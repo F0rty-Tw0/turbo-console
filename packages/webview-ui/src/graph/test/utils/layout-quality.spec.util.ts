@@ -1,9 +1,10 @@
 import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
-import { crosses, edgesUnder, hits, isInside, midpointOf, placementOf, segmentsOf } from './layout-geometry.spec.util.ts';
+import { boxOverlapOf, fitOf } from './layout-extent.spec.util.ts';
+import { crosses, edgesUnder, hits, isInside, midpointOf, placementOf, segmentsOf, sumOf } from './layout-geometry.spec.util.ts';
 import type { Position } from '../../../bridge/common/graph-state.type.ts';
 import { FOLDER_PADDING_PX } from '../../common/graph.const.ts';
-import type { DrawnLine, LayoutQuality, PlacedRect, Placement, Rect } from '../common/layout-quality.type.ts';
+import type { DrawnLine, LayoutQuality, PlacedRect, Rect, Segment } from '../common/layout-quality.type.ts';
 import type { U0Canvas } from '../common/u0-workspace.type.ts';
 
 // The metrics of the U6c harness `score` (`~/.cache/tc-u6c-plan/harness.mjs:81-130`) on routed layouts. One difference: an
@@ -11,12 +12,7 @@ import type { U0Canvas } from '../common/u0-workspace.type.ts';
 
 type BoxCounts = Pick<LayoutQuality, 'overHeader' | 'ownHeader' | 'foreignBox'>;
 
-type Fit = Pick<LayoutQuality, 'fitZoom' | 'fitAspect'>;
-
 const LEAF_INSET_PX = 2;
-const BORDER_PX = 1.5;
-const FIT_MARGIN_PX = 24;
-const MAX_ZOOM = 2;
 
 const routeOf = (edge: ElkEdge | undefined): Position[] => {
   const section = edge?.sections?.[0];
@@ -81,11 +77,10 @@ const boxCountsOf = (line: DrawnLine, boxes: PlacedRect[]): BoxCounts => {
   const isOwn = (box: PlacedRect): boolean => line.endBoxes.has(box.id);
   const own = boxes.filter(isOwn);
   const foreign = boxes.filter((box) => !isOwn(box));
-  const counts: BoxCounts = {
-    overHeader: foreign.filter(crossesBand).length,
-    ownHeader: own.filter(crossesBand).length,
-    foreignBox: foreign.filter(crossesBody).length
-  };
+  const overHeader = foreign.filter(crossesBand).length;
+  const ownHeader = own.filter(crossesBand).length;
+  const foreignBox = foreign.filter(crossesBody).length;
+  const counts: BoxCounts = { overHeader, ownHeader, foreignBox };
 
   return counts;
 };
@@ -94,8 +89,13 @@ const sharesEnd = (left: DrawnLine, right: DrawnLine): boolean => isEnd(right, l
 
 const linesCross = (left: DrawnLine, right: DrawnLine): boolean => {
   const rightSegments = segmentsOf(right.points);
+  const crossesRight = (segment: Segment): boolean => {
+    const crossesSegment = (other: Segment): boolean => crosses(segment, other);
 
-  return segmentsOf(left.points).some((segment) => rightSegments.some((other) => crosses(segment, other)));
+    return rightSegments.some(crossesSegment);
+  };
+
+  return segmentsOf(left.points).some(crossesRight);
 };
 
 /** Line pairs with no shared end that cross at least once (`harness.mjs:107-111`). */
@@ -104,7 +104,8 @@ const crossingsOf = (lines: DrawnLine[]): number => {
 
   for (const [index, left] of lines.entries()) {
     const later = lines.slice(index + 1);
-    const crossed = later.filter((right) => !sharesEnd(left, right) && linesCross(left, right));
+    const crossesLeft = (right: DrawnLine): boolean => !sharesEnd(left, right) && linesCross(left, right);
+    const crossed = later.filter(crossesLeft);
 
     count += crossed.length;
   }
@@ -112,54 +113,27 @@ const crossingsOf = (lines: DrawnLine[]): number => {
   return count;
 };
 
-const grown = (box: PlacedRect): PlacedRect => {
-  const drawn: PlacedRect = { ...box, x1: box.x1 - BORDER_PX, y1: box.y1 - BORDER_PX, x2: box.x2 + BORDER_PX, y2: box.y2 + BORDER_PX };
+const totalOf = (lines: DrawnLine[], countOf: (line: DrawnLine) => number): number => {
+  const counts = lines.map(countOf);
 
-  return drawn;
+  return counts.reduce(sumOf, 0);
 };
 
-const pointRectOf = (point: Position): Rect => {
-  const rect: Rect = { x1: point.x, y1: point.y, x2: point.x, y2: point.y };
+/** The box counts of every line, summed per field. */
+const boxTotalsOf = (lines: DrawnLine[], boxes: PlacedRect[]): BoxCounts => {
+  const countsOf = (line: DrawnLine): BoxCounts => boxCountsOf(line, boxes);
+  const all = lines.map(countsOf);
+  const overHeaders = all.map((counts) => counts.overHeader);
+  const ownHeaders = all.map((counts) => counts.ownHeader);
+  const foreignBoxes = all.map((counts) => counts.foreignBox);
+  const totals: BoxCounts = {
+    overHeader: overHeaders.reduce(sumOf, 0),
+    ownHeader: ownHeaders.reduce(sumOf, 0),
+    foreignBox: foreignBoxes.reduce(sumOf, 0)
+  };
 
-  return rect;
+  return totals;
 };
-
-/** The fit zoom and aspect of leaves, drawn boxes (ELK rect plus border) and route points (`harness.mjs:112-121`). */
-const fitOf = (placement: Placement, lines: DrawnLine[], canvas: U0Canvas): Fit => {
-  const points = lines.flatMap((line) => line.points).map(pointRectOf);
-  const drawnBoxes = placement.boxes.map(grown);
-  const rects = [...placement.leaves, ...drawnBoxes, ...points];
-  const lefts = rects.map((rect) => rect.x1);
-  const rights = rects.map((rect) => rect.x2);
-  const tops = rects.map((rect) => rect.y1);
-  const bottoms = rects.map((rect) => rect.y2);
-  const width = Math.max(...rights) - Math.min(...lefts);
-  const height = Math.max(...bottoms) - Math.min(...tops);
-  const zoomX = (canvas.width - 2 * FIT_MARGIN_PX) / width;
-  const zoomY = (canvas.height - 2 * FIT_MARGIN_PX) / height;
-  const fit: Fit = { fitZoom: Math.min(zoomX, zoomY, MAX_ZOOM), fitAspect: width / height };
-
-  return fit;
-};
-
-const overlaps = (left: PlacedRect, right: PlacedRect): boolean => {
-  const isNested = left.ancestors.includes(right.id) || right.ancestors.includes(left.id);
-  const meetX = left.x1 < right.x2 && right.x1 < left.x2;
-
-  return !isNested && meetX && left.y1 < right.y2 && right.y1 < left.y2;
-};
-
-/** Pairs of drawn boxes, neither inside the other, that overlap (`harness.mjs:127`). */
-const boxOverlapOf = (boxes: PlacedRect[]): number => {
-  const drawn = boxes.map(grown);
-  const overlapsLater = (box: PlacedRect, index: number): number =>
-    drawn.slice(index + 1).filter((other) => overlaps(box, other)).length;
-
-  return drawn.map(overlapsLater).reduce((total, count) => total + count, 0);
-};
-
-const totalOf = (lines: DrawnLine[], countOf: (line: DrawnLine) => number): number =>
-  lines.map(countOf).reduce((total, count) => total + count, 0);
 
 /** How readable `laidOut` (ELK's answer to `input`) is on `canvas`, scored like the U6c harness. */
 export const qualityOf = (input: ElkNode, laidOut: ElkNode, canvas: U0Canvas): LayoutQuality => {
@@ -169,16 +143,15 @@ export const qualityOf = (input: ElkNode, laidOut: ElkNode, canvas: U0Canvas): L
   const lines = linesOf(input, laidOut, leafById);
   const routed = lines.filter((line) => line.points.length > 0);
   const fit = fitOf(placement, routed, canvas);
+  const boxTotals = boxTotalsOf(routed, boxes);
   const quality: LayoutQuality = {
     ...fit,
+    ...boxTotals,
     routeCount: routed.length,
     edgeCount: lines.length,
     throughNode: totalOf(routed, (line) => throughCountOf(line, leaves)),
     midpointUnder: totalOf(routed, (line) => midpointCountOf(line, leaves)),
     crossings: crossingsOf(routed),
-    overHeader: totalOf(routed, (line) => boxCountsOf(line, boxes).overHeader),
-    ownHeader: totalOf(routed, (line) => boxCountsOf(line, boxes).ownHeader),
-    foreignBox: totalOf(routed, (line) => boxCountsOf(line, boxes).foreignBox),
     boxOverlap: boxOverlapOf(boxes)
   };
 

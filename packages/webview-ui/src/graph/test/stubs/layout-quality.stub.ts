@@ -1,27 +1,6 @@
-import type { ElkEdge, ElkEdgeSection, ElkNode } from 'elkjs/lib/elk-api.js';
+import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
-import type { Position } from '../../../bridge/common/graph-state.type.ts';
-
-const leafOf = (id: string, x: number, y: number): ElkNode => {
-  const leaf: ElkNode = { id, x, y, width: 10, height: 10 };
-
-  return leaf;
-};
-
-/** An edge routed in root coordinates through one bend. */
-const routedEdgeOf = (source: string, target: string, points: [Position, Position, Position]): ElkEdge => {
-  const [startPoint, bend, endPoint] = points;
-  const section: ElkEdgeSection = { id: `${source}-${target}`, startPoint, bendPoints: [bend], endPoint };
-  const edge: ElkEdge = { id: `${source}-${target}`, sources: [source], targets: [target], sections: [section] };
-
-  return edge;
-};
-
-const rootOf = (children: ElkNode[], edges: ElkEdge[]): ElkNode => {
-  const root: ElkNode = { id: 'root', children, edges };
-
-  return root;
-};
+import { boxOf, leafOf, rootOf, routedEdgeOf } from '../utils/layout-nodes.spec.util.ts';
 
 const A = leafOf('a', 0, 0);
 const B = leafOf('b', 100, 100);
@@ -74,9 +53,24 @@ export const THROUGH_LEAF_STUB: ElkNode = rootOf(
   ]
 );
 
+/**
+ * `a → d` runs straight down along `x = 1`, the left edge of `x`, a third leaf: its half-length point is inside `x`, but
+ * the route stays out of `x` shrunk by 2 px.
+ */
+export const MIDPOINT_UNDER_STUB: ElkNode = rootOf(
+  [A, D, leafOf('x', 0, 50)],
+  [
+    routedEdgeOf('a', 'd', [
+      { x: 1, y: 10 },
+      { x: 1, y: 55 },
+      { x: 1, y: 100 }
+    ])
+  ]
+);
+
 const T_IN_PACKAGE = leafOf('t', 32, 40);
-const PACKAGE_BOX: ElkNode = { id: 'pkg:p', x: 32, y: 32, width: 136, height: 120, children: [T_IN_PACKAGE] };
-const FOLDER_BOX: ElkNode = { id: '\u0001f', x: 0, y: 100, width: 200, height: 200, children: [PACKAGE_BOX] };
+const PACKAGE_BOX = boxOf('pkg:p', { x: 32, y: 32, width: 136, height: 120 }, [T_IN_PACKAGE]);
+const FOLDER_BOX = boxOf('\u0001f', { x: 0, y: 100, width: 200, height: 200 }, [PACKAGE_BOX]);
 const S_ABOVE = leafOf('s', 64, 0);
 
 /** `s → t` comes down into `t` through the title bands of its own package box and of that box's folder. */

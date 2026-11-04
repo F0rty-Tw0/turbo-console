@@ -29,6 +29,9 @@ export type LayoutQuality = {
   readonly boxOverlap: number;
 };
 
+/** The fit zoom and aspect of a drawing on a canvas. */
+export type LayoutFit = Pick<LayoutQuality, 'fitZoom' | 'fitAspect'>;
+
 /** An axis-aligned rect in root coordinates. */
 export type Rect = {
   readonly x1: number;
@@ -37,15 +40,14 @@ export type Rect = {
   readonly y2: number;
 };
 
-/** A leaf or box in root coordinates with the ids of the boxes around it, outermost first; wrappers are never boxes. */
-export type PlacedRect = {
+/** The id of a leaf or box and the ids of the boxes around it, outermost first. */
+type Lineage = {
   readonly id: string;
-  readonly x1: number;
-  readonly y1: number;
-  readonly x2: number;
-  readonly y2: number;
   readonly ancestors: string[];
 };
+
+/** A leaf or box in root coordinates with the ids of the boxes around it, outermost first; wrappers are never boxes. */
+export type PlacedRect = Rect & Lineage;
 
 /** Every leaf and box of a laid-out graph. */
 export type Placement = {

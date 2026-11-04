@@ -3,7 +3,21 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { LayoutQuality } from '../test/common/layout-quality.type.ts';
 import { REAL_ELK_HOOK_TIMEOUT_MS, REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
 import type { U0TaskView, U0View } from '../test/common/u0-workspace.type.ts';
-import { CROSSING_ROUTES_STUB, OWN_BANDS_STUB, SHARED_END_ROUTES_STUB, THROUGH_LEAF_STUB } from '../test/stubs/layout-quality.stub.ts';
+import {
+  FIT_BOUNDS_STUB,
+  FIT_CANVAS_STUB,
+  FOREIGN_BAND_STUB,
+  FOREIGN_BODY_STUB,
+  NESTED_BOXES_STUB,
+  OVERLAPPING_BOXES_STUB
+} from '../test/stubs/layout-boxes.stub.ts';
+import {
+  CROSSING_ROUTES_STUB,
+  MIDPOINT_UNDER_STUB,
+  OWN_BANDS_STUB,
+  SHARED_END_ROUTES_STUB,
+  THROUGH_LEAF_STUB
+} from '../test/stubs/layout-quality.stub.ts';
 import { U0_CANVAS_STUB } from '../test/stubs/u0-workspace.stub.ts';
 import { qualityOf } from '../test/utils/layout-quality.spec.util.ts';
 import {
@@ -87,53 +101,58 @@ describe('FEATURE: layout quality of the U0 workspace with real elkjs', { timeou
       quality = await u0QualitiesOf();
     }, REAL_ELK_HOOK_TIMEOUT_MS);
 
-    it('THEN c1: the flat package view fits at zoom 1.40 or more', () => {
-      expect(quality.pkgFlat.fitZoom).toBeGreaterThanOrEqual(1.4);
-    });
-
-    it('THEN c2: the flat package view has 10 crossings or fewer', () => {
-      expect(quality.pkgFlat.crossings).toBeLessThanOrEqual(10);
-    });
-
-    it.each(C2B_ROWS)('THEN c2b: %s has at most %i crossings', (view, most) => {
-      expect(quality[view].crossings).toBeLessThanOrEqual(most);
-    });
-
-    it.each(C3_ROWS)('THEN c3: %s fits at zoom %f or more', (view, least) => {
-      expect(quality[view].fitZoom).toBeGreaterThanOrEqual(least);
-    });
-
-    it.each(C4_ROWS)('THEN c4: %s fits at zoom %f or more', (view, least) => {
-      expect(quality[view].fitZoom).toBeGreaterThanOrEqual(least);
-    });
-
-    it.each(C4_ROWS)('THEN c4: %s fits a box at most twice as wide as high', (view) => {
-      expect(quality[view].fitAspect).toBeLessThanOrEqual(C4_ASPECT_MAX);
-    });
-
-    it.each(C5_ROWS)('THEN c5: %s fits at zoom %f or more', (view, least) => {
-      expect(quality[view].fitZoom).toBeGreaterThanOrEqual(least);
-    });
-
-    it('THEN c5: lintTypecheckUnitGrouped has at most 234 crossings', () => {
-      expect(quality.lintTypecheckUnitGrouped.crossings).toBeLessThanOrEqual(234);
-    });
-
-    it.each(ALL_VIEWS)('THEN c6: %s routes every edge, through no leaf, with no midpoint under a leaf and no box overlap', (view) => {
-      const { routeCount, edgeCount, throughNode, midpointUnder, boxOverlap } = quality[view];
-
-      expect({ routeCount, throughNode, midpointUnder, boxOverlap }).toStrictEqual({
-        routeCount: edgeCount,
-        throughNode: 0,
-        midpointUnder: 0,
-        boxOverlap: 0
+    describe('WHEN each is scored', () => {
+      it('THEN c1: the flat package view fits at zoom 1.40 or more', () => {
+        expect(quality.pkgFlat.fitZoom).toBeGreaterThanOrEqual(1.4);
       });
-    });
 
-    it.each(C7_VIEWS)('THEN c7: %s crosses no foreign title band and no foreign box', (view) => {
-      const { overHeader, foreignBox } = quality[view];
+      it('THEN c2: the flat package view has 10 crossings or fewer', () => {
+        expect(quality.pkgFlat.crossings).toBeLessThanOrEqual(10);
+      });
 
-      expect({ overHeader, foreignBox }).toStrictEqual({ overHeader: 0, foreignBox: 0 });
+      it.each(C2B_ROWS)('THEN c2b: %s has at most %i crossings', (view, most) => {
+        expect(quality[view].crossings).toBeLessThanOrEqual(most);
+      });
+
+      it.each(C3_ROWS)('THEN c3: %s fits at zoom %f or more', (view, least) => {
+        expect(quality[view].fitZoom).toBeGreaterThanOrEqual(least);
+      });
+
+      it.each(C4_ROWS)('THEN c4: %s fits at zoom %f or more', (view, least) => {
+        expect(quality[view].fitZoom).toBeGreaterThanOrEqual(least);
+      });
+
+      it.each(C4_ROWS)('THEN c4: %s fits a box at most twice as wide as high', (view) => {
+        expect(quality[view].fitAspect).toBeLessThanOrEqual(C4_ASPECT_MAX);
+      });
+
+      it.each(C5_ROWS)('THEN c5: %s fits at zoom %f or more', (view, least) => {
+        expect(quality[view].fitZoom).toBeGreaterThanOrEqual(least);
+      });
+
+      it('THEN c5: lintTypecheckUnitGrouped has at most 234 crossings', () => {
+        expect(quality.lintTypecheckUnitGrouped.crossings).toBeLessThanOrEqual(234);
+      });
+
+      it.each(ALL_VIEWS)(
+        'THEN c6: %s routes every edge, through no leaf, with no midpoint under a leaf and no box overlap',
+        (view) => {
+          const { routeCount, edgeCount, throughNode, midpointUnder, boxOverlap } = quality[view];
+
+          expect({ routeCount, throughNode, midpointUnder, boxOverlap }).toStrictEqual({
+            routeCount: edgeCount,
+            throughNode: 0,
+            midpointUnder: 0,
+            boxOverlap: 0
+          });
+        }
+      );
+
+      it.each(C7_VIEWS)('THEN c7: %s crosses no foreign title band and no foreign box', (view) => {
+        const { overHeader, foreignBox } = quality[view];
+
+        expect({ overHeader, foreignBox }).toStrictEqual({ overHeader: 0, foreignBox: 0 });
+      });
     });
   });
 
@@ -154,6 +173,48 @@ describe('FEATURE: layout quality of the U0 workspace with real elkjs', { timeou
       const { throughNode } = qualityOf(THROUGH_LEAF_STUB, THROUGH_LEAF_STUB, U0_CANVAS_STUB);
 
       expect(throughNode).toBe(1);
+    });
+
+    it('WHEN a route has its half-length point inside a third leaf it only grazes THEN midpointUnder is 1 and throughNode is 0', () => {
+      const { midpointUnder, throughNode } = qualityOf(MIDPOINT_UNDER_STUB, MIDPOINT_UNDER_STUB, U0_CANVAS_STUB);
+
+      expect({ midpointUnder, throughNode }).toStrictEqual({ midpointUnder: 1, throughNode: 0 });
+    });
+
+    it('WHEN a route crosses the title band of a box that holds neither end THEN overHeader and foreignBox are 1', () => {
+      const { overHeader, ownHeader, foreignBox } = qualityOf(FOREIGN_BAND_STUB, FOREIGN_BAND_STUB, U0_CANVAS_STUB);
+
+      expect({ overHeader, ownHeader, foreignBox }).toStrictEqual({ overHeader: 1, ownHeader: 0, foreignBox: 1 });
+    });
+
+    it('WHEN a route crosses only the body of a box that holds neither end THEN foreignBox is 1 and overHeader is 0', () => {
+      const { overHeader, foreignBox } = qualityOf(FOREIGN_BODY_STUB, FOREIGN_BODY_STUB, U0_CANVAS_STUB);
+
+      expect({ overHeader, foreignBox }).toStrictEqual({ overHeader: 0, foreignBox: 1 });
+    });
+
+    it('WHEN two sibling boxes overlap THEN boxOverlap is 1', () => {
+      const { boxOverlap } = qualityOf(OVERLAPPING_BOXES_STUB, OVERLAPPING_BOXES_STUB, U0_CANVAS_STUB);
+
+      expect(boxOverlap).toBe(1);
+    });
+
+    it('WHEN one box holds another THEN boxOverlap is 0', () => {
+      const { boxOverlap } = qualityOf(NESTED_BOXES_STUB, NESTED_BOXES_STUB, U0_CANVAS_STUB);
+
+      expect(boxOverlap).toBe(0);
+    });
+
+    it('WHEN boxes, leaves and a route bend bound the drawing at 123 × 71.5 THEN fitZoom is 1 on a canvas 123 px wide inside its margins', () => {
+      const { fitZoom } = qualityOf(FIT_BOUNDS_STUB, FIT_BOUNDS_STUB, FIT_CANVAS_STUB);
+
+      expect(fitZoom).toBe(1);
+    });
+
+    it('WHEN boxes, leaves and a route bend bound the drawing at 123 × 71.5 THEN fitAspect is 123 over 71.5', () => {
+      const { fitAspect } = qualityOf(FIT_BOUNDS_STUB, FIT_BOUNDS_STUB, FIT_CANVAS_STUB);
+
+      expect(fitAspect).toBeCloseTo(123 / 71.5, 10);
     });
 
     it('WHEN a route enters its end through the bands of its package box and folder THEN both count as own bands', () => {

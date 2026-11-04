@@ -122,12 +122,17 @@ export const sortedEdgeIdsOf = (graph: ElkNode): string[] => {
   return ids.sort();
 };
 
-/** The quality of a captured U0 view as real elkjs lays out a fresh builder input, on the captured canvas. */
+/**
+ * The quality of a captured U0 view as real elkjs lays out a fresh builder input, on the captured canvas. elkjs writes its
+ * answer into the graph it is given (`laidOut` is that same object), so the oracle reads the edges from a second build.
+ */
 const u0QualityOf = async (view: U0View): Promise<LayoutQuality> => {
   const elk = new elkConstructor();
-  const laidOut = await elk.layout(u0InputOf(view));
+  const layoutInput = u0InputOf(view);
+  const laidOut = await elk.layout(layoutInput);
+  const unlaidInput = u0InputOf(view);
 
-  return qualityOf(u0InputOf(view), laidOut, U0_CANVAS_STUB);
+  return qualityOf(unlaidInput, laidOut, U0_CANVAS_STUB);
 };
 
 /** The quality of every captured U0 view, laid out one after the other. */

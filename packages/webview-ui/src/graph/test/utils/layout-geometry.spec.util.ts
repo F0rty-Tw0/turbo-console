@@ -113,7 +113,8 @@ const lengthOf = (segment: Segment): number => {
   return Math.hypot(q.x - p.x, q.y - p.y);
 };
 
-const sumOf = (total: number, value: number): number => total + value;
+/** `total` plus `value`, as a `reduce` step. */
+export const sumOf = (total: number, value: number): number => total + value;
 
 /** The point half way along the line, as Cytoscape draws a midpoint (`harness.mjs:93-95`); the first point for none. */
 export const midpointOf = (points: Position[]): Position => {
