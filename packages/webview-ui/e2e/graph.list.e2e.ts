@@ -111,12 +111,11 @@ test.describe('FEATURE: graph package list', () => {
     async ({ graphCanvas, graphHost, graphKeys, graphPage, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
-      await test.step('AND the 300-package state is sent and laid out', async (): Promise<void> => {
-        await graphHost.sendState(largeState());
-        await graphProbe.expectLayoutSettled();
-      });
+      await test.step('AND the 300-package state is sent', async (): Promise<void> => graphHost.sendState(largeState()));
 
-      await test.step('AND Fit is pressed, since the open itself shows only the top of a graph this big', async (): Promise<void> =>
+      await test.step('THEN the graph is laid out', async (): Promise<void> => graphProbe.expectLayoutSettled());
+
+      await test.step('WHEN Fit is pressed, since the open itself shows only the top of a graph this big', async (): Promise<void> =>
         graphPage.pressButton(FIT_LABEL));
 
       await test.step('AND pkg-290 is tapped', async (): Promise<void> => graphCanvas.tapNode('pkg-290'));

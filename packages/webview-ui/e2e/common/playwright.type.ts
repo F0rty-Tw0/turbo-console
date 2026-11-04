@@ -7,6 +7,12 @@ export type AriaRoleName = Parameters<Page['getByRole']>[0];
 
 export type RouteHandler = (route: Route) => Promise<void>;
 
+/** The page size, in CSS pixels. */
+export type ViewportSize = {
+  readonly width: number;
+  readonly height: number;
+};
+
 /** A spot in the viewport, in CSS pixels. */
 export type ViewportPoint = {
   readonly x: number;

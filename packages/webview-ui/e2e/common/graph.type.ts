@@ -1,3 +1,4 @@
+import type { ViewportSize } from './playwright.type.ts';
 import type { EdgeExplainResult, GraphWebviewMessage } from '../../src/bridge/common/graph-message.type.ts';
 import type { Position, Positions, Routes } from '../../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../src/bridge/common/graph-view-state.type.ts';
@@ -19,6 +20,8 @@ export type GraphOptions = {
   readonly host?: boolean;
   /** `false` skips the probe flag, so the page exposes no probe. */
   readonly probe?: boolean;
+  /** The page size, set before the page loads; the default is the project's. */
+  readonly viewport?: ViewportSize;
 };
 
 /** A task node's run outline: its width and its colour as `rgb(r, g, b)`. */

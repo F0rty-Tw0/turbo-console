@@ -44,6 +44,8 @@ export class GraphPage {
   public async open(options: GraphOptions = {}): Promise<void> {
     await this.diagnostics.attach();
 
+    if (options.viewport !== undefined) await this.page.setViewportSize(options.viewport);
+
     if (options.probe !== false) await this.page.addInitScript({ content: PROBE_WANTED });
 
     if (options.host !== false) await this.page.addInitScript({ content: HOST_API_STUB });
