@@ -12,6 +12,7 @@ describe('FEATURE: createFittedCamera', () => {
   let cy: Core;
   let events: string[];
   let fittedAtViewport: boolean[];
+  let fittedAtEvent: boolean[];
   let handlers: FittedHandlers;
   let camera: FittedCamera;
   /**
@@ -41,6 +42,7 @@ describe('FEATURE: createFittedCamera', () => {
     cy = cytoscape({ headless: true, styleEnabled: true, layout, elements });
     events = [];
     fittedAtViewport = [];
+    fittedAtEvent = [];
     vi.spyOn(cy, 'fit').mockImplementation((): Core => {
       events.push('fit');
       cy.zoom(cy.zoom() + 1);
@@ -48,6 +50,7 @@ describe('FEATURE: createFittedCamera', () => {
       return cy;
     });
     cy.on('resize', (): void => void events.push('resize'));
+    cy.on('viewport', (): void => void fittedAtEvent.push(camera.isFitted()));
     handlers = {
       onViewport: vi.fn((): void => void fittedAtViewport.push(camera.isFitted())),
       onRefit: vi.fn((): void => void events.push('refit'))
@@ -92,14 +95,10 @@ describe('FEATURE: createFittedCamera', () => {
 
   describe('GIVEN a new camera', () => {
     it('WHEN fit runs THEN it is fitted before the viewport event it emits', () => {
-      const seen: boolean[] = [];
-
-      cy.on('viewport', (): void => void seen.push(camera.isFitted()));
-
       camera.fit();
 
       expect(camera.isFitted()).toBe(true);
-      expect(seen).toStrictEqual([true]);
+      expect(fittedAtEvent).toStrictEqual([true]);
     });
 
     it('WHEN dragpan fires THEN onViewport is not called again', () => {
@@ -144,14 +143,10 @@ describe('FEATURE: createFittedCamera', () => {
     );
 
     it('WHEN setViewport runs THEN it is not fitted before the viewport event, and zoom and pan are set', () => {
-      const seen: boolean[] = [];
-
-      cy.on('viewport', (): void => void seen.push(camera.isFitted()));
-
       camera.setViewport(2, { x: 5, y: 6 });
 
       expect(camera.isFitted()).toBe(false);
-      expect(seen).toStrictEqual([false]);
+      expect(fittedAtEvent.at(-1)).toBe(false);
       expect(cy.zoom()).toBe(2);
       expect(cy.pan()).toStrictEqual({ x: 5, y: 6 });
     });
@@ -286,12 +281,8 @@ describe('FEATURE: createFittedCamera', () => {
   });
 
   describe('GIVEN a new camera over a graph that fits below the floor', () => {
-    const seen: boolean[] = [];
-
     beforeEach(() => {
       remount(4000, 3000);
-      seen.length = 0;
-      cy.on('viewport', (): void => void seen.push(camera.isFitted()));
     });
 
     it('WHEN open runs THEN zoom is 0.75 and pan is the top-centre anchor of the framed box', () => {
@@ -305,11 +296,21 @@ describe('FEATURE: createFittedCamera', () => {
       expect(cy.pan().y).toBeCloseTo(24 - box.y1 * 0.75, 6);
     });
 
-    it('WHEN open runs THEN only one resize runs, cy.fit never, and it is not fitted at the viewport event', () => {
+    it('WHEN open runs THEN only one resize runs and cy.fit never', () => {
       camera.open();
 
       expect(events).toStrictEqual(['resize']);
-      expect(seen).toStrictEqual([false]);
+    });
+
+    it('WHEN open runs THEN the camera is not fitted at the viewport event', () => {
+      camera.open();
+
+      expect(fittedAtEvent).toStrictEqual([false]);
+    });
+
+    it('WHEN open runs THEN the camera is not fitted after it', () => {
+      camera.open();
+
       expect(camera.isFitted()).toBe(false);
     });
 
@@ -323,19 +324,15 @@ describe('FEATURE: createFittedCamera', () => {
   });
 
   describe('GIVEN a new camera over a graph that fits above the floor', () => {
-    const seen: boolean[] = [];
-
     beforeEach(() => {
       remount(100, 75);
-      seen.length = 0;
-      cy.on('viewport', (): void => void seen.push(camera.isFitted()));
     });
 
     it('WHEN open runs THEN one resize then cy.fit, and it is fitted at the viewport event', () => {
       camera.open();
 
       expect(events).toStrictEqual(['resize', 'fit']);
-      expect(seen).toStrictEqual([true]);
+      expect(fittedAtEvent).toStrictEqual([true]);
     });
   });
 });
