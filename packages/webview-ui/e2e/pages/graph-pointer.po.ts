@@ -18,6 +18,8 @@ const PRESS_HALF_PX = 60;
  */
 const PRESS_NOISE_LEVELS = 4;
 
+const CANVAS_QUIET_WINDOW: QuietWindow = { quietMs: CANVAS_QUIET_MS, timeoutMs: CANVAS_QUIET_TIMEOUT_MS };
+
 const cursorAt = ({ x, y }: ViewportPoint): string => {
   const element = document.elementFromPoint(x, y);
 
@@ -89,15 +91,15 @@ export class GraphPointer extends GraphHover {
 
   /**
    * Waits for the drawn nodes, then until Cytoscape draws nothing for a while, so the next input starts from a settled
-   * canvas; a freshly drawn graph still refines its textures, which a slow runner draws after the input.
+   * canvas; a freshly drawn graph still refines its textures, which a slow runner draws after the input. A caller with a
+   * stricter count passes its own window.
    */
-  public async waitForQuietCanvas(): Promise<void> {
+  public async waitForQuietCanvas(quietWindow: QuietWindow = CANVAS_QUIET_WINDOW): Promise<void> {
     await this.probe.waitForNodes();
 
-    const quietWindow: QuietWindow = { quietMs: CANVAS_QUIET_MS, timeoutMs: CANVAS_QUIET_TIMEOUT_MS };
     const isQuiet = await this.page.evaluate(settlesQuiet, quietWindow);
 
-    if (!isQuiet) throw new Error(`graph e2e: the canvas kept rendering for ${CANVAS_QUIET_TIMEOUT_MS} ms`);
+    if (!isQuiet) throw new Error(`graph e2e: the canvas kept rendering for ${quietWindow.timeoutMs} ms`);
   }
 
   /** Waits two frames after the last input, then counts the renders until the canvas goes quiet. */
