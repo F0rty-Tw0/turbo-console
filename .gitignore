@@ -43,9 +43,10 @@ Thumbs.db
 .env
 .env.*
 
-# Turbo, bench, VS Code test and Playwright output
+# Turbo, bench, Vitest, VS Code test and Playwright output
 .turbo
 .bench
+.vitest
 .vscode-test
 .vsix
 *.vsix
