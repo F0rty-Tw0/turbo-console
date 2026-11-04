@@ -22,7 +22,7 @@ type DrawParts = {
   readonly opening: GraphViewState | null;
   readonly frames: Pick<FrameClock, 'arm' | 'receivedAt'>;
   readonly filtering: RestoredFiltering;
-  readonly view: Pick<GraphView, 'setLabels' | 'setViewport' | 'fit'>;
+  readonly view: Pick<GraphView, 'setLabels' | 'setViewport' | 'fit' | 'open'>;
 };
 
 /** The Controls panel, which swaps in the relabelled graph itself. */
@@ -54,6 +54,7 @@ export const restoreAfterDraw = (parts: DrawParts, saved: GraphViewState | null)
   filtering.inspection.mount(saved);
 
   if (plan.kind === 'restore') view.setViewport(plan.zoom, plan.pan);
+  else if (plan.kind === 'open') view.open();
   else view.fit();
 
   filtering.inspection.restore(saved, visible);

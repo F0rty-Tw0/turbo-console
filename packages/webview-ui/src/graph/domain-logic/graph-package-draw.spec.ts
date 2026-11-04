@@ -1,10 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { refreshedDrawn } from './graph-package-draw.ts';
+import { refreshedDrawn, restoreAfterDraw } from './graph-package-draw.ts';
 import type { GraphPackage, GraphReady } from '../../bridge/common/graph-state.type.ts';
+import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { DrawnGraph } from '../common/graph-page.type.ts';
 import { BARE_HIDDEN_STUB, BARE_SHOWN_STUB } from '../test/stubs/scope-labels.stub.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
+import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
 const recountOf = (pkg: GraphPackage): GraphPackage => {
   const recounted: GraphPackage = { ...pkg, taskCount: pkg.taskCount + 1 };
@@ -53,4 +55,42 @@ describe('FEATURE: refreshedDrawn', () => {
       expect(refreshed).toBe(shown);
     });
   });
+});
+
+describe('FEATURE: restoreAfterDraw camera', () => {
+  const drawn = drawnGraphOf(BARE_SHOWN_STUB);
+  const savedFor = (hash: string): GraphViewState => freshViewStateOf(hash);
+  const OPENING = savedFor(drawn.hash);
+  const MOVED: GraphViewState = { ...OPENING, zoom: 1.5 };
+  const FITTED: GraphViewState = { ...OPENING, fitted: true };
+
+  const cameraCallsOf = (saved: GraphViewState | null): string[] => {
+    const calls: string[] = [];
+    const view = {
+      setLabels: vi.fn(),
+      setViewport: vi.fn((): void => void calls.push('setViewport')),
+      fit: vi.fn((): void => void calls.push('fit')),
+      open: vi.fn((): void => void calls.push('open'))
+    };
+    const frames = { arm: vi.fn(), receivedAt: vi.fn((): number => 0) };
+    const inspection = { mount: vi.fn(), restore: vi.fn() };
+    const filtering = { restore: vi.fn((): ReadonlySet<string> => new Set()), inspection };
+
+    restoreAfterDraw({ drawn, opening: OPENING, frames, filtering, view }, saved);
+
+    return calls;
+  };
+
+  it.each([
+    ['no saved camera', 'open', null],
+    ['a save for another hash', 'open', savedFor('h0')],
+    ['a fitted save for this hash', 'fit', FITTED],
+    ['a moved save for this hash', 'setViewport', MOVED],
+    ['the opening state itself (large graph, no grouping choice)', 'open', OPENING]
+  ])(
+    'GIVEN %s WHEN the first draw restores THEN the camera calls %s only',
+    (_name: string, called: string, saved: GraphViewState | null) => {
+      expect(cameraCallsOf(saved)).toStrictEqual([called]);
+    }
+  );
 });
