@@ -3,6 +3,7 @@ import type { ElkNode } from 'elkjs/lib/elk-api.js';
 import { edgeIdOf } from './edge-id.util.ts';
 import { elkEdgeOf } from './elk-grouped-graph.util.ts';
 import { groupedRootOptionsOf, paddedOptionsOf, taskLayeringOf } from './elk-options.util.ts';
+import { packComponentsOf } from './elk-pack.util.ts';
 import { compoundOptionsOf, folderBoxIdOf, scriptsBoxIdOf, taskBoxIdOf, taskFolderOf, taskPackagesOf } from './task-compound.util.ts';
 import type { GraphEdge, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { LAYOUT_VERSION } from '../common/graph-layout.const.ts';
@@ -102,7 +103,8 @@ const rootChildrenOf = (
  * title in `titleWidths`, holding the shown turbo tasks and, when a script is shown, a Scripts compound around the shown
  * scripts; tasks are sized by `sizes` or else their names, every link at the root so ELK routes links across packages and
  * into the nested Scripts compounds (`INCLUDE_CHILDREN`). While `naming` is grouped each package compound sits in its
- * folder compound; ungrouped the package compounds are the root children.
+ * folder compound; ungrouped the package compounds are the root children. Root children no link joins are packed into
+ * wrappers (`packComponentsOf`).
  */
 export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkNode => {
   const { tasks, shown, sizes, titleWidths, naming } = request;
@@ -133,7 +135,7 @@ export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkN
   const layoutOptions = groupedRootOptionsOf(drawn.length, layering);
   const graph: ElkNode = { id: 'root', layoutOptions, children, edges };
 
-  return graph;
+  return packComponentsOf(graph);
 };
 
 /** The sorted `[packageName, folder]` pairs of the packages of `drawn` while grouped; none while ungrouped. */

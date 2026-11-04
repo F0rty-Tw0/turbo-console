@@ -33,3 +33,9 @@ export const LAYERING_DEFAULT: ElkLayering = 'NETWORK_SIMPLEX';
 
 /** The layering of the grouped task view: NETWORK_SIMPLEX raised the grouped U0 task view from 399 to 449 crossings (U6c Task 3.1); LONGEST_PATH is the pre-U6c layering there. */
 export const LAYERING_GROUPED_TASKS: ElkLayering = 'LONGEST_PATH';
+
+/** The gap between packed components, in px. */
+export const PACK_SPACING_PX = 48;
+
+/** The width over height the packed components aim for: 1 is square. */
+export const PACK_ASPECT = 1;

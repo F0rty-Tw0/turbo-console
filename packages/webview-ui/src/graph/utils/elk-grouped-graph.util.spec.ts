@@ -143,7 +143,7 @@ describe('FEATURE: groupedElkGraphOf', () => {
     it('WHEN a root folder and a real (root) folder coexist THEN their compounds are distinct', () => {
       const groups = [groupOf('', 'a'), groupOf('(root)', 'b')];
 
-      const graph = groupedElkGraphOf(groups, [], boardsSizeOf);
+      const graph = groupedElkGraphOf(groups, [{ source: 'a', target: 'b' }], boardsSizeOf);
 
       expect(idsOf(childrenOf(graph))).toStrictEqual(['\u0001', '\u0001(root)']);
     });

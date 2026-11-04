@@ -80,3 +80,11 @@ export const optionValuesOf = (node: ElkNode, key: string): string[] => {
 
 /** `value` repeated `count` times. */
 export const repeatedOf = (count: number, value: string): string[] => Array.from({ length: count }, () => value);
+
+/** The value of layout option `key` on each child of `node`, in order: the wrappers of a packed root. */
+export const wrapperOptionsOf = (node: ElkNode, key: string): (string | undefined)[] => {
+  const children = node.children ?? [];
+  const optionOf = (child: ElkNode): string | undefined => child.layoutOptions?.[key];
+
+  return children.map(optionOf);
+};

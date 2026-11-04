@@ -120,6 +120,9 @@ export const COLLAPSED_ID_PREFIX = '\u0002';
 /** Starts every folder link id; package names never start with U+0003. */
 export const FOLDER_LINK_ID_PREFIX = '\u0003';
 
+/** Starts every component wrapper id in the ELK input; package and task names never hold U+0004. */
+export const WRAPPER_ID_PREFIX = '\u0004';
+
 export const COLLAPSED_NODE_WIDTH = 220;
 
 export const COLLAPSED_NODE_HEIGHT = 56;

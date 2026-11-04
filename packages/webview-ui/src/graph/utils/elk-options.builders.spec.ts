@@ -9,21 +9,26 @@ import {
   packageNamesOf,
   repeatedOf,
   sizeOf,
-  taskGraphOf
+  taskGraphOf,
+  wrapperOptionsOf
 } from '../test/utils/elk-options.spec.util.ts';
+import { wrapperIdOf, wrapperIdsOf } from '../test/utils/elk-pack.spec.util.ts';
 
 const THOROUGHNESS = 'elk.layered.thoroughness';
 
 const LAYERING = 'elk.layered.layering.strategy';
 
-/** root, 3 folders, 3 packages, 3 Scripts boxes. */
-const GROUPED_TASK_BOXES = 10;
+/** root, 3 wrappers (the 3 folders are unlinked), 3 folders, 3 packages, 3 Scripts boxes. */
+const GROUPED_TASK_BOXES = 13;
 
-/** root, 3 packages, 3 Scripts boxes. */
-const UNGROUPED_TASK_BOXES = 7;
+/** root, 3 wrappers (the 3 packages are unlinked), 3 packages, 3 Scripts boxes. */
+const UNGROUPED_TASK_BOXES = 10;
 
-/** root, 3 folders, 3 packages, 1 Scripts box. */
-const ONE_SCRIPT_BOXES = 8;
+/** root, 3 wrappers, 3 folders, 3 packages, 1 Scripts box. */
+const ONE_SCRIPT_BOXES = 11;
+
+/** The unlinked folders (grouped) or packages (ungrouped) of the generated task graphs: one wrapper each. */
+const WRAPPER_COUNT = 3;
 
 describe('FEATURE: the ELK options of every builder (c8)', () => {
   describe('GIVEN packages WHEN elkGraphOf builds', () => {
@@ -79,6 +84,28 @@ describe('FEATURE: the ELK options of every builder (c8)', () => {
       const graph = taskGraphOf(150, 1, true);
 
       expect(optionValuesOf(graph, THOROUGHNESS)).toStrictEqual(repeatedOf(ONE_SCRIPT_BOXES, '1'));
+    });
+  });
+
+  describe('GIVEN unlinked tasks WHEN elkTaskGraphOf packs them into wrappers', () => {
+    it.each([
+      [150, '7'],
+      [151, '1']
+    ])('GIVEN %i tasks THEN every wrapper carries thoroughness %s', (count, thoroughness) => {
+      const graph = taskGraphOf(count - 3, 3, true);
+
+      expect(wrapperOptionsOf(graph, THOROUGHNESS)).toStrictEqual(repeatedOf(WRAPPER_COUNT, thoroughness));
+    });
+
+    it.each([
+      [true, 'LONGEST_PATH', GROUPED_TASK_BOXES],
+      [false, 'NETWORK_SIMPLEX', UNGROUPED_TASK_BOXES]
+    ])('GIVEN grouped %s THEN the wrappers are numbered and every box carries %s', (grouped, layering, boxes) => {
+      const graph = taskGraphOf(147, 3, grouped);
+
+      expect(wrapperIdsOf(graph)).toStrictEqual([wrapperIdOf(0), wrapperIdOf(1), wrapperIdOf(2)]);
+      expect(wrapperOptionsOf(graph, LAYERING)).toStrictEqual(repeatedOf(WRAPPER_COUNT, layering));
+      expect(optionValuesOf(graph, LAYERING)).toStrictEqual(repeatedOf(boxes, layering));
     });
   });
 });

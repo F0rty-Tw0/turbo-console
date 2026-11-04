@@ -2,6 +2,7 @@ import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
 import { edgeIdOf } from './edge-id.util.ts';
 import { groupedRootOptionsOf, paddedOptionsOf } from './elk-options.util.ts';
+import { packComponentsOf } from './elk-pack.util.ts';
 import { folderIdOf } from './folder-id.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
@@ -16,7 +17,7 @@ export const elkEdgeOf = (edge: GraphEdge): ElkEdge => {
 
 /**
  * The grouped ELK input: one padded compound per folder, its packages as leaves, every edge at the root so ELK routes
- * links across folders (`INCLUDE_CHILDREN`).
+ * links across folders (`INCLUDE_CHILDREN`); folders no link joins are packed into wrappers (`packComponentsOf`).
  */
 export const groupedElkGraphOf = (groups: FolderGroup[], edges: GraphEdge[], sizeOf: (name: string) => NodeSize): ElkNode => {
   const leafOf = (pkg: GraphPackage): ElkNode => {
@@ -38,5 +39,5 @@ export const groupedElkGraphOf = (groups: FolderGroup[], edges: GraphEdge[], siz
   const layoutOptions = groupedRootOptionsOf(leafCount, LAYERING_DEFAULT);
   const graph: ElkNode = { id: 'root', layoutOptions, children, edges: elkEdges };
 
-  return graph;
+  return packComponentsOf(graph);
 };
