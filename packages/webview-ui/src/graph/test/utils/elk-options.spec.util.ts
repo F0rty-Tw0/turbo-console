@@ -6,13 +6,12 @@ import type { FolderGroup } from '../../common/folder-group.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import { elkTaskGraphOf } from '../../utils/elk-task-graph.util.ts';
 import { NAMING_STUB } from '../stubs/graph-task.stub.ts';
+import { NODE_SIZE_STUB } from '../stubs/node-size.stub.ts';
 
 const FOLDERS = ['a', 'b', 'c'];
 
-const NODE_SIZE: NodeSize = { width: 80, height: 32 };
-
 /** A node size for every name. */
-export const sizeOf = (): NodeSize => NODE_SIZE;
+export const sizeOf = (): NodeSize => NODE_SIZE_STUB;
 
 const slotsOf = (count: number): number[] => Array.from({ length: count }, (_unused, index) => index);
 
@@ -82,7 +81,7 @@ export const optionValuesOf = (node: ElkNode, key: string): string[] => {
 export const repeatedOf = (count: number, value: string): string[] => Array.from({ length: count }, () => value);
 
 /** The value of layout option `key` on each child of `node`, in order: the wrappers of a packed root. */
-export const wrapperOptionsOf = (node: ElkNode, key: string): (string | undefined)[] => {
+export const wrapperOptionValuesOf = (node: ElkNode, key: string): (string | undefined)[] => {
   const children = node.children ?? [];
   const optionOf = (child: ElkNode): string | undefined => child.layoutOptions?.[key];
 

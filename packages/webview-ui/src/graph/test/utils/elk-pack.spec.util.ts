@@ -1,6 +1,7 @@
 import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
 import { sizeOf } from './elk-options.spec.util.ts';
+import { childrenOf, idsOf } from './folder-boards.spec.util.ts';
 import { LAYERING_DEFAULT } from '../../common/graph-layout.const.ts';
 import { WRAPPER_ID_PREFIX } from '../../common/graph.const.ts';
 import type { ElkLayering, ElkOptions } from '../../common/layout.type.ts';
@@ -39,28 +40,16 @@ export const packRootOf = (children: ElkNode[], edges: ElkEdge[], layering: ElkL
   return root;
 };
 
-/** The wrappers of a packed root, the ids of the children of each wrapper. */
-export const wrappedIdsOf = (packed: ElkNode): string[][] => {
-  const wrappers = packed.children ?? [];
-  const idsOf = (wrapper: ElkNode): string[] => {
-    const children = wrapper.children ?? [];
+/** The wrappers of a packed root, the ids of the members (the children) of each wrapper. */
+export const wrapperMemberIdsOf = (packed: ElkNode): string[][] => {
+  const memberIdsOf = (wrapper: ElkNode): string[] => idsOf(childrenOf(wrapper));
 
-    return children.map((child) => child.id);
-  };
-
-  return wrappers.map(idsOf);
-};
-
-/** The ids of the children of a packed root: its wrappers. */
-export const wrapperIdsOf = (packed: ElkNode): string[] => {
-  const wrappers = packed.children ?? [];
-
-  return wrappers.map((wrapper) => wrapper.id);
+  return childrenOf(packed).map(memberIdsOf);
 };
 
 /** The edges held by each wrapper of a packed root. */
 export const wrapperEdgesOf = (packed: ElkNode): ElkEdge[][] => {
-  const wrappers = packed.children ?? [];
+  const wrappers = childrenOf(packed);
   const edgesOf = (wrapper: ElkNode): ElkEdge[] => wrapper.edges ?? [];
 
   return wrappers.map(edgesOf);
@@ -81,7 +70,7 @@ export const packedRootOptionsOf = (leafCount: number, layering: ElkLayering): E
 };
 
 /** The options a wrapper carries: the grouped root's, with no padding. */
-export const wrapperLayoutOptionsOf = (leafCount: number, layering: ElkLayering): ElkOptions => {
+export const expectedWrapperOptionsOf = (leafCount: number, layering: ElkLayering): ElkOptions => {
   const root = groupedRootOptionsOf(leafCount, layering);
   const options = { ...root, 'elk.padding': '[top=0,left=0,bottom=0,right=0]' };
 

@@ -8,16 +8,16 @@ import { optionValuesOf, sizeOf } from '../test/utils/elk-options.spec.util.ts';
 import {
   PACK_LEAF_COUNT,
   compoundNodeOf,
+  expectedWrapperOptionsOf,
   leafNodeOf,
   linkOf,
   packRootOf,
   packedRootOptionsOf,
-  wrappedIdsOf,
   wrapperEdgesOf,
   wrapperIdOf,
-  wrapperIdsOf,
-  wrapperLayoutOptionsOf
+  wrapperMemberIdsOf
 } from '../test/utils/elk-pack.spec.util.ts';
+import { childrenOf, idsOf } from '../test/utils/folder-boards.spec.util.ts';
 
 const firstCodePointOf = (id: string): number | undefined => id.codePointAt(0);
 
@@ -25,7 +25,7 @@ const codePointsOf = (ids: string[]): (number | undefined)[] => ids.map(firstCod
 
 const PACKED_OPTIONS = packedRootOptionsOf(PACK_LEAF_COUNT, LAYERING_DEFAULT);
 
-const WRAPPER_OPTIONS = wrapperLayoutOptionsOf(PACK_LEAF_COUNT, LAYERING_DEFAULT);
+const WRAPPER_OPTIONS = expectedWrapperOptionsOf(PACK_LEAF_COUNT, LAYERING_DEFAULT);
 
 const FOLDER_A = compoundNodeOf('A', [leafNodeOf('a1'), leafNodeOf('a2')]);
 
@@ -81,7 +81,7 @@ describe('FEATURE: packComponentsOf', () => {
       const root = packRootOf([FOLDER_A, FOLDER_B, FOLDER_C], [A1_B1]);
 
       const packed = packComponentsOf(root);
-      const ids = wrapperIdsOf(packed);
+      const ids = idsOf(childrenOf(packed));
 
       expect(ids).toStrictEqual([wrapperIdOf(0), wrapperIdOf(1)]);
       expect(codePointsOf(ids)).toStrictEqual([4, 4]);
@@ -99,7 +99,7 @@ describe('FEATURE: packComponentsOf', () => {
 
       const packed = packComponentsOf(root);
 
-      expect(wrappedIdsOf(packed)).toStrictEqual([['apps', 'packages'], ['tools']]);
+      expect(wrapperMemberIdsOf(packed)).toStrictEqual([['apps', 'packages'], ['tools']]);
     });
   });
 
@@ -121,7 +121,7 @@ describe('FEATURE: packComponentsOf', () => {
 
       const packed = packComponentsOf(root);
 
-      expect(wrappedIdsOf(packed)).toStrictEqual([['A'], ['B']]);
+      expect(wrapperMemberIdsOf(packed)).toStrictEqual([['A'], ['B']]);
       expect(wrapperEdgesOf(packed)).toStrictEqual([[dangling], []]);
     });
   });
@@ -132,7 +132,7 @@ describe('FEATURE: packComponentsOf', () => {
 
       const packed = packComponentsOf(root);
 
-      expect(wrappedIdsOf(packed)).toStrictEqual([['A'], ['B']]);
+      expect(wrapperMemberIdsOf(packed)).toStrictEqual([['A'], ['B']]);
       expect(wrapperEdgesOf(packed)).toStrictEqual([[], []]);
     });
   });

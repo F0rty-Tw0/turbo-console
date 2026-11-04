@@ -1,7 +1,6 @@
-import type { ElkNode } from 'elkjs/lib/elk-api.js';
+import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 import { describe, expect, it } from 'vitest';
 
-import { edgeIdOf } from './edge-id.util.ts';
 import { elkEdgeOf } from './elk-grouped-graph.util.ts';
 import { paddedOptionsOf } from './elk-options.util.ts';
 import { elkTaskGraphOf } from './elk-task-graph.util.ts';
@@ -11,12 +10,17 @@ import { LAYERING_DEFAULT } from '../common/graph-layout.const.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import { packedRootOptionsOf, wrapperIdOf, wrapperLayoutOptionsOf } from '../test/utils/elk-pack.spec.util.ts';
-import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
-
-const NODE_SIZE: NodeSize = { width: 80, height: 32 };
-
-const SIZE_OF = (): NodeSize => NODE_SIZE;
+import { NODE_SIZE_STUB } from '../test/stubs/node-size.stub.ts';
+import { sizeOf } from '../test/utils/elk-options.spec.util.ts';
+import {
+  expectedWrapperOptionsOf,
+  packedRootOptionsOf,
+  wrapperEdgesOf,
+  wrapperIdOf,
+  wrapperMemberIdsOf
+} from '../test/utils/elk-pack.spec.util.ts';
+import { packedEdgeIds, packedTaskGraphOf } from '../test/utils/packed-routes.spec.util.ts';
+import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const NO_SIZES = new Map<string, NodeSize>();
 
@@ -65,7 +69,7 @@ const PACKAGE_TASKS_SHOWN = new Set(['web#build', 'ui#build', 'core#build']);
 const graphOf = (shown: ReadonlySet<string>, naming: TaskNaming, titleWidths: ReadonlyMap<string, number> = NO_TITLES): ElkNode => {
   const input = { tasks: FOLDER_TASKS, shown, sizes: NO_SIZES, titleWidths, naming };
 
-  return elkTaskGraphOf(input, SIZE_OF);
+  return elkTaskGraphOf(input, sizeOf);
 };
 
 describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
@@ -118,27 +122,17 @@ describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
     });
   });
 
-  describe('GIVEN grouped tasks where a script of web (apps) needs a task of ui (packages), and cli (tools) stands alone', () => {
-    it('c9: WHEN built THEN two wrappers: apps and packages in the first, tools in the second', () => {
-      const tasks = [scriptOf('web#lint-fix', ['ui#build']), taskOf('ui#build', []), taskOf('cli#build', [])];
-      const shown = new Set(tasks.map((task) => task.id));
-      const folders = new Map([
-        ['web', 'apps'],
-        ['ui', 'packages'],
-        ['cli', 'tools']
-      ]);
-      const naming = { ...NAMING_GROUPED, folders };
-      const input = { tasks, shown, sizes: NO_SIZES, titleWidths: NO_TITLES, naming };
+  describe('GIVEN grouped tasks where a script of web (apps) needs a task of ui (packages), and cli (tools) has its own pair', () => {
+    it('c9: WHEN built THEN two wrappers: apps and packages in the first, tools in the second, each with its own link', () => {
+      const graph = packedTaskGraphOf();
 
-      const graph = elkTaskGraphOf(input, SIZE_OF);
-      const folderIds = childIdsOf(graph).map((id) => childIdsOf(compoundAt(graph, [id])));
-      const linkId = edgeIdOf({ source: 'web#lint-fix', target: 'ui#build' });
-      const firstEdges = compoundAt(graph, [wrapperIdOf(0)]).edges ?? [];
-      const firstEdgeIds = firstEdges.map((edge) => edge.id);
+      const edgeIdsOfWrapper = (edges: ElkEdge[]): string[] => edges.map((edge) => edge.id);
+      const linkIds = wrapperEdgesOf(graph).map(edgeIdsOfWrapper);
+      const [webLinkId = '', cliLinkId = ''] = packedEdgeIds();
 
       expect(childIdsOf(graph)).toStrictEqual([wrapperIdOf(0), wrapperIdOf(1)]);
-      expect(folderIds).toStrictEqual([[folderIdOf('apps'), folderIdOf('packages')], [folderIdOf('tools')]]);
-      expect(firstEdgeIds).toStrictEqual([linkId]);
+      expect(wrapperMemberIdsOf(graph)).toStrictEqual([[folderIdOf('apps'), folderIdOf('packages')], [folderIdOf('tools')]]);
+      expect(linkIds).toStrictEqual([[webLinkId], [cliLinkId]]);
     });
   });
 
@@ -148,12 +142,12 @@ describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
       const graph = graphOf(shown, { ...NAMING_GROUPED, grouped: false });
       const layoutOptions = paddedOptionsOf(4, LAYERING_DEFAULT);
       const compoundOfLeaf = (packageName: string, taskId: string): ElkNode => {
-        const leaf: ElkNode = { id: taskId, ...NODE_SIZE };
+        const leaf: ElkNode = { id: taskId, ...NODE_SIZE_STUB };
         const compound: ElkNode = { id: `pkg:${packageName}`, layoutOptions, children: [leaf] };
 
         return compound;
       };
-      const wrapperOptions = wrapperLayoutOptionsOf(4, LAYERING_DEFAULT);
+      const wrapperOptions = expectedWrapperOptionsOf(4, LAYERING_DEFAULT);
       const edges = [elkEdgeOf({ source: 'web#build', target: 'ui#build' }), elkEdgeOf({ source: 'ui#build', target: 'core#build' })];
       const gen: ElkNode = {
         id: wrapperIdOf(0),
