@@ -55,6 +55,7 @@ export class GraphFoldersPage {
     const message = `graph e2e: no box for folder '${folder}' is drawn`;
 
     await expect.poll(async (): Promise<boolean> => this.isDrawn(folder), { message }).toBe(true);
+
     const folders = await this.folders();
 
     return folderKeyed(folders, folder);

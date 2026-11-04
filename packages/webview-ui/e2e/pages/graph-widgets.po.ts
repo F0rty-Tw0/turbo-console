@@ -152,6 +152,7 @@ export class GraphWidgetsPage {
     const message = `graph e2e: no node '${name}' is drawn`;
 
     await expect.poll(async (): Promise<string[]> => this.probe.nodeIds(), { message }).toContain(name);
+
     const nodes = await this.probe.nodes();
     const zoom = await this.probe.zoom();
 
