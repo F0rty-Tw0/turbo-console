@@ -12,7 +12,6 @@ import { recordHoverCpu } from '../test/utils/graph-hover-cpu.spec.util.ts';
 import { emptySpotOn, lineMidpointOf, readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 import { forcesRender, rendersSoFar } from '../test/utils/graph-quiet-canvas.spec.util.ts';
 import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
-import { waitInPage } from '../test/utils/page-wait.spec.util.ts';
 
 /** The span one step stands for when `hoverFlowCpu` sizes a run; a step takes about two frames, so it is not a frame. */
 const STEP_SPAN_MS = 16;
@@ -121,9 +120,8 @@ export class GraphHover {
     return hover;
   }
 
-  /** Waits `delayMs` in the page, then redraws the canvas at once, so the draw that follows a style change happens here and not during a later measure. */
-  public async redrawAfter(delayMs: number): Promise<void> {
-    await this.page.evaluate(waitInPage, delayMs);
+  /** Redraws the canvas at once, so the draw that follows a style change happens here and not during a later measure. */
+  public async redrawNow(): Promise<void> {
     await this.page.evaluate(forcesRender);
   }
 

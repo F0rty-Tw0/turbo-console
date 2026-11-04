@@ -7,6 +7,7 @@ import {
   targetLikeHubSavedState,
   targetLikeTasksState
 } from './test/utils/graph-target-like-tasks.spec.util.ts';
+import { waitInPage } from './test/utils/page-wait.spec.util.ts';
 import { FLOW_IDLE_MS } from '../src/graph/common/flow.const.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
@@ -97,9 +98,12 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
         await graphFlow.expectInked(true);
       });
 
-      await test.step('AND the lit style is redrawn once past the texture cache window, so its layers are built before the measure', async (): Promise<void> => {
+      await test.step('AND the page waits past the texture cache window, so a late Fit or hover-enter render lands before the count starts', async (): Promise<void> =>
+        page.evaluate(waitInPage, HOVER_LAYER_WINDOW_MS));
+
+      await test.step('AND the lit style is redrawn once, so its layers are built before the measure', async (): Promise<void> => {
         rendersBeforeWarmUp = await page.evaluate(rendersSoFar);
-        await graphHover.redrawAfter(HOVER_LAYER_WINDOW_MS);
+        await graphHover.redrawNow();
       });
 
       await test.step('AND the canvas is quiet, so late redraws of the Fit and the hover-enter paint are not counted', async (): Promise<void> => {
