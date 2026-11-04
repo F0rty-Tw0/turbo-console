@@ -6,7 +6,7 @@ import { lineSegmentsOf } from './graph-geometry.spec.util.ts';
 import { crossesBox } from './graph-lines.spec.util.ts';
 import type { ProbeEdgeLine, ProbeFolder } from '../../../src/graph/common/graph-probe.type.ts';
 import { FOLDER_ID_PREFIX, FOLDER_PADDING_PX } from '../../../src/graph/common/graph.const.ts';
-import type { ElementRect } from '../../common/playwright.type.ts';
+import type { ElementRect, LinkEnds } from '../../common/playwright.type.ts';
 
 /** The folder boxes the probe reports, in page pixels; runs in the page through `evaluate`. */
 export const readFolders = async (page: Page): Promise<ProbeFolder[]> =>
@@ -63,20 +63,33 @@ const bandAndBodyOf = (folder: ProbeFolder, zoom: number): ElementRect[] => {
 /**
  * How many times a drawn line crosses the title band or the body of a drawn box that holds neither of its ends: each
  * pair of a line and a foreign box counts once for its band and once for its body. A box that holds an end is the line's
- * own, and the lines that enter it through its title band are left out (U6c OQ1).
+ * own, and the lines that enter it through its title band are left out (U6c OQ1). A box holds a package only through the
+ * folder ids in its `packages`, so this reads package views, not task views.
  */
 export const foreignBoxHitsOf = (lines: ProbeEdgeLine[], folders: ProbeFolder[], zoom: number): number => {
   const drawnBoxes = folders.filter(isDrawnBox);
   const hitsOf = (line: ProbeEdgeLine): number => {
     const segments = lineSegmentsOf(line);
-    const isForeign = (folder: ProbeFolder): boolean =>
-      !holdsPackage(folders, folder, line.source) && !holdsPackage(folders, folder, line.target);
+    const isForeign = (folder: ProbeFolder): boolean => {
+      const holdsSource = holdsPackage(folders, folder, line.source);
+      const holdsTarget = holdsPackage(folders, folder, line.target);
+
+      return !holdsSource && !holdsTarget;
+    };
+    const rectsOf = (folder: ProbeFolder): ElementRect[] => bandAndBodyOf(folder, zoom);
+    const isCrossed = (rect: ElementRect): boolean => {
+      const crossesRect = (segment: LinkEnds): boolean => crossesBox(segment, rect);
+
+      return segments.some(crossesRect);
+    };
     const foreignBoxes = drawnBoxes.filter(isForeign);
-    const rects = foreignBoxes.flatMap((folder): ElementRect[] => bandAndBodyOf(folder, zoom));
-    const crossedRects = rects.filter((rect): boolean => segments.some((segment): boolean => crossesBox(segment, rect)));
+    const rects = foreignBoxes.flatMap(rectsOf);
+    const crossedRects = rects.filter(isCrossed);
 
     return line.isDrawn ? crossedRects.length : 0;
   };
 
-  return lines.map(hitsOf).reduce((sum, hits): number => sum + hits, 0);
+  const addHits = (sum: number, hits: number): number => sum + hits;
+
+  return lines.map(hitsOf).reduce(addHits, 0);
 };

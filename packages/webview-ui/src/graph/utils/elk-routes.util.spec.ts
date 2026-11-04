@@ -89,7 +89,8 @@ describe('FEATURE: routesOf', () => {
   describe('GIVEN a packed task graph of two components laid out by real elkjs', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
     it('WHEN routes are read THEN every edge has a route starting on its source box in root coordinates (c10)', async () => {
       const input = packedTaskGraphOf();
-      const laidOut = await new elkConstructor().layout(input);
+      const elk = new elkConstructor();
+      const laidOut = await elk.layout(input);
 
       const routes = routesOf(laidOut);
 
