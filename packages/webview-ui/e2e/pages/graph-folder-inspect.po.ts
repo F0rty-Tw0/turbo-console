@@ -56,7 +56,9 @@ export class GraphFolderInspect {
 
   /** Taps a collapsed folder's centre, or an expanded one's left padding at mid height, where no package or link sits, once its box is drawn. */
   public async tapFolder(folder: string): Promise<void> {
-    await expect.poll(async (): Promise<ProbeState | undefined> => this.stateOf(folder)).toBeDefined();
+    const message = `graph e2e: no box for folder '${folder}' is drawn`;
+
+    await expect.poll(async (): Promise<ProbeState | undefined> => this.stateOf(folder), { message }).toBeDefined();
 
     const folders = await this.folders();
     const zoom = await this.probe.zoom();
