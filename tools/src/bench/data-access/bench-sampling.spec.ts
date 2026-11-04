@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { sampleBench } from './bench-sampling.ts';
 import { NS_PER_MS } from '../common/bench.const.ts';
@@ -30,18 +30,26 @@ describe('FEATURE: bench sampling', () => {
     });
   });
 
-  describe('GIVEN a fast bench and a warmup of 1 call or 30 ms', () => {
-    it('WHEN sampled THEN it keeps warming past the 1 call until 30 ms have passed', async () => {
+  describe('GIVEN a warmup of 1 call or 30 ms and a clock that moves 10 ms per read', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('WHEN sampled with no samples THEN it warms 3 calls, past the 1 call until 30 ms have passed', async () => {
       const fn = vi.fn();
       const descriptor: BenchDescriptor = { name: 'fast', fn, gate: true };
-      const start = process.hrtime.bigint();
+      const tick = BigInt(10 * NS_PER_MS);
+      let now = 0n;
 
-      await sampleBench(descriptor, { calls: 1, ms: 30 }, 1);
+      vi.spyOn(process.hrtime, 'bigint').mockImplementation(() => {
+        now += tick;
 
-      const elapsedMs = Number(process.hrtime.bigint() - start) / NS_PER_MS;
+        return now;
+      });
 
-      expect(elapsedMs).toBeGreaterThanOrEqual(30);
-      expect(fn.mock.calls.length).toBeGreaterThan(2);
+      await sampleBench(descriptor, { calls: 1, ms: 30 }, 0);
+
+      expect(fn).toHaveBeenCalledTimes(3);
     });
   });
 
