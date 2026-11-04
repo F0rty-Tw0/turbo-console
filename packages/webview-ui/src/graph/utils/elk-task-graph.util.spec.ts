@@ -7,6 +7,7 @@ import { elkTaskGraphOf, taskLayoutKeyOf } from './elk-task-graph.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
+import { REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
@@ -190,7 +191,7 @@ describe('FEATURE: elkTaskGraphOf', () => {
     });
   });
 
-  describe('GIVEN a package title of 130, laid out by the real ELK', () => {
+  describe('GIVEN a package title of 130, laid out by the real ELK', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
     it('WHEN its one leaf is 80 wide THEN the box is 194 wide, 96 high, and the leaf stays at the padding', async () => {
       const graph = await layoutOf(80, 130);
       const box = compoundOf(graph, 'pkg:web');

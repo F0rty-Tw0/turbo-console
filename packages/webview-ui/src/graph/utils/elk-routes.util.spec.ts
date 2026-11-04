@@ -8,6 +8,7 @@ import { elkGraphOf } from './elk-graph.util.ts';
 import { postableRoutesOf, routesOf, withoutRoutes } from './elk-routes.util.ts';
 import type { EdgeRoute, GraphEdge, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import { ROUTE_BENDS_MAX } from '../common/graph-layout.const.ts';
+import { REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
 import { BOARDS_SIZE_STUB } from '../test/stubs/folder-boards.stub.ts';
 import { ROUTED_ELK_STUB, ROUTES_STUB } from '../test/stubs/layout.stub.ts';
 import { BOARDS_EDGES, boardsSizeOf, layoutBoards } from '../test/utils/folder-boards.spec.util.ts';
@@ -37,7 +38,7 @@ const centreOf = (positions: Positions, name: string): Position => positions[nam
 const routeOf = (routes: Routes, edge: GraphEdge): EdgeRoute => routes[edgeIdOf(edge)] ?? NO_ROUTE;
 
 describe('FEATURE: routesOf', () => {
-  describe('GIVEN the boards fixture laid out by real elkjs', () => {
+  describe('GIVEN the boards fixture laid out by real elkjs', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
     it('WHEN routes are read THEN ui -> utils starts at the centre x of ui (a1)', async () => {
       const laidOut = await layoutBoards();
       const ui = centreOf(nestedCentresOf(laidOut), '@acme/ui');
@@ -64,7 +65,7 @@ describe('FEATURE: routesOf', () => {
     });
   });
 
-  describe('GIVEN two packages a -> b laid out by real elkjs', () => {
+  describe('GIVEN two packages a -> b laid out by real elkjs', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
     const laidOutAb = async (): Promise<ElkNode> => {
       const graph = elkGraphOf(['a', 'b'], [A_B], boardsSizeOf);
 

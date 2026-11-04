@@ -7,6 +7,7 @@ import { folderIdOf } from './folder-id.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import { ELK_OPTIONS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import { REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
 import { BOARDS_EDGES_STUB, BOARDS_SIZE_STUB } from '../test/stubs/folder-boards.stub.ts';
 import {
   allRoomsOf,
@@ -88,7 +89,7 @@ describe('FEATURE: groupedElkGraphOf', () => {
     });
   });
 
-  describe('GIVEN the boards graph laid out by the real ELK', () => {
+  describe('GIVEN the boards graph laid out by the real ELK', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
     it('WHEN the rooms are measured THEN every compound keeps 32 px around its children', async () => {
       const laidOut = await layoutBoards();
 
