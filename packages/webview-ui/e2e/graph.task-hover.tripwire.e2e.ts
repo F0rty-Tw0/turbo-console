@@ -27,9 +27,11 @@ const HOVER_STEP_MS = IS_MAC_RUNNER ? 90 : 50;
 
 /**
  * Cytoscape `render` events during the 188-step hover (about 6 s): the flow overlay exists so Cytoscape never redraws
- * while the dashes move. The hover-enter paint happens before the measure, so it is not counted. The base reads 0 over
- * the 188 steps (3 runs); a mutant forcing `cy.forceRender()` in `viewport` every frame reads about 376, two a step.
- * Host-independent, unlike the CPU budget, which that mutant (about 877 ms pinned) stays inside.
+ * while the dashes move. The measure starts once the canvas is quiet, so the hover-enter paint and the late texture
+ * redraws Cytoscape fires after it and the Fit are not counted; slow macOS runners drew them inside the measure and
+ * read up to 4. The base reads 0 over the 188 steps (3 runs); a mutant forcing `cy.forceRender()` in `viewport` every
+ * frame reads about 376, two a step. Host-independent, unlike the CPU budget, which that mutant (about 877 ms pinned)
+ * stays inside.
  */
 const RENDER_LIMIT = 2;
 
@@ -40,7 +42,7 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
   test(
     'GIVEN the hub task of a target-like state framed by Fit, a 188-step hover (about 6 s) with the pointer moving every step uses under its main-thread CPU and step budgets',
     { annotation: HOVER_FLOW },
-    async ({ graphCanvas, graphFlow, graphHost, graphHover, graphPage, graphProbe }): Promise<void> => {
+    async ({ graphCanvas, graphFlow, graphHost, graphHover, graphPage, graphPointer, graphProbe }): Promise<void> => {
       await test.step('WHEN the page is opened in task mode with the hub task chosen', async (): Promise<void> =>
         graphPage.open({ savedState: SAVED_VIEW }));
 
@@ -60,6 +62,9 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
         await graphHover.expectLitEdges();
         await graphFlow.expectInked(true);
       });
+
+      await test.step('AND the canvas is quiet, so late redraws of the Fit and the hover-enter paint are not counted', async (): Promise<void> =>
+        graphPointer.waitForQuietCanvas());
 
       await test.step('WHEN the pointer moves 1 px every step on the hub task for 188 steps, about 6 s', async (): Promise<void> =>
         graphHover.hoverFlowCpu(TARGET_LIKE_HUB_TASK, HOVER_STEP_SPAN_MS));
