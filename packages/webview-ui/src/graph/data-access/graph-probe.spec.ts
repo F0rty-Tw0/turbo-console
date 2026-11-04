@@ -77,6 +77,14 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
     expect(probe.renderCount()).toBe(2);
   });
 
+  it('GIVEN a spy on Cytoscape WHEN the probe forces a render THEN Cytoscape force-renders once', () => {
+    const forceRender = vi.spyOn(cy, 'forceRender');
+
+    probe.forceRender();
+
+    expect(forceRender).toHaveBeenCalledTimes(1);
+  });
+
   describe('GIVEN b drawn as a ghost on the path a, b, c', () => {
     it('WHEN the nodes are read THEN b is a highlighted ghost with a dashed border', () => {
       const node = nodeOf(probe, 'b');

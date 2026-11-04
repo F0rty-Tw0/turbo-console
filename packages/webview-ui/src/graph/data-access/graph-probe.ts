@@ -131,7 +131,8 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
     edgeColor,
     zoom,
     pan,
-    renderCount
+    renderCount,
+    forceRender: (): void => void view.cy().forceRender()
   };
 
   return probe;

@@ -10,7 +10,7 @@ import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { recordHoverCpu } from '../test/utils/graph-hover-cpu.spec.util.ts';
 import { emptySpotOn, lineMidpointOf, readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
-import { rendersSoFar } from '../test/utils/graph-quiet-canvas.spec.util.ts';
+import { forcesRender, rendersSoFar } from '../test/utils/graph-quiet-canvas.spec.util.ts';
 import { cpuStepsOf } from '../test/utils/graph-thread-time.spec.util.ts';
 
 /** The span one step stands for when `hoverFlowCpu` sizes a run; a step takes about two frames, so it is not a frame. */
@@ -118,6 +118,11 @@ export class GraphHover {
     if (hover === null) throw new Error('graph e2e: no hover-flow run was measured');
 
     return hover;
+  }
+
+  /** Redraws the canvas at once, so the draw that follows a style change happens here and not during a later measure. */
+  public async redrawNow(): Promise<void> {
+    await this.page.evaluate(forcesRender);
   }
 
   /** The Cytoscape renders during the last `hoverFlowCpu`; throws when none ran. */
