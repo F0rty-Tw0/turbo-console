@@ -173,4 +173,22 @@ describe('FEATURE: folder links drawn on their first member route', () => {
       expect(linkToUi(cy).style('source-endpoint')).toBe(APPS_DOCS_START);
     });
   });
+
+  describe('GIVEN apps collapsed on a headless Cytoscape, which has no renderer to measure labels with', () => {
+    const scene = boardsSceneOf(['apps']);
+
+    beforeEach(() => {
+      folders.show(scene, labelOf);
+    });
+
+    it('WHEN the links are routed afresh THEN none of them waits for a label', () => {
+      const links = folderLinksByIdOf(scene);
+      const drawn = emptyDrawnLinks();
+      const routing: FolderRouting = { members: scene.members, routes: MIXED_RECORD, drawn };
+
+      routeFolderLinks(cy, links, routing);
+
+      expect(drawn.unlabelled.size).toBe(0);
+    });
+  });
 });

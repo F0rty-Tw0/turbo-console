@@ -121,15 +121,23 @@ const routeKeyOf = (edge: EdgeSingular, link: FolderLink, links: ReadonlyMap<str
   return JSON.stringify(parts);
 };
 
+/** A headless Cytoscape has no renderer to measure labels with: it has no container. */
+const isHeadlessOf = (cy: Core): boolean => {
+  const container = cy.container();
+
+  return container === null;
+};
+
 /**
  * Draws each folder link whose inputs changed since `drawn` recorded it on its first member's bends outside the collapsed
- * boxes, or straight when none is left, and marks it for `labelFolderLinks`. Call it inside the caller's batch, after the
- * collapsed nodes are placed and `routing.members` holds the scene being drawn. A link Cytoscape already removed, with the
- * collapsed node `setGrouping` took away before the next `show`, is skipped.
+ * boxes, or straight when none is left, and marks it for `labelFolderLinks` unless Cytoscape is headless. Call it inside
+ * the caller's batch, after the collapsed nodes are placed and `routing.members` holds the scene being drawn. A link
+ * Cytoscape already removed, with the collapsed node `setGrouping` took away before the next `show`, is skipped.
  */
 export const routeFolderLinks = (cy: Core, links: ReadonlyMap<string, FolderLink>, routing: FolderRouting): void => {
   const { members, routes, drawn } = routing;
   const scene: DrawnScene = { cy, members, routes };
+  const isHeadless = isHeadlessOf(cy);
 
   for (const [id, link] of links) {
     const edge = cy.getElementById(id);
@@ -145,6 +153,9 @@ export const routeFolderLinks = (cy: Core, links: ReadonlyMap<string, FolderLink
 
     routeLink(scene, edge, link);
     drawn.keys.set(edge, key);
+
+    if (isHeadless) continue;
+
     drawn.unlabelled.add(edge);
   }
 };
@@ -169,12 +180,10 @@ const isPlaceable = (edge: EdgeSingular): boolean => {
 /**
  * Moves the label of each visible folder link routed since its label was placed off its line, by `labelDx`/`labelDy` data
  * the margin rule reads; a hidden one waits for a later pass. Call it after the batch that routed the links: the drawn
- * path exists only once Cytoscape has applied it. A headless Cytoscape has no renderer to measure with (it has no
- * container), so there it does nothing.
+ * path exists only once Cytoscape has applied it. On a headless Cytoscape it does nothing.
  */
 export const labelFolderLinks = (cy: Core, drawn: DrawnLinks): void => {
-  const container = cy.container();
-  const isHeadless = container === null;
+  const isHeadless = isHeadlessOf(cy);
 
   if (isHeadless) return;
 
