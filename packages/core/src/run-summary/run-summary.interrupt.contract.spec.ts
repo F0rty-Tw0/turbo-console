@@ -22,7 +22,7 @@ import { TASK_NODE_STUB } from './test/stubs/task-node.stub.ts';
 import { turboRunArgs } from '../run-args/utils/run-args.util.ts';
 import type { RunSummary } from '../shared/turbo/common/turbo.type.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
-import { turboEnv } from '../shared/turbo/utils/turbo-env.util.ts';
+import { exitCodeOf, signalGroup, streamedTurboEnv } from '../shared/turbo/test/utils/turbo-process.spec.util.ts';
 import type { TaskNode } from '../workspace/common/workspace-model.type.ts';
 
 const TURBO = devTurboPath();
@@ -54,29 +54,6 @@ const printed = async (child: ChildProcess, text: string): Promise<void> => {
   }
 };
 
-/**
- * Signals the process group `child` leads (it was spawned `detached`), as Ctrl+C in a terminal signals the foreground
- * group. Turbo runs the package manager in a group of its own and relays the signal to it, so the script ends as well.
- */
-const signalGroup = (child: ChildProcess, signal: NodeJS.Signals): void => {
-  const { pid } = child;
-
-  if (pid === undefined) return;
-
-  try {
-    process.kill(-pid, signal);
-  } catch {
-    // The group has already exited.
-  }
-};
-
-/** The exit code of `child`, which has exited; throws when a signal killed it, so there is no code. */
-const exitCodeOf = (child: ChildProcess): number => {
-  if (child.exitCode === null) throw new Error(`turbo was killed by ${child.signalCode}`);
-
-  return child.exitCode;
-};
-
 describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run interrupted by SIGINT (Ctrl+C in its terminal)', () => {
   let dir = '';
   let child: ChildProcess | null = null;
@@ -90,10 +67,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run inter
 
     const launchedAt = Date.now();
 
-    // Under GITHUB_ACTIONS turbo holds a task's output until the task ends; streaming prints `slow-ready` while it runs.
-    const env = turboEnv(process.env);
-
-    env['TURBO_LOG_ORDER'] = 'stream';
+    const env = streamedTurboEnv({});
 
     child = spawn(TURBO, turboRunArgs(SLOW, INTERRUPT_PACKAGE_STUB), { cwd: dir, env, detached: true });
     const exited = once(child, 'exit');
