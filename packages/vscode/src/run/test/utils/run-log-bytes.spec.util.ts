@@ -9,7 +9,8 @@ export const byteLengthOf = (text: string): number => bytesOf(text).length;
 /** Turbo's on-disk shape (probe P1.1): `[\n`, the first object, then `,\n` before each further one, a `\n` after each, and `]\n`. */
 export const turboLogTextOf = (lines: string[]): string => {
   const [first, ...rest] = lines;
-  const restText = rest.map((line) => `,\n${line}\n`).join('');
+  const separatedLines = rest.map((line) => `,\n${line}\n`);
+  const restText = separatedLines.join('');
   const body = first === undefined ? '' : `${first}\n${restText}`;
 
   return `[\n${body}]\n`;

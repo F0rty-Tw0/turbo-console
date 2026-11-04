@@ -19,8 +19,11 @@ export type RunLogStep = {
   readonly isUnknown: boolean;
 };
 
-/** How a drained file ended: read to its end, stopped as an unknown format (D4), or never written (D6). */
-export type RunLogOutcome = 'read' | 'unknown' | 'missing';
+/**
+ * How a drained file ended: read to its end, stopped as an unknown format (D4), never written (D6), or `failed`: a read
+ * rejected or the listener threw, and the tail ended there.
+ */
+export type RunLogOutcome = 'read' | 'unknown' | 'missing' | 'failed';
 
 export type RunLogListener = (event: RunLogEvent) => void;
 

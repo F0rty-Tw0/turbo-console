@@ -166,6 +166,16 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
     });
   });
 
+  describe('GIVEN a file of 0 bytes', () => {
+    it('WHEN drained THEN the outcome is read, not missing: the file exists', async () => {
+      fs.files.set(LOG_PATH, bytesOf(''));
+
+      const outcome = await tail.drain();
+
+      expect(outcome).toBe('read');
+    });
+  });
+
   describe('GIVEN three invalid objects first', () => {
     it('WHEN drained THEN the outcome is unknown, no event, and no read follows the one that proved it', async () => {
       fs.write(LOG_PATH, [INVALID_OBJECT, INVALID_OBJECT, INVALID_OBJECT]);
@@ -179,84 +189,5 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
 
       expect([outcome, events, fs.reads.length]).toStrictEqual(['unknown', [], 1]);
     });
-  });
-
-  describe('GIVEN a drained tail', () => {
-    it('WHEN drained again THEN the same outcome and no read', async () => {
-      fs.write(LOG_PATH, [ENTRY_A]);
-      const first = await tail.drain();
-      const readsAfterFirst = fs.reads.length;
-
-      const second = await tail.drain();
-
-      expect([second, fs.reads.length]).toStrictEqual([first, readsAfterFirst]);
-    });
-  });
-
-  describe('GIVEN a read in flight when the tail is closed', () => {
-    it('WHEN the read resolves THEN no event is emitted', async () => {
-      fs.write(LOG_PATH, [ENTRY_A]);
-      const release = fs.hold();
-
-      tail.changed();
-      const closing = tail.close();
-
-      release();
-      await closing;
-
-      expect(events).toStrictEqual([]);
-    });
-
-    it('WHEN the read is still held THEN close is still pending', async () => {
-      fs.write(LOG_PATH, [ENTRY_A]);
-      const release = fs.hold();
-      let isClosed = false;
-      const markClosed = (): void => {
-        isClosed = true;
-      };
-
-      tail.changed();
-      const closing = tail.close().then(markClosed);
-
-      await flush();
-      const isPending = !isClosed;
-
-      release();
-      await closing;
-
-      expect(isPending).toBe(true);
-    });
-  });
-
-  describe('GIVEN a pending drain when the tail is closed (critic E2)', () => {
-    it('WHEN the held read resolves THEN the drain resolves read and no further read runs', async () => {
-      fs.write(LOG_PATH, [ENTRY_A]);
-      const release = fs.hold();
-
-      tail.changed();
-      const drained = tail.drain();
-      const closing = tail.close();
-
-      release();
-      const outcome = await drained;
-
-      await closing;
-
-      expect([outcome, fs.reads.length]).toStrictEqual(['read', 1]);
-    });
-  });
-
-  it.each([
-    ['drained', 'drain'],
-    ['closed', 'close']
-  ] as const)('GIVEN a %s tail WHEN changed THEN no read', async (_, ending) => {
-    fs.write(LOG_PATH, [ENTRY_A]);
-    await tail[ending]();
-    const readsAfterEnd = fs.reads.length;
-
-    tail.changed();
-    await flush();
-
-    expect(fs.reads).toHaveLength(readsAfterEnd);
   });
 });

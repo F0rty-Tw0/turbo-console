@@ -8,7 +8,8 @@ import { runLogStepOf } from '../utils/run-log-step.util.ts';
 /**
  * One turbo log file read from a cursor (spec D5): one read at a time, events in file order. `changed` reads again
  * while a read is full or another `changed` came in during it. `drain` reads to the end and ends the tail; `close` ends
- * it at once and resolves when the read in flight has finished. A tail that has ended reads and emits nothing.
+ * it at once and resolves when the read in flight has finished. A tail that has ended reads and emits nothing. A read
+ * that rejects or a listener that throws ends the tail as `failed`; no method rejects.
  */
 export class RunLogFileTail {
   private readonly path: string;
@@ -20,7 +21,7 @@ export class RunLogFileTail {
   private isDirty = false;
   private hasAppeared = false;
   private isUnknown = false;
-  private isClosed = false;
+  private isFailed = false;
   private isEnded = false;
 
   public constructor(path: string, read: RunLogRead, onEvent: RunLogListener) {
@@ -36,7 +37,10 @@ export class RunLogFileTail {
     this.requestRead();
   }
 
-  /** Waits for the read in flight, reads to the end of the file and ends the tail; a second call returns the same outcome. */
+  /**
+   * Waits for every read in flight, reads to the end of the file and ends the tail; a second call returns the same
+   * outcome. On a closed tail it reads nothing and returns the outcome seen so far (`missing` if nothing was read).
+   */
   public async drain(): Promise<RunLogOutcome> {
     this.draining ??= this.finish();
 
@@ -45,7 +49,6 @@ export class RunLogFileTail {
 
   /** Ends the tail at once: no event follows, not even from the read in flight; resolves when that read has finished. */
   public async close(): Promise<void> {
-    this.isClosed = true;
     this.isEnded = true;
 
     await this.loop;
@@ -54,7 +57,7 @@ export class RunLogFileTail {
   private async finish(): Promise<RunLogOutcome> {
     if (!this.isEnded) this.requestRead();
 
-    await this.loop;
+    while (this.loop !== null) await this.loop;
 
     this.isEnded = true;
 
@@ -72,6 +75,17 @@ export class RunLogFileTail {
   }
 
   private async readLoop(): Promise<void> {
+    try {
+      await this.readWhileMore();
+    } catch {
+      this.isFailed = true;
+      this.isEnded = true;
+    } finally {
+      this.loop = null;
+    }
+  }
+
+  private async readWhileMore(): Promise<void> {
     let isMore = true;
 
     while (isMore) {
@@ -81,8 +95,6 @@ export class RunLogFileTail {
 
       isMore = this.isMoreAfter(isFull);
     }
-
-    this.loop = null;
   }
 
   private isMoreAfter(isFull: boolean): boolean {
@@ -99,7 +111,7 @@ export class RunLogFileTail {
 
     this.hasAppeared = true;
 
-    if (this.isClosed) return false;
+    if (this.isEnded) return false;
 
     const isFull = bytes.length === RUN_LOG_READ_MAX;
     const step = runLogStepOf(this.cursor, bytes, isFull);
@@ -119,13 +131,18 @@ export class RunLogFileTail {
 
   private emit(entries: RunLogEntry[]): void {
     for (const entry of entries) {
+      if (this.isEnded) return;
+
       const event = runLogEventOf(entry);
 
       if (event !== null) this.onEvent(event);
     }
   }
 
+  /** `failed` wins over what was read before it; then `unknown`, `missing` (nothing appeared) and `read`. */
   private outcomeOf(): RunLogOutcome {
+    if (this.isFailed) return 'failed';
+
     if (this.isUnknown) return 'unknown';
 
     if (!this.hasAppeared) return 'missing';
