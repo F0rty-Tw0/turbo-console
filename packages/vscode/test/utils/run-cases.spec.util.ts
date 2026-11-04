@@ -4,6 +4,7 @@ import { readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { buildPair } from './build-pair.spec.util.ts';
+import { logMissedFail } from './missed-fail.spec.util.ts';
 import { overlapCase } from './overlap-case.spec.util.ts';
 import { packageDirOf, setScript, writeEdited } from './package-edit.spec.util.ts';
 import { assertOneTerminal, assertTerminalKept } from './run-terminal.spec.util.ts';
@@ -114,11 +115,14 @@ const failCase = async (scene: RunScene): Promise<void> => {
     await whenQuiet(api, scene.root);
 
     const node = await taskNodeNamed(api, task.packageName, task.fullName);
+    const before = await summaryNames(scene.root);
     const launchedAt = await startRun(api, node);
     const entry = await endedRun(api, node, launchedAt);
     const description = descriptionOf(api, node);
 
     log(`failed run: ${entry.state}, "${description}"`);
+
+    if (entry.state !== 'failed') await logMissedFail(scene.root, entry, before);
     assert.equal(entry.state, 'failed');
     assert.ok(description.startsWith('exit 1'), `description: ${description}`);
   });
