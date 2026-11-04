@@ -83,6 +83,16 @@ const dataOf = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
   return match;
 };
 
+const fitOf = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
+  const match = dataOf(summary, run);
+
+  if (match === null) return null;
+
+  const hasRealDuration = isRealDuration(match.durationMs);
+
+  return hasRealDuration ? match : null;
+};
+
 /**
  * Spec §4.1.2: the data `summary` gives `run` when it fits: it started within `[launchedAt, endedAt]`, ran the same
  * command and ended with the same exit code, and, for a task with its own entry, lists that entry. The duration and
@@ -97,13 +107,9 @@ export const matchSummary = (summary: RunSummary, run: RunToMatch): RunMatch | n
 
   if (!isRunCandidate) return null;
 
-  const match = dataOf(summary, run);
+  const match = fitOf(summary, run);
 
-  if (match === null) return null;
-
-  const hasRealDuration = isRealDuration(match.durationMs);
-
-  return hasRealDuration ? match : null;
+  return match;
 };
 
 const taskOutcomeOf = (entry: RunSummaryTask): TaskOutcome => {
@@ -127,7 +133,7 @@ export const summaryCandidateOf = (summary: RunSummary, run: RunToMatch): RunTas
 
   if (!isRunCandidate) return null;
 
-  const match = matchSummary(summary, run);
+  const match = fitOf(summary, run);
   const outcomes = taskOutcomesOf(summary);
   const candidate: RunTasksMatch = { match, outcomes };
 
