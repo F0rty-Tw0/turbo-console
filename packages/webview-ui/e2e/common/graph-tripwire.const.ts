@@ -19,3 +19,6 @@ export const ROWS_BUTTONS_SHOWN = 4;
 
 /** The first-frame budget of the 14-package target-like flat row, where ELK takes little of the frame. */
 export const FLAT_FIRST_FRAME_MS = 2000;
+
+/** Five folders of `largeState()` that sit well inside the canvas after Fit and the zoom to 120 px boxes. */
+export const TOGGLED_FOLDERS = ['group-2', 'group-3', 'group-4', 'group-12', 'group-13'];
