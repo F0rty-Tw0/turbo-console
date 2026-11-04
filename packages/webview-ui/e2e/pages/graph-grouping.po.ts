@@ -10,7 +10,7 @@ import { ONE_FRAME, TOOLBAR_LABELS } from '../common/graph.const.ts';
 import type { PositionsMessage, PostedLayout } from '../common/graph.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
-import { boxGrabOf, clipFaultsOf, folderKeyed, inViewCountOf } from '../test/utils/graph-folders.spec.util.ts';
+import { boxGrabOf, clipFaultsOf, findFolder, folderKeyed, inViewCountOf } from '../test/utils/graph-folders.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { positionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
 
@@ -57,8 +57,12 @@ export class GraphGroupingPage extends GraphBoxesPage {
     await this.page.mouse.up();
   }
 
-  /** The viewport point a box drag holds the folder's box by: the middle of its left padding band. */
+  /** The viewport point a box drag holds the folder's box by: the middle of its left padding band, once the box is drawn. */
   public async boxGrab(folder: string): Promise<ViewportPoint> {
+    const message = `graph e2e: no box for folder '${folder}' is drawn`;
+
+    await expect.poll(async (): Promise<boolean> => this.isDrawn(folder), { message }).toBe(true);
+
     const folders = await this.folders();
     const zoom = await this.probe.zoom();
 
@@ -169,6 +173,13 @@ export class GraphGroupingPage extends GraphBoxesPage {
     const folders = await this.folders();
 
     return inViewCountOf(canvas, folders);
+  }
+
+  private async isDrawn(folder: string): Promise<boolean> {
+    const folders = await this.folders();
+    const found = findFolder(folders, folder);
+
+    return found !== undefined;
   }
 
   private async isCanvasFitting(): Promise<boolean> {
