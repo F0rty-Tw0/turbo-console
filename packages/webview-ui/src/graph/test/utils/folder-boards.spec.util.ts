@@ -3,10 +3,11 @@ import elkConstructor from 'elkjs/lib/elk.bundled.js';
 
 import type { GraphEdge, GraphPackage, Position, Positions } from '../../../bridge/common/graph-state.type.ts';
 import type { FolderGroup } from '../../common/folder-group.type.ts';
-import type { FolderScene } from '../../common/folder-scene.type.ts';
+import type { FolderLink, FolderScene } from '../../common/folder-scene.type.ts';
 import type { DrawnGraph } from '../../common/graph-page.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import { groupedElkGraphOf } from '../../utils/elk-grouped-graph.util.ts';
+import { folderLinkIdOf } from '../../utils/folder-id.util.ts';
 import { folderSceneOf } from '../../utils/folder-scene.util.ts';
 import { labelsOf } from '../../utils/package-label.util.ts';
 import type { ElkRect, SceneParts } from '../common/folder-boards.type.ts';
@@ -70,6 +71,14 @@ export const sceneOf = (infos: GraphPackage[], edges: GraphEdge[], parts: SceneP
   const ghosts = new Set(parts.ghosts ?? []);
 
   return folderSceneOf(infos, edges, collapsed, visible, ghosts);
+};
+
+/** The scene's folder links by element id, as the folders view keeps them. */
+export const folderLinksByIdOf = (scene: FolderScene): Map<string, FolderLink> => {
+  const entryOf = (link: FolderLink): [string, FolderLink] => [folderLinkIdOf(link.source, link.target), link];
+  const entries = scene.links.map(entryOf);
+
+  return new Map(entries);
 };
 
 export const boardsSizeOf = (): NodeSize => BOARDS_SIZE_STUB;

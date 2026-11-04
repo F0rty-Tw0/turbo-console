@@ -9,6 +9,7 @@ import { COLLAPSED_ID_PREFIX, FOLDER_PADDING_PX } from '../common/graph.const.ts
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { RouteSegments } from '../common/route-segments.type.ts';
 import { drawnBendsOf } from '../utils/drawn-bends.util.ts';
+import { unionBoxOf } from '../utils/folder-box.util.ts';
 import { folderLinkIdOf } from '../utils/folder-id.util.ts';
 import { firstMemberIdOf, folderLinkRouteOf } from '../utils/folder-link-route.util.ts';
 import { labelOffsetOf } from '../utils/label-offset.util.ts';
@@ -38,31 +39,35 @@ const boxOfNode = (node: NodeSingular): BoundingBox12 => {
   return box;
 };
 
-/** The members' boxes joined and grown by the folder padding: the box ELK laid the folder out in, read from the packages because a hidden box has no bounds. */
-const folderBoxOf = (cy: Core, names: string[]): BoundingBox12 => {
+/** The members' boxes joined and grown by the folder padding: the box ELK laid the folder out in, read from the packages because a hidden box has no bounds. `null` for no members. */
+const folderBoxOf = (cy: Core, names: string[]): BoundingBox12 | null => {
   const boxes = names.map((name): BoundingBox12 => boxOfNode(cy.getElementById(name)));
-  const lefts = boxes.map((member) => member.x1);
-  const tops = boxes.map((member) => member.y1);
-  const rights = boxes.map((member) => member.x2);
-  const bottoms = boxes.map((member) => member.y2);
+  const union = unionBoxOf(boxes);
+
+  if (union === null) return null;
+
   const box: BoundingBox12 = {
-    x1: Math.min(...lefts) - FOLDER_PADDING_PX,
-    y1: Math.min(...tops) - FOLDER_PADDING_PX,
-    x2: Math.max(...rights) + FOLDER_PADDING_PX,
-    y2: Math.max(...bottoms) + FOLDER_PADDING_PX
+    x1: union.x1 - FOLDER_PADDING_PX,
+    y1: union.y1 - FOLDER_PADDING_PX,
+    x2: union.x2 + FOLDER_PADDING_PX,
+    y2: union.y2 + FOLDER_PADDING_PX
   };
 
   return box;
 };
 
+/** A link end on a collapsed folder; `null` for a package end, and for a folder the members do not list, which has no box to leave. */
 const collapsedEndOf = (scene: DrawnScene, id: string): CollapsedEnd | null => {
   const isCollapsed = id.startsWith(COLLAPSED_ID_PREFIX);
 
   if (!isCollapsed) return null;
 
   const names = scene.members.get(id.slice(COLLAPSED_ID_PREFIX.length)) ?? [];
-  const centre = scene.cy.getElementById(id).position();
   const box = folderBoxOf(scene.cy, names);
+
+  if (box === null) return null;
+
+  const centre = scene.cy.getElementById(id).position();
   const end: CollapsedEnd = { centre, box };
 
   return end;

@@ -2,15 +2,17 @@ import type { Core, EdgeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setBoxes } from './graph-boxes.ts';
+import { drawnLinksOf, routeFolderLinks } from './graph-folder-routes.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { applyRoutes } from './graph-routes.ts';
 import type { EdgeRoute, Position, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { FolderRouting } from '../common/folder-link-route.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import type { FoldersView } from '../common/graph-page.type.ts';
 import { boardsCyMock, groupedCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { THREE_POSITIONS_STUB } from '../test/stubs/folder-boards.stub.ts';
-import { THREE, THREE_EDGES, THREE_GROUPS, boardsSceneOf, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
+import { THREE, THREE_EDGES, THREE_GROUPS, boardsSceneOf, folderLinksByIdOf, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { collapsedIdOf, folderLinkIdOf } from '../utils/folder-id.util.ts';
 
@@ -36,6 +38,9 @@ const DOCS_MOVED_AT: Position = { x: -200, y: 0 };
 const WEB_MOVED_AT: Position = { x: -80, y: 0 };
 
 const DOCS_START: Position = { x: 0, y: 16 };
+
+/** The docs route start as an endpoint offset from the apps collapsed node at `APPS_CENTRE`. */
+const APPS_DOCS_START = '-60px 16px';
 
 const route = (bends: Position[]): EdgeRoute => {
   const routed: EdgeRoute = { start: DOCS_START, bends, end: DOCS_END };
@@ -151,6 +156,23 @@ describe('FEATURE: folder links drawn on their first member route', () => {
       folders.show(boardsSceneOf(['apps']), labelOf);
 
       expect(linkToUi(cy).hasClass(ROUTED_CLASS)).toBe(false);
+    });
+  });
+
+  describe('GIVEN apps collapsed and members that do not list apps', () => {
+    const scene = boardsSceneOf(['apps']);
+
+    beforeEach(() => {
+      folders.show(scene, labelOf);
+    });
+
+    it('WHEN the links are routed THEN the apps end has no box to leave and starts where the member route starts', () => {
+      const links = folderLinksByIdOf(scene);
+      const routing: FolderRouting = { members: new Map(), routes: MIXED_RECORD, drawn: drawnLinksOf() };
+
+      routeFolderLinks(cy, links, routing);
+
+      expect(linkToUi(cy).style('source-endpoint')).toBe(APPS_DOCS_START);
     });
   });
 });
