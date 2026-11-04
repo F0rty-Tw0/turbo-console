@@ -12,6 +12,7 @@ const RUN: RunDefinition = { root: '/ws', id: 'build' };
 const MATCH: RunMatch = { cache: 'MISS', durationMs: 2500, interrupted: false };
 const OUTCOMES: TaskOutcome[] = [{ taskId: 'a#build', state: 'passed' }];
 const TASKS_MATCH: RunTasksMatch = { match: MATCH, outcomes: [] };
+const OUTCOMES_MATCH: RunTasksMatch = { match: MATCH, outcomes: OUTCOMES };
 
 const endedEntry = (store: RunStore, exitCode: number | undefined): RunEntry => {
   const ended = store.processEnded(RUN, exitCode, 4000);
@@ -87,7 +88,7 @@ describe('FEATURE: run flow, matching a run summary', () => {
     });
 
     it('WHEN its summary gives outcomes THEN the entry holds them beside the match', async () => {
-      const match = vi.fn().mockResolvedValue({ match: MATCH, outcomes: OUTCOMES });
+      const match = vi.fn().mockResolvedValue(OUTCOMES_MATCH);
       const matched = fakeRunPorts(execution, { match });
 
       await finishRun(store, matched, entry);
