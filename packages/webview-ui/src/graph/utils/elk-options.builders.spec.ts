@@ -103,12 +103,12 @@ describe('FEATURE: the ELK options of every builder (c8)', () => {
     });
   });
 
-  describe('GIVEN 147 tasks with 3 scripts, unlinked', () => {
+  describe('GIVEN 97 tasks with 3 scripts, unlinked', () => {
     it.each([
       [true, 'LONGEST_PATH', GROUPED_TASK_BOXES],
       [false, 'NETWORK_SIMPLEX', UNGROUPED_TASK_BOXES]
     ])('WHEN grouped is %s THEN the wrappers are numbered and every box carries %s', (grouped, layering, boxes) => {
-      const graph = taskGraphOf(147, 3, grouped);
+      const graph = taskGraphOf(97, 3, grouped);
 
       expect(idsOf(childrenOf(graph))).toStrictEqual([wrapperIdOf(0), wrapperIdOf(1), wrapperIdOf(2)]);
       expect(wrapperOptionValuesOf(graph, LAYERING)).toStrictEqual(repeatedOf(WRAPPER_COUNT, layering));
