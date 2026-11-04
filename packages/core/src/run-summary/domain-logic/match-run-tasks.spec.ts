@@ -37,7 +37,8 @@ const FITTING_FAILED = summaryJson(COMMAND, WINDOW, 1, [
   taskEntry('web#build', WINDOW, 'MISS', 1)
 ]);
 
-const OTHER = summaryJson('turbo run test --filter=web', WINDOW, 0, []);
+/** Exit 1 like `FAILED_RUN`, so only its command keeps it from being a candidate. */
+const OTHER = summaryJson('turbo run test --filter=web', WINDOW, 1, []);
 
 const DEP_OUTCOMES: TaskOutcome[] = [{ taskId: 'ui#build', state: 'failed' }];
 
@@ -119,13 +120,25 @@ describe('FEATURE: match a run to the outcomes of its summary', () => {
   });
 
   describe('GIVEN two fitting candidates', () => {
-    it('WHEN matched THEN it is null, as matchRunSummary is', async () => {
+    it('WHEN matched THEN the run is ambiguous, so it is null', async () => {
       const root = await newRoot();
 
       await writeRun(root, 'a.json', FITTING_FAILED, OLDEST);
       await writeRun(root, 'b.json', FITTING_FAILED, OLDEST + 1);
 
       await expect(matchRunTasks(root, FAILED_RUN)).resolves.toBeNull();
+    });
+  });
+
+  describe('GIVEN one fitting candidate and two non-fitting ones', () => {
+    it('WHEN matched THEN the fitting one wins over the ambiguous non-fitting ones', async () => {
+      const root = await newRoot();
+
+      await writeRun(root, 'fitting.json', FITTING_FAILED, OLDEST);
+      await writeRun(root, 'non-fitting-a.json', DEP_FAILED, OLDEST + 1);
+      await writeRun(root, 'non-fitting-b.json', DEP_FAILED, OLDEST + 2);
+
+      await expect(matchRunTasks(root, FAILED_RUN)).resolves.toStrictEqual(FIT_TASKS);
     });
   });
 
