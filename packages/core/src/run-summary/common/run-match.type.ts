@@ -19,3 +19,19 @@ export type RunMatch = {
   readonly durationMs: number;
   readonly interrupted: boolean;
 };
+
+/** How the run summary says one task ended: a cache HIT or exit 0 passed, any other exit failed. */
+export type TaskOutcome = {
+  readonly taskId: string;
+  readonly state: 'passed' | 'failed';
+};
+
+/**
+ * What the run summary of one run says about every task it lists: one outcome per `tasks[]` entry, in its order. A task
+ * turbo attempted but never saw end (Ctrl+C) has no entry and so no outcome; `outcomes` is `[]` when none ended. `match`
+ * is `null` when the summary lacks the launched task's entry, as after a failed dependency.
+ */
+export type RunTasksMatch = {
+  readonly match: RunMatch | null;
+  readonly outcomes: TaskOutcome[];
+};
