@@ -130,6 +130,8 @@ export type GraphProbe = {
   readonly edges: () => ProbeEdge[];
   /** Every drawn edge's line (package or task link), in the order `edges` lists them. */
   readonly edgeLines: () => ProbeEdgeLine[];
+  /** Every folder link's line, in the order `folderLinks` lists them. */
+  readonly folderLinkLines: () => ProbeEdgeLine[];
   /** The first edge's `line-color`, `''` when there is no edge. */
   readonly edgeColor: () => string;
   /**

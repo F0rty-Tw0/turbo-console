@@ -8,6 +8,7 @@ export const GRAPH_PROBE_STUB: GraphProbe = {
   nodes: () => [],
   edges: () => [],
   edgeLines: () => [],
+  folderLinkLines: () => [],
   edgeColor: () => '',
   selected: () => null,
   zoom: () => 1,
