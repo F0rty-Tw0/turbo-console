@@ -1,9 +1,11 @@
 import type { TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { runKeyOf, runningEntryOf } from './run-entry.util.ts';
+import { progressKeyOf, runKeyOf, runningEntryOf } from './run-entry.util.ts';
 import { PACKAGE_MANAGER_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import type { ProgressOwner } from '../common/run-progress.type.ts';
 import type { RunEntry } from '../common/run.type.ts';
+import { PROGRESS_OWNER_STUB } from '../test/stubs/run-progress.stub.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 
 describe('FEATURE: run key', () => {
@@ -13,6 +15,18 @@ describe('FEATURE: run key', () => {
 
   it('GIVEN a root ending where another task id starts WHEN keyed THEN the keys differ', () => {
     expect(runKeyOf('/ws/a', 'b')).not.toBe(runKeyOf('/ws', 'a/b'));
+  });
+
+  describe('GIVEN two launches of one task and a copy of the first', () => {
+    it('WHEN keyed by progress key THEN they give two keys', () => {
+      const rerun: ProgressOwner = { ...PROGRESS_OWNER_STUB, launchedAt: 5000 };
+      const copy: ProgressOwner = { ...PROGRESS_OWNER_STUB };
+      const owners = [PROGRESS_OWNER_STUB, rerun, copy];
+
+      const keys = new Set(owners.map(progressKeyOf));
+
+      expect(keys.size).toBe(2);
+    });
   });
 });
 
