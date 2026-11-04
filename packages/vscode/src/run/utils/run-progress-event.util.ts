@@ -14,22 +14,38 @@ const lineStateOf = (event: RunLogEvent, record: ProgressRecord | undefined): Pr
   return isLifted ? 'passed' : record.state;
 };
 
-const lineRecordsOf = (run: ProgressRun, event: RunLogEvent, at: number): ProgressRecord[] => {
-  if (event.taskId === run.owner.taskId) return [];
+const lineRecordOf = (run: ProgressRun, event: RunLogEvent, at: number): ProgressRecord | null => {
+  if (event.taskId === run.owner.taskId) return null;
 
   const record = run.records.get(event.taskId);
   const state = lineStateOf(event, record);
 
-  if (state === record?.state) return [];
+  if (state === record?.state) return null;
 
   const changed: ProgressRecord = { owner: run.owner, taskId: event.taskId, state, at };
 
-  return [changed];
+  return changed;
 };
 
-const inferredRecordsOf = (run: ProgressRun, taskId: string, at: number): ProgressRecord[] => {
-  const dependencies = run.dependenciesOf(taskId);
-  const lifted: ProgressRecord[] = [];
+const hasRunningOf = (run: ProgressRun, dependencies: string[]): boolean => {
+  for (const dependency of dependencies) {
+    const record = run.records.get(dependency);
+
+    if (record?.state === 'running') return true;
+  }
+
+  return false;
+};
+
+const changedRecordsOf = (
+  run: ProgressRun,
+  lineRecord: ProgressRecord | null,
+  dependencies: string[],
+  at: number
+): Map<string, ProgressRecord> => {
+  const records = new Map(run.records);
+
+  if (lineRecord !== null) records.set(lineRecord.taskId, lineRecord);
 
   for (const dependency of dependencies) {
     const record = run.records.get(dependency);
@@ -38,28 +54,26 @@ const inferredRecordsOf = (run: ProgressRun, taskId: string, at: number): Progre
 
     const passed: ProgressRecord = { ...record, state: 'passed', at };
 
-    lifted.push(passed);
+    records.set(dependency, passed);
   }
 
-  return lifted;
+  return records;
 };
 
 /**
  * The run after one log line at wall-clock `at` (spec §5.1, D3): the line's own task moves by its event cell (never the
  * owner's own id, spec D8), and every running dependency of the line's task is inferred passed, owner lines included.
- * Returns `run` itself when no record changes.
+ * The §5.1 `failed(n)` row is void here, since `RunLogEvent` is `seen | cacheHit` and `failed` comes only from a
+ * summary outcome at settle. Returns `run` itself, with no allocation, when no record changes.
  */
 export const eventRunOf = (run: ProgressRun, event: RunLogEvent, at: number): ProgressRun => {
-  const lineRecords = lineRecordsOf(run, event, at);
-  const inferredRecords = inferredRecordsOf(run, event.taskId, at);
-  const changed = [...lineRecords, ...inferredRecords];
+  const lineRecord = lineRecordOf(run, event, at);
+  const dependencies = run.dependenciesOf(event.taskId);
+  const isLifting = hasRunningOf(run, dependencies);
 
-  if (changed.length === 0) return run;
+  if (lineRecord === null && !isLifting) return run;
 
-  const records = new Map(run.records);
-
-  for (const record of changed) records.set(record.taskId, record);
-
+  const records = changedRecordsOf(run, lineRecord, dependencies, at);
   const next: ProgressRun = { ...run, records };
 
   return next;
