@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
 import { ROUTED_CLASS, ROUTE_RADIUS_PX } from '../common/graph-layout.const.ts';
+import { FOLDER_LINK_CLASS } from '../common/graph.const.ts';
 import { CANVAS_COLORS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 
 const SEGMENT_DATA = { segWeights: [0.25, 0.75], segDistances: [-40, -40], srcEnd: '0px 16px', tgtEnd: '0px -16px' };
@@ -12,12 +13,15 @@ const ROUTED_DATA: EdgeDataDefinition = { id: 'routed', source: 'a', target: 'b'
 
 const PLAIN_DATA: EdgeDataDefinition = { id: 'plain', source: 'b', target: 'c', ...SEGMENT_DATA };
 
+const OFFSET_DATA: EdgeDataDefinition = { id: 'offset', source: 'a', target: 'c', labelDx: 24, labelDy: -3 };
+
 const ROUTED_ELEMENTS: ElementDefinition[] = [
   canvasNodeOf('a'),
   canvasNodeOf('b'),
   canvasNodeOf('c'),
   { data: ROUTED_DATA, classes: ROUTED_CLASS },
-  { data: PLAIN_DATA }
+  { data: PLAIN_DATA },
+  { data: OFFSET_DATA, classes: FOLDER_LINK_CLASS }
 ];
 
 describe('FEATURE: routeRulesOf in the graph stylesheet', () => {
@@ -94,6 +98,16 @@ describe('FEATURE: routeRulesOf in the graph stylesheet', () => {
       const curve: unknown = cy.getElementById('plain').style('curve-style');
 
       expect(curve).toBe('bezier');
+    });
+  });
+
+  describe('GIVEN a folder link with a label offset in its data', () => {
+    it('WHEN styled THEN its label margins are the data offsets', () => {
+      const edge = cy.getElementById('offset');
+
+      const margins: unknown[] = [edge.style('text-margin-x'), edge.style('text-margin-y')];
+
+      expect(margins).toStrictEqual(['24px', '-3px']);
     });
   });
 });
