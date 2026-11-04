@@ -4,9 +4,9 @@ import { withSession } from './bench-session.ts';
 import { expanded, panned, stretchOpened, toggledAt } from './bench-stretch-frame.ts';
 import type { BenchSession, LargeSample, OpenSample, StretchPan } from './common/bench.type.ts';
 import { MEDIUM_EXPANDED } from './common/stretch.const.ts';
-import { median } from './utils/bench-stats.util.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
 import { STRETCH_UMBRELLAS, stretchSavedState } from '../test/utils/graph-stretch.spec.util.ts';
+import { median } from '../test/utils/stats.spec.util.ts';
 
 const BYTES_PER_MB = 1024 * 1024;
 

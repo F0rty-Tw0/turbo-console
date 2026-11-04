@@ -8,9 +8,9 @@ import { collectSamples, expectRecorded, recordSample } from './bench/bench-reco
 import { BENCH_ROWS, LONG_TASK_BUDGET_MS } from './bench/common/bench.const.ts';
 import type { PanSample } from './bench/common/bench.type.ts';
 import { noteAnnotation } from './bench/utils/bench-results.util.ts';
-import { median } from './bench/utils/bench-stats.util.ts';
 import { largeState } from './test/utils/graph-large.spec.util.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
+import { median } from './test/utils/stats.spec.util.ts';
 import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
 
 const SAMPLE_COUNT = BENCH_ROWS.panCpu.samples;

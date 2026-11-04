@@ -1,4 +1,4 @@
-import { p95 } from './bench-stats.util.ts';
+import { p95 } from '../../test/utils/stats.spec.util.ts';
 import type { LongTask, PanTrace, StretchPan } from '../common/bench.type.ts';
 
 const isWithin = (time: number, tOn: number, tOff: number): boolean => tOn <= time && time <= tOff;

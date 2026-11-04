@@ -8,6 +8,13 @@ import { IS_MAC_RUNNER } from './graph.const.ts';
  */
 export const ROWS_PAN_MS = IS_MAC_RUNNER ? 4800 : 2400;
 
+/**
+ * Wall time for a pan CPU tripwire, which pans three times: macOS CI took up to 1.5 min for the header-rows one and
+ * timed out once at `test.slow()`'s 90 s (run 41857829802), so about 2x that. A timeout, not a budget: the CPU budget
+ * is the gate.
+ */
+export const PAN_CPU_TEST_TIMEOUT_MS = 180_000;
+
 /** The grouped pans' slowest step; macOS read up to 52 ms there (C58), so it gets about 1.7x, Linux and Windows the 50 ms long-task line. */
 export const GROUPED_PAN_STEP_MS = IS_MAC_RUNNER ? 90 : 50;
 

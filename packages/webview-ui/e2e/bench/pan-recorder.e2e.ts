@@ -2,8 +2,8 @@ import type { Page, Route } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
 import { PanRecorder } from './pan-recorder.ts';
-import { p95 } from './utils/bench-stats.util.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
+import { p95 } from '../test/utils/stats.spec.util.ts';
 
 const BENCH_ORIGIN = 'https://bench.test';
 const BLANK_URL = `${BENCH_ORIGIN}/`;
