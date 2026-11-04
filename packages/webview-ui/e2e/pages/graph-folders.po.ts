@@ -18,7 +18,7 @@ import {
   sortedLinks
 } from '../test/utils/graph-folder-facts.spec.util.ts';
 import { boxCornerOf, folderTapOf } from '../test/utils/graph-folder-points.spec.util.ts';
-import { folderKeyed, isFolderInView } from '../test/utils/graph-folders.spec.util.ts';
+import { findFolder, folderKeyed, outOfViewOf } from '../test/utils/graph-folders.spec.util.ts';
 import { expectMinUnder } from '../test/utils/graph-min-under.spec.util.ts';
 
 /** The accessible name of a folder's list header button. */
@@ -139,7 +139,7 @@ export class GraphFoldersPage {
     await expect.poll(async (): Promise<boolean> => this.areAll(isCollapsed)).toBe(true);
   }
 
-  /** Every folder in `keys` overlaps the canvas. */
+  /** Every folder in `keys` is drawn and overlaps the canvas. */
   public async expectFoldersInView(keys: string[]): Promise<void> {
     await expect.poll(async (): Promise<string[]> => this.outOfView(keys)).toEqual([]);
   }
@@ -175,7 +175,7 @@ export class GraphFoldersPage {
 
   private async isVisible(folder: string): Promise<boolean | undefined> {
     const folders = await this.folders();
-    const found = folders.find((candidate): boolean => candidate.folder === folder);
+    const found = findFolder(folders, folder);
 
     return found?.isVisible;
   }
@@ -203,8 +203,7 @@ export class GraphFoldersPage {
     const container = this.page.getByRole('application', { name: GRAPH_LABEL });
     const canvas = await container.evaluate(readRect);
     const folders = await this.folders();
-    const isOut = (key: string): boolean => !isFolderInView(canvas, folderKeyed(folders, key));
 
-    return keys.filter(isOut);
+    return outOfViewOf(canvas, folders, keys);
   }
 }
