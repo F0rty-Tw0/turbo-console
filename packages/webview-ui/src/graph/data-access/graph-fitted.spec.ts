@@ -35,17 +35,10 @@ describe('FEATURE: createFittedCamera', () => {
     ids.forEach((id: string): void => void cy.$id(id).emit('free'));
   };
 
-  beforeEach(() => {
-    const ids = ['a', 'b'];
-    const elementOf = (id: string): ElementDefinition => {
-      const data = { id };
-      const element: ElementDefinition = { data };
+  const mount = (elements: ElementDefinition[]): void => {
+    const layout = { name: 'preset', fit: false };
 
-      return element;
-    };
-    const elements = ids.map(elementOf);
-
-    cy = cytoscape({ headless: true, styleEnabled: true, elements });
+    cy = cytoscape({ headless: true, styleEnabled: true, layout, elements });
     events = [];
     fittedAtViewport = [];
     vi.spyOn(cy, 'fit').mockImplementation((): Core => {
@@ -60,6 +53,33 @@ describe('FEATURE: createFittedCamera', () => {
       onRefit: vi.fn((): void => void events.push('refit'))
     };
     camera = createFittedCamera(cy, handlers);
+  };
+  const nodeAt = (id: string, x: number, y: number): ElementDefinition => {
+    const data = { id };
+    const position = { x, y };
+    const element: ElementDefinition = { data, position };
+
+    return element;
+  };
+  /** Replaces the graph with nodes a at (0, 0) and b at `(farX, farY)` over a 1000 by 800 canvas. */
+  const remount = (farX: number, farY: number): void => {
+    cy.destroy();
+    mount([nodeAt('a', 0, 0), nodeAt('b', farX, farY)]);
+    vi.spyOn(cy, 'width').mockReturnValue(1000);
+    vi.spyOn(cy, 'height').mockReturnValue(800);
+  };
+
+  beforeEach(() => {
+    const ids = ['a', 'b'];
+    const elementOf = (id: string): ElementDefinition => {
+      const data = { id };
+      const element: ElementDefinition = { data };
+
+      return element;
+    };
+    const elements = ids.map(elementOf);
+
+    mount(elements);
   });
 
   afterEach(() => {
@@ -262,6 +282,60 @@ describe('FEATURE: createFittedCamera', () => {
 
         expect(handlers.onRefit).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('GIVEN a new camera over a graph that fits below the floor', () => {
+    const seen: boolean[] = [];
+
+    beforeEach(() => {
+      remount(4000, 3000);
+      seen.length = 0;
+      cy.on('viewport', (): void => void seen.push(camera.isFitted()));
+    });
+
+    it('WHEN open runs THEN zoom is 0.75 and pan is the top-centre anchor of the framed box', () => {
+      const box = cy.elements().boundingBox();
+      const centreX = (box.x1 + box.x2) / 2;
+
+      camera.open();
+
+      expect(cy.zoom()).toBeCloseTo(0.75, 6);
+      expect(cy.pan().x).toBeCloseTo(500 - centreX * 0.75, 6);
+      expect(cy.pan().y).toBeCloseTo(24 - box.y1 * 0.75, 6);
+    });
+
+    it('WHEN open runs THEN only one resize runs, cy.fit never, and it is not fitted at the viewport event', () => {
+      camera.open();
+
+      expect(events).toStrictEqual(['resize']);
+      expect(seen).toStrictEqual([false]);
+      expect(camera.isFitted()).toBe(false);
+    });
+
+    it('WHEN open runs and then the container resizes THEN the zoom stays 0.75', () => {
+      camera.open();
+      camera.resized();
+
+      expect(events).toStrictEqual(['resize', 'resize']);
+      expect(cy.zoom()).toBeCloseTo(0.75, 6);
+    });
+  });
+
+  describe('GIVEN a new camera over a graph that fits above the floor', () => {
+    const seen: boolean[] = [];
+
+    beforeEach(() => {
+      remount(100, 75);
+      seen.length = 0;
+      cy.on('viewport', (): void => void seen.push(camera.isFitted()));
+    });
+
+    it('WHEN open runs THEN one resize then cy.fit, and it is fitted at the viewport event', () => {
+      camera.open();
+
+      expect(events).toStrictEqual(['resize', 'fit']);
+      expect(seen).toStrictEqual([true]);
     });
   });
 });

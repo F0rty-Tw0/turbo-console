@@ -58,7 +58,10 @@ export type PackageSideHooks = {
 };
 
 /** The canvas calls task mode makes: the task canvas, the camera and a re-measure after a panel change. */
-export type TaskView = Pick<GraphView, 'tasks' | 'atoms' | 'fit' | 'isFitted' | 'setViewport' | 'viewport' | 'resize' | 'flowEdges'>;
+export type TaskView = Pick<
+  GraphView,
+  'tasks' | 'atoms' | 'fit' | 'open' | 'isFitted' | 'setViewport' | 'viewport' | 'resize' | 'flowEdges'
+>;
 
 /** The task mode lines above the canvas, built once by `buildPage`, all hidden in package mode. */
 export type TaskScreenElements = {

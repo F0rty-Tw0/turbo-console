@@ -106,6 +106,11 @@ export type GraphView = {
   readonly paint: (paint: Paint) => void;
   /** Fits the camera to the visible nodes; with none visible it does nothing. */
   readonly fit: () => void;
+  /**
+   * The first automatic fit of a graph with no saved camera: the true fit, or `OPEN_ZOOM_FLOOR` at the top-centre of the fit
+   * box when the fit is below it; it leaves the camera not fitted then. Fit, refits and mode switches use `fit`.
+   */
+  readonly open: () => void;
   /** Whether the camera is where `fit` left it: a gesture that moved it, `setViewport` and `centreOn` clear it, a keep-clear `panBy` does not. */
   readonly isFitted: () => boolean;
   /** Shows exactly these package names; the rest are hidden, not moved. */

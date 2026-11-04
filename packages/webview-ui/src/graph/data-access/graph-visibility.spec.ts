@@ -5,8 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setBoxes } from './graph-boxes.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { graphStyleOf } from './graph-style.ts';
-import { centreOnNode, fitVisible, showOnly } from './graph-visibility.ts';
-import type { Position } from '../../bridge/common/graph-state.type.ts';
+import { centreOnNode, fitVisible, framedOf, openViewportOf, showOnly } from './graph-visibility.ts';
+import type { GraphPackage, Position } from '../../bridge/common/graph-state.type.ts';
+import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 import { boardsCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
@@ -14,6 +15,7 @@ import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { CANVAS_RUN_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
+import { folderIdOf } from '../utils/folder-id.util.ts';
 
 const COLORS: ThemeColors = {
   background: '#111',
@@ -293,6 +295,65 @@ describe('FEATURE: graph visibility', () => {
 
     it('WHEN fitted with b hidden by a filter THEN a>b and b>c are not fitted', () => {
       expect(fittedEdgeIdsOf(['a', 'c'])).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN an apps box over a and b and a docs box above it whose package a filter hid', () => {
+    const sizedNodeAt = (id: string, x: number, y: number): ElementDefinition => {
+      const data = { id, width: 40, height: 20 };
+      const position: Position = { x, y };
+      const definition: ElementDefinition = { data, position };
+
+      return definition;
+    };
+    const groupOf = (folder: string, names: string[]): FolderGroup => {
+      const packageOf = (name: string): GraphPackage => {
+        const pkg: GraphPackage = { name, bareName: name, path: name, tags: [], taskCount: 0 };
+
+        return pkg;
+      };
+      const group: FolderGroup = { folder, packages: names.map(packageOf) };
+
+      return group;
+    };
+
+    beforeEach(() => {
+      const elements = [sizedNodeAt('a', 0, 0), sizedNodeAt('b', 4000, 0), sizedNodeAt('c', 0, -900)];
+      const layout = { name: 'preset', fit: false };
+
+      cy.destroy();
+      cy = cytoscape({ headless: true, styleEnabled: true, layout, elements });
+      cy.style(graphStyleOf(COLORS, 'sans-serif', false));
+      setBoxes(cy, [groupOf('apps', ['a', 'b']), groupOf('docs', ['c'])]);
+      // A compound's extent is computed lazily: read with c shown, it keeps c's place once c is hidden, as a drawn box does.
+      cy.nodes().boundingBox();
+      showOnly(cy, new Set(['a', 'b']));
+      vi.spyOn(cy, 'width').mockReturnValue(1000);
+      vi.spyOn(cy, 'height').mockReturnValue(800);
+    });
+
+    it('WHEN the framed collection is read THEN it starts at the apps box, below the docs box that cy.nodes() reaches', () => {
+      const appsTop = cy.$id(folderIdOf('apps')).boundingBox().y1;
+      const nodesTop = cy.nodes().boundingBox().y1;
+
+      expect(framedOf(cy).boundingBox().y1).toBeCloseTo(appsTop, 6);
+      expect(nodesTop).toBeLessThan(appsTop - 800);
+    });
+
+    it('WHEN openViewportOf runs THEN zoom is 0.75 and pan.y = 24 - y1 * 0.75, y1 the top of the apps box', () => {
+      const appsTop = cy.$id(folderIdOf('apps')).boundingBox().y1;
+      const viewport = openViewportOf(cy, PADDING_PX);
+
+      expect(viewport?.zoom).toBe(0.75);
+      expect(viewport?.pan.y).toBeCloseTo(PADDING_PX - appsTop * 0.75, 6);
+    });
+  });
+
+  describe('GIVEN nothing shown', () => {
+    it('WHEN openViewportOf runs THEN it is null, the true fit', () => {
+      showOnly(cy, new Set());
+
+      expect(openViewportOf(cy, PADDING_PX)).toBeNull();
     });
   });
 
