@@ -31,8 +31,8 @@ const SAVED: GraphViewState = {
 };
 
 describe('FEATURE: restorePlanOf', () => {
-  it('GIVEN no saved state WHEN a graph is placed THEN it is fitted', () => {
-    const expected: RestorePlan = { kind: 'fit' };
+  it('GIVEN no saved state WHEN a graph is placed THEN it opens', () => {
+    const expected: RestorePlan = { kind: 'open' };
 
     const plan = restorePlanOf(null, 'h1');
 
@@ -55,8 +55,8 @@ describe('FEATURE: restorePlanOf', () => {
     expect(plan).toStrictEqual(expected);
   });
 
-  it('GIVEN a saved state for another hash WHEN a graph is placed THEN it is fitted', () => {
-    const expected: RestorePlan = { kind: 'fit' };
+  it('GIVEN a saved state for another hash WHEN a graph is placed THEN it opens', () => {
+    const expected: RestorePlan = { kind: 'open' };
 
     const plan = restorePlanOf(SAVED, 'h2');
 
