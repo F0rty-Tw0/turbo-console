@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { failedToStartText, noScriptText, startTimeoutText, startWaitText, unsafeScriptText } from './run-text.util.ts';
+import {
+  failedToStartText,
+  noScriptText,
+  runLogWatchErrorText,
+  startTimeoutText,
+  startWaitText,
+  unsafeScriptText
+} from './run-text.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 
 describe('FEATURE: run texts', () => {
@@ -58,6 +65,16 @@ describe('FEATURE: run texts', () => {
       const text = noScriptText('x'.repeat(LABEL_MAX * 2));
 
       expect(text).toBe(`\`${'x'.repeat(LABEL_MAX - 1)}…\` has no package.json script, so it runs only through turbo.`);
+    });
+  });
+
+  describe('GIVEN a turbo log folder that cannot be watched', () => {
+    it('WHEN the text is made THEN it names the folder and the error and says progress arrives at the end', () => {
+      const text = runLogWatchErrorText('/ws/.turbo/turbo-console', new Error('ENOSPC'));
+
+      expect(text).toBe(
+        'cannot watch /ws/.turbo/turbo-console for turbo log changes (ENOSPC): live progress arrives when the run ends'
+      );
     });
   });
 });

@@ -3,6 +3,7 @@ import type { PackageManager } from '@turbo-console/core';
 import { sourceText } from './source-text.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { toastText } from '../../shared/utils/link-safe.util.ts';
+import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { START_TIMEOUT_MS } from '../common/run.const.ts';
 
 const SECONDS = START_TIMEOUT_MS / 1000;
@@ -37,4 +38,11 @@ export const notFoundText = (packageManager: PackageManager, exitCode: number): 
   const runner = `${packageManager.name} ${sourceText(packageManager.source)}`;
 
   return `exit ${exitCode}: a command was not found: ${runner} or one the script runs. Install it or check packageManager.`;
+};
+
+/** The Output line when the watcher of a root's turbo log folder fails (spec D5): the run goes on, progress arrives at its end. */
+export const runLogWatchErrorText = (dir: string, error: unknown): string => {
+  const reason = logTextOf(error);
+
+  return `cannot watch ${dir} for turbo log changes (${reason}): live progress arrives when the run ends`;
 };
