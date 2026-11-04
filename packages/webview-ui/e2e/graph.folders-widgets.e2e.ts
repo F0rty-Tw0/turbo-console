@@ -224,6 +224,7 @@ test.describe('FEATURE: folder widget placement', () => {
     async ({ graphFolderInspect, graphGrouping, graphMenus, graphWidgetInput, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards page is opened and the graph container has focus', async (): Promise<void> => {
         await graphFolderInspect.open(grouped(), BOARDS);
+        await graphWidgets.expectEllipsisShown('apps');
         await graphWidgets.focusContainer();
       });
 

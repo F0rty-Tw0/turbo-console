@@ -44,6 +44,7 @@ test.describe('FEATURE: folder row keys', () => {
     async ({ graphFolderInspect, graphMenus, graphWidgetInput, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards open and Tab moves from the container to the apps row', async (): Promise<void> => {
         await graphFolderInspect.open(BOARDS_SAVED, BOARDS);
+        await graphWidgets.expectEllipsisShown('apps');
         await graphWidgets.focusContainer();
         await graphMenus.pressKey('Tab');
       });
@@ -88,6 +89,7 @@ test.describe('FEATURE: folder row keys', () => {
     async ({ graphFolderInspect, graphMenus, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards open, Tab reaches the apps chevron and End its "…"', async (): Promise<void> => {
         await graphFolderInspect.open(BOARDS_SAVED, BOARDS);
+        await graphWidgets.expectEllipsisShown('apps');
         await graphWidgets.focusContainer();
         await graphMenus.pressKey('Tab');
         await graphMenus.pressKey('End');
@@ -142,6 +144,7 @@ test.describe('FEATURE: folder row keys', () => {
     async ({ graphFolderInspect, graphGrouping, graphMenus, graphWidgetInput, graphWidgets }): Promise<void> => {
       await test.step('WHEN the boards open with apps collapsed and Tab reaches its row', async (): Promise<void> => {
         await graphFolderInspect.open(APPS_COLLAPSED, BOARDS);
+        await graphWidgets.expectEllipsisShown('apps');
         await graphWidgets.focusContainer();
         await graphMenus.pressKey('Tab');
       });
