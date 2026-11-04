@@ -184,6 +184,7 @@ export const finishRun = async (store: Runs, ports: RunPorts, entry: RunEntry): 
   const definition: RunDefinition = { root: entry.root, id: entry.taskId };
   const tasksMatch = await matchOf(ports, entry);
   const match = tasksMatch?.match ?? null;
+  const outcomes = tasksMatch?.outcomes ?? null;
 
-  store.setMatch(definition, entry.launchedAt, match);
+  store.setMatch(definition, entry.launchedAt, match, outcomes);
 };

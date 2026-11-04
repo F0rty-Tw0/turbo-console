@@ -31,14 +31,14 @@ describe('FEATURE: run store, calls of one run never reach another run of the ta
     });
 
     it('WHEN run 1 match arrives late THEN run 2 does not get it', () => {
-      store.setMatch(RUN, 1000, FIRST_MATCH);
+      store.setMatch(RUN, 1000, FIRST_MATCH, null);
 
       expect(store.get('/ws', 'build')).toMatchObject({ launchedAt: 5000, match: null, matching: true });
     });
 
     it('WHEN run 1 match arrives late and then run 2 match THEN run 2 holds its own match', () => {
-      store.setMatch(RUN, 1000, FIRST_MATCH);
-      store.setMatch(RUN, 5000, SECOND_MATCH);
+      store.setMatch(RUN, 1000, FIRST_MATCH, null);
+      store.setMatch(RUN, 5000, SECOND_MATCH, null);
 
       expect(store.get('/ws', 'build')).toMatchObject({ launchedAt: 5000, match: SECOND_MATCH, matching: false });
     });

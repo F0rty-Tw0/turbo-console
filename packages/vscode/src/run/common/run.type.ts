@@ -1,4 +1,4 @@
-import type { PackageManager, RunMatch, RunTasksMatch, RunToMatch, TaskNode } from '@turbo-console/core';
+import type { PackageManager, RunMatch, RunTasksMatch, RunToMatch, TaskNode, TaskOutcome } from '@turbo-console/core';
 
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 
@@ -22,6 +22,8 @@ export type RunEntry = {
   readonly stopRequested: boolean;
   readonly match: RunMatch | null;
   readonly matching: boolean;
+  /** Spec D7: how the run's summary says each task it lists ended; null until settled, when no summary matched, or for a run never matched (stopped, failed to start, a script). [] when the summary listed no task (Ctrl+C before any ended); a task cut off by Ctrl+C has no outcome. */
+  readonly outcomes: TaskOutcome[] | null;
   /** Run Without Cache: the run passed `--force`, so its summary records `MISS` whatever the cache held. */
   readonly force: boolean;
   /** The package manager a script run was launched with, so its end can name it; `null` for a turbo task. */
@@ -90,7 +92,7 @@ export type Runs = {
   readonly tryStart: (request: RunRequest, now: number) => boolean;
   readonly attach: (definition: RunDefinition, launchedAt: number, execution: Terminable) => void;
   readonly failStart: (definition: RunDefinition, at: number, launchedAt?: number, isTaskEnded?: boolean) => RunEntry | null;
-  readonly setMatch: (definition: RunDefinition, launchedAt: number, match: RunMatch | null) => void;
+  readonly setMatch: (definition: RunDefinition, launchedAt: number, match: RunMatch | null, outcomes: TaskOutcome[] | null) => void;
   readonly get: RunLookup;
   readonly runningIds: LiveIds;
   readonly onDidChange: (listener: RunListener) => () => void;

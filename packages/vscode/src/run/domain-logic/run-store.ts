@@ -1,4 +1,4 @@
-import type { RunMatch } from '@turbo-console/core';
+import type { RunMatch, TaskOutcome } from '@turbo-console/core';
 
 import type { LiveIds, RunDefinition, RunEntry, RunKey, RunListener, RunLookup, RunRequest, Terminable } from '../common/run.type.ts';
 import { endStateOf, isMatchedEnd } from '../utils/run-end.util.ts';
@@ -132,9 +132,9 @@ export class RunStore {
   /**
    * Settles the run launched at `launchedAt` while it waits for its match; ignored for any other entry. B2-1: a passed
    * run whose match is `interrupted` was cut off (Ctrl+C in its terminal exits 0), so it is stopped; a failed one stays
-   * failed.
+   * failed. The outcomes are written in the same change.
    */
-  public setMatch(definition: RunDefinition, launchedAt: number, match: RunMatch | null): void {
+  public setMatch(definition: RunDefinition, launchedAt: number, match: RunMatch | null, outcomes: TaskOutcome[] | null): void {
     const slot = this.slots.get(runKeyOf(definition.root, definition.id));
 
     if (slot?.entry.matching !== true) return;
@@ -144,7 +144,7 @@ export class RunStore {
     const isCutOff = slot.entry.state === 'passed' && match?.interrupted === true;
     const state = isCutOff ? 'stopped' : slot.entry.state;
 
-    this.update(slot, { state, match, matching: false });
+    this.update(slot, { state, match, outcomes, matching: false });
   }
 
   /** Drops the ended entries of `root` whose task is gone; a running entry stays until it ends. */

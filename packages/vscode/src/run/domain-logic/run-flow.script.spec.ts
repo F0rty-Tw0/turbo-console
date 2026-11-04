@@ -55,8 +55,7 @@ describe('FEATURE: run flow, a script', () => {
 
       const entry = store.get('/ws', 'build');
 
-      expect(entry?.packageManager).toStrictEqual(PACKAGE_MANAGER_STUB);
-      expect(entry?.matching).toBe(false);
+      expect(entry).toMatchObject({ packageManager: PACKAGE_MANAGER_STUB, matching: false, outcomes: null });
     });
 
     it('WHEN it is run twice THEN the second says Already running and launches nothing', async () => {

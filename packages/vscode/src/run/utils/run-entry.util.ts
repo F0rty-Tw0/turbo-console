@@ -24,6 +24,7 @@ export const runningEntryOf = (request: RunRequest, now: number): RunEntry => {
     stopRequested: false,
     match: null,
     matching: false,
+    outcomes: null,
     force: request.force,
     packageManager
   };
