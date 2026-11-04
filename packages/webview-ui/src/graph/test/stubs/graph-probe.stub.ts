@@ -14,6 +14,7 @@ export const GRAPH_PROBE_STUB: GraphProbe = {
   zoom: () => 1,
   pan: () => ORIGIN,
   renderCount: () => 0,
+  forceRender: () => undefined,
   firstFrameMs: () => null,
   layoutEngine: () => null,
   visibleIds: () => [],

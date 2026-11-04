@@ -144,6 +144,8 @@ export type GraphProbe = {
   readonly pan: () => Position;
   /** The Cytoscape `render` events since the probe was made: a redraw of the canvas, which the flow overlay exists to avoid. */
   readonly renderCount: () => number;
+  /** Redraws the canvas at once (Cytoscape's `forceRender`), which counts as a `render`: lets a test finish a texture rebuild before it counts renders. */
+  readonly forceRender: () => void;
   /** From the latest `graph` state's message event to the first Cytoscape `render` after it; `null` until that render. */
   readonly firstFrameMs: () => number | null;
   readonly layoutEngine: () => LayoutEngine | null;
