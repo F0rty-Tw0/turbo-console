@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import type { LayoutQuality } from '../test/common/layout-quality.type.ts';
-import { REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
+import { REAL_ELK_HOOK_TIMEOUT_MS, REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
 import type { U0TaskView, U0View } from '../test/common/u0-workspace.type.ts';
 import { CROSSING_ROUTES_STUB, OWN_BANDS_STUB, SHARED_END_ROUTES_STUB, THROUGH_LEAF_STUB } from '../test/stubs/layout-quality.stub.ts';
 import { U0_CANVAS_STUB } from '../test/stubs/u0-workspace.stub.ts';
@@ -85,7 +85,7 @@ describe('FEATURE: layout quality of the U0 workspace with real elkjs', { timeou
 
     beforeAll(async () => {
       quality = await u0QualitiesOf();
-    });
+    }, REAL_ELK_HOOK_TIMEOUT_MS);
 
     it('THEN c1: the flat package view fits at zoom 1.40 or more', () => {
       expect(quality.pkgFlat.fitZoom).toBeGreaterThanOrEqual(1.4);
