@@ -1,0 +1,17 @@
+[
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":""}
+,
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":"   • turbo 2.11.7"},
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":"   • Packages in scope: @acme/app"},
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":"   • Running build in 1 package"}
+,
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":"   • Remote caching disabled (TURBO_TOKEN set without TURBO_TEAM)"}
+,
+{"source":"turbo","level":"info","timestamp":1793796854282,"text":""}
+,
+{"source":"@acme/lib#build","level":"stdout","timestamp":1793796854285,"text":"cache bypass, force executing 1115377ac53df17d"}
+,
+{"source":"@acme/lib#build","level":"stdout","timestamp":1793796854336,"text":"$ node -e \"console.log('lib'+'-ready');const f=require('fs'),t=Date.now();const i=setInterval(()=>{if(f.existsSync('../../go')){clearInterval(i)}else if(Date.now()-t>60000){process.exit(2)}},50)\""}
+,
+{"source":"@acme/lib#build","level":"stdout","timestamp":1793796854353,"text":"lib-ready"}
+]

@@ -1,0 +1,29 @@
+[
+{"source":"turbo","level":"info","timestamp":1793796872703,"text":""},
+{"source":"turbo","level":"info","timestamp":1793796872704,"text":"   • turbo 2.11.7"},
+{"source":"turbo","level":"info","timestamp":1793796872704,"text":"   • Packages in scope: @acme/app"},
+{"source":"turbo","level":"info","timestamp":1793796872704,"text":"   • Running after-fail in 1 package"},
+{"source":"turbo","level":"info","timestamp":1793796872704,"text":"   • Remote caching disabled (TURBO_TOKEN set without TURBO_TEAM)"},
+{"source":"turbo","level":"info","timestamp":1793796872704,"text":""}
+,
+{"source":"@acme/lib#fail","level":"stdout","timestamp":1793796872712,"text":"cache bypass, force executing a1bf465fa81e8845"}
+,
+{"source":"@acme/lib#fail","level":"stdout","timestamp":1793796872808,"text":"$ node -e \"console.log('fail'+'-line');process.exit(3)\""}
+,
+{"source":"@acme/lib#fail","level":"stdout","timestamp":1793796872832,"text":"fail-line"}
+,
+{"source":"@acme/lib#fail","level":"stdout","timestamp":1793796872833,"text":"[ELIFECYCLE] Command failed with exit code 3."}
+,
+{"source":"turbo","level":"error","timestamp":1793796872839,"text":"command (/tmp/u7a-probe-s0eIsG/packages/lib) /usr/local/bin/pnpm run fail exited (3)"}
+,
+{"source":"turbo","level":"info","timestamp":1793796872840,"text":""}
+,
+{"source":"turbo","level":"info","timestamp":1793796872840,"text":"  Tasks:    0 successful, 1 total"},
+{"source":"turbo","level":"info","timestamp":1793796872840,"text":" Cached:    0 cached, 1 total"},
+{"source":"turbo","level":"info","timestamp":1793796872840,"text":"   Time:    144ms "}
+,
+{"source":"turbo","level":"info","timestamp":1793796872840,"text":"Summary:    /tmp/u7a-probe-s0eIsG/.turbo/runs/3LdvglyaXOP5mbAXdGEhu2hM5mV.json"}
+,
+{"source":"turbo","level":"info","timestamp":1793796872840,"text":" Failed:    @acme/lib#fail"},
+{"source":"turbo","level":"info","timestamp":1793796872840,"text":""}
+]

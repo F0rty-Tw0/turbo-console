@@ -1,0 +1,24 @@
+[
+{"source":"turbo","level":"info","timestamp":1793796872872,"text":""},
+{"source":"turbo","level":"info","timestamp":1793796872872,"text":"   • turbo 2.11.7"},
+{"source":"turbo","level":"info","timestamp":1793796872872,"text":"   • Packages in scope: @acme/lib"},
+{"source":"turbo","level":"info","timestamp":1793796872872,"text":"   • Running build in 1 package"},
+{"source":"turbo","level":"info","timestamp":1793796872872,"text":"   • Remote caching disabled (TURBO_TOKEN set without TURBO_TEAM)"},
+{"source":"turbo","level":"info","timestamp":1793796872872,"text":""}
+,
+{"source":"@acme/lib#build","level":"stdout","timestamp":1793796872881,"text":"cache bypass, force executing 1115377ac53df17d"}
+,
+{"source":"@acme/lib#build","level":"stdout","timestamp":1793796872957,"text":"$ node -e \"console.log('lib'+'-ready');const f=require('fs'),t=Date.now();const i=setInterval(()=>{if(f.existsSync('../../go')){clearInterval(i)}else if(Date.now()-t>60000){process.exit(2)}},50)\""}
+,
+{"source":"@acme/lib#build","level":"stdout","timestamp":1793796872976,"text":"lib-ready"}
+,
+{"source":"turbo","level":"info","timestamp":1793796873063,"text":"Shutting down Turborepo tasks..."}
+,
+{"source":"turbo","level":"info","timestamp":1793796873269,"text":""},
+{"source":"turbo","level":"info","timestamp":1793796873269,"text":"  Tasks:    0 successful, 1 total"},
+{"source":"turbo","level":"info","timestamp":1793796873269,"text":" Cached:    0 cached, 1 total"}
+,
+{"source":"turbo","level":"info","timestamp":1793796873269,"text":"   Time:    402ms "},
+{"source":"turbo","level":"info","timestamp":1793796873269,"text":"Summary:    /tmp/u7a-probe-MPuaiU/.turbo/runs/3Ldvgu7HTcaOR2ZHB7nK2iiqthN.json"},
+{"source":"turbo","level":"info","timestamp":1793796873269,"text":""}
+]

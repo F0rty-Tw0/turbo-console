@@ -21,6 +21,9 @@ import type {
   PackageManagerName,
   PackageManagerSource,
   PackageNode,
+  RunLogEntry,
+  RunLogEvent,
+  RunLogScan,
   RunMatch,
   RunSummary,
   RunToMatch,
@@ -43,6 +46,8 @@ const RUNTIME_EXPORTS = [
   'AFFECTED_TASKS_QUERY',
   'PACKAGE_GRAPH_QUERY',
   'PACKAGE_NAME',
+  'RUN_LOG_OBJECT_MAX',
+  'RUN_LOG_PROBE',
   'SCHEMA_SDL_SHA256',
   'SINGLE_PACKAGE',
   'SUPPORTED_TURBO_RANGE',
@@ -51,6 +56,7 @@ const RUNTIME_EXPORTS = [
   'assertTaskName',
   'atomGroupsOf',
   'dryRunSchema',
+  'isUnknownRunLog',
   'isWithin',
   'loadWorkspace',
   'matchRunSummary',
@@ -64,7 +70,9 @@ const RUNTIME_EXPORTS = [
   'readNewestRunSummary',
   'readSmallFile',
   'resolveTurbo',
+  'runLogEventOf',
   'runSummarySchema',
+  'scanRunLog',
   'turboRunAllArgs',
   'turboRunArgs'
 ];
@@ -103,6 +111,9 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<DryRun>().toHaveProperty('tasks');
       expectTypeOf<PackageGraph>().toHaveProperty('data');
       expectTypeOf<RunSummary>().toHaveProperty('execution');
+      expectTypeOf<RunLogScan>().toHaveProperty('next');
+      expectTypeOf<RunLogEntry>().toHaveProperty('source');
+      expectTypeOf<RunLogEvent>().toHaveProperty('taskId');
       expectTypeOf<RunToMatch>().toHaveProperty('launchedAt');
       expectTypeOf<RunMatch['cache']>().toEqualTypeOf<'HIT' | 'MISS' | null>();
       expectTypeOf<AtomResult['outcome']>().toEqualTypeOf<'passed' | 'failed' | 'cached'>();

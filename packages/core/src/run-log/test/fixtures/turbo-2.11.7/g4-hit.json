@@ -1,0 +1,27 @@
+[
+{"source":"turbo","level":"info","timestamp":1793796871332,"text":""},
+{"source":"turbo","level":"info","timestamp":1793796871332,"text":"   • turbo 2.11.7"},
+{"source":"turbo","level":"info","timestamp":1793796871332,"text":"   • Packages in scope: @acme/lib"},
+{"source":"turbo","level":"info","timestamp":1793796871332,"text":"   • Running hit in 1 package"}
+,
+{"source":"turbo","level":"info","timestamp":1793796871332,"text":"   • Remote caching disabled (TURBO_TOKEN set without TURBO_TEAM)"},
+{"source":"turbo","level":"info","timestamp":1793796871332,"text":""}
+,
+{"source":"@acme/lib#hit","level":"stdout","timestamp":1793796871335,"text":"cache hit, replaying logs 3b2c502dcd207f46"}
+,
+{"source":"@acme/lib#hit","level":"stdout","timestamp":1793796871335,"text":"$ node -e \"console.log('hit'+'-line')\""}
+,
+{"source":"@acme/lib#hit","level":"stdout","timestamp":1793796871335,"text":"hit-line"}
+,
+{"source":"turbo","level":"info","timestamp":1793796871336,"text":""}
+,
+{"source":"turbo","level":"info","timestamp":1793796871336,"text":"  Tasks:    1 successful, 1 total"}
+,
+{"source":"turbo","level":"info","timestamp":1793796871336,"text":" Cached:    1 cached, 1 total"}
+,
+{"source":"turbo","level":"info","timestamp":1793796871336,"text":"   Time:    7ms >>> FULL TURBO"}
+,
+{"source":"turbo","level":"info","timestamp":1793796871336,"text":"Summary:    /tmp/u7a-probe-ao4Lbr/.turbo/runs/3Ldvgd9Eae7E9p273XWGdJuendE.json"}
+,
+{"source":"turbo","level":"info","timestamp":1793796871336,"text":""}
+]
