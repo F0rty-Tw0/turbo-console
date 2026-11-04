@@ -107,13 +107,13 @@ export const taskOutcomesOf = (summary: RunSummary): TaskOutcome[] => summary.ta
 /**
  * Spec §4.1.2 and D7: what `summary` says when it is a candidate for `run` (it started within `[launchedAt, endedAt]`,
  * ran the same command and ended with the same exit code), `null` when it is not. `match` is the data a fitting
- * summary gives: for a task with its own entry it must list that entry, and the duration and cache status come from it,
- * or from the whole summary (`cache: null`) for an umbrella or aggregate. B2-1: a run that exited 0 is `interrupted`
- * when turbo attempted more tasks than it saw end, or, for a task with its own entry, the summary lists no task at all
- * (Ctrl+C before turbo attempted one); the data is then the whole summary's. A failed run is never `interrupted`: turbo
- * cuts siblings off after a failure itself. `match` is `null` for a candidate that does not fit (no entry of the
- * launched task, as after a failed dependency, or a duration that is not finite or is negative); the `outcomes` are the
- * summary's either way.
+ * summary gives: for a task with its own entry it must list that entry unless interrupted (B2-1, below), and the
+ * duration and cache status come from it, or from the whole summary (`cache: null`) for an umbrella or aggregate. B2-1:
+ * a run that exited 0 is `interrupted` when turbo attempted more tasks than it saw end, or, for a task with its own
+ * entry, the summary lists no task at all (Ctrl+C before turbo attempted one); the data is then the whole summary's. A
+ * failed run is never `interrupted`: turbo cuts siblings off after a failure itself. `match` is `null` for a candidate
+ * that does not fit (no entry of the launched task, as after a failed dependency, or a duration that is not finite or
+ * is negative); the `outcomes` are the summary's either way.
  */
 export const summaryCandidateOf = (summary: RunSummary, run: RunToMatch): RunTasksMatch | null => {
   const isRunCandidate = isCandidate(summary, run);
