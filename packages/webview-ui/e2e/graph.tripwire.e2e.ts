@@ -1,4 +1,10 @@
-import { GROUPED_PAN_STEP_MS, ROWS_BOXES_IN_VIEW, ROWS_BUTTONS_SHOWN, ROWS_PAN_MS } from './common/graph-tripwire.const.ts';
+import {
+  FLAT_FIRST_FRAME_MS,
+  GROUPED_PAN_STEP_MS,
+  ROWS_BOXES_IN_VIEW,
+  ROWS_BUTTONS_SHOWN,
+  ROWS_PAN_MS
+} from './common/graph-tripwire.const.ts';
 import { IS_MAC_RUNNER, IS_WINDOWS_RUNNER, LARGE_PACKAGE_COUNT, TOGGLE_BUDGET_MS, TOGGLE_SAMPLES } from './common/graph.const.ts';
 import { test } from './graph-task.fixture.ts';
 import { PKG_299_TO_000_FACTS_STUB } from './test/stubs/graph-trace-facts.stub.ts';
@@ -89,7 +95,8 @@ test.describe('FEATURE: graph tripwires', () => {
 
     await test.step('AND the target-like state is sent', async (): Promise<void> => graphHost.sendState(targetLikeState()));
 
-    await test.step('THEN the first frame came in under 2000 ms', async (): Promise<void> => graphLook.expectFirstFrameUnder(2000));
+    await test.step('THEN the first frame came in under 2000 ms', async (): Promise<void> =>
+      graphLook.expectFirstFrameUnder(FLAT_FIRST_FRAME_MS));
 
     await test.step('AND the ELK time and the main.js size are recorded', async (): Promise<void> =>
       graphHost.recordBundleAndLayout());
