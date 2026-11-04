@@ -31,9 +31,9 @@ export const summaryText = (id: string): string => {
   return JSON.stringify(summary);
 };
 
-/** One task entry of a summary: `taskId` ran over `span` and ended with cache `status`, exit code 0. */
-export const taskEntry = (taskId: string, span: RunWindow, status: 'HIT' | 'MISS'): RunSummaryTask => {
-  const execution = { ...span, exitCode: 0 };
+/** One task entry of a summary: `taskId` ran over `span` and ended with cache `status` and `exitCode`. */
+export const taskEntry = (taskId: string, span: RunWindow, status: 'HIT' | 'MISS', exitCode = 0): RunSummaryTask => {
+  const execution = { ...span, exitCode };
   const cache = { status };
   const entry = { taskId, execution, cache };
 
@@ -57,6 +57,14 @@ export const summaryOf = (command: string, window: RunWindow, exitCode: number, 
   const summary: RunSummary = { ...RUN_SUMMARY_STUB, execution, tasks };
 
   return summary;
+};
+
+/** `summary` with `attempted` raised past the tasks it saw end: a Ctrl+C cut one of them off. */
+export const cutShortOf = (summary: RunSummary): RunSummary => {
+  const execution = { ...summary.execution, attempted: summary.execution.attempted + 1 };
+  const cut: RunSummary = { ...summary, execution };
+
+  return cut;
 };
 
 /** `summaryOf(...)` as JSON. */

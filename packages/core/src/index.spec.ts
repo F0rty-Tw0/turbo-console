@@ -26,9 +26,11 @@ import type {
   RunLogScan,
   RunMatch,
   RunSummary,
+  RunTasksMatch,
   RunToMatch,
   TaskDefinition,
   TaskNode,
+  TaskOutcome,
   TurboBinary,
   TurboErrorKind,
   TurboVersionRange,
@@ -59,7 +61,7 @@ const RUNTIME_EXPORTS = [
   'isUnknownRunLog',
   'isWithin',
   'loadWorkspace',
-  'matchRunSummary',
+  'matchRunTasks',
   'packageGraphSchema',
   'plainLine',
   'plainLines',
@@ -116,6 +118,8 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<RunLogEvent>().toHaveProperty('taskId');
       expectTypeOf<RunToMatch>().toHaveProperty('launchedAt');
       expectTypeOf<RunMatch['cache']>().toEqualTypeOf<'HIT' | 'MISS' | null>();
+      expectTypeOf<TaskOutcome['state']>().toEqualTypeOf<'passed' | 'failed'>();
+      expectTypeOf<RunTasksMatch>().toHaveProperty('outcomes');
       expectTypeOf<AtomResult['outcome']>().toEqualTypeOf<'passed' | 'failed' | 'cached'>();
       expectTypeOf<TurboVersionRange>().toHaveProperty('maxExclusive');
     });

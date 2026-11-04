@@ -1,5 +1,5 @@
 import { turboRunArgs } from '@turbo-console/core';
-import type { RunMatch } from '@turbo-console/core';
+import type { RunTasksMatch } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, TASK_ENDED_TEXT } from '../common/run.const.ts';
@@ -160,7 +160,7 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
   store.attach(definition, launchedAt, execution);
 };
 
-const matchOf = async (ports: RunPorts, entry: RunEntry): Promise<RunMatch | null> => {
+const matchOf = async (ports: RunPorts, entry: RunEntry): Promise<RunTasksMatch | null> => {
   const run = runToMatchOf(entry);
 
   if (run === null) return null;
@@ -175,14 +175,16 @@ const matchOf = async (ports: RunPorts, entry: RunEntry): Promise<RunMatch | nul
 };
 
 /**
- * Spec §4.5 step 6, after `processEnded`: the summary match of exactly this run, or none (no summary, more than one, or
- * a lookup error, logged). `matching` always ends `false`; nothing for an entry not waiting for a match (a stopped run).
+ * Spec §4.5 step 6, after `processEnded`: the summary match of exactly this run and the outcome of every task its
+ * summary lists, or neither (no summary, more than one, or a lookup error, logged). A single summary that lacks the
+ * launched task's entry (a failed dependency) gives outcomes with no match. `matching` always ends `false`; nothing for
+ * an entry not waiting for a match (a stopped run).
  */
 export const finishRun = async (store: Runs, ports: RunPorts, entry: RunEntry): Promise<void> => {
   if (!entry.matching) return;
 
   const definition: RunDefinition = { root: entry.root, id: entry.taskId };
-  const match = await matchOf(ports, entry);
+  const tasksMatch = await matchOf(ports, entry);
 
-  store.setMatch(definition, entry.launchedAt, match);
+  store.setMatch(definition, entry.launchedAt, tasksMatch);
 };

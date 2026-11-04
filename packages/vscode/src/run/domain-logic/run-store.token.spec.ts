@@ -1,4 +1,4 @@
-import type { RunMatch } from '@turbo-console/core';
+import type { RunMatch, RunTasksMatch, TaskOutcome } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunStore } from './run-store.ts';
@@ -8,6 +8,10 @@ import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 const FIRST_MATCH: RunMatch = { cache: 'HIT', durationMs: 9999, interrupted: false };
 const SECOND_MATCH: RunMatch = { cache: 'MISS', durationMs: 1200, interrupted: false };
+const FIRST_OUTCOMES: TaskOutcome[] = [{ taskId: 'build', state: 'passed' }];
+const SECOND_OUTCOMES: TaskOutcome[] = [{ taskId: 'build', state: 'failed' }];
+const FIRST_TASKS: RunTasksMatch = { match: FIRST_MATCH, outcomes: FIRST_OUTCOMES };
+const SECOND_TASKS: RunTasksMatch = { match: SECOND_MATCH, outcomes: SECOND_OUTCOMES };
 
 const terminable = (): Terminable => {
   const execution: Terminable = { terminate: vi.fn() };
@@ -30,17 +34,22 @@ describe('FEATURE: run store, calls of one run never reach another run of the ta
       store.processEnded(RUN, 1, 6000);
     });
 
-    it('WHEN run 1 match arrives late THEN run 2 does not get it', () => {
-      store.setMatch(RUN, 1000, FIRST_MATCH);
+    it('WHEN run 1 match arrives late THEN run 2 gets neither its match nor its outcomes', () => {
+      store.setMatch(RUN, 1000, FIRST_TASKS);
 
-      expect(store.get('/ws', 'build')).toMatchObject({ launchedAt: 5000, match: null, matching: true });
+      expect(store.get('/ws', 'build')).toMatchObject({ launchedAt: 5000, match: null, outcomes: null, matching: true });
     });
 
     it('WHEN run 1 match arrives late and then run 2 match THEN run 2 holds its own match', () => {
-      store.setMatch(RUN, 1000, FIRST_MATCH);
-      store.setMatch(RUN, 5000, SECOND_MATCH);
+      store.setMatch(RUN, 1000, FIRST_TASKS);
+      store.setMatch(RUN, 5000, SECOND_TASKS);
 
-      expect(store.get('/ws', 'build')).toMatchObject({ launchedAt: 5000, match: SECOND_MATCH, matching: false });
+      expect(store.get('/ws', 'build')).toMatchObject({
+        launchedAt: 5000,
+        match: SECOND_MATCH,
+        outcomes: SECOND_OUTCOMES,
+        matching: false
+      });
     });
   });
 

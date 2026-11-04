@@ -5,9 +5,10 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { RunToMatch } from './common/run-match.type.ts';
-import { matchRunSummary } from './domain-logic/match-run-summary.ts';
+import { matchRunTasks } from './domain-logic/match-run-tasks.ts';
 import { readNewestRunSummary } from './domain-logic/read-newest-run-summary.ts';
 import { TASK_NODE_STUB } from './test/stubs/task-node.stub.ts';
+import { runMatchOf } from './test/utils/run-match.spec.util.ts';
 import { turboRunAllArgs, turboRunArgs } from '../run-args/utils/run-args.util.ts';
 import type { RunSummary, TurboResult } from '../shared/turbo/common/turbo.type.ts';
 import { runTurbo } from '../shared/turbo/data-access/run-turbo.ts';
@@ -53,10 +54,12 @@ describe('FEATURE: a run in a single-package repo against turbo 2.11.7', () => {
       expect(summary?.tasks.map((task) => task.taskId)).toStrictEqual(['//#build']);
     });
 
-    it('THEN matchRunSummary finds the run of //#build with a cache status', async () => {
+    it('THEN matchRunTasks finds the run of //#build with a cache status', async () => {
       const run: RunToMatch = { task: BUILD, packageName: '//', launchedAt, endedAt, exitCode: result.exitCode };
 
-      await expect(matchRunSummary(dir, run)).resolves.toMatchObject({ cache: 'MISS' });
+      const tasksMatch = await matchRunTasks(dir, run);
+
+      expect(runMatchOf(tasksMatch)).toMatchObject({ cache: 'MISS' });
     });
   });
 });

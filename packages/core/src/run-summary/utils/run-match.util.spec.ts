@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { isNearRun, matchSummary, runCommandOf } from './run-match.util.ts';
+import { isNearRun, runCommandOf, summaryCandidateOf, taskOutcomesOf } from './run-match.util.ts';
 import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
 import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
-import type { RunToMatch } from '../common/run-match.type.ts';
+import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from '../common/run-match.type.ts';
 import type { RunSummaryFile } from '../common/run-summary-file.type.ts';
 import { SUMMARY_MTIME_SLACK_MS } from '../common/run-summary.const.ts';
 import { TASK_NODE_STUB } from '../test/stubs/task-node.stub.ts';
-import { summaryOf, taskEntry } from '../test/utils/run-summary.spec.util.ts';
+import { cutShortOf, summaryOf, taskEntry } from '../test/utils/run-summary.spec.util.ts';
 
 const LAUNCHED_AT = 1_760_000_000_000;
 
@@ -26,23 +26,27 @@ const OWN_ENTRY = taskEntry('web#build', TASK_SPAN, 'MISS');
 
 const DEPENDENCY_ENTRY = taskEntry('ui#build', WINDOW, 'HIT');
 
-const OWN_MATCH = { cache: 'MISS', durationMs: 500, interrupted: false };
+const OWN_MATCH: RunMatch = { cache: 'MISS', durationMs: 500, interrupted: false };
 
 /** The whole summary, `WINDOW`, cut short: turbo exits 0 on Ctrl+C with no cache status for the run. */
-const INTERRUPTED_MATCH = { cache: null, durationMs: 4000, interrupted: true };
+const INTERRUPTED_MATCH: RunMatch = { cache: null, durationMs: 4000, interrupted: true };
 
-/** `summary` with `attempted` raised past the tasks it saw end: a Ctrl+C cut one of them off. */
-const cutShort = (summary: RunSummary): RunSummary => {
-  const execution = { ...summary.execution, attempted: summary.execution.attempted + 1 };
-  const cut: RunSummary = { ...summary, execution };
-
-  return cut;
-};
+const PASSED_BOTH: TaskOutcome[] = [
+  { taskId: 'ui#build', state: 'passed' },
+  { taskId: 'web#build', state: 'passed' }
+];
 
 const fileAt = (mtimeMs: number): RunSummaryFile => {
   const file: RunSummaryFile = { name: 'a.json', mtimeMs };
 
   return file;
+};
+
+/** The match part of `summaryCandidateOf`: `null` for a summary that is no candidate or does not fit. */
+const matchOf = (summary: RunSummary, run: RunToMatch): RunMatch | null => {
+  const candidate = summaryCandidateOf(summary, run);
+
+  return candidate?.match ?? null;
 };
 
 describe('FEATURE: run match', () => {
@@ -74,19 +78,19 @@ describe('FEATURE: run match', () => {
     it('WHEN matched THEN the entry of the task gives the cache status and its own duration', () => {
       const summary = summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY, OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(OWN_MATCH);
     });
 
     it('WHEN its start equals launchedAt THEN it still matches', () => {
       const summary = summaryOf(COMMAND, { ...WINDOW, startTime: LAUNCHED_AT }, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(OWN_MATCH);
     });
 
     it('WHEN its start equals endedAt THEN it still matches', () => {
       const summary = summaryOf(COMMAND, { startTime: ENDED_AT, endTime: ENDED_AT + 1000 }, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(OWN_MATCH);
     });
   });
 
@@ -94,31 +98,31 @@ describe('FEATURE: run match', () => {
     it('WHEN it started before launchedAt THEN there is no match', () => {
       const summary = summaryOf(COMMAND, { ...WINDOW, startTime: LAUNCHED_AT - 1 }, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN it started after endedAt THEN there is no match', () => {
       const summary = summaryOf(COMMAND, { startTime: ENDED_AT + 1, endTime: ENDED_AT + 1000 }, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN its command is another filter THEN there is no match', () => {
       const summary = summaryOf('turbo run build --filter=lib', WINDOW, 0, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN its exit code differs THEN there is no match', () => {
       const summary = summaryOf(COMMAND, WINDOW, 1, [OWN_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN it lists other entries but none for the task, and every attempted task ended, THEN there is no match', () => {
       const summary = summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
   });
 
@@ -126,25 +130,25 @@ describe('FEATURE: run match', () => {
     it('WHEN it lists no task, attempted 0 (Ctrl+C before turbo attempted one) THEN it matches as interrupted', () => {
       const summary = summaryOf(COMMAND, WINDOW, 0, []);
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
     });
 
     it('WHEN it lists no task, attempted 1 (turbo 2.11.7 after Ctrl+C) THEN it matches as interrupted', () => {
-      const summary = cutShort(summaryOf(COMMAND, WINDOW, 0, []));
+      const summary = cutShortOf(summaryOf(COMMAND, WINDOW, 0, []));
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
     });
 
     it('WHEN it lists the task but attempted more tasks than ended THEN it matches as interrupted', () => {
-      const summary = cutShort(summaryOf(COMMAND, WINDOW, 0, [OWN_ENTRY]));
+      const summary = cutShortOf(summaryOf(COMMAND, WINDOW, 0, [OWN_ENTRY]));
 
-      expect(matchSummary(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
+      expect(matchOf(summary, RUN)).toStrictEqual(INTERRUPTED_MATCH);
     });
 
     it('WHEN its span is broken THEN there is no match', () => {
       const summary = summaryOf(COMMAND, { startTime: WINDOW.startTime, endTime: LAUNCHED_AT }, 0, []);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
   });
 
@@ -152,21 +156,21 @@ describe('FEATURE: run match', () => {
     const failedRun: RunToMatch = { ...RUN, exitCode: 1 };
 
     it('WHEN it lists the task THEN the entry gives the data and the run is not interrupted', () => {
-      const summary = cutShort(summaryOf(COMMAND, WINDOW, 1, [OWN_ENTRY]));
+      const summary = cutShortOf(summaryOf(COMMAND, WINDOW, 1, [OWN_ENTRY]));
 
-      expect(matchSummary(summary, failedRun)).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, failedRun)).toStrictEqual(OWN_MATCH);
     });
 
     it('WHEN it lists another entry but none for the task (a failed dependency) THEN there is no match', () => {
-      const summary = cutShort(summaryOf(COMMAND, WINDOW, 1, [DEPENDENCY_ENTRY]));
+      const summary = cutShortOf(summaryOf(COMMAND, WINDOW, 1, [DEPENDENCY_ENTRY]));
 
-      expect(matchSummary(summary, failedRun)).toBeNull();
+      expect(matchOf(summary, failedRun)).toBeNull();
     });
 
     it('WHEN it lists no task THEN there is no match', () => {
       const summary = summaryOf(COMMAND, WINDOW, 1, []);
 
-      expect(matchSummary(summary, failedRun)).toBeNull();
+      expect(matchOf(summary, failedRun)).toBeNull();
     });
   });
 
@@ -175,14 +179,14 @@ describe('FEATURE: run match', () => {
       const backwards = taskEntry('web#build', { startTime: TASK_SPAN.endTime, endTime: TASK_SPAN.startTime }, 'MISS');
       const summary = summaryOf(COMMAND, WINDOW, 0, [backwards]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
 
     it('WHEN the entry spans -1e308 to 1e308, an infinite duration, THEN there is no match', () => {
       const endless = taskEntry('web#build', { startTime: -1e308, endTime: 1e308 }, 'MISS');
       const summary = summaryOf(COMMAND, WINDOW, 0, [endless]);
 
-      expect(matchSummary(summary, RUN)).toBeNull();
+      expect(matchOf(summary, RUN)).toBeNull();
     });
   });
 
@@ -194,33 +198,93 @@ describe('FEATURE: run match', () => {
     it('WHEN an umbrella run is matched THEN there is no cache and the duration is the summary span', () => {
       const summary = summaryOf(umbrellaCommand, WINDOW, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task: umbrella })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
+      expect(matchOf(summary, { ...RUN, task: umbrella })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
     });
 
     it('WHEN the umbrella run attempted more tasks than ended THEN it matches as interrupted', () => {
-      const summary = cutShort(summaryOf(umbrellaCommand, WINDOW, 0, [fileEntry]));
+      const summary = cutShortOf(summaryOf(umbrellaCommand, WINDOW, 0, [fileEntry]));
 
-      expect(matchSummary(summary, { ...RUN, task: umbrella })).toStrictEqual(INTERRUPTED_MATCH);
+      expect(matchOf(summary, { ...RUN, task: umbrella })).toStrictEqual(INTERRUPTED_MATCH);
     });
 
     it('WHEN the umbrella summary ends before it starts THEN there is no match', () => {
       const summary = summaryOf(umbrellaCommand, { startTime: WINDOW.startTime, endTime: LAUNCHED_AT }, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task: umbrella })).toBeNull();
+      expect(matchOf(summary, { ...RUN, task: umbrella })).toBeNull();
     });
 
     it('WHEN an aggregate run is matched THEN there is no cache and the duration is the summary span', () => {
       const task: TaskNode = { ...TASK_NODE_STUB, id: 'web#e2e-ci--all', name: 'e2e-ci--all', kind: 'atom-aggregate' };
       const summary = summaryOf('turbo run e2e-ci--all --filter=web', WINDOW, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
+      expect(matchOf(summary, { ...RUN, task })).toStrictEqual({ cache: null, durationMs: 4000, interrupted: false });
     });
 
     it('WHEN an atom file run is matched THEN it has its own entry, so the entry gives the data', () => {
       const task: TaskNode = { ...TASK_NODE_STUB, id: 'web#e2e--a.spec.ts', name: 'e2e--a.spec.ts', kind: 'atom-file' };
       const summary = summaryOf('turbo run e2e--a.spec.ts --filter=web', WINDOW, 0, [fileEntry]);
 
-      expect(matchSummary(summary, { ...RUN, task })).toStrictEqual(OWN_MATCH);
+      expect(matchOf(summary, { ...RUN, task })).toStrictEqual(OWN_MATCH);
+    });
+  });
+
+  describe('GIVEN summary entries of each kind', () => {
+    it.each([
+      ['a MISS that exited 0', 'passed', taskEntry('ui#build', WINDOW, 'MISS')],
+      ['a MISS that exited 3', 'failed', taskEntry('ui#build', WINDOW, 'MISS', 3)],
+      ['a HIT', 'passed', taskEntry('ui#build', WINDOW, 'HIT')],
+      ['a HIT that records exit 1 (a HIT is passed whatever the code)', 'passed', taskEntry('ui#build', WINDOW, 'HIT', 1)]
+    ])('WHEN the outcomes of a summary listing %s are read THEN its state is %s', (_name, state, entry) => {
+      const summary = summaryOf(COMMAND, WINDOW, 0, [entry]);
+
+      expect(taskOutcomesOf(summary)).toStrictEqual([{ taskId: 'ui#build', state }]);
+    });
+
+    it('WHEN a summary lists a dependency then the task THEN the outcomes keep that order', () => {
+      const summary = summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY, OWN_ENTRY]);
+
+      expect(taskOutcomesOf(summary)).toStrictEqual(PASSED_BOTH);
+    });
+  });
+
+  describe('GIVEN summaries as candidates of the run', () => {
+    it('WHEN the summary is of another command THEN it is no candidate', () => {
+      const summary = summaryOf('turbo run build --filter=lib', WINDOW, 0, [OWN_ENTRY]);
+
+      expect(summaryCandidateOf(summary, RUN)).toBeNull();
+    });
+
+    it('WHEN it fits THEN it has the own match and every outcome', () => {
+      const summary = summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY, OWN_ENTRY]);
+      const expected: RunTasksMatch = { match: OWN_MATCH, outcomes: PASSED_BOTH };
+
+      expect(summaryCandidateOf(summary, RUN)).toStrictEqual(expected);
+    });
+
+    it('WHEN a failed run lists only a failed dependency THEN it has no match but that outcome', () => {
+      const failedRun: RunToMatch = { ...RUN, exitCode: 1 };
+      const summary = summaryOf(COMMAND, WINDOW, 1, [taskEntry('ui#build', WINDOW, 'MISS', 3)]);
+      const outcomes: TaskOutcome[] = [{ taskId: 'ui#build', state: 'failed' }];
+      const expected: RunTasksMatch = { match: null, outcomes };
+
+      expect(summaryCandidateOf(summary, failedRun)).toStrictEqual(expected);
+    });
+
+    it('WHEN its own entry has a broken span THEN it has no match, outcomes kept', () => {
+      const backwards = taskEntry('web#build', { startTime: TASK_SPAN.endTime, endTime: TASK_SPAN.startTime }, 'MISS');
+      const summary = summaryOf(COMMAND, WINDOW, 0, [backwards]);
+      const outcomes: TaskOutcome[] = [{ taskId: 'web#build', state: 'passed' }];
+      const expected: RunTasksMatch = { match: null, outcomes };
+
+      expect(summaryCandidateOf(summary, RUN)).toStrictEqual(expected);
+    });
+
+    it('WHEN Ctrl+C cut it short after the dependency ended THEN it is interrupted and only the dependency has an outcome', () => {
+      const summary = cutShortOf(summaryOf(COMMAND, WINDOW, 0, [DEPENDENCY_ENTRY]));
+      const outcomes: TaskOutcome[] = [{ taskId: 'ui#build', state: 'passed' }];
+      const expected: RunTasksMatch = { match: INTERRUPTED_MATCH, outcomes };
+
+      expect(summaryCandidateOf(summary, RUN)).toStrictEqual(expected);
     });
   });
 });

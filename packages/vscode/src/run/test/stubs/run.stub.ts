@@ -16,6 +16,7 @@ export const RUN_ENTRY_STUB: RunEntry = {
   stopRequested: false,
   match: null,
   matching: false,
+  outcomes: null,
   force: false,
   packageManager: null
 };

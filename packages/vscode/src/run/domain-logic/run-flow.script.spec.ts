@@ -50,13 +50,20 @@ describe('FEATURE: run flow, a script', () => {
       expect(ports.execute).not.toHaveBeenCalled();
     });
 
-    it('WHEN it is run THEN its entry names the package manager and never waits for a match', async () => {
+    it('WHEN it is run THEN its entry names the package manager', async () => {
       await runTask(store, ports, SCRIPT);
 
       const entry = store.get('/ws', 'build');
 
       expect(entry?.packageManager).toStrictEqual(PACKAGE_MANAGER_STUB);
-      expect(entry?.matching).toBe(false);
+    });
+
+    it('WHEN it is run THEN its entry never waits for a match and holds no outcomes', async () => {
+      await runTask(store, ports, SCRIPT);
+
+      const entry = store.get('/ws', 'build');
+
+      expect(entry).toMatchObject({ matching: false, outcomes: null });
     });
 
     it('WHEN it is run twice THEN the second says Already running and launches nothing', async () => {

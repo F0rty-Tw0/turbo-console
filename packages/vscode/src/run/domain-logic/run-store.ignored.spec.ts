@@ -1,19 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { RunStore } from './run-store.ts';
-import type { RunDefinition, RunEntry } from '../common/run.type.ts';
+import type { RunDefinition } from '../common/run.type.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { changesOf } from '../test/utils/run-changes.spec.util.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
 const UNKNOWN: RunDefinition = { root: '/ws', id: 'lint' };
-
-const changesOf = (store: RunStore): RunEntry[] => {
-  const changes: RunEntry[] = [];
-
-  store.onDidChange((entry) => changes.push(entry));
-
-  return changes;
-};
 
 describe('FEATURE: run store, events for a run that is not running are ignored', () => {
   let store: RunStore;

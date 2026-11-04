@@ -6,10 +6,11 @@ import { commitBaseRepo } from '@turbo-console/repo-gen';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { RunMatch, RunToMatch } from './common/run-match.type.ts';
-import { matchRunSummary } from './domain-logic/match-run-summary.ts';
+import { matchRunTasks } from './domain-logic/match-run-tasks.ts';
 import { readNewestRunSummary } from './domain-logic/read-newest-run-summary.ts';
 import { FORCE_FIXTURE_FILES_STUB, FORCE_PACKAGE_STUB } from './test/stubs/force-fixture.stub.ts';
 import { TASK_NODE_STUB } from './test/stubs/task-node.stub.ts';
+import { runMatchOf } from './test/utils/run-match.spec.util.ts';
 import { runCommandOf } from './utils/run-match.util.ts';
 import type { RunTaskOptions } from '../run-args/common/run-args.type.ts';
 import { turboRunArgs } from '../run-args/utils/run-args.util.ts';
@@ -49,10 +50,10 @@ describe('FEATURE: a forced run against turbo 2.11.7', () => {
     dir = await mkdtemp(join(tmpdir(), 'force-contract-'));
     await commitBaseRepo(dir, FORCE_FIXTURE_FILES_STUB);
     plainRun = await buildIn(dir, PLAIN);
-    second = await matchRunSummary(dir, await buildIn(dir, PLAIN));
+    second = runMatchOf(await matchRunTasks(dir, await buildIn(dir, PLAIN)));
     forcedRun = await buildIn(dir, FORCED);
     forcedSummary = await readNewestRunSummary(dir);
-    forcedMatch = await matchRunSummary(dir, forcedRun);
+    forcedMatch = runMatchOf(await matchRunTasks(dir, forcedRun));
   });
 
   afterAll(async () => {
@@ -78,7 +79,7 @@ describe('FEATURE: a forced run against turbo 2.11.7', () => {
       expect(statuses).toStrictEqual(['MISS']);
     });
 
-    it('WHEN it runs again with force THEN matchRunSummary matches it as a MISS', () => {
+    it('WHEN it runs again with force THEN matchRunTasks matches it as a MISS', () => {
       expect(forcedMatch).toMatchObject({ cache: 'MISS' });
     });
   });

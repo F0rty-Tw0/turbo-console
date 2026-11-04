@@ -5,9 +5,10 @@ import { PRESETS } from '@turbo-console/repo-gen';
 import type { ManifestTask } from '@turbo-console/repo-gen';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import type { RunMatch, RunToMatch } from './common/run-match.type.ts';
-import { matchRunSummary } from './domain-logic/match-run-summary.ts';
+import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from './common/run-match.type.ts';
+import { matchRunTasks } from './domain-logic/match-run-tasks.ts';
 import { readNewestRunSummary } from './domain-logic/read-newest-run-summary.ts';
+import { runMatchOf } from './test/utils/run-match.spec.util.ts';
 import { runCommandOf } from './utils/run-match.util.ts';
 import { turboRunArgs } from '../run-args/utils/run-args.util.ts';
 import type { RunSummary } from '../shared/turbo/common/turbo.type.ts';
@@ -73,8 +74,9 @@ const runOf = async (dir: string, task: TaskNode, packageName: string): Promise<
 /** Runs `task` of `packageName` in `dir`, then asks for the match of that run. */
 const runAndMatch = async (dir: string, task: TaskNode, packageName: string): Promise<RunMatch | null> => {
   const run = await runOf(dir, task, packageName);
+  const tasksMatch = await matchRunTasks(dir, run);
 
-  return matchRunSummary(dir, run);
+  return runMatchOf(tasksMatch);
 };
 
 const buildOf = (packageName: string): TaskNode => {
@@ -164,6 +166,8 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
     let dependentCommand = '';
     let dependentMatch: RunMatch | null = null;
     let dependentSummary: RunSummary | null = null;
+    let dependentTasks: RunTasksMatch | null = null;
+    let failingId = '';
 
     beforeAll(async () => {
       const { dir, manifest } = fixture();
@@ -174,15 +178,17 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
       const failing = await runOf(dir, failingTask, leaf.name);
 
       failingExit = failing.exitCode;
-      failingMatch = await matchRunSummary(dir, failing);
+      failingMatch = runMatchOf(await matchRunTasks(dir, failing));
 
       const dependent = await runOf(dir, dependentTask, leaf.name);
 
       dependentExit = dependent.exitCode;
       dependentId = dependentTask.id;
       dependentCommand = runCommandOf(dependent);
-      dependentMatch = await matchRunSummary(dir, dependent);
+      dependentMatch = runMatchOf(await matchRunTasks(dir, dependent));
       dependentSummary = await readNewestRunSummary(dir);
+      failingId = failingTask.id;
+      dependentTasks = await matchRunTasks(dir, dependent);
     });
 
     it(`THEN the ${FAILING_NAME} run ends with exit 3 and matches its summary as a cache MISS`, () => {
@@ -197,6 +203,18 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
       expect(dependentSummary?.execution.command).toBe(dependentCommand);
       expect(taskIds).not.toContain(dependentId);
       expect(dependentMatch).toBeNull();
+    });
+
+    it(`THEN the ${DEPENDENT_NAME} summary lists the ${FAILING_NAME} entry`, () => {
+      const taskIds = dependentSummary?.tasks.map((task) => task.taskId);
+
+      expect(taskIds).toContain(failingId);
+    });
+
+    it(`THEN matchRunTasks keeps the ${FAILING_NAME} outcome as failed though ${DEPENDENT_NAME} has no entry`, () => {
+      const failedOutcome: TaskOutcome = { taskId: failingId, state: 'failed' };
+
+      expect(dependentTasks).toStrictEqual({ match: null, outcomes: [failedOutcome] });
     });
   });
 

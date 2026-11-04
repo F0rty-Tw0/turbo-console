@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { matchRunSummary } from './match-run-summary.ts';
-import type { RunToMatch } from '../common/run-match.type.ts';
+import { matchRunTasks } from './match-run-tasks.ts';
+import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from '../common/run-match.type.ts';
 import type { RunSummaryFile } from '../common/run-summary-file.type.ts';
 import type * as runSummaryFiles from '../data-access/run-summary-files.ts';
 import { TASK_NODE_STUB } from '../test/stubs/task-node.stub.ts';
@@ -55,11 +55,17 @@ const RUN: RunToMatch = {
 
 const MATCHING = summaryJson(COMMAND, WINDOW, 0, [taskEntry('web#build', WINDOW, 'HIT')]);
 
+const MATCH: RunMatch = { cache: 'HIT', durationMs: 4000, interrupted: false };
+
+const OUTCOMES: TaskOutcome[] = [{ taskId: 'web#build', state: 'passed' }];
+
+const EXPECTED: RunTasksMatch = { match: MATCH, outcomes: OUTCOMES };
+
 let tempDir = '';
 
 describe('FEATURE: match a run to its summary while files vanish', () => {
   beforeAll(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), 'match-run-summary-vanish-'));
+    tempDir = await mkdtemp(join(tmpdir(), 'match-run-tasks-vanish-'));
   });
 
   afterAll(async () => {
@@ -76,7 +82,7 @@ describe('FEATURE: match a run to its summary while files vanish', () => {
 
       listing.afterList = async (): Promise<void> => rm(gone);
 
-      await expect(matchRunSummary(root, RUN)).resolves.toStrictEqual({ cache: 'HIT', durationMs: 4000, interrupted: false });
+      await expect(matchRunTasks(root, RUN)).resolves.toStrictEqual(EXPECTED);
     });
   });
 });

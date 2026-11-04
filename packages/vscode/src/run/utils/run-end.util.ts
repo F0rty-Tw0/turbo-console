@@ -43,7 +43,7 @@ export const isMatchedEnd = (state: RunState, exitCode: number | undefined, isTu
   return isTurboTask && isFinished && exitCode !== undefined;
 };
 
-/** What `matchRunSummary` needs of an ended entry; `null` while its end time or exit code is unknown. */
+/** What `matchRunTasks` needs of an ended entry; `null` while its end time or exit code is unknown. */
 export const runToMatchOf = (entry: RunEntry): RunToMatch | null => {
   const { endedAt, exitCode } = entry;
 
