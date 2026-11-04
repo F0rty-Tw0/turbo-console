@@ -16,6 +16,7 @@ import {
   ROUTED_ELK_STUB,
   ROUTES_STUB
 } from '../test/stubs/layout.stub.ts';
+import { PACKED_EDGES_STUB, PACKED_GRAPH_STUB } from '../test/stubs/packed-graph.stub.ts';
 import { boardsGraphOf } from '../test/utils/folder-boards.spec.util.ts';
 import { runnerDepsOf } from '../test/utils/layout-runner.spec.util.ts';
 import { flatElkGraphOf } from '../utils/elk-flat-graph.util.ts';
@@ -269,6 +270,20 @@ describe('FEATURE: createLayoutRunner', () => {
       const result = await runner.run('h1', grouped);
 
       expect(Object.keys(result?.positions ?? {})).toStrictEqual(['docs', 'web', '@acme/config', '@acme/ui', '@acme/utils']);
+    });
+  });
+
+  describe('GIVEN a packed graph', () => {
+    it('WHEN ELK rejects THEN the fallback receives every edge of every depth', async () => {
+      const fallback = fallbackMock(FALLBACK_POSITIONS_STUB);
+      const runner = createLayoutRunner(runnerDepsOf(() => mock.elk, fallback));
+
+      const pending = runner.run('h1', PACKED_GRAPH_STUB);
+
+      mock.rejectLayout(new Error('bad graph'));
+      await pending;
+
+      expect(fallback.mock.calls[0]?.[0].edges).toStrictEqual(PACKED_EDGES_STUB);
     });
   });
 });
