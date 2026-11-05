@@ -337,11 +337,17 @@ p {
 
 /* Controls panel */
 
+/*
+ * Clips the flow canvas and widget layer, sized from script one frame after the container shrinks: their overflow would
+ * add page scrollbars that shrink the body again inside the same ResizeObserver pass. `clip`, not `hidden`, so the
+ * body is no scroll container.
+ */
 .graph-body {
   position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
+  overflow: clip;
 }
 
 .graph-body .graph-container {
