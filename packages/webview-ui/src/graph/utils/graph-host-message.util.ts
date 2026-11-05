@@ -88,9 +88,9 @@ const isGraphState = (state: unknown): boolean => {
 
 const isRunsMessage = (value: UnknownRecord): boolean => {
   const { runs, owners } = value;
-  const hasOwners = owners === undefined || isOwnersRecord(owners);
+  const areOwnersFit = owners === undefined || isOwnersRecord(owners);
 
-  return isRunsRecord(runs) && hasOwners;
+  return isRunsRecord(runs) && areOwnersFit;
 };
 
 /**
