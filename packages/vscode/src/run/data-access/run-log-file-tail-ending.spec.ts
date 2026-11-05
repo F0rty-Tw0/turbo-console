@@ -8,7 +8,7 @@ import { LOG_PATH, SEEN_A } from '../test/common/run-log-fs.const.ts';
 import type { FakeLogFs } from '../test/common/run-log-fs.type.ts';
 import { ENTRY_A, ENTRY_B, INVALID_OBJECT } from '../test/common/run-log-step.const.ts';
 import { afterHops } from '../test/utils/microtask-hops.spec.util.ts';
-import { endChangeWindow, fakeChangeWindows } from '../test/utils/run-log-change-window.spec.util.ts';
+import { endChangeWindow, fakeChangeWindows, fireChangeWindow } from '../test/utils/run-log-change-window.spec.util.ts';
 import { fakeLogFs } from '../test/utils/run-log-fs.spec.util.ts';
 
 const HOPS_AFTER_READ = [0, 1, 2, 3, 4, 5, 6];
@@ -59,6 +59,22 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       const outcomes = await Promise.all([first, second]);
 
       expect([outcomes, fs.reads.length]).toStrictEqual([['read', 'read'], 1]);
+    });
+  });
+
+  describe('GIVEN a change window pending when drain starts a held read', () => {
+    it('WHEN the window would end during the read THEN it is dropped and one read ran in all', async () => {
+      fs.write(LOG_PATH, [ENTRY_A]);
+      const release = fs.hold();
+
+      tail.changed();
+      const drained = tail.drain();
+
+      fireChangeWindow();
+      release();
+      const outcome = await drained;
+
+      expect([outcome, fs.reads.length]).toStrictEqual(['read', 1]);
     });
   });
 
@@ -237,6 +253,7 @@ describe('FEATURE: end a turbo log tail (spec D5)', () => {
       const land = (): void => {
         fs.append(LOG_PATH, ENTRY_B);
         tail.changed();
+        fireChangeWindow();
       };
       let inFlight = 0;
       const readThenLand: RunLogRead = async (path, from, max) => {

@@ -75,6 +75,8 @@ export class RunLogFileTail {
   }
 
   private async finish(): Promise<RunLogOutcome> {
+    this.cancelChangeWindow();
+
     if (!this.isEnded) this.requestRead();
 
     while (this.loop !== null) await this.loop;
