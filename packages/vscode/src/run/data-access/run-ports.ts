@@ -20,6 +20,8 @@ const after = (delayMs: number, action: () => void): void => {
   setTimeout(action, delayMs);
 };
 
+const randomId = (): string => randomUUID().slice(0, RUN_LOG_ID_LENGTH);
+
 /** An information toast; nothing waits on its dismissal. */
 export const showInfo = (text: string): void => {
   void vscode.window.showInformationMessage(text);
@@ -46,7 +48,7 @@ export const editorRunPorts = (output: Output, dependenciesOf: (root: string) =>
     log: output.error,
     now: () => Date.now(),
     dependenciesOf,
-    randomId: () => randomUUID().slice(0, RUN_LOG_ID_LENGTH),
+    randomId,
     logs
   };
 
