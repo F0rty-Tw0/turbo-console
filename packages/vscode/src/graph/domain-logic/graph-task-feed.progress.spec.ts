@@ -102,7 +102,22 @@ describe('FEATURE: run progress in the graph feed (spec D11)', () => {
       expect(postedRunsMessagesOf(ports)).toStrictEqual([]);
     });
 
-    it('WHEN progress changes 5 times and the store once inside 50 ms THEN exactly one post follows', () => {
+    it('WHEN progress changes 5 times to different owners inside 50 ms THEN exactly one post follows', () => {
+      const { ports, fake } = startedFeed();
+
+      for (let change = 0; change < 5; change += 1) {
+        const record = change % 2 === 0 ? A_UNDER_WEB_BUILD : A_UNDER_WEB_LINT;
+
+        fake.recordsOf.mockImplementation(recordsOfA(record));
+        fake.changed('/ws');
+      }
+
+      vi.advanceTimersByTime(100);
+
+      expect(postedRunsMessagesOf(ports)).toHaveLength(1);
+    });
+
+    it('WHEN progress changes 5 times and the store once inside 50 ms THEN the two sources share one post', () => {
       const { runs, ports, fake } = startedFeed();
 
       for (let change = 0; change < 5; change += 1) fake.changed('/ws');
@@ -113,7 +128,7 @@ describe('FEATURE: run progress in the graph feed (spec D11)', () => {
       expect(postedRunsMessagesOf(ports)).toHaveLength(1);
     });
 
-    it('WHEN progress changes and recordsOf would throw THEN the change call returns without a throw', () => {
+    it('WHEN recordsOf would throw THEN the change listener reads no records and does not throw', () => {
       const { fake } = startedFeed();
 
       fake.recordsOf.mockImplementation(() => {
@@ -140,6 +155,14 @@ describe('FEATURE: run progress in the graph feed (spec D11)', () => {
       fake.changed('/ws');
 
       expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('WHEN the feed is stopped THEN it holds no progress listener', () => {
+      const { feed, fake } = startedFeed();
+
+      feed.stop();
+
+      expect(fake.listenerCount()).toBe(0);
     });
 
     it('WHEN the feed is stopped THEN a progress change posts nothing', () => {
@@ -171,19 +194,6 @@ describe('FEATURE: run progress in the graph feed (spec D11)', () => {
       fake.changed('/ws');
       vi.advanceTimersByTime(50);
       feed.flush(GRAPH_STATE_STUB);
-
-      expect(postedRunsMessagesOf(ports)).toStrictEqual([A_OWNED_BY_WEB_BUILD, A_OWNED_BY_WEB_BUILD]);
-    });
-
-    it('WHEN the feed stops and starts again THEN the next fire posts even an equal map', () => {
-      const { feed, ports, fake } = startedFeed();
-
-      fake.changed('/ws');
-      vi.advanceTimersByTime(50);
-      feed.stop();
-      feed.start();
-      fake.changed('/ws');
-      vi.advanceTimersByTime(50);
 
       expect(postedRunsMessagesOf(ports)).toStrictEqual([A_OWNED_BY_WEB_BUILD, A_OWNED_BY_WEB_BUILD]);
     });

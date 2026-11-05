@@ -74,7 +74,6 @@ export class GraphTaskFeed {
     this.unsubscribes = [];
     this.coalescer.cancel();
     this.held = null;
-    this.lastRuns = null;
   }
 
   public flush(state: GraphState): void {
@@ -144,7 +143,7 @@ export class GraphTaskFeed {
   /** Skips a message whose JSON equals the last one sent unless `isForced`, as a reloaded page needs the message again. */
   private postRuns(ids: string[], isForced: boolean): void {
     const { root, runs, progress, gate, ports } = this.deps;
-    const recordsOf = (at: string, taskId: string): ProgressRecord[] => progress.recordsOf(at, taskId);
+    const recordsOf = (recordsRoot: string, taskId: string): ProgressRecord[] => progress.recordsOf(recordsRoot, taskId);
     const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds() };
     const message = runsMessageOf(root, ids, sources);
     const text = JSON.stringify(message);
