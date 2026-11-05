@@ -188,6 +188,18 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
         [runLogWatchErrorText(DIR_WS, error)]
       ]);
     });
+
+    it('WHEN a line is appended and one poll passes THEN the line arrives without any watch event', async () => {
+      h.fs.failNextWatch(new Error('EMFILE'));
+
+      const started = h.start(ROOT_WS, P1);
+
+      await endChangeWindow();
+      h.fs.append(P1, ENTRY_A);
+      await advanceOnePoll();
+
+      expect(started.events).toStrictEqual([SEEN_A]);
+    });
   });
 
   describe('GIVEN a /ws tail that drained and a newer /ws tail with its own watcher', () => {
@@ -227,6 +239,47 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
       await flush();
 
       expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
+  describe('GIVEN poll timers', () => {
+    it('WHEN two tails of /ws are live THEN one poll timer runs', async () => {
+      h.start(ROOT_WS, P1);
+      h.start(ROOT_WS, P2);
+      await endChangeWindow();
+
+      expect(vi.getTimerCount()).toBe(1);
+    });
+
+    it('WHEN the only /ws tail closes and a new one starts THEN one poll timer runs and it delivers', async () => {
+      h.start(ROOT_WS, P1).tail.close();
+      await flush();
+
+      const restarted = h.start(ROOT_WS, P2);
+
+      await endChangeWindow();
+      h.fs.append(P2, ENTRY_A);
+      await advanceOnePoll();
+
+      expect([vi.getTimerCount(), restarted.events]).toStrictEqual([1, [SEEN_A]]);
+    });
+  });
+
+  describe('GIVEN a poll tick whose read is still in flight', () => {
+    it('WHEN the tail closes and the read finishes THEN no event arrives and no timer is left', async () => {
+      const started = h.start(ROOT_WS, P1);
+
+      await endChangeWindow();
+      h.fs.append(P1, ENTRY_A);
+
+      const release = h.fs.hold();
+
+      await advanceOnePoll();
+      started.tail.close();
+      release();
+      await flush();
+
+      expect([started.events, vi.getTimerCount()]).toStrictEqual([[], 0]);
     });
   });
 

@@ -25,8 +25,9 @@ type LoggedKind = RunLogOutcome | 'watch' | 'dir';
 
 /**
  * The live turbo log tails of the window (spec D5, D6): one folder watcher and one poll per root while any of its tails
- * lives (the poll covers a watcher that stays silent or failed), and each degrade line once per session. A tail ends once, by `drain` or `close`: it leaves the registry, releases the
- * root's watcher and poll if it was the last, and removes its file after its last read.
+ * lives (the poll covers a watcher that stays silent or failed), and each degrade line once per session. A tail ends
+ * once, by `drain` or `close`: it leaves the registry, releases the root's watcher and poll if it was the last, and
+ * removes its file after its last read.
  */
 export class RunLogTails implements RunLogs {
   private readonly ports: RunLogPorts;
@@ -177,7 +178,10 @@ export class RunLogTails implements RunLogs {
     void file.close().then(removeAfterRead);
   }
 
-  /** Unregisters the tail and releases the root's watcher and poll with its last tail; `false` when the tail had already ended. */
+  /**
+   * Unregisters the tail and releases the root's watcher and poll with its last tail; `false` when the tail had already
+   * ended.
+   */
   private leave(root: string, path: string, file: RunLogFileTail): boolean {
     const live = this.liveOf(root);
 
