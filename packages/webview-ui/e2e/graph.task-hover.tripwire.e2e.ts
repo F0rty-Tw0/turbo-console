@@ -1,3 +1,4 @@
+import { PAN_CPU_TEST_TIMEOUT_MS } from './common/graph-tripwire.const.ts';
 import { IS_MAC_RUNNER } from './common/graph.const.ts';
 import type { QuietWindow } from './common/graph.type.ts';
 import { expect, test } from './graph-task.fixture.ts';
@@ -79,7 +80,7 @@ test.describe('FEATURE: task graph hover-flow tripwire', () => {
     'GIVEN the hub task of a target-like state framed by Fit, the median of three 188-step hovers (about 6 s each) with the pointer moving every step uses under its main-thread CPU and step budgets',
     { annotation: HOVER_FLOW },
     async ({ graphCanvas, graphFlow, graphHost, graphHover, graphPage, graphPointer, graphProbe, page }): Promise<void> => {
-      test.slow();
+      test.setTimeout(PAN_CPU_TEST_TIMEOUT_MS);
 
       let rendersBeforeWarmUp = 0;
       let warmUpRenders = 0;
