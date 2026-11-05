@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { existsSync, readdirSync } from 'node:fs';
 import { rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -22,7 +23,12 @@ const GO_LINES = [
   "const poll = setInterval(() => { if (fs.existsSync('go')) { clearInterval(poll); process.exit(0); } }, 50);"
 ];
 
-const GO_SCRIPT = GO_LINES.join('\n');
+/** A fresh token line per call changes X's task hash, so a relaunch in the same fixture never replays X from turbo's cache. */
+const goScriptOf = (): string => {
+  const lines = [`// ${randomUUID()}`, ...GO_LINES];
+
+  return lines.join('\n');
+};
 
 const GO_FILES = ['go-wait.js', 'go'];
 
@@ -57,7 +63,7 @@ const recordOfY = (scene: LiveScene, launchedAt: number): ProgressRecord | undef
 };
 
 const prepareBlockedX = async (scene: LiveScene): Promise<void> => {
-  await writeFile(join(dirname(scene.manifest), 'go-wait.js'), GO_SCRIPT);
+  await writeFile(join(dirname(scene.manifest), 'go-wait.js'), goScriptOf());
   await writeEdited(scene.manifest, scene.manifestText, (manifest) => {
     setScript(manifest, BUILD_TASK, 'node go-wait.js');
   });
@@ -86,7 +92,10 @@ const awaitLiveRecord = async (scene: LiveScene, launchedAt: number): Promise<vo
   const firstMs = (firstAts[0] ?? Number.NaN) - launchedAt;
   const seen = [...states];
 
-  assert.equal(api.runs.get(root, x.fullName)?.state, 'running', 'X ended before Y was recorded');
+  const entry = api.runs.get(root, x.fullName);
+
+  assert.equal(entry?.state, 'running', 'X ended before Y was recorded');
+  assert.equal(entry.launchedAt, launchedAt, 'the running entry of X is not this run');
   log(`live run: Y states seen ${seen.join(', ')}, first record ${firstMs} ms after the launch`);
 };
 
@@ -110,14 +119,40 @@ const runBlockedX = async (scene: LiveScene): Promise<void> => {
   await waitFor('log file removed', () => logFilesOf(root).length === 0);
 };
 
+const RELEASE_LIMIT_MS = 15000;
+
+/** Writes `go` so X's script exits, then waits until X's run is no longer running. */
+const releaseX = async (scene: LiveScene): Promise<void> => {
+  const { api, root, x, manifest } = scene;
+  const isEnded = (): boolean => api.runs.get(root, x.fullName)?.state !== 'running';
+
+  await writeFile(join(dirname(manifest), 'go'), '');
+  await waitFor('X released', isEnded, RELEASE_LIMIT_MS);
+};
+
+const cleanUp = async (scene: LiveScene): Promise<void> => {
+  const dir = dirname(scene.manifest);
+
+  try {
+    await releaseX(scene);
+  } finally {
+    await Promise.all(GO_FILES.map(async (name) => rm(join(dir, name), { force: true })));
+    await writeFile(scene.manifest, scene.manifestText);
+    await whenQuiet(scene.api, scene.root);
+  }
+};
+
+const logCleanupFailure = (error: unknown): void => {
+  log(`live run cleanup failed after the case failed: ${String(error)}`);
+};
+
 /**
  * U7e1: X's build blocks on a `go` file, so only the log tail can have recorded Y while X runs; the settle comes after
  * X ends. Holds in stream and grouped log order: Y finishes before X starts, and grouped order flushes a task's lines at
- * its end. Puts X's `package.json` back and removes the `go` files.
+ * its end. Each call writes a new script, so a relaunch cannot replay X from the cache. Releases X, puts X's
+ * `package.json` back and removes the `go` files; after a failed case a cleanup failure is logged, not thrown over it.
  */
 export const liveCase = async (scene: LiveScene): Promise<void> => {
-  const dir = dirname(scene.manifest);
-
   try {
     await step(
       'U7e1: a tree run of X records its dependency Y from the live log while X still runs, then settles it and removes the log file',
@@ -126,9 +161,11 @@ export const liveCase = async (scene: LiveScene): Promise<void> => {
         await runBlockedX(scene);
       }
     );
-  } finally {
-    await Promise.all(GO_FILES.map(async (name) => rm(join(dir, name), { force: true })));
-    await writeFile(scene.manifest, scene.manifestText);
-    await whenQuiet(scene.api, scene.root);
+  } catch (error) {
+    await cleanUp(scene).catch(logCleanupFailure);
+
+    throw error;
   }
+
+  await cleanUp(scene);
 };
