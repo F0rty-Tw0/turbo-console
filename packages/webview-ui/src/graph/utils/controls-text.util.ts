@@ -1,5 +1,6 @@
+import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import type { RowLabels } from '../common/controls-elements.type.ts';
-import { RUN_LABEL, STOP_LABEL } from '../common/graph-task.const.ts';
+import { RUN_LABEL, RUN_STATE_TEXT, STOP_LABEL } from '../common/graph-task.const.ts';
 import { CONTROLS_FILTERED_LABEL, CONTROLS_LABEL, ROOT_FOLDER, SHOW_ALL_LABEL } from '../common/graph.const.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
 
@@ -71,6 +72,13 @@ export const stopTextOf = (runOwner: string | null): string => {
   if (runOwner === null) return STOP_LABEL;
 
   return stopRunOfLabelOf(runOwner);
+};
+
+/** The task panel's run state word; a task that runs under another task's run names that run after it. */
+export const runStateTextOf = (state: GraphRunState, runOwner: string | null): string => {
+  if (runOwner === null) return RUN_STATE_TEXT[state];
+
+  return `${RUN_STATE_TEXT[state]} · in the run of ${runOwner}`;
 };
 
 /** The accessible name of the selected task's node toolbar. */

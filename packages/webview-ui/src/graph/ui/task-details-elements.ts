@@ -14,14 +14,13 @@ import {
   RUN_LABEL,
   RUN_NO_CACHE_LABEL,
   RUN_STATE_ICONS,
-  RUN_STATE_TEXT,
   STOP_LABEL,
   TASK_DETAILS_ID,
   TASK_EMPTY_LEAD_TEXT
 } from '../common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../common/graph.const.ts';
 import type { TaskDependencyButton, TaskDetailsEmpty, TaskDetailsModel, TaskDetailsView } from '../common/task-details.type.ts';
-import { showPackageLabelOf } from '../utils/controls-text.util.ts';
+import { runStateTextOf, showPackageLabelOf, stopRunOfLabelOf } from '../utils/controls-text.util.ts';
 import { ownerTextOf } from '../utils/owner-text.util.ts';
 import { isLiveRun } from '../utils/task-run.util.ts';
 
@@ -33,13 +32,14 @@ const focusButton = (button: HTMLButtonElement, key: string): HTMLButtonElement 
 };
 
 /** The run state as icon + word; `data-state` picks the icon colour, and no state hides the line. */
-const stateLine = (state: GraphRunState | null): HTMLElement => {
-  const text = state === null ? '' : RUN_STATE_TEXT[state];
-  const line = textElement('p', 'details-line task-run-state', text);
+const stateLine = (state: GraphRunState | null, runOwner: string | null): HTMLElement => {
+  const line = textElement('p', 'details-line task-run-state', '');
 
   line.hidden = state === null;
 
   if (state === null) return line;
+
+  line.textContent = runStateTextOf(state, runOwner);
 
   const icon = graphIcon(RUN_STATE_ICONS[state]);
 
@@ -47,6 +47,14 @@ const stateLine = (state: GraphRunState | null): HTMLElement => {
   line.prepend(icon);
 
   return line;
+};
+
+/** Stop of a task that runs under another task's run: its text stays `Stop`, its accessible name and title name that run. */
+const nameStopAfterOwner = (stop: HTMLButtonElement, runOwner: string): void => {
+  const label = stopRunOfLabelOf(runOwner);
+
+  stop.setAttribute('aria-label', label);
+  stop.title = label;
 };
 
 /** A task named by its id; its focus key is `kind:<id>`, `dep` in Dependencies and `dependent` in Dependents. */
@@ -164,7 +172,7 @@ export const buildTaskDetails = (model: TaskDetailsModel): TaskDetailsView => {
   const main = sectionOf();
   const { line: ownerLine, owner } = ownerLineOf(model);
   const command = textElement('code', 'details-code', task.command ?? NO_COMMAND_TEXT);
-  const state = stateLine(model.state);
+  const state = stateLine(model.state, model.runOwner);
   const isLive = isLiveRun(model.state);
   const actions = textElement('div', 'details-actions', '');
   const run = focusButton(actionButton(RUN_LABEL), 'run');
@@ -179,6 +187,9 @@ export const buildTaskDetails = (model: TaskDetailsModel): TaskDetailsView => {
   run.hidden = !task.isRunnable;
   runNoCache.hidden = !task.isRunnable;
   stop.hidden = !isLive;
+
+  if (model.runOwner !== null) nameStopAfterOwner(stop, model.runOwner);
+
   needs.hidden = dependencies.length === 0;
   actions.append(run, runNoCache, stop);
   main.append(ownerLine, command, state, actions);

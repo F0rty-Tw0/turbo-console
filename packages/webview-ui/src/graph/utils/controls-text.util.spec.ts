@@ -13,6 +13,7 @@ import {
   packageToolbarLabelOf,
   rowLabelsOf,
   runLabelOf,
+  runStateTextOf,
   showAllTextOf,
   showLabelOf,
   showPackageLabelOf,
@@ -228,6 +229,18 @@ describe('FEATURE: controls text', () => {
       const label = stopRunOfLabelOf('web#all');
 
       expect(label).toBe('Stop run of web#all');
+    });
+  });
+
+  describe('GIVEN a live task and the run that runs it', () => {
+    it.each([
+      { state: 'running', runOwner: null, expected: 'Running' },
+      { state: 'running', runOwner: 'web#build', expected: 'Running · in the run of web#build' },
+      { state: 'continuous', runOwner: 'web#build', expected: 'Continuous · in the run of web#build' }
+    ] as const)('WHEN $state owned by $runOwner is worded THEN it reads $expected', ({ state, runOwner, expected }) => {
+      const text = runStateTextOf(state, runOwner);
+
+      expect(text).toBe(expected);
     });
   });
 
