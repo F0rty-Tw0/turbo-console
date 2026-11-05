@@ -141,6 +141,24 @@ describe('FEATURE: bench comparison', () => {
 
       expect(comparison.failed).toBe(false);
     });
+
+    it('WHEN the fastest is far past it but the middle sits exactly on it THEN the comparison passes', () => {
+      const base = [reduced('core/parse', 100, true, 100)];
+      const head = [reduced('core/parse', 200, true, 115)];
+
+      const comparison = compareBenches(base, head, THRESHOLD);
+
+      expect(comparison.failed).toBe(false);
+    });
+
+    it('WHEN the middle is far past it but the fastest sits exactly on it THEN the comparison passes', () => {
+      const base = [reduced('core/parse', 100, true, 100)];
+      const head = [reduced('core/parse', 115, true, 200)];
+
+      const comparison = compareBenches(base, head, THRESHOLD);
+
+      expect(comparison.failed).toBe(false);
+    });
   });
 
   describe('GIVEN a gated bench one ns past the threshold on head', () => {
