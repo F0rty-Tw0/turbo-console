@@ -15,6 +15,13 @@ export const strongestRunOf = (states: GraphRunState[]): GraphRunState | null =>
   return strongest ?? null;
 };
 
+/** Whether `state` ranks above `current` in `RUN_PRECEDENCE`; any state beats none. */
+const outranks = (state: GraphRunState, current: GraphRunState | undefined): boolean => {
+  if (current === undefined) return true;
+
+  return RUN_PRECEDENCE.indexOf(state) < RUN_PRECEDENCE.indexOf(current);
+};
+
 /** Each package's strongest state among its listed tasks that have one; atom file ids and unlisted ids add nothing. */
 export const packageRunsOf = (runs: TaskRuns, tasks: GraphTask[]): PackageRuns => {
   const packageRuns = new Map<string, GraphRunState>();
@@ -25,13 +32,9 @@ export const packageRunsOf = (runs: TaskRuns, tasks: GraphTask[]): PackageRuns =
     if (state === null) continue;
 
     const current = packageRuns.get(task.packageName);
-    const held: GraphRunState[] = [state];
+    const isStronger = outranks(state, current);
 
-    if (current !== undefined) held.push(current);
-
-    const strongest = strongestRunOf(held);
-
-    if (strongest !== null) packageRuns.set(task.packageName, strongest);
+    if (isStronger) packageRuns.set(task.packageName, state);
   }
 
   return packageRuns;
