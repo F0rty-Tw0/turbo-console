@@ -144,6 +144,7 @@ export const runsMapOf = (root: string, ids: string[], get: RunLookup): Record<s
 
 const runningWordOf = (isPersistent: boolean): GraphRunState => (isPersistent ? 'continuous' : 'running');
 
+/** The graph word of a displayed run: the own run's `running` wins, as `displayRunOf` ranks it (D9 rule 1); this maps the word only. */
 const graphWordOf = (displayed: DisplayedRun, own: RunEntry | undefined, isPersistent: boolean): GraphRunState => {
   if (own?.state === 'running') return runningWordOf(own.task.persistent);
 
@@ -181,7 +182,8 @@ export const runsMessageOf = (root: string, ids: string[], sources: RunSources):
     return plain;
   }
 
-  const owned: GraphRunsMessage = { type: 'runs', runs: runsRecord, owners: Object.fromEntries(owners) };
+  const ownersRecord = Object.fromEntries(owners);
+  const owned: GraphRunsMessage = { type: 'runs', runs: runsRecord, owners: ownersRecord };
 
   return owned;
 };

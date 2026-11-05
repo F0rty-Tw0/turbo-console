@@ -13,7 +13,7 @@ type MergeRow = {
   readonly given: string;
   readonly own: RunEntry | undefined;
   readonly records: ProgressRecord[];
-  readonly word: string | undefined;
+  readonly word: string;
   readonly owner: string | undefined;
 };
 
@@ -37,6 +37,8 @@ const OWN_PASSED_AT_1100: RunEntry = { ...OWN_RUNNING, state: 'passed', endedAt:
 
 const OWN_FAILED_TO_START: RunEntry = { ...OWN_RUNNING, state: 'failed-to-start', endedAt: 1100 };
 
+const OWN_STOPPED: RunEntry = { ...OWN_RUNNING, state: 'stopped', endedAt: 1100 };
+
 const DEV_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'ui#dev', name: 'dev', persistent: true };
 
 const OWN_DEV_RUNNING: RunEntry = { ...OWN_RUNNING, taskId: 'ui#dev', task: DEV_TASK };
@@ -59,8 +61,9 @@ const DEV_OWNED_BY_A = { 'ui#dev': 'a#build' };
 
 const LISTED_IDS = ['b#x', 'a#x', 'c#x'];
 
+const PROTOTYPE_IDS = ['__proto__', 'constructor'];
+
 const MERGE_ROWS: MergeRow[] = [
-  { given: 'no own run and no records', own: undefined, records: [], word: undefined, owner: undefined },
   { given: 'no own run and a run in a#build', own: undefined, records: [RUNNING_IN_A], word: 'running', owner: 'a#build' },
   {
     given: 'no own run, a run in a#build and a pass in b#build',
@@ -105,7 +108,8 @@ const MERGE_ROWS: MergeRow[] = [
     word: 'failed',
     owner: undefined
   },
-  { given: 'an own run that failed to start', own: OWN_FAILED_TO_START, records: [], word: 'failed-to-start', owner: undefined }
+  { given: 'an own run that failed to start', own: OWN_FAILED_TO_START, records: [], word: 'failed-to-start', owner: undefined },
+  { given: 'an own run that stopped', own: OWN_STOPPED, records: [], word: 'stopped', owner: undefined }
 ];
 
 const sourcesOf = (entries: RunEntry[], records: ProgressRecord[], persistentIds: string[] = []): RunSources => {
@@ -144,8 +148,16 @@ const taskNamed = (id: string, isPersistent: boolean): TaskNode => {
 
 describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
   describe('GIVEN ui#build listed', () => {
+    it('WHEN no own run and no record names it THEN runs has no ui#build key', () => {
+      const sources = sourcesOf([], []);
+
+      const message = runsMessageOf('/ws', ['ui#build'], sources);
+
+      expect(message.runs).not.toHaveProperty('ui#build');
+    });
+
     it.each(MERGE_ROWS)(
-      'WHEN the message is built over $given THEN runs and owners follow the rules',
+      'WHEN the message is built over $given THEN the word is $word and the owner is $owner',
       ({ own, records, word, owner }) => {
         const sources = sourcesOf(ownEntriesOf(own), records);
 
@@ -155,14 +167,6 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
         expect(message.owners?.['ui#build']).toBe(owner);
       }
     );
-
-    it('WHEN a run in a#build runs it THEN the whole message names the word and the owner', () => {
-      const sources = sourcesOf([], [RUNNING_IN_A]);
-
-      const message = runsMessageOf('/ws', ['ui#build'], sources);
-
-      expect(message).toStrictEqual({ type: 'runs', runs: BUILD_RUNNING, owners: BUILD_OWNED_BY_A });
-    });
   });
 
   describe('GIVEN a persistent task ui#dev', () => {
@@ -211,6 +215,23 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
     });
   });
 
+  describe('GIVEN listed ids named like Object.prototype members', () => {
+    it('WHEN a#build runs them THEN each is an own key of runs and of owners and no prototype changes', () => {
+      const records = PROTOTYPE_IDS.map((id) => recordOf(id, 'running', 1000, A));
+      const sources = sourcesOf([], records);
+
+      const message = runsMessageOf('/ws', PROTOTYPE_IDS, sources);
+
+      expect(Object.entries(message.owners ?? {})).toStrictEqual([
+        ['__proto__', 'a#build'],
+        ['constructor', 'a#build']
+      ]);
+      expect(Object.keys(message.runs)).toStrictEqual(PROTOTYPE_IDS);
+      expect(Object.getPrototypeOf(message.owners)).toBe(Object.prototype);
+      expect(Object.getPrototypeOf(message.runs)).toBe(Object.prototype);
+    });
+  });
+
   describe('GIVEN a record of an id that is not listed', () => {
     it('WHEN the message is built THEN neither map names it', () => {
       const ghost = recordOf('ghost#build', 'running', 1000, A);
@@ -222,8 +243,8 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
     });
   });
 
-  describe('GIVEN records under another root', () => {
-    it('WHEN the message is built for /ws THEN only /ws is read', () => {
+  describe('GIVEN lookups for the runs and for the records', () => {
+    it('WHEN the message is built for /ws THEN both are called with /ws and the id', () => {
       const get = vi.fn((): RunEntry | undefined => undefined);
       const recordsOf = vi.fn((): ProgressRecord[] => []);
       const sources: RunSources = { get, recordsOf, persistentIds: new Set() };
