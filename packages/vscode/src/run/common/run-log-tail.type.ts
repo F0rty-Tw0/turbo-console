@@ -28,7 +28,7 @@ export type RunLogOutcome = 'read' | 'unknown' | 'missing' | 'failed';
 /** Synchronous: a returned promise is not awaited and its rejection is not contained; only a throw ends the tail. */
 export type RunLogListener = (event: RunLogEvent) => void;
 
-/** Up to `max` bytes of the file at `path` from `from`; `null` while the file does not exist. */
+/** Up to `max` bytes of the file at `path` from `from`; `null` while the file does not exist or is briefly unreadable (`RUN_LOG_RETRYABLE_READ_CODES`). */
 export type RunLogRead = (path: string, from: number, max: number) => Promise<Uint8Array | null>;
 
 /** A directory watcher that can be closed; closing it twice is harmless. */

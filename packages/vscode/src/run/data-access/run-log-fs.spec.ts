@@ -47,7 +47,7 @@ describe("FEATURE: the log tails' file ports (spec D5)", () => {
   });
 
   describe('GIVEN a folder path', () => {
-    it('WHEN read THEN it rejects, as only a missing file reads as null', async () => {
+    it('WHEN read THEN it rejects, as only a missing or briefly held file reads as null', async () => {
       const read = ports.read(join(root, 'two'), 0, 4);
 
       await expect(read).rejects.toThrow();
