@@ -29,6 +29,15 @@ export const CANVAS_COLORS: ThemeColors = {
   dimmedOpacity: 0.25
 };
 
+/** `CANVAS_COLORS.frame` (`#444`) as the `rgb(...)` text Cytoscape resolves it to. */
+export const CANVAS_FRAME_RGB = 'rgb(68,68,68)';
+
+/** `CANVAS_COLORS.selected` (`#f00`) as Cytoscape resolves it. */
+export const CANVAS_SELECTED_RGB = 'rgb(255,0,0)';
+
+/** `CANVAS_COLORS.selection.fill` (`#00f`) as Cytoscape resolves it. */
+export const CANVAS_SELECTION_FILL_RGB = 'rgb(0,0,255)';
+
 export const canvasNodeOf = (id: string): ElementDefinition => {
   const data = { id };
   const definition: ElementDefinition = { data };

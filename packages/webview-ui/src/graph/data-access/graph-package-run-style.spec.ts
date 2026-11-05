@@ -5,17 +5,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { graphStyleOf } from './graph-style.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import { PACKAGE_RUN_CLASS, RUN_CLASS_PREFIX, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
-import { FOLDER_NODE_CLASS, NODE_BORDER_PX, SELECTED_BORDER_PX } from '../common/graph.const.ts';
-import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
-import { classedNodeOf, ringOf } from '../test/utils/task-ring.spec.util.ts';
+import { FOLDER_NODE_CLASS, NODE_BORDER_PX } from '../common/graph.const.ts';
+import { CANVAS_COLORS, CANVAS_FRAME_RGB, CANVAS_SELECTION_FILL_RGB } from '../test/utils/canvas-elements.spec.util.ts';
+import { SELECTED_RING, classedNodeOf, ringOf } from '../test/utils/task-ring.spec.util.ts';
 
 const TASK_ID = 'web#build';
 const RUNNING = `${RUN_CLASS_PREFIX}running`;
-const FRAME = 'rgb(68,68,68)';
-const SELECTED = 'rgb(255,0,0)';
-const SELECTION_FILL = 'rgb(0,0,255)';
-const RUN_RING = [2, NODE_BORDER_PX, FRAME];
-const SELECTION_RING = [0, SELECTED_BORDER_PX, SELECTED];
+const RUN_RING = [2, NODE_BORDER_PX, CANVAS_FRAME_RGB];
 
 describe('FEATURE: a selected package or collapsed folder with a run state draws one ring in graphStyleOf', () => {
   let cy: Core;
@@ -58,7 +54,7 @@ describe('FEATURE: a selected package or collapsed folder with a run state draws
     it('WHEN web is selected with no run class THEN the border is the selected ring', () => {
       web.addClass('selected');
 
-      expect(ringOf(web)).toStrictEqual(SELECTION_RING);
+      expect(ringOf(web)).toStrictEqual(SELECTED_RING);
     });
 
     it('WHEN web has run-running and package-run but is not selected THEN outline 2 and the plain border', () => {
@@ -70,15 +66,15 @@ describe('FEATURE: a selected package or collapsed folder with a run state draws
     it('WHEN web is selected with run-running and package-run THEN the selection fill still applies', () => {
       web.addClass(`selected ${RUNNING} ${PACKAGE_RUN_CLASS}`);
 
-      expect(web.style('background-color')).toBe(SELECTION_FILL);
+      expect(web.style('background-color')).toBe(CANVAS_SELECTION_FILL_RGB);
     });
   });
 
-  describe('GIVEN a task node web#build selected with run-running', () => {
-    it('THEN its outline is 0 and its border is the selected ring', () => {
+  describe('GIVEN a task node web#build', () => {
+    it('WHEN it is selected with run-running THEN its outline is 0 and its border is the selected ring', () => {
       task.addClass(`selected ${RUNNING}`);
 
-      expect(ringOf(task)).toStrictEqual(SELECTION_RING);
+      expect(ringOf(task)).toStrictEqual(SELECTED_RING);
     });
   });
 });

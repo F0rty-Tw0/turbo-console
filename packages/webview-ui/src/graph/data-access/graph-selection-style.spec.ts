@@ -3,15 +3,19 @@ import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
-import { PACKAGE_RUN_CLASS } from '../common/graph-task.const.ts';
+import { PACKAGE_RUN_CLASS, RUN_CLASS_PREFIX } from '../common/graph-task.const.ts';
 import { FOCUS_TARGET_CLASS, FOLDER_NODE_CLASS, NODE_BORDER_PX } from '../common/graph.const.ts';
-import { CANVAS_COLORS, CANVAS_ELEMENTS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
+import {
+  CANVAS_COLORS,
+  CANVAS_ELEMENTS,
+  CANVAS_FRAME_RGB,
+  CANVAS_SELECTION_FILL_RGB,
+  canvasNodeOf
+} from '../test/utils/canvas-elements.spec.util.ts';
 
 const EDITOR_FILL = 'rgb(17,17,17)';
 
-const FRAME = 'rgb(68,68,68)';
-
-const SELECTION_FILL = 'rgb(0,0,255)';
+const RUNNING = `${RUN_CLASS_PREFIX}running`;
 
 /** `CANVAS_ELEMENTS` and a folder box `apps`, which takes `a` in `beforeEach`. */
 const ELEMENTS: ElementDefinition[] = [canvasNodeOf('apps'), ...CANVAS_ELEMENTS];
@@ -36,15 +40,20 @@ describe('FEATURE: graphStyleOf selected fill and focus target', () => {
 
       const look = [node.style('background-color'), node.style('color'), node.style('font-weight'), node.numericStyle('border-width')];
 
-      expect(look).toStrictEqual([SELECTION_FILL, 'rgb(255,255,0)', 'bold', 1.5]);
+      expect(look).toStrictEqual([CANVAS_SELECTION_FILL_RGB, 'rgb(255,255,0)', 'bold', 1.5]);
     });
 
-    it('WHEN it is selected with run-running and package-run THEN its border is 1 in the frame colour and the selection fill stays', () => {
-      node.addClass(`selected run-running ${PACKAGE_RUN_CLASS}`);
+    it('WHEN it is selected with run-running and package-run THEN its border is 1 in the frame colour, the selection fill stays and the label is bold', () => {
+      node.addClass(`selected ${RUNNING} ${PACKAGE_RUN_CLASS}`);
 
-      const look = [node.numericStyle('border-width'), node.style('border-color'), node.style('background-color')];
+      const look = [
+        node.numericStyle('border-width'),
+        node.style('border-color'),
+        node.style('background-color'),
+        node.style('font-weight')
+      ];
 
-      expect(look).toStrictEqual([NODE_BORDER_PX, FRAME, SELECTION_FILL]);
+      expect(look).toStrictEqual([NODE_BORDER_PX, CANVAS_FRAME_RGB, CANVAS_SELECTION_FILL_RGB, 'bold']);
     });
 
     it('WHEN it is selected and deselected THEN the editor fill and the normal weight return', () => {
@@ -81,7 +90,7 @@ describe('FEATURE: graphStyleOf selected fill and focus target', () => {
     it('WHEN its collapsed node is selected THEN it gets the selection fill', () => {
       const folder = cy.getElementById('b').addClass(`${FOLDER_NODE_CLASS} selected`);
 
-      expect(folder.style('background-color')).toBe(SELECTION_FILL);
+      expect(folder.style('background-color')).toBe(CANVAS_SELECTION_FILL_RGB);
     });
   });
 });
