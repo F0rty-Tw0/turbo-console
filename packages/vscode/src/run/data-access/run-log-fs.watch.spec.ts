@@ -27,6 +27,7 @@ describe("FEATURE: the log tails' folder watcher (spec D5)", () => {
         if (started instanceof EventEmitter) started.emit('error', failure);
       };
 
+      expect(started).toBeInstanceOf(EventEmitter);
       expect(fail).not.toThrow();
       watcher.close();
       expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
