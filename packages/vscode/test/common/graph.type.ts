@@ -1,6 +1,6 @@
 import type { ManifestContext } from '@turbo-console/webview-ui';
 
-import type { ShownManifest } from './launch.type.ts';
+import type { ShownManifest, ShownTask } from './launch.type.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 
 /** What L13's cases share: the window's api, the first root and the fixture manifest. */
@@ -18,4 +18,14 @@ export type GraphFixtureLink = {
   readonly spec: string;
   readonly line: number;
   readonly context: ManifestContext;
+};
+
+/** What L13's owner cases share: A = a shown `build` task that depends on L; L's `package.json` is `manifest`, `manifestText` its text before the case. */
+export type GraphLiveScene = {
+  readonly api: TurboConsoleApi;
+  readonly root: string;
+  readonly a: ShownTask;
+  readonly l: ShownTask;
+  readonly manifest: string;
+  readonly manifestText: string;
 };

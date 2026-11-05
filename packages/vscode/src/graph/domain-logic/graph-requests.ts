@@ -85,7 +85,7 @@ export async function requestHandledOf(message: GraphRequestMessage, context: Re
       return openDetailsOf(message.packageName, state, ports);
     case 'runTask':
     case 'stopTask':
-      return routeRun(message, state, ports, root);
+      return routeRun(message, context);
     case 'shownUmbrellas':
       return shownUmbrellasOf(message.ids, state, root, feeds.atoms);
     case 'setViewToggle':

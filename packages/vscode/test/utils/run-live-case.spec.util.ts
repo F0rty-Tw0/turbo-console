@@ -16,21 +16,22 @@ import type { ShownTask } from '../common/launch.type.ts';
 
 const BUILD_TASK = 'build';
 
-/** Blocks until `go` exists in its directory; exits 2 by itself after 60 s without it. */
+/** Blocks until `go` exists in its directory; exits 2 by itself after 60 s without it; the log line gives turbo an event for the task while it blocks. */
 const GO_LINES = [
   "const fs = require('node:fs');",
+  "console.log('waiting for go');",
   'setTimeout(() => process.exit(2), 60000).unref();',
   "const poll = setInterval(() => { if (fs.existsSync('go')) { clearInterval(poll); process.exit(0); } }, 50);"
 ];
 
 /** A fresh token line per call changes X's task hash, so a relaunch in the same fixture never replays X from turbo's cache. */
-const goScriptOf = (): string => {
+export const goScriptOf = (): string => {
   const lines = [`// ${randomUUID()}`, ...GO_LINES];
 
   return lines.join('\n');
 };
 
-const GO_FILES = ['go-wait.js', 'go'];
+export const GO_FILES = ['go-wait.js', 'go'];
 
 /** X = a shown `build` task that depends on Y; `manifest` is X's `package.json` and `manifestText` its text before the case. */
 type LiveScene = {
@@ -42,7 +43,7 @@ type LiveScene = {
   readonly manifestText: string;
 };
 
-const logFilesOf = (root: string): string[] => {
+export const logFilesOf = (root: string): string[] => {
   const dir = runLogDirOf(root);
   const hasDir = existsSync(dir);
 

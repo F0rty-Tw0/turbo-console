@@ -1,4 +1,4 @@
-import type { GraphHostMessage, GraphState, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
+import type { GraphHostMessage, GraphState, GraphTask, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
@@ -51,6 +51,9 @@ type RunTag = { readonly type: 'runTask' | 'stopTask' };
 
 /** A page request to run or stop one task of the graph. */
 export type GraphRunRequest = Extract<GraphWebviewMessage, RunTag>;
+
+/** The task a run command names: its id and its package, which a listed `GraphTask` or a running entry both give. */
+export type RunTarget = Pick<GraphTask, 'id' | 'packageName'>;
 
 /** What a request is judged against: the state built now, the root, its coordinator, the ports a request may use and the session's feeds (the atoms it may ask to load and the toggles it may set). */
 export type RequestContext = {
