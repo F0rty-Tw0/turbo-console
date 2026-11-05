@@ -3,6 +3,7 @@ import type { GraphHostMessage, HostMessage, LayoutGrouping } from '@turbo-conso
 import type { ScriptsToggleApi } from './scripts-toggle.type.ts';
 import type { Span } from './span.type.ts';
 import type { LoadRecord } from '../../roots/common/coordinator.type.ts';
+import type { ProgressRecords } from '../../run/common/run-progress.type.ts';
 import type { Runs } from '../../run/common/run.type.ts';
 import type { FixedViewApi } from '../../tree/common/fixed-view.type.ts';
 import type { PackagesTreeApi } from '../../tree/common/tree-node.type.ts';
@@ -82,13 +83,15 @@ export type RunCommandsUi = {
  * What `activate` returns, for the integration tests only. Root keys are each workspace folder's `uri.fsPath` as VS
  * Code gives it. `loads` holds an empty list per root from activation on. `whenIdle` waits for a pending debounced
  * watcher change and any load it starts, then for the root's load in flight; it rejects for a key that is not a current
- * root. `treeVisible` is the Packages view's `visible`, `false` before the workspace is trusted.
+ * root. `treeVisible` is the Packages view's `visible`, `false` before the workspace is trusted. `progress` reads the
+ * task records of the turbo runs this window launched.
  */
 export type TurboConsoleApi = {
   readonly tree: PackagesTreeApi;
   readonly commands: FixedViewApi;
   readonly help: FixedViewApi;
   readonly runs: Runs;
+  readonly progress: ProgressRecords;
   readonly timings: Timings;
   readonly loads: Map<string, LoadRecord[]>;
   readonly whenIdle: (root: string) => Promise<void>;

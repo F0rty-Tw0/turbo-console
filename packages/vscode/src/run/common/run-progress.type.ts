@@ -55,6 +55,11 @@ export type DisplayedRun = {
 /** Called with the root of the runs whose records changed. */
 export type ProgressListener = (root: string) => void;
 
+/** The read side of the task progress, for the integration tests and, from U7e2, the graph feed: the record of `taskId` in every run of `root`. */
+export type ProgressRecords = {
+  readonly recordsOf: (root: string, taskId: string) => ProgressRecord[];
+};
+
 /** The change feed of the task progress; `onDidChange` returns the unsubscribe. */
 export type ProgressChanges = {
   readonly onDidChange: (listener: ProgressListener) => () => void;
