@@ -8,6 +8,7 @@ import { runLogDirOf } from '../utils/run-log-dir.util.ts';
 import { runLogDirErrorText } from '../utils/run-text.util.ts';
 
 const DIR_WS = runLogDirOf(ROOT_WS);
+const DIR_OTHER = runLogDirOf(ROOT_OTHER);
 
 describe('FEATURE: the log folder before a run (spec D6)', () => {
   describe('GIVEN a root whose folder can be made', () => {
@@ -49,11 +50,27 @@ describe('FEATURE: the log folder before a run (spec D6)', () => {
       const tails = new RunLogTails(fs.ports);
 
       fs.failMakeDir(failure);
-      await tails.prepare(ROOT_WS);
-      await tails.prepare(ROOT_WS);
-      await tails.prepare(ROOT_OTHER);
+      const first = await tails.prepare(ROOT_WS);
+      const second = await tails.prepare(ROOT_WS);
+      const third = await tails.prepare(ROOT_OTHER);
 
-      expect(fs.logs).toHaveLength(1);
+      expect([[first, second, third], fs.madeDirs, fs.logs]).toStrictEqual([
+        [false, false, false],
+        [DIR_WS, DIR_WS, DIR_OTHER],
+        [runLogDirErrorText(DIR_WS, failure)]
+      ]);
+    });
+
+    it('WHEN the failure is set twice THEN the later error is the one named', async () => {
+      const fs = fakeLogFs();
+      const tails = new RunLogTails(fs.ports);
+      const later = new Error('ENOSPC');
+
+      fs.failMakeDir(failure);
+      fs.failMakeDir(later);
+      await tails.prepare(ROOT_WS);
+
+      expect(fs.logs).toStrictEqual([runLogDirErrorText(DIR_WS, later)]);
     });
 
     it('WHEN prepared THEN no watcher opens and no listing is swept', async () => {

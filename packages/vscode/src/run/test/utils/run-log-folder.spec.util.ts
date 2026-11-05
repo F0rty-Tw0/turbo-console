@@ -2,12 +2,15 @@ import { basename, dirname } from 'node:path';
 
 import type { FolderCalls } from '../common/run-log-fs.type.ts';
 
+/** The error `makeDir` rejects with; wrapped so a `null` or `undefined` error still counts as set. */
+type MakeDirFailure = { readonly error: unknown };
+
 export const folderCallsOf = (files: Map<string, Uint8Array>): FolderCalls => {
   const removed: string[] = [];
   const logs: string[] = [];
   const mtimes = new Map<string, number>();
   const madeDirs: string[] = [];
-  const failures: unknown[] = [];
+  let failure: MakeDirFailure | null = null;
 
   const remove: FolderCalls['remove'] = async (path) => {
     files.delete(path);
@@ -29,13 +32,13 @@ export const folderCallsOf = (files: Map<string, Uint8Array>): FolderCalls => {
   const makeDir: FolderCalls['makeDir'] = async (dir) => {
     madeDirs.push(dir);
 
-    if (failures.length > 0) return Promise.reject(failures[0]);
+    if (failure !== null) return Promise.reject(failure.error);
 
     return Promise.resolve();
   };
 
   const failMakeDir: FolderCalls['failMakeDir'] = (error) => {
-    failures.push(error);
+    failure = { error };
   };
 
   const log: FolderCalls['log'] = (line) => {
