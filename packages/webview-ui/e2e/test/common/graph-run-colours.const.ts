@@ -11,3 +11,9 @@ export const PASSED_RGB = 'rgb(115, 201, 145)';
 
 /** The run outline of a failed node in the dark theme: `--vscode-testing-iconFailed`, `#f14c4c`, 2 wide. */
 export const FAILED_OUTLINE: RunOutline = { width: 2, colour: 'rgb(241,76,76)' };
+
+/** The run outline of a continuous node in the dark theme: `--vscode-charts-green`, `#89d185`, 2 wide. */
+export const CONTINUOUS_OUTLINE: RunOutline = { width: 2, colour: 'rgb(137,209,133)' };
+
+/** The run outline of a node that failed to start in the dark theme: `--vscode-errorForeground`, `#f85149`, 2 wide. */
+export const FAILED_TO_START_OUTLINE: RunOutline = { width: 2, colour: 'rgb(248,81,73)' };
