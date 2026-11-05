@@ -49,10 +49,9 @@ test.describe('FEATURE: a selected task with a run state', () => {
     'GIVEN app#build continuous in the dark theme, it has the green outline and the pulse glyph, and its panel reads Continuous with Stop',
     { annotation: UB5B },
     async ({ graphCanvas, graphGlyphs, graphLook, graphTaskDetails, graphTaskHost, graphTaskProbe }): Promise<void> => {
-      await test.step('WHEN the chosen task graph is opened in the dark theme', async (): Promise<void> => {
-        await graphGlyphs.openChosen();
-        await graphLook.applyTheme(THEME_DARK_STUB);
-      });
+      await test.step('WHEN the chosen task graph is opened', async (): Promise<void> => graphGlyphs.openChosen());
+
+      await test.step('AND the dark theme is applied', async (): Promise<void> => graphLook.applyTheme(THEME_DARK_STUB));
 
       await test.step('AND app#build is reported continuous', async (): Promise<void> =>
         graphTaskHost.sendRuns({ 'app#build': 'continuous' }));
@@ -65,11 +64,12 @@ test.describe('FEATURE: a selected task with a run state', () => {
 
       await test.step('WHEN it is tapped', async (): Promise<void> => graphCanvas.tapNode('app#build'));
 
-      await test.step('THEN the panel reads Continuous with a green icon and a Stop button', async (): Promise<void> => {
-        await graphTaskDetails.expectState('Continuous');
-        await graphTaskDetails.expectStateIconColour('continuous', CONTINUOUS_RGB);
-        await expect(graphTaskDetails.stop).toBeVisible();
-      });
+      await test.step('THEN the panel reads Continuous', async (): Promise<void> => graphTaskDetails.expectState('Continuous'));
+
+      await test.step('AND its state icon is green', async (): Promise<void> =>
+        graphTaskDetails.expectStateIconColour('continuous', CONTINUOUS_RGB));
+
+      await test.step('AND a Stop button shows', async (): Promise<void> => expect(graphTaskDetails.stop).toBeVisible());
     }
   );
 });
