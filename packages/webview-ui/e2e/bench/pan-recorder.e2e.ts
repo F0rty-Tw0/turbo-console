@@ -9,8 +9,12 @@ const BENCH_ORIGIN = 'https://bench.test';
 const BLANK_URL = `${BENCH_ORIGIN}/`;
 const BENCH_PAGES = `${BENCH_ORIGIN}/**`;
 
-const BUSY_80_MS =
-  'new Promise((resolve) => requestAnimationFrame(() => { const end = performance.now() + 80; while (performance.now() < end) { /* busy */ } resolve(); }))';
+const busyFrameOf = (ms: number): string =>
+  `new Promise((resolve) => requestAnimationFrame(() => { const end = performance.now() + ${ms}; while (performance.now() < end) { /* busy */ } resolve(); }))`;
+
+const BUSY_80_MS = busyFrameOf(80);
+
+const BUSY_250_MS = busyFrameOf(250);
 
 /** 30 ms of work in a timer task between frames, 20 times: the long frame is followed by catch-up frames with stale frame times. */
 const TIMER_BURSTS_30_MS = `new Promise((resolve) => {
@@ -41,7 +45,7 @@ const expectLongestTaskAtLeast = async (recorder: PanRecorder, ms: number): Prom
   expect(trace.longestLongTaskMs).toBeGreaterThanOrEqual(ms);
 };
 
-/** Below the busy frame, not 0: a loaded runner can stall 50+ ms inside the window on its own (58 ms on macOS CI). */
+/** Below the busy frame, not 0: a loaded runner can stall 50+ ms inside the window on its own (58 ms on macOS CI), so the busy frame is long enough to leave that room. */
 const expectLongestTaskBelow = async (recorder: PanRecorder, ms: number): Promise<void> => {
   const trace = await recorder.read();
 
@@ -72,14 +76,14 @@ test.describe('FEATURE: pan recorder', () => {
     await test.step('THEN the longest long task is at least 70 ms', async (): Promise<void> => expectLongestTaskAtLeast(recorder, 70));
   });
 
-  test('GIVEN an 80 ms busy frame that ended before markOn, the trace does not count it', async ({ page }): Promise<void> => {
+  test('GIVEN a 250 ms busy frame that ended before markOn, the trace does not count it', async ({ page }): Promise<void> => {
     const recorder = new PanRecorder(page);
 
     await test.step('WHEN the recorder is installed', async (): Promise<void> => recorder.install());
 
     await test.step('AND a blank page is opened', async (): Promise<void> => openBlank(page));
 
-    await test.step('AND an 80 ms busy frame runs', async (): Promise<void> => runScript(page, BUSY_80_MS));
+    await test.step('AND a 250 ms busy frame runs', async (): Promise<void> => runScript(page, BUSY_250_MS));
 
     await test.step('AND the pan window opens', async (): Promise<void> => recorder.markOn());
 
@@ -87,7 +91,7 @@ test.describe('FEATURE: pan recorder', () => {
 
     await test.step('AND the pan window closes', async (): Promise<void> => recorder.markOff());
 
-    await test.step('THEN the longest long task is under 70 ms', async (): Promise<void> => expectLongestTaskBelow(recorder, 70));
+    await test.step('THEN the longest long task is under 200 ms', async (): Promise<void> => expectLongestTaskBelow(recorder, 200));
   });
 
   test('GIVEN 20 timer tasks of 30 ms each between frames, the p95 frame delta reads the stall', async ({ page }): Promise<void> => {
