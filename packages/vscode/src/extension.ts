@@ -115,7 +115,7 @@ const rootsChangedOf = (
   return onRoots;
 };
 
-/** The stat results back until now; the whole span is zero when the roots were never found. */
+/** The span from when the roots were found to now; a zero-length span at now when they were never found. */
 const resumeSpanOf = (rootsFoundAt: number | null): Span => {
   const end = performance.now();
   const span: Span = { start: rootsFoundAt ?? end, end };
