@@ -103,7 +103,9 @@ const restyledIdsDuring = (cy: Core, write: () => void): string[] => {
   cy.on('style', (event: EventObjectNode | EventObjectEdge): void => void ids.add(event.target.id()));
   write();
 
-  return [...ids];
+  const restyled = [...ids];
+
+  return restyled.sort();
 };
 
 const stateOf = (cy: Core, id: string): string => {
@@ -397,7 +399,7 @@ describe('FEATURE: createTaskCanvas run marks with styles on', () => {
     it('WHEN only web#build changes state THEN only web#build and its package compound are restyled', () => {
       const restyled = restyledIdsDuring(cy, (): void => canvas.runStates({ 'web#build': 'passed' }));
 
-      expect(restyled).toStrictEqual(['web#build', 'pkg:web']);
+      expect(restyled).toStrictEqual(['pkg:web', 'web#build']);
     });
   });
 });
