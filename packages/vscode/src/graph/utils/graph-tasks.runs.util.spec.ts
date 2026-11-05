@@ -233,6 +233,17 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
     });
   });
 
+  describe('GIVEN an own run of an id that is not listed', () => {
+    it('WHEN the message is built THEN neither map names it', () => {
+      const ghostRun: RunEntry = { ...OWN_RUNNING, taskId: 'ghost#build' };
+      const sources = sourcesOf([OWN_RUNNING, ghostRun], []);
+
+      const message = runsMessageOf('/ws', ['ui#build'], sources);
+
+      expect(message).toStrictEqual({ type: 'runs', runs: BUILD_RUNNING });
+    });
+  });
+
   describe('GIVEN a record of an id that is not listed', () => {
     it('WHEN the message is built THEN neither map names it', () => {
       const ghost = recordOf('ghost#build', 'running', 1000, A);

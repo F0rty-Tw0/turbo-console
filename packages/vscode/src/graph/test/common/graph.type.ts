@@ -1,11 +1,13 @@
 import type { GraphHostMessage, Positions } from '@turbo-console/webview-ui';
 import type { Mock } from 'vitest';
 
+import type { ProgressListener } from '../../../run/common/run-progress.type.ts';
 import type { ViewFake } from '../../../shared/test/common/panel-fakes.type.ts';
 import type { ScriptsToggleFake } from '../../../shared/test/common/scripts-toggle-fake.type.ts';
 import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphHost } from '../../common/graph-panel.type.ts';
+import type { GraphProgress } from '../../common/graph.type.ts';
 
 /** The fields of a posted `graph` state that a spec reads. */
 export type PostedGraph = {
@@ -37,6 +39,15 @@ export type AtomsFake = {
   readonly childrenRequested: Mock<SharedAtoms['childrenRequested']>;
   /** Tells every subscribed listener that the view of one package changed. */
   readonly changed: AtomListener;
+  readonly listenerCount: () => number;
+};
+
+/** A task progress whose `recordsOf` is a spy the spec sets, and whose change feed fires when the spec calls `changed`. */
+export type ProgressFake = {
+  readonly progress: GraphProgress;
+  readonly recordsOf: Mock<GraphProgress['recordsOf']>;
+  /** Tells every subscribed listener that the records of one root changed. */
+  readonly changed: ProgressListener;
   readonly listenerCount: () => number;
 };
 

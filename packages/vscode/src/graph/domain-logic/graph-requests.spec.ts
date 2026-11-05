@@ -4,8 +4,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { isRequestMessage, requestHandledOf } from './graph-requests.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { RunStore } from '../../run/domain-logic/run-store.ts';
+import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphRequestMessage, RequestContext } from '../common/graph.type.ts';
+import type { ToggleFakes } from '../test/common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import {
   APP_BUILD_TASK_STUB,
@@ -16,7 +19,7 @@ import {
   GRAPH_ATOM_UNLOADED_VIEW_STUB
 } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_SHOWN_STUB, GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
-import { atomsFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
+import { atomsFake, feedsOf, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { smokeGroupTasksOf } from '../test/utils/graph-model.spec.util.ts';
 import { graphStateOf } from '../utils/graph-state.util.ts';
 
@@ -44,15 +47,10 @@ const SHOWN_UMBRELLAS: GraphRequestMessage = {
   ids: [ATOM_UMBRELLA_TASK_STUB.id, SMOKE_UMBRELLA.id, 'gone#nothing', ATOM_FILE_A_TASK_STUB.id, APP_BUILD_TASK_STUB.id]
 };
 
-const contextOf = (state: GraphState, atoms: RequestContext['atoms'] = SHARED_ATOMS_STUB): RequestContext => {
-  const context: RequestContext = {
-    state,
-    root: '/ws',
-    coordinator: coordinatorMock(),
-    ports: graphPortsMock(),
-    atoms,
-    toggles: togglesOf()
-  };
+/** A context on `/ws` over spy ports and a fresh run store, with hidden fake toggles. */
+const contextOf = (state: GraphState, atoms: SharedAtoms = SHARED_ATOMS_STUB, toggles: ToggleFakes = togglesOf()): RequestContext => {
+  const feeds = feedsOf(new RunStore(), atoms, toggles);
+  const context: RequestContext = { state, root: '/ws', coordinator: coordinatorMock(), ports: graphPortsMock(), feeds };
 
   return context;
 };
@@ -201,7 +199,7 @@ describe('FEATURE: graph setViewToggle request', () => {
 
       await requestHandledOf(SET_SCOPE, context);
 
-      expect(context.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
+      expect(context.feeds.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
     });
 
     it('WHEN it is handled THEN the scripts toggle is not set', async () => {
@@ -209,7 +207,7 @@ describe('FEATURE: graph setViewToggle request', () => {
 
       await requestHandledOf(SET_SCOPE, context);
 
-      expect(context.toggles.scripts.set).not.toHaveBeenCalled();
+      expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
     });
 
     it('WHEN it is handled THEN true is returned', async () => {
@@ -225,7 +223,7 @@ describe('FEATURE: graph setViewToggle request', () => {
 
       await requestHandledOf(SET_SCRIPTS, context);
 
-      expect(context.toggles.scripts.set).toHaveBeenCalledExactlyOnceWith(true);
+      expect(context.feeds.toggles.scripts.set).toHaveBeenCalledExactlyOnceWith(true);
     });
 
     it('WHEN it is handled THEN the scope toggle is not set', async () => {
@@ -233,7 +231,7 @@ describe('FEATURE: graph setViewToggle request', () => {
 
       await requestHandledOf(SET_SCRIPTS, context);
 
-      expect(context.toggles.scope.set).not.toHaveBeenCalled();
+      expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
     });
   });
 
@@ -243,7 +241,7 @@ describe('FEATURE: graph setViewToggle request', () => {
 
       await requestHandledOf(SET_SCOPE, context);
 
-      expect(context.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
+      expect(context.feeds.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
     });
 
     it('WHEN a setViewToggle is handled THEN true is returned', async () => {
@@ -256,8 +254,7 @@ describe('FEATURE: graph setViewToggle request', () => {
   describe('GIVEN a toggle whose set rejects', () => {
     it('WHEN a setViewToggle is handled THEN true is returned and nothing is thrown', async () => {
       const toggles = togglesOf();
-      const base = contextOf(GRAPH_STATE_STUB);
-      const context: RequestContext = { ...base, toggles };
+      const context = contextOf(GRAPH_STATE_STUB, SHARED_ATOMS_STUB, toggles);
 
       toggles.scope.set.mockRejectedValueOnce(new Error('boom'));
 

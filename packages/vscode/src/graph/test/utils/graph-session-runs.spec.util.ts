@@ -19,9 +19,12 @@ const isShow = (message: GraphHostMessage): message is GraphShowRequest => {
   return message.type === 'showTasks' || message.type === 'showPackage';
 };
 
+/** The `runs` messages posted so far, in order, with their `owners`. */
+export const postedRunsMessagesOf = (ports: GraphPorts): GraphRunsMessage[] => postedOf(ports).filter(isRuns);
+
 /** The `runs` maps posted so far, in order. */
 export const postedRunsOf = (ports: GraphPorts): GraphRunsMessage['runs'][] => {
-  const messages = postedOf(ports).filter(isRuns);
+  const messages = postedRunsMessagesOf(ports);
 
   return messages.map((message) => message.runs);
 };

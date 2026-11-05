@@ -3,7 +3,7 @@ import type { GraphAtomFile, GraphAtomGroup, GraphRunState, GraphRunsMessage, Gr
 
 import { atomFoldOf } from './graph-atoms.util.ts';
 import type { DisplayedRun } from '../../run/common/run-progress.type.ts';
-import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
+import type { RunEntry } from '../../run/common/run.type.ts';
 import { displayRunOf } from '../../run/utils/run-display.util.ts';
 import { isRunnableTask, isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 import type { AtomFold, GraphListing } from '../common/graph-atom.type.ts';
@@ -122,24 +122,6 @@ export const runIdsOf = (state: GraphState): string[] => {
   if (state.kind !== 'graph') return NO_IDS;
 
   return runIdsOfListing(state);
-};
-
-/** The graph word of a run entry: a running entry whose launch node is persistent is `continuous`, any other keeps its state. */
-const runWordOf = (entry: RunEntry | undefined): GraphRunState | undefined => {
-  if (entry === undefined) return undefined;
-
-  const isContinuous = entry.state === 'running' && entry.task.persistent;
-  const { state } = entry;
-
-  return isContinuous ? 'continuous' : state;
-};
-
-/** The run word of each id that has a run under `root` (`continuous` for a running persistent launch); ids no run names never appear. */
-export const runsMapOf = (root: string, ids: string[], get: RunLookup): Record<string, GraphRunState> => {
-  const entries = ids.map((id): [string, GraphRunState | undefined] => [id, runWordOf(get(root, id))]);
-  const withRun = entries.filter((entry): entry is [string, GraphRunState] => entry[1] !== undefined);
-
-  return Object.fromEntries(withRun);
 };
 
 const runningWordOf = (isPersistent: boolean): GraphRunState => (isPersistent ? 'continuous' : 'running');

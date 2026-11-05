@@ -11,6 +11,17 @@ import type { PanelRoots } from '../roots/common/panel-roots.type.ts';
 import { manifestFile, rootOf } from '../run/feature/register-pickers.ts';
 import type { Output } from '../shared/common/output.type.ts';
 
+/** The feeds every graph panel reads: the run states and the task progress of the run session, the shared Atomizer loads and the tree's toggles. */
+export const graphFeedsOf = (
+  run: Pick<GraphFeeds, 'runs' | 'progress'>,
+  atoms: GraphFeeds['atoms'],
+  toggles: GraphFeeds['toggles']
+): GraphFeeds => {
+  const feeds: GraphFeeds = { runs: run.runs, progress: run.progress, atoms, toggles };
+
+  return feeds;
+};
+
 /**
  * The graph panels over the root session, wired as `createPanels` wires Details; a panel reports its visibility to the
  * session only through the `setPanelVisible` closure here. It sits beside the layers, like `extension.ts`, because it
@@ -37,6 +48,7 @@ export const createGraph = (
     setPanelVisible,
     openDetails,
     runs: feeds.runs,
+    progress: feeds.progress,
     atoms: feeds.atoms,
     toggles: feeds.toggles
   });

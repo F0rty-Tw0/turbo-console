@@ -1,12 +1,13 @@
 import { vi } from 'vitest';
 
+import type { ProgressListener } from '../../../run/common/run-progress.type.ts';
 import type { Runs } from '../../../run/common/run.type.ts';
 import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
 import type { AtomLookup } from '../../../tree/common/atom-view.type.ts';
 import { SHARED_ATOMS_STUB } from '../../../tree/test/stubs/shared-atoms.stub.ts';
-import type { GraphFeeds, GraphToggles } from '../../common/graph.type.ts';
-import type { AtomsFake, ToggleFakes } from '../common/graph.type.ts';
+import type { GraphFeeds, GraphProgress, GraphToggles } from '../../common/graph.type.ts';
+import type { AtomsFake, ProgressFake, ToggleFakes } from '../common/graph.type.ts';
 
 /** Two fresh toggles: scripts hidden, scope hidden unless `isScopeShown`. */
 export const togglesOf = (isScopeShown = false): ToggleFakes => {
@@ -15,9 +16,34 @@ export const togglesOf = (isScopeShown = false): ToggleFakes => {
   return toggles;
 };
 
-/** Feeds over `runs`, atoms that never load and hidden toggles, unless a spec passes its own. */
-export const feedsOf = (runs: Runs, atoms: SharedAtoms = SHARED_ATOMS_STUB, toggles: GraphToggles = togglesOf()): GraphFeeds => {
-  const feeds: GraphFeeds = { runs, atoms, toggles };
+/** A task progress with no records until the spec sets `recordsOf`, that tells its listeners when the spec calls `changed`. */
+export const progressFake = (): ProgressFake => {
+  const listeners = new Set<ProgressListener>();
+  const recordsOf = vi.fn<GraphProgress['recordsOf']>().mockReturnValue([]);
+  const onDidChange = (listener: ProgressListener): (() => void) => {
+    listeners.add(listener);
+
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+  const changed: ProgressListener = (root) => {
+    for (const listener of listeners) listener(root);
+  };
+  const progress: GraphProgress = { recordsOf, onDidChange };
+  const fake: ProgressFake = { progress, recordsOf, changed, listenerCount: () => listeners.size };
+
+  return fake;
+};
+
+/** Feeds over `runs`, a progress with no records, atoms that never load and hidden toggles, unless a spec passes its own. */
+export const feedsOf = (
+  runs: Runs,
+  atoms: SharedAtoms = SHARED_ATOMS_STUB,
+  toggles: GraphToggles = togglesOf(),
+  progress: GraphProgress = progressFake().progress
+): GraphFeeds => {
+  const feeds: GraphFeeds = { runs, progress, atoms, toggles };
 
   return feeds;
 };
