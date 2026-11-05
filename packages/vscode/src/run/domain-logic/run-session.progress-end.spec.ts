@@ -1,15 +1,20 @@
+import { basename } from 'node:path';
+
+import type { RunTasksMatch } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunSession } from './run-session.ts';
+import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
 import type { RunLogPorts } from '../common/run-log-tail.type.ts';
 import { START_TIMEOUT_MS } from '../common/run.const.ts';
 import type { RunPorts, Terminable } from '../common/run.type.ts';
 import { RunLogTails } from '../data-access/run-log-tails.ts';
+import { ENTRY_B } from '../test/common/run-log-step.const.ts';
 import type { LiveParts, LiveSession } from '../test/common/run-session-live.type.ts';
 import { JOIN_DEFINITION_STUB, JOIN_EVENT_STUB, JOIN_OWNER_STUB, JOIN_REQUEST_STUB } from '../test/stubs/run-progress-join.stub.ts';
 import { endChangeWindow, fakeChangeWindows } from '../test/utils/run-log-change-window.spec.util.ts';
-import { LIVE_FILE, liveSessionOf } from '../test/utils/run-session-live.spec.util.ts';
+import { LIVE_DIR, LIVE_FILE, liveSessionOf } from '../test/utils/run-session-live.spec.util.ts';
 
 const TURBO_ARGS = ['--skip-infer', 'run', 'build', '--filter=a', '--summarize'];
 
@@ -18,6 +23,8 @@ const PARTS: LiveParts = { sessionOf: (ports) => new RunSession(ports, []), tail
 const neverLaunches = async (): Promise<Terminable> => Promise.withResolvers<Terminable>().promise;
 
 const launchRejects = async (): Promise<Terminable> => Promise.reject(new Error('no workspace folder'));
+
+const NO_TASKS: RootChange = { root: '/ws', before: null, after: null, errorBefore: null, errorAfter: null };
 
 const NEVER_LAUNCHES: Partial<RunPorts> = { execute: neverLaunches };
 
@@ -60,7 +67,7 @@ const stoppedFirst = async (): Promise<LiveSession> => {
   return live;
 };
 
-describe('FEATURE: live progress of a turbo run that ends early or reruns (spec D10, §5.3)', () => {
+describe('FEATURE: live progress of a turbo run that ends early, loses its task or reruns (spec D10, §5.3)', () => {
   let h: LiveSession;
 
   const settledOwners = (): unknown[] => h.settle.mock.calls.map(([owner]) => owner);
@@ -129,6 +136,42 @@ describe('FEATURE: live progress of a turbo run that ends early or reruns (spec 
       await running;
 
       expect([settledOwners(), h.start.mock.calls.length]).toStrictEqual([[JOIN_OWNER_STUB], 0]);
+    });
+  });
+
+  describe('GIVEN an ended turbo run still waiting for its match', () => {
+    beforeEach(async () => {
+      const matching = Promise.withResolvers<RunTasksMatch | null>();
+      const waitsForMatch: Partial<RunPorts> = { match: async () => matching.promise };
+
+      h = liveSessionOf(PARTS, waitsForMatch);
+      await h.session.run(JOIN_REQUEST_STUB);
+      h.fs.write(LIVE_FILE, [ENTRY_B]);
+      h.fs.emit(LIVE_DIR, basename(LIVE_FILE));
+      await endChangeWindow();
+      h.session.processEnded(JOIN_EVENT_STUB, 0);
+      await endChangeWindow();
+    });
+
+    it('WHEN its task vanishes in a root change THEN its progress settles once', async () => {
+      h.session.rootChanged(NO_TASKS);
+      await flush();
+
+      expect(settledOwners()).toStrictEqual([JOIN_OWNER_STUB]);
+    });
+
+    it('WHEN a run change listener throws on the root change THEN it logs one line, still prunes the progress and does not throw', () => {
+      h.session.runs.onDidChange(() => {
+        throw new Error('listener boom');
+      });
+
+      expect(() => {
+        h.session.rootChanged(NO_TASKS);
+      }).not.toThrow();
+      expect([h.stateOfB(), vi.mocked(h.ports.log).mock.calls]).toStrictEqual([
+        undefined,
+        [[expect.stringContaining('listener boom')]]
+      ]);
     });
   });
 

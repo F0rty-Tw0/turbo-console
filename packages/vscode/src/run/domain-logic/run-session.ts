@@ -34,6 +34,9 @@ export class RunSession implements RunControl {
   private readonly timings: RunTiming[];
   /** The launch token of each run whose process ended and whose task end has not arrived yet. */
   private readonly endingRuns = new Map<RunKey, number>();
+  private readonly logFailure = (error: unknown): void => {
+    this.ports.log(logTextOf(error));
+  };
 
   public constructor(ports: RunSessionPorts, timings: RunTiming[]) {
     this.progress = new RunProgress(ports.now);
@@ -76,12 +79,8 @@ export class RunSession implements RunControl {
 
     const owner = progressOwnerOf(ended.root, ended.taskId, ended.launchedAt);
 
-    this.join.drain(owner).catch((error: unknown) => {
-      this.ports.log(logTextOf(error));
-    });
-    finishRun(this.runs, this.ports, ended).catch((error: unknown) => {
-      this.ports.log(logTextOf(error));
-    });
+    this.join.drain(owner).catch(this.logFailure);
+    finishRun(this.runs, this.ports, ended).catch(this.logFailure);
   }
 
   /** Spec 1c-b §4.4: a script ending 127 or 9009 gets one hedged Output line and no notice. */
@@ -107,11 +106,20 @@ export class RunSession implements RunControl {
     taskEnded(this.runs, this.ports, event.definition, event.launchedAt);
   }
 
-  /** Drops the ended runs and the progress records of tasks the root no longer has; a root with no model keeps none. */
+  /**
+   * Drops the ended runs and the progress records of tasks the root no longer has; a root with no model keeps none. A
+   * throwing run change listener is logged, never thrown: the progress is pruned all the same, and the root listeners
+   * after this one still hear of the change.
+   */
   public rootChanged(change: RootChange): void {
     const visibleIds = taskIdsOf(change.after);
 
-    this.runs.prune(change.root, visibleIds);
+    try {
+      this.runs.prune(change.root, visibleIds);
+    } catch (error) {
+      this.logFailure(error);
+    }
+
     this.progress.prune(change.root, visibleIds);
   }
 
