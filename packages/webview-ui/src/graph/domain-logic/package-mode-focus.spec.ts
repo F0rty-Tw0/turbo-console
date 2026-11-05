@@ -52,7 +52,7 @@ describe('FEATURE: PackageModeFocus', () => {
         expect(screen.showGraph).toHaveBeenCalledWith(false);
       });
 
-      it('WHEN focus is lost again and the graph shows again THEN focus is not given back', () => {
+      it('THEN a second loss of focus and a second show do not give focus back', () => {
         page.details.focus();
         dropFocus();
         shown.showGraph(false);
@@ -69,7 +69,7 @@ describe('FEATURE: PackageModeFocus', () => {
     });
   });
 
-  describe('GIVEN the details have focus and focus is kept', () => {
+  describe('GIVEN the details have focus when focus is kept', () => {
     beforeEach(() => {
       page.details.focus();
       focus.keep();
