@@ -121,8 +121,9 @@ type TaskToolbarFields = {
   readonly elements: TaskToolbarElements;
   /** The selected task's model; its state picks what the Run/Stop slot does. */
   model: TaskDetailsModel;
-  /** What the Run/Stop slot is drawn for; `null` until the first sync draws it. */
-  slotAction: RunSlotAction | null;
+  /** The label the Run/Stop slot is drawn with; `null` until the first sync. */
+  // eslint-disable-next-line local/readonly-type-properties -- the toolbar rewrites it when the slot is redrawn
+  slotLabel: string | null;
 };
 
 /** The task toolbar as it is kept. */

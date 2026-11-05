@@ -9,18 +9,17 @@ import { stopOf } from '../utils/roving-stop.util.ts';
 import { TASK_TOOLBAR_ORDER, runActionOf, runSlotLabelOf, taskToolbarShownOf } from '../utils/task-toolbar.util.ts';
 import { isNodeToolbarCompact } from '../utils/widget-geometry.util.ts';
 
-/** Draws the Run/Stop slot for the task's state now, on the same element so focus stays on it; a slot already drawn for that action is not written. */
+/** Draws the Run/Stop slot for the task's state and run owner now, on the same element so focus stays on it; a slot already drawn with that label is not written. */
 const syncRun = (entry: TaskToolbarEntry): void => {
   const { id, elements, model } = entry;
   const action = runActionOf(model.state);
+  const label = runSlotLabelOf(id, action, model.runOwner);
 
-  if (action === entry.slotAction) return;
-
-  const label = runSlotLabelOf(id, action);
+  if (label === entry.slotLabel) return;
 
   setButtonIcon(elements.run, ACTION_ICONS[action]);
   setButtonLabel(elements.run, label);
-  entry.slotAction = action;
+  entry.slotLabel = label;
 };
 
 /**
@@ -109,7 +108,7 @@ export class TaskToolbar {
   private build(model: TaskDetailsModel): TaskToolbarEntry {
     const { id, packageName } = model.task;
     const elements = this.deps.views.taskToolbar(id, packageName);
-    const entry: TaskToolbarEntry = { id, elements, model, slotAction: null, shown: [], preferred: 'run' };
+    const entry: TaskToolbarEntry = { id, elements, model, slotLabel: null, shown: [], preferred: 'run' };
     const { run, showPackage, ellipsis } = elements;
 
     ellipsis.addEventListener('click', (): void => this.deps.onMenu(ellipsis));
