@@ -2,7 +2,7 @@ import type { GraphHostMessage, GraphState, GraphWebviewMessage, LayoutGrouping 
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
-import type { ProgressRecords } from '../../run/common/run-progress.type.ts';
+import type { ProgressChanges, ProgressRecords } from '../../run/common/run-progress.type.ts';
 import type { RunLookup, Runs } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
@@ -74,11 +74,15 @@ export type ExplainContext = {
   readonly canPost: () => boolean;
 };
 
-/** `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now and `runIds` the ids a run can report, without the rest of the state. */
+/**
+ * `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now, `runIds` the ids a run can report
+ * and `persistentIds` the ids whose running word is `continuous`, without the rest of the state.
+ */
 export type TaskFeedGate = {
   readonly canPost: () => boolean;
   readonly state: () => GraphState;
   readonly runIds: () => string[];
+  readonly persistentIds: () => ReadonlySet<string>;
 };
 
 /** The tree command a graph run request maps to, with the tree-row argument it takes. */
@@ -99,9 +103,13 @@ export type GraphToggles = {
   readonly scripts: ScriptsToggleApi;
 };
 
-/** What a panel's feeds read: the run states of its root, the Atomizer loads shared with the tree and the tree's two toggles. */
+/** The task progress a graph reads: the records of an id and the change feed that says which root they changed under. */
+export type GraphProgress = ProgressRecords & ProgressChanges;
+
+/** What a panel's feeds read: the run states of its root, the task progress of every run, the Atomizer loads shared with the tree and the tree's two toggles. */
 export type GraphFeeds = {
   readonly runs: Runs;
+  readonly progress: GraphProgress;
   readonly atoms: SharedAtoms;
   readonly toggles: GraphToggles;
 };

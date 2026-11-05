@@ -1,11 +1,12 @@
 import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphTask } from '@turbo-console/webview-ui';
+import type { GraphRunsMessage, GraphTask } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { graphListingOf, graphTasksOf, runsMapOf } from './graph-tasks.util.ts';
+import { graphListingOf, graphTasksOf, runsMessageOf } from './graph-tasks.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import type { RunSources } from '../common/graph.type.ts';
 import {
   ATOM_AGGREGATE_TASK_STUB,
   ATOM_E2E_PACKAGE_STUB,
@@ -46,6 +47,14 @@ const lookupOf = (...entries: RunEntry[]): RunLookup => {
   const byKey = new Map(entries.map((entry) => [`${entry.root}\0${entry.taskId}`, entry]));
 
   return (root, taskId) => byKey.get(`${root}\0${taskId}`);
+};
+
+/** The `runs` map of the message over own runs only: no progress records and no persistent ids. */
+const runWordsOf = (root: string, ids: string[], get: RunLookup): GraphRunsMessage['runs'] => {
+  const sources: RunSources = { get, recordsOf: () => [], persistentIds: new Set() };
+  const message = runsMessageOf(root, ids, sources);
+
+  return message.runs;
 };
 
 const ROOT = '/ws';
@@ -223,12 +232,12 @@ describe('FEATURE: graph listing of atom groups', () => {
   });
 });
 
-describe('FEATURE: graph runs map', () => {
+describe('FEATURE: graph runs words (own runs only)', () => {
   describe('GIVEN a run of a file of a listed group', () => {
     it('WHEN the map is built over the run ids THEN it holds that state by file id', () => {
       const get = lookupOf(runOf(ROOT, FILE_A, 'passed'));
 
-      const runs = runsMapOf(ROOT, [...LISTED, FILE_A], get);
+      const runs = runWordsOf(ROOT, [...LISTED, FILE_A], get);
 
       expect(runs).toStrictEqual({ [FILE_A]: 'passed' });
     });
@@ -238,7 +247,7 @@ describe('FEATURE: graph runs map', () => {
     it('WHEN the map is built THEN it holds that state by id', () => {
       const get = lookupOf(runOf(ROOT, 'a#build', 'running'));
 
-      const runs = runsMapOf(ROOT, LISTED, get);
+      const runs = runWordsOf(ROOT, LISTED, get);
 
       expect(runs).toStrictEqual({ 'a#build': 'running' });
     });
@@ -257,7 +266,7 @@ describe('FEATURE: graph runs map', () => {
       const launched = runOf(ROOT, 'a#build', state);
       const entry: RunEntry = { ...launched, task };
 
-      const runs = runsMapOf(ROOT, LISTED, lookupOf(entry));
+      const runs = runWordsOf(ROOT, LISTED, lookupOf(entry));
 
       expect(runs).toStrictEqual({ 'a#build': expected });
     });
@@ -269,7 +278,7 @@ describe('FEATURE: graph runs map', () => {
       const launched = runOf(ROOT, 'a#build', 'running');
       const entry: RunEntry = { ...launched, task };
 
-      const runs = runsMapOf(ROOT, LISTED, lookupOf(entry));
+      const runs = runWordsOf(ROOT, LISTED, lookupOf(entry));
 
       expect(runs).toStrictEqual({ 'a#build': 'running' });
     });
@@ -279,7 +288,7 @@ describe('FEATURE: graph runs map', () => {
     it('WHEN the map is built THEN it is empty', () => {
       const get = lookupOf(runOf('/other', 'a#build', 'running'));
 
-      const runs = runsMapOf(ROOT, LISTED, get);
+      const runs = runWordsOf(ROOT, LISTED, get);
 
       expect(runs).toStrictEqual({});
     });
@@ -289,7 +298,7 @@ describe('FEATURE: graph runs map', () => {
     it('WHEN the map is built for /other THEN it holds the /other state only', () => {
       const get = lookupOf(runOf(ROOT, 'a#build', 'running'), runOf('/other', 'a#build', 'failed'));
 
-      const runs = runsMapOf('/other', LISTED, get);
+      const runs = runWordsOf('/other', LISTED, get);
 
       expect(runs).toStrictEqual({ 'a#build': 'failed' });
     });
@@ -299,7 +308,7 @@ describe('FEATURE: graph runs map', () => {
     it('WHEN the map is built THEN it is absent', () => {
       const get = lookupOf(runOf(ROOT, 'gone#build', 'running'));
 
-      const runs = runsMapOf(ROOT, LISTED, get);
+      const runs = runWordsOf(ROOT, LISTED, get);
 
       expect(runs).toStrictEqual({});
     });
@@ -307,7 +316,7 @@ describe('FEATURE: graph runs map', () => {
 
   describe('GIVEN no runs', () => {
     it('WHEN the map is built THEN it is empty', () => {
-      const runs = runsMapOf(ROOT, LISTED, lookupOf());
+      const runs = runWordsOf(ROOT, LISTED, lookupOf());
 
       expect(runs).toStrictEqual({});
     });

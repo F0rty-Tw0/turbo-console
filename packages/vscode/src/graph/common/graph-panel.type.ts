@@ -2,7 +2,7 @@ import type { GraphHostMessage, GraphShowRequest } from '@turbo-console/webview-
 import type * as vscode from 'vscode';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
-import type { GraphPorts, GraphToggles } from './graph.type.ts';
+import type { GraphPorts, GraphProgress, GraphToggles } from './graph.type.ts';
 import type { PanelKey } from '../../details/common/details.type.ts';
 import type { Roots } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
@@ -41,6 +41,7 @@ export type GraphPanelsDeps = {
   readonly setPanelVisible: (root: string, panelId: string, visible: boolean) => void;
   readonly openDetails: (key: PanelKey) => Promise<void>;
   readonly runs: Runs;
+  readonly progress: GraphProgress;
   readonly atoms: SharedAtoms;
   readonly toggles: GraphToggles;
 };

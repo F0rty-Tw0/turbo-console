@@ -1,3 +1,4 @@
+import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphSession } from './graph-session.ts';
@@ -5,13 +6,17 @@ import type { LoadedModel } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { LOADED_MODEL_STUB } from '../../roots/test/stubs/root.stub.ts';
+import type { ProgressRecord } from '../../run/common/run-progress.type.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
+import { recordOf } from '../../run/test/utils/run-progress.spec.util.ts';
 import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
+import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
+import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphPorts } from '../common/graph.type.ts';
 import { ATOM_FILE_A_TASK_STUB, GRAPH_ATOM_MODEL_STUB } from '../test/stubs/graph-atom-model.stub.ts';
-import { GRAPH_LOADED_STUB } from '../test/stubs/graph-model.stub.ts';
+import { GRAPH_LOADED_STUB, GRAPH_MODEL_STUB } from '../test/stubs/graph-model.stub.ts';
 import { A_BUILD_DEFINITION_STUB, RUN_A_BUILD_STUB } from '../test/stubs/graph-run.stub.ts';
-import { feedsOf } from '../test/utils/graph-feeds.spec.util.ts';
+import { feedsOf, progressFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { postedRunsOf, postedTypesOf } from '../test/utils/graph-session-runs.spec.util.ts';
 import { portsWith, postedOf } from '../test/utils/graph-session.spec.util.ts';
 
@@ -19,6 +24,19 @@ type ShownSession = {
   readonly session: GraphSession;
   readonly runs: RunStore;
   readonly ports: GraphPorts;
+};
+
+const UI_DEV_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'ui#dev', name: 'dev', persistent: true };
+const UI_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'ui', path: 'packages/ui', tasks: [UI_DEV_TASK] };
+const DEV_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GRAPH_MODEL_STUB.packages, UI_NODE] };
+const DEV_LOADED: LoadedModel = { ...LOADED_MODEL_STUB, model: DEV_MODEL };
+const UI_DEV_UNDER_WEB_BUILD = recordOf('ui#dev', 'running', 1100);
+
+/** `ui#dev` running under `web#build`, and no record of any other id. */
+const uiDevRecordsOf = (_root: string, taskId: string): ProgressRecord[] => {
+  if (taskId !== 'ui#dev') return [];
+
+  return [UI_DEV_UNDER_WEB_BUILD];
 };
 
 const loadedStore = (loaded: LoadedModel = GRAPH_LOADED_STUB): RootStore => {
@@ -199,7 +217,7 @@ describe('FEATURE: graph session runs feed', () => {
       });
     });
 
-    it('WHEN a run of an unlisted task starts THEN the next runs map has no key for it', async () => {
+    it('WHEN an unrelated run changes THEN no runs map is re-sent', async () => {
       const { session, runs, ports } = shownSession();
       const goneTask = { ...RUN_A_BUILD_STUB.task, id: 'gone#build' };
       const gone = { ...RUN_A_BUILD_STUB, packageName: 'gone', task: goneTask };
@@ -208,7 +226,23 @@ describe('FEATURE: graph session runs feed', () => {
       runs.tryStart(gone, 1000);
       vi.advanceTimersByTime(50);
 
-      expect(postedRunsOf(ports)).toStrictEqual([{}, {}]);
+      expect(postedRunsOf(ports)).toStrictEqual([{}]);
+    });
+
+    it('WHEN its runs feed posts THEN a persistent listed id the model marks is continuous under an owner', async () => {
+      const fake = progressFake();
+      const ports = portsWith(null);
+      const feeds = feedsOf(new RunStore(), SHARED_ATOMS_STUB, togglesOf(), fake.progress);
+      const session = new GraphSession('/ws', loadedStore(DEV_LOADED), ports, feeds);
+
+      session.setVisible(true);
+      session.start();
+      await session.receive({ type: 'ready' });
+      fake.recordsOf.mockImplementation(uiDevRecordsOf);
+      fake.changed('/ws');
+      vi.advanceTimersByTime(50);
+
+      expect(postedRunsOf(ports).at(-1)).toStrictEqual({ 'ui#dev': 'continuous' });
     });
 
     it('WHEN ready arrives twice THEN each state is followed by its map', async () => {

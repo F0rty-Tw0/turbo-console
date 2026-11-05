@@ -1,13 +1,14 @@
-import type { GraphRunsMessage, GraphShowRequest, GraphState } from '@turbo-console/webview-ui';
+import type { GraphShowRequest, GraphState } from '@turbo-console/webview-ui';
 
 import { Coalescer } from './coalescer.ts';
 import { GraphAtomFeed } from './graph-atom-feed.ts';
-import type { RunEntry, Runs } from '../../run/common/run.type.ts';
+import type { ProgressRecord } from '../../run/common/run-progress.type.ts';
+import type { Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
-import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
-import { runIdsOf, runsMapOf } from '../utils/graph-tasks.util.ts';
+import type { GraphPorts, GraphProgress, RunSources, TaskFeedGate } from '../common/graph.type.ts';
+import { runIdsOf, runsMessageOf } from '../utils/graph-tasks.util.ts';
 
 const isSinglePackageState = (state: GraphState): boolean => state.kind === 'graph' && state.singlePackage;
 
@@ -24,18 +25,21 @@ type TaskFeedDeps = {
   readonly ports: Pick<GraphPorts, 'post' | 'log'>;
   readonly gate: TaskFeedGate;
   readonly atoms: Pick<SharedAtoms, 'onDidChange' | 'view'>;
+  readonly progress: GraphProgress;
 };
 
 /**
- * What a graph panel is told about tasks besides its state: the run states of its root, coalesced so a burst of task
- * events is one post, the Atomizer counts of its groups (a `GraphAtomFeed`) and the one `showTasks` or `showPackage` request
- * held until the page can take it. A request is never posted before a `graph` state: `flush` is the one point that posts the full runs
- * map, the atoms and the held request, in that order, right after a state is posted.
+ * What a graph panel is told about tasks besides its state: the run words and owners of its root, merged from its own runs and
+ * the task progress (spec D11) and coalesced so a burst of task events or progress changes is one post, the Atomizer counts of its
+ * groups (a `GraphAtomFeed`) and the one `showTasks` or `showPackage` request held until the page can take it. A coalesced post that
+ * equals the last one sent is skipped. A request is never posted before a `graph` state: `flush` is the one point that posts the
+ * full runs message, always, the atoms and the held request, in that order, right after a state is posted.
  */
 export class GraphTaskFeed {
   private readonly deps: TaskFeedDeps;
-  private unsubscribe: (() => void) | null = null;
+  private unsubscribes: (() => void)[] = [];
   private readonly coalescer: Coalescer;
+  private lastRuns: string | null = null;
   private held: GraphShowRequest | null = null;
   private readonly atomFeed: GraphAtomFeed;
 
@@ -50,24 +54,32 @@ export class GraphTaskFeed {
   public start(): void {
     this.atomFeed.start();
 
-    if (this.unsubscribe !== null) return;
+    if (this.unsubscribes.length > 0) return;
 
-    this.unsubscribe = this.deps.runs.onDidChange((entry) => {
-      this.changed(entry);
+    const offRuns = this.deps.runs.onDidChange((entry) => {
+      this.changed(entry.root);
     });
+    const offProgress = this.deps.progress.onDidChange((root) => {
+      this.changed(root);
+    });
+
+    this.unsubscribes = [offRuns, offProgress];
   }
 
   public stop(): void {
     this.atomFeed.stop();
-    this.unsubscribe?.();
-    this.unsubscribe = null;
+
+    for (const unsubscribe of this.unsubscribes) unsubscribe();
+
+    this.unsubscribes = [];
     this.coalescer.cancel();
     this.held = null;
+    this.lastRuns = null;
   }
 
   public flush(state: GraphState): void {
     this.coalescer.cancel();
-    this.postRuns(runIdsOf(state));
+    this.postRuns(runIdsOf(state), true);
     this.atomFeed.flush(state);
     this.postHeld(state);
   }
@@ -109,8 +121,12 @@ export class GraphTaskFeed {
     this.deps.ports.log(logTextOf(text));
   }
 
-  private changed(entry: RunEntry): void {
-    if (entry.root !== this.deps.root) return;
+  /**
+   * Runs on the call stack of a run change or a progress `begin`, `event` or `prune`, which do not catch: it reads no run and no
+   * record, it only arms the timer, so `fire` does the reads on its own stack.
+   */
+  private changed(root: string): void {
+    if (root !== this.deps.root) return;
 
     const canPost = this.deps.gate.canPost();
 
@@ -122,14 +138,20 @@ export class GraphTaskFeed {
 
     if (!canPost) return;
 
-    this.postRuns(this.deps.gate.runIds());
+    this.postRuns(this.deps.gate.runIds(), false);
   }
 
-  private postRuns(ids: string[]): void {
-    const { root, runs, ports } = this.deps;
-    const map = runsMapOf(root, ids, runs.get);
-    const message: GraphRunsMessage = { type: 'runs', runs: map };
+  /** Skips a message whose JSON equals the last one sent unless `isForced`, as a reloaded page needs the message again. */
+  private postRuns(ids: string[], isForced: boolean): void {
+    const { root, runs, progress, gate, ports } = this.deps;
+    const recordsOf = (at: string, taskId: string): ProgressRecord[] => progress.recordsOf(at, taskId);
+    const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds() };
+    const message = runsMessageOf(root, ids, sources);
+    const text = JSON.stringify(message);
 
+    if (!isForced && text === this.lastRuns) return;
+
+    this.lastRuns = text;
     ports.post(message);
   }
 

@@ -10,7 +10,7 @@ import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { ExplainContext, ExplainRequest, GraphFeeds, GraphPorts, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
-import { graphStateOfRoot, runIdsOfRoot, shownOf } from '../utils/graph-state.util.ts';
+import { graphStateOfRoot, persistentIdsOfRoot, runIdsOfRoot, shownOf } from '../utils/graph-state.util.ts';
 
 type ExplainJob = {
   readonly request: ExplainRequest;
@@ -48,10 +48,11 @@ export class GraphSession {
     const gate: TaskFeedGate = {
       canPost: (): boolean => this.canPost(),
       state: (): GraphState => this.stateNow(),
-      runIds: (): string[] => runIdsOfRoot(this.roots.get(this.root)?.state)
+      runIds: (): string[] => runIdsOfRoot(this.roots.get(this.root)?.state),
+      persistentIds: (): ReadonlySet<string> => persistentIdsOfRoot(this.roots.get(this.root)?.state)
     };
 
-    this.feed = new GraphTaskFeed({ root, runs: feeds.runs, ports, gate, atoms: feeds.atoms });
+    this.feed = new GraphTaskFeed({ root, runs: feeds.runs, ports, gate, atoms: feeds.atoms, progress: feeds.progress });
   }
 
   public start(): void {

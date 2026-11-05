@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { registerCodeLens } from './codelens/feature/register-codelens.ts';
 import { createPanels } from './details/details-wiring.ts';
 import { registerDetails } from './details/feature/register-details.ts';
-import { createGraph } from './graph/graph-wiring.ts';
+import { createGraph, graphFeedsOf } from './graph/graph-wiring.ts';
 import { runDependenciesOf } from './graph/utils/graph-dependencies.util.ts';
 import type { Roots } from './roots/common/coordinator.type.ts';
 import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/root.type.ts';
@@ -140,7 +140,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
   const panels = createPanels(context, session, { runs: runSession.runs, scripts: toggles.scripts }, output);
-  const graph = createGraph(context, session, panels, output, { runs: runSession.runs, atoms, toggles });
+  const graph = createGraph(context, session, panels, output, graphFeedsOf(runSession, atoms, toggles));
   const treeVisibility = new TreeVisibility();
   const ticker = new ElapsedTicker(runSession.runs, tickerPortsOf(tree));
   const api: TurboConsoleApi = {
