@@ -78,7 +78,8 @@ const runsDir = (root: string): string => join(root, '.turbo', 'runs');
 /** The names of the run summary files turbo wrote under `root` so far. */
 export const summaryNames = async (root: string): Promise<string[]> => readdir(runsDir(root));
 
-const readSummary = async (root: string, name: string): Promise<RunSummary> => {
+/** The run summary file `name` under `root`, parsed. */
+export const readSummary = async (root: string, name: string): Promise<RunSummary> => {
   const text = await readFile(join(runsDir(root), name), 'utf8');
   const summary: unknown = JSON.parse(text);
 
