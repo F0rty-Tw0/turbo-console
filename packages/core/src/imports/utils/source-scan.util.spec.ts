@@ -90,6 +90,7 @@ describe('FEATURE: char scanners of the import lexer', () => {
 
     it.each([
       ['a zero-width space', 0x200b],
+      ['a char just before the en quad', 0x1fff],
       ['a char just before the ogham space mark', 0x167f],
       ['a char just after the ideographic space', 0x3001]
     ])('WHEN %s sits inside ab?cd THEN it stays a word char', (_name, code) => {
