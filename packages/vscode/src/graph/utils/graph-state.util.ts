@@ -155,15 +155,16 @@ export const runIdsOfRoot = (state: RootState | undefined): string[] => {
   return runIdsOfListing(graphListingOf(model));
 };
 
-/** The ids `runIdsOfRoot(state)` lists that the root's model marks persistent: none unless the root shows a model. */
+/**
+ * The ids the root's model marks persistent: a superset of the ids `runIdsOfRoot(state)` lists (it keeps the ids a fold hides),
+ * which is fine for `.has`. None unless the root shows a model.
+ */
 export const persistentIdsOfRoot = (state: RootState | undefined): ReadonlySet<string> => {
-  const none = new Set<string>();
-
-  if (state === undefined) return none;
+  if (state === undefined) return new Set<string>();
 
   const model = shownModelOf(state);
 
-  if (model === null) return none;
+  if (model === null) return new Set<string>();
 
   return persistentIdsOf(model);
 };
