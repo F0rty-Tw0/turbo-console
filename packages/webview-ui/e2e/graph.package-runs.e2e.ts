@@ -31,7 +31,7 @@ const D14 = { description: 'U7 spec D14', type: 'requirement' };
 
 const STATE = packageRunsState();
 
-const FOLDER_RINGS = { drawn: RUNNING_RGB, absent: PASSED_RGB };
+const RUNNING_RINGS = { drawn: RUNNING_RGB, absent: PASSED_RGB };
 
 test.describe('FEATURE: run state on packages and collapsed folders', () => {
   test(
@@ -85,7 +85,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
       });
 
       await test.step('THEN the packages folder is ringed running and not passed', async (): Promise<void> => {
-        await graphTaskRings.expectFolderRings('packages', FOLDER_RINGS);
+        await graphTaskRings.expectFolderRings('packages', RUNNING_RINGS);
       });
 
       await test.step('AND web, a package with no state in the expanded apps box, has no outline', async (): Promise<void> => {
@@ -123,7 +123,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
   test(
     'GIVEN packages collapsed and ui running, expanding and collapsing the folder keeps the marks current',
     { annotation: D13 },
-    async ({ graphFolders, graphHost, graphLook, graphPage, graphTaskHost, graphTaskProbe, graphTaskRings }): Promise<void> => {
+    async ({ graphFolders, graphHost, graphLook, graphPage, graphTaskHost, graphTaskRings }): Promise<void> => {
       await test.step('WHEN the boards open with packages collapsed', async (): Promise<void> => {
         await graphPage.open({ savedState: collapsedSavedState(STATE.hash, ['packages']) });
       });
@@ -135,13 +135,13 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
       await test.step('AND ui is reported running', async (): Promise<void> => graphTaskHost.sendRuns(UI_RUNNING_STUB));
 
       await test.step('THEN the packages folder is ringed running', async (): Promise<void> => {
-        await graphTaskRings.expectFolderRings('packages', FOLDER_RINGS);
+        await graphTaskRings.expectFolderRings('packages', RUNNING_RINGS);
       });
 
       await test.step('WHEN the packages header expands it', async (): Promise<void> => graphFolders.toggleInList('packages', false));
 
-      await test.step('THEN ui has the 2 wide running outline', async (): Promise<void> => {
-        await graphTaskProbe.expectRunOutline('@acme/ui', RUNNING_OUTLINE);
+      await test.step('THEN ui is drawn with the running ring and no passed one', async (): Promise<void> => {
+        await graphTaskRings.expectRings('@acme/ui', RUNNING_RINGS);
       });
 
       await test.step('WHEN the packages header collapses it again', async (): Promise<void> => {
@@ -149,7 +149,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
       });
 
       await test.step('THEN the packages folder is ringed running', async (): Promise<void> => {
-        await graphTaskRings.expectFolderRings('packages', FOLDER_RINGS);
+        await graphTaskRings.expectFolderRings('packages', RUNNING_RINGS);
       });
     }
   );

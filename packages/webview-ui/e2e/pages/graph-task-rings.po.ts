@@ -55,12 +55,12 @@ export class GraphTaskRings {
     return this.inkOf(clip, colours);
   }
 
-  /** `ringsOf` for a folder's box, whose rendered rect is already in page pixels. */
+  /** `ringsOf` for a collapsed folder's node, whose rendered rect is already in page pixels; `[false, -1]` while the folder is expanded. */
   private async folderRingsOf(folder: string, colours: RingColours): Promise<[boolean, number]> {
     const folders = await readFolders(this.page);
     const found = findFolder(folders, folder);
 
-    if (found === undefined) return [false, -1];
+    if (found?.isCollapsed !== true) return [false, -1];
 
     const clip = grownClipOf(boxRectOf(found));
 
