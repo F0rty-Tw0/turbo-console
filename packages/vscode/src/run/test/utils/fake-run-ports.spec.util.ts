@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 import type { RunLogTail, RunLogs } from '../../common/run-log-tail.type.ts';
 import type { ProgressPort } from '../../common/run-progress.type.ts';
 import type { RunPorts, Terminable } from '../../common/run.type.ts';
+import { FAKE_RUN_ID } from '../common/run-log-id.const.ts';
 
 const afterTimeout = (delayMs: number, action: () => void): void => {
   setTimeout(action, delayMs);
@@ -21,7 +22,7 @@ const drainedTail = (): RunLogTail => {
 /**
  * Run ports where the binary may run, VS Code runs no task of the request, `execute` and `executeScript` resolve with
  * `execution`, no summary matches, `after` is a real `setTimeout` (so fake timers drive the watchdog), the clock reads
- * 1000, every task has no dependencies, the random id is `ab12cd34`, the log folder is made and each tail drains at
+ * 1000, every task has no dependencies, the random id is `FAKE_RUN_ID`, the log folder is made and each tail drains at
  * once, and the progress port only records its calls; `overrides` on top.
  */
 export const fakeRunPorts = (execution: Terminable, overrides: Partial<RunPorts> = {}): RunPorts => {
@@ -46,7 +47,7 @@ export const fakeRunPorts = (execution: Terminable, overrides: Partial<RunPorts>
     log: vi.fn(),
     now: () => 1000,
     dependenciesOf: vi.fn(() => noDependencies),
-    randomId: () => 'ab12cd34',
+    randomId: () => FAKE_RUN_ID,
     logs,
     progress
   };

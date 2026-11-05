@@ -8,13 +8,14 @@ import { dependenciesOfMap } from './run-progress.spec.util.ts';
 import type { RunLogListener, RunLogPorts, RunLogs } from '../../common/run-log-tail.type.ts';
 import type { RunPorts } from '../../common/run.type.ts';
 import { runLogDirOf } from '../../utils/run-log-dir.util.ts';
+import { FAKE_RUN_ID } from '../common/run-log-id.const.ts';
 import type { LiveParts, LiveSession } from '../common/run-session-live.type.ts';
 import { JOIN_DEPENDENCIES_STUB } from '../stubs/run-progress-join.stub.ts';
 
 /** The folder and the file of the run of `/ws` launched at 1000, with the fake random id. */
 export const LIVE_DIR = runLogDirOf('/ws');
 
-export const LIVE_FILE = join(LIVE_DIR, 'run-1000-ab12cd34.json');
+export const LIVE_FILE = join(LIVE_DIR, `run-1000-${FAKE_RUN_ID}.json`);
 
 /** `overrides` replace run ports, `logOverrides` ports of the fake log fs under the real tails. */
 export const liveSessionOf = (

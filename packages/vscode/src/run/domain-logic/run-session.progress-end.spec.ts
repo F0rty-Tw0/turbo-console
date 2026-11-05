@@ -13,10 +13,9 @@ import { RunLogTails } from '../data-access/run-log-tails.ts';
 import { ENTRY_B } from '../test/common/run-log-step.const.ts';
 import type { LiveParts, LiveSession } from '../test/common/run-session-live.type.ts';
 import { JOIN_DEFINITION_STUB, JOIN_EVENT_STUB, JOIN_OWNER_STUB, JOIN_REQUEST_STUB } from '../test/stubs/run-progress-join.stub.ts';
+import { TURBO_ARGS_STUB } from '../test/stubs/run.stub.ts';
 import { endChangeWindow, fakeChangeWindows } from '../test/utils/run-log-change-window.spec.util.ts';
 import { LIVE_DIR, LIVE_FILE, liveSessionOf } from '../test/utils/run-session-live.spec.util.ts';
-
-const TURBO_ARGS = ['--skip-infer', 'run', 'build', '--filter=a', '--summarize'];
 
 const PARTS: LiveParts = { sessionOf: (ports) => new RunSession(ports, []), tailsOf: (ports) => new RunLogTails(ports) };
 
@@ -68,9 +67,9 @@ const stoppedFirst = async (): Promise<LiveSession> => {
 };
 
 describe('FEATURE: live progress of a turbo run that ends early, loses its task or reruns (spec D10, §5.3)', () => {
-  let h: LiveSession;
+  let live: LiveSession;
 
-  const settledOwners = (): unknown[] => h.settle.mock.calls.map(([owner]) => owner);
+  const settledOwners = (): unknown[] => live.settle.mock.calls.map(([owner]) => owner);
 
   beforeEach(() => {
     fakeChangeWindows();
@@ -87,12 +86,12 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
       ['the launch rejects', rejects],
       ['it is stopped before its process starts, then its task ends', stoppedFirst]
     ])('WHEN %s THEN its tail is closed once, the /ws watcher closes, no D6 line is logged, and the run settles', async (_, fail) => {
-      h = await fail();
+      live = await fail();
       await endChangeWindow();
 
-      const closed = h.fs.watchers.map((watcher) => watcher.closed);
+      const closed = live.fs.watchers.map((watcher) => watcher.closed);
 
-      expect([h.fs.removed, closed, h.fs.logs, settledOwners()]).toStrictEqual([[LIVE_FILE], [true], [], [JOIN_OWNER_STUB]]);
+      expect([live.fs.removed, closed, live.fs.logs, settledOwners()]).toStrictEqual([[LIVE_FILE], [true], [], [JOIN_OWNER_STUB]]);
     });
   });
 
@@ -104,12 +103,12 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
         }
       };
 
-      h = liveSessionOf(PARTS, snapshotThrows);
-      await h.session.run(JOIN_REQUEST_STUB);
+      live = liveSessionOf(PARTS, snapshotThrows);
+      await live.session.run(JOIN_REQUEST_STUB);
 
-      const { state } = h.session.runs.get('/ws', 'a#build') ?? {};
-      const logged = vi.mocked(h.ports.log).mock.calls;
-      const launched = vi.mocked(h.ports.execute).mock.calls;
+      const { state } = live.session.runs.get('/ws', 'a#build') ?? {};
+      const logged = vi.mocked(live.ports.log).mock.calls;
+      const launched = vi.mocked(live.ports.execute).mock.calls;
 
       expect([state, logged, launched]).toStrictEqual(['failed-to-start', [[expect.stringContaining('graph boom')]], []]);
     });
@@ -121,21 +120,21 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
 
       const slowFolder: Partial<RunLogPorts> = { makeDir: async () => made.promise };
 
-      h = liveSessionOf(PARTS, {}, slowFolder);
+      live = liveSessionOf(PARTS, {}, slowFolder);
 
-      const running = h.session.run(JOIN_REQUEST_STUB);
+      const running = live.session.run(JOIN_REQUEST_STUB);
 
       await flush();
       vi.advanceTimersByTime(START_TIMEOUT_MS);
       made.resolve(undefined);
       await running;
 
-      const launches = vi.mocked(h.ports.execute).mock.calls;
+      const launches = vi.mocked(live.ports.execute).mock.calls;
 
-      expect([h.start.mock.calls.length, h.fs.watchers.length, launches]).toStrictEqual([
+      expect([live.start.mock.calls.length, live.fs.watchers.length, launches]).toStrictEqual([
         0,
         0,
-        [[JOIN_REQUEST_STUB, TURBO_ARGS, 1000, undefined]]
+        [[JOIN_REQUEST_STUB, TURBO_ARGS_STUB, 1000, undefined]]
       ]);
     });
   });
@@ -146,20 +145,20 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
       const makeDir = vi.fn<RunLogPorts['makeDir']>().mockReturnValueOnce(made.promise).mockResolvedValue(undefined);
       let clock = 1000;
 
-      h = liveSessionOf(PARTS, { now: () => clock }, { makeDir });
+      live = liveSessionOf(PARTS, { now: () => clock }, { makeDir });
 
-      const earlier = h.session.run(JOIN_REQUEST_STUB);
+      const earlier = live.session.run(JOIN_REQUEST_STUB);
 
       await flush();
-      h.session.taskEnded(JOIN_EVENT_STUB);
+      live.session.taskEnded(JOIN_EVENT_STUB);
       clock = 2000;
-      await h.session.run(JOIN_REQUEST_STUB);
+      await live.session.run(JOIN_REQUEST_STUB);
       made.resolve(undefined);
       await earlier;
 
-      const earlierLaunch = vi.mocked(h.ports.execute).mock.calls.find(([, , launchedAt]) => launchedAt === 1000);
+      const earlierLaunch = vi.mocked(live.ports.execute).mock.calls.find(([, , launchedAt]) => launchedAt === 1000);
 
-      expect([h.start.mock.calls.length, earlierLaunch?.[3]]).toStrictEqual([1, undefined]);
+      expect([live.start.mock.calls.length, earlierLaunch?.[3]]).toStrictEqual([1, undefined]);
     });
   });
 
@@ -169,15 +168,15 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
 
       const slowCheck: Partial<RunPorts> = { canExecute: async () => check.promise };
 
-      h = liveSessionOf(PARTS, slowCheck);
+      live = liveSessionOf(PARTS, slowCheck);
 
-      const running = h.session.run(JOIN_REQUEST_STUB);
+      const running = live.session.run(JOIN_REQUEST_STUB);
 
       vi.advanceTimersByTime(START_TIMEOUT_MS);
       check.resolve(true);
       await running;
 
-      expect([settledOwners(), h.start.mock.calls.length]).toStrictEqual([[JOIN_OWNER_STUB], 0]);
+      expect([settledOwners(), live.start.mock.calls.length]).toStrictEqual([[JOIN_OWNER_STUB], 0]);
     });
   });
 
@@ -186,31 +185,31 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
       const matching = Promise.withResolvers<RunTasksMatch | null>();
       const waitsForMatch: Partial<RunPorts> = { match: async () => matching.promise };
 
-      h = liveSessionOf(PARTS, waitsForMatch);
-      await h.session.run(JOIN_REQUEST_STUB);
-      h.fs.write(LIVE_FILE, [ENTRY_B]);
-      h.fs.emit(LIVE_DIR, basename(LIVE_FILE));
+      live = liveSessionOf(PARTS, waitsForMatch);
+      await live.session.run(JOIN_REQUEST_STUB);
+      live.fs.write(LIVE_FILE, [ENTRY_B]);
+      live.fs.emit(LIVE_DIR, basename(LIVE_FILE));
       await endChangeWindow();
-      h.session.processEnded(JOIN_EVENT_STUB, 0);
+      live.session.processEnded(JOIN_EVENT_STUB, 0);
       await endChangeWindow();
     });
 
     it('WHEN its task vanishes in a root change THEN its progress settles once', async () => {
-      h.session.rootChanged(NO_TASKS);
+      live.session.rootChanged(NO_TASKS);
       await flush();
 
       expect(settledOwners()).toStrictEqual([JOIN_OWNER_STUB]);
     });
 
     it('WHEN a run change listener throws on the root change THEN it logs one line, still prunes the progress and does not throw', () => {
-      h.session.runs.onDidChange(() => {
+      live.session.runs.onDidChange(() => {
         throw new Error('listener boom');
       });
 
       expect(() => {
-        h.session.rootChanged(NO_TASKS);
+        live.session.rootChanged(NO_TASKS);
       }).not.toThrow();
-      expect([h.stateOfB(), vi.mocked(h.ports.log).mock.calls]).toStrictEqual([
+      expect([live.stateOfB(), vi.mocked(live.ports.log).mock.calls]).toStrictEqual([
         undefined,
         [[expect.stringContaining('listener boom')]]
       ]);

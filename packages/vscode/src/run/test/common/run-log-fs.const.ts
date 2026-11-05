@@ -1,8 +1,9 @@
 import type { RunLogEvent } from '@turbo-console/core';
 
+import { FAKE_RUN_ID } from './run-log-id.const.ts';
 import { RUN_LOG_READ_MAX } from '../../common/run-log-tail.const.ts';
 
-export const LOG_PATH = '/ws/.turbo/turbo-console/run-1-ab12cd34.json';
+export const LOG_PATH = `/ws/.turbo/turbo-console/run-1-${FAKE_RUN_ID}.json`;
 
 export const ENTRY_TURBO = '{"source":"turbo","level":"info","timestamp":1,"text":"Running build"}';
 

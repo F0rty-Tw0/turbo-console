@@ -5,7 +5,7 @@ import { RunSession } from './run-session.ts';
 import type { RunTiming } from '../../shared/common/api.type.ts';
 import { ALREADY_RUNNING_TEXT, RUN_TIMINGS_MAX } from '../common/run.const.ts';
 import type { RunDefinition, RunEvent, RunPorts, Terminable } from '../common/run.type.ts';
-import { LOG_ENV_STUB, RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { LOG_ENV_STUB, RUN_REQUEST_STUB, TURBO_ARGS_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 import { logEnvOf } from '../test/utils/run-log-env.spec.util.ts';
 
@@ -18,8 +18,6 @@ const TASKS_MATCH: RunTasksMatch = { match: MATCH, outcomes: [] };
 const THIS_RUN: RunEvent = { definition: RUN, launchedAt: 1000 };
 
 const EARLIER_RUN: RunEvent = { definition: RUN, launchedAt: 500 };
-
-const TURBO_ARGS = ['--skip-infer', 'run', 'build', '--filter=a', '--summarize'];
 
 describe('FEATURE: run session, task events', () => {
   let clock: number;
@@ -53,7 +51,7 @@ describe('FEATURE: run session, task events', () => {
   });
 
   it('GIVEN a binary check that lets the clock move WHEN it runs THEN turbo is launched with the token read at launch', () => {
-    expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, TURBO_ARGS, 1000, LOG_ENV_STUB);
+    expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, TURBO_ARGS_STUB, 1000, LOG_ENV_STUB);
   });
 
   describe('GIVEN a run launched at 1000', () => {
@@ -160,7 +158,7 @@ describe('FEATURE: run session, task events', () => {
       it('WHEN it is run again at 3000 THEN turbo is launched with the new token', async () => {
         await session.run(RUN_REQUEST_STUB);
 
-        expect(ports.execute).toHaveBeenNthCalledWith(2, RUN_REQUEST_STUB, TURBO_ARGS, 3000, logEnvOf(3000));
+        expect(ports.execute).toHaveBeenNthCalledWith(2, RUN_REQUEST_STUB, TURBO_ARGS_STUB, 3000, logEnvOf(3000));
       });
 
       it('WHEN it is run again THEN the user is not told it is already running', async () => {
@@ -179,7 +177,7 @@ describe('FEATURE: run session, task events', () => {
         session.taskEnded(EARLIER_RUN);
         await session.run(RUN_REQUEST_STUB);
 
-        expect(ports.execute).toHaveBeenNthCalledWith(2, RUN_REQUEST_STUB, TURBO_ARGS, 3000, logEnvOf(3000));
+        expect(ports.execute).toHaveBeenNthCalledWith(2, RUN_REQUEST_STUB, TURBO_ARGS_STUB, 3000, logEnvOf(3000));
       });
     });
 
