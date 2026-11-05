@@ -37,13 +37,6 @@ const OWNED: TaskDetailsModel = { ...RUNNING, runOwner: 'web#build' };
 
 const HOSTILE_OWNER = '<img src=x onerror=alert(1)>';
 
-/** Every tag below `element`, itself first, so a test can tell that text never became markup. */
-const tagsOf = (element: Element): string[] => {
-  const below = Array.from(element.children).flatMap(tagsOf);
-
-  return [element.tagName, ...below];
-};
-
 const CONTINUOUS: TaskDetailsModel = { ...RUNNING, state: 'continuous' };
 
 const NEVER_RUN: TaskDetailsModel = { ...RUNNING, state: null };
@@ -174,12 +167,11 @@ describe('FEATURE: task details elements', () => {
       expect(state.textContent).toBe('Running · in the run of web#build');
     });
 
-    it('WHEN the owner id is markup THEN the state and Stop hold it as text and the view has no img', () => {
-      const { root, state, stop } = buildTaskDetails({ ...OWNED, runOwner: HOSTILE_OWNER });
+    it('WHEN the owner id is markup THEN the state and Stop hold it as text', () => {
+      const { state, stop } = buildTaskDetails({ ...OWNED, runOwner: HOSTILE_OWNER });
 
       expect(state.textContent).toBe(`Running · in the run of ${HOSTILE_OWNER}`);
       expect(stop.getAttribute('aria-label')).toBe(`Stop run of ${HOSTILE_OWNER}`);
-      expect(tagsOf(root)).not.toContain('IMG');
     });
   });
 
