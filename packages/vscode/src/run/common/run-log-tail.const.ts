@@ -12,6 +12,13 @@ export const RUN_LOG_READ_MAX = RUN_LOG_OBJECT_MAX;
  */
 export const RUN_LOG_CHANGE_WINDOW_MS = 16;
 
+/**
+ * How often a root with a live tail reads its tails without a watch event. turbo holds its log file open and appends
+ * through the same handle, and macOS FSEvents reports a write to such a file only on close, so the folder watcher stays
+ * silent until turbo exits; the poll is the only trigger there. The watcher stays the fast path elsewhere.
+ */
+export const RUN_LOG_POLL_MS = 100;
+
 export const RUN_LOG_START: RunLogCursor = { offset: 0, skipping: false, leadingInvalid: 0, hasEntry: false };
 
 /** Where turbo writes its log files under a root (spec D6). */

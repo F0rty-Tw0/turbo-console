@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunLogTails } from './run-log-tails.ts';
+import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
+import { RUN_LOG_CHANGE_WINDOW_MS, RUN_LOG_POLL_MS } from '../common/run-log-tail.const.ts';
 import type { RunLogPorts } from '../common/run-log-tail.type.ts';
 import { SEEN_A, SEEN_B } from '../test/common/run-log-fs.const.ts';
 import { ENTRY_A, ENTRY_B } from '../test/common/run-log-step.const.ts';
@@ -18,6 +20,14 @@ const DIR_OTHER = runLogDirOf(ROOT_OTHER);
 const P1 = logPathOf(ROOT_WS, 'run-1.json');
 const P2 = logPathOf(ROOT_WS, 'run-2.json');
 const P3 = logPathOf(ROOT_OTHER, 'run-3.json');
+
+/** Time for one poll to fire and the change window it opens to end. */
+const POLL_AND_WINDOW_MS = RUN_LOG_POLL_MS + RUN_LOG_CHANGE_WINDOW_MS;
+
+const advanceOnePoll = async (): Promise<void> => {
+  vi.advanceTimersByTime(POLL_AND_WINDOW_MS);
+  await flush();
+};
 
 describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
   let h: TailsHarness;
@@ -188,6 +198,51 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
       h.fs.watchers[0]?.onError(new Error('EMFILE'));
 
       expect(h.fs.watchers.map((watcher) => watcher.closed)).toStrictEqual([true, false]);
+    });
+  });
+
+  describe('GIVEN a /ws tail whose watcher never reports a write, as FSEvents on a file turbo keeps open', () => {
+    let started: StartedTail;
+
+    beforeEach(async () => {
+      started = h.start(ROOT_WS, P1);
+      await endChangeWindow();
+      h.fs.append(P1, ENTRY_A);
+    });
+
+    it('WHEN one poll interval and a change window pass THEN the new line arrives before any drain', async () => {
+      await advanceOnePoll();
+
+      expect(started.events).toStrictEqual([SEEN_A]);
+    });
+
+    it('WHEN the only tail drains THEN no poll timer is left', async () => {
+      await started.tail.drain();
+
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('WHEN the only tail is closed THEN no poll timer is left', async () => {
+      started.tail.close();
+      await flush();
+
+      expect(vi.getTimerCount()).toBe(0);
+    });
+  });
+
+  describe('GIVEN a /ws tail and an /other tail that gets no watch event', () => {
+    it("WHEN /ws drains and the poll passes THEN /other's new line still arrives and /ws's does not", async () => {
+      const ws = h.start(ROOT_WS, P1);
+      const other = h.start(ROOT_OTHER, P3);
+
+      await endChangeWindow();
+      await ws.tail.drain();
+      h.fs.append(P1, ENTRY_A);
+      h.fs.append(P3, ENTRY_B);
+
+      await advanceOnePoll();
+
+      expect([ws.events, other.events]).toStrictEqual([[], [SEEN_B]]);
     });
   });
 });

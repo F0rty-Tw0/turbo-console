@@ -2,6 +2,7 @@ import { basename } from 'node:path';
 
 import { RunLogFileTail } from './run-log-file-tail.ts';
 import { prepareRunLogDir } from './run-log-folder.ts';
+import { RunLogPolls } from './run-log-polls.ts';
 import { sweepRunLogs } from './run-log-sweep.ts';
 import { RUN_LOG_OUTCOME_TEXTS } from '../common/run-log-tail.const.ts';
 import type { RunLogListener, RunLogOutcome, RunLogPorts, RunLogTail, RunLogWatcher, RunLogs } from '../common/run-log-tail.type.ts';
@@ -23,14 +24,15 @@ type WatchAttempt = {
 type LoggedKind = RunLogOutcome | 'watch' | 'dir';
 
 /**
- * The live turbo log tails of the window (spec D5, D6): one folder watcher per root while any of its tails lives, and
- * each degrade line once per session. A tail ends once, by `drain` or `close`: it leaves the registry, releases the
- * root's watcher if it was the last, and removes its file after its last read.
+ * The live turbo log tails of the window (spec D5, D6): one folder watcher and one poll per root while any of its tails
+ * lives (the poll covers a watcher that stays silent or failed), and each degrade line once per session. A tail ends once, by `drain` or `close`: it leaves the registry, releases the
+ * root's watcher and poll if it was the last, and removes its file after its last read.
  */
 export class RunLogTails implements RunLogs {
   private readonly ports: RunLogPorts;
   private readonly liveByRoot = new Map<string, Map<string, LiveTail>>();
   private readonly watchers = new Map<string, RunLogWatcher>();
+  private readonly polls = new RunLogPolls();
   private readonly sweptRoots = new Set<string>();
   private readonly loggedKinds = new Set<LoggedKind>();
 
@@ -65,7 +67,12 @@ export class RunLogTails implements RunLogs {
 
     const handle: RunLogTail = { drain, close };
 
+    const readAll = (): void => {
+      this.route(root, null);
+    };
+
     this.watch(root);
+    this.polls.start(root, readAll);
     live.set(path, { file, handle });
     this.sweepOnce(root);
     file.changed();
@@ -170,7 +177,7 @@ export class RunLogTails implements RunLogs {
     void file.close().then(removeAfterRead);
   }
 
-  /** Unregisters the tail and releases the root's watcher with its last tail; `false` when the tail had already ended. */
+  /** Unregisters the tail and releases the root's watcher and poll with its last tail; `false` when the tail had already ended. */
   private leave(root: string, path: string, file: RunLogFileTail): boolean {
     const live = this.liveOf(root);
 
@@ -180,9 +187,14 @@ export class RunLogTails implements RunLogs {
 
     live.delete(path);
 
-    if (live.size === 0) this.dropWatcher(root);
+    if (live.size === 0) this.releaseRoot(root);
 
     return true;
+  }
+
+  private releaseRoot(root: string): void {
+    this.dropWatcher(root);
+    this.polls.stop(root);
   }
 
   private async removeFile(path: string): Promise<void> {
