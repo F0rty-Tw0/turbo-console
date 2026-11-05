@@ -29,6 +29,8 @@ const SCM_BASE_KEY = 'TURBO_SCM_BASE';
 
 const SCM_HEAD_KEY = 'TURBO_SCM_HEAD';
 
+const LOG_ORDER_KEY = 'TURBO_LOG_ORDER';
+
 /** Pins turbo's affected range to the last commit, as the core contract's `AFFECTED_RANGE` does; case 8 makes that commit. */
 const PINNED_RANGE: Readonly<Record<string, string>> = { [SCM_BASE_KEY]: 'HEAD~1', [SCM_HEAD_KEY]: 'HEAD' };
 
@@ -81,7 +83,13 @@ const L11: Launch = {
 
 const L12: Launch = { ...L11, name: 'L12', suite: 'empty-workspace.suite', workspace: 'empty-workspace', settings: NO_SETTINGS };
 
-const L13: Launch = { ...L9, name: 'L13', suite: 'graph.suite', workspace: 'fixture-root-task' };
+/**
+ * CI sets GITHUB_ACTIONS, which makes turbo group a task's lines until it ends; a dependency that blocks on `go` is only seen live in stream
+ * order (U7e2). L1 keeps auto order.
+ */
+const STREAM_LOG_ORDER: Readonly<Record<string, string>> = { [LOG_ORDER_KEY]: 'stream' };
+
+const L13: Launch = { ...L9, name: 'L13', suite: 'graph.suite', workspace: 'fixture-root-task', env: STREAM_LOG_ORDER };
 
 /**
  * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L13 each get a user-data dir
