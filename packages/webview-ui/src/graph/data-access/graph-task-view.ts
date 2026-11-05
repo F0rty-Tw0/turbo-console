@@ -23,10 +23,10 @@ import { runStateOf } from '../utils/task-run.util.ts';
 
 const RUN_CLASS_NAMES: string[] = RUN_STATES.map(runClassOf);
 
-const NO_RUN_CLASSES: string[] = [];
+const NO_CLASSES: string[] = [];
 
 const runClassesOf = (state: GraphRunState | null): string[] => {
-  if (state === null) return NO_RUN_CLASSES;
+  if (state === null) return NO_CLASSES;
 
   const name = runClassOf(state);
 
@@ -34,8 +34,6 @@ const runClassesOf = (state: GraphRunState | null): string[] => {
 };
 
 const DIMMED_BOX_CLASSES: string[] = [DIMMED_BOX_CLASS];
-
-const LIT_BOX_CLASSES: string[] = [];
 
 const taskNodes = (cy: Core): NodeCollection => cy.nodes(`.${TASK_NODE_CLASS}`);
 
@@ -81,7 +79,7 @@ const paintTasks = (cy: Core, target: string | null): void => {
     const lit = box.descendants('.selected, .highlighted');
     const isUnlit = lit.empty();
     const isDimmed = target !== null && isUnlit;
-    const wanted = isDimmed ? DIMMED_BOX_CLASSES : LIT_BOX_CLASSES;
+    const wanted = isDimmed ? DIMMED_BOX_CLASSES : NO_CLASSES;
 
     setClassesAmong(box, BOX_STATE_CLASS_NAMES, wanted);
   };
