@@ -10,7 +10,7 @@ import type { GraphEdge, GraphRunState, GraphTask, Position, Positions, Routes }
 import type { Closure } from '../common/closure.type.ts';
 import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
 import { TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
-import { DIMMED_BOX_CLASS, STATE_CLASSES } from '../common/graph.const.ts';
+import { BOX_STATE_CLASS_NAMES, DIMMED_BOX_CLASS, STATE_CLASS_NAMES } from '../common/graph.const.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
 import { closureOf } from '../utils/closure.util.ts';
@@ -33,7 +33,9 @@ const runClassesOf = (state: GraphRunState | null): string[] => {
   return [name];
 };
 
-const BOX_STATE_CLASSES = `${STATE_CLASSES} ${DIMMED_BOX_CLASS}`;
+const DIMMED_BOX_CLASSES: string[] = [DIMMED_BOX_CLASS];
+
+const LIT_BOX_CLASSES: string[] = [];
 
 const taskNodes = (cy: Core): NodeCollection => cy.nodes(`.${TASK_NODE_CLASS}`);
 
@@ -58,6 +60,7 @@ const closureOfLinks = (target: string | null, links: EdgeCollection): Closure |
 /**
  * Gives each task and link one state class for `target`, the selected task, and its closure; a folder, package or
  * Scripts compound with no selected or highlighted task gets `dimmed-box`. `null` paints every task and link `normal`.
+ * An element already right is not touched.
  */
 const paintTasks = (cy: Core, target: string | null): void => {
   const tasks = taskNodes(cy);
@@ -66,22 +69,21 @@ const paintTasks = (cy: Core, target: string | null): void => {
   const classTask = (node: NodeSingular): void => {
     const state = nodeStateOf(node.id(), target, closure);
 
-    node.removeClass(STATE_CLASSES).addClass(state);
+    setClassesAmong(node, STATE_CLASS_NAMES, [state]);
   };
   const classLink = (edge: EdgeSingular): void => {
     const ends = endsOf(edge);
     const state = edgeStateOf(ends, target, closure);
 
-    edge.removeClass(STATE_CLASSES).addClass(state);
+    setClassesAmong(edge, STATE_CLASS_NAMES, [state]);
   };
   const classBox = (box: NodeSingular): void => {
     const lit = box.descendants('.selected, .highlighted');
     const isUnlit = lit.empty();
     const isDimmed = target !== null && isUnlit;
+    const wanted = isDimmed ? DIMMED_BOX_CLASSES : LIT_BOX_CLASSES;
 
-    box.removeClass(BOX_STATE_CLASSES);
-
-    if (isDimmed) box.addClass(DIMMED_BOX_CLASS);
+    setClassesAmong(box, BOX_STATE_CLASS_NAMES, wanted);
   };
 
   cy.batch((): void => {

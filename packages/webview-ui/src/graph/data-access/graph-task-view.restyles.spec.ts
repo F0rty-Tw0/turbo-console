@@ -79,4 +79,30 @@ describe('FEATURE: createTaskCanvas restyles with styles on', () => {
       expect(restyled).toStrictEqual(['pkg:web', 'web#build']);
     });
   });
+
+  describe('GIVEN three tasks are shown and web#build is painted as the target', () => {
+    beforeEach(() => {
+      canvas.paint('web#build');
+    });
+
+    it('WHEN web#build is painted again THEN no element is restyled', () => {
+      const restyles = styleEventsDuring(cy, (): void => canvas.paint('web#build'));
+
+      expect(restyles).toBe(0);
+    });
+
+    it('WHEN api#build becomes the target THEN only api#build, web#build and their package compounds are restyled', () => {
+      const restyled = restyledIdsDuring(cy, (): void => canvas.paint('api#build'));
+
+      expect(restyled).toStrictEqual(['api#build', 'pkg:api', 'pkg:web', 'web#build']);
+    });
+  });
+
+  describe('GIVEN three tasks are shown and nothing is painted as the target', () => {
+    it('WHEN no target is painted again THEN no element is restyled', () => {
+      const restyles = styleEventsDuring(cy, (): void => canvas.paint(null));
+
+      expect(restyles).toBe(0);
+    });
+  });
 });
