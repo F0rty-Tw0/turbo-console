@@ -18,7 +18,7 @@ import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { RowPlan, WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
-import type { GraphEdge, GraphPackage, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphPackage, GraphRunState, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState, PackageViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
@@ -37,6 +37,9 @@ export type ViewStateSaver<TState = GraphViewState> = {
 export type PackageSaver = ViewStateSaver<PackageViewState>;
 
 export type NodeSizer = (name: string) => NodeSize;
+
+/** Package name → the run state drawn on it. */
+export type PackageRuns = ReadonlyMap<string, GraphRunState>;
 
 /** What sizes an umbrella: `name` its task name line, `counts` its counts line. */
 export type UmbrellaSizers = {
