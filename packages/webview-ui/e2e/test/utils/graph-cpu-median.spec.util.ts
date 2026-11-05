@@ -1,7 +1,7 @@
 import { median } from './stats.spec.util.ts';
 import type { CpuSteps } from '../../common/graph.type.ts';
 
-/** The median of each field across `readings`, so one spiked pan out of three does not decide a budget; throws on none. */
+/** The median of each field across `readings`, so one spiked run out of three does not decide a budget; throws on none. */
 export const medianCpuOf = (readings: CpuSteps[]): CpuSteps => {
   const totals = readings.map((reading): number => reading.totalMs);
   const minSteps = readings.map((reading): number => reading.minStepMs);

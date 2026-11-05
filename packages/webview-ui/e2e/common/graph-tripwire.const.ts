@@ -15,6 +15,9 @@ export const ROWS_PAN_MS = IS_MAC_RUNNER ? 4800 : 2400;
  */
 export const PAN_CPU_TEST_TIMEOUT_MS = 180_000;
 
+/** Measured runs per CPU tripwire: the median of three keeps one spiked run on a slow CI host from failing a budget. */
+export const CPU_RUNS = 3;
+
 /** The grouped pans' slowest step; macOS read up to 52 ms there (C58), so it gets about 1.7x, Linux and Windows the 50 ms long-task line. */
 export const GROUPED_PAN_STEP_MS = IS_MAC_RUNNER ? 90 : 50;
 
