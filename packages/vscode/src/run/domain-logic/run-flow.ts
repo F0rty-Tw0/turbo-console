@@ -1,7 +1,7 @@
 import { turboRunArgs } from '@turbo-console/core';
 import type { RunTasksMatch } from '@turbo-console/core';
 
-import { beginProgress, liveEnvOf } from './run-live.ts';
+import { beginProgress, startLiveLog } from './run-live.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, TASK_ENDED_TEXT } from '../common/run.const.ts';
 import type { RunDefinition, RunEntry, RunPorts, RunRequest, Runs, Terminable } from '../common/run.type.ts';
@@ -70,7 +70,7 @@ const launchTurbo = async (store: Runs, ports: RunPorts, request: RunRequest, la
 
   const args = turboRunArgs(request.task, request.packageName, { force: request.force }, request.singlePackage);
 
-  const env = await liveEnvOf(store, ports, request, launchedAt);
+  const env = await startLiveLog(store, ports, request, launchedAt);
 
   return ports.execute(request, args, launchedAt, env);
 };

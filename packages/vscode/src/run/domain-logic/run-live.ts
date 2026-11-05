@@ -20,9 +20,10 @@ export const beginProgress = (ports: RunPorts, request: RunRequest, launchedAt: 
 
 /**
  * Spec D6, D10: makes the log folder, starts the tail of the run's log file and answers the env that has turbo write
- * it. `undefined`, with no tail, when the folder cannot be made (level 2) or the run ended while it was being made.
+ * it. `undefined`, with no tail, when the folder cannot be made (level 2) or the run ended, or a rerun took its slot,
+ * while it was being made.
  */
-export const liveEnvOf = async (
+export const startLiveLog = async (
   store: Runs,
   ports: RunPorts,
   request: RunRequest,

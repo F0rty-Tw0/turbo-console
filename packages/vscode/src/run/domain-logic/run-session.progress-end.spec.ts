@@ -140,6 +140,29 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
     });
   });
 
+  describe('GIVEN a run waiting for its log folder whose task ended, and a rerun now holding the slot', () => {
+    it('WHEN the folder is made THEN only the rerun has a tail, and the earlier launch gets no env', async () => {
+      const made = Promise.withResolvers<undefined>();
+      const makeDir = vi.fn<RunLogPorts['makeDir']>().mockReturnValueOnce(made.promise).mockResolvedValue(undefined);
+      let clock = 1000;
+
+      h = liveSessionOf(PARTS, { now: () => clock }, { makeDir });
+
+      const earlier = h.session.run(JOIN_REQUEST_STUB);
+
+      await flush();
+      h.session.taskEnded(JOIN_EVENT_STUB);
+      clock = 2000;
+      await h.session.run(JOIN_REQUEST_STUB);
+      made.resolve(undefined);
+      await earlier;
+
+      const earlierLaunch = vi.mocked(h.ports.execute).mock.calls.find(([, , launchedAt]) => launchedAt === 1000);
+
+      expect([h.start.mock.calls.length, earlierLaunch?.[3]]).toStrictEqual([1, undefined]);
+    });
+  });
+
   describe('GIVEN canExecute pending (deferred) when the start timeout fires', () => {
     it('WHEN the start timeout fires THEN the run was begun and settles, and no tail starts once canExecute resolves', async () => {
       const check = Promise.withResolvers<boolean>();
