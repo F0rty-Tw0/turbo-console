@@ -52,6 +52,15 @@ export type RunLogPorts = {
 };
 
 /**
+ * One run's log path: `env` is repo-relative with `/`, the form turbo's `TURBO_LOG_FILE` was proven with (U7a contract,
+ * three OSes); `file` is absolute, for the tail.
+ */
+export type RunLogPath = {
+  readonly env: string;
+  readonly file: string;
+};
+
+/**
  * Spec D8's tail handle: `drain` at the process end reads to the end of the file, `close` on a start failure reads no
  * more. Both remove the file and release the root's watcher; neither rejects.
  */
