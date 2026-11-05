@@ -7,7 +7,7 @@ import { runLogPathOf } from '../utils/run-log-path.util.ts';
 
 /**
  * Spec D10: opens the progress of a turbo run with the dependency snapshot of its root; a script or Run Without Turbo
- * gets none. Called before the launch awaits anything, so every end of the run finds it begun.
+ * gets none. Called first in the launch, before it awaits anything, so every end of the run finds it begun.
  */
 export const beginProgress = (ports: RunPorts, request: RunRequest, launchedAt: number): void => {
   if (!request.task.isTurboTask) return;

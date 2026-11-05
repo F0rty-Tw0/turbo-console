@@ -77,11 +77,14 @@ const launchTurbo = async (store: Runs, ports: RunPorts, request: RunRequest, la
 
 /**
  * The execution of `request`, or `null` once the reason is logged: a turbo launch that cannot start, a name turbo would
- * read as filter syntax, or a rejected launch. A script skips the binary check: the shell reports a missing package
- * manager as an exit code (spec 1c-b §4.3 step 3).
+ * read as filter syntax, a rejected launch, or a progress that cannot begin. The progress of the run (spec D10) begins
+ * first, before anything is awaited, so every end of the run finds it. A script skips the binary check: the shell reports
+ * a missing package manager as an exit code (spec 1c-b §4.3 step 3).
  */
 const launch = async (store: Runs, ports: RunPorts, request: RunRequest, launchedAt: number): Promise<Terminable | null> => {
   try {
+    beginProgress(ports, request, launchedAt);
+
     if (request.task.isTurboTask) return await launchTurbo(store, ports, request, launchedAt);
 
     return await ports.executeScript(request, launchedAt);
@@ -112,9 +115,8 @@ const onStartTimeout = (store: Runs, ports: RunPorts, start: StartEnd, isLaunche
 /**
  * Spec §4.5 run flow: a request `refusalOf` refuses (spec 1c-b §4.3: an unsafe script, Run Without Cache on a script)
  * shows its text first, before the watchdog. Then a watchdog that ends the run as failed to start when its launch has
- * not settled `START_TIMEOUT_MS` after launch, the guard (a running entry, or a task of it VS Code already runs), the
- * progress of the run (spec D10), begun before anything is awaited so every end of the run finds it, then the launch.
- * The task events drive the rest through the store.
+ * not settled `START_TIMEOUT_MS` after launch, the guard (a running entry, or a task of it VS Code already runs), then
+ * the launch, which begins the progress of the run (spec D10). The task events drive the rest through the store.
  */
 export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest): Promise<void> => {
   const refusal = refusalOf(request);
@@ -154,8 +156,6 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
 
     return;
   }
-
-  beginProgress(ports, request, launchedAt);
 
   const execution = await launch(store, ports, request, launchedAt);
 

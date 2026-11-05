@@ -96,6 +96,25 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
     });
   });
 
+  describe('GIVEN a turbo run whose dependency snapshot throws', () => {
+    it('WHEN it runs THEN it ends failed to start, the reason is logged and turbo is not executed', async () => {
+      const snapshotThrows: Partial<RunPorts> = {
+        dependenciesOf: () => {
+          throw new Error('graph boom');
+        }
+      };
+
+      h = liveSessionOf(PARTS, snapshotThrows);
+      await h.session.run(JOIN_REQUEST_STUB);
+
+      const { state } = h.session.runs.get('/ws', 'a#build') ?? {};
+      const logged = vi.mocked(h.ports.log).mock.calls;
+      const launched = vi.mocked(h.ports.execute).mock.calls;
+
+      expect([state, logged, launched]).toStrictEqual(['failed-to-start', [[expect.stringContaining('graph boom')]], []]);
+    });
+  });
+
   describe('GIVEN the start timeout fires while the log folder is being made (deferred makeDir)', () => {
     it('WHEN the folder is made after THEN no tail and no watcher start, and execute gets no env', async () => {
       const made = Promise.withResolvers<undefined>();
