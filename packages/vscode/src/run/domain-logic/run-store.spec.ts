@@ -331,6 +331,25 @@ describe('FEATURE: run store', () => {
       expect([store.get('/ws', 'build'), store.get('/ws', 'lint')]).toStrictEqual([undefined, undefined]);
     });
 
+    it('WHEN a change listener throws on the first gone entry THEN the next one is still announced', () => {
+      const lintTask: TaskNode = { ...RUN_REQUEST_STUB.task, id: 'lint' };
+      const lint: RunRequest = { ...RUN_REQUEST_STUB, task: lintTask };
+      const heardIds: string[] = [];
+
+      store.tryStart(lint, 1000);
+      store.processEnded({ root: '/ws', id: 'lint' }, 0, 4000);
+      store.onDidChange((entry) => {
+        heardIds.push(entry.taskId);
+
+        if (heardIds.length === 1) throw new Error('listener boom');
+      });
+
+      expect(() => {
+        store.prune('/ws', new Set());
+      }).toThrow('listener boom');
+      expect(heardIds).toStrictEqual(['build', 'lint']);
+    });
+
     it('WHEN another root is pruned THEN the entry is kept', () => {
       store.prune('/other', new Set());
 

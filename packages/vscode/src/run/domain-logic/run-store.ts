@@ -152,7 +152,9 @@ export class RunStore {
   /**
    * Drops the ended entries of `root` whose task is gone; a running entry stays until it ends. One still waiting for its
    * match is then announced unmatched: `setMatch` finds no entry after, and the run's progress settles on that change.
-   * Every entry is dropped before any listener hears of one, so a throwing listener cannot leave a gone entry behind.
+   * Every entry is dropped before any listener hears of one, so a throwing listener cannot leave a gone entry behind,
+   * and each is announced even when an earlier announcement threw: an unannounced one would keep its progress join open.
+   * The first error is thrown once all are announced.
    */
   public prune(root: string, visibleIds: Set<string>): void {
     const unmatchedEntries: RunEntry[] = [];
@@ -173,7 +175,17 @@ export class RunStore {
       unmatchedEntries.push(unmatched);
     }
 
-    for (const unmatched of unmatchedEntries) this.announce(unmatched);
+    const errors: unknown[] = [];
+
+    for (const unmatched of unmatchedEntries) {
+      try {
+        this.announce(unmatched);
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+
+    if (errors.length > 0) throw errors[0];
   }
 
   /** Fires on every change of an entry; returns the unsubscribe. */
