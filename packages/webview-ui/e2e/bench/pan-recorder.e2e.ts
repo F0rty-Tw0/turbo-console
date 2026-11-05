@@ -41,10 +41,11 @@ const expectLongestTaskAtLeast = async (recorder: PanRecorder, ms: number): Prom
   expect(trace.longestLongTaskMs).toBeGreaterThanOrEqual(ms);
 };
 
-const expectNoLongTask = async (recorder: PanRecorder): Promise<void> => {
+/** Below the busy frame, not 0: a loaded runner can stall 50+ ms inside the window on its own (58 ms on macOS CI). */
+const expectLongestTaskBelow = async (recorder: PanRecorder, ms: number): Promise<void> => {
   const trace = await recorder.read();
 
-  expect(trace.longestLongTaskMs).toBe(0);
+  expect(trace.longestLongTaskMs).toBeLessThan(ms);
 };
 
 const expectP95FrameAtLeast = async (recorder: PanRecorder, ms: number): Promise<void> => {
@@ -71,7 +72,7 @@ test.describe('FEATURE: pan recorder', () => {
     await test.step('THEN the longest long task is at least 70 ms', async (): Promise<void> => expectLongestTaskAtLeast(recorder, 70));
   });
 
-  test('GIVEN a busy frame that ended before markOn, the trace counts no long task', async ({ page }): Promise<void> => {
+  test('GIVEN an 80 ms busy frame that ended before markOn, the trace does not count it', async ({ page }): Promise<void> => {
     const recorder = new PanRecorder(page);
 
     await test.step('WHEN the recorder is installed', async (): Promise<void> => recorder.install());
@@ -86,7 +87,7 @@ test.describe('FEATURE: pan recorder', () => {
 
     await test.step('AND the pan window closes', async (): Promise<void> => recorder.markOff());
 
-    await test.step('THEN no long task is counted', async (): Promise<void> => expectNoLongTask(recorder));
+    await test.step('THEN the longest long task is under 70 ms', async (): Promise<void> => expectLongestTaskBelow(recorder, 70));
   });
 
   test('GIVEN 20 timer tasks of 30 ms each between frames, the p95 frame delta reads the stall', async ({ page }): Promise<void> => {
