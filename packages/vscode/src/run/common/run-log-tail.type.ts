@@ -30,3 +30,29 @@ export type RunLogListener = (event: RunLogEvent) => void;
 
 /** Up to `max` bytes of the file at `path` from `from`; `null` while the file does not exist. */
 export type RunLogRead = (path: string, from: number, max: number) => Promise<Uint8Array | null>;
+
+/** A directory watcher that can be closed; closing it twice is harmless. */
+export type RunLogWatcher = {
+  readonly close: () => void;
+};
+
+/**
+ * What the tails need from the machine. `watch` reports a changed file name, or `null` when the OS gave none; it never
+ * throws and reports a failure through `onError`, possibly before it returns; `read` never invents a file; `log` takes
+ * one Output line.
+ */
+export type RunLogPorts = {
+  readonly watch: (dir: string, onChange: (fileName: string | null) => void, onError: (error: unknown) => void) => RunLogWatcher;
+  readonly read: RunLogRead;
+  readonly remove: (path: string) => Promise<void>;
+  readonly log: (line: string) => void;
+};
+
+/**
+ * Spec D8's tail handle: `drain` at the process end reads to the end of the file, `close` on a start failure reads no
+ * more. Both remove the file and release the root's watcher; neither rejects.
+ */
+export type RunLogTail = {
+  readonly drain: () => Promise<void>;
+  readonly close: () => void;
+};

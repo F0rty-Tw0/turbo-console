@@ -1,5 +1,7 @@
 import { bytesOf, turboLogOf } from './run-log-bytes.spec.util.ts';
-import type { RunLogRead } from '../../common/run-log-tail.type.ts';
+import { folderCallsOf } from './run-log-folder.spec.util.ts';
+import { fakeWatchers } from './run-log-watchers.spec.util.ts';
+import type { RunLogPorts, RunLogRead } from '../../common/run-log-tail.type.ts';
 import type { FakeLogFs, RunLogReadRecord } from '../common/run-log-fs.type.ts';
 
 const EMPTY_LOG = turboLogOf([]);
@@ -38,6 +40,8 @@ export const bytesReadOf = (reads: RunLogReadRecord[]): number => {
 export const fakeLogFs = (): FakeLogFs => {
   const files = new Map<string, Uint8Array>();
   const reads: RunLogReadRecord[] = [];
+  const { watchers, watch, emit, fail, failNextWatch } = fakeWatchers();
+  const { removed, logs, remove, log } = folderCallsOf(files);
   let gate: Promise<undefined> | null = null;
 
   const read: RunLogRead = async (path, from, max) => {
@@ -73,7 +77,23 @@ export const fakeLogFs = (): FakeLogFs => {
     };
   };
 
-  const fs: FakeLogFs = { read, files, reads, write, append, hold };
+  const ports: RunLogPorts = { watch, read, remove, log };
+
+  const fs: FakeLogFs = {
+    read,
+    files,
+    reads,
+    write,
+    append,
+    hold,
+    watchers,
+    emit,
+    fail,
+    failNextWatch,
+    removed,
+    logs,
+    ports
+  };
 
   return fs;
 };
