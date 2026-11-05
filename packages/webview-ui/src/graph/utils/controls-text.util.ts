@@ -63,6 +63,16 @@ export const runLabelOf = (id: string): string => `${RUN_LABEL} ${id}`;
 /** The task toolbar's Stop button name, the Run slot while the task is live. */
 export const stopLabelOf = (id: string): string => `${STOP_LABEL} ${id}`;
 
+/** The Stop name of a task that runs under another task's run: it stops the owner's whole run, so it names the owner. */
+export const stopRunOfLabelOf = (owner: string): string => `${STOP_LABEL} run of ${owner}`;
+
+/** The Stop menu item's text: plain `Stop` for a task's own run, `Stop run of <owner>` while the owner's run runs it. */
+export const stopTextOf = (runOwner: string | null): string => {
+  if (runOwner === null) return STOP_LABEL;
+
+  return stopRunOfLabelOf(runOwner);
+};
+
 /** The accessible name of the selected task's node toolbar. */
 export const taskToolbarLabelOf = (id: string): string => `Task ${id}`;
 

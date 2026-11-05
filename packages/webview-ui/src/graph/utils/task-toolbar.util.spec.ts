@@ -64,7 +64,7 @@ describe('FEATURE: task toolbar model', () => {
       'WHEN $title is listed THEN the "…" shows exactly when the task menu has items',
       ({ task, state, isCompact }) => {
         const shown = taskToolbarShownOf(task, state, isCompact);
-        const menu = taskMenuOf(task, state, actionsMock());
+        const menu = taskMenuOf(task, state, null, actionsMock());
 
         expect(shown.includes('ellipsis')).toBe(menu.length > 0);
       }

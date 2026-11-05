@@ -207,6 +207,18 @@ describe('FEATURE: GraphTaskWidgets', () => {
     });
   });
 
+  describe('GIVEN the a#build menu open while it runs on its own', () => {
+    it('WHEN a#build turns owned by web#build THEN the menu closes', () => {
+      const widgets = widgetsOf(rig, false);
+
+      widgets.show(RUNNING);
+      rig.toolbars[0]?.ellipsis.click();
+      widgets.show(OWNED);
+
+      expect(rig.menus[0]?.menu.isConnected).toBe(false);
+    });
+  });
+
   describe('GIVEN a#build, not runnable, shown continuous with its "…" menu open', () => {
     let widgets: GraphTaskWidgets;
 
