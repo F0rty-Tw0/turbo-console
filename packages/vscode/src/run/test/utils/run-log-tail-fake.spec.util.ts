@@ -2,7 +2,7 @@ import type { RunLogTail } from '../../common/run-log-tail.type.ts';
 import type { FakeRunLogTail } from '../common/run-log-tail-fake.type.ts';
 
 export const fakeRunLogTail = (): FakeRunLogTail => {
-  const { promise, resolve } = Promise.withResolvers<undefined>();
+  const { promise, resolve, reject } = Promise.withResolvers<undefined>();
   let drains = 0;
   let closes = 0;
   const drain = async (): Promise<void> => {
@@ -17,6 +17,9 @@ export const fakeRunLogTail = (): FakeRunLogTail => {
   const finishDrain = (): void => {
     resolve(undefined);
   };
+  const failDrain = (error: Error): void => {
+    reject(error);
+  };
   const fake: FakeRunLogTail = {
     handle,
     get drains(): number {
@@ -25,7 +28,8 @@ export const fakeRunLogTail = (): FakeRunLogTail => {
     get closes(): number {
       return closes;
     },
-    finishDrain
+    finishDrain,
+    failDrain
   };
 
   return fake;

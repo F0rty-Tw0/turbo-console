@@ -81,12 +81,18 @@ export class RunProgressJoin implements ProgressPort {
     this.progress.event(owner, event);
   }
 
-  /** The drain half: reads the tail to its end; with no tail it is done at once. */
+  /**
+   * The drain half: reads the tail to its end; with no tail it is done at once. A tail whose drain rejects still ends
+   * the half, and its error reaches the caller.
+   */
   public async drain(owner: ProgressOwner): Promise<void> {
     const key = progressKeyOf(owner);
 
-    await this.joins.get(key)?.tail?.drain();
-    this.finishDrain(key);
+    try {
+      await this.joins.get(key)?.tail?.drain();
+    } finally {
+      this.finishDrain(key);
+    }
   }
 
   /** The drain half for a start that failed: the tail reads no more. */

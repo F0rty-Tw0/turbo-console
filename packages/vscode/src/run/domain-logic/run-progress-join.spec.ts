@@ -175,6 +175,36 @@ describe('FEATURE: settle a run once its log is drained and its summary is match
     });
   });
 
+  describe('GIVEN a drain HELD and the run aborted', () => {
+    it('WHEN the drain ends THEN the run stays settled once and the drain resolves', async () => {
+      h.beginTailedRun();
+      h.runs.failStart(JOIN_DEFINITION_STUB, 3000, JOIN_OWNER_STUB.launchedAt);
+
+      const draining = h.join.drain(JOIN_OWNER_STUB);
+
+      h.join.abort(JOIN_OWNER_STUB);
+      h.tail.finishDrain();
+
+      await expect(draining).resolves.toBeUndefined();
+      expect(h.settle).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('GIVEN a begun run whose tail drain rejects', () => {
+    it('WHEN the drain fails THEN the run still settles once and the caller gets the error', async () => {
+      h.beginTailedRun();
+      h.endRun(0);
+      h.runs.setMatch(JOIN_DEFINITION_STUB, JOIN_OWNER_STUB.launchedAt, null);
+
+      const draining = h.join.drain(JOIN_OWNER_STUB);
+
+      h.tail.failDrain(new Error('read failed'));
+
+      await expect(draining).rejects.toThrow('read failed');
+      expect(h.settle).toHaveBeenCalledExactlyOnceWith(JOIN_OWNER_STUB, expect.objectContaining({ state: 'passed' }));
+    });
+  });
+
   describe('GIVEN a run already aborted', () => {
     it('WHEN its tail is handed over late THEN the tail is closed at once and nothing settles again', () => {
       const late = fakeRunLogTail();
