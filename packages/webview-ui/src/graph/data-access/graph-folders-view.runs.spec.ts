@@ -55,6 +55,14 @@ describe('FEATURE: createFoldersView run marks', () => {
 
       expect(classesOf(cy, APPS_NODE)).toStrictEqual([]);
     });
+
+    it('WHEN the runs turn empty and show draws apps again THEN the apps node has no run class', () => {
+      view.markRuns(runsOf('web', 'running'));
+      view.markRuns(new Map());
+      view.show(boardsSceneOf(['apps']), labelOf);
+
+      expect(classesOf(cy, APPS_NODE)).toStrictEqual([]);
+    });
   });
 
   describe('GIVEN markRuns was called with ui running before any folder was collapsed', () => {
