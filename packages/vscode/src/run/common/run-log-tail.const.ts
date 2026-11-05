@@ -21,6 +21,12 @@ export const RUN_LOG_FILE_PATTERN = /^run-.*\.json$/;
 
 export const RUN_LOG_SWEEP_AGE_MS = 86_400_000;
 
+/**
+ * A missing file, or a file a scanner or indexer holds for a moment (Windows EPERM/EBUSY), or a full handle table:
+ * reading again on the next change can succeed, so one of these must not end a run's live progress.
+ */
+export const RUN_LOG_RETRYABLE_READ_CODES: ReadonlySet<unknown> = new Set(['ENOENT', 'EBUSY', 'EPERM', 'EMFILE', 'ENFILE', 'EAGAIN']);
+
 export const RUN_LOG_MISSING_TEXT = 'turbo wrote no log file: live progress is off for this turbo version';
 
 export const RUN_LOG_UNKNOWN_TEXT =

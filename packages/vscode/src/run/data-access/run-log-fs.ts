@@ -3,6 +3,7 @@ import { open, readdir, rm, stat } from 'node:fs/promises';
 import type { FileHandle } from 'node:fs/promises';
 
 import type { RunLogPorts, RunLogRead, RunLogWatcher } from '../common/run-log-tail.type.ts';
+import { isRetryableReadError } from '../utils/run-log-read-error.util.ts';
 
 const NO_WATCHER: RunLogWatcher = { close: () => undefined };
 
@@ -29,16 +30,14 @@ const readOpen = async (path: string, from: number, max: number): Promise<Uint8A
   }
 };
 
-const isMissingFile = (error: unknown): boolean => error instanceof Error && 'code' in error && error.code === 'ENOENT';
-
-/** A file that does not exist reads as `null`; any other error rejects, so the tail ends `failed` and logs it. */
+/** A missing or briefly held file reads as `null` and the next change retries; any other error rejects, so the tail ends `failed` and logs it. */
 const read: RunLogRead = async (path, from, max) => {
   try {
     return await readOpen(path, from, max);
   } catch (error) {
-    const isMissing = isMissingFile(error);
+    const isRetryable = isRetryableReadError(error);
 
-    if (isMissing) return null;
+    if (isRetryable) return null;
 
     throw error;
   }
