@@ -18,17 +18,25 @@ const sweepOne = async (ports: RunLogPorts, dir: string, name: string, isLive: I
   if (!isOwned) await ports.remove(path);
 };
 
+const sweepQuietly = async (ports: RunLogPorts, dir: string, name: string, isLive: IsLive): Promise<void> => {
+  try {
+    await sweepOne(ports, dir, name, isLive);
+  } catch {
+    return;
+  }
+};
+
 /**
  * Removes the run files of `dir` older than 24 h that no live tail owns (`isLive` takes a file name and is asked just
- * before the remove): what turbo wrote for a run that never reached its drain, e.g. after an editor crash. Any
- * rejection ends the sweep quietly.
+ * before the remove): what turbo wrote for a run that never reached its drain, e.g. after an editor crash. A file
+ * that rejects (say, busy on Windows) is skipped quietly and the sweep goes on; a folder that cannot be listed ends it.
  */
 export const sweepRunLogs = async (ports: RunLogPorts, dir: string, isLive: IsLive): Promise<void> => {
   try {
     const names = await ports.list(dir);
     const candidates = names.filter((name) => RUN_LOG_FILE_PATTERN.test(name));
 
-    for (const name of candidates) await sweepOne(ports, dir, name, isLive);
+    for (const name of candidates) await sweepQuietly(ports, dir, name, isLive);
   } catch {
     return;
   }

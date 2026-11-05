@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunLogTails } from './run-log-tails.ts';
+import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
 import { RUN_LOG_SWEEP_AGE_MS } from '../common/run-log-tail.const.ts';
 import type { RunLogPorts } from '../common/run-log-tail.type.ts';
 import { SEEN_A } from '../test/common/run-log-fs.const.ts';
@@ -19,6 +20,7 @@ const OLD = logPathOf(ROOT_WS, 'run-old.json');
 const YOUNG = logPathOf(ROOT_WS, 'run-young.json');
 const NOTES = logPathOf(ROOT_WS, 'notes.txt');
 const NEW = logPathOf(ROOT_WS, 'run-new.json');
+const OLDER = logPathOf(ROOT_WS, 'run-older.json');
 const OTHER_OLD = logPathOf(ROOT_OTHER, 'run-old.json');
 
 describe('FEATURE: sweep stale turbo log files (spec D6)', () => {
@@ -59,6 +61,48 @@ describe('FEATURE: sweep stale turbo log files (spec D6)', () => {
       await endChangeWindow();
 
       expect(h.fs.removed).toStrictEqual([OTHER_OLD]);
+    });
+  });
+
+  describe('GIVEN two old files and a remove that rejects for the first', () => {
+    it('WHEN the first /ws tail starts THEN the second is still removed and nothing is logged', async () => {
+      const attempted: string[] = [];
+      const remove: RunLogPorts['remove'] = async (path) => {
+        attempted.push(path);
+
+        if (path === OLD) return Promise.reject(new Error('EBUSY'));
+
+        return Promise.resolve();
+      };
+      const h = tailsHarnessOf(tailsOf, { remove });
+
+      ageOf(h, OLD, 25);
+      ageOf(h, OLDER, 25);
+      h.start(ROOT_WS, NEW);
+      await endChangeWindow();
+
+      expect([attempted, h.fs.logs]).toStrictEqual([[OLD, OLDER], []]);
+    });
+  });
+
+  describe('GIVEN an old file whose mtime is held and a second tail that starts on it meanwhile', () => {
+    it('WHEN the mtime is released THEN the file is not removed', async () => {
+      const gate = Promise.withResolvers<undefined>();
+      const modifiedAt: RunLogPorts['modifiedAt'] = async (path) => {
+        await gate.promise;
+
+        return path === OLD ? 0 : null;
+      };
+      const h = tailsHarnessOf(tailsOf, { modifiedAt });
+
+      h.fs.write(OLD, []);
+      h.start(ROOT_WS, NEW);
+      await flush();
+      h.start(ROOT_WS, OLD);
+      gate.resolve(undefined);
+      await endChangeWindow();
+
+      expect(h.fs.removed).toStrictEqual([]);
     });
   });
 
