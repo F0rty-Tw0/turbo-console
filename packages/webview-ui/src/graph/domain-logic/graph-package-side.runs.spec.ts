@@ -76,8 +76,8 @@ describe('FEATURE: GraphPackageSide run states', () => {
     });
 
     it('WHEN task mode is left and the package graph is drawn again THEN setPackageRuns gets web running', async () => {
-      rig.side.runs({ 'web#build': 'running' });
       rig.modes.setMode('tasks', 'h1');
+      rig.side.runs({ 'web#build': 'running' });
       rig.modes.setMode('packages', 'h1');
       rig.view.setPackageRuns.mockClear();
       rig.side.redraw();
