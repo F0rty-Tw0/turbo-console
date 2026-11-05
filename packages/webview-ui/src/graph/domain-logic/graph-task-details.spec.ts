@@ -29,6 +29,7 @@ type DetailsRig = {
 const RUNNING: TaskDetailsModel = {
   task: GRAPH_TASK_STUB,
   state: 'running',
+  runOwner: null,
   dependencies: [API_BUILD_STUB],
   dependents: [],
   rootLabel: null

@@ -1,5 +1,6 @@
+import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import type { RowLabels } from '../common/controls-elements.type.ts';
-import { RUN_LABEL, STOP_LABEL } from '../common/graph-task.const.ts';
+import { RUN_LABEL, RUN_STATE_TEXT, STOP_LABEL } from '../common/graph-task.const.ts';
 import { CONTROLS_FILTERED_LABEL, CONTROLS_LABEL, ROOT_FOLDER, SHOW_ALL_LABEL } from '../common/graph.const.ts';
 import type { MenuTarget } from '../common/widget.type.ts';
 
@@ -62,6 +63,23 @@ export const runLabelOf = (id: string): string => `${RUN_LABEL} ${id}`;
 
 /** The task toolbar's Stop button name, the Run slot while the task is live. */
 export const stopLabelOf = (id: string): string => `${STOP_LABEL} ${id}`;
+
+/** The Stop name of a task that runs under another task's run: it stops the owner's whole run, so it names the owner. */
+export const stopRunOfLabelOf = (owner: string): string => `${STOP_LABEL} run of ${owner}`;
+
+/** The Stop menu item's text: plain `Stop` for a task's own run, `Stop run of <owner>` while the owner's run runs it. */
+export const stopTextOf = (runOwner: string | null): string => {
+  if (runOwner === null) return STOP_LABEL;
+
+  return stopRunOfLabelOf(runOwner);
+};
+
+/** The task panel's run state word; a task that runs under another task's run names that run after it. */
+export const runStateTextOf = (state: GraphRunState, runOwner: string | null): string => {
+  if (runOwner === null) return RUN_STATE_TEXT[state];
+
+  return `${RUN_STATE_TEXT[state]} · in the run of ${runOwner}`;
+};
 
 /** The accessible name of the selected task's node toolbar. */
 export const taskToolbarLabelOf = (id: string): string => `Task ${id}`;

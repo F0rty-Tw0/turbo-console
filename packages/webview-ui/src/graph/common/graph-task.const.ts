@@ -1,4 +1,5 @@
 import type { RunStateIconId } from './graph-icon.type.ts';
+import type { TaskOwners } from './task-details.type.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 
 /** The most tasks task mode draws before it cuts dependent and dependency hops. */
@@ -132,6 +133,9 @@ export const ROOT_TASK_PACKAGE = '//';
 
 /** The command line of a task whose package script is missing. */
 export const NO_COMMAND_TEXT = 'No command';
+
+/** The `owners` of a `runs` message that has none: every task runs on its own. */
+export const NO_OWNERS: TaskOwners = {};
 
 /** The word the task panel shows beside each run state's icon. */
 export const RUN_STATE_TEXT: Readonly<Record<GraphRunState, string>> = {

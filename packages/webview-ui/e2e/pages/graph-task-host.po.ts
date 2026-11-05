@@ -36,6 +36,13 @@ export class GraphTaskHost {
     await this.sendRaw(message);
   }
 
+  /** A `runs` message whose `owners` name the task run that runs a dependency: `owners[id]` is the owner's task id. */
+  public async sendOwnedRuns(runs: Readonly<Record<string, GraphRunState>>, owners: Readonly<Record<string, string>>): Promise<void> {
+    const message: GraphRunsMessage = { type: 'runs', runs, owners };
+
+    await this.sendRaw(message);
+  }
+
   public async sendAtoms(groups: Readonly<Record<string, GraphAtomGroupState>>): Promise<void> {
     const message: GraphAtomsMessage = { type: 'atoms', groups };
 

@@ -11,6 +11,7 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { FlowControl } from '../common/flow.type.ts';
 import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { FilteringFacts, LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
+import { NO_OWNERS } from '../common/graph-task.const.ts';
 import type { GraphLocation } from '../common/location.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { hasSavedGrouping, readGraphViewState } from '../utils/graph-view-state.util.ts';
@@ -99,7 +100,7 @@ class GraphPageController {
         this.packages.filtering.inspection.explained(message);
         break;
       case 'runs':
-        this.tasks.selection.runs(message.runs);
+        this.tasks.selection.runs(message.runs, message.owners ?? NO_OWNERS);
         break;
       case 'atoms':
         this.tasks.layout.atoms.states(message.groups);

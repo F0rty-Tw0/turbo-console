@@ -64,7 +64,7 @@ describe('FEATURE: task toolbar model', () => {
       'WHEN $title is listed THEN the "…" shows exactly when the task menu has items',
       ({ task, state, isCompact }) => {
         const shown = taskToolbarShownOf(task, state, isCompact);
-        const menu = taskMenuOf(task, state, actionsMock());
+        const menu = taskMenuOf(task, state, null, actionsMock());
 
         expect(shown.includes('ellipsis')).toBe(menu.length > 0);
       }
@@ -87,10 +87,12 @@ describe('FEATURE: task toolbar model', () => {
 
   describe('GIVEN the Run/Stop slot of app#build', () => {
     it.each([
-      { action: 'run', expected: 'Run app#build' },
-      { action: 'stop', expected: 'Stop app#build' }
-    ] as const)('WHEN it does $action THEN it is named $expected', ({ action, expected }) => {
-      const label = runSlotLabelOf('app#build', action);
+      { action: 'run', runOwner: null, expected: 'Run app#build' },
+      { action: 'run', runOwner: 'web#build', expected: 'Run app#build' },
+      { action: 'stop', runOwner: null, expected: 'Stop app#build' },
+      { action: 'stop', runOwner: 'web#build', expected: 'Stop run of web#build' }
+    ] as const)('WHEN it does $action under $runOwner THEN it is named $expected', ({ action, runOwner, expected }) => {
+      const label = runSlotLabelOf('app#build', action, runOwner);
 
       expect(label).toBe(expected);
     });

@@ -30,7 +30,7 @@ describe('FEATURE: taskMenuOf', () => {
     { title: 'a task that is not runnable, idle', task: NOT_RUNNABLE, state: null, expected: [] },
     { title: 'a task that is not runnable, running', task: NOT_RUNNABLE, state: 'running', expected: ['Stop'] }
   ] as const)('GIVEN $title WHEN its menu is listed THEN it reads $expected', ({ task, state, expected }) => {
-    const labels = labelsOf(taskMenuOf(task, state, actionsMock()));
+    const labels = labelsOf(taskMenuOf(task, state, null, actionsMock()));
 
     expect(labels).toStrictEqual(expected);
   });
@@ -43,21 +43,37 @@ describe('FEATURE: taskMenuOf', () => {
     ] as const)('WHEN $label runs THEN only $action is asked for a#build', ({ label, action }) => {
       const actions = actionsMock();
 
-      itemLabelled(taskMenuOf(GRAPH_TASK_STUB, 'running', actions), label).run();
+      itemLabelled(taskMenuOf(GRAPH_TASK_STUB, 'running', null, actions), label).run();
 
       expect(actions.act).toHaveBeenCalledExactlyOnceWith('a#build', action);
     });
 
     it('WHEN Run is read THEN it is an enabled item with the run icon', () => {
-      const { icon, isDisabled } = itemLabelled(taskMenuOf(GRAPH_TASK_STUB, 'running', actionsMock()), 'Run');
+      const { icon, isDisabled } = itemLabelled(taskMenuOf(GRAPH_TASK_STUB, 'running', null, actionsMock()), 'Run');
 
       expect({ icon, isDisabled }).toStrictEqual({ icon: 'play', isDisabled: false });
     });
 
     it('WHEN its icons are read THEN Run, Run without cache and Stop draw play, debug-rerun and debug-stop', () => {
-      const icons = iconsOf(taskMenuOf(GRAPH_TASK_STUB, 'running', actionsMock()));
+      const icons = iconsOf(taskMenuOf(GRAPH_TASK_STUB, 'running', null, actionsMock()));
 
       expect(icons).toStrictEqual(['play', 'debug-rerun', 'debug-stop']);
+    });
+  });
+
+  describe('GIVEN a#build running under the run of web#build', () => {
+    it('WHEN its menu is listed THEN it reads Run, Run without cache, Stop run of web#build', () => {
+      const labels = labelsOf(taskMenuOf(GRAPH_TASK_STUB, 'running', 'web#build', actionsMock()));
+
+      expect(labels).toStrictEqual(['Run', 'Run without cache', 'Stop run of web#build']);
+    });
+
+    it('WHEN Stop run of web#build runs THEN only stop is asked for a#build', () => {
+      const actions = actionsMock();
+
+      itemLabelled(taskMenuOf(GRAPH_TASK_STUB, 'running', 'web#build', actions), 'Stop run of web#build').run();
+
+      expect(actions.act).toHaveBeenCalledExactlyOnceWith('a#build', 'stop');
     });
   });
 });
@@ -76,7 +92,7 @@ describe('FEATURE: task menu icons from the action icon table', () => {
   describe('GIVEN a table where every action draws another icon', () => {
     it('WHEN a running task menu is built THEN its icons follow the table', async () => {
       const swapped = await import('./task-menu-model.util.ts');
-      const model = swapped.taskMenuOf(GRAPH_TASK_STUB, 'running', actionsMock());
+      const model = swapped.taskMenuOf(GRAPH_TASK_STUB, 'running', null, actionsMock());
 
       expect(iconsOf(model)).toStrictEqual([SWAPPED.run, SWAPPED.runNoCache, SWAPPED.stop]);
     });

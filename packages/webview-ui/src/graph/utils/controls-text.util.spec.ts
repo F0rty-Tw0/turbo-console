@@ -13,10 +13,13 @@ import {
   packageToolbarLabelOf,
   rowLabelsOf,
   runLabelOf,
+  runStateTextOf,
   showAllTextOf,
   showLabelOf,
   showPackageLabelOf,
   stopLabelOf,
+  stopRunOfLabelOf,
+  stopTextOf,
   taskToolbarLabelOf
 } from './controls-text.util.ts';
 import { labelIn } from './package-label.util.ts';
@@ -218,6 +221,37 @@ describe('FEATURE: controls text', () => {
       const label = stopLabelOf('app#build');
 
       expect(label).toBe('Stop app#build');
+    });
+  });
+
+  describe('GIVEN a task that runs under the run of web#all', () => {
+    it('WHEN the run is named THEN the name carries the owner', () => {
+      const label = stopRunOfLabelOf('web#all');
+
+      expect(label).toBe('Stop run of web#all');
+    });
+  });
+
+  describe('GIVEN a live task and the run that runs it', () => {
+    it.each([
+      { state: 'running', runOwner: null, expected: 'Running' },
+      { state: 'running', runOwner: 'web#build', expected: 'Running · in the run of web#build' },
+      { state: 'continuous', runOwner: 'web#build', expected: 'Continuous · in the run of web#build' }
+    ] as const)('WHEN $state owned by $runOwner is worded THEN it reads $expected', ({ state, runOwner, expected }) => {
+      const text = runStateTextOf(state, runOwner);
+
+      expect(text).toBe(expected);
+    });
+  });
+
+  describe('GIVEN the Stop text of a task', () => {
+    it.each([
+      { runOwner: null, expected: 'Stop' },
+      { runOwner: 'web#all', expected: 'Stop run of web#all' }
+    ])('WHEN its run owner is $runOwner THEN it reads $expected', ({ runOwner, expected }) => {
+      const text = stopTextOf(runOwner);
+
+      expect(text).toBe(expected);
     });
   });
 });

@@ -65,12 +65,13 @@ export class GraphTaskWidgets {
     deps.overlay.addEventListener('change', (): void => this.relayout());
   }
 
-  /** The toolbar of the selected task of `model`; none for `null` or outside task mode; the menu closes when its toolbar is replaced or removed, or when it turns empty, as its "…" then hides. */
+  /** The toolbar of the selected task of `model`; none for `null` or outside task mode; the menu closes, focus to the container, when its toolbar is replaced or removed or when it turns empty, as its "…" then hides; it closes with focus back on its "…" when only its task's run owner changes. */
   public show(model: TaskDetailsModel | null): void {
     const isActive = this.deps.isActive();
     const shown = isActive ? model : null;
     const shownId = shown?.task.id ?? null;
     const toolbarId = this.toolbar.id();
+    const isOwnerChanged = model?.runOwner !== this.model?.runOwner;
 
     this.model = model;
 
@@ -78,6 +79,7 @@ export class GraphTaskWidgets {
     const isMenuGone = shownId !== toolbarId || items.length === 0;
 
     if (isMenuGone) this.menus.drop();
+    else if (isOwnerChanged) this.menus.close();
 
     this.toolbar.sync(shown);
     this.place();
@@ -173,7 +175,7 @@ export class GraphTaskWidgets {
 
     if (model === null) return [];
 
-    return taskMenuOf(model.task, model.state, this.actions);
+    return taskMenuOf(model.task, model.state, model.runOwner, this.actions);
   }
 
   /** The shown task's model when its id is `id`, else `null`, so an item of a task since replaced posts nothing. */

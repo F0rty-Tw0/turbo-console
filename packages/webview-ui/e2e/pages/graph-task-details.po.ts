@@ -31,6 +31,11 @@ export class GraphTaskDetails {
     this.stop = this.panel.getByRole('button', { name: STOP_LABEL, exact: true });
   }
 
+  /** The panel's Stop button named exactly `label`; an owned dependency's Stop reads `Stop run of <owner>`. */
+  public stopNamed(label: string): Locator {
+    return this.panel.getByRole('button', { name: label, exact: true });
+  }
+
   /** Clicks the dependency button named by its task id. */
   public async pickDependency(taskId: string): Promise<void> {
     await this.panel.getByRole('button', { name: taskId, exact: true }).click();

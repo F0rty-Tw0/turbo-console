@@ -1,5 +1,14 @@
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import type { TaskDetails, TaskDetailsModel, TaskRuns, TaskSelectionDeps, TaskWidgets } from '../common/task-details.type.ts';
+import { NO_OWNERS } from '../common/graph-task.const.ts';
+import type {
+  LatestRuns,
+  TaskDetails,
+  TaskDetailsModel,
+  TaskOwners,
+  TaskRuns,
+  TaskSelectionDeps,
+  TaskWidgets
+} from '../common/task-details.type.ts';
 import { highlightTargetOf } from '../utils/hover-target.util.ts';
 import { taskDetailsModelOf, taskWithId } from '../utils/task-run.util.ts';
 
@@ -14,7 +23,7 @@ export class GraphTaskSelection {
   private readonly details: TaskDetails;
   private readonly widgets: TaskWidgets;
   private shown: GraphTask[] = [];
-  private latestRuns: TaskRuns = {};
+  private latest: LatestRuns = { runs: {}, owners: NO_OWNERS };
   private isEntered = false;
   private hovered: string | null = null;
 
@@ -51,11 +60,11 @@ export class GraphTaskSelection {
   }
 
   /**
-   * Keeps the latest runs; outside task mode they wait for the repaint on entering, so the hidden panel is not rebuilt.
+   * Keeps the latest runs and their owners; outside task mode they wait for the repaint on entering, so the hidden panel is not rebuilt.
    * Runs leave the highlight as it is, so they never restart an idle flow.
    */
-  public runs(runs: TaskRuns): void {
-    this.latestRuns = runs;
+  public runs(runs: TaskRuns, owners: TaskOwners): void {
+    this.latest = { runs, owners };
 
     if (this.isEntered) this.refill(this.modelOf());
   }
@@ -136,7 +145,7 @@ export class GraphTaskSelection {
 
     if (task === undefined) return null;
 
-    return taskDetailsModelOf(task, this.shown, this.latestRuns, this.deps.rootLabel());
+    return taskDetailsModelOf(task, this.shown, this.latest, this.deps.rootLabel());
   }
 
   private repaint(): void {
@@ -163,7 +172,7 @@ export class GraphTaskSelection {
   }
 
   private refill(model: TaskDetailsModel | null): void {
-    this.deps.view.tasks.runStates(this.latestRuns);
+    this.deps.view.tasks.runStates(this.latest.runs);
     this.details.show(model);
     this.widgets.show(model);
   }

@@ -8,6 +8,7 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH, PANEL_LEFT } from '../test/common/graph-ta
 import type { TaskWidgetsRig } from '../test/common/graph-task-widgets.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { API_BUILD_STUB, GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
+import { TASK_DETAILS_STUB } from '../test/stubs/task-details.stub.ts';
 import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
 import { setBox } from '../test/utils/element-box.spec.util.ts';
 import { rectsOf, stopItemOf, taskToolbarsOf, taskWidgetsRigOf } from '../test/utils/graph-task-widgets.spec.util.ts';
@@ -15,13 +16,15 @@ import { rectsOf, stopItemOf, taskToolbarsOf, taskWidgetsRigOf } from '../test/u
 /** `a#build` drawn across the panel's left edge: its toolbar under it. */
 const UNDER_RECT: RectPx = { x1: 260, y1: 50, x2: 320, y2: 80 };
 
-const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
+const RUNNING: TaskDetailsModel = { ...TASK_DETAILS_STUB, state: 'running' };
+
+const OWNED: TaskDetailsModel = { ...RUNNING, runOwner: 'web#build' };
 
 const ROOT_NOT_RUNNABLE_TASK: GraphTask = { ...ROOT_BUILD_STUB, isRunnable: false };
 
 const ROOT_NOT_RUNNABLE_IDLE: TaskDetailsModel = { ...RUNNING, task: ROOT_NOT_RUNNABLE_TASK, state: null };
 
-const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
+const API_RUNNING: TaskDetailsModel = { ...RUNNING, task: API_BUILD_STUB };
 
 const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
 
@@ -168,6 +171,60 @@ describe('FEATURE: GraphTaskWidgets', () => {
       widgets.keepClear();
 
       expect(rig.view.panBy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a#build running under the run of web#build', () => {
+    beforeEach(() => {
+      const widgets = widgetsOf(rig, false);
+
+      widgets.show(OWNED);
+    });
+
+    it('WHEN the toolbar slot is clicked THEN stopTask web#build is posted', () => {
+      rig.toolbars[0]?.run.click();
+
+      expect(rig.bridge.post).toHaveBeenCalledExactlyOnceWith({ type: 'stopTask', taskId: 'web#build' });
+    });
+
+    it('WHEN the menu Stop item runs THEN stopTask web#build is posted', () => {
+      stopItemOf(rig)?.click();
+
+      expect(rig.bridge.post).toHaveBeenCalledExactlyOnceWith({ type: 'stopTask', taskId: 'web#build' });
+    });
+  });
+
+  describe('GIVEN the a#build menu open while it runs on its own', () => {
+    let widgets: GraphTaskWidgets;
+
+    beforeEach(() => {
+      widgets = widgetsOf(rig, false);
+      widgets.show(RUNNING);
+      rig.toolbars[0]?.ellipsis.click();
+    });
+
+    it('WHEN a#build turns owned by web#build THEN the menu closes', () => {
+      widgets.show(OWNED);
+
+      expect(rig.menus[0]?.menu.isConnected).toBe(false);
+    });
+
+    it('WHEN a#build turns owned by web#build THEN focus is on the "…" button', () => {
+      widgets.show(OWNED);
+
+      expect(document.activeElement).toBe(rig.toolbars[0]?.ellipsis);
+    });
+  });
+
+  describe('GIVEN the a#build menu open while it runs under web#build', () => {
+    it('WHEN the same owner is shown again in a new model THEN the menu stays open', () => {
+      const widgets = widgetsOf(rig, false);
+
+      widgets.show(OWNED);
+      rig.toolbars[0]?.ellipsis.click();
+      widgets.show({ ...OWNED });
+
+      expect(rig.menus[0]?.menu.isConnected).toBe(true);
     });
   });
 

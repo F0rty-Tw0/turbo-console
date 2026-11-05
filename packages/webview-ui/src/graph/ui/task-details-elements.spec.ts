@@ -13,6 +13,7 @@ const TASK_NO_COMMAND: GraphTask = { ...GRAPH_TASK_STUB, command: null, isRunnab
 const STOPPED_NO_COMMAND: TaskDetailsModel = {
   task: TASK_NO_COMMAND,
   state: 'stopped',
+  runOwner: null,
   dependencies: [],
   dependents: [],
   rootLabel: null
@@ -21,6 +22,7 @@ const STOPPED_NO_COMMAND: TaskDetailsModel = {
 const RUNNING: TaskDetailsModel = {
   task: GRAPH_TASK_STUB,
   state: 'running',
+  runOwner: null,
   dependencies: [API_BUILD_STUB],
   dependents: [],
   rootLabel: null
@@ -31,6 +33,10 @@ const NEEDED_BY_WEB: TaskDetailsModel = { ...RUNNING, dependents: [WEB_BUILD_STU
 /** The Dependents section: the fourth child of the view, after the heading, the main section and Dependencies. */
 const dependentsSectionOf = (root: HTMLElement): Element[] => Array.from(root.children[3]?.children ?? []);
 
+const OWNED: TaskDetailsModel = { ...RUNNING, runOwner: 'web#build' };
+
+const HOSTILE_OWNER = '<img src=x onerror=alert(1)>';
+
 const CONTINUOUS: TaskDetailsModel = { ...RUNNING, state: 'continuous' };
 
 const NEVER_RUN: TaskDetailsModel = { ...RUNNING, state: null };
@@ -38,6 +44,7 @@ const NEVER_RUN: TaskDetailsModel = { ...RUNNING, state: null };
 const ROOT_BUILD: TaskDetailsModel = {
   task: ROOT_BUILD_STUB,
   state: null,
+  runOwner: null,
   dependencies: [],
   dependents: [],
   rootLabel: 'single-app'
@@ -143,6 +150,36 @@ describe('FEATURE: task details elements', () => {
 
     expect(owner).toMatchObject({ tagName: 'BUTTON', className: 'details-name', textContent: 'a', title: 'Show package a' });
     expect([owner?.getAttribute('aria-label'), owner?.getAttribute('data-focus')]).toStrictEqual(['Show package a', 'owner']);
+  });
+
+  describe('GIVEN a#build running under the run of web#build', () => {
+    it('WHEN built THEN Stop shows the text Stop with aria-label and title Stop run of web#build', () => {
+      const { stop } = buildTaskDetails(OWNED);
+
+      expect(stop.textContent).toBe('Stop');
+      expect(stop.getAttribute('aria-label')).toBe('Stop run of web#build');
+      expect(stop.title).toBe('Stop run of web#build');
+    });
+
+    it('WHEN built THEN the state reads Running · in the run of web#build', () => {
+      const { state } = buildTaskDetails(OWNED);
+
+      expect(state.textContent).toBe('Running · in the run of web#build');
+    });
+
+    it('WHEN the owner id is markup THEN the state and Stop hold it as text', () => {
+      const { state, stop } = buildTaskDetails({ ...OWNED, runOwner: HOSTILE_OWNER });
+
+      expect(state.textContent).toBe(`Running · in the run of ${HOSTILE_OWNER}`);
+      expect(stop.getAttribute('aria-label')).toBe(`Stop run of ${HOSTILE_OWNER}`);
+    });
+  });
+
+  it('GIVEN a#build running on its own WHEN built THEN Stop has no aria-label and title Stop', () => {
+    const { stop } = buildTaskDetails(RUNNING);
+
+    expect(stop.getAttribute('aria-label')).toBeNull();
+    expect(stop.title).toBe('Stop');
   });
 
   it('GIVEN a continuous task WHEN built THEN the state reads Continuous and Stop is shown', () => {
