@@ -29,12 +29,18 @@ const readOpen = async (path: string, from: number, max: number): Promise<Uint8A
   }
 };
 
-/** Any error reads as `null`: the drain retries, and a file that never reads ends as `missing`, logged there. */
+const isMissingFile = (error: unknown): boolean => error instanceof Error && 'code' in error && error.code === 'ENOENT';
+
+/** A file that does not exist reads as `null`; any other error rejects, so the tail ends `failed` and logs it. */
 const read: RunLogRead = async (path, from, max) => {
   try {
     return await readOpen(path, from, max);
-  } catch {
-    return null;
+  } catch (error) {
+    const isMissing = isMissingFile(error);
+
+    if (isMissing) return null;
+
+    throw error;
   }
 };
 
@@ -84,7 +90,7 @@ const watchDir: RunLogPorts['watch'] = (dir, onChange, onError) => {
   }
 };
 
-/** The log tails' file effects over `node:fs`; `log` takes one Output line (U7e1 passes `output.warn`). */
+/** The log tails' file effects over `node:fs`; `log` takes one Output line. */
 export const editorRunLogPorts = (log: (line: string) => void): RunLogPorts => {
   const ports: RunLogPorts = { watch: watchDir, read, remove, list, modifiedAt, now: () => Date.now(), log };
 

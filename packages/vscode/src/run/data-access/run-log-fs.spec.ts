@@ -46,6 +46,24 @@ describe("FEATURE: the log tails' file ports (spec D5)", () => {
     });
   });
 
+  describe('GIVEN a folder path', () => {
+    it('WHEN read THEN it rejects, as only a missing file reads as null', async () => {
+      const read = ports.read(join(root, 'two'), 0, 4);
+
+      await expect(read).rejects.toThrow();
+    });
+  });
+
+  describe('GIVEN the clock', () => {
+    it('WHEN now is asked THEN a time between two Date.now() calls', () => {
+      const before = Date.now();
+      const now = ports.now();
+      const after = Date.now();
+
+      expect([before <= now, now <= after]).toStrictEqual([true, true]);
+    });
+  });
+
   describe('GIVEN a missing file', () => {
     it('WHEN read THEN null', async () => {
       const bytes = await ports.read(join(root, 'gone.json'), 0, 4);
