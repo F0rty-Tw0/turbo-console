@@ -1,5 +1,5 @@
 import cytoscape from 'cytoscape';
-import type { Core, NodeSingular } from 'cytoscape';
+import type { Core, EventObjectEdge, EventObjectNode, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { probeStateOf } from './graph-probe-state.ts';
@@ -86,6 +86,24 @@ const runClassesOf = (cy: Core, id: string): string[] => {
   const classes = cy.getElementById(id).classes();
 
   return classes.filter(isRunClass);
+};
+
+const styleEventsDuring = (cy: Core, write: () => void): number => {
+  let count = 0;
+
+  cy.on('style', (): void => void count++);
+  write();
+
+  return count;
+};
+
+const restyledIdsDuring = (cy: Core, write: () => void): string[] => {
+  const ids = new Set<string>();
+
+  cy.on('style', (event: EventObjectNode | EventObjectEdge): void => void ids.add(event.target.id()));
+  write();
+
+  return [...ids];
 };
 
 const stateOf = (cy: Core, id: string): string => {
@@ -345,6 +363,41 @@ describe('FEATURE: createTaskCanvas', () => {
 
       expect(stateOf(cy, 'web#build')).toBe('selected');
       expect(runClassesOf(cy, 'api#build')).toStrictEqual(['run-passed']);
+    });
+  });
+});
+
+describe('FEATURE: createTaskCanvas run marks with styles on', () => {
+  let cy: Core;
+  let canvas: TaskCanvas;
+
+  beforeEach(() => {
+    const layout = { name: 'preset', fit: false };
+
+    cy = cytoscape({ headless: true, styleEnabled: true, layout });
+    canvas = createTaskCanvas(cy);
+    canvas.show(PAINT_DRAWING);
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  describe('GIVEN three tasks are shown and web#build is running', () => {
+    beforeEach(() => {
+      canvas.runStates({ 'web#build': 'running' });
+    });
+
+    it('WHEN the same map comes again THEN no element is restyled', () => {
+      const restyles = styleEventsDuring(cy, (): void => canvas.runStates({ 'web#build': 'running' }));
+
+      expect(restyles).toBe(0);
+    });
+
+    it('WHEN only web#build changes state THEN only web#build and its package compound are restyled', () => {
+      const restyled = restyledIdsDuring(cy, (): void => canvas.runStates({ 'web#build': 'passed' }));
+
+      expect(restyled).toStrictEqual(['web#build', 'pkg:web']);
     });
   });
 });
