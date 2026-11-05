@@ -4,17 +4,18 @@ import { graphListingOf } from './graph-tasks.util.ts';
 import type { Roots } from '../../roots/common/coordinator.type.ts';
 import type { DependenciesOf } from '../../run/common/run-progress.type.ts';
 
-const NO_DEPENDENCIES: string[] = [];
+/** A fresh list per call, so a caller that edits its answer cannot change the next one. */
+const noDependencies = (): string[] => [];
 
 /** The listed dependencies of every listed task of `model`, as they are now (spec D3, D10); `[]` for any other id. */
 export const dependenciesOfModel = (model: WorkspaceModel | null): DependenciesOf => {
-  if (model === null) return () => NO_DEPENDENCIES;
+  if (model === null) return noDependencies;
 
   const { tasks } = graphListingOf(model);
   const pairs = tasks.map((task): [string, string[]] => [task.id, task.dependencies]);
   const edges = new Map(pairs);
 
-  return (id) => edges.get(id) ?? NO_DEPENDENCIES;
+  return (id) => edges.get(id) ?? noDependencies();
 };
 
 /**

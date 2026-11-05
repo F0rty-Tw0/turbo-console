@@ -68,10 +68,12 @@ describe('FEATURE: the dependency snapshot of a run (spec D3, D10)', () => {
       expect(dependenciesOf('gone#build')).toStrictEqual([]);
     });
 
-    it('WHEN asked twice for unknown ids THEN the same [] object', () => {
+    it('WHEN a caller edits the answer for an unknown id THEN the next unknown id still gives []', () => {
       const dependenciesOf = runDependenciesOf(roots)('/ws');
 
-      expect(dependenciesOf('gone#build')).toBe(dependenciesOf('other#build'));
+      dependenciesOf('gone#build').push('x#build');
+
+      expect(dependenciesOf('other#build')).toStrictEqual([]);
     });
 
     it('WHEN the model changes after the snapshot THEN the snapshot still gives the old edges', () => {
@@ -113,6 +115,16 @@ describe('FEATURE: the dependency snapshot of a run (spec D3, D10)', () => {
       model = loaded;
 
       const dependenciesOf = runDependenciesOf(roots)(root);
+
+      expect(dependenciesOf('web#build')).toStrictEqual([]);
+    });
+
+    it('WHEN a caller edits the answer THEN the next answer is still []', () => {
+      model = loaded;
+
+      const dependenciesOf = runDependenciesOf(roots)(root);
+
+      dependenciesOf('web#build').push('x#build');
 
       expect(dependenciesOf('web#build')).toStrictEqual([]);
     });
