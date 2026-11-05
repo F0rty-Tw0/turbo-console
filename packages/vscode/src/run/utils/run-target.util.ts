@@ -82,9 +82,12 @@ export const directRequestOf = (request: RunRequest): RunRequest => {
   return direct;
 };
 
+/** Every task id the root has, root `//#x` tasks included. */
 export const taskIdsOf = (model: WorkspaceModel | null): Set<string> => {
   const packages = model?.packages ?? [];
-  const ids = packages.flatMap((pkg) => pkg.tasks.map((task) => task.id));
+  const rootTasks = model?.rootPackage?.tasks ?? [];
+  const ownIds = packages.flatMap((pkg) => pkg.tasks.map((task) => task.id));
+  const rootIds = rootTasks.map((task) => task.id);
 
-  return new Set(ids);
+  return new Set([...ownIds, ...rootIds]);
 };
