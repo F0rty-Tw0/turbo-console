@@ -62,8 +62,12 @@ const recordOfY = (scene: LiveScene, launchedAt: number): ProgressRecord | undef
   return records.find(isOwn);
 };
 
+/** A `go` left by an attempt that died before its clean up would let X exit at once, so it is removed first. */
 const prepareBlockedX = async (scene: LiveScene): Promise<void> => {
-  await writeFile(join(dirname(scene.manifest), 'go-wait.js'), goScriptOf());
+  const dir = dirname(scene.manifest);
+
+  await rm(join(dir, 'go'), { force: true });
+  await writeFile(join(dir, 'go-wait.js'), goScriptOf());
   await writeEdited(scene.manifest, scene.manifestText, (manifest) => {
     setScript(manifest, BUILD_TASK, 'node go-wait.js');
   });
