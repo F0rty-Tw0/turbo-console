@@ -150,10 +150,9 @@ test.describe('FEATURE: theme screenshots of the grouped task canvas', () => {
       await test.step('WHEN every task of the three-folder state is laid out grouped in task mode', async (): Promise<void> =>
         shots.openTasks(TASK_CANVAS_SETUP, theme));
 
-      await test.step('AND Fit is pressed and every box is in view', async (): Promise<void> => {
-        await graphPage.pressButton(FIT_LABEL);
-        await graphCanvas.expectAllNodesInView();
-      });
+      await test.step('AND Fit is pressed', async (): Promise<void> => graphPage.pressButton(FIT_LABEL));
+
+      await test.step('AND every box is in view', async (): Promise<void> => graphCanvas.expectAllNodesInView());
 
       await test.step(`THEN the page matches task-canvas-${name}.png`, async (): Promise<void> =>
         expect(page).toHaveScreenshot(`task-canvas-${name}.png`));
