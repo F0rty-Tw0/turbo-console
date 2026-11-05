@@ -4,15 +4,13 @@ import { expect, test } from '@playwright/test';
 import { GraphCanvas } from './graph-canvas.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
+import { CPU_RUNS } from '../common/graph-tripwire.const.ts';
 import type { CpuSteps } from '../common/graph.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { isPanNear } from '../test/utils/graph-camera.spec.util.ts';
-import { medianCpuOf } from '../test/utils/graph-pan-cpu.spec.util.ts';
+import { medianCpuOf } from '../test/utils/graph-cpu-median.spec.util.ts';
 import { dragBy } from '../test/utils/graph-scripted-pan.spec.util.ts';
 import { recordPanCpu } from '../test/utils/graph-thread-time.spec.util.ts';
-
-/** Scripted pans per CPU tripwire: the median of three keeps one spiked run on a slow CI host from failing a budget. */
-const PAN_RUNS = 3;
 
 /** The pan CPU tripwires: three scripted pans from one camera, asserted on their medians. */
 export class GraphPanCpu {
@@ -37,7 +35,7 @@ export class GraphPanCpu {
     const home = await this.currentPan();
     const readings: CpuSteps[] = [];
 
-    for (let run = 0; run < PAN_RUNS; run += 1) {
+    for (let run = 0; run < CPU_RUNS; run += 1) {
       if (run > 0) await this.panHome(start, home);
 
       await this.canvas.scriptedPan(warmUpFrames, panFrames, start);
@@ -62,7 +60,7 @@ export class GraphPanCpu {
 
     const pan = medianCpuOf(readings);
 
-    recordPanCpu(test.info(), { readings, pan }, totalMs, stepMs);
+    recordPanCpu(test.info(), { readings, median: pan }, totalMs, stepMs);
     expect(pan.totalMs).toBeGreaterThan(0);
     expect(pan.totalMs).toBeLessThan(totalMs);
     expect(pan.maxStepMs).toBeLessThan(stepMs);
