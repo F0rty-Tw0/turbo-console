@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import type { RunAllEvents, RunAllLaunch } from '../common/run-all.type.ts';
-import type { RunDefinition, RunRequest, TaskEvents, Terminable } from '../common/run.type.ts';
+import type { RunDefinition, RunEnv, RunRequest, TaskEvents, Terminable } from '../common/run.type.ts';
 import { runAllDefinitionOf, runAllKeyOf, runAllTaskDefinitionOf } from '../utils/run-all-task.util.ts';
 import { isTaskOf, runEventOf, taskDefinitionOf } from '../utils/run-event.util.ts';
 
@@ -9,6 +9,7 @@ type ProcessLaunch = {
   readonly root: string;
   readonly binaryPath: string;
   readonly args: string[];
+  readonly env?: RunEnv | undefined;
 };
 
 const folderOf = (root: string): vscode.WorkspaceFolder => {
@@ -39,24 +40,37 @@ const executeIn = async (
   return vscode.tasks.executeTask(task);
 };
 
+/** Runs in `process.root`; `env`, when given, is added to the window's environment. */
+const processOptionsOf = (process: ProcessLaunch): vscode.ProcessExecutionOptions => {
+  const { root: cwd, env } = process;
+  const options: vscode.ProcessExecutionOptions = { cwd };
+
+  if (env === undefined) return options;
+
+  const withEnv: vscode.ProcessExecutionOptions = { cwd, env };
+
+  return withEnv;
+};
+
 /** A turbo process as a `vscode.Task`, run in the workspace folder `process.root`. */
 const executeProcessTask = async (
   definition: vscode.TaskDefinition,
   name: string,
   process: ProcessLaunch
 ): Promise<vscode.TaskExecution> => {
-  const execution = new vscode.ProcessExecution(process.binaryPath, process.args, { cwd: process.root });
+  const options = processOptionsOf(process);
+  const execution = new vscode.ProcessExecution(process.binaryPath, process.args, options);
 
   return executeIn(definition, name, process.root, execution);
 };
 
 /**
- * Spec §4.5 step 3: runs turbo as a `vscode.Task` named after the task id. Rejects when `request.root` is no workspace
- * folder.
+ * Spec §4.5 step 3: runs turbo as a `vscode.Task` named after the task id, with `env` added (spec D1: the log file).
+ * Rejects when `request.root` is no workspace folder.
  */
-export const executeTurboTask = async (request: RunRequest, args: string[], launchedAt: number): Promise<Terminable> => {
+export const executeTurboTask = async (request: RunRequest, args: string[], launchedAt: number, env?: RunEnv): Promise<Terminable> => {
   const definition = taskDefinitionOf(request, launchedAt);
-  const process: ProcessLaunch = { root: request.root, binaryPath: request.binaryPath, args };
+  const process: ProcessLaunch = { root: request.root, binaryPath: request.binaryPath, args, env };
 
   return executeProcessTask(definition, request.task.id, process);
 };

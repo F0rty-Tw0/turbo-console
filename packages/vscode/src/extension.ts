@@ -4,6 +4,7 @@ import { registerCodeLens } from './codelens/feature/register-codelens.ts';
 import { createPanels } from './details/details-wiring.ts';
 import { registerDetails } from './details/feature/register-details.ts';
 import { createGraph } from './graph/graph-wiring.ts';
+import { runDependenciesOf } from './graph/utils/graph-dependencies.util.ts';
 import type { Roots } from './roots/common/coordinator.type.ts';
 import type { LoadDeps, SessionPorts, SharedLoadPorts } from './roots/common/root.type.ts';
 import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
@@ -123,7 +124,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const { start, timings } = startTimings();
   const output = createOutput();
   const session = createSession(context, output);
-  const runSession = new RunSession(editorRunPorts(output), timings.runs);
+  const runSession = new RunSession(editorRunPorts(output, runDependenciesOf(session.store)), timings.runs);
   const toggles = togglesOf(context.workspaceState, output);
   const atoms = sharedAtomsOf(session.store, editorAtomPorts(session.store, output));
   const treeDeps = treeDepsOf(runSession.runs, timings, toggles.scripts, atoms, output.error);

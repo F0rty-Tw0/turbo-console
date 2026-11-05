@@ -21,7 +21,7 @@ import type {
   Terminable
 } from '../common/run.type.ts';
 import { RunSession } from '../domain-logic/run-session.ts';
-import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { LOG_ENV_STUB, RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 import { noScriptText, unsafeScriptText } from '../utils/run-text.util.ts';
 
@@ -128,7 +128,7 @@ describe('FEATURE: run commands', () => {
       });
 
       it('THEN turbo runs that task with the binary', () => {
-        expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000);
+        expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000, LOG_ENV_STUB);
       });
 
       it('THEN its store listener is removed', () => {
@@ -147,7 +147,7 @@ describe('FEATURE: run commands', () => {
       });
 
       it('THEN turbo runs that task with it', () => {
-        expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000);
+        expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000, LOG_ENV_STUB);
       });
 
       it('THEN its store listener is removed', () => {
@@ -195,13 +195,13 @@ describe('FEATURE: run commands', () => {
     it('WHEN Run Task is invoked on the task row THEN turbo runs that task with the root binary', async () => {
       await command('turboConsole.runTask', TASK_TREE_NODE_STUB);
 
-      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000);
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(REQUEST, ARGS, 1000, LOG_ENV_STUB);
     });
 
     it('WHEN Run Task Without Cache is invoked on the task row THEN turbo runs it with --force and the entry is forced', async () => {
       await command('turboConsole.runTaskWithoutCache', TASK_TREE_NODE_STUB);
 
-      expect(ports.execute).toHaveBeenCalledExactlyOnceWith({ ...REQUEST, force: true }, [...ARGS, '--force'], 1000);
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith({ ...REQUEST, force: true }, [...ARGS, '--force'], 1000, LOG_ENV_STUB);
       expect(session.runs.get('/ws', 'build')?.force).toBe(true);
     });
 

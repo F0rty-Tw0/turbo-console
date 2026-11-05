@@ -4,7 +4,7 @@ import { runTask, taskEnded } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
 import { START_TIMEOUT_MS } from '../common/run.const.ts';
 import type { RunDefinition, RunPorts, RunRequest, Terminable } from '../common/run.type.ts';
-import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { LOG_ENV_STUB, RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 
 const RUN: RunDefinition = { root: '/ws', id: 'build' };
@@ -38,7 +38,7 @@ describe('FEATURE: run flow, starting a run', () => {
 
       await runTask(store, ports, RUN_REQUEST_STUB);
 
-      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, args, 1000);
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, args, 1000, LOG_ENV_STUB);
     });
 
     it('WHEN it is run twice without waiting THEN the second run is refused at once', () => {

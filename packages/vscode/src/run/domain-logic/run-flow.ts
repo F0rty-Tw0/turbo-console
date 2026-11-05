@@ -1,11 +1,12 @@
 import { turboRunArgs } from '@turbo-console/core';
 import type { RunTasksMatch } from '@turbo-console/core';
 
+import { beginProgress, startLiveLog } from './run-live.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { ALREADY_RUNNING_TEXT, START_TIMEOUT_MS, TASK_ENDED_TEXT } from '../common/run.const.ts';
 import type { RunDefinition, RunEntry, RunPorts, RunRequest, Runs, Terminable } from '../common/run.type.ts';
 import { runToMatchOf } from '../utils/run-end.util.ts';
-import { processNameOf } from '../utils/run-entry.util.ts';
+import { processNameOf, progressOwnerOf } from '../utils/run-entry.util.ts';
 import { refusalOf } from '../utils/run-refusal.util.ts';
 import { startTimeoutText, startWaitText } from '../utils/run-text.util.ts';
 
@@ -30,12 +31,16 @@ type StartEnd = {
  * Ends a run whose process never started, terminating its execution unless its task already ended; nothing for a run no
  * longer running, or, with `launchedAt`, for another run of the task. Only a run that ends as failed to start logs its
  * reason and tells the user, naming the process the ended run started: one the user stopped first ends as stopped,
- * quietly.
+ * quietly. Either way its progress is aborted (spec D10): its log tail reads no more.
  */
 const endStart = (store: Runs, ports: RunPorts, end: StartEnd): void => {
   const ended = store.failStart(end.definition, ports.now(), end.launchedAt, end.isTaskEnded);
 
-  if (ended?.state !== 'failed-to-start') return;
+  if (ended === null) return;
+
+  ports.progress.abort(progressOwnerOf(ended.root, ended.taskId, ended.launchedAt));
+
+  if (ended.state !== 'failed-to-start') return;
 
   if (end.reason !== undefined) ports.log(logTextOf(end.reason));
 
@@ -52,9 +57,9 @@ export const taskEnded = (store: Runs, ports: RunPorts, definition: RunDefinitio
 
 /**
  * The turbo execution of `request`, or `null` once the reason is logged: a binary that is missing or cannot be run (VS
- * Code fires no task process event for a missing one).
+ * Code fires no task process event for a missing one). Turbo gets the env of the run's log file, when it has one.
  */
-const launchTurbo = async (ports: RunPorts, request: RunRequest, launchedAt: number): Promise<Terminable | null> => {
+const launchTurbo = async (store: Runs, ports: RunPorts, request: RunRequest, launchedAt: number): Promise<Terminable | null> => {
   const canExecute = await ports.canExecute(request.binaryPath);
 
   if (!canExecute) {
@@ -65,17 +70,22 @@ const launchTurbo = async (ports: RunPorts, request: RunRequest, launchedAt: num
 
   const args = turboRunArgs(request.task, request.packageName, { force: request.force }, request.singlePackage);
 
-  return ports.execute(request, args, launchedAt);
+  const env = await startLiveLog(store, ports, request, launchedAt);
+
+  return ports.execute(request, args, launchedAt, env);
 };
 
 /**
  * The execution of `request`, or `null` once the reason is logged: a turbo launch that cannot start, a name turbo would
- * read as filter syntax, or a rejected launch. A script skips the binary check: the shell reports a missing package
- * manager as an exit code (spec 1c-b §4.3 step 3).
+ * read as filter syntax, a rejected launch, or a progress that cannot begin. The progress of the run (spec D10) begins
+ * first, before anything is awaited, so every end of the run finds it. A script skips the binary check: the shell reports
+ * a missing package manager as an exit code (spec 1c-b §4.3 step 3).
  */
-const launch = async (ports: RunPorts, request: RunRequest, launchedAt: number): Promise<Terminable | null> => {
+const launch = async (store: Runs, ports: RunPorts, request: RunRequest, launchedAt: number): Promise<Terminable | null> => {
   try {
-    if (request.task.isTurboTask) return await launchTurbo(ports, request, launchedAt);
+    beginProgress(ports, request, launchedAt);
+
+    if (request.task.isTurboTask) return await launchTurbo(store, ports, request, launchedAt);
 
     return await ports.executeScript(request, launchedAt);
   } catch (error) {
@@ -106,7 +116,7 @@ const onStartTimeout = (store: Runs, ports: RunPorts, start: StartEnd, isLaunche
  * Spec §4.5 run flow: a request `refusalOf` refuses (spec 1c-b §4.3: an unsafe script, Run Without Cache on a script)
  * shows its text first, before the watchdog. Then a watchdog that ends the run as failed to start when its launch has
  * not settled `START_TIMEOUT_MS` after launch, the guard (a running entry, or a task of it VS Code already runs), then
- * the launch. The task events drive the rest through the store.
+ * the launch, which begins the progress of the run (spec D10). The task events drive the rest through the store.
  */
 export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest): Promise<void> => {
   const refusal = refusalOf(request);
@@ -147,7 +157,7 @@ export const runTask = async (store: Runs, ports: RunPorts, request: RunRequest)
     return;
   }
 
-  const execution = await launch(ports, request, launchedAt);
+  const execution = await launch(store, ports, request, launchedAt);
 
   isLaunched = true;
 

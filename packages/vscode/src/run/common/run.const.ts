@@ -15,6 +15,9 @@ export const NOT_TURBO_FORCE_TEXT = 'Run Without Cache only applies to turbo tas
 
 export const TASK_ENDED_TEXT = 'task ended before its process started';
 
+/** The variable that has turbo write its structured log to a file (spec D1). */
+export const TURBO_LOG_FILE_KEY = 'TURBO_LOG_FILE';
+
 /** The task definition type of every run, declared in package.json `taskDefinitions`. */
 export const RUN_TASK_TYPE = 'turbo-console';
 

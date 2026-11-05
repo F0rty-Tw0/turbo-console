@@ -6,6 +6,13 @@ export const runKeyOf = (root: string, taskId: string): RunKey => `${root}\0${ta
 /** One key per launch of a task: two runs of one task get two keys. */
 export const progressKeyOf = (owner: ProgressOwner): string => `${runKeyOf(owner.root, owner.taskId)}\0${owner.launchedAt}`;
 
+/** The progress owner of the run of `taskId` launched at `launchedAt`. */
+export const progressOwnerOf = (root: string, taskId: string, launchedAt: number): ProgressOwner => {
+  const owner: ProgressOwner = { root, taskId, launchedAt };
+
+  return owner;
+};
+
 /** The process a run starts: its package manager for a script, `turbo` for a turbo task or no run at all. */
 export const processNameOf = (entry: RunEntry | null | undefined): string => entry?.packageManager?.name ?? 'turbo';
 

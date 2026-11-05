@@ -1,7 +1,8 @@
 import { join } from 'node:path';
 
 import { PACKAGE_MANAGER_STUB, TASK_NODE_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
-import type { RunEntry, RunRequest } from '../../common/run.type.ts';
+import type { RunEntry, RunEnv, RunRequest } from '../../common/run.type.ts';
+import { logEnvOf } from '../utils/run-log-env.spec.util.ts';
 
 export const RUN_ENTRY_STUB: RunEntry = {
   root: '/ws',
@@ -31,3 +32,9 @@ export const RUN_REQUEST_STUB: RunRequest = {
   force: false,
   singlePackage: false
 };
+
+/** The env turbo gets for the run launched at 1000, with the fake random id. */
+export const LOG_ENV_STUB: RunEnv = logEnvOf(1000);
+
+/** The args of a turbo run of `RUN_REQUEST_STUB`. */
+export const TURBO_ARGS_STUB: string[] = ['--skip-infer', 'run', 'build', '--filter=a', '--summarize'];

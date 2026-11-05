@@ -1,5 +1,7 @@
 import type { PackageManager, RunMatch, RunTasksMatch, RunToMatch, TaskNode, TaskOutcome } from '@turbo-console/core';
 
+import type { RunLogs } from './run-log-tail.type.ts';
+import type { DependenciesOf, ProgressPort } from './run-progress.type.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 
 export type RunState = 'running' | 'passed' | 'failed' | 'stopped' | 'failed-to-start';
@@ -70,18 +72,23 @@ export type RunRequest = {
   readonly singlePackage: boolean;
 };
 
+/** Variables added to the environment of one turbo process. */
+export type RunEnv = Readonly<Record<string, string>>;
+
 /**
  * Editor effects of the run flow. `canExecute` answers whether `binaryPath` exists and may be run; `isActive` whether
  * VS Code already runs a task of `definition`, one the store may not know (Rerun Last Task, a reconnect); `execute`
- * runs turbo and `executeScript` the package manager's `run <script>`; `after` calls `action` once `delayMs` has
- * passed; `notifyFailedToStart` names the process that did not start; `log` takes a finished line (`logTextOf`); `now`
- * is wall-clock milliseconds, as the run summary files' times are. `match` reads the summary of exactly one run and the
- * outcomes of every task it lists.
+ * runs turbo, with `env` added to its environment, and `executeScript` the package manager's `run <script>`; `after`
+ * calls `action` once `delayMs` has passed; `notifyFailedToStart` names the process that did not start; `log` takes a
+ * finished line (`logTextOf`); `now` is wall-clock milliseconds, as the run summary files' times are. `match` reads the
+ * summary of exactly one run and the outcomes of every task it lists. `dependenciesOf` snapshots the dependencies of
+ * every task of a root (spec D10); `randomId` gives the id that tells two log files of one millisecond apart; `logs`
+ * makes the log folder and tails a run's log file; `progress` is told about each turbo run's start, log and end.
  */
 export type RunPorts = {
   readonly canExecute: (binaryPath: string) => Promise<boolean>;
   readonly isActive: (definition: RunDefinition) => boolean;
-  readonly execute: (request: RunRequest, args: string[], launchedAt: number) => Promise<Terminable>;
+  readonly execute: (request: RunRequest, args: string[], launchedAt: number, env?: RunEnv) => Promise<Terminable>;
   readonly executeScript: (request: RunRequest, launchedAt: number) => Promise<Terminable>;
   readonly after: (delayMs: number, action: () => void) => void;
   readonly match: (root: string, run: RunToMatch) => Promise<RunTasksMatch | null>;
@@ -89,7 +96,14 @@ export type RunPorts = {
   readonly info: (text: string) => void;
   readonly log: (line: string) => void;
   readonly now: () => number;
+  readonly dependenciesOf: (root: string) => DependenciesOf;
+  readonly randomId: () => string;
+  readonly logs: RunLogs;
+  readonly progress: ProgressPort;
 };
+
+/** The editor's run ports; the session adds its own progress join. */
+export type RunSessionPorts = Omit<RunPorts, 'progress'>;
 
 /** The public face of `RunStore` that the run flow drives. */
 export type Runs = {
