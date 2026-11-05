@@ -1,5 +1,5 @@
 import { test } from './graph-task.fixture.ts';
-import { RUNNING_OUTLINE, RUNNING_RGB } from './test/common/graph-run-colours.const.ts';
+import { FAILED_OUTLINE, PASSED_RGB, RUNNING_OUTLINE, RUNNING_RGB } from './test/common/graph-run-colours.const.ts';
 import {
   UI_RUNNING_UTILS_PASSED_STUB,
   WEB_PASSED_AND_FAILED_STUB,
@@ -13,12 +13,6 @@ import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 const D13 = { description: 'U7 spec D13', type: 'requirement' };
 
 const STATE = packageRunsState();
-
-/** The dark stub's `--vscode-testing-iconPassed`, `#73c991`. */
-const PASSED_RGB = 'rgb(115, 201, 145)';
-
-/** The dark stub's `--vscode-testing-iconFailed`, `#f14c4c`. */
-const FAILED_OUTLINE = { width: 2, colour: 'rgb(241,76,76)' };
 
 const FOLDER_RINGS = { drawn: RUNNING_RGB, absent: PASSED_RGB };
 
