@@ -1,6 +1,7 @@
 import { GraphFiltering } from './graph-filtering.ts';
 import { GraphLayouts } from './graph-layouts.ts';
 import { refreshedDrawn, relabel, restoreAfterDraw } from './graph-package-draw.ts';
+import { GraphPackageRuns } from './graph-package-runs.ts';
 import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-states.ts';
 import { PackageModeFocus } from './package-mode-focus.ts';
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
@@ -8,6 +9,7 @@ import type { GraphViewState } from '../../bridge/common/graph-view-state.type.t
 import type { FrameClock } from '../common/frame-clock.type.ts';
 import type { DrawnGraph, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { PackageModes, PackageSideHooks } from '../common/graph-task.type.ts';
+import type { TaskRuns } from '../common/task-details.type.ts';
 import { parkedScreenOf, parkedViewOf } from '../data-access/parked-view.ts';
 import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
@@ -28,6 +30,7 @@ export class GraphPackageSide {
   private readonly frames: FrameClock;
   private readonly modes: PackageModes;
   private readonly modeFocus: PackageModeFocus;
+  private readonly runMarks: GraphPackageRuns;
   private readonly onMessage: () => void;
   private drawn: DrawnGraph | null = null;
   private opening: GraphViewState | null = null;
@@ -44,8 +47,10 @@ export class GraphPackageSide {
     const isGrouped = (): boolean => isPackageMode() && this.layouts.drawnMode() === 'folders';
     const canAct = (): boolean => isGrouped() && this.layouts.mode() === 'folders';
     const canActOnPackage = (): boolean => isPackageMode() && this.layouts.mode() === this.layouts.drawnMode();
+    const runMarks = new GraphPackageRuns(view);
     const onPlaced = (): void => {
       this.filtering.placed();
+      runMarks.mark();
       hooks.onPlaced();
     };
 
@@ -54,6 +59,7 @@ export class GraphPackageSide {
     this.frames = frames;
     this.modes = modes;
     this.modeFocus = modeFocus;
+    this.runMarks = runMarks;
     this.onMessage = hooks.onMessage;
     this.filtering = new GraphFiltering({
       ...deps,
@@ -91,6 +97,11 @@ export class GraphPackageSide {
     this.filtering.inspection.reset();
     showStateMessage(this.deps.page, state);
     this.onMessage();
+  }
+
+  /** The latest host run states; drawn on the packages while package mode shows (spec D13). */
+  public runs(runs: TaskRuns): void {
+    this.runMarks.runs(runs);
   }
 
   /** The hash of the package graph shown or being laid out; `null` while none is. */
@@ -144,6 +155,8 @@ export class GraphPackageSide {
    * repaints the labels only when `scopeShown` rebuilt them, then the inspection follows.
    */
   private showGraph(state: GraphReady, at: number): void {
+    this.runMarks.listed(state.tasks);
+
     const shown = this.drawn;
 
     if (shown !== null && state.hash === shown.hash) {

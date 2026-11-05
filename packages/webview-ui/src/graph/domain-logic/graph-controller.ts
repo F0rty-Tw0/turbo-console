@@ -101,6 +101,7 @@ class GraphPageController {
         break;
       case 'runs':
         this.tasks.selection.runs(message.runs, message.owners ?? NO_OWNERS);
+        this.packages.runs(message.runs);
         break;
       case 'atoms':
         this.tasks.layout.atoms.states(message.groups);
