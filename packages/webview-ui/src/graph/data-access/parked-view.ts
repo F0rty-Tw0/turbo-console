@@ -41,6 +41,7 @@ export const parkedViewOf = (view: GraphView, isParked: () => boolean): GraphVie
     ...view,
     setGraph: gated(view.setGraph),
     setLabels: gated(view.setLabels),
+    setPackageRuns: gated(view.setPackageRuns),
     paint: gated(view.paint),
     fit: gated(view.fit),
     open: gated(view.open),

@@ -14,6 +14,7 @@ import { applyFocusTarget, applyPaint } from './graph-paint.ts';
 import { placeNodes, positionOf } from './graph-place.ts';
 import { markRowLess, widgetRectsOf } from './graph-rects.ts';
 import { applyRoutes } from './graph-routes.ts';
+import { markPackageRuns } from './graph-run-marks.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import { showOnly } from './graph-visibility.ts';
@@ -22,7 +23,7 @@ import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
-import type { FoldersView, GraphView, GraphViewHandlers, NodeSizer, Viewport } from '../common/graph-page.type.ts';
+import type { FoldersView, GraphView, GraphViewHandlers, NodeSizer, PackageRuns, Viewport } from '../common/graph-page.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { Paint } from '../common/paint.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
@@ -95,6 +96,12 @@ export const labelPackages = (cy: Core, labels: ReadonlyMap<string, string>): vo
   cy.batch(relabel);
 };
 
+/** Marks the package nodes, then the collapsed folders, with their run states. */
+const markRunsOn = (cy: Core, folders: FoldersView, runs: PackageRuns): void => {
+  markPackageRuns(cy, runs);
+  folders.markRuns(runs);
+};
+
 /** Places the packages, then re-centres the collapsed folders on them. */
 const placeOn = (cy: Core, folders: FoldersView, placed: Positions): void => {
   placeNodes(cy, placed);
@@ -133,6 +140,7 @@ export const createGraphView = (
   const view: GraphView = {
     setGraph,
     setLabels: (labels: ReadonlyMap<string, string>): void => labelPackages(cy, labels),
+    setPackageRuns: (runs: PackageRuns): void => markRunsOn(cy, folders, runs),
     paint: (next: Paint): void => paintOn(cy, folders, next),
     fit: camera.fit,
     open: camera.open,

@@ -4,10 +4,11 @@ import { packageEdges } from './graph-boxes.ts';
 import { setClassesAmong } from './graph-classes.ts';
 import { centreOf, syncCollapsedNodes, syncFolderLinks } from './graph-folder-elements.ts';
 import { emptyDrawnLinks, labelFolderLinks, routeFolderLinks } from './graph-folder-routes.ts';
+import { markFolderRuns } from './graph-run-marks.ts';
 import type { Routes } from '../../bridge/common/graph-state.type.ts';
 import type { FolderRouting } from '../common/folder-link-route.type.ts';
 import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
-import type { FoldersView } from '../common/graph-page.type.ts';
+import type { FoldersView, PackageRuns } from '../common/graph-page.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
 import {
   BOX_COLLAPSED_CLASS,
@@ -111,6 +112,18 @@ const paintFolders = (cy: Core, links: ReadonlyMap<string, FolderLink>, paint: P
   });
 };
 
+/** Moves each collapsed node to the centre of all its packages, hidden ones included. */
+const recentreNodes = (cy: Core, members: ReadonlyMap<string, string[]>): void => {
+  const recentreNode = (node: NodeSingular): void => {
+    const folder = node.id().slice(COLLAPSED_ID_PREFIX.length);
+    const names = members.get(folder) ?? [];
+
+    node.position(centreOf(cy, names));
+  };
+
+  cy.nodes(`.${FOLDER_NODE_CLASS}`).forEach(recentreNode);
+};
+
 /**
  * The folder pass. It hides with classes, never display bypasses, so `resetGhosts` (which clears edge bypasses and
  * re-runs `showOnly` on packages) cannot undo it; a package inside a hidden box is hidden by Cytoscape with its box.
@@ -121,7 +134,12 @@ export const createFoldersView = (cy: Core): FoldersView => {
   let routes: Routes = {};
   let drawn = emptyDrawnLinks();
   let lastPaint: Paint | null = null;
+  let lastRuns: PackageRuns = new Map();
 
+  const markRuns = (next: PackageRuns): void => {
+    lastRuns = next;
+    markFolderRuns(cy, members, next);
+  };
   const paint = (next: Paint): void => {
     lastPaint = next;
     paintFolders(cy, links, next);
@@ -141,6 +159,7 @@ export const createFoldersView = (cy: Core): FoldersView => {
       syncCollapsedNodes(cy, scene, labelOf);
       syncFolderLinks(cy, scene, links);
       members = scene?.members ?? new Map();
+      markFolderRuns(cy, members, lastRuns);
       routeLinks();
     });
 
@@ -148,17 +167,11 @@ export const createFoldersView = (cy: Core): FoldersView => {
 
     labelLinks();
   };
-  const recentreNode = (node: NodeSingular): void => {
-    const folder = node.id().slice(COLLAPSED_ID_PREFIX.length);
-    const names = members.get(folder) ?? [];
-
-    node.position(centreOf(cy, names));
-  };
   /** Packages moved, so every link is re-drawn: a collapsed box can change while its centre stays put. */
   const recentre = (): void => {
     drawn = emptyDrawnLinks();
     cy.batch((): void => {
-      cy.nodes(`.${FOLDER_NODE_CLASS}`).forEach(recentreNode);
+      recentreNodes(cy, members);
       routeLinks();
     });
     labelLinks();
@@ -169,7 +182,7 @@ export const createFoldersView = (cy: Core): FoldersView => {
     cy.batch(routeLinks);
     labelLinks();
   };
-  const view: FoldersView = { show, paint, recentre, setRoutes };
+  const view: FoldersView = { show, paint, recentre, setRoutes, markRuns };
 
   return view;
 };

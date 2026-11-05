@@ -18,7 +18,7 @@ import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { RowPlan, WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
-import type { GraphEdge, GraphPackage, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphPackage, GraphRunState, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState, PackageViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
@@ -37,6 +37,9 @@ export type ViewStateSaver<TState = GraphViewState> = {
 export type PackageSaver = ViewStateSaver<PackageViewState>;
 
 export type NodeSizer = (name: string) => NodeSize;
+
+/** Package name → the run state drawn on it. */
+export type PackageRuns = ReadonlyMap<string, GraphRunState>;
 
 /** What sizes an umbrella: `name` its task name line, `counts` its counts line. */
 export type UmbrellaSizers = {
@@ -95,6 +98,8 @@ export type FoldersView = {
   readonly recentre: () => void;
   /** Keeps the routes the folder links follow and re-draws them all: `GraphView.setRoutes` calls it after it straightens every edge. */
   readonly setRoutes: (routes: Routes) => void;
+  /** Keeps the run states the collapsed nodes show and marks them now; `show` re-marks the nodes it draws (spec D13). */
+  readonly markRuns: (runs: PackageRuns) => void;
 };
 
 /** The Cytoscape canvas view of one page. */
@@ -102,6 +107,8 @@ export type GraphView = {
   readonly setGraph: (packages: string[], edges: GraphEdge[], positions: Positions, sizeOf: NodeSizer) => void;
   /** Gives each drawn package node its label text; sizes, positions and the camera stay as they are. */
   readonly setLabels: (labels: ReadonlyMap<string, string>) => void;
+  /** Gives each package node and each collapsed folder node the run state of its tasks; no state clears the run classes (spec D13). */
+  readonly setPackageRuns: (runs: PackageRuns) => void;
   /** Gives each package, link, box, collapsed folder and folder link its state class. */
   readonly paint: (paint: Paint) => void;
   /** Fits the camera to the visible nodes; with none visible it does nothing. */

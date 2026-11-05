@@ -8,7 +8,7 @@ import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphEdge, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
 import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
-import { RUN_CLASS_PREFIX, TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import { TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import { DIMMED_BOX_CLASS, STATE_CLASSES } from '../common/graph.const.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
@@ -16,10 +16,11 @@ import { closureOf } from '../utils/closure.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
 import { edgeStateOf, nodeStateOf } from '../utils/highlight.util.ts';
+import { runClassOf } from '../utils/package-run.util.ts';
 import { parentIdOf } from '../utils/task-compound.util.ts';
 import { runStateOf } from '../utils/task-run.util.ts';
 
-const RUN_CLASSES = RUN_STATES.map((state) => `${RUN_CLASS_PREFIX}${state}`).join(' ');
+const RUN_CLASSES = RUN_STATES.map(runClassOf).join(' ');
 
 const BOX_STATE_CLASSES = `${STATE_CLASSES} ${DIMMED_BOX_CLASS}`;
 
@@ -86,7 +87,7 @@ const markRuns = (cy: Core, runs: TaskRuns): void => {
 
     node.removeClass(RUN_CLASSES);
 
-    if (state !== null) node.addClass(`${RUN_CLASS_PREFIX}${state}`);
+    if (state !== null) node.addClass(runClassOf(state));
   };
 
   cy.batch((): void => void runNodes(cy).forEach(markTask));
