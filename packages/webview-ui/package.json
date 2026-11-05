@@ -18,6 +18,7 @@
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "e2e": "playwright test",
+    "tripwires": "playwright test --project tripwire --no-deps",
     "bench": "playwright test --config playwright.bench.config.ts",
     "stretch": "playwright test --config playwright.stretch.config.ts",
     "screenshots": "playwright test --config playwright.screenshot.config.ts"
