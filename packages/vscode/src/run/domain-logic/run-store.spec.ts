@@ -1,4 +1,4 @@
-import type { RunMatch, RunTasksMatch, TaskOutcome } from '@turbo-console/core';
+import type { RunMatch, RunTasksMatch, TaskNode, TaskOutcome } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunStore } from './run-store.ts';
@@ -316,7 +316,8 @@ describe('FEATURE: run store', () => {
     });
 
     it('WHEN a change listener throws during the prune THEN every gone entry is still dropped', () => {
-      const lint: RunRequest = { ...RUN_REQUEST_STUB, task: { ...RUN_REQUEST_STUB.task, id: 'lint' } };
+      const lintTask: TaskNode = { ...RUN_REQUEST_STUB.task, id: 'lint' };
+      const lint: RunRequest = { ...RUN_REQUEST_STUB, task: lintTask };
 
       store.tryStart(lint, 1000);
       store.processEnded({ root: '/ws', id: 'lint' }, 0, 4000);
