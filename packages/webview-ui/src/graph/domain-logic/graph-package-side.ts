@@ -2,10 +2,10 @@ import { GraphFiltering } from './graph-filtering.ts';
 import { GraphLayouts } from './graph-layouts.ts';
 import { refreshedDrawn, relabel, restoreAfterDraw } from './graph-package-draw.ts';
 import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-states.ts';
+import { PackageModeFocus } from './package-mode-focus.ts';
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
-import type { LayoutScreen } from '../common/graph-layouts.type.ts';
 import type { DrawnGraph, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { PackageModes, PackageSideHooks } from '../common/graph-task.type.ts';
 import { parkedScreenOf, parkedViewOf } from '../data-access/parked-view.ts';
@@ -13,7 +13,6 @@ import { drawnGraphOf } from '../utils/drawn-graph.util.ts';
 import { folderKeysOf } from '../utils/folder-group.util.ts';
 import { openingStateOf } from '../utils/grouping-open.util.ts';
 import { groupingOf } from '../utils/layout-plan.util.ts';
-import { modeFocusOf } from '../utils/mode-focus.util.ts';
 
 /**
  * The package graph: shows the host's states, hands a graph state to the layouts, which draw it and post its layout back.
@@ -28,10 +27,10 @@ export class GraphPackageSide {
   private readonly view: GraphView;
   private readonly frames: FrameClock;
   private readonly modes: PackageModes;
+  private readonly modeFocus: PackageModeFocus;
   private readonly onMessage: () => void;
   private drawn: DrawnGraph | null = null;
   private opening: GraphViewState | null = null;
-  private isModeFocusKept = false;
 
   public constructor(deps: GraphControllerDeps, screenView: GraphView, hooks: PackageSideHooks) {
     const { frames, modes } = hooks;
@@ -40,10 +39,8 @@ export class GraphPackageSide {
     const view = parkedViewOf(screenView, isParked);
     const pageScreen = layoutScreenOf(deps.page);
     const parkedScreen = parkedScreenOf(pageScreen, isParked);
-    const screen: LayoutScreen = {
-      ...parkedScreen,
-      showGraph: (isFallback: boolean): void => this.showScreenGraph(parkedScreen, isFallback)
-    };
+    const modeFocus = new PackageModeFocus(deps.page);
+    const screen = modeFocus.screenOf(parkedScreen);
     const isGrouped = (): boolean => isPackageMode() && this.layouts.drawnMode() === 'folders';
     const canAct = (): boolean => isGrouped() && this.layouts.mode() === 'folders';
     const canActOnPackage = (): boolean => isPackageMode() && this.layouts.mode() === this.layouts.drawnMode();
@@ -56,6 +53,7 @@ export class GraphPackageSide {
     this.view = view;
     this.frames = frames;
     this.modes = modes;
+    this.modeFocus = modeFocus;
     this.onMessage = hooks.onMessage;
     this.filtering = new GraphFiltering({
       ...deps,
@@ -118,10 +116,7 @@ export class GraphPackageSide {
 
   /** Task mode is being left: a mode button with focus hands it to `modeFocusOf` once the package graph shows, as the loading screen drops it. */
   public keepModeFocus(): void {
-    const { activeElement } = document;
-    const { packagesMode, taskMode } = this.deps.page;
-
-    this.isModeFocusKept = activeElement === packagesMode || activeElement === taskMode;
+    this.modeFocus.keep();
   }
 
   /**
@@ -173,17 +168,6 @@ export class GraphPackageSide {
     this.frames.start(at);
     this.filtering.inspection.reset();
     void this.guard(async (): Promise<void> => this.layouts.show(state, saved));
-  }
-
-  private showScreenGraph(screen: LayoutScreen, isFallback: boolean): void {
-    const { activeElement, body } = document;
-    const isFocusLost = activeElement === null || activeElement === body;
-    const isRefocus = this.isModeFocusKept && isFocusLost;
-
-    screen.showGraph(isFallback);
-    this.isModeFocusKept = false;
-
-    if (isRefocus) modeFocusOf(this.deps.page).focus();
   }
 
   private afterDraw(saved: GraphViewState | null): void {
