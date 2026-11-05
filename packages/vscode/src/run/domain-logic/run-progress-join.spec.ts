@@ -232,6 +232,31 @@ describe('FEATURE: settle a run once its log is drained and its summary is match
     });
   });
 
+  describe('GIVEN no begun run', () => {
+    const drained = async (): Promise<void> => h.join.drain(JOIN_OWNER_STUB);
+    const aborted = async (): Promise<void> => {
+      h.join.abort(JOIN_OWNER_STUB);
+      await Promise.resolve();
+    };
+
+    it.each([
+      ['drained', drained],
+      ['aborted', aborted]
+    ])('WHEN it is %s THEN nothing settles and nothing throws', async (_title, act) => {
+      await act();
+
+      expect(h.settle).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a tail is handed over THEN it is closed at once', () => {
+      const late = fakeRunLogTail();
+
+      h.join.tail(JOIN_OWNER_STUB, late.handle);
+
+      expect(late.closes).toBe(1);
+    });
+  });
+
   describe('GIVEN a run already aborted', () => {
     it('WHEN its tail is handed over late THEN the tail is closed at once and nothing settles again', () => {
       const late = fakeRunLogTail();
