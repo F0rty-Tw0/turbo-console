@@ -14,6 +14,7 @@ import { GraphToolbar } from './graph-toolbar.po.ts';
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { GraphPage } from './graph.po.ts';
 import type { GraphAtomGroupState } from '../../src/bridge/common/graph-message.type.ts';
+import type { TaskRuns } from '../../src/graph/common/task-details.type.ts';
 import type { ShotSetup, TaskShotSetup } from '../common/graph-shots.type.ts';
 import type { ThemeStub } from '../common/graph-theme.type.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
@@ -104,6 +105,12 @@ export class GraphShots {
     await this.probe.expectSelected(name);
     await this.details.toggle();
     await this.details.expectHeading(name);
+    await this.settle();
+  }
+
+  /** The host's `runs` message, then the canvas settled. */
+  public async sendRuns(runs: TaskRuns): Promise<void> {
+    await this.taskHost.sendRuns(runs);
     await this.settle();
   }
 

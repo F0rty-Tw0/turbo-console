@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
+import type { RingColours } from '../common/graph-ring.type.ts';
 import type { ColourInkInput } from '../common/graph.type.ts';
 import type { ElementRect, ScreenClip } from '../common/playwright.type.ts';
 import { boxRectOf, findFolder } from '../test/utils/graph-folders.spec.util.ts';
@@ -11,12 +12,6 @@ import { colourInkOf } from '../test/utils/graph-png.spec.util.ts';
 
 /** Screen px kept around a node, so its outline and border are inside the shot. */
 const RING_MARGIN_PX = 4;
-
-/** The ring colour a shot of a node must show and the one it must not. */
-type RingColours = {
-  readonly drawn: string;
-  readonly absent: string;
-};
 
 /** `box` grown by the ring margin on every side. */
 const grownClipOf = (box: ElementRect): ScreenClip => {
@@ -47,12 +42,12 @@ export class GraphTaskRings {
     await expect.poll(async (): Promise<[boolean, number]> => this.folderRingsOf(folder, colours)).toStrictEqual([true, 0]);
   }
 
-  /** Whether `colours.drawn` shows at all, and how many pixels `colours.absent` has. */
+  /** Whether `colours.drawn` shows at all, and how many pixels `colours.absent` has; `[false, -1]` while the node hides in a collapsed folder. */
   private async ringsOf(id: string, colours: RingColours): Promise<[boolean, number]> {
     const nodes = await this.probe.nodes();
     const node = nodes.find((candidate): boolean => candidate.id === id);
 
-    if (node === undefined) return [false, -1];
+    if (node === undefined || node.isCollapsed) return [false, -1];
 
     const zoom = await this.probe.zoom();
     const clip = grownClipOf(nodeBoxOf(node, zoom));
@@ -60,12 +55,12 @@ export class GraphTaskRings {
     return this.inkOf(clip, colours);
   }
 
-  /** `ringsOf` for a folder's box, whose rendered rect is already in page pixels. */
+  /** `ringsOf` for a collapsed folder's node, whose rendered rect is already in page pixels; `[false, -1]` while the folder is expanded. */
   private async folderRingsOf(folder: string, colours: RingColours): Promise<[boolean, number]> {
     const folders = await readFolders(this.page);
     const found = findFolder(folders, folder);
 
-    if (found === undefined) return [false, -1];
+    if (found?.isCollapsed !== true) return [false, -1];
 
     const clip = grownClipOf(boxRectOf(found));
 

@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { packageNodes, setBoxes } from './graph-boxes.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB, BOX_IDS_STUB, GONE_GROUP_STUB, PROTO_NAMES_GROUP_STUB } from '../test/stubs/folder-boxes.stub.ts';
+import { CANVAS_FRAME_RGB } from '../test/utils/canvas-elements.spec.util.ts';
 import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
 
 const BOUNDS = { includeLabels: false, includeOverlays: false };
@@ -24,9 +25,6 @@ const parentIdsOf = (cy: Core, ids: string[]): string[] => {
 };
 
 const centreXOf = (cy: Core, id: string): number => cy.getElementById(id).position('x');
-
-/** `CANVAS_COLORS.frame` (`#444`) as the `rgb(...)` text Cytoscape resolves it to. */
-const FRAME_RGB = 'rgb(68,68,68)';
 
 const PACKAGE_IDS = ['a', 'b', 'c'];
 
@@ -132,7 +130,7 @@ describe('FEATURE: setBoxes', () => {
       expect(box.numericStyle('padding')).toBe(32);
       expect(styleTextOf(cy, '\u0001apps', 'label')).toBe('');
       expect(box.numericStyle('border-width')).toBe(1);
-      expect(styleTextOf(cy, '\u0001apps', 'border-color')).toBe(FRAME_RGB);
+      expect(styleTextOf(cy, '\u0001apps', 'border-color')).toBe(CANVAS_FRAME_RGB);
     });
 
     it('WHEN the style applies THEN its bounds sit 32 to 34 px beyond its packages on every side', () => {
