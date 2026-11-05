@@ -28,6 +28,17 @@ export const isRunsRecord = (value: unknown): boolean => {
   return Object.values(value).every(isRunState);
 };
 
+const isOwnerId = (value: unknown): boolean => isString(value) && value !== '';
+
+/** A `runs` message's `owners`: at most `TASK_COUNT_MAX` task ids to a non-empty owner task id. */
+export const isOwnersRecord = (value: unknown): boolean => {
+  if (!isRecord(value) || Array.isArray(value)) return false;
+
+  const isCapped = Object.keys(value).length <= TASK_COUNT_MAX;
+
+  return isCapped && Object.values(value).every(isOwnerId);
+};
+
 /** A `showTasks` message's `taskIds`: an array of strings. */
 export const isTaskIdList = isStringList;
 

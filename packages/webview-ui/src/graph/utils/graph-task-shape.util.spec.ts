@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { isAtomGroupList, isAtomStateRecord, isGraphTaskList, isRunsRecord, isTaskIdList } from './graph-task-shape.util.ts';
+import {
+  isAtomGroupList,
+  isAtomStateRecord,
+  isGraphTaskList,
+  isOwnersRecord,
+  isRunsRecord,
+  isTaskIdList
+} from './graph-task-shape.util.ts';
 
 const TASK = {
   id: 'a#build',
@@ -140,6 +147,14 @@ const outcomesOf = (count: number): Record<string, string> => {
   return Object.fromEntries(entries);
 };
 
+/** `count` task ids, each owned by `web#build`. */
+const ownersOfSize = (count: number): Record<string, string> => {
+  const entryAt = (_value: unknown, index: number): [string, string] => [`t${index}`, 'web#build'];
+  const entries = Array.from({ length: count }, entryAt);
+
+  return Object.fromEntries(entries);
+};
+
 describe('FEATURE: atom group list shape', () => {
   it.each([
     ['an empty list', []],
@@ -211,5 +226,31 @@ describe('FEATURE: atom state record shape', () => {
     ['100 001 files', recordWith({ files: outcomesOf(LIMIT + 1) })]
   ])('GIVEN %s WHEN checked THEN it is not an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(false);
+  });
+});
+
+describe('FEATURE: the owners of a runs message (spec D11)', () => {
+  it.each([
+    ['one owner', { 'ui#build': 'web#build' }],
+    ['no keys', {}],
+    ['TASK_COUNT_MAX keys', ownersOfSize(LIMIT)]
+  ])('GIVEN owners as %s WHEN checked THEN it is an owners record', (_label, value) => {
+    const isOwners = isOwnersRecord(value);
+
+    expect(isOwners).toBe(true);
+  });
+
+  it.each([
+    ['TASK_COUNT_MAX + 1 keys', ownersOfSize(LIMIT + 1)],
+    ['an empty owner id', { 'ui#build': '' }],
+    ['a number owner', { 'ui#build': 1 }],
+    ['a null owner', { 'ui#build': null }],
+    ['an array', ['web#build']],
+    ['null', null],
+    ['a string', 'web#build']
+  ])('GIVEN owners as %s WHEN checked THEN it is not an owners record', (_label, value) => {
+    const isOwners = isOwnersRecord(value);
+
+    expect(isOwners).toBe(false);
   });
 });

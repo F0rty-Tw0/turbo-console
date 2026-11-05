@@ -1,5 +1,12 @@
 import { isEdgeExplained } from './edge-explained.util.ts';
-import { isAtomGroupList, isAtomStateRecord, isGraphTaskList, isRunsRecord, isTaskIdList } from './graph-task-shape.util.ts';
+import {
+  isAtomGroupList,
+  isAtomStateRecord,
+  isGraphTaskList,
+  isOwnersRecord,
+  isRunsRecord,
+  isTaskIdList
+} from './graph-task-shape.util.ts';
 import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
 import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
 import type { GraphHostMessage } from '../../bridge/common/graph-message.type.ts';
@@ -79,10 +86,17 @@ const isGraphState = (state: unknown): boolean => {
   }
 };
 
+const isRunsMessage = (value: UnknownRecord): boolean => {
+  const { runs, owners } = value;
+  const hasOwners = owners === undefined || isOwnersRecord(owners);
+
+  return isRunsRecord(runs) && hasOwners;
+};
+
 /**
  * Narrows a posted value to a `state` message, by its state's `kind` and shape down to each package's name, bare name, path, tags and task
  * count, each edge end, each task's fields, each atom group's files and the two shown flags; to an `edgeExplained` message by its names and
- * result; to a `runs` message by its run states; to a `showTasks` message by its task ids; to a `showPackage` message by
+ * result; to a `runs` message by its run states and its optional owners; to a `showTasks` message by its task ids; to a `showPackage` message by
  * its package name; or to an `atoms` message by its counts lines and the four outcome words. Anything else is ignored. The payload itself comes from the extension host,
  * which builds it.
  */
@@ -95,7 +109,7 @@ export const isGraphHostMessage = (value: unknown): value is GraphHostMessage =>
     case 'edgeExplained':
       return isEdgeExplained(value);
     case 'runs':
-      return isRunsRecord(value['runs']);
+      return isRunsMessage(value);
     case 'showTasks':
       return isTaskIdList(value['taskIds']);
     case 'showPackage':
