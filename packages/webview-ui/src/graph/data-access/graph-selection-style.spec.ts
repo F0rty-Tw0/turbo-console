@@ -3,10 +3,13 @@ import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
-import { FOCUS_TARGET_CLASS, FOLDER_NODE_CLASS } from '../common/graph.const.ts';
+import { PACKAGE_RUN_CLASS } from '../common/graph-task.const.ts';
+import { FOCUS_TARGET_CLASS, FOLDER_NODE_CLASS, NODE_BORDER_PX } from '../common/graph.const.ts';
 import { CANVAS_COLORS, CANVAS_ELEMENTS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 
 const EDITOR_FILL = 'rgb(17,17,17)';
+
+const FRAME = 'rgb(68,68,68)';
 
 const SELECTION_FILL = 'rgb(0,0,255)';
 
@@ -34,6 +37,14 @@ describe('FEATURE: graphStyleOf selected fill and focus target', () => {
       const look = [node.style('background-color'), node.style('color'), node.style('font-weight'), node.numericStyle('border-width')];
 
       expect(look).toStrictEqual([SELECTION_FILL, 'rgb(255,255,0)', 'bold', 1.5]);
+    });
+
+    it('WHEN it is selected with run-running and package-run THEN its border is 1 in the frame colour and the selection fill stays', () => {
+      node.addClass(`selected run-running ${PACKAGE_RUN_CLASS}`);
+
+      const look = [node.numericStyle('border-width'), node.style('border-color'), node.style('background-color')];
+
+      expect(look).toStrictEqual([NODE_BORDER_PX, FRAME, SELECTION_FILL]);
     });
 
     it('WHEN it is selected and deselected THEN the editor fill and the normal weight return', () => {
