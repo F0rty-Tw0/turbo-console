@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { folderRunOf, packageRunsOf, runClassOf, runMarkClassesOf, strongestRunOf } from './package-run.util.ts';
+import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { PackageRuns } from '../common/graph-page.type.ts';
+import { RUN_PRECEDENCE } from '../common/graph-task.const.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
 import { GRAPH_TASK_STUB } from '../test/stubs/graph-task.stub.ts';
 
@@ -40,6 +42,15 @@ const MARK_ROWS: MarkRow[] = [
 ];
 
 describe('FEATURE: package run state', () => {
+  describe('GIVEN RUN_PRECEDENCE', () => {
+    it('WHEN it is compared with RUN_STATES THEN it ranks every run state once', () => {
+      const ranked = RUN_PRECEDENCE.toSorted();
+      const states = RUN_STATES.toSorted();
+
+      expect(ranked).toStrictEqual(states);
+    });
+  });
+
   describe('GIVEN runClassOf', () => {
     it('WHEN a state is named THEN the class starts with run-', () => {
       const className = runClassOf('failed-to-start');
