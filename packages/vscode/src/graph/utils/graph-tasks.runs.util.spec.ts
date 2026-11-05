@@ -148,12 +148,13 @@ const taskNamed = (id: string, isPersistent: boolean): TaskNode => {
 
 describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
   describe('GIVEN ui#build listed', () => {
-    it('WHEN no own run and no record names it THEN runs has no ui#build key', () => {
+    it('WHEN no own run and no record names it THEN runs has no ui#build key and the message has no owners', () => {
       const sources = sourcesOf([], []);
 
       const message = runsMessageOf('/ws', ['ui#build'], sources);
 
       expect(message.runs).not.toHaveProperty('ui#build');
+      expect(message).not.toHaveProperty('owners');
     });
 
     it.each(MERGE_ROWS)(

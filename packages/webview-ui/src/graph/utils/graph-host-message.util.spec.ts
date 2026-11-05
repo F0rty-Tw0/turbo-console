@@ -149,6 +149,9 @@ const RUNNING = { 'ui#build': 'running' };
 
 const OWNED_BY_WEB = { 'ui#build': 'web#build' };
 
+/** Parsed, so `__proto__` and `constructor` arrive as own keys, as they would from a posted message. */
+const PROTOTYPE_NAMED_OWNERS: unknown = JSON.parse('{"__proto__":"web#build","constructor":"web#build"}');
+
 const ownedRunsMessageOf = (runs: unknown, owners: unknown): unknown => {
   const message = { type: 'runs', runs, owners };
 
@@ -207,7 +210,8 @@ describe('FEATURE: isGraphHostMessage', () => {
   describe('GIVEN a runs message with or without owners', () => {
     it.each([
       ['runs without owners', runsMessageOf(RUNNING)],
-      ['runs with owners', ownedRunsMessageOf(RUNNING, OWNED_BY_WEB)]
+      ['runs with owners', ownedRunsMessageOf(RUNNING, OWNED_BY_WEB)],
+      ['runs with owners keyed like Object.prototype members', ownedRunsMessageOf(RUNNING, PROTOTYPE_NAMED_OWNERS)]
     ])('WHEN a posted %s is narrowed THEN it is a host message', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);
 
