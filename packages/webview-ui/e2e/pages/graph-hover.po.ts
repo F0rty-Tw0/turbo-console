@@ -4,10 +4,12 @@ import { expect, test } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { ProbeEdge, ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
+import { CPU_RUNS } from '../common/graph-tripwire.const.ts';
 import { ONE_FRAME } from '../common/graph.const.ts';
-import type { CpuSteps } from '../common/graph.type.ts';
+import type { CpuRuns, CpuSteps } from '../common/graph.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
+import { medianCpuOf } from '../test/utils/graph-cpu-median.spec.util.ts';
 import { recordHoverCpu } from '../test/utils/graph-hover-cpu.spec.util.ts';
 import { emptySpotOn, lineMidpointOf, readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 import { forcesRender, rendersSoFar } from '../test/utils/graph-quiet-canvas.spec.util.ts';
@@ -27,14 +29,14 @@ export class GraphHover {
   protected readonly page: Page;
   protected readonly container: Locator;
   protected readonly probe: GraphProbePage;
-  private hoverCpu: CpuSteps | null;
-  private hoverRenders: number | null;
+  private hoverCpu: CpuSteps[];
+  private hoverRenders: number[];
   private point: ViewportPoint | null;
 
   public constructor(page: Page) {
     this.page = page;
-    this.hoverCpu = null;
-    this.hoverRenders = null;
+    this.hoverCpu = [];
+    this.hoverRenders = [];
     this.point = null;
     this.probe = new GraphProbePage(page);
     this.container = page.getByRole('application', { name: GRAPH_LABEL });
@@ -88,36 +90,43 @@ export class GraphHover {
   }
 
   /**
-   * Rests the pointer on node `id`, then nudges it 1 px per step for `spanMs / 16` steps (3000 gives 188), keeping the
-   * main-thread CPU each step took. A step is a mouse move plus one `requestAnimationFrame` round trip, about two
-   * frames, so the run lasts about twice `spanMs` of wall time (188 steps take about 6 s).
-   * The pointer keeps moving, so the flow overlay never reaches its idle stop and draws throughout.
-   * Also counts the Cytoscape renders those steps caused; the hover-enter paint happens in `overNode`, before either measure starts.
+   * Rests the pointer on node `id`, then runs the nudge three times: each run nudges it 1 px per step for `spanMs / 16`
+   * steps (3000 gives 188), keeping the main-thread CPU each step took. A step is a mouse move plus one
+   * `requestAnimationFrame` round trip, about two frames, so a run lasts about twice `spanMs` of wall time (188 steps
+   * take about 6 s). The pointer keeps moving, so the flow overlay never reaches its idle stop and draws throughout.
+   * Also counts the Cytoscape renders each run caused; the hover-enter paint happens in `overNode`, before any measure starts.
    */
   public async hoverFlowCpu(id: string, spanMs: number): Promise<void> {
     await this.overNode(id);
 
     const node = await this.nodeOf(id);
     const steps = Math.ceil(spanMs / STEP_SPAN_MS);
-    const rendersBefore = await this.renderCount();
+    const readings: CpuSteps[] = [];
+    const renders: number[] = [];
 
-    this.hoverCpu = await cpuStepsOf(this.page, async (endStep): Promise<void> => {
-      for (let step = 1; step <= steps; step += 1) {
-        await this.page.mouse.move(node.renderedX + (step % 2) * NUDGE_PX, node.renderedY);
-        await this.page.evaluate(ONE_FRAME);
-        await endStep();
-      }
-    });
-    this.hoverRenders = (await this.renderCount()) - rendersBefore;
+    for (let run = 0; run < CPU_RUNS; run += 1) {
+      const rendersBefore = await this.renderCount();
+      const reading = await this.nudgeCpu(node, steps);
+      const rendersAfter = await this.renderCount();
+
+      readings.push(reading);
+      renders.push(rendersAfter - rendersBefore);
+    }
+
+    this.hoverCpu = readings;
+    this.hoverRenders = renders;
   }
 
-  /** The main-thread CPU of the last `hoverFlowCpu`; throws when none ran. */
-  public measuredHoverCpu(): CpuSteps {
-    const hover = this.hoverCpu;
+  /** Every run of the last `hoverFlowCpu` and their per-field median; throws when none ran. */
+  public measuredHoverCpu(): CpuRuns {
+    const readings = this.hoverCpu;
 
-    if (hover === null) throw new Error('graph e2e: no hover-flow run was measured');
+    if (readings.length === 0) throw new Error('graph e2e: no hover-flow run was measured');
 
-    return hover;
+    const median = medianCpuOf(readings);
+    const runs: CpuRuns = { readings, median };
+
+    return runs;
   }
 
   /** Redraws the canvas at once, so the draw that follows a style change happens here and not during a later measure. */
@@ -125,28 +134,36 @@ export class GraphHover {
     await this.page.evaluate(forcesRender);
   }
 
-  /** The Cytoscape renders during the last `hoverFlowCpu`; throws when none ran. */
-  public measuredHoverRenders(): number {
+  /** The Cytoscape renders during each run of the last `hoverFlowCpu`; throws when none ran. */
+  public measuredHoverRenders(): number[] {
     const renders = this.hoverRenders;
 
-    if (renders === null) throw new Error('graph e2e: no hover-flow run was measured');
+    if (renders.length === 0) throw new Error('graph e2e: no hover-flow run was measured');
 
     return renders;
   }
 
-  /** The last `hoverFlowCpu` used a measured, non-zero total under `totalMs` of main-thread CPU with no step over `stepMs`; both are recorded and printed before the asserts, so a failing run logs them too. */
+  /**
+   * The median of the last `hoverFlowCpu`'s runs used a measured, non-zero total under `totalMs` of main-thread CPU, and
+   * their median costliest step stayed under `stepMs`; every run, both medians and every run's renders are recorded and
+   * printed before the asserts, so a failing run logs them too.
+   */
   public expectHoverCpuUnder(totalMs: number, stepMs: number): void {
-    const hover = this.measuredHoverCpu();
+    const runs = this.measuredHoverCpu();
+    const { median } = runs;
 
-    recordHoverCpu(test.info(), hover, this.measuredHoverRenders(), { totalMs, stepMs });
-    expect(hover.totalMs).toBeGreaterThan(0);
-    expect(hover.totalMs).toBeLessThan(totalMs);
-    expect(hover.maxStepMs).toBeLessThan(stepMs);
+    recordHoverCpu(test.info(), runs, this.measuredHoverRenders(), { totalMs, stepMs });
+    expect(median.totalMs).toBeGreaterThan(0);
+    expect(median.totalMs).toBeLessThan(totalMs);
+    expect(median.maxStepMs).toBeLessThan(stepMs);
   }
 
-  /** The last `hoverFlowCpu` made Cytoscape render at most `limit` times: the flow stayed on its overlay. */
+  /** No run of the last `hoverFlowCpu` made Cytoscape render more than `limit` times: the flow stayed on its overlay. */
   public expectHoverRendersAtMost(limit: number): void {
-    expect(this.measuredHoverRenders()).toBeLessThanOrEqual(limit);
+    const renders = this.measuredHoverRenders();
+    const most = Math.max(...renders);
+
+    expect(most).toBeLessThanOrEqual(limit);
   }
 
   /** At least one drawn edge reads `highlighted`: the hovered chain is lit, so the flow has edges to draw. */
@@ -160,6 +177,17 @@ export class GraphHover {
     };
 
     await expect.poll(litCount).toBeGreaterThan(0);
+  }
+
+  /** Nudges the pointer 1 px per step on `node` for `steps` steps, letting a frame draw each step, and returns the main-thread CPU each step took. */
+  private async nudgeCpu(node: ProbeNode, steps: number): Promise<CpuSteps> {
+    return cpuStepsOf(this.page, async (endStep): Promise<void> => {
+      for (let step = 1; step <= steps; step += 1) {
+        await this.page.mouse.move(node.renderedX + (step % 2) * NUDGE_PX, node.renderedY);
+        await this.page.evaluate(ONE_FRAME);
+        await endStep();
+      }
+    });
   }
 
   private async moveTo(point: ViewportPoint): Promise<void> {
