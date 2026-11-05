@@ -1,6 +1,7 @@
 import { packageOf } from './graph-package.spec.util.ts';
 import { positionsOf } from './graph-positions.spec.util.ts';
-import type { GraphEdge, GraphReady } from '../../../src/bridge/common/graph-state.type.ts';
+import { taskOf } from './graph-task-of.spec.util.ts';
+import type { GraphEdge, GraphReady, GraphTask } from '../../../src/bridge/common/graph-state.type.ts';
 
 const EDGES: GraphEdge[] = [
   { source: 'web', target: 'ui' },
@@ -38,6 +39,22 @@ export const foldersShotState = (): GraphReady => {
     tasks: [],
     atomGroups: []
   };
+
+  return state;
+};
+
+const PACKAGE_RUN_SHOT_TASKS: GraphTask[] = [
+  taskOf('web', 'build'),
+  taskOf('ui', 'build'),
+  taskOf('core', 'build'),
+  taskOf('lint', 'build'),
+  taskOf('build', 'build')
+];
+
+/** `foldersShotState()` with a build task in web, ui, core, lint and build: the runs of a shot give some of them a state. */
+export const packageRunShotState = (): GraphReady => {
+  const base = foldersShotState();
+  const state: GraphReady = { ...base, tasks: PACKAGE_RUN_SHOT_TASKS };
 
   return state;
 };

@@ -1,5 +1,13 @@
 import type { TaskRuns } from '../../../src/graph/common/task-details.type.ts';
 
+/** The shot's packages by state: web and lint build, ui failed, core passed; tools is collapsed, so it reads running. */
+export const PACKAGE_RUN_SHOT_RUNS_STUB: TaskRuns = {
+  'web#build': 'running',
+  'ui#build': 'failed',
+  'core#build': 'passed',
+  'lint#build': 'running'
+};
+
 /** web builds while its test failed. */
 export const WEB_RUNNING_AND_FAILED_STUB: TaskRuns = { 'web#build': 'running', 'web#test': 'failed' };
 

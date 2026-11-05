@@ -2,10 +2,11 @@ import type { ShotSetup } from './common/graph-shots.type.ts';
 import { expect, test } from './graph.fixture.ts';
 import { GraphShots } from './pages/graph-shots.po.ts';
 import { FOLDERS_SHOT_COLLAPSED } from './test/common/graph-shots.const.ts';
+import { PACKAGE_RUN_SHOT_RUNS_STUB } from './test/stubs/graph-package-runs.stub.ts';
 import { THEME_DARK_STUB, THEME_HC_STUB, THEME_LIGHT_STUB } from './test/stubs/graph-theme.stub.ts';
 import { ATOMS_SHOT_FILE_IDS, ATOMS_SHOT_GROUPS, atomsShotSetup } from './test/utils/graph-atoms-shot.spec.util.ts';
 import { collapsedSavedState } from './test/utils/graph-folder-states.spec.util.ts';
-import { foldersShotState } from './test/utils/graph-folders-shot.spec.util.ts';
+import { foldersShotState, packageRunShotState } from './test/utils/graph-folders-shot.spec.util.ts';
 import { scopedNamesState } from './test/utils/graph-scope-names.spec.util.ts';
 import { closedPanelsSavedState } from './test/utils/graph-shot-state.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA } from './test/utils/graph-target-like-tasks.spec.util.ts';
@@ -49,6 +50,15 @@ const FOLDERS_SETUP: ShotSetup = {
   saved: collapsedSavedState(FOLDERS.hash, FOLDERS_SHOT_COLLAPSED),
   cache: 'folderPositions'
 };
+
+const PACKAGE_RUN_STATE = packageRunShotState();
+
+const PACKAGE_RUN_COLLAPSED = collapsedSavedState(PACKAGE_RUN_STATE.hash, FOLDERS_SHOT_COLLAPSED);
+
+/** Both panels start closed: `inspect` opens them, and a fresh view would open them already. */
+const PACKAGE_RUN_SAVED = { ...PACKAGE_RUN_COLLAPSED, controlsOpen: false, detailsOpen: false };
+
+const PACKAGE_RUN_SETUP: ShotSetup = { state: PACKAGE_RUN_STATE, saved: PACKAGE_RUN_SAVED, cache: 'folderPositions' };
 
 test.describe('FEATURE: theme screenshots', () => {
   for (const { name, theme } of THEMES) {
@@ -146,6 +156,27 @@ test.describe('FEATURE: theme screenshots of the grouped task canvas', () => {
 
       await test.step(`THEN the page matches task-canvas-${name}.png`, async (): Promise<void> =>
         expect(page).toHaveScreenshot(`task-canvas-${name}.png`));
+    });
+  }
+});
+
+test.describe('FEATURE: theme screenshots of package run outlines', () => {
+  for (const { name, theme } of THEMES) {
+    test(`GIVEN the ${name} theme, the run outlines and the selected running package match package-run-${name}.png`, async ({
+      page
+    }): Promise<void> => {
+      const shots = new GraphShots(page);
+
+      await test.step('WHEN the folders graph with build tasks is laid out with tools collapsed and reopened from its cache', async (): Promise<void> =>
+        shots.openCached(PACKAGE_RUN_SETUP, theme));
+
+      await test.step('AND runs arrive and web is selected from the controls and shown in the details', async (): Promise<void> => {
+        await shots.sendRuns(PACKAGE_RUN_SHOT_RUNS_STUB);
+        await shots.inspect('web');
+      });
+
+      await test.step(`THEN the page matches package-run-${name}.png`, async (): Promise<void> =>
+        expect(page).toHaveScreenshot(`package-run-${name}.png`));
     });
   }
 });
