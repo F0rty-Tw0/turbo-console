@@ -154,6 +154,7 @@ describe('FEATURE: routing a graph run request to the run commands', () => {
 
 const LINT_TASK: RunRequest['task'] = { ...TASK_NODE_STUB, id: '//#lint' };
 
+/** A made-up entry whose package differs from its id prefix (a real id always starts with its package), so a package taken from the id shows. */
 const LINT_REQUEST: RunRequest = { ...RUN_REQUEST_STUB, packageName: 'fixture-root', task: LINT_TASK };
 
 const STOP_LINT: GraphRunRequest = { type: 'stopTask', taskId: '//#lint' };

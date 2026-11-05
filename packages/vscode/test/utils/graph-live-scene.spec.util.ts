@@ -47,7 +47,7 @@ const blockL = async (scene: GraphLiveScene): Promise<void> => {
 export const isIdle = (scene: GraphLiveScene, task: ShownTask): boolean =>
   scene.api.runs.get(scene.root, task.fullName)?.state !== 'running';
 
-/** `task` has a running entry whose script process has started, not only been launched. */
+/** `task` has a running entry whose VS Code task process (turbo) has started, not only been launched. */
 export const isStarted = (scene: GraphLiveScene, task: ShownTask): boolean => {
   const entry = scene.api.runs.get(scene.root, task.fullName);
 
