@@ -12,6 +12,7 @@ import type { FoldersView, PackageRuns } from '../common/graph-page.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
 import {
   BOX_COLLAPSED_CLASS,
+  BOX_STATE_CLASS_NAMES,
   COLLAPSED_ID_PREFIX,
   DIMMED_BOX_CLASS,
   FOLDER_HIDDEN_CLASS,
@@ -28,8 +29,6 @@ type LabelOf = (folder: string) => string;
 const PASS_CLASSES: string[] = [FOLDER_HIDDEN_CLASS, BOX_COLLAPSED_CLASS];
 
 const HIDDEN_CLASSES: string[] = [FOLDER_HIDDEN_CLASS];
-
-const BOX_STATE_CLASS_NAMES: string[] = [...STATE_CLASS_NAMES, DIMMED_BOX_CLASS];
 
 const isBoxNode = (node: NodeSingular): boolean => node.id().startsWith(FOLDER_ID_PREFIX);
 

@@ -14,9 +14,6 @@ export const NODE_FONT_SIZE = 13;
 /** The four state classes `GraphView.paint` gives; an element has exactly one of them once painted. */
 export const STATE_CLASS_NAMES: string[] = ['selected', 'highlighted', 'dimmed', 'normal'];
 
-/** `STATE_CLASS_NAMES` as one class string. */
-export const STATE_CLASSES = STATE_CLASS_NAMES.join(' ');
-
 /** The class `GraphView.setGhosts` gives a trace's hidden path packages and their path links. */
 export const GHOST_CLASS = 'ghost';
 
@@ -147,6 +144,9 @@ export const BOX_COLLAPSED_CLASS = 'box-collapsed';
 
 /** A dimmed box: frame, label and fill fade, never `opacity`, which a compound multiplies into its packages. */
 export const DIMMED_BOX_CLASS = 'dimmed-box';
+
+/** The classes a box's paint sets: the four state classes and `dimmed-box`. */
+export const BOX_STATE_CLASS_NAMES: string[] = [...STATE_CLASS_NAMES, DIMMED_BOX_CLASS];
 
 /** Room ELK leaves around a folder's packages, and Cytoscape's compound padding, in px. */
 export const FOLDER_PADDING_PX = 32;

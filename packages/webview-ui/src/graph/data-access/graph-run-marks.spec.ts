@@ -7,6 +7,7 @@ import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import type { PackageRuns } from '../common/graph-page.type.ts';
 import { FOLDER_NODE_CLASS } from '../common/graph.const.ts';
 import { classesOf } from '../test/utils/run-marks.spec.util.ts';
+import { styleEventsDuring } from '../test/utils/style-events.spec.util.ts';
 import { collapsedIdOf, folderIdOf } from '../utils/folder-id.util.ts';
 
 const APPS_NODE = collapsedIdOf('apps');
@@ -26,15 +27,6 @@ const APPS: ElementDefinition = { data: APPS_DATA, classes: FOLDER_NODE_CLASS };
 const MEMBERS: ReadonlyMap<string, string[]> = new Map([['apps', ['web', 'docs']]]);
 
 const runsOf = (...entries: [string, GraphRunState][]): PackageRuns => new Map(entries);
-
-const styleEventsDuring = (cy: Core, write: () => void): number => {
-  let count = 0;
-
-  cy.on('style', (): void => void count++);
-  write();
-
-  return count;
-};
 
 describe('FEATURE: markPackageRuns and markFolderRuns', () => {
   let cy: Core;
