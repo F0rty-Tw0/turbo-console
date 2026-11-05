@@ -1,11 +1,22 @@
 import { finishRun, runTask, taskEnded } from './run-flow.ts';
+import { RunProgressJoin } from './run-progress-join.ts';
+import { RunProgress } from './run-progress.ts';
 import { RunStore } from './run-store.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import type { RunTiming } from '../../shared/common/api.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { NOT_FOUND_CODES, RUN_TIMINGS_MAX } from '../common/run.const.ts';
-import type { RunControl, RunDefinition, RunEntry, RunEvent, RunKey, RunPorts, RunRequest } from '../common/run.type.ts';
-import { runKeyOf } from '../utils/run-entry.util.ts';
+import type {
+  RunControl,
+  RunDefinition,
+  RunEntry,
+  RunEvent,
+  RunKey,
+  RunPorts,
+  RunRequest,
+  RunSessionPorts
+} from '../common/run.type.ts';
+import { progressOwnerOf, runKeyOf } from '../utils/run-entry.util.ts';
 import { taskIdsOf } from '../utils/run-target.util.ts';
 import { notFoundText } from '../utils/run-text.util.ts';
 
@@ -13,17 +24,21 @@ import { notFoundText } from '../utils/run-text.util.ts';
  * The runs of the window and what drives them: the run commands and the task events of runs this window launched. Each
  * event carries its run's launch token, so an event of an earlier run of the task never changes the current one. Every
  * run gets one entry in `timings` (the newest `RUN_TIMINGS_MAX`), its launch and its process start, for the integration
- * tests.
+ * tests. `progress` holds what each turbo run's log says of its tasks (spec D8), settled through the join (spec D10).
  */
 export class RunSession implements RunControl {
   public readonly runs = new RunStore();
+  public readonly progress: RunProgress;
+  private readonly join: RunProgressJoin;
   private readonly ports: RunPorts;
   private readonly timings: RunTiming[];
   /** The launch token of each run whose process ended and whose task end has not arrived yet. */
   private readonly endingRuns = new Map<RunKey, number>();
 
-  public constructor(ports: RunPorts, timings: RunTiming[]) {
-    this.ports = ports;
+  public constructor(ports: RunSessionPorts, timings: RunTiming[]) {
+    this.progress = new RunProgress(ports.now);
+    this.join = new RunProgressJoin(this.progress, this.runs, ports.log);
+    this.ports = { ...ports, progress: this.join };
     this.timings = timings;
     this.runs.onDidChange((entry) => {
       this.record(entry);
@@ -44,7 +59,10 @@ export class RunSession implements RunControl {
     this.runs.processStarted(event.definition, this.ports.now(), event.launchedAt);
   }
 
-  /** Spec §4.5 step 6: a failure while settling the match (a throwing change listener) is logged, never thrown. */
+  /**
+   * Spec §4.5 step 6, D10: drains the run's log tail and settles its match; a failure of either (a throwing change
+   * listener) is logged, never thrown.
+   */
   public processEnded(event: RunEvent, exitCode: number | undefined): void {
     const ended = this.runs.processEnded(event.definition, exitCode, this.ports.now(), event.launchedAt);
 
@@ -55,6 +73,12 @@ export class RunSession implements RunControl {
     const key = runKeyOf(ended.root, ended.taskId);
 
     this.endingRuns.set(key, ended.launchedAt);
+
+    const owner = progressOwnerOf(ended.root, ended.taskId, ended.launchedAt);
+
+    this.join.drain(owner).catch((error: unknown) => {
+      this.ports.log(logTextOf(error));
+    });
     finishRun(this.runs, this.ports, ended).catch((error: unknown) => {
       this.ports.log(logTextOf(error));
     });
@@ -83,11 +107,12 @@ export class RunSession implements RunControl {
     taskEnded(this.runs, this.ports, event.definition, event.launchedAt);
   }
 
-  /** Drops the ended runs of tasks the root no longer has; a root with no model keeps none. */
+  /** Drops the ended runs and the progress records of tasks the root no longer has; a root with no model keeps none. */
   public rootChanged(change: RootChange): void {
     const visibleIds = taskIdsOf(change.after);
 
     this.runs.prune(change.root, visibleIds);
+    this.progress.prune(change.root, visibleIds);
   }
 
   /**

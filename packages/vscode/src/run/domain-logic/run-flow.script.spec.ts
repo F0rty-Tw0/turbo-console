@@ -6,7 +6,7 @@ import { RunStore } from './run-store.ts';
 import { PACKAGE_MANAGER_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { ALREADY_RUNNING_TEXT, NOT_TURBO_FORCE_TEXT, START_TIMEOUT_MS } from '../common/run.const.ts';
 import type { RunDefinition, RunPorts, RunRequest, Terminable } from '../common/run.type.ts';
-import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { LOG_ENV_STUB, RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 
 const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
@@ -189,7 +189,12 @@ describe('FEATURE: run flow, a script', () => {
     it('WHEN it is run THEN turbo launches with --summarize and the script port stays unused', async () => {
       await runTask(store, ports, RUN_REQUEST_STUB);
 
-      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, expect.arrayContaining(['--summarize']), 1000);
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(
+        RUN_REQUEST_STUB,
+        expect.arrayContaining(['--summarize']),
+        1000,
+        LOG_ENV_STUB
+      );
       expect(ports.canExecute).toHaveBeenCalledOnce();
       expect(ports.executeScript).not.toHaveBeenCalled();
     });

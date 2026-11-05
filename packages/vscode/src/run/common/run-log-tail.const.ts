@@ -19,6 +19,9 @@ export const RUN_LOG_DIR_PARTS: string[] = ['.turbo', 'turbo-console'];
 
 export const RUN_LOG_FILE_PATTERN = /^run-.*\.json$/;
 
+/** Hex characters of the random id in a log file name: two windows launching in one millisecond get two files. */
+export const RUN_LOG_ID_LENGTH = 8;
+
 export const RUN_LOG_SWEEP_AGE_MS = 86_400_000;
 
 /**

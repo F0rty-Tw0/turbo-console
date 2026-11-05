@@ -10,7 +10,7 @@ import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { RunDefinition, RunPorts, RunRequest, TaskTarget, Terminable } from '../common/run.type.ts';
-import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { LOG_ENV_STUB, RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 import { runRequestOf } from '../utils/run-target.util.ts';
 
@@ -60,7 +60,7 @@ describe('FEATURE: run flow, single-package root', () => {
     it('WHEN it runs THEN the arguments carry --single-package after the summary flag', async () => {
       await runTask(store, ports, SINGLE);
 
-      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(SINGLE, ARGS, 1000);
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(SINGLE, ARGS, 1000, LOG_ENV_STUB);
     });
 
     it('WHEN it is forced too THEN --force stays last', async () => {
@@ -68,7 +68,7 @@ describe('FEATURE: run flow, single-package root', () => {
 
       await runTask(store, ports, forced);
 
-      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(forced, [...ARGS, '--force'], 1000);
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(forced, [...ARGS, '--force'], 1000, LOG_ENV_STUB);
     });
   });
 

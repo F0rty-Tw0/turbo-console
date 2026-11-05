@@ -3,13 +3,16 @@ import type { RunLogEvent, RunTasksMatch, TaskNode, TaskOutcome } from '@turbo-c
 import { RUN_REQUEST_STUB } from './run.stub.ts';
 import { TASK_NODE_STUB } from '../../../tree/test/stubs/workspace-model.stub.ts';
 import type { ProgressOwner } from '../../common/run-progress.type.ts';
-import type { RunDefinition, RunRequest } from '../../common/run.type.ts';
+import type { RunDefinition, RunEvent, RunRequest } from '../../common/run.type.ts';
 
 const BUILD_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'a#build' };
 
 export const JOIN_REQUEST_STUB: RunRequest = { ...RUN_REQUEST_STUB, task: BUILD_TASK };
 
 export const JOIN_DEFINITION_STUB: RunDefinition = { root: '/ws', id: 'a#build' };
+
+/** A task event of the run of a#build launched at 1000. */
+export const JOIN_EVENT_STUB: RunEvent = { definition: JOIN_DEFINITION_STUB, launchedAt: 1000 };
 
 export const JOIN_OWNER_STUB: ProgressOwner = { root: '/ws', taskId: 'a#build', launchedAt: 1000 };
 
