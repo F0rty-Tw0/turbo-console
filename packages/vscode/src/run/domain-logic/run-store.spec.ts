@@ -1,4 +1,4 @@
-import type { RunMatch, RunTasksMatch, TaskOutcome } from '@turbo-console/core';
+import type { RunMatch, RunTasksMatch, TaskNode, TaskOutcome } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunStore } from './run-store.ts';
@@ -283,10 +283,71 @@ describe('FEATURE: run store', () => {
       expect(store.get('/ws', 'build')).toBeUndefined();
     });
 
+    it('WHEN the root is pruned without its task THEN one change ends its matching with no match first', () => {
+      const changes = changesOf(store);
+
+      store.prune('/ws', new Set());
+
+      expect(changes.map((entry) => [entry.matching, entry.match, entry.outcomes])).toStrictEqual([[false, null, null]]);
+    });
+
     it('WHEN the root is pruned with its task THEN the entry is kept', () => {
       store.prune('/ws', new Set(['build']));
 
       expect(store.get('/ws', 'build')?.state).toBe('passed');
+    });
+
+    it('WHEN the root is pruned with its task THEN nothing is announced', () => {
+      const changes = changesOf(store);
+
+      store.prune('/ws', new Set(['build']));
+
+      expect(changes).toStrictEqual([]);
+    });
+
+    it('WHEN its match already ended and the root is pruned without its task THEN the entry is dropped and nothing is announced', () => {
+      store.setMatch(RUN, 1000, MATCHED);
+
+      const changes = changesOf(store);
+
+      store.prune('/ws', new Set());
+
+      expect([store.get('/ws', 'build'), changes]).toStrictEqual([undefined, []]);
+    });
+
+    it('WHEN a change listener throws during the prune THEN every gone entry is still dropped', () => {
+      const lintTask: TaskNode = { ...RUN_REQUEST_STUB.task, id: 'lint' };
+      const lint: RunRequest = { ...RUN_REQUEST_STUB, task: lintTask };
+
+      store.tryStart(lint, 1000);
+      store.processEnded({ root: '/ws', id: 'lint' }, 0, 4000);
+      store.onDidChange(() => {
+        throw new Error('listener boom');
+      });
+
+      expect(() => {
+        store.prune('/ws', new Set());
+      }).toThrow('listener boom');
+      expect([store.get('/ws', 'build'), store.get('/ws', 'lint')]).toStrictEqual([undefined, undefined]);
+    });
+
+    it('WHEN a change listener throws on the first gone entry THEN the next one is still announced', () => {
+      const lintTask: TaskNode = { ...RUN_REQUEST_STUB.task, id: 'lint' };
+      const lint: RunRequest = { ...RUN_REQUEST_STUB, task: lintTask };
+      const heardIds: string[] = [];
+
+      store.tryStart(lint, 1000);
+      store.processEnded({ root: '/ws', id: 'lint' }, 0, 4000);
+      store.onDidChange((entry) => {
+        heardIds.push(entry.taskId);
+
+        if (heardIds.length === 1) throw new Error('listener boom');
+      });
+
+      expect(() => {
+        store.prune('/ws', new Set());
+      }).toThrow('listener boom');
+      expect(heardIds).toStrictEqual(['build', 'lint']);
     });
 
     it('WHEN another root is pruned THEN the entry is kept', () => {
