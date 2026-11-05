@@ -5,7 +5,9 @@ import {
   FAILED_TO_START_OUTLINE,
   PASSED_RGB,
   RUNNING_OUTLINE,
-  RUNNING_RGB
+  RUNNING_RGB,
+  RUN_RING,
+  SELECTION_RING
 } from './test/common/graph-run-colours.const.ts';
 import {
   UI_RUNNING_STUB,
@@ -30,12 +32,6 @@ const D14 = { description: 'U7 spec D14', type: 'requirement' };
 const STATE = packageRunsState();
 
 const FOLDER_RINGS = { drawn: RUNNING_RGB, absent: PASSED_RGB };
-
-const SELECTED_RGB = THEME_DARK_STUB.expected.selected;
-
-const RUN_RING = { drawn: RUNNING_RGB, absent: SELECTED_RGB };
-
-const SELECTION_RING = { drawn: SELECTED_RGB, absent: RUNNING_RGB };
 
 test.describe('FEATURE: run state on packages and collapsed folders', () => {
   test(

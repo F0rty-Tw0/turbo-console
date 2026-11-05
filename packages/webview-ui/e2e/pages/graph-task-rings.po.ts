@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
+import type { RingColours } from '../common/graph-ring.type.ts';
 import type { ColourInkInput } from '../common/graph.type.ts';
 import type { ElementRect, ScreenClip } from '../common/playwright.type.ts';
 import { boxRectOf, findFolder } from '../test/utils/graph-folders.spec.util.ts';
@@ -11,12 +12,6 @@ import { colourInkOf } from '../test/utils/graph-png.spec.util.ts';
 
 /** Screen px kept around a node, so its outline and border are inside the shot. */
 const RING_MARGIN_PX = 4;
-
-/** The ring colour a shot of a node must show and the one it must not. */
-type RingColours = {
-  readonly drawn: string;
-  readonly absent: string;
-};
 
 /** `box` grown by the ring margin on every side. */
 const grownClipOf = (box: ElementRect): ScreenClip => {

@@ -1,5 +1,5 @@
 import { expect, test } from './graph-task.fixture.ts';
-import { RUNNING_OUTLINE, RUNNING_RGB } from './test/common/graph-run-colours.const.ts';
+import { CONTINUOUS_OUTLINE, RUNNING_OUTLINE, RUN_RING, SELECTION_RING } from './test/common/graph-run-colours.const.ts';
 import { THEME_DARK_STUB } from './test/stubs/graph-theme.stub.ts';
 import { GLYPH_CODE_POINTS } from '../src/graph/common/graph-glyph.const.ts';
 
@@ -7,16 +7,8 @@ const UB5B = { description: 'UB5b spec 2.2, 4', type: 'requirement' };
 
 const TASK_TIDY = { description: 'U1 phase 2, U1-5', type: 'requirement' };
 
-const SELECTED_RGB = THEME_DARK_STUB.expected.selected;
-
 /** The dark stub's `--vscode-charts-green`, `#89d185`, as Cytoscape and the panel icon report it. */
 const CONTINUOUS_RGB = 'rgb(137, 209, 133)';
-
-const CONTINUOUS_OUTLINE = { width: 2, colour: 'rgb(137,209,133)' };
-
-const RUN_RING = { drawn: RUNNING_RGB, absent: SELECTED_RGB };
-
-const SELECTION_RING = { drawn: SELECTED_RGB, absent: RUNNING_RGB };
 
 test.describe('FEATURE: a selected task with a run state', () => {
   test(
