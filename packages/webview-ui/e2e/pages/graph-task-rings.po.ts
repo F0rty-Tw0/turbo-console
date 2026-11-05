@@ -1,12 +1,11 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
-import type { ProbeFolder } from '../../src/graph/common/graph-probe.type.ts';
 import type { ColourInkInput } from '../common/graph.type.ts';
 import type { ElementRect, ScreenClip } from '../common/playwright.type.ts';
 import { boxRectOf, findFolder } from '../test/utils/graph-folders.spec.util.ts';
+import { readFolders } from '../test/utils/graph-foreign-boxes.spec.util.ts';
 import { nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { colourInkOf } from '../test/utils/graph-png.spec.util.ts';
 
@@ -63,7 +62,7 @@ export class GraphTaskRings {
 
   /** `ringsOf` for a folder's box, whose rendered rect is already in page pixels. */
   private async folderRingsOf(folder: string, colours: RingColours): Promise<[boolean, number]> {
-    const folders = await this.page.evaluate((): ProbeFolder[] => window.__tcGraphProbe?.folders() ?? []);
+    const folders = await readFolders(this.page);
     const found = findFolder(folders, folder);
 
     if (found === undefined) return [false, -1];
