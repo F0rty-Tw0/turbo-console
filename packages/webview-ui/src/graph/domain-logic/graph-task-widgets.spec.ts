@@ -15,13 +15,29 @@ import { rectsOf, stopItemOf, taskToolbarsOf, taskWidgetsRigOf } from '../test/u
 /** `a#build` drawn across the panel's left edge: its toolbar under it. */
 const UNDER_RECT: RectPx = { x1: 260, y1: 50, x2: 320, y2: 80 };
 
-const RUNNING: TaskDetailsModel = { task: GRAPH_TASK_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
+const RUNNING: TaskDetailsModel = {
+  task: GRAPH_TASK_STUB,
+  state: 'running',
+  runOwner: null,
+  dependencies: [],
+  dependents: [],
+  rootLabel: null
+};
+
+const OWNED: TaskDetailsModel = { ...RUNNING, runOwner: 'web#build' };
 
 const ROOT_NOT_RUNNABLE_TASK: GraphTask = { ...ROOT_BUILD_STUB, isRunnable: false };
 
 const ROOT_NOT_RUNNABLE_IDLE: TaskDetailsModel = { ...RUNNING, task: ROOT_NOT_RUNNABLE_TASK, state: null };
 
-const API_RUNNING: TaskDetailsModel = { task: API_BUILD_STUB, state: 'running', dependencies: [], dependents: [], rootLabel: null };
+const API_RUNNING: TaskDetailsModel = {
+  task: API_BUILD_STUB,
+  state: 'running',
+  runOwner: null,
+  dependencies: [],
+  dependents: [],
+  rootLabel: null
+};
 
 const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
 
@@ -168,6 +184,26 @@ describe('FEATURE: GraphTaskWidgets', () => {
       widgets.keepClear();
 
       expect(rig.view.panBy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a#build running under the run of web#build', () => {
+    beforeEach(() => {
+      const widgets = widgetsOf(rig, false);
+
+      widgets.show(OWNED);
+    });
+
+    it('WHEN the toolbar slot is clicked THEN stopTask web#build is posted', () => {
+      rig.toolbars[0]?.run.click();
+
+      expect(rig.bridge.post).toHaveBeenCalledExactlyOnceWith({ type: 'stopTask', taskId: 'web#build' });
+    });
+
+    it('WHEN the menu Stop item runs THEN stopTask web#build is posted', () => {
+      stopItemOf(rig)?.click();
+
+      expect(rig.bridge.post).toHaveBeenCalledExactlyOnceWith({ type: 'stopTask', taskId: 'web#build' });
     });
   });
 

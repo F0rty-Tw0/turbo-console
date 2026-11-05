@@ -5,6 +5,7 @@ import type { TaskDetailsModel } from '../../common/task-details.type.ts';
 export const TASK_DETAILS_STUB: TaskDetailsModel = {
   task: GRAPH_TASK_STUB,
   state: null,
+  runOwner: null,
   dependencies: [],
   dependents: [],
   rootLabel: null

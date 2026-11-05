@@ -99,7 +99,7 @@ describe('FEATURE: GraphTaskSelection tells the flow overlay', () => {
     });
 
     it('WHEN runs arrive THEN the run states are painted and the flow hears nothing', () => {
-      selection.runs({ 'web#build': 'running' });
+      selection.runs({ 'web#build': 'running' }, {});
 
       expect(canvas.runStates).toHaveBeenLastCalledWith({ 'web#build': 'running' });
       expect(onHighlight).not.toHaveBeenCalled();

@@ -10,10 +10,21 @@ import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts
 /** The latest host `runs` map: each task's run state by id; a task missing from it has no state. */
 export type TaskRuns = Readonly<Record<string, GraphRunState>>;
 
+/** The latest host `owners` map: task id → the task id of the run that runs it; a task missing from it runs on its own or not at all. */
+export type TaskOwners = Readonly<Record<string, string>>;
+
+/** The latest host `runs` and `owners` maps. */
+export type LatestRuns = {
+  readonly runs: TaskRuns;
+  readonly owners: TaskOwners;
+};
+
 /** What the task details panel shows of the selected task. */
 export type TaskDetailsModel = {
   readonly task: GraphTask;
   readonly state: GraphRunState | null;
+  /** The task id of the run that runs this task while it is live under another task's run; `null` for its own run or no run (spec D12). */
+  readonly runOwner: string | null;
   /** The task's direct dependencies that are in the shown set, in its dependency order. */
   readonly dependencies: GraphTask[];
   /** The shown tasks that directly depend on the task, in the shown order. */

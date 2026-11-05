@@ -13,6 +13,7 @@ const TASK_NO_COMMAND: GraphTask = { ...GRAPH_TASK_STUB, command: null, isRunnab
 const STOPPED_NO_COMMAND: TaskDetailsModel = {
   task: TASK_NO_COMMAND,
   state: 'stopped',
+  runOwner: null,
   dependencies: [],
   dependents: [],
   rootLabel: null
@@ -21,6 +22,7 @@ const STOPPED_NO_COMMAND: TaskDetailsModel = {
 const RUNNING: TaskDetailsModel = {
   task: GRAPH_TASK_STUB,
   state: 'running',
+  runOwner: null,
   dependencies: [API_BUILD_STUB],
   dependents: [],
   rootLabel: null
@@ -38,6 +40,7 @@ const NEVER_RUN: TaskDetailsModel = { ...RUNNING, state: null };
 const ROOT_BUILD: TaskDetailsModel = {
   task: ROOT_BUILD_STUB,
   state: null,
+  runOwner: null,
   dependencies: [],
   dependents: [],
   rootLabel: 'single-app'

@@ -21,6 +21,7 @@ type SelectionRig = {
 const WEB_BUILD_MODEL: TaskDetailsModel = {
   task: WEB_BUILD_STUB,
   state: null,
+  runOwner: null,
   dependencies: [API_BUILD_STUB],
   dependents: [],
   rootLabel: null
@@ -152,7 +153,7 @@ describe('FEATURE: GraphTaskSelection', () => {
 
     it('WHEN a run state arrives THEN the canvas keeps painting web#build', () => {
       selection.enter(true);
-      selection.runs({ 'web#build': 'running' });
+      selection.runs({ 'web#build': 'running' }, {});
 
       expect(rig.canvas.paint).toHaveBeenLastCalledWith('web#build');
     });
@@ -215,13 +216,31 @@ describe('FEATURE: GraphTaskSelection', () => {
       const runs: TaskRuns = { 'web#build': 'running' };
 
       selection.enter(true);
-      selection.runs(runs);
+      selection.runs(runs, {});
 
       const running: TaskDetailsModel = { ...WEB_BUILD_MODEL, state: 'running' };
 
       expect(rig.canvas.runStates).toHaveBeenLastCalledWith(runs);
       expect(rig.details.show).toHaveBeenLastCalledWith(running);
       expect(rig.widgets.show).toHaveBeenLastCalledWith(running);
+    });
+
+    it('WHEN runs say running and owners name api#all THEN the panel and widgets get runOwner api#all', () => {
+      selection.enter(true);
+      selection.runs({ 'web#build': 'running' }, { 'web#build': 'api#all' });
+
+      const owned: unknown = expect.objectContaining({ runOwner: 'api#all' });
+
+      expect(rig.details.show).toHaveBeenLastCalledWith(owned);
+      expect(rig.widgets.show).toHaveBeenLastCalledWith(owned);
+    });
+
+    it('WHEN a later runs map has no owners THEN runOwner is null again', () => {
+      selection.enter(true);
+      selection.runs({ 'web#build': 'running' }, { 'web#build': 'api#all' });
+      selection.runs({ 'web#build': 'running' }, {});
+
+      expect(rig.details.show).toHaveBeenLastCalledWith(expect.objectContaining({ runOwner: null }));
     });
 
     it('WHEN the shown tasks lose web#build THEN the selection is saved as null', () => {
@@ -253,14 +272,14 @@ describe('FEATURE: GraphTaskSelection', () => {
     });
 
     it('WHEN runs arrive THEN the hidden panel and the canvas are not repainted', () => {
-      selection.runs(runs);
+      selection.runs(runs, {});
 
       expect(rig.details.show).not.toHaveBeenCalled();
       expect(rig.canvas.runStates).not.toHaveBeenCalled();
     });
 
     it('WHEN runs arrive and task mode is entered again THEN the panel reads running', () => {
-      selection.runs(runs);
+      selection.runs(runs, {});
       selection.enter(true);
 
       expect(rig.canvas.runStates).toHaveBeenLastCalledWith(runs);

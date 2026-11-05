@@ -1,6 +1,6 @@
 import type { GraphWebviewMessage } from '../../bridge/common/graph-message.type.ts';
 import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
-import type { TaskDetailsModel, TaskRunAction, TaskRuns } from '../common/task-details.type.ts';
+import type { LatestRuns, TaskDetailsModel, TaskOwners, TaskRunAction, TaskRuns } from '../common/task-details.type.ts';
 
 /** The task's state in the latest `runs` map; an own key only, so `toString` or `__proto__` never reads as a state. */
 export const runStateOf = (runs: TaskRuns, id: string): GraphRunState | null => {
@@ -11,37 +11,56 @@ export const runStateOf = (runs: TaskRuns, id: string): GraphRunState | null => 
   return runs[id] ?? null;
 };
 
+/** The task id of the run that runs `id` under another task's run; an own key only, so `constructor` or `__proto__` never reads as an owner. */
+export const runOwnerOf = (owners: TaskOwners, id: string): string | null => {
+  const hasOwner = Object.hasOwn(owners, id);
+
+  if (!hasOwner) return null;
+
+  return owners[id] ?? null;
+};
+
 export const taskWithId = (tasks: GraphTask[], id: string | null): GraphTask | undefined => tasks.find((task) => task.id === id);
+
+/** Whether a run is still going: a one-shot `running` or a persistent `continuous` one. */
+export const isLiveRun = (state: GraphRunState | null): boolean => state === 'running' || state === 'continuous';
+
+const liveRunOwnerOf = (state: GraphRunState | null, owners: TaskOwners, id: string): string | null => {
+  const isLive = isLiveRun(state);
+
+  if (!isLive) return null;
+
+  return runOwnerOf(owners, id);
+};
 
 /**
  * The panel model of `task`: its run state, its direct dependencies that are in `shown`, in its dependency order, the
- * shown tasks that directly depend on it, in the shown order, and the root label.
+ * shown tasks that directly depend on it, in the shown order, the root label, and the run owner while the task is live.
  */
 export const taskDetailsModelOf = (
   task: GraphTask,
   shown: GraphTask[],
-  runs: TaskRuns,
+  latest: LatestRuns,
   rootLabel: string | null
 ): TaskDetailsModel => {
   const shownOf = (id: string): GraphTask | undefined => taskWithId(shown, id);
   const found = task.dependencies.map(shownOf);
   const dependencies = found.filter((dependency) => dependency !== undefined);
   const dependents = shown.filter((other) => other.dependencies.includes(task.id));
-  const state = runStateOf(runs, task.id);
-  const model: TaskDetailsModel = { task, state, dependencies, dependents, rootLabel };
+  const state = runStateOf(latest.runs, task.id);
+  const runOwner = liveRunOwnerOf(state, latest.owners, task.id);
+  const model: TaskDetailsModel = { task, state, runOwner, dependencies, dependents, rootLabel };
 
   return model;
 };
-
-/** Whether a run is still going: a one-shot `running` or a persistent `continuous` one. */
-export const isLiveRun = (state: GraphRunState | null): boolean => state === 'running' || state === 'continuous';
 
 const stopMessageOf = (model: TaskDetailsModel): GraphWebviewMessage | null => {
   const isLive = isLiveRun(model.state);
 
   if (!isLive) return null;
 
-  const message: GraphWebviewMessage = { type: 'stopTask', taskId: model.task.id };
+  const taskId = model.runOwner ?? model.task.id;
+  const message: GraphWebviewMessage = { type: 'stopTask', taskId };
 
   return message;
 };
