@@ -12,8 +12,8 @@ import {
 import {
   UI_RUNNING_STUB,
   UI_RUNNING_UTILS_PASSED_STUB,
+  WEB_CONTINUOUS_AND_FAILED_TO_START_STUB,
   WEB_CONTINUOUS_AND_RUNNING_STUB,
-  WEB_CONTINUOUS_STUB,
   WEB_FAILED_TO_START_AND_PASSED_STUB,
   WEB_PASSED_AND_FAILED_STUB,
   WEB_RUNNING_AND_FAILED_STUB,
@@ -32,6 +32,12 @@ const D14 = { description: 'U7 spec D14', type: 'requirement' };
 
 const STATE = packageRunsState();
 
+const GROUPED_SAVED = groupedSavedState(STATE.hash);
+
+const PACKAGES_COLLAPSED_SAVED = collapsedSavedState(STATE.hash, ['packages']);
+
+const WEB_BUILD_TASK_SAVED = taskSavedState(STATE.hash, { chosen: ['web#build'] });
+
 const RUNNING_RINGS = { drawn: RUNNING_RGB, absent: PASSED_RGB };
 
 test.describe('FEATURE: run state on packages and collapsed folders', () => {
@@ -40,7 +46,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
     { annotation: D13 },
     async ({ graphHost, graphLook, graphPage, graphTaskHost, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN the boards open grouped', async (): Promise<void> => {
-        await graphPage.open({ savedState: groupedSavedState(STATE.hash) });
+        await graphPage.open({ savedState: GROUPED_SAVED });
       });
 
       await test.step('AND the host sends the state', async (): Promise<void> => graphHost.sendState(STATE));
@@ -74,7 +80,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
     { annotation: D13 },
     async ({ graphHost, graphLook, graphPage, graphTaskHost, graphTaskProbe, graphTaskRings }): Promise<void> => {
       await test.step('WHEN the boards open with packages collapsed', async (): Promise<void> => {
-        await graphPage.open({ savedState: collapsedSavedState(STATE.hash, ['packages']) });
+        await graphPage.open({ savedState: PACKAGES_COLLAPSED_SAVED });
       });
 
       await test.step('AND the host sends the state', async (): Promise<void> => graphHost.sendState(STATE));
@@ -100,7 +106,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
     { annotation: D13 },
     async ({ graphHost, graphLook, graphPage, graphTask, graphTaskHost, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN the boards open in task mode with web#build chosen', async (): Promise<void> => {
-        await graphPage.open({ savedState: taskSavedState(STATE.hash, { chosen: ['web#build'] }) });
+        await graphPage.open({ savedState: WEB_BUILD_TASK_SAVED });
       });
 
       await test.step('AND the host sends the state', async (): Promise<void> => graphHost.sendState(STATE));
@@ -109,7 +115,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
 
       await test.step('AND web#build is reported running', async (): Promise<void> => graphTaskHost.sendRuns(WEB_RUNNING_STUB));
 
-      await test.step('THEN the task web#build has the 2 wide running outline', async (): Promise<void> => {
+      await test.step("THEN the task web#build has the task rule's 2 wide running outline", async (): Promise<void> => {
         await graphTaskProbe.expectRunOutline('web#build', RUNNING_OUTLINE);
       });
 
@@ -126,7 +132,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
     { annotation: D13 },
     async ({ graphFolders, graphHost, graphLook, graphPage, graphTaskHost, graphTaskRings }): Promise<void> => {
       await test.step('WHEN the boards open with packages collapsed', async (): Promise<void> => {
-        await graphPage.open({ savedState: collapsedSavedState(STATE.hash, ['packages']) });
+        await graphPage.open({ savedState: PACKAGES_COLLAPSED_SAVED });
       });
 
       await test.step('AND the host sends the state', async (): Promise<void> => graphHost.sendState(STATE));
@@ -160,7 +166,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
     { annotation: D13 },
     async ({ graphGrouping, graphHost, graphLook, graphPage, graphTaskHost, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN the boards open grouped', async (): Promise<void> => {
-        await graphPage.open({ savedState: groupedSavedState(STATE.hash) });
+        await graphPage.open({ savedState: GROUPED_SAVED });
       });
 
       await test.step('AND the host sends the state', async (): Promise<void> => graphHost.sendState(STATE));
@@ -171,15 +177,17 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
 
       await test.step('WHEN the grouping is switched off', async (): Promise<void> => graphGrouping.setGrouped(false));
 
-      await test.step('THEN web has the 2 wide running outline', async (): Promise<void> => {
-        await graphGrouping.expectGrouped(false);
+      await test.step('THEN the boards are ungrouped', async (): Promise<void> => graphGrouping.expectGrouped(false));
+
+      await test.step('AND web has the 2 wide running outline', async (): Promise<void> => {
         await graphTaskProbe.expectRunOutline('web', RUNNING_OUTLINE);
       });
 
       await test.step('WHEN the grouping is switched on', async (): Promise<void> => graphGrouping.setGrouped(true));
 
-      await test.step('THEN web has the 2 wide running outline again', async (): Promise<void> => {
-        await graphGrouping.expectGrouped(true);
+      await test.step('THEN the boards are grouped', async (): Promise<void> => graphGrouping.expectGrouped(true));
+
+      await test.step('AND web has the 2 wide running outline again', async (): Promise<void> => {
         await graphTaskProbe.expectRunOutline('web', RUNNING_OUTLINE);
       });
     }
@@ -190,7 +198,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
     { annotation: D13 },
     async ({ graphHost, graphLook, graphPage, graphTaskHost, graphTaskProbe }): Promise<void> => {
       await test.step('WHEN the boards open grouped', async (): Promise<void> => {
-        await graphPage.open({ savedState: groupedSavedState(STATE.hash) });
+        await graphPage.open({ savedState: GROUPED_SAVED });
       });
 
       await test.step('AND the host sends the state', async (): Promise<void> => graphHost.sendState(STATE));
@@ -205,7 +213,9 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
         await graphTaskProbe.expectRunOutline('web', FAILED_TO_START_OUTLINE);
       });
 
-      await test.step('WHEN web#build alone is continuous', async (): Promise<void> => graphTaskHost.sendRuns(WEB_CONTINUOUS_STUB));
+      await test.step('WHEN web#build is continuous beside a web#test that failed to start', async (): Promise<void> => {
+        await graphTaskHost.sendRuns(WEB_CONTINUOUS_AND_FAILED_TO_START_STUB);
+      });
 
       await test.step('THEN web has the continuous outline', async (): Promise<void> => {
         await graphTaskProbe.expectRunOutline('web', CONTINUOUS_OUTLINE);
@@ -226,7 +236,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
     { annotation: D14 },
     async ({ graphCanvas, graphHost, graphLook, graphPage, graphProbe, graphTaskHost, graphTaskRings }): Promise<void> => {
       await test.step('WHEN the boards open grouped', async (): Promise<void> => {
-        await graphPage.open({ savedState: groupedSavedState(STATE.hash) });
+        await graphPage.open({ savedState: GROUPED_SAVED });
       });
 
       await test.step('AND the host sends the state', async (): Promise<void> => graphHost.sendState(STATE));
@@ -256,7 +266,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
     { annotation: D14 },
     async ({ graphDetails, graphFolders, graphHost, graphLook, graphPage, graphTaskHost, graphTaskRings }): Promise<void> => {
       await test.step('WHEN the boards open with packages collapsed', async (): Promise<void> => {
-        await graphPage.open({ savedState: collapsedSavedState(STATE.hash, ['packages']) });
+        await graphPage.open({ savedState: PACKAGES_COLLAPSED_SAVED });
       });
 
       await test.step('AND the host sends the state', async (): Promise<void> => graphHost.sendState(STATE));
