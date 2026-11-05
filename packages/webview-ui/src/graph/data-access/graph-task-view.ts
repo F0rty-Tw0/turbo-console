@@ -1,11 +1,12 @@
 import type { Core, EdgeCollection, EdgeSingular, ElementDefinition, NodeCollection, NodeSingular } from 'cytoscape';
 
 import { labelOf, setCountLabels, taskClassesOf } from './graph-atom-view.ts';
+import { setClassesAmong } from './graph-classes.ts';
 import { positionOf } from './graph-place.ts';
 import { applyRoutes } from './graph-routes.ts';
 import { boxesOf } from './graph-task-boxes.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
-import type { GraphEdge, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphRunState, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
 import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
 import { TASK_LINK_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
@@ -20,7 +21,17 @@ import { runClassOf } from '../utils/package-run.util.ts';
 import { parentIdOf } from '../utils/task-compound.util.ts';
 import { runStateOf } from '../utils/task-run.util.ts';
 
-const RUN_CLASSES = RUN_STATES.map(runClassOf).join(' ');
+const RUN_CLASS_NAMES: string[] = RUN_STATES.map(runClassOf);
+
+const NO_RUN_CLASSES: string[] = [];
+
+const runClassesOf = (state: GraphRunState | null): string[] => {
+  if (state === null) return NO_RUN_CLASSES;
+
+  const name = runClassOf(state);
+
+  return [name];
+};
 
 const BOX_STATE_CLASSES = `${STATE_CLASSES} ${DIMMED_BOX_CLASS}`;
 
@@ -80,14 +91,13 @@ const paintTasks = (cy: Core, target: string | null): void => {
   });
 };
 
-/** One `run-<state>` class per task and Atomizer file in `runs`, none on the rest. */
+/** One `run-<state>` class per task and Atomizer file in `runs`, none on the rest; a node already right is not touched. */
 const markRuns = (cy: Core, runs: TaskRuns): void => {
   const markTask = (node: NodeSingular): void => {
     const state = runStateOf(runs, node.id());
+    const wanted = runClassesOf(state);
 
-    node.removeClass(RUN_CLASSES);
-
-    if (state !== null) node.addClass(runClassOf(state));
+    setClassesAmong(node, RUN_CLASS_NAMES, wanted);
   };
 
   cy.batch((): void => void runNodes(cy).forEach(markTask));
