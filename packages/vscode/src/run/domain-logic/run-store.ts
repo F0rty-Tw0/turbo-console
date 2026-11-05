@@ -149,13 +149,22 @@ export class RunStore {
     this.update(slot, { state, match, outcomes, matching: false });
   }
 
-  /** Drops the ended entries of `root` whose task is gone; a running entry stays until it ends. */
+  /**
+   * Drops the ended entries of `root` whose task is gone; a running entry stays until it ends. One still waiting for its
+   * match first ends unmatched, announced: `setMatch` finds no entry after, and the run's progress settles on that change.
+   */
   public prune(root: string, visibleIds: Set<string>): void {
-    for (const [key, { entry }] of this.slots) {
+    for (const [key, slot] of this.slots) {
+      const { entry } = slot;
       const isVisible = visibleIds.has(entry.taskId);
       const isDropped = entry.root === root && !isVisible && entry.state !== 'running';
 
-      if (isDropped) this.slots.delete(key);
+      if (!isDropped) continue;
+
+      const unmatched: Partial<RunEntry> = { ...NOT_MATCHED, matching: false };
+
+      if (entry.matching) this.update(slot, unmatched);
+      this.slots.delete(key);
     }
   }
 

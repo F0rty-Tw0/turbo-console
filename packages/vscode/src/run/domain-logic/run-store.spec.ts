@@ -283,6 +283,14 @@ describe('FEATURE: run store', () => {
       expect(store.get('/ws', 'build')).toBeUndefined();
     });
 
+    it('WHEN the root is pruned without its task THEN one change ends its matching with no match first', () => {
+      const changes = changesOf(store);
+
+      store.prune('/ws', new Set());
+
+      expect(changes.map((entry) => [entry.matching, entry.match, entry.outcomes])).toStrictEqual([[false, null, null]]);
+    });
+
     it('WHEN the root is pruned with its task THEN the entry is kept', () => {
       store.prune('/ws', new Set(['build']));
 
