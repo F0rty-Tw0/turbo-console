@@ -151,9 +151,12 @@ export class RunStore {
 
   /**
    * Drops the ended entries of `root` whose task is gone; a running entry stays until it ends. One still waiting for its
-   * match first ends unmatched, announced: `setMatch` finds no entry after, and the run's progress settles on that change.
+   * match is then announced unmatched: `setMatch` finds no entry after, and the run's progress settles on that change.
+   * Every entry is dropped before any listener hears of one, so a throwing listener cannot leave a gone entry behind.
    */
   public prune(root: string, visibleIds: Set<string>): void {
+    const unmatchedEntries: RunEntry[] = [];
+
     for (const [key, slot] of this.slots) {
       const { entry } = slot;
       const isVisible = visibleIds.has(entry.taskId);
@@ -161,11 +164,16 @@ export class RunStore {
 
       if (!isDropped) continue;
 
-      const unmatched: Partial<RunEntry> = { ...NOT_MATCHED, matching: false };
-
-      if (entry.matching) this.update(slot, unmatched);
       this.slots.delete(key);
+
+      if (!entry.matching) continue;
+
+      const unmatched: RunEntry = { ...entry, ...NOT_MATCHED, matching: false };
+
+      unmatchedEntries.push(unmatched);
     }
+
+    for (const unmatched of unmatchedEntries) this.announce(unmatched);
   }
 
   /** Fires on every change of an entry; returns the unsubscribe. */
@@ -212,13 +220,17 @@ export class RunStore {
   }
 
   /**
-   * Every change of an entry goes through here, so the running ids of its root are dropped before a listener can ask for
-   * them. `attach` replaces a slot with the same entry and `prune` drops ended ones only: neither changes them.
+   * Every change of a slot goes through here, so the running ids of its root are dropped before a listener can ask for
+   * them. `attach` swaps the execution of a slot and does not come through here: no entry changes.
    */
   private put(slot: RunSlot): void {
     this.slots.set(runKeyOf(slot.entry.root, slot.entry.taskId), slot);
     this.idsByRoot.delete(slot.entry.root);
+    this.announce(slot.entry);
+  }
 
-    for (const listener of this.listeners) listener(slot.entry);
+  /** Tells every listener of `entry`; `prune` uses it alone for an entry it already dropped, so no slot is put back. */
+  private announce(entry: RunEntry): void {
+    for (const listener of this.listeners) listener(entry);
   }
 }

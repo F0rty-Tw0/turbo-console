@@ -297,6 +297,39 @@ describe('FEATURE: run store', () => {
       expect(store.get('/ws', 'build')?.state).toBe('passed');
     });
 
+    it('WHEN the root is pruned with its task THEN nothing is announced', () => {
+      const changes = changesOf(store);
+
+      store.prune('/ws', new Set(['build']));
+
+      expect(changes).toStrictEqual([]);
+    });
+
+    it('WHEN its match already ended and the root is pruned without its task THEN the entry is dropped and nothing is announced', () => {
+      store.setMatch(RUN, 1000, MATCHED);
+
+      const changes = changesOf(store);
+
+      store.prune('/ws', new Set());
+
+      expect([store.get('/ws', 'build'), changes]).toStrictEqual([undefined, []]);
+    });
+
+    it('WHEN a change listener throws during the prune THEN every gone entry is still dropped', () => {
+      const lint: RunRequest = { ...RUN_REQUEST_STUB, task: { ...RUN_REQUEST_STUB.task, id: 'lint' } };
+
+      store.tryStart(lint, 1000);
+      store.processEnded({ root: '/ws', id: 'lint' }, 0, 4000);
+      store.onDidChange(() => {
+        throw new Error('listener boom');
+      });
+
+      expect(() => {
+        store.prune('/ws', new Set());
+      }).toThrow('listener boom');
+      expect([store.get('/ws', 'build'), store.get('/ws', 'lint')]).toStrictEqual([undefined, undefined]);
+    });
+
     it('WHEN another root is pruned THEN the entry is kept', () => {
       store.prune('/other', new Set());
 
