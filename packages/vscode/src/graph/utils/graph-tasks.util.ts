@@ -1,10 +1,13 @@
 import type { AtomFile, AtomGroup, PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphAtomFile, GraphAtomGroup, GraphRunState, GraphState, GraphTask } from '@turbo-console/webview-ui';
+import type { GraphAtomFile, GraphAtomGroup, GraphRunState, GraphRunsMessage, GraphState, GraphTask } from '@turbo-console/webview-ui';
 
 import { atomFoldOf } from './graph-atoms.util.ts';
+import type { DisplayedRun } from '../../run/common/run-progress.type.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
+import { displayRunOf } from '../../run/utils/run-display.util.ts';
 import { isRunnableTask, isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 import type { AtomFold, GraphListing } from '../common/graph-atom.type.ts';
+import type { RunSources } from '../common/graph.type.ts';
 
 type VisibleTask = { readonly packageName: string; readonly task: TaskNode; readonly isRootTask: boolean };
 
@@ -32,6 +35,14 @@ const visibleTasksOf = (model: WorkspaceModel): VisibleTask[] => {
   const root = rootTasksOf(model);
 
   return [...own, ...root];
+};
+
+/** The ids a running word shows as `continuous`: the visible tasks the model marks persistent. */
+export const persistentIdsOf = (model: WorkspaceModel): ReadonlySet<string> => {
+  const persistent = visibleTasksOf(model).filter(({ task }) => task.persistent);
+  const ids = persistent.map(({ task }) => task.id);
+
+  return new Set(ids);
 };
 
 const NO_IDS: string[] = [];
@@ -129,4 +140,48 @@ export const runsMapOf = (root: string, ids: string[], get: RunLookup): Record<s
   const withRun = entries.filter((entry): entry is [string, GraphRunState] => entry[1] !== undefined);
 
   return Object.fromEntries(withRun);
+};
+
+const runningWordOf = (isPersistent: boolean): GraphRunState => (isPersistent ? 'continuous' : 'running');
+
+const graphWordOf = (displayed: DisplayedRun, own: RunEntry | undefined, isPersistent: boolean): GraphRunState => {
+  if (own?.state === 'running') return runningWordOf(own.task.persistent);
+
+  if (displayed.owner !== null) return runningWordOf(isPersistent);
+
+  return displayed.state;
+};
+
+/**
+ * The runs message of the listed `ids` under `root` (spec D9, D11): each id's word from its own run and the progress records
+ * (`continuous` for a running persistent task, own or owned), and `owners` for the ids that run under another task's run,
+ * left out when there is none. Ids no run names never appear, and an id that is not in `ids` never does.
+ */
+export const runsMessageOf = (root: string, ids: string[], sources: RunSources): GraphRunsMessage => {
+  const { get, recordsOf, persistentIds } = sources;
+  const runs = new Map<string, GraphRunState>();
+  const owners = new Map<string, string>();
+
+  for (const id of ids) {
+    const own = get(root, id);
+    const displayed = displayRunOf(own, recordsOf(root, id));
+
+    if (displayed === null) continue;
+
+    runs.set(id, graphWordOf(displayed, own, persistentIds.has(id)));
+
+    if (displayed.owner !== null) owners.set(id, displayed.owner);
+  }
+
+  const runsRecord = Object.fromEntries(runs);
+
+  if (owners.size === 0) {
+    const plain: GraphRunsMessage = { type: 'runs', runs: runsRecord };
+
+    return plain;
+  }
+
+  const owned: GraphRunsMessage = { type: 'runs', runs: runsRecord, owners: Object.fromEntries(owners) };
+
+  return owned;
 };

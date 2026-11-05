@@ -2,7 +2,8 @@ import type { GraphHostMessage, GraphState, GraphWebviewMessage, LayoutGrouping 
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
-import type { Runs } from '../../run/common/run.type.ts';
+import type { ProgressRecords } from '../../run/common/run-progress.type.ts';
+import type { RunLookup, Runs } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 
@@ -104,4 +105,11 @@ export type GraphFeeds = {
   readonly runs: Runs;
   readonly atoms: SharedAtoms;
   readonly toggles: GraphToggles;
+};
+
+/** What the runs message of a graph reads: the own run of an id, the progress records that name it and the ids whose running word is `continuous`. */
+export type RunSources = {
+  readonly get: RunLookup;
+  readonly recordsOf: ProgressRecords['recordsOf'];
+  readonly persistentIds: ReadonlySet<string>;
 };
