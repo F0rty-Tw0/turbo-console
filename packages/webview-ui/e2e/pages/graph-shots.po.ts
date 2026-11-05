@@ -108,7 +108,7 @@ export class GraphShots {
     await this.settle();
   }
 
-  /** The host's `runs` message, then the marks drawn and the canvas settled. */
+  /** The host's `runs` message, then the canvas settled. */
   public async sendRuns(runs: TaskRuns): Promise<void> {
     await this.taskHost.sendRuns(runs);
     await this.settle();

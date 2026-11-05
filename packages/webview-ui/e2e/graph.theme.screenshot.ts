@@ -13,6 +13,7 @@ import { TARGET_LIKE_UMBRELLA } from './test/utils/graph-target-like-tasks.spec.
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 import { taskCanvasShotSetup } from './test/utils/graph-task-canvas.spec.util.ts';
 import { taskShotSetup } from './test/utils/graph-task-shot.spec.util.ts';
+import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const THEMES = [
@@ -56,7 +57,7 @@ const PACKAGE_RUN_STATE = packageRunShotState();
 const PACKAGE_RUN_COLLAPSED = collapsedSavedState(PACKAGE_RUN_STATE.hash, FOLDERS_SHOT_COLLAPSED);
 
 /** Both panels start closed: `inspect` opens them, and a fresh view would open them already. */
-const PACKAGE_RUN_SAVED = { ...PACKAGE_RUN_COLLAPSED, controlsOpen: false, detailsOpen: false };
+const PACKAGE_RUN_SAVED: GraphViewState = { ...PACKAGE_RUN_COLLAPSED, controlsOpen: false, detailsOpen: false };
 
 const PACKAGE_RUN_SETUP: ShotSetup = { state: PACKAGE_RUN_STATE, saved: PACKAGE_RUN_SAVED, cache: 'folderPositions' };
 
@@ -170,10 +171,10 @@ test.describe('FEATURE: theme screenshots of package run outlines', () => {
       await test.step('WHEN the folders graph with build tasks is laid out with tools collapsed and reopened from its cache', async (): Promise<void> =>
         shots.openCached(PACKAGE_RUN_SETUP, theme));
 
-      await test.step('AND runs arrive and web is selected from the controls and shown in the details', async (): Promise<void> => {
-        await shots.sendRuns(PACKAGE_RUN_SHOT_RUNS_STUB);
-        await shots.inspect('web');
-      });
+      await test.step('AND runs arrive', async (): Promise<void> => shots.sendRuns(PACKAGE_RUN_SHOT_RUNS_STUB));
+
+      await test.step('AND web is selected from the controls and shown in the details', async (): Promise<void> =>
+        shots.inspect('web'));
 
       await test.step(`THEN the page matches package-run-${name}.png`, async (): Promise<void> =>
         expect(page).toHaveScreenshot(`package-run-${name}.png`));
