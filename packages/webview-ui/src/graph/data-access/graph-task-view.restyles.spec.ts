@@ -1,5 +1,5 @@
 import cytoscape from 'cytoscape';
-import type { Core, EventObjectEdge, EventObjectNode } from 'cytoscape';
+import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createTaskCanvas } from './graph-task-view.ts';
@@ -8,6 +8,7 @@ import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
+import { restyledIdsDuring, styleEventsDuring } from '../test/utils/style-events.spec.util.ts';
 
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 
@@ -24,26 +25,6 @@ const DRAWING: TaskDrawing = {
   titleWidths: new Map(),
   rootLabel: null,
   naming: NAMING_STUB
-};
-
-const styleEventsDuring = (cy: Core, write: () => void): number => {
-  let count = 0;
-
-  cy.on('style', (): void => void count++);
-  write();
-
-  return count;
-};
-
-const restyledIdsDuring = (cy: Core, write: () => void): string[] => {
-  const ids = new Set<string>();
-
-  cy.on('style', (event: EventObjectNode | EventObjectEdge): void => void ids.add(event.target.id()));
-  write();
-
-  const restyled = [...ids];
-
-  return restyled.sort();
 };
 
 describe('FEATURE: createTaskCanvas restyles with styles on', () => {
