@@ -106,6 +106,7 @@ describe('FEATURE: run progress in the graph feed (spec D11)', () => {
       const { ports, fake } = startedFeed();
 
       for (let change = 0; change < 5; change += 1) {
+        // Owners alternate, so each change is a new map and dedupe cannot hide a post the listener makes itself.
         const record = change % 2 === 0 ? A_UNDER_WEB_BUILD : A_UNDER_WEB_LINT;
 
         fake.recordsOf.mockImplementation(recordsOfA(record));
