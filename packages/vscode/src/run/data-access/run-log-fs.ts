@@ -1,5 +1,5 @@
 import { watch } from 'node:fs';
-import { open, readdir, rm, stat } from 'node:fs/promises';
+import { mkdir, open, readdir, rm, stat } from 'node:fs/promises';
 import type { FileHandle } from 'node:fs/promises';
 
 import type { RunLogPorts, RunLogRead, RunLogWatcher } from '../common/run-log-tail.type.ts';
@@ -66,6 +66,10 @@ const modifiedAt = async (path: string): Promise<number | null> => {
   }
 };
 
+const makeDir = async (dir: string): Promise<void> => {
+  await mkdir(dir, { recursive: true });
+};
+
 const watchDir: RunLogPorts['watch'] = (dir, onChange, onError) => {
   const onEvent = (_event: string, name: string | null): void => {
     onChange(name);
@@ -91,7 +95,7 @@ const watchDir: RunLogPorts['watch'] = (dir, onChange, onError) => {
 
 /** The log tails' file effects over `node:fs`; `log` takes one Output line. */
 export const editorRunLogPorts = (log: (line: string) => void): RunLogPorts => {
-  const ports: RunLogPorts = { watch: watchDir, read, remove, list, modifiedAt, now: () => Date.now(), log };
+  const ports: RunLogPorts = { watch: watchDir, read, remove, list, modifiedAt, makeDir, now: () => Date.now(), log };
 
   return ports;
 };

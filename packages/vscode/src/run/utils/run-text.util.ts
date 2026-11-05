@@ -46,3 +46,10 @@ export const runLogWatchErrorText = (dir: string, error: unknown): string => {
 
   return `cannot watch ${dir} for turbo log changes (${reason}): live progress arrives when the run ends`;
 };
+
+/** The Output line when the turbo log folder of a root cannot be made (spec D6): the run goes on, progress arrives at its end. */
+export const runLogDirErrorText = (dir: string, error: unknown): string => {
+  const reason = logTextOf(error);
+
+  return `cannot create ${dir} for turbo's log (${reason}): live progress arrives when the run ends`;
+};

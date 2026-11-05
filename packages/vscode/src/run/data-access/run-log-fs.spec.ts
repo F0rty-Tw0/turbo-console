@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, stat, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -21,6 +21,7 @@ describe("FEATURE: the log tails' file ports (spec D5)", () => {
     await mkdir(join(root, 'two'));
     await writeFile(join(root, 'two', 'run-1.json'), '');
     await writeFile(join(root, 'two', 'run-2.json'), '');
+    await writeFile(join(root, 'plain-file'), '');
   });
 
   afterAll(async () => {
@@ -105,6 +106,26 @@ describe("FEATURE: the log tails' file ports (spec D5)", () => {
 
       expect(close).not.toThrow();
       expect(onError).toHaveBeenCalledWith(expect.objectContaining({ code: 'ENOENT' }));
+    });
+  });
+
+  describe('GIVEN a missing nested folder', () => {
+    it('WHEN made THEN it exists', async () => {
+      const dir = join(root, 'a', 'b', 'c');
+
+      await ports.makeDir(dir);
+
+      const made = await stat(dir);
+
+      expect(made.isDirectory()).toBe(true);
+    });
+  });
+
+  describe('GIVEN a file where the folder should be', () => {
+    it('WHEN made THEN it rejects', async () => {
+      const made = ports.makeDir(join(root, 'plain-file'));
+
+      await expect(made).rejects.toThrow();
     });
   });
 });

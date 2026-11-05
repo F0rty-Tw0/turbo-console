@@ -42,8 +42,8 @@ export const bytesReadOf = (reads: RunLogReadRecord[]): number => {
 export const fakeLogFs = (): FakeLogFs => {
   const files = new Map<string, Uint8Array>();
   const reads: RunLogReadRecord[] = [];
-  const { watchers, watch, emit, fail, failNextWatch } = fakeWatchers();
-  const { removed, logs, mtimes, remove, list, modifiedAt, log } = folderCallsOf(files);
+  const { watch, ...watching } = fakeWatchers();
+  const { removed, logs, mtimes, madeDirs, failMakeDir, remove, list, modifiedAt, makeDir, log } = folderCallsOf(files);
   let gate: Promise<undefined> | null = null;
 
   const read: RunLogRead = async (path, from, max) => {
@@ -79,7 +79,7 @@ export const fakeLogFs = (): FakeLogFs => {
     };
   };
 
-  const ports: RunLogPorts = { watch, read, remove, list, modifiedAt, now: (): number => FAKE_NOW_MS, log };
+  const ports: RunLogPorts = { watch, read, remove, list, modifiedAt, makeDir, now: (): number => FAKE_NOW_MS, log };
 
   const fs: FakeLogFs = {
     read,
@@ -88,13 +88,12 @@ export const fakeLogFs = (): FakeLogFs => {
     write,
     append,
     hold,
-    watchers,
-    emit,
-    fail,
-    failNextWatch,
+    ...watching,
     removed,
     logs,
     mtimes,
+    madeDirs,
+    failMakeDir,
     nowMs: FAKE_NOW_MS,
     ports
   };

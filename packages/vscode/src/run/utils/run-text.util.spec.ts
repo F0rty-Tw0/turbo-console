@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   failedToStartText,
   noScriptText,
+  runLogDirErrorText,
   runLogWatchErrorText,
   startTimeoutText,
   startWaitText,
@@ -75,6 +76,14 @@ describe('FEATURE: run texts', () => {
       expect(text).toBe(
         'cannot watch /ws/.turbo/turbo-console for turbo log changes (ENOSPC): live progress arrives when the run ends'
       );
+    });
+  });
+
+  describe('GIVEN a turbo log folder that cannot be made', () => {
+    it('WHEN the text is made THEN it names the folder and the error and says progress arrives at the end', () => {
+      const text = runLogDirErrorText('/ws/.turbo/turbo-console', new Error('EACCES'));
+
+      expect(text).toBe("cannot create /ws/.turbo/turbo-console for turbo's log (EACCES): live progress arrives when the run ends");
     });
   });
 });

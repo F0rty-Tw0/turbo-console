@@ -39,7 +39,8 @@ export type RunLogWatcher = {
 /**
  * What the tails need from the machine. `watch` reports a changed file name, or `null` when the OS gave none; it never
  * throws and reports a failure through `onError`, possibly before it returns; `read` and `list` never invent a file;
- * `modifiedAt` is `null` for a file that is gone; `log` takes one Output line.
+ * `modifiedAt` is `null` for a file that is gone; `makeDir` makes `dir` and its parents and rejects when it cannot;
+ * `log` takes one Output line.
  */
 export type RunLogPorts = {
   readonly watch: (dir: string, onChange: (fileName: string | null) => void, onError: (error: unknown) => void) => RunLogWatcher;
@@ -47,8 +48,18 @@ export type RunLogPorts = {
   readonly remove: (path: string) => Promise<void>;
   readonly list: (dir: string) => Promise<string[]>;
   readonly modifiedAt: (path: string) => Promise<number | null>;
+  readonly makeDir: (dir: string) => Promise<void>;
   readonly now: () => number;
   readonly log: (line: string) => void;
+};
+
+/**
+ * One run's log path: `env` is repo-relative with `/`, the form turbo's `TURBO_LOG_FILE` was proven with (U7a contract,
+ * three OSes); `file` is absolute, for the tail.
+ */
+export type RunLogPath = {
+  readonly env: string;
+  readonly file: string;
 };
 
 /**
@@ -58,4 +69,10 @@ export type RunLogPorts = {
 export type RunLogTail = {
   readonly drain: () => Promise<void>;
   readonly close: () => void;
+};
+
+/** What a run needs of the window's tails (spec D6, D10): the folder made before it starts, and its file tailed. */
+export type RunLogs = {
+  readonly prepare: (root: string) => Promise<boolean>;
+  readonly start: (root: string, path: string, onEvent: RunLogListener) => RunLogTail;
 };

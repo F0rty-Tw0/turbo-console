@@ -36,6 +36,10 @@ const TWO_TASKS: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [TASK_NODE_STUB, T
 
 const MODEL: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [TWO_TASKS] };
 
+const ROOT_LINT_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#lint', name: 'lint' };
+
+const ROOT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', tasks: [ROOT_LINT_TASK] };
+
 const NO_MODEL: RootState = { ...LOADED, model: null };
 
 const NO_PACKAGES: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [] };
@@ -192,6 +196,14 @@ describe('FEATURE: run targets', () => {
       const ids = taskIdsOf(MODEL);
 
       expect(ids).toStrictEqual(new Set(['build', 'a#test']));
+    });
+
+    it('WHEN the model has a root package with //#lint THEN //#lint is among the ids', () => {
+      const withRoot: WorkspaceModel = { ...MODEL, rootPackage: ROOT_PACKAGE };
+
+      const ids = taskIdsOf(withRoot);
+
+      expect(ids).toStrictEqual(new Set(['build', 'a#test', '//#lint']));
     });
 
     it('WHEN the root has no model THEN it has no task ids', () => {
