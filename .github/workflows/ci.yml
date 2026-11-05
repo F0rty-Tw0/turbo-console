@@ -173,9 +173,11 @@ jobs:
       # successful one, so no stale file is counted.
       # On CI runners a bench process still settles in a fast or a slow mode after the warmup (#200: 18.1 vs 20.9 ms for
       # parse-package-graph-stretch-300), more than the gate allows, so three draws per side can fail unchanged code. When
-      # a gated bench regressed (compare exit 1), rounds 4-6 (H,B / B,H / H,B) run and the fastest of all six draws per
-      # side is compared again; a real slowdown slows every draw and stays red. Missing gated benches or a compare error
-      # (exit 3) fail at once, and so do rounds 4-6 with a failed base run, since head would then get more draws than base.
+      # a gated bench regressed (compare exit 1), rounds 4-6 (H,B / B,H / H,B) run and the draws are compared again. A
+      # bench fails only when both the fastest and the middle (median) of the draws per side are past the threshold: a real
+      # slowdown slows every draw and stays red, while one fast draw on base (#265: 249 ms against a usual 295-387) moves
+      # only the fastest. Missing gated benches or a compare error (exit 3) fail at once, and so do rounds 4-6 with a
+      # failed base run, since head would then get more draws than base.
       - name: Bench and compare
         shell: bash
         env:

@@ -24,12 +24,29 @@ export type BenchResult = {
   readonly gate: boolean;
 };
 
-/** One bench present on both sides; `ratio` is `headNs / baseNs`, `gate` is set when either side gates it; `failed` means gated and slower than the threshold allows. */
+/**
+ * One bench reduced over its runs: `medianNs` is the fastest run median and `middleNs` the median of the run medians;
+ * the rest comes from the last run.
+ */
+export type ReducedResult = {
+  readonly name: string;
+  readonly medianNs: number;
+  readonly middleNs: number;
+  readonly samples: number;
+  readonly gate: boolean;
+};
+
+/**
+ * One bench present on both sides; `ratio` is head's fastest over base's fastest run median, `middleRatio` head's middle
+ * over base's middle; `gate` is set when either side gates it; `failed` means gated and both slowdowns are past the
+ * threshold.
+ */
 export type ComparisonRow = {
   readonly name: string;
   readonly baseNs: number;
   readonly headNs: number;
   readonly ratio: number;
+  readonly middleRatio: number;
   readonly gate: boolean;
   readonly failed: boolean;
 };
