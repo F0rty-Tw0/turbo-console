@@ -1,10 +1,19 @@
 const ENCODER = new TextEncoder();
 
+const DECODER = new TextDecoder();
+
 const OPEN_PREFIX = '{"source":"a#b","level":"info","timestamp":1,"text":"';
 
 export const bytesOf = (text: string): Uint8Array => ENCODER.encode(text);
 
 export const byteLengthOf = (text: string): number => bytesOf(text).length;
+
+/** The UTF-8 text of a read, or `null` for a read of a missing file. */
+export const textOf = (bytes: Uint8Array | null): string | null => {
+  if (bytes === null) return null;
+
+  return DECODER.decode(bytes);
+};
 
 /** Turbo's on-disk shape (probe P1.1): `[\n`, the first object, then `,\n` before each further one, a `\n` after each, and `]\n`. */
 export const turboLogTextOf = (lines: string[]): string => {

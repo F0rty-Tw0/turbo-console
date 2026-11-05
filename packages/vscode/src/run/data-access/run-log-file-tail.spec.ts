@@ -1,5 +1,5 @@
 import type { RunLogEvent } from '@turbo-console/core';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunLogFileTail } from './run-log-file-tail.ts';
 import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
@@ -18,6 +18,7 @@ import {
 import type { FakeLogFs } from '../test/common/run-log-fs.type.ts';
 import { ENTRY_A, ENTRY_B, INVALID_OBJECT } from '../test/common/run-log-step.const.ts';
 import { byteLengthOf, bytesOf, entryLinesOf, openObjectOf, turboLogTextOf } from '../test/utils/run-log-bytes.spec.util.ts';
+import { endChangeWindow, fakeChangeWindows } from '../test/utils/run-log-change-window.spec.util.ts';
 import { bytesReadOf, fakeLogFs } from '../test/utils/run-log-fs.spec.util.ts';
 
 describe('FEATURE: tail one turbo log file (spec D5)', () => {
@@ -30,9 +31,14 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
       events.push(event);
     };
 
+    fakeChangeWindows();
     fs = fakeLogFs();
     events = [];
     tail = new RunLogFileTail(LOG_PATH, fs.read, onEvent);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('GIVEN a file with lines of a#build and b#build and a turbo line', () => {
@@ -42,18 +48,18 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
 
     it('WHEN changed THEN seen a#build, seen b#build in file order and nothing for turbo', async () => {
       tail.changed();
-      await flush();
+      await endChangeWindow();
 
       expect(events).toStrictEqual([SEEN_A, SEEN_B]);
     });
 
     it('WHEN a cache-hit line of a#build is appended and changed again THEN one cacheHit a#build more', async () => {
       tail.changed();
-      await flush();
+      await endChangeWindow();
 
       fs.append(LOG_PATH, ENTRY_CACHE_HIT);
       tail.changed();
-      await flush();
+      await endChangeWindow();
 
       expect(events).toStrictEqual([SEEN_A, SEEN_B, CACHE_HIT_A]);
     });
@@ -65,10 +71,11 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
       const release = fs.hold();
 
       tail.changed();
+      await endChangeWindow();
       tail.changed();
       tail.changed();
       tail.changed();
-      await flush();
+      await endChangeWindow();
       const readsHeld = fs.reads.length;
 
       release();
@@ -77,6 +84,56 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
 
       expect([readsHeld, readsReleased]).toStrictEqual([1, 2]);
     });
+
+    it('WHEN changed, the read fails on its listener and the window opened meanwhile ends THEN no read follows', async () => {
+      const throwOnEvent = (): void => {
+        throw new Error('listener broke');
+      };
+      const throwingTail = new RunLogFileTail(LOG_PATH, fs.read, throwOnEvent);
+
+      fs.write(LOG_PATH, [ENTRY_A]);
+      const release = fs.hold();
+
+      throwingTail.changed();
+      await endChangeWindow();
+      throwingTail.changed();
+      release();
+      await flush();
+      await endChangeWindow();
+
+      expect(fs.reads).toHaveLength(1);
+    });
+  });
+
+  describe('GIVEN a file of a#build and b#build and changes inside one window', () => {
+    beforeEach(() => {
+      fs.write(LOG_PATH, [ENTRY_A, ENTRY_B]);
+      tail.changed();
+      tail.changed();
+      tail.changed();
+    });
+
+    it('WHEN the window ends THEN one read, none before it', async () => {
+      await flush();
+      const readsInWindow = fs.reads.length;
+
+      await endChangeWindow();
+
+      expect([readsInWindow, fs.reads.length]).toStrictEqual([0, 1]);
+    });
+
+    it('WHEN drained in the window THEN its lines arrive at once and no window is left', async () => {
+      await tail.drain();
+
+      expect([events, vi.getTimerCount()]).toStrictEqual([[SEEN_A, SEEN_B], 0]);
+    });
+
+    it('WHEN closed in the window THEN no read and no window is left', async () => {
+      await tail.close();
+      await flush();
+
+      expect([fs.reads.length, vi.getTimerCount()]).toStrictEqual([0, 0]);
+    });
   });
 
   describe('GIVEN a file of 2.5 MiB of entries (three windows)', () => {
@@ -84,7 +141,7 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
       fs.write(LOG_PATH, entryLinesOf(ENTRY_COUNT_MULTI_WINDOW, ENTRY_TEXT_SIZE));
 
       tail.changed();
-      await flush();
+      await endChangeWindow();
 
       expect(events).toHaveLength(ENTRY_COUNT_MULTI_WINDOW);
     });
@@ -100,7 +157,7 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
       for (const line of lines) {
         fs.append(LOG_PATH, line);
         tail.changed();
-        await flush();
+        await endChangeWindow();
       }
       const bytesRead = bytesReadOf(fs.reads);
 
@@ -138,6 +195,7 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
       const release = fs.hold();
 
       tail.changed();
+      await endChangeWindow();
       const drained = tail.drain();
 
       fs.append(LOG_PATH, ENTRY_B);
@@ -182,6 +240,7 @@ describe('FEATURE: tail one turbo log file (spec D5)', () => {
       const release = fs.hold();
 
       tail.changed();
+      await endChangeWindow();
       const drained = tail.drain();
 
       release();

@@ -1,12 +1,12 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunLogTails } from './run-log-tails.ts';
-import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
 import type { RunLogPorts } from '../common/run-log-tail.type.ts';
 import { SEEN_A, SEEN_B } from '../test/common/run-log-fs.const.ts';
 import { ENTRY_A, ENTRY_B } from '../test/common/run-log-step.const.ts';
 import { ROOT_OTHER, ROOT_WS } from '../test/common/run-log-tails.const.ts';
 import type { StartedTail, TailsHarness } from '../test/common/run-log-tails.type.ts';
+import { endChangeWindow, fakeChangeWindows } from '../test/utils/run-log-change-window.spec.util.ts';
 import { logPathOf, tailsHarnessOf } from '../test/utils/run-log-tails.spec.util.ts';
 import { runLogDirOf } from '../utils/run-log-dir.util.ts';
 import { runLogWatchErrorText } from '../utils/run-text.util.ts';
@@ -23,7 +23,12 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
   let h: TailsHarness;
 
   beforeEach(() => {
+    fakeChangeWindows();
     h = tailsHarnessOf(tailsOf);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('GIVEN two tails of /ws and one of /other', () => {
@@ -34,7 +39,7 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
       tail1 = h.start(ROOT_WS, P1);
       tail2 = h.start(ROOT_WS, P2);
       h.start(ROOT_OTHER, P3);
-      await flush();
+      await endChangeWindow();
     });
 
     it('WHEN started THEN one watcher per root folder', () => {
@@ -46,7 +51,7 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
       h.fs.append(P2, ENTRY_B);
 
       h.fs.emit(DIR_WS, 'run-2.json');
-      await flush();
+      await endChangeWindow();
 
       expect([tail1.events, tail2.events]).toStrictEqual([[], [SEEN_B]]);
     });
@@ -56,7 +61,7 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
       h.fs.append(P2, ENTRY_B);
 
       h.fs.emit(DIR_WS, null);
-      await flush();
+      await endChangeWindow();
 
       expect([tail1.events, tail2.events]).toStrictEqual([[SEEN_A], [SEEN_B]]);
     });
@@ -65,7 +70,7 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
       const readsBefore = h.fs.reads.length;
 
       h.fs.emit(DIR_WS, 'notes.txt');
-      await flush();
+      await endChangeWindow();
 
       expect(h.fs.reads).toHaveLength(readsBefore);
     });
@@ -74,7 +79,7 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
       tail1.tail.close();
       h.fs.append(P1, ENTRY_A);
       h.fs.emit(DIR_WS, 'run-1.json');
-      await flush();
+      await endChangeWindow();
 
       expect([tail1.events, h.fs.removed]).toStrictEqual([[], [P1]]);
     });
@@ -99,7 +104,7 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
 
       const started = h.start(ROOT_WS, P1);
 
-      await flush();
+      await endChangeWindow();
 
       expect(started.events).toStrictEqual([SEEN_A, SEEN_B]);
     });
@@ -109,7 +114,7 @@ describe("FEATURE: the window's turbo log tails (spec D5, D6)", () => {
     it('WHEN started again THEN no second tail reads it', async () => {
       h.start(ROOT_WS, P1);
       h.start(ROOT_WS, P1);
-      await flush();
+      await endChangeWindow();
 
       expect(h.fs.reads).toHaveLength(1);
     });
