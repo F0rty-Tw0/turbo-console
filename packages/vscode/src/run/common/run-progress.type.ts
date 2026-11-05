@@ -63,6 +63,9 @@ export type ProgressChanges = {
 /**
  * What the run flow and the session tell the progress of one owner run (spec D10): `drain` from the process end, `abort`
  * from a start that failed. A call for an owner never begun is ignored, and a tail handed to one is closed.
+ *
+ * Lifecycle contract: every begun owner gets `drain` or `abort`, and its entry gets a settled match (`setMatch`, even
+ * `null`) or a rerun; otherwise its join stays until the window closes.
  */
 export type ProgressPort = {
   readonly begin: (owner: ProgressOwner, dependenciesOf: DependenciesOf) => void;
