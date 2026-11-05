@@ -3,7 +3,7 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import type { GraphEdge, GraphPackage, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { graphHashOf, graphStateOf, graphStateOfRoot, rootLabelOf, runIdsOfRoot } from './graph-state.util.ts';
+import { graphHashOf, graphStateOf, graphStateOfRoot, persistentIdsOfRoot, rootLabelOf, runIdsOfRoot } from './graph-state.util.ts';
 import { runIdsOf } from './graph-tasks.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
@@ -39,6 +39,9 @@ const GHOSTED: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: GHOST
 const ROOT_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
 const ROOT_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [ROOT_TASK] };
 const ROOT_INFOS = [{ name: '//', path: '' }];
+const DEV_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#dev', name: 'dev', persistent: true };
+const DEV_ROOT_NODE: PackageNode = { ...ROOT_NODE, tasks: [ROOT_TASK, DEV_TASK] };
+const DEV_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [DEV_ROOT_NODE] };
 const SINGLE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [ROOT_NODE] };
 const GROWN_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GRAPH_MODEL_STUB.packages, rootNode('new')] };
 
@@ -317,5 +320,23 @@ describe('FEATURE: run ids of a root', () => {
 
   it('GIVEN a single-package model WHEN the run ids are read THEN they list the // tasks', () => {
     expect(runIdsOfRoot(stateOf({ model: SINGLE_MODEL }))).not.toStrictEqual([]);
+  });
+});
+
+describe('FEATURE: persistent ids of a root', () => {
+  it('GIVEN a root that shows a model with a persistent task WHEN its persistent ids are taken THEN they are those of the model', () => {
+    const ids = persistentIdsOfRoot(stateOf({ model: DEV_MODEL }));
+
+    expect([...ids]).toStrictEqual(['//#dev']);
+  });
+
+  it.each([
+    ['no state', undefined],
+    ['no model', stateOf({ model: null })],
+    ['a binary failure over a model', stateOf({ model: DEV_MODEL, error: LOAD_FAILURE_STUB })]
+  ])('GIVEN %s WHEN its persistent ids are taken THEN there are none', (_label, root) => {
+    const ids = persistentIdsOfRoot(root);
+
+    expect(ids.size).toBe(0);
   });
 });

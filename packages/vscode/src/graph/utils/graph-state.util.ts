@@ -4,7 +4,7 @@ import type { GraphEdge, GraphPackage, GraphState } from '@turbo-console/webview
 
 import { coversExactly } from './graph-cache.util.ts';
 import { packageNamesOf } from './graph-package.util.ts';
-import { graphListingOf, runIdsOfListing } from './graph-tasks.util.ts';
+import { graphListingOf, persistentIdsOf, runIdsOfListing } from './graph-tasks.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { bareTextsOf } from '../../tree/utils/model-view.util.ts';
@@ -153,4 +153,17 @@ export const runIdsOfRoot = (state: RootState | undefined): string[] => {
   if (model === null) return NO_IDS;
 
   return runIdsOfListing(graphListingOf(model));
+};
+
+/** The ids `runIdsOfRoot(state)` lists that the root's model marks persistent: none unless the root shows a model. */
+export const persistentIdsOfRoot = (state: RootState | undefined): ReadonlySet<string> => {
+  const none = new Set<string>();
+
+  if (state === undefined) return none;
+
+  const model = shownModelOf(state);
+
+  if (model === null) return none;
+
+  return persistentIdsOf(model);
 };
