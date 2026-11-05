@@ -3,7 +3,7 @@ import type { GraphPackage, GraphSetViewToggleMessage, GraphState, GraphWebviewM
 import { routeRun } from './graph-run-route.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { GraphPorts, GraphRequestMessage, GraphToggles, RequestContext } from '../common/graph.type.ts';
+import type { GraphFeeds, GraphPorts, GraphRequestMessage, GraphToggles, RequestContext } from '../common/graph.type.ts';
 import { packageNamesOf } from '../utils/graph-package.util.ts';
 
 const NO_PACKAGES: GraphPackage[] = [];
@@ -54,7 +54,7 @@ async function openDetailsOf(
 }
 
 /** `false` unless the state is a graph; each package that holds a listed umbrella among `ids` is asked to load once, and other ids are ignored. */
-function shownUmbrellasOf(ids: string[], state: GraphState, root: string, atoms: RequestContext['atoms']): boolean {
+function shownUmbrellasOf(ids: string[], state: GraphState, root: string, atoms: GraphFeeds['atoms']): boolean {
   if (state.kind !== 'graph') return false;
 
   const umbrellaIds = new Set(state.atomGroups.map((group) => group.umbrellaId));
@@ -76,7 +76,7 @@ async function setViewToggleOf(message: GraphSetViewToggleMessage, toggles: Grap
 
 /** `false` when the page asked for something the state does not allow; the session logs and drops that message. */
 export async function requestHandledOf(message: GraphRequestMessage, context: RequestContext): Promise<boolean> {
-  const { state, root, coordinator, ports, atoms, toggles } = context;
+  const { state, root, coordinator, ports, feeds } = context;
 
   switch (message.type) {
     case 'reload':
@@ -87,8 +87,8 @@ export async function requestHandledOf(message: GraphRequestMessage, context: Re
     case 'stopTask':
       return routeRun(message, state, ports, root);
     case 'shownUmbrellas':
-      return shownUmbrellasOf(message.ids, state, root, atoms);
+      return shownUmbrellasOf(message.ids, state, root, feeds.atoms);
     case 'setViewToggle':
-      return setViewToggleOf(message, toggles);
+      return setViewToggleOf(message, feeds.toggles);
   }
 }

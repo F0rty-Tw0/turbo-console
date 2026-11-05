@@ -52,14 +52,13 @@ type RunTag = { readonly type: 'runTask' | 'stopTask' };
 /** A page request to run or stop one task of the graph. */
 export type GraphRunRequest = Extract<GraphWebviewMessage, RunTag>;
 
-/** What a request is judged against: the state built now, the root, its coordinator, the ports a request may use, the atoms it may ask to load and the toggles it may set. */
+/** What a request is judged against: the state built now, the root, its coordinator, the ports a request may use and the session's feeds (the atoms it may ask to load and the toggles it may set). */
 export type RequestContext = {
   readonly state: GraphState;
   readonly root: string;
   readonly coordinator: Pick<Coordinator, 'request'> | undefined;
   readonly ports: Pick<GraphPorts, 'openDetails' | 'log' | 'executeCommand'>;
-  readonly atoms: Pick<SharedAtoms, 'childrenRequested'>;
-  readonly toggles: GraphToggles;
+  readonly feeds: GraphFeeds;
 };
 
 type ExplainTag = { readonly type: 'explainEdge' | 'openManifest' };
