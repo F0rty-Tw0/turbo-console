@@ -208,14 +208,36 @@ describe('FEATURE: GraphTaskWidgets', () => {
   });
 
   describe('GIVEN the a#build menu open while it runs on its own', () => {
-    it('WHEN a#build turns owned by web#build THEN the menu closes', () => {
-      const widgets = widgetsOf(rig, false);
+    let widgets: GraphTaskWidgets;
 
+    beforeEach(() => {
+      widgets = widgetsOf(rig, false);
       widgets.show(RUNNING);
       rig.toolbars[0]?.ellipsis.click();
+    });
+
+    it('WHEN a#build turns owned by web#build THEN the menu closes', () => {
       widgets.show(OWNED);
 
       expect(rig.menus[0]?.menu.isConnected).toBe(false);
+    });
+
+    it('WHEN a#build turns owned by web#build THEN focus is on the "…" button', () => {
+      widgets.show(OWNED);
+
+      expect(document.activeElement).toBe(rig.toolbars[0]?.ellipsis);
+    });
+  });
+
+  describe('GIVEN the a#build menu open while it runs under web#build', () => {
+    it('WHEN the same owner is shown again in a new model THEN the menu stays open', () => {
+      const widgets = widgetsOf(rig, false);
+
+      widgets.show(OWNED);
+      rig.toolbars[0]?.ellipsis.click();
+      widgets.show({ ...OWNED });
+
+      expect(rig.menus[0]?.menu.isConnected).toBe(true);
     });
   });
 
