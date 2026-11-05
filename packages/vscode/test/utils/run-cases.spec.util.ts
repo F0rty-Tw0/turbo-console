@@ -7,6 +7,7 @@ import { buildPair } from './build-pair.spec.util.ts';
 import { logMissedFail } from './missed-fail.spec.util.ts';
 import { overlapCase } from './overlap-case.spec.util.ts';
 import { packageDirOf, setScript, writeEdited } from './package-edit.spec.util.ts';
+import { liveCase } from './run-live-case.spec.util.ts';
 import { assertOneTerminal, assertTerminalKept } from './run-terminal.spec.util.ts';
 import { endedRun, logRunStarts, processStartOf, startRun, startRunWith, summaryNames, taskNodeNamed } from './run-wait.spec.util.ts';
 import { scriptTerminals } from './scripts-shell.spec.util.ts';
@@ -179,6 +180,7 @@ export const runCases = async (api: TurboConsoleApi, root: string, manifest: Sho
     await passCase(scene);
     await failCase(scene);
     await directCase(scene);
+    await liveCase({ api, root, x, y, manifest: file, manifestText });
   } finally {
     const asked = ASK_FILES.map(async (name) => rm(join(dir, name), { force: true }));
 

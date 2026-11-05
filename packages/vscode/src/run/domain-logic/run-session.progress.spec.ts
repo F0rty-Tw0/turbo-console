@@ -1,15 +1,23 @@
 import { basename } from 'node:path';
 
-import type { RunTasksMatch, TaskNode } from '@turbo-console/core';
+import type { RunTasksMatch, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunSession } from './run-session.ts';
+import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
 import type { RunPorts, RunRequest } from '../common/run.type.ts';
 import { RunLogTails } from '../data-access/run-log-tails.ts';
-import { ENTRY_B } from '../test/common/run-log-step.const.ts';
+import { ENTRY_A, ENTRY_B, ENTRY_LINT } from '../test/common/run-log-step.const.ts';
 import type { LiveParts, LiveSession } from '../test/common/run-session-live.type.ts';
-import { B_PASSED_STUB, JOIN_EVENT_STUB, JOIN_OWNER_STUB, JOIN_REQUEST_STUB } from '../test/stubs/run-progress-join.stub.ts';
+import {
+  B_PASSED_STUB,
+  JOIN_EVENT_STUB,
+  JOIN_MODEL_NO_B_STUB,
+  JOIN_MODEL_STUB,
+  JOIN_OWNER_STUB,
+  JOIN_REQUEST_STUB
+} from '../test/stubs/run-progress-join.stub.ts';
 import { LOG_ENV_STUB, TURBO_ARGS_STUB } from '../test/stubs/run.stub.ts';
 import { endChangeWindow, fakeChangeWindows } from '../test/utils/run-log-change-window.spec.util.ts';
 import { LIVE_DIR, LIVE_FILE, liveSessionOf } from '../test/utils/run-session-live.spec.util.ts';
@@ -22,6 +30,12 @@ const SCRIPT_REQUEST: RunRequest = { ...JOIN_REQUEST_STUB, task: SCRIPT_TASK };
 const SINGLE_REQUEST: RunRequest = { ...JOIN_REQUEST_STUB, singlePackage: true };
 
 const PARTS: LiveParts = { sessionOf: (ports) => new RunSession(ports, []), tailsOf: (ports) => new RunLogTails(ports) };
+
+const rootChangeOf = (after: WorkspaceModel): RootChange => {
+  const change: RootChange = { root: '/ws', before: null, after, errorBefore: null, errorAfter: null };
+
+  return change;
+};
 
 const matchesB = async (): Promise<RunTasksMatch> => Promise.resolve(B_PASSED_STUB);
 
@@ -90,7 +104,36 @@ describe('FEATURE: live progress of a turbo run (spec D10)', () => {
     });
   });
 
-  // U7e1d (moved by the size split, Task 5.9 Step 0b): pass on arrival.
+  describe('GIVEN a running turbo task a#build (depends on b#build) of a monorepo root', () => {
+    const writeLines = async (lines: string[]): Promise<void> => {
+      live.fs.write(LIVE_FILE, lines);
+      live.fs.emit(LIVE_DIR, basename(LIVE_FILE));
+      await endChangeWindow();
+    };
+
+    beforeEach(async () => {
+      live = liveSessionOf(PARTS);
+      await live.session.run(JOIN_REQUEST_STUB);
+      await writeLines([ENTRY_B]);
+    });
+
+    it('WHEN the root changes mid-run THEN dependenciesOf is not asked again and a later a#build line still turns b#build passed', async () => {
+      live.session.rootChanged(rootChangeOf(JOIN_MODEL_STUB));
+      await writeLines([ENTRY_B, ENTRY_A]);
+
+      expect(live.ports.dependenciesOf).toHaveBeenCalledExactlyOnceWith('/ws');
+      expect(live.stateOfB()).toBe('passed');
+    });
+
+    it('WHEN the root loses b#build THEN its record is dropped, and a //#lint record stays', async () => {
+      await writeLines([ENTRY_B, ENTRY_LINT]);
+      live.session.rootChanged(rootChangeOf(JOIN_MODEL_NO_B_STUB));
+
+      const lint = live.session.progress.recordsOf('/ws', '//#lint');
+
+      expect([live.stateOfB(), lint.map((record) => record.state)]).toStrictEqual([undefined, ['running']]);
+    });
+  });
 
   describe('GIVEN a turbo task of a single-package root (OQ1)', () => {
     it('WHEN it runs THEN it gets the env and its run is begun', async () => {

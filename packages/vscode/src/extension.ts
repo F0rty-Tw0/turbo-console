@@ -115,6 +115,14 @@ const rootsChangedOf = (
   return onRoots;
 };
 
+/** The span from when the roots were found to now; a zero-length span at now when they were never found. */
+const resumeSpanOf = (rootsFoundAt: number | null): Span => {
+  const end = performance.now();
+  const span: Span = { start: rootsFoundAt ?? end, end };
+
+  return span;
+};
+
 /**
  * Spec §3 activation: registers the view, commands and listeners, finds the roots and sets the context key. No turbo
  * spawn and no load: the first load starts when the view asks for its children or turns visible. In an untrusted
@@ -140,6 +148,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     commands,
     help,
     runs: runSession.runs,
+    progress: runSession.progress,
     timings,
     loads: session.loads,
     whenIdle: async (root: string): Promise<void> => session.whenIdle(root),
@@ -176,9 +185,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     timings.activation = { start, end: performance.now() };
   }
 
-  const end = performance.now();
-
-  timings.activationResume = { start: session.rootsFoundAt ?? end, end };
+  timings.activationResume = resumeSpanOf(session.rootsFoundAt);
 
   return api;
 };

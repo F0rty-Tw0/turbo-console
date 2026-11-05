@@ -7,17 +7,28 @@ import { RunSession } from './run-session.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import { flush } from '../../tree/test/utils/atom-load.spec.util.ts';
 import type { RunLogPorts } from '../common/run-log-tail.type.ts';
-import { START_TIMEOUT_MS } from '../common/run.const.ts';
+import { START_TIMEOUT_MS, TASK_ENDED_TEXT } from '../common/run.const.ts';
 import type { RunPorts, Terminable } from '../common/run.type.ts';
 import { RunLogTails } from '../data-access/run-log-tails.ts';
 import { ENTRY_B } from '../test/common/run-log-step.const.ts';
 import type { LiveParts, LiveSession } from '../test/common/run-session-live.type.ts';
-import { JOIN_DEFINITION_STUB, JOIN_EVENT_STUB, JOIN_OWNER_STUB, JOIN_REQUEST_STUB } from '../test/stubs/run-progress-join.stub.ts';
+import {
+  B_PASSED_STUB,
+  JOIN_DEFINITION_STUB,
+  JOIN_EVENT_STUB,
+  JOIN_OWNER_STUB,
+  JOIN_REQUEST_STUB
+} from '../test/stubs/run-progress-join.stub.ts';
 import { TURBO_ARGS_STUB } from '../test/stubs/run.stub.ts';
 import { endChangeWindow, fakeChangeWindows } from '../test/utils/run-log-change-window.spec.util.ts';
 import { LIVE_DIR, LIVE_FILE, liveSessionOf } from '../test/utils/run-session-live.spec.util.ts';
 
 const PARTS: LiveParts = { sessionOf: (ports) => new RunSession(ports, []), tailsOf: (ports) => new RunLogTails(ports) };
+
+type ProgressSeen = {
+  readonly state: string | undefined;
+  readonly begins: number;
+};
 
 const neverLaunches = async (): Promise<Terminable> => Promise.withResolvers<Terminable>().promise;
 
@@ -70,6 +81,17 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
   let live: LiveSession;
 
   const settledOwners = (): unknown[] => live.settle.mock.calls.map(([owner]) => owner);
+
+  const writeB = async (): Promise<void> => {
+    live.fs.write(LIVE_FILE, [ENTRY_B]);
+    live.fs.emit(LIVE_DIR, basename(LIVE_FILE));
+    await endChangeWindow();
+  };
+
+  const endRun = async (): Promise<void> => {
+    live.session.processEnded(JOIN_EVENT_STUB, 0);
+    await endChangeWindow();
+  };
 
   beforeEach(() => {
     fakeChangeWindows();
@@ -187,11 +209,8 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
 
       live = liveSessionOf(PARTS, waitsForMatch);
       await live.session.run(JOIN_REQUEST_STUB);
-      live.fs.write(LIVE_FILE, [ENTRY_B]);
-      live.fs.emit(LIVE_DIR, basename(LIVE_FILE));
-      await endChangeWindow();
-      live.session.processEnded(JOIN_EVENT_STUB, 0);
-      await endChangeWindow();
+      await writeB();
+      await endRun();
     });
 
     it('WHEN its task vanishes in a root change THEN its progress settles once', async () => {
@@ -216,5 +235,65 @@ describe('FEATURE: live progress of a turbo run that ends early, loses its task 
     });
   });
 
-  // U7e1d (moved by the size split, Task 5.9 Step 0b): pass on arrival.
+  describe('GIVEN a#build ended (exit 0) with its match pending (deferred match), b#build seen, its drain FINISHED', () => {
+    it("WHEN a#build runs again THEN progress.onDidChange fired with b#build passed before the rerun's begin, no first-owner record remains after it, and fs.removed holds the first file once", async () => {
+      let clock = 1000;
+      const waitsForMatch: Partial<RunPorts> = {
+        match: async () => Promise.withResolvers<RunTasksMatch | null>().promise,
+        now: () => clock
+      };
+
+      live = liveSessionOf(PARTS, waitsForMatch);
+      await live.session.run(JOIN_REQUEST_STUB);
+      await writeB();
+      await endRun();
+
+      const seen: ProgressSeen[] = [];
+
+      live.session.progress.onDidChange(() => seen.push({ state: live.stateOfB(), begins: live.begin.mock.calls.length }));
+      clock = 5000;
+      await live.session.run(JOIN_REQUEST_STUB);
+
+      expect(seen[0]).toStrictEqual({ state: 'passed', begins: 1 });
+      expect([live.stateOfB(), live.fs.removed]).toStrictEqual([undefined, [LIVE_FILE]]);
+    });
+  });
+
+  describe('GIVEN a#build ended (exit 0), matched, its drain HELD (fs.hold), and run again', () => {
+    it('WHEN the drain ends THEN the first run settles from its own entry: b#build passed', async () => {
+      let clock = 1000;
+      const matchesBNow: Partial<RunPorts> = { match: async () => Promise.resolve(B_PASSED_STUB), now: () => clock };
+
+      live = liveSessionOf(PARTS, matchesBNow);
+      await live.session.run(JOIN_REQUEST_STUB);
+      await writeB();
+
+      const release = live.fs.hold();
+
+      live.session.processEnded(JOIN_EVENT_STUB, 0);
+      await flush();
+      clock = 5000;
+      await live.session.run(JOIN_REQUEST_STUB);
+      release();
+      await endChangeWindow();
+
+      expect(live.stateOfB()).toBe('passed');
+    });
+  });
+
+  describe('GIVEN a progress listener that throws', () => {
+    it("WHEN its task ends before its process starts THEN the failed-to-start notice is still shown and the listener's error is logged once, beside the task-ended reason", async () => {
+      live = liveSessionOf(PARTS);
+      await live.session.run(JOIN_REQUEST_STUB);
+      live.session.progress.onDidChange(() => {
+        throw new Error('feed bug');
+      });
+      live.session.taskEnded(JOIN_EVENT_STUB);
+
+      const logged = vi.mocked(live.ports.log).mock.calls;
+
+      expect(live.ports.notifyFailedToStart).toHaveBeenCalledOnce();
+      expect(logged).toStrictEqual([[expect.stringContaining('feed bug')], [expect.stringContaining(TASK_ENDED_TEXT)]]);
+    });
+  });
 });

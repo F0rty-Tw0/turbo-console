@@ -3,9 +3,9 @@ import { vi } from 'vitest';
 import { flush } from '../../../tree/test/utils/atom-load.spec.util.ts';
 import { RUN_LOG_CHANGE_WINDOW_MS } from '../../common/run-log-tail.const.ts';
 
-/** Fakes only the change window's timer: `flush` still waits on a real `setImmediate`. */
+/** Fakes only the change window's and the poll's timers: `flush` still waits on a real `setImmediate`. */
 export const fakeChangeWindows = (): void => {
-  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'] });
 };
 
 /** Ends every pending change window at once; the reads it starts have not settled yet. */

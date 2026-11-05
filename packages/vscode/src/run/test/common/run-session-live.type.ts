@@ -2,7 +2,7 @@ import type { Mock, MockInstance } from 'vitest';
 
 import type { FakeLogFs } from './run-log-fs.type.ts';
 import type { RunLogPorts, RunLogs } from '../../common/run-log-tail.type.ts';
-import type { ProgressRecord, ProgressRuns } from '../../common/run-progress.type.ts';
+import type { ProgressChanges, ProgressRecord, ProgressRuns } from '../../common/run-progress.type.ts';
 import type { RunControl, RunPorts } from '../../common/run.type.ts';
 
 type ProgressReads = {
@@ -10,7 +10,7 @@ type ProgressReads = {
 };
 
 type SessionProgress = {
-  readonly progress: ProgressRuns & ProgressReads;
+  readonly progress: ProgressRuns & ProgressChanges & ProgressReads;
 };
 
 /** What the harness needs of `RunSession`, so a spec util builds it without importing the class. */
