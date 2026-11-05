@@ -21,6 +21,7 @@ import {
 } from './test/stubs/graph-package-runs.stub.ts';
 import { THEME_DARK_STUB } from './test/stubs/graph-theme.stub.ts';
 import { collapsedSavedState } from './test/utils/graph-folder-states.spec.util.ts';
+import { folderInspection } from './test/utils/graph-inspection.spec.util.ts';
 import { packageRunsState } from './test/utils/graph-package-runs.spec.util.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
@@ -223,7 +224,7 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
   test(
     'GIVEN web#build running, selecting web draws one ring, the run ring, and clearing the runs leaves the selection ring',
     { annotation: D14 },
-    async ({ graphCanvas, graphHost, graphLook, graphPage, graphTaskHost, graphTaskRings }): Promise<void> => {
+    async ({ graphCanvas, graphHost, graphLook, graphPage, graphProbe, graphTaskHost, graphTaskRings }): Promise<void> => {
       await test.step('WHEN the boards open grouped', async (): Promise<void> => {
         await graphPage.open({ savedState: groupedSavedState(STATE.hash) });
       });
@@ -236,7 +237,9 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
 
       await test.step('AND web is tapped', async (): Promise<void> => graphCanvas.tapNode('web'));
 
-      await test.step('THEN only the run ring is drawn on web', async (): Promise<void> => {
+      await test.step('THEN web is the selected node', async (): Promise<void> => graphProbe.expectSelected('web'));
+
+      await test.step('AND only the run ring is drawn on web', async (): Promise<void> => {
         await graphTaskRings.expectRings('web', RUN_RING);
       });
 
@@ -249,9 +252,9 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
   );
 
   test(
-    'GIVEN packages collapsed and ui running, selecting the folder draws one ring, the run ring',
+    'GIVEN packages collapsed and ui running, selecting the folder draws one ring, the run ring, and clearing the runs leaves the selection ring',
     { annotation: D14 },
-    async ({ graphFolders, graphHost, graphLook, graphPage, graphTaskHost, graphTaskRings }): Promise<void> => {
+    async ({ graphDetails, graphFolders, graphHost, graphLook, graphPage, graphTaskHost, graphTaskRings }): Promise<void> => {
       await test.step('WHEN the boards open with packages collapsed', async (): Promise<void> => {
         await graphPage.open({ savedState: collapsedSavedState(STATE.hash, ['packages']) });
       });
@@ -264,8 +267,18 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
 
       await test.step('AND the packages folder is tapped', async (): Promise<void> => graphFolders.tapFolder('packages'));
 
-      await test.step('THEN only the run ring is drawn on the folder', async (): Promise<void> => {
+      await test.step('THEN the packages folder is the inspected one', async (): Promise<void> => {
+        await graphDetails.expectInspection(folderInspection('packages'));
+      });
+
+      await test.step('AND only the run ring is drawn on the folder', async (): Promise<void> => {
         await graphTaskRings.expectFolderRings('packages', RUN_RING);
+      });
+
+      await test.step('WHEN an empty runs map arrives', async (): Promise<void> => graphTaskHost.sendRuns({}));
+
+      await test.step('THEN only the selection ring is drawn on the folder', async (): Promise<void> => {
+        await graphTaskRings.expectFolderRings('packages', SELECTION_RING);
       });
     }
   );
