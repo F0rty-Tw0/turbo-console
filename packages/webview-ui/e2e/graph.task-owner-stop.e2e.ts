@@ -27,12 +27,16 @@ const LIB_RUNNING: Record<string, GraphRunState> = { 'lib#build': 'running' };
 
 const UI_RUNNING: Record<string, GraphRunState> = { 'ui#build': 'running' };
 
+const APP_AND_LIB_RUNNING: Record<string, GraphRunState> = { 'app#build': 'running', 'lib#build': 'running' };
+
 /** An owner id that is markup: the panel must hold it as text. */
 const HOSTILE_OWNER = '<img src=x onerror=alert(1)>#build';
 
 const LIB_UNDER_HOSTILE = { 'lib#build': HOSTILE_OWNER };
 
 const STOP_OF_HOSTILE = stopRunOfLabelOf(HOSTILE_OWNER);
+
+const HOSTILE_STATE = runStateTextOf('running', HOSTILE_OWNER);
 
 const POST_STOP_HOSTILE: GraphWebviewMessage = { type: 'stopTask', taskId: HOSTILE_OWNER };
 
@@ -62,7 +66,7 @@ test.describe('FEATURE: Stop on a dependency that runs under another task run', 
     { annotation: D12 },
     async ({ graphCanvas, graphTaskDetails, graphTaskHost }): Promise<void> => {
       await test.step('WHEN the host reports lib#build running in the run of app#build and lib#build is tapped', async (): Promise<void> => {
-        await graphTaskHost.sendOwnedRuns({ 'app#build': 'running', 'lib#build': 'running' }, LIB_UNDER_APP);
+        await graphTaskHost.sendOwnedRuns(APP_AND_LIB_RUNNING, LIB_UNDER_APP);
         await graphCanvas.tapNode('lib#build');
       });
 
@@ -83,7 +87,7 @@ test.describe('FEATURE: Stop on a dependency that runs under another task run', 
     { annotation: D12 },
     async ({ graphCanvas, graphMenus, graphTask, graphTaskHost, graphTaskToolbar }): Promise<void> => {
       await test.step('WHEN lib#build is running under app#build, tapped and in view', async (): Promise<void> => {
-        await graphTaskHost.sendOwnedRuns({ 'app#build': 'running', 'lib#build': 'running' }, LIB_UNDER_APP);
+        await graphTaskHost.sendOwnedRuns(APP_AND_LIB_RUNNING, LIB_UNDER_APP);
         await graphCanvas.tapNode('lib#build');
         await graphTaskToolbar.expectNodeInView('lib#build');
       });
@@ -151,7 +155,7 @@ test.describe('FEATURE: Stop on a dependency that runs under another task run', 
         graphTaskHost.expectTaskPosts([POST_STOP_LIB]));
 
       await test.step('WHEN the host reports an owner for lib#build with no reselect', async (): Promise<void> =>
-        graphTaskHost.sendOwnedRuns({ 'lib#build': 'running' }, LIB_UNDER_APP));
+        graphTaskHost.sendOwnedRuns(LIB_RUNNING, LIB_UNDER_APP));
 
       await test.step('THEN the panel names the run and the same slot reads the owner Stop', async (): Promise<void> => {
         await graphTaskDetails.expectState(OWNED_STATE);
@@ -177,8 +181,7 @@ test.describe('FEATURE: Stop on a dependency that runs under another task run', 
         await graphCanvas.tapNode('lib#build');
       });
 
-      await test.step('THEN the status reads the id as text', async (): Promise<void> =>
-        graphTaskDetails.expectState(runStateTextOf('running', HOSTILE_OWNER)));
+      await test.step('THEN the status reads the id as text', async (): Promise<void> => graphTaskDetails.expectState(HOSTILE_STATE));
 
       await test.step('AND Stop is named for the id and the panel has no img', async (): Promise<void> => {
         await expect(graphTaskDetails.stopNamed(STOP_OF_HOSTILE)).toBeVisible();
@@ -217,7 +220,7 @@ test.describe('FEATURE: Stop on a dependency that runs under another task run', 
     async ({ graphCanvas, graphLook, graphTaskHost, graphTaskRings }): Promise<void> => {
       await test.step('WHEN the dark theme applies and lib#build runs under app#build', async (): Promise<void> => {
         await graphLook.applyTheme(THEME_DARK_STUB);
-        await graphTaskHost.sendOwnedRuns({ 'lib#build': 'running' }, LIB_UNDER_APP);
+        await graphTaskHost.sendOwnedRuns(LIB_RUNNING, LIB_UNDER_APP);
       });
 
       await test.step('AND lib#build is tapped', async (): Promise<void> => graphCanvas.tapNode('lib#build'));
