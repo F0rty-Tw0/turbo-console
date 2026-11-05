@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isLiveRun, runMessageOf, runOwnerOf, runStateOf, taskDetailsModelOf, taskWithId } from './task-run.util.ts';
+import { isLiveRun, runMessageOf, runStateOf, taskDetailsModelOf, taskWithId } from './task-run.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { LatestRuns, TaskDetailsModel, TaskOwners, TaskRuns } from '../common/task-details.type.ts';
 import {
@@ -11,6 +11,7 @@ import {
   WEB_BUILD_STUB,
   WEB_LINT_STUB
 } from '../test/stubs/graph-task.stub.ts';
+import { TASK_DETAILS_STUB } from '../test/stubs/task-details.stub.ts';
 
 const RUNS: TaskRuns = { 'a#build': 'running', 'api#build': 'failed' };
 
@@ -28,14 +29,7 @@ const UI_BUILD_TASK: GraphTask = { ...GRAPH_TASK_STUB, id: 'ui#build' };
 
 const LATEST: LatestRuns = { runs: RUNS, owners: {} };
 
-const RUNNING: TaskDetailsModel = {
-  task: GRAPH_TASK_STUB,
-  state: 'running',
-  runOwner: null,
-  dependencies: [],
-  dependents: [],
-  rootLabel: null
-};
+const RUNNING: TaskDetailsModel = { ...TASK_DETAILS_STUB, state: 'running' };
 
 const PASSED: TaskDetailsModel = { ...RUNNING, state: 'passed' };
 
@@ -128,17 +122,20 @@ describe('FEATURE: task runs', () => {
     });
   });
 
-  describe('GIVEN runOwnerOf over an owners map', () => {
+  describe('GIVEN taskDetailsModelOf with each task running and OWNERS naming ui#build alone', () => {
     it.each([
       { id: 'ui#build', expected: 'web#build' },
       { id: 'api#build', expected: null },
       { id: 'constructor', expected: null },
       { id: 'toString', expected: null },
       { id: '__proto__', expected: null }
-    ])('WHEN $id is read THEN its owner is $expected', ({ id, expected }) => {
-      const owner = runOwnerOf(OWNERS, id);
+    ])('WHEN $id is modelled THEN runOwner is $expected', ({ id, expected }) => {
+      const task: GraphTask = { ...GRAPH_TASK_STUB, id };
+      const runs: TaskRuns = { [id]: 'running' };
 
-      expect(owner).toBe(expected);
+      const model = taskDetailsModelOf(task, TASK_CHAIN_STUB, { runs, owners: OWNERS }, null);
+
+      expect(model.runOwner).toBe(expected);
     });
   });
 
@@ -218,12 +215,14 @@ describe('FEATURE: task runs', () => {
       expect(message).toStrictEqual({ type: 'runTask', taskId: 'ui#build', noCache: true });
     });
 
-    it('GIVEN the owner web#all is not a shown task WHEN Stop is asked THEN stopTask names web#all', () => {
-      const unlisted: TaskDetailsModel = { ...OWNED, runOwner: 'web#all' };
+    describe('GIVEN the owner web#all is not a shown task', () => {
+      const UNLISTED: TaskDetailsModel = { ...OWNED, runOwner: 'web#all' };
 
-      const message = runMessageOf(unlisted, 'stop');
+      it('WHEN Stop is asked THEN stopTask names web#all', () => {
+        const message = runMessageOf(UNLISTED, 'stop');
 
-      expect(message).toStrictEqual({ type: 'stopTask', taskId: 'web#all' });
+        expect(message).toStrictEqual({ type: 'stopTask', taskId: 'web#all' });
+      });
     });
   });
 

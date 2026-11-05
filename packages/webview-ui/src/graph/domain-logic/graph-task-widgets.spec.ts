@@ -8,6 +8,7 @@ import { CANVAS_HEIGHT, CANVAS_WIDTH, PANEL_LEFT } from '../test/common/graph-ta
 import type { TaskWidgetsRig } from '../test/common/graph-task-widgets.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { API_BUILD_STUB, GRAPH_TASK_STUB, ROOT_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
+import { TASK_DETAILS_STUB } from '../test/stubs/task-details.stub.ts';
 import { accessLogOf } from '../test/utils/access-log.spec.util.ts';
 import { setBox } from '../test/utils/element-box.spec.util.ts';
 import { rectsOf, stopItemOf, taskToolbarsOf, taskWidgetsRigOf } from '../test/utils/graph-task-widgets.spec.util.ts';
@@ -15,14 +16,7 @@ import { rectsOf, stopItemOf, taskToolbarsOf, taskWidgetsRigOf } from '../test/u
 /** `a#build` drawn across the panel's left edge: its toolbar under it. */
 const UNDER_RECT: RectPx = { x1: 260, y1: 50, x2: 320, y2: 80 };
 
-const RUNNING: TaskDetailsModel = {
-  task: GRAPH_TASK_STUB,
-  state: 'running',
-  runOwner: null,
-  dependencies: [],
-  dependents: [],
-  rootLabel: null
-};
+const RUNNING: TaskDetailsModel = { ...TASK_DETAILS_STUB, state: 'running' };
 
 const OWNED: TaskDetailsModel = { ...RUNNING, runOwner: 'web#build' };
 
@@ -30,14 +24,7 @@ const ROOT_NOT_RUNNABLE_TASK: GraphTask = { ...ROOT_BUILD_STUB, isRunnable: fals
 
 const ROOT_NOT_RUNNABLE_IDLE: TaskDetailsModel = { ...RUNNING, task: ROOT_NOT_RUNNABLE_TASK, state: null };
 
-const API_RUNNING: TaskDetailsModel = {
-  task: API_BUILD_STUB,
-  state: 'running',
-  runOwner: null,
-  dependencies: [],
-  dependents: [],
-  rootLabel: null
-};
+const API_RUNNING: TaskDetailsModel = { ...RUNNING, task: API_BUILD_STUB };
 
 const NOT_RUNNABLE_TASK: GraphTask = { ...GRAPH_TASK_STUB, isRunnable: false };
 

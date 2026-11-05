@@ -226,21 +226,23 @@ describe('FEATURE: GraphTaskSelection', () => {
     });
 
     it('WHEN runs say running and owners name api#all THEN the panel and widgets get runOwner api#all', () => {
+      const owned: unknown = expect.objectContaining({ runOwner: 'api#all' });
+
       selection.enter(true);
       selection.runs({ 'web#build': 'running' }, { 'web#build': 'api#all' });
-
-      const owned: unknown = expect.objectContaining({ runOwner: 'api#all' });
 
       expect(rig.details.show).toHaveBeenLastCalledWith(owned);
       expect(rig.widgets.show).toHaveBeenLastCalledWith(owned);
     });
 
     it('WHEN a later runs map has no owners THEN runOwner is null again', () => {
+      const unowned: unknown = expect.objectContaining({ runOwner: null });
+
       selection.enter(true);
       selection.runs({ 'web#build': 'running' }, { 'web#build': 'api#all' });
       selection.runs({ 'web#build': 'running' }, {});
 
-      expect(rig.details.show).toHaveBeenLastCalledWith(expect.objectContaining({ runOwner: null }));
+      expect(rig.details.show).toHaveBeenLastCalledWith(unowned);
     });
 
     it('WHEN the shown tasks lose web#build THEN the selection is saved as null', () => {

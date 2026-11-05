@@ -21,7 +21,6 @@ describe("FEATURE: TaskToolbar Run/Stop slot under another task's run", () => {
     vi.stubGlobal('document', fakeDocumentMock());
     rig = taskToolbarRigOf();
     toolbar = new TaskToolbar(rig.deps);
-    toolbar.sync(RUNNING);
   });
 
   afterEach((): void => {
@@ -29,6 +28,10 @@ describe("FEATURE: TaskToolbar Run/Stop slot under another task's run", () => {
   });
 
   describe('GIVEN the toolbar of a#build running on its own', () => {
+    beforeEach((): void => {
+      toolbar.sync(RUNNING);
+    });
+
     it('WHEN it turns owned by web#build THEN the same slot reads Stop run of web#build in aria-label and title', () => {
       const { run } = latestOf(rig);
 

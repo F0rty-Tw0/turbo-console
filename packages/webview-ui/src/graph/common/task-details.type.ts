@@ -119,7 +119,7 @@ export type TaskWidgets = {
 type TaskToolbarFields = {
   readonly id: string;
   readonly elements: TaskToolbarElements;
-  /** The selected task's model; its state picks what the Run/Stop slot does. */
+  /** The selected task's model; its state and run owner pick what the Run/Stop slot does and says. */
   model: TaskDetailsModel;
   /** The label the Run/Stop slot is drawn with; `null` until the first sync. */
   // eslint-disable-next-line local/readonly-type-properties -- the toolbar rewrites it when the slot is redrawn

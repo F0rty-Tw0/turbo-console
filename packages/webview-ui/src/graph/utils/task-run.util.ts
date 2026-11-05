@@ -12,7 +12,7 @@ export const runStateOf = (runs: TaskRuns, id: string): GraphRunState | null => 
 };
 
 /** The task id of the run that runs `id` under another task's run; an own key only, so `constructor` or `__proto__` never reads as an owner. */
-export const runOwnerOf = (owners: TaskOwners, id: string): string | null => {
+const runOwnerOf = (owners: TaskOwners, id: string): string | null => {
   const hasOwner = Object.hasOwn(owners, id);
 
   if (!hasOwner) return null;
