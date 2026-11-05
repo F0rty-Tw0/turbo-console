@@ -1,4 +1,5 @@
 import { expect, test } from './graph-task.fixture.ts';
+import { RUNNING_OUTLINE, RUNNING_RGB } from './test/common/graph-run-colours.const.ts';
 import { THEME_DARK_STUB } from './test/stubs/graph-theme.stub.ts';
 import { GLYPH_CODE_POINTS } from '../src/graph/common/graph-glyph.const.ts';
 
@@ -6,12 +7,7 @@ const UB5B = { description: 'UB5b spec 2.2, 4', type: 'requirement' };
 
 const TASK_TIDY = { description: 'U1 phase 2, U1-5', type: 'requirement' };
 
-/** The dark stub's `--vscode-charts-yellow`, `#cca700`, as Cytoscape reports it and as the page draws it. */
-const RUNNING_RGB = 'rgb(204, 167, 0)';
-
 const SELECTED_RGB = THEME_DARK_STUB.expected.selected;
-
-const RUNNING_OUTLINE = { width: 2, colour: 'rgb(204,167,0)' };
 
 /** The dark stub's `--vscode-charts-green`, `#89d185`, as Cytoscape and the panel icon report it. */
 const CONTINUOUS_RGB = 'rgb(137, 209, 133)';
