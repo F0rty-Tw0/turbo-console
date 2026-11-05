@@ -1,5 +1,6 @@
 import type { RunLogEvent } from '@turbo-console/core';
 
+import type { RunLogTail } from './run-log-tail.type.ts';
 import type { RunEntry, RunState } from './run.type.ts';
 
 /** The dependency ids of a task in one run, snapshotted at run start (spec D10); `[]` for an id the snapshot lacks. */
@@ -57,4 +58,26 @@ export type ProgressListener = (root: string) => void;
 /** The change feed of the task progress; `onDidChange` returns the unsubscribe. */
 export type ProgressChanges = {
   readonly onDidChange: (listener: ProgressListener) => () => void;
+};
+
+/**
+ * What the run flow and the session tell the progress of one owner run (spec D10): `drain` from the process end, `abort`
+ * from a start that failed. A call for an owner never begun is ignored, and a tail handed to one is closed.
+ *
+ * Lifecycle contract: every begun owner gets `drain` or `abort`, and its entry gets a settled match (`setMatch`, even
+ * `null`) or a rerun; otherwise its join stays until the window closes.
+ */
+export type ProgressPort = {
+  readonly begin: (owner: ProgressOwner, dependenciesOf: DependenciesOf) => void;
+  readonly tail: (owner: ProgressOwner, handle: RunLogTail) => void;
+  readonly event: (owner: ProgressOwner, event: RunLogEvent) => void;
+  readonly drain: (owner: ProgressOwner) => Promise<void>;
+  readonly abort: (owner: ProgressOwner) => void;
+};
+
+/** What the join drives of the progress: the run it opens, its log lines, and its settle by the owner's entry. */
+export type ProgressRuns = {
+  readonly begin: (owner: ProgressOwner, dependenciesOf: DependenciesOf) => void;
+  readonly event: (owner: ProgressOwner, event: RunLogEvent) => void;
+  readonly settle: (owner: ProgressOwner, entry: RunEntry) => void;
 };

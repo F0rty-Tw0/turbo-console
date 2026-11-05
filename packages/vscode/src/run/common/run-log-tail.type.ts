@@ -64,7 +64,8 @@ export type RunLogPath = {
 
 /**
  * Spec D8's tail handle: `drain` at the process end reads to the end of the file, `close` on a start failure reads no
- * more. Both remove the file and release the root's watcher; neither rejects.
+ * more. Both remove the file and release the root's watcher; neither rejects (`RunProgressJoin` still survives a
+ * `drain` that does).
  */
 export type RunLogTail = {
   readonly drain: () => Promise<void>;
