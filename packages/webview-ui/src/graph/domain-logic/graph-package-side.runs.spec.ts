@@ -3,13 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GraphFrames } from './graph-frames.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { ViewStateModes } from './view-state-modes.ts';
-import type { GraphReady, GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
+import type { GraphReady, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { GROUPED_POSITIONS_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { WEB_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { mapOf } from '../test/utils/run-marks.spec.util.ts';
 
 type RunsSideParts = {
   readonly side: GraphPackageSide;
@@ -28,12 +29,6 @@ const GROUPED_LISTED: GraphReady = { ...BUILD_LISTED, folderPositions: GROUPED_P
 
 /** `h1` again, now also listing `web#test`. */
 const TEST_ADDED: GraphReady = { ...STATE_STUB, tasks: [WEB_BUILD_STUB, WEB_TEST_STUB] };
-
-const mapOf = (state: GraphRunState): Map<string, GraphRunState> => {
-  const runs = new Map<string, GraphRunState>([['web', state]]);
-
-  return runs;
-};
 
 /** A `GraphPackageSide` over the mocked deps, its view modes starting at `saved`. */
 const rigOf = (saved: GraphViewState): RunsSideRig => {

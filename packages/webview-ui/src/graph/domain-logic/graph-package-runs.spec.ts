@@ -1,18 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { GraphPackageRuns } from './graph-package-runs.ts';
-import type { GraphRunState, GraphTask } from '../../bridge/common/graph-state.type.ts';
+import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { graphViewMock } from '../test/mocks/graph-view.mock.ts';
 import { WEB_BUILD_STUB } from '../test/stubs/graph-task.stub.ts';
 import { HOME_CAMERA_STUB } from '../test/stubs/layout.stub.ts';
+import { mapOf } from '../test/utils/run-marks.spec.util.ts';
 
 const TASKS: GraphTask[] = [WEB_BUILD_STUB];
-
-const mapOf = (state: GraphRunState): Map<string, GraphRunState> => {
-  const runs = new Map<string, GraphRunState>([['web', state]]);
-
-  return runs;
-};
 
 describe('FEATURE: GraphPackageRuns', () => {
   describe('GIVEN web#build listed', () => {
