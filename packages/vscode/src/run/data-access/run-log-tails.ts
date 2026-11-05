@@ -3,9 +3,9 @@ import { basename } from 'node:path';
 import { RunLogFileTail } from './run-log-file-tail.ts';
 import { sweepRunLogs } from './run-log-sweep.ts';
 import { RUN_LOG_OUTCOME_TEXTS } from '../common/run-log-tail.const.ts';
-import type { RunLogListener, RunLogOutcome, RunLogPorts, RunLogTail, RunLogWatcher } from '../common/run-log-tail.type.ts';
+import type { RunLogListener, RunLogOutcome, RunLogPorts, RunLogTail, RunLogWatcher, RunLogs } from '../common/run-log-tail.type.ts';
 import { runLogDirOf } from '../utils/run-log-dir.util.ts';
-import { runLogWatchErrorText } from '../utils/run-text.util.ts';
+import { runLogDirErrorText, runLogWatchErrorText } from '../utils/run-text.util.ts';
 
 type LiveTail = {
   readonly file: RunLogFileTail;
@@ -19,14 +19,14 @@ type WatchAttempt = {
   watcher: RunLogWatcher | null;
 };
 
-type LoggedKind = RunLogOutcome | 'watch';
+type LoggedKind = RunLogOutcome | 'watch' | 'dir';
 
 /**
  * The live turbo log tails of the window (spec D5, D6): one folder watcher per root while any of its tails lives, and
  * each degrade line once per session. A tail ends once, by `drain` or `close`: it leaves the registry, releases the
  * root's watcher if it was the last, and removes its file after its last read.
  */
-export class RunLogTails {
+export class RunLogTails implements RunLogs {
   private readonly ports: RunLogPorts;
   private readonly liveByRoot = new Map<string, Map<string, LiveTail>>();
   private readonly watchers = new Map<string, RunLogWatcher>();
@@ -35,6 +35,21 @@ export class RunLogTails {
 
   public constructor(ports: RunLogPorts) {
     this.ports = ports;
+  }
+
+  /** Makes the root's log folder before a run; `false`, with one line per session, when it cannot be made. */
+  public async prepare(root: string): Promise<boolean> {
+    const dir = runLogDirOf(root);
+
+    try {
+      await this.ports.makeDir(dir);
+    } catch (error) {
+      this.logOnce('dir', runLogDirErrorText(dir, error));
+
+      return false;
+    }
+
+    return true;
   }
 
   /**

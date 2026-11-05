@@ -19,7 +19,8 @@ export type FakeWatcherRecord = {
  * An in-memory log folder. `hold` makes every later `read` wait until the returned release is called; `append` does
  * turbo's rewrite: the last `]\n` becomes `,\n` + line + `\n]\n`, or the first line goes over `[\n]\n`. `emit` and `fail`
  * call the open watchers of a folder; `failNextWatch` makes the next `watch` call report its error before it returns;
- * `removed` and `logs` record what `ports` was asked; `mtimes` is what `modifiedAt` answers.
+ * `removed` and `logs` record what `ports` was asked; `mtimes` is what `modifiedAt` answers; `madeDirs` records each
+ * `makeDir` call, and `failMakeDir` makes every later one reject with the error.
  */
 export type FakeLogFs = {
   readonly read: RunLogRead;
@@ -35,6 +36,8 @@ export type FakeLogFs = {
   readonly removed: string[];
   readonly logs: string[];
   readonly mtimes: Map<string, number>;
+  readonly madeDirs: string[];
+  readonly failMakeDir: (error: unknown) => void;
   readonly nowMs: number;
   readonly ports: RunLogPorts;
 };
@@ -50,14 +53,17 @@ export type FakeWatchers = {
 
 /**
  * The folder calls of the fake: `remove` deletes from `files` and records the path in `removed`, `log` records in
- * `logs`, `modifiedAt` answers from `mtimes`.
+ * `logs`, `modifiedAt` answers from `mtimes`, `makeDir` records in `madeDirs` and rejects after `failMakeDir`.
  */
 export type FolderCalls = {
   readonly removed: string[];
   readonly logs: string[];
   readonly mtimes: Map<string, number>;
+  readonly madeDirs: string[];
+  readonly failMakeDir: (error: unknown) => void;
   readonly log: RunLogPorts['log'];
   readonly remove: RunLogPorts['remove'];
   readonly list: RunLogPorts['list'];
   readonly modifiedAt: RunLogPorts['modifiedAt'];
+  readonly makeDir: RunLogPorts['makeDir'];
 };
