@@ -31,7 +31,7 @@ export async function routeRun(request: GraphRunRequest, context: RequestContext
 
   if (task === undefined) return false;
 
-  const isUnrunnableRun = request.type === 'runTask' && listed?.isRunnable === false;
+  const isUnrunnableRun = request.type === 'runTask' && listed?.isRunnable !== true;
 
   if (isUnrunnableRun) return false;
 

@@ -152,15 +152,15 @@ describe('FEATURE: routing a graph run request to the run commands', () => {
   });
 });
 
-const LINT_TASK: RunRequest['task'] = { ...TASK_NODE_STUB, id: 'turbo#lint' };
+const LINT_TASK: RunRequest['task'] = { ...TASK_NODE_STUB, id: '//#lint' };
 
-const LINT_REQUEST: RunRequest = { ...RUN_REQUEST_STUB, packageName: 'turbo', task: LINT_TASK };
+const LINT_REQUEST: RunRequest = { ...RUN_REQUEST_STUB, packageName: 'fixture-root', task: LINT_TASK };
 
-const STOP_LINT: GraphRunRequest = { type: 'stopTask', taskId: 'turbo#lint' };
+const STOP_LINT: GraphRunRequest = { type: 'stopTask', taskId: '//#lint' };
 
-const RUN_LINT: GraphRunRequest = { type: 'runTask', taskId: 'turbo#lint', noCache: false };
+const RUN_LINT: GraphRunRequest = { type: 'runTask', taskId: '//#lint', noCache: false };
 
-const LINT_ROW = { kind: 'task', root: '/ws', key: 'turbo#lint', packageName: 'turbo' };
+const LINT_ROW = { kind: 'task', root: '/ws', key: '//#lint', packageName: 'fixture-root' };
 
 const runningStoreOf = (request: RunRequest): RunStore => {
   const store = new RunStore();
@@ -188,7 +188,7 @@ const passedStoreOf = (): RunStore => endedStoreOf('passed');
 const stoppedStoreOf = (): RunStore => endedStoreOf('stopped');
 
 describe('FEATURE: Stop on an owner the graph does not list (spec D15)', () => {
-  describe('GIVEN an unlisted turbo#lint with a running entry of package turbo WHEN stopTask turbo#lint is routed', () => {
+  describe('GIVEN an unlisted //#lint with a running entry of package fixture-root WHEN stopTask //#lint is routed', () => {
     it('THEN true is returned', async () => {
       const context = contextOf(GRAPH_STATE_STUB, graphPortsMock(), runningStoreOf(LINT_REQUEST));
 
