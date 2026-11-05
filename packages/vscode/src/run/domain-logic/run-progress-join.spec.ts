@@ -205,6 +205,33 @@ describe('FEATURE: settle a run once its log is drained and its summary is match
     });
   });
 
+  describe('GIVEN a run with no tail yet whose drain finished with its match pending', () => {
+    it('WHEN its tail is handed over late THEN the tail is closed at once', async () => {
+      const late = fakeRunLogTail();
+
+      h.beginRun();
+      h.endRun(0);
+
+      await h.join.drain(JOIN_OWNER_STUB);
+
+      h.join.tail(JOIN_OWNER_STUB, late.handle);
+
+      expect(late.closes).toBe(1);
+    });
+  });
+
+  describe('GIVEN a begun run that already has a tail', () => {
+    it('WHEN a second tail is handed over THEN the second is closed and the first stays open', () => {
+      const second = fakeRunLogTail();
+
+      h.beginTailedRun();
+      h.join.tail(JOIN_OWNER_STUB, second.handle);
+
+      expect(second.closes).toBe(1);
+      expect(h.tail.closes).toBe(0);
+    });
+  });
+
   describe('GIVEN a run already aborted', () => {
     it('WHEN its tail is handed over late THEN the tail is closed at once and nothing settles again', () => {
       const late = fakeRunLogTail();
