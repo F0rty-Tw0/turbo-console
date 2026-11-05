@@ -52,6 +52,11 @@ export type GraphEdgeExplainedMessage = {
 export type GraphRunsMessage = {
   readonly type: 'runs';
   readonly runs: Readonly<Record<string, GraphRunState>>;
+  /**
+   * Task id → the task id of the run that runs it, only while the task runs under another task's run and not on its own (spec D11);
+   * absent when none.
+   */
+  readonly owners?: Readonly<Record<string, string>>;
 };
 
 /** Asks the page to show these tasks in task mode. */

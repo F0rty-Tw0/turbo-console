@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { isAtomGroupList, isAtomStateRecord, isGraphTaskList, isRunsRecord, isTaskIdList } from './graph-task-shape.util.ts';
+import {
+  isAtomGroupList,
+  isAtomStateRecord,
+  isGraphTaskList,
+  isOwnersRecord,
+  isRunsRecord,
+  isTaskIdList
+} from './graph-task-shape.util.ts';
+import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
 
 const TASK = {
   id: 'a#build',
@@ -119,8 +127,6 @@ const ONE_BAD_RECORD = { ...GOOD_RECORD, b: BAD_COUNTS_STATE };
 
 const EVERY_OUTCOME = { w: 'passed', x: 'failed', y: 'cached', z: 'none' };
 
-const LIMIT = 100_000;
-
 /** `count` groups of no files, each with its own umbrella id. */
 const groupsOf = (count: number): unknown[] => {
   const groupAt = (_value: unknown, index: number): unknown => {
@@ -132,13 +138,22 @@ const groupsOf = (count: number): unknown[] => {
   return Array.from({ length: count }, groupAt);
 };
 
-/** `count` file ids, each with the outcome `passed`. */
-const outcomesOf = (count: number): Record<string, string> => {
-  const entryAt = (_value: unknown, index: number): [string, string] => [`f${index}`, 'passed'];
+/** `count` ids, each with `value`. */
+const idsWith = (count: number, value: string): Record<string, string> => {
+  const entryAt = (_value: unknown, index: number): [string, string] => [`k${index}`, value];
   const entries = Array.from({ length: count }, entryAt);
 
   return Object.fromEntries(entries);
 };
+
+const PASSED = 'passed';
+
+const WEB_BUILD = 'web#build';
+
+/** A JSON object whose keys are the names of `Object.prototype` members: they parse to own keys. */
+const PROTOTYPE_NAMED = '{"__proto__":"web#build","constructor":"web#build"}';
+
+const PROTOTYPE_NAMED_WITH_NUMBER = '{"__proto__":1,"constructor":"web#build"}';
 
 describe('FEATURE: atom group list shape', () => {
   it.each([
@@ -168,16 +183,16 @@ describe('FEATURE: atom group list shape', () => {
     expect(isAtomGroupList(value)).toBe(false);
   });
 
-  it('GIVEN 100 000 groups WHEN checked THEN it is a group list', () => {
-    expect(isAtomGroupList(groupsOf(LIMIT))).toBe(true);
+  it('GIVEN TASK_COUNT_MAX groups WHEN checked THEN it is a group list', () => {
+    expect(isAtomGroupList(groupsOf(TASK_COUNT_MAX))).toBe(true);
   });
 
-  it('GIVEN 100 001 groups WHEN checked THEN it is not a group list', () => {
-    expect(isAtomGroupList(groupsOf(LIMIT + 1))).toBe(false);
+  it('GIVEN TASK_COUNT_MAX + 1 groups WHEN checked THEN it is not a group list', () => {
+    expect(isAtomGroupList(groupsOf(TASK_COUNT_MAX + 1))).toBe(false);
   });
 
-  it('GIVEN a group of 100 001 files WHEN checked THEN it is not a group list', () => {
-    const files = Array.from({ length: 100_001 }, () => FILE);
+  it('GIVEN a group of TASK_COUNT_MAX + 1 files WHEN checked THEN it is not a group list', () => {
+    const files = Array.from({ length: TASK_COUNT_MAX + 1 }, () => FILE);
     const groups = groupsWithFiles(files);
 
     expect(isAtomGroupList(groups)).toBe(false);
@@ -190,7 +205,7 @@ describe('FEATURE: atom state record shape', () => {
     ['a group with every outcome', recordWith({ counts: '4 files', files: EVERY_OUTCOME })],
     ['a group with no files', recordWith({ counts: '0 files', files: {} })],
     ['counts of 200 characters', recordWith({ counts: 'c'.repeat(200) })],
-    ['100 000 files', recordWith({ files: outcomesOf(LIMIT) })]
+    ['TASK_COUNT_MAX files', recordWith({ files: idsWith(TASK_COUNT_MAX, PASSED) })]
   ])('GIVEN %s WHEN checked THEN it is an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(true);
   });
@@ -208,8 +223,36 @@ describe('FEATURE: atom state record shape', () => {
     ['one bad group after a good one', ONE_BAD_RECORD],
     ['counts of 201 characters', recordWith({ counts: 'c'.repeat(201) })],
     ['counts with a line break', recordWith({ counts: '1 files\n2 cached' })],
-    ['100 001 files', recordWith({ files: outcomesOf(LIMIT + 1) })]
+    ['TASK_COUNT_MAX + 1 files', recordWith({ files: idsWith(TASK_COUNT_MAX + 1, PASSED) })]
   ])('GIVEN %s WHEN checked THEN it is not an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(false);
+  });
+});
+
+describe('FEATURE: the owners of a runs message (spec D11)', () => {
+  it.each([
+    ['one owner', { 'ui#build': 'web#build' }],
+    ['no keys', {}],
+    ['TASK_COUNT_MAX keys', idsWith(TASK_COUNT_MAX, WEB_BUILD)],
+    ['keys named like Object.prototype members', JSON.parse(PROTOTYPE_NAMED)]
+  ])('GIVEN owners as %s WHEN checked THEN it is an owners record', (_label, value) => {
+    const isOwners = isOwnersRecord(value);
+
+    expect(isOwners).toBe(true);
+  });
+
+  it.each([
+    ['TASK_COUNT_MAX + 1 keys', idsWith(TASK_COUNT_MAX + 1, WEB_BUILD)],
+    ['an empty owner id', { 'ui#build': '' }],
+    ['a number owner', { 'ui#build': 1 }],
+    ['a number owner under the key __proto__', JSON.parse(PROTOTYPE_NAMED_WITH_NUMBER)],
+    ['a null owner', { 'ui#build': null }],
+    ['an array', ['web#build']],
+    ['null', null],
+    ['a string', 'web#build']
+  ])('GIVEN owners as %s WHEN checked THEN it is not an owners record', (_label, value) => {
+    const isOwners = isOwnersRecord(value);
+
+    expect(isOwners).toBe(false);
   });
 });
