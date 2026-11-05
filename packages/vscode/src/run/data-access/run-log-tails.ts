@@ -1,11 +1,12 @@
 import { basename } from 'node:path';
 
 import { RunLogFileTail } from './run-log-file-tail.ts';
+import { prepareRunLogDir } from './run-log-folder.ts';
 import { sweepRunLogs } from './run-log-sweep.ts';
 import { RUN_LOG_OUTCOME_TEXTS } from '../common/run-log-tail.const.ts';
 import type { RunLogListener, RunLogOutcome, RunLogPorts, RunLogTail, RunLogWatcher, RunLogs } from '../common/run-log-tail.type.ts';
 import { runLogDirOf } from '../utils/run-log-dir.util.ts';
-import { runLogDirErrorText, runLogWatchErrorText } from '../utils/run-text.util.ts';
+import { runLogWatchErrorText } from '../utils/run-text.util.ts';
 
 type LiveTail = {
   readonly file: RunLogFileTail;
@@ -39,17 +40,11 @@ export class RunLogTails implements RunLogs {
 
   /** Makes the root's log folder before a run; `false`, with one line per session, when it cannot be made. */
   public async prepare(root: string): Promise<boolean> {
-    const dir = runLogDirOf(root);
+    const logDirOnce = (line: string): void => {
+      this.logOnce('dir', line);
+    };
 
-    try {
-      await this.ports.makeDir(dir);
-    } catch (error) {
-      this.logOnce('dir', runLogDirErrorText(dir, error));
-
-      return false;
-    }
-
-    return true;
+    return prepareRunLogDir(this.ports, root, logDirOnce);
   }
 
   /**
