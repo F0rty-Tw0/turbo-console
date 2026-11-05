@@ -105,6 +105,15 @@ export const runStatesOf = (api: TurboConsoleApi, root: string, id: string): Gra
   return states;
 };
 
+/** The owner `id` carries in each `runs` map posted to the panel of `root`, oldest first; `undefined` where a map has no owner for `id`. */
+export const ownersOf = (api: TurboConsoleApi, root: string, id: string): (string | undefined)[] => {
+  const owners: (string | undefined)[] = [];
+
+  for (const message of postedRuns(api, root)) owners.push(message.owners?.[id]);
+
+  return owners;
+};
+
 /** The sorted ids of the tasks a picker pools in `state`: every turbo task, plus the scripts while the state shows them; none before there is a state. */
 export const pooledIdsOf = (state: GraphReady | null): string[] => {
   const isPooled = (task: GraphTask): boolean => task.isTurboTask || state?.scriptsShown === true;
