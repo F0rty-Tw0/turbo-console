@@ -115,7 +115,7 @@ export const TASK_EMPTY_LEAD_TEXT = 'Select a task to see its command, dependenc
 /** Starts each run state class on a task node: `run-running`, `run-continuous`, `run-passed`, `run-failed`, `run-stopped`, `run-failed-to-start`. */
 export const RUN_CLASS_PREFIX = 'run-';
 
-/** The package and collapsed folder run state: the first of these any of its tasks has (spec D13; `continuous` beside `running`, index premise 3). */
+/** The package and collapsed folder run state: the first of these any of its tasks has. `continuous` ranks just below `running`. */
 export const RUN_PRECEDENCE: GraphRunState[] = ['running', 'continuous', 'failed', 'failed-to-start', 'stopped', 'passed'];
 
 /** Set with `run-<state>` on a package or collapsed folder node only, so a rule can tell them from tasks (spec D14). */
