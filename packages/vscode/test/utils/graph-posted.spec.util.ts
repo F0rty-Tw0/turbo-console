@@ -80,6 +80,21 @@ export const postedRuns = (api: TurboConsoleApi, root: string): GraphRunsMessage
   return maps;
 };
 
+/** The newest `runs` map posted to the panel of `root`, `undefined` before there is one; a mark for `postedRunsAfter`. */
+export const lastPostedRuns = (api: TurboConsoleApi, root: string): GraphRunsMessage | undefined => postedRuns(api, root).at(-1);
+
+/**
+ * The `runs` maps posted after `mark`, oldest first. The panel keeps only its last messages, so a mark is found by identity,
+ * not by count: every map is newer when `mark` is `undefined` or has been dropped.
+ */
+export const postedRunsAfter = (api: TurboConsoleApi, root: string, mark: GraphRunsMessage | undefined): GraphRunsMessage[] => {
+  const maps = postedRuns(api, root);
+  const isMark = (message: GraphRunsMessage): boolean => message === mark;
+  const found = maps.findIndex(isMark);
+
+  return maps.slice(found + 1);
+};
+
 /** The `atoms` posts to the panel of `root`, oldest first. */
 export const postedAtoms = (api: TurboConsoleApi, root: string): GraphAtomsMessage[] => {
   const posted = api.graph.posted(root);

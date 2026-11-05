@@ -1,10 +1,10 @@
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import type { GraphRunState } from '@turbo-console/webview-ui';
+import type { GraphRunState, GraphRunsMessage } from '@turbo-console/webview-ui';
 
 import { buildPair } from './build-pair.spec.util.ts';
-import { postedRuns } from './graph-posted.spec.util.ts';
+import { postedRuns, postedRunsAfter } from './graph-posted.spec.util.ts';
 import { packageDirOf, setScript, writeEdited } from './package-edit.spec.util.ts';
 import { GO_FILES, goScriptOf } from './run-live-case.spec.util.ts';
 import { startGraphRun, taskNodeNamed } from './run-wait.spec.util.ts';
@@ -46,6 +46,13 @@ const blockL = async (scene: GraphLiveScene): Promise<void> => {
 
 export const isIdle = (scene: GraphLiveScene, task: ShownTask): boolean =>
   scene.api.runs.get(scene.root, task.fullName)?.state !== 'running';
+
+/** `task` has a running entry whose script process has started, not only been launched. */
+export const isStarted = (scene: GraphLiveScene, task: ShownTask): boolean => {
+  const entry = scene.api.runs.get(scene.root, task.fullName);
+
+  return entry?.state === 'running' && entry.processStartedAt !== null;
+};
 
 /** Writes `go` so L's script exits, then waits until neither A nor L has a running entry. */
 const releaseBoth = async (scene: GraphLiveScene): Promise<void> => {
@@ -94,10 +101,10 @@ export const isLUnderA = (scene: GraphLiveScene): boolean => {
   return last?.runs[l.fullName] === 'running' && last.owners?.[l.fullName] === a.fullName;
 };
 
-/** A `runs` post after the first `seen` shows L in `state` with no owner. */
-export const isLLeftAs = (scene: GraphLiveScene, seen: number, state: GraphRunState): boolean => {
+/** A `runs` post after `mark` shows L in `state` with no owner. */
+export const isLLeftAs = (scene: GraphLiveScene, mark: GraphRunsMessage | undefined, state: GraphRunState): boolean => {
   const { api, root, l } = scene;
-  const later = postedRuns(api, root).slice(seen);
+  const later = postedRunsAfter(api, root, mark);
 
   return later.some((message) => message.runs[l.fullName] === state && message.owners?.[l.fullName] === undefined);
 };

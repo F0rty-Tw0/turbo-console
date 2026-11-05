@@ -3,15 +3,15 @@ import { writeFile } from 'node:fs/promises';
 
 import {
   goFileOf,
-  isIdle,
   isLLeftAs,
   isLUnderA,
+  isStarted,
   liveSceneOf,
   nodeOf,
   startedUnderA,
   withBlockedL
 } from './graph-live-scene.spec.util.ts';
-import { ownersOf, postedRuns } from './graph-posted.spec.util.ts';
+import { lastPostedRuns, postedRunsAfter } from './graph-posted.spec.util.ts';
 import { logFilesOf } from './run-live-case.spec.util.ts';
 import { endedRun, startGraphRun, startRun } from './run-wait.spec.util.ts';
 import { log, step, waitFor } from './suite-env.spec.util.ts';
@@ -27,14 +27,14 @@ export const ownerCase = async (graph: GraphScene): Promise<void> => {
   await step('L13-15: a graph run of A posts its dependency L as running under A, then passed without an owner', async () => {
     await withBlockedL(scene, async () => {
       const launchedAt = await startedUnderA(scene, 'owner');
-      const seen = postedRuns(api, root).length;
+      const mark = lastPostedRuns(api, root);
       const node = await nodeOf(scene, a);
 
       await writeFile(goFileOf(scene), '');
 
       const ended = await endedRun(api, node, launchedAt);
 
-      await waitFor('L passed without an owner', () => isLLeftAs(scene, seen, 'passed'));
+      await waitFor('L passed without an owner', () => isLLeftAs(scene, mark, 'passed'));
       await waitFor('log file removed', () => logFilesOf(root).length === 0);
       assert.equal(ended.state, 'passed');
     });
@@ -49,14 +49,14 @@ export const ownerStopCase = async (graph: GraphScene): Promise<void> => {
   await step('L13-16: stopTask on the owner A stops its run and posts L stopped without an owner', async () => {
     await withBlockedL(scene, async () => {
       const launchedAt = await startedUnderA(scene, 'stop');
-      const seen = postedRuns(api, root).length;
+      const mark = lastPostedRuns(api, root);
       const node = await nodeOf(scene, a);
 
       await api.graph.receive(root, { type: 'stopTask', taskId: a.fullName });
 
       const ended = await endedRun(api, node, launchedAt);
 
-      await waitFor('L stopped without an owner', () => isLLeftAs(scene, seen, 'stopped'));
+      await waitFor('L stopped without an owner', () => isLLeftAs(scene, mark, 'stopped'));
       assert.equal(ended.state, 'stopped');
     });
   });
@@ -77,11 +77,11 @@ export const ownWinsCase = async (graph: GraphScene): Promise<void> => {
 
   await step('L13-17: L run on its own shows no owner while A runs it too, and shows A once the own run is stopped', async () => {
     await withBlockedL(scene, async () => {
-      const seen = postedRuns(api, root).length;
+      const mark = lastPostedRuns(api, root);
       const nodeL = await nodeOf(scene, l);
       const launchedL = await startRun(api, nodeL);
 
-      await waitFor('L running', () => !isIdle(scene, l));
+      await waitFor('L process started', () => isStarted(scene, l));
 
       const nodeA = await nodeOf(scene, a);
       const launchedA = await startGraphRun(api, nodeA);
@@ -89,7 +89,8 @@ export const ownWinsCase = async (graph: GraphScene): Promise<void> => {
       await waitFor('L recorded running under A', () => isRunningUnderA(scene));
       await whenQuiet(api, root);
 
-      const owners = ownersOf(api, root, l.fullName).slice(seen);
+      const later = postedRunsAfter(api, root, mark);
+      const owners = later.map((message) => message.owners?.[l.fullName]);
       const found = owners.filter((owner) => owner !== undefined);
 
       assert.ok(owners.length > 0, 'no runs post since the own run started');
@@ -102,7 +103,7 @@ export const ownWinsCase = async (graph: GraphScene): Promise<void> => {
       assert.equal(endedL.state, 'stopped');
       assert.equal(api.runs.get(root, a.fullName)?.state, 'running');
       await waitFor('L owned by A', () => isLUnderA(scene));
-      log(`own-wins: first owners post ${Date.now() - launchedA} ms after the launch of A`);
+      log(`own-wins: A shown as owner of L ${Date.now() - launchedA} ms after the launch of A, after the own stop of L`);
       await writeFile(goFileOf(scene), '');
       await endedRun(api, nodeA, launchedA);
     });
