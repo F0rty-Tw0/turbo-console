@@ -948,6 +948,7 @@ kbd {
 .vscode-high-contrast .graph-sash:focus-visible,
 .vscode-high-contrast-light .graph-sash:focus-visible {
   outline: 1px solid var(--vscode-contrastActiveBorder);
+  outline-offset: -1px;
 }
 
 .graph-body.is-sashing {
