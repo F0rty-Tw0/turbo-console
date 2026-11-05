@@ -10,7 +10,7 @@ import { progressKeyOf } from '../utils/run-entry.util.ts';
  * One begun run's two halves: the log (`isDrained`: its tail drained or closed, or it never had one) and the summary
  * (`isMatched`: the owner's `ended` entry holds its match, or a rerun took its slot while the match was pending).
  */
-type ProgressJoin = {
+type JoinState = {
   readonly owner: ProgressOwner;
   readonly tail: RunLogTail | null;
   readonly isDrained: boolean;
@@ -18,19 +18,19 @@ type ProgressJoin = {
   readonly isMatched: boolean;
 };
 
-const joinAfterEntry = (join: ProgressJoin, entry: RunEntry): ProgressJoin => {
+const joinAfterEntry = (join: JoinState, entry: RunEntry): JoinState => {
   const { launchedAt } = join.owner;
 
   if (entry.launchedAt === launchedAt) {
     if (entry.state === 'running') return join;
 
-    const ended: ProgressJoin = { ...join, ended: entry, isMatched: !entry.matching };
+    const ended: JoinState = { ...join, ended: entry, isMatched: !entry.matching };
 
     return ended;
   }
 
   const isRerunOverPendingMatch = entry.launchedAt > launchedAt && join.ended?.matching === true;
-  const matched: ProgressJoin = { ...join, isMatched: true };
+  const matched: JoinState = { ...join, isMatched: true };
 
   return isRerunOverPendingMatch ? matched : join;
 };
@@ -42,7 +42,7 @@ const joinAfterEntry = (join: ProgressJoin, entry: RunEntry): ProgressJoin => {
  * catch of its own.
  */
 export class RunProgressJoin implements ProgressPort {
-  private readonly joins = new Map<string, ProgressJoin>();
+  private readonly joins = new Map<string, JoinState>();
   private readonly progress: ProgressRuns;
   private readonly log: (text: string) => void;
 
@@ -55,7 +55,7 @@ export class RunProgressJoin implements ProgressPort {
   }
 
   public begin(owner: ProgressOwner, dependenciesOf: DependenciesOf): void {
-    const join: ProgressJoin = { owner, tail: null, isDrained: false, ended: null, isMatched: false };
+    const join: JoinState = { owner, tail: null, isDrained: false, ended: null, isMatched: false };
 
     this.progress.begin(owner, dependenciesOf);
     this.joins.set(progressKeyOf(owner), join);
@@ -72,7 +72,7 @@ export class RunProgressJoin implements ProgressPort {
       return;
     }
 
-    const tailed: ProgressJoin = { ...join, tail: handle };
+    const tailed: JoinState = { ...join, tail: handle };
 
     this.joins.set(key, tailed);
   }
@@ -103,21 +103,21 @@ export class RunProgressJoin implements ProgressPort {
 
     if (join === undefined) return;
 
-    const drained: ProgressJoin = { ...join, isDrained: true };
+    const drained: JoinState = { ...join, isDrained: true };
 
-    this.keep(key, drained);
+    this.settleWhenDone(key, drained);
   }
 
   private latch(entry: RunEntry): void {
     for (const [key, join] of this.joins) {
       const isTask = join.owner.root === entry.root && join.owner.taskId === entry.taskId;
 
-      if (isTask) this.keep(key, joinAfterEntry(join, entry));
+      if (isTask) this.settleWhenDone(key, joinAfterEntry(join, entry));
     }
   }
 
   /** Stores `join`, or settles its run with the latched entry and forgets it when both halves are done. */
-  private keep(key: string, join: ProgressJoin): void {
+  private settleWhenDone(key: string, join: JoinState): void {
     const { ended } = join;
     const isDone = join.isDrained && join.isMatched;
 
