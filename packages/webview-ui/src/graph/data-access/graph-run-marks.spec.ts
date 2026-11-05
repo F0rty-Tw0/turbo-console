@@ -6,6 +6,7 @@ import { markFolderRuns, markPackageRuns } from './graph-run-marks.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import type { PackageRuns } from '../common/graph-page.type.ts';
 import { FOLDER_NODE_CLASS } from '../common/graph.const.ts';
+import { classesOf } from '../test/utils/run-marks.spec.util.ts';
 import { collapsedIdOf, folderIdOf } from '../utils/folder-id.util.ts';
 
 const APPS_NODE = collapsedIdOf('apps');
@@ -25,11 +26,6 @@ const APPS: ElementDefinition = { data: APPS_DATA, classes: FOLDER_NODE_CLASS };
 const MEMBERS: ReadonlyMap<string, string[]> = new Map([['apps', ['web', 'docs']]]);
 
 const runsOf = (...entries: [string, GraphRunState][]): PackageRuns => new Map(entries);
-
-const isMark = (name: string): boolean => name !== FOLDER_NODE_CLASS;
-
-/** The classes of the element but the folder node marker, which no mark writes. */
-const classesOf = (cy: Core, id: string): string[] => cy.getElementById(id).classes().filter(isMark);
 
 const styleEventsDuring = (cy: Core, write: () => void): number => {
   let count = 0;
@@ -52,10 +48,15 @@ describe('FEATURE: markPackageRuns and markFolderRuns', () => {
   });
 
   describe('GIVEN package nodes web and ui and a collapsed folder node apps holding web and docs', () => {
-    it('WHEN web runs THEN web has run-running and package-run and ui has neither', () => {
+    it('WHEN web runs THEN web has run-running and package-run', () => {
       markPackageRuns(cy, runsOf(['web', 'running']));
 
       expect(classesOf(cy, 'web')).toStrictEqual(['run-running', 'package-run']);
+    });
+
+    it('WHEN web runs THEN ui has no run class', () => {
+      markPackageRuns(cy, runsOf(['web', 'running']));
+
       expect(classesOf(cy, 'ui')).toStrictEqual([]);
     });
 
@@ -78,7 +79,9 @@ describe('FEATURE: markPackageRuns and markFolderRuns', () => {
 
       markPackageRuns(cy, runs);
 
-      expect(styleEventsDuring(cy, () => markPackageRuns(cy, runs))).toBe(0);
+      const events = styleEventsDuring(cy, (): void => markPackageRuns(cy, runs));
+
+      expect(events).toBe(0);
     });
 
     it('WHEN web runs and docs passed THEN the apps node reads run-running and package-run', () => {
@@ -98,7 +101,9 @@ describe('FEATURE: markPackageRuns and markFolderRuns', () => {
 
       markFolderRuns(cy, MEMBERS, runs);
 
-      expect(styleEventsDuring(cy, () => markFolderRuns(cy, MEMBERS, runs))).toBe(0);
+      const events = styleEventsDuring(cy, (): void => markFolderRuns(cy, MEMBERS, runs));
+
+      expect(events).toBe(0);
     });
 
     it('WHEN a package turns idle THEN markPackageRuns leaves the apps node alone', () => {
@@ -126,10 +131,15 @@ describe('FEATURE: markPackageRuns and markFolderRuns', () => {
       expect(classesOf(cy, folderIdOf('apps'))).toStrictEqual([]);
     });
 
-    it('WHEN web runs and the packages are marked THEN web is marked and the box is not', () => {
+    it('WHEN web runs and the packages are marked THEN web is marked', () => {
       markPackageRuns(cy, runsOf(['web', 'running']));
 
       expect(classesOf(cy, 'web')).toStrictEqual(['run-running', 'package-run']);
+    });
+
+    it('WHEN web runs and the packages are marked THEN the box is not', () => {
+      markPackageRuns(cy, runsOf(['web', 'running']));
+
       expect(classesOf(cy, folderIdOf('apps'))).toStrictEqual([]);
     });
   });
