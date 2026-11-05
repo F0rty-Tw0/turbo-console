@@ -42,12 +42,12 @@ export class GraphTaskRings {
     await expect.poll(async (): Promise<[boolean, number]> => this.folderRingsOf(folder, colours)).toStrictEqual([true, 0]);
   }
 
-  /** Whether `colours.drawn` shows at all, and how many pixels `colours.absent` has. */
+  /** Whether `colours.drawn` shows at all, and how many pixels `colours.absent` has; `[false, -1]` while the node hides in a collapsed folder. */
   private async ringsOf(id: string, colours: RingColours): Promise<[boolean, number]> {
     const nodes = await this.probe.nodes();
     const node = nodes.find((candidate): boolean => candidate.id === id);
 
-    if (node === undefined) return [false, -1];
+    if (node === undefined || node.isCollapsed) return [false, -1];
 
     const zoom = await this.probe.zoom();
     const clip = grownClipOf(nodeBoxOf(node, zoom));
