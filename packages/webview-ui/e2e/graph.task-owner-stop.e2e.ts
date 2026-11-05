@@ -1,4 +1,5 @@
 import { expect, test } from './graph-toolbar.fixture.ts';
+import { RUNNING_RGB } from './test/common/graph-run-colours.const.ts';
 import { TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { THEME_DARK_STUB } from './test/stubs/graph-theme.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
@@ -50,7 +51,7 @@ const RUNNING_STATE = runStateTextOf('running', null);
 
 const SELECTED_RGB = THEME_DARK_STUB.expected.selected;
 
-const SELECTION_RING = { drawn: SELECTED_RGB, absent: 'rgb(204,167,0)' };
+const SELECTION_RING = { drawn: SELECTED_RGB, absent: RUNNING_RGB };
 
 test.describe('FEATURE: Stop on a dependency that runs under another task run', () => {
   test.beforeEach(async ({ graphHost, graphPage, graphTaskProbe }): Promise<void> => {
