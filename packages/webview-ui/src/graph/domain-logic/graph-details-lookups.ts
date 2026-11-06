@@ -34,7 +34,9 @@ export class LinkLookups {
 
   /** A reply for the shown link updates the explain block in place, or builds it again when its shape changed. */
   public explained(message: GraphEdgeExplainedMessage, view: DetailsView | null): void {
-    const isReply = isReplyFor(message, this.env().shown());
+    const env = this.env();
+    const shown = env.shown();
+    const isReply = isReplyFor(message, shown);
 
     if (!isReply || view?.kind !== 'link') return;
 
@@ -48,7 +50,7 @@ export class LinkLookups {
 
     view.explain.replaceChildren(details.root);
     this.explain = { state, details };
-    wireExplain(details, message.source, (): ExplainState | null => this.explain?.state ?? null, this.env());
+    wireExplain(details, message.source, (): ExplainState | null => this.explain?.state ?? null, env);
 
     if (hadFocus) view.heading.focus();
   }
