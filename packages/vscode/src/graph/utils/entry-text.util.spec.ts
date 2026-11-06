@@ -11,7 +11,7 @@ const SHOWN = String.fromCodePoint(0xfffd);
 
 const CONTROL_CODES = [0x061c, 0x200e, 0x200f, 0x202a, 0x202b, 0x202c, 0x202d, 0x202e, 0x2066, 0x2067, 0x2068, 0x2069];
 
-const controlRows = (): [string, number][] => CONTROL_CODES.map((code): [string, number] => [code.toString(16).toUpperCase(), code]);
+const CONTROL_ROWS = CONTROL_CODES.map((code): [string, number] => [code.toString(16).toUpperCase().padStart(4, '0'), code]);
 
 describe('FEATURE: entry text cut', () => {
   describe('GIVEN a text of at most ENTRY_TEXT_MAX units', () => {
@@ -40,17 +40,17 @@ describe('FEATURE: entry text cut', () => {
       expect(result).toBe(`${'a'.repeat(ENTRY_TEXT_MAX - 1)}${ELLIPSIS}`);
     });
 
-    it('WHEN an emoji ends exactly at unit 200 THEN the text is kept whole', () => {
-      const text = `${'a'.repeat(ENTRY_TEXT_MAX - 2)}${EMOJI}`;
+    it('WHEN an emoji fills units 199 and 200 and text follows THEN the pair is kept and an ellipsis added', () => {
+      const text = `${'a'.repeat(ENTRY_TEXT_MAX - 2)}${EMOJI}b`;
 
       const result = cut(text);
 
-      expect(result).toBe(text);
+      expect(result).toBe(`${'a'.repeat(ENTRY_TEXT_MAX - 2)}${EMOJI}${ELLIPSIS}`);
     });
   });
 
   describe('GIVEN a control character inside a short text', () => {
-    it.each(controlRows())('WHEN U+%s is cut THEN it shows as U+FFFD', (_hex, code) => {
+    it.each(CONTROL_ROWS)('WHEN U+%s is cut THEN it shows as U+FFFD', (_hex, code) => {
       const text = `a${String.fromCodePoint(code)}b`;
 
       const result = cut(text);
