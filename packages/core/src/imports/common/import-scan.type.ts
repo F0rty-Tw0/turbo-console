@@ -31,3 +31,18 @@ export type ImportScanCaps = {
   /** Files read at once. */
   readonly reads: number;
 };
+
+/** One file's last lex: the `lstat` it was read under, and what `importsOf` found. */
+export type CachedFile = {
+  readonly mtimeMs: number;
+  readonly size: number;
+  readonly imports: SourceImport[];
+};
+
+/** What `ImportScanInput.cache` needs; `ImportFileCache` (data-access) fills it, since `common/` may not import that class. */
+export type ImportFileStore = {
+  /** The map the last finished scan of `dir` left; empty when none. */
+  readonly filesOf: (dir: string) => ReadonlyMap<string, CachedFile>;
+  /** Replaces `dir`'s map; clears every map first when the total would pass `IMPORT_CACHE_MAX`. */
+  readonly swap: (dir: string, files: ReadonlyMap<string, CachedFile>) => void;
+};

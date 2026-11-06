@@ -11,3 +11,6 @@ export const NODE_MODULES_DIR = 'node_modules';
 
 /** D8 caps per package scan; `fileBytes` matches `readSmallFile`'s default, which is not exported. */
 export const IMPORT_SCAN_CAPS: ImportScanCaps = { files: 5000, entries: 50_000, timeMs: 4000, fileBytes: 1024 * 1024, reads: 8 };
+
+/** D9: entries across every dir's map before a swap clears them all. */
+export const IMPORT_CACHE_MAX = 20_000;
