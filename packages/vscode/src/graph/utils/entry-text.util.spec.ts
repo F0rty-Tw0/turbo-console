@@ -1,7 +1,7 @@
 import { ENTRY_TEXT_MAX } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { cut } from './entry-text.util.ts';
+import { cutEntryText } from './entry-text.util.ts';
 
 const EMOJI = String.fromCodePoint(0x1f600);
 
@@ -19,7 +19,7 @@ describe('FEATURE: entry text cut', () => {
       ['a', 'a'],
       ['200 chars', 's'.repeat(ENTRY_TEXT_MAX)]
     ])('WHEN %s is cut THEN it is kept whole', (_title, text) => {
-      const result = cut(text);
+      const result = cutEntryText(text);
 
       expect(result).toBe(text);
     });
@@ -27,7 +27,7 @@ describe('FEATURE: entry text cut', () => {
 
   describe('GIVEN a text over ENTRY_TEXT_MAX units', () => {
     it('WHEN 201 plain chars are cut THEN it is the first 200 and an ellipsis', () => {
-      const result = cut('s'.repeat(ENTRY_TEXT_MAX + 1));
+      const result = cutEntryText('s'.repeat(ENTRY_TEXT_MAX + 1));
 
       expect(result).toBe(`${'s'.repeat(ENTRY_TEXT_MAX)}${ELLIPSIS}`);
     });
@@ -35,7 +35,7 @@ describe('FEATURE: entry text cut', () => {
     it('WHEN an emoji has its high half at unit 200 THEN it is 199 units and an ellipsis, the pair never split', () => {
       const text = `${'a'.repeat(ENTRY_TEXT_MAX - 1)}${EMOJI}b`;
 
-      const result = cut(text);
+      const result = cutEntryText(text);
 
       expect(result).toBe(`${'a'.repeat(ENTRY_TEXT_MAX - 1)}${ELLIPSIS}`);
     });
@@ -43,7 +43,7 @@ describe('FEATURE: entry text cut', () => {
     it('WHEN an emoji fills units 199 and 200 and text follows THEN the pair is kept and an ellipsis added', () => {
       const text = `${'a'.repeat(ENTRY_TEXT_MAX - 2)}${EMOJI}b`;
 
-      const result = cut(text);
+      const result = cutEntryText(text);
 
       expect(result).toBe(`${'a'.repeat(ENTRY_TEXT_MAX - 2)}${EMOJI}${ELLIPSIS}`);
     });
@@ -53,7 +53,7 @@ describe('FEATURE: entry text cut', () => {
     it.each(CONTROL_ROWS)('WHEN U+%s is cut THEN it shows as U+FFFD', (_hex, code) => {
       const text = `a${String.fromCodePoint(code)}b`;
 
-      const result = cut(text);
+      const result = cutEntryText(text);
 
       expect(result).toBe(`a${SHOWN}b`);
     });

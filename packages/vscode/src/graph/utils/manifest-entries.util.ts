@@ -3,7 +3,7 @@ import type { ManifestContext, ManifestEntry, ManifestField } from '@turbo-conso
 import { parseTree } from 'jsonc-parser';
 import type { Node } from 'jsonc-parser';
 
-import { cut } from './entry-text.util.ts';
+import { cutEntryText } from './entry-text.util.ts';
 import { lineAt, linesOf } from '../../shared/utils/text-line.util.ts';
 
 type ManifestQuery = {
@@ -49,7 +49,7 @@ const beforeOf = (lines: string[], line: number): ManifestContext => {
 
   if (line < 1 || text === undefined) return NO_SIDE;
 
-  const side: ManifestContext = { before: cut(text) };
+  const side: ManifestContext = { before: cutEntryText(text) };
 
   return side;
 };
@@ -59,7 +59,7 @@ const afterOf = (lines: string[], line: number): ManifestContext => {
 
   if (text === undefined) return NO_SIDE;
 
-  const side: ManifestContext = { after: cut(text) };
+  const side: ManifestContext = { after: cutEntryText(text) };
 
   return side;
 };
@@ -90,7 +90,7 @@ const entryOf = (field: ManifestField, property: Node, query: ManifestQuery): Ma
   const spec = text ?? body.slice(valueNode.offset, valueNode.offset + valueNode.length);
   const line = lineAt(body, keyNode.offset);
   const context = contextOf(lines, line);
-  const entry: ManifestEntry = { field, key: cut(key), spec: cut(spec), line, context };
+  const entry: ManifestEntry = { field, key: cutEntryText(key), spec: cutEntryText(spec), line, context };
 
   return entry;
 };
