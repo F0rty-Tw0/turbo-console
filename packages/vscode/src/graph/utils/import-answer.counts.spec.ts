@@ -24,8 +24,8 @@ const linesUpTo = (count: number): number[] => Array.from({ length: count }, (_n
 
 describe('FEATURE: answer counts', () => {
   describe('GIVEN the IMPORT_SITES_MAX cap', () => {
-    it('WHEN 201 sites match THEN 200 are sent, the 201st by order is not, and total is 201', () => {
-      const lines = linesUpTo(IMPORT_SITES_MAX + 1);
+    it('WHEN 201 sites match in descending line order THEN the first 200 by order are sent, the 201st is not, and total is 201', () => {
+      const lines = linesUpTo(IMPORT_SITES_MAX + 1).toReversed();
 
       const result = answerOf(importScanOf([matchedFileOf('x.ts', ...lines)]));
 
@@ -53,11 +53,15 @@ describe('FEATURE: answer counts', () => {
       expect(foundSitesOf(result).map((site) => site.file)).toStrictEqual(['a.ts']);
     });
 
-    it('WHEN the path is exactly MANIFEST_FILE_MAX long THEN its site is sent and the counts are unchanged', () => {
-      const result = answerOf(importScanOf([matchedFileOf(EXACT_FILE, 1)], { scanned: 5, skipped: 2 }));
+    it('WHEN it holds 1 site and x.ts holds 200 THEN all 200 sites of x.ts are sent and total is 201', () => {
+      const files = [matchedFileOf(LONG_FILE, 1), matchedFileOf('x.ts', ...linesUpTo(IMPORT_SITES_MAX))];
 
-      expect(result).toMatchObject({ kind: 'found', scanned: 5, skipped: 2, total: 1 });
-      expect(foundSitesOf(result).map((site) => site.file)).toStrictEqual([EXACT_FILE]);
+      const result = answerOf(importScanOf(files));
+      const sentFiles = new Set(foundSitesOf(result).map((site) => site.file));
+
+      expect(result).toMatchObject({ kind: 'found', total: IMPORT_SITES_MAX + 1 });
+      expect(foundSitesOf(result)).toHaveLength(IMPORT_SITES_MAX);
+      expect([...sentFiles]).toStrictEqual(['x.ts']);
     });
 
     it('WHEN the only matching file has such a path THEN it is none with scanned -1 and skipped +1', () => {
@@ -72,6 +76,15 @@ describe('FEATURE: answer counts', () => {
       const result = answerOf(importScanOf([other, matchedFileOf('a.ts', 4)], { scanned: 5, skipped: 2 }));
 
       expect(result).toMatchObject({ kind: 'found', scanned: 5, skipped: 2, total: 1 });
+    });
+  });
+
+  describe('GIVEN a file path exactly MANIFEST_FILE_MAX long', () => {
+    it('WHEN it holds 1 site THEN its site is sent and the counts are unchanged', () => {
+      const result = answerOf(importScanOf([matchedFileOf(EXACT_FILE, 1)], { scanned: 5, skipped: 2 }));
+
+      expect(result).toMatchObject({ kind: 'found', scanned: 5, skipped: 2, total: 1 });
+      expect(foundSitesOf(result).map((site) => site.file)).toStrictEqual([EXACT_FILE]);
     });
   });
 });
