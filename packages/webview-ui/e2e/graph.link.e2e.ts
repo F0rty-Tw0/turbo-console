@@ -97,6 +97,9 @@ test.describe('FEATURE: graph link explain', () => {
       await test.step('THEN the host was asked to explain it once', async (): Promise<void> =>
         graphReplies.expectExplainAsked('web', 'ui', 1));
 
+      await test.step('AND the host was asked to scan its imports once', async (): Promise<void> =>
+        graphReplies.expectImportsAsked('web', 'ui', 1));
+
       await test.step('AND the panel reads apps/web/package.json', async (): Promise<void> =>
         graphLink.expectReading('apps/web/package.json'));
 

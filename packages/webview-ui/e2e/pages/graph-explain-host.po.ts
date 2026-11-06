@@ -3,9 +3,15 @@ import { expect } from '@playwright/test';
 
 import type { EdgeExplainResult, GraphEdgeExplainedMessage } from '../../src/bridge/common/graph-message.type.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
-import type { ExplainEdgeMessage, OpenManifestMessage } from '../common/graph.type.ts';
+import type { ExplainEdgeMessage, OpenManifestMessage, ScanImportsMessage } from '../common/graph.type.ts';
 import { postReply } from '../test/utils/graph-host-state.spec.util.ts';
-import { explainEdgePosted, lastExplainPosted, openManifestPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
+import {
+  explainEdgePosted,
+  lastExplainPosted,
+  openManifestPosted,
+  readPosted,
+  scanImportsPosted
+} from '../test/utils/graph-posted.spec.util.ts';
 
 /** The host stand-in's explain side: the `explainEdge` and `openManifest` messages the page posted, and the replies it gets. */
 export class GraphExplainHost {
@@ -40,6 +46,11 @@ export class GraphExplainHost {
     await expect.poll(async (): Promise<number> => this.askedCount(source, target)).toBe(times);
   }
 
+  /** The page has asked the host to scan the link's dependent for imports exactly `times` times. */
+  public async expectImportsAsked(source: string, target: string, times: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.importsAskedCount(source, target)).toBe(times);
+  }
+
   public async expectNoExplainAsked(): Promise<void> {
     await this.page.evaluate(NEXT_FRAME);
 
@@ -70,6 +81,14 @@ export class GraphExplainHost {
     const posted = await readPosted(this.page);
     const asked = explainEdgePosted(posted);
     const isLink = (message: ExplainEdgeMessage): boolean => message.source === source && message.target === target;
+
+    return asked.filter(isLink).length;
+  }
+
+  private async importsAskedCount(source: string, target: string): Promise<number> {
+    const posted = await readPosted(this.page);
+    const asked = scanImportsPosted(posted);
+    const isLink = (message: ScanImportsMessage): boolean => message.source === source && message.target === target;
 
     return asked.filter(isLink).length;
   }

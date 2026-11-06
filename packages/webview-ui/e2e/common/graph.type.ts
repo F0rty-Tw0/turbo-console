@@ -103,6 +103,8 @@ export type OpenDetailsMessage = Extract<GraphWebviewMessage, MessageTag<'openDe
 
 export type ExplainEdgeMessage = Extract<GraphWebviewMessage, MessageTag<'explainEdge'>>;
 
+export type ScanImportsMessage = Extract<GraphWebviewMessage, MessageTag<'scanImports'>>;
+
 export type OpenManifestMessage = Extract<GraphWebviewMessage, MessageTag<'openManifest'>>;
 
 export type ExportImageMessage = Extract<GraphWebviewMessage, MessageTag<'exportImage'>>;
