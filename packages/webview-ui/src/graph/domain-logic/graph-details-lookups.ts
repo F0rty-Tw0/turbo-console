@@ -46,7 +46,7 @@ export class LinkLookups {
     this.asked(link);
   }
 
-  /** The imports of the shown link, `null` while no link is shown. */
+  /** The imports of the shown link: `null` until a link view is built, and after a view that is not a link. */
   public importsState(): ImportsState | null {
     return this.imports;
   }
