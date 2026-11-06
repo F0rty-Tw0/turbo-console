@@ -152,7 +152,8 @@ const aliasKeysOfField = (fieldObject: Node | null, dependency: string): string[
   for (const property of fieldObject?.children ?? []) {
     const [keyNode, valueNode] = property.children ?? [];
     const key = stringValueOf(keyNode);
-    const isAlias = isAliasOf(stringValueOf(valueNode), dependency);
+    const value = stringValueOf(valueNode);
+    const isAlias = isAliasOf(value, dependency);
 
     if (key !== null && key !== dependency && isAlias) keys.push(key);
   }
@@ -173,7 +174,8 @@ export const aliasKeysOf = (text: string, dependency: string): string[] => {
   const keys = new Set<string>();
 
   for (const field of MANIFEST_FIELDS) {
-    const inField = aliasKeysOfField(fieldObjectOf(root, field), dependency);
+    const fieldObject = fieldObjectOf(root, field);
+    const inField = aliasKeysOfField(fieldObject, dependency);
 
     for (const key of inField) keys.add(key);
   }

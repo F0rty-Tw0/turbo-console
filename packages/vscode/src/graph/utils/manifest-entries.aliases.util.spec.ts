@@ -72,12 +72,13 @@ describe('FEATURE: alias keys of a dependency', () => {
       expect(keys).toStrictEqual([BIDI_KEY]);
     });
 
-    it('WHEN there are 9 alias keys THEN the first 8 are listed', () => {
+    it('WHEN there is one more alias key than the cap THEN only the keys up to the cap are listed', () => {
       const text = manifestOf('dependencies', aliasEntriesOf(MANIFEST_ENTRIES_MAX + 1));
+      const expected = Object.keys(aliasEntriesOf(MANIFEST_ENTRIES_MAX));
 
       const keys = aliasKeysOf(text, DEPENDENCY);
 
-      expect(keys).toStrictEqual(Object.keys(aliasEntriesOf(MANIFEST_ENTRIES_MAX)));
+      expect(keys).toStrictEqual(expected);
     });
   });
 });
