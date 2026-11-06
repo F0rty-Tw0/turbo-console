@@ -1,3 +1,4 @@
+import type { ImportScanInput, PackageImportScan } from '@turbo-console/core';
 import type { GraphHostMessage, GraphState, GraphTask, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
@@ -9,8 +10,10 @@ import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 
 /**
  * Editor effects of one graph panel. `openDetails` and `openAt` may reject; `readText` rejects on a file it cannot open and gives
- * `null` for one over the read cap; `pickSaveUri` gives the chosen path or `null` on a cancel and may reject, as may `writeBytes`;
- * `executeCommand` runs a registered command and may reject; `log` (failures), `info`, `showInfo` and `showError` take one clean line and must not throw.
+ * `null` for one over the read cap; `scanImports` is core's `scanPackageImports`: it rejects with `signal.reason` on an abort and
+ * with the raw error when the dir cannot be read; `pickSaveUri` gives the chosen path or `null` on a cancel and may reject, as may
+ * `writeBytes`; `executeCommand` runs a registered command and may reject; `log` (failures), `info`, `showInfo` and `showError`
+ * take one clean line and must not throw.
  */
 export type GraphPorts = {
   readonly post: (message: GraphHostMessage) => void;
@@ -19,6 +22,7 @@ export type GraphPorts = {
   readonly openDetails: (packageName: string) => Promise<void>;
   readonly readText: (path: string) => Promise<string | null>;
   readonly openAt: (path: string, line: number) => Promise<void>;
+  readonly scanImports: (input: ImportScanInput) => Promise<PackageImportScan>;
   readonly setPanelVisible: (visible: boolean) => void;
   readonly log: (text: string) => void;
   readonly info: (text: string) => void;
@@ -75,6 +79,15 @@ export type ExplainContext = {
   readonly root: string;
   readonly ports: GraphPorts;
   readonly canPost: () => boolean;
+};
+
+/** What `GraphLookups` needs of its session: the root, the ports, the state built now, whether a reply may still be posted, and the drop-and-log of a message it does not answer. */
+export type LookupGate = {
+  readonly root: string;
+  readonly ports: GraphPorts;
+  readonly state: () => GraphState;
+  readonly canPost: () => boolean;
+  readonly drop: (value: unknown) => void;
 };
 
 /**

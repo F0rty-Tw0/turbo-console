@@ -1,29 +1,23 @@
 import type { GraphShowRequest, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
-import { answerRequest } from './graph-explain.ts';
 import { GraphImageSaver } from './graph-image-saver.ts';
 import { layoutCachesOf, storePositions } from './graph-layout-store.ts';
+import { GraphLookups, isLookupMessage } from './graph-lookups.ts';
 import { isRequestMessage, requestHandledOf } from './graph-requests.ts';
 import { GraphTaskFeed } from './graph-task-feed.ts';
-import { LatestWins } from './latest-wins.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { ExplainContext, ExplainRequest, GraphFeeds, GraphPorts, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
+import type { GraphFeeds, GraphPorts, LookupGate, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
 import { graphStateOfRoot, persistentIdsOfRoot, runIdsOfRoot, shownOf } from '../utils/graph-state.util.ts';
-
-type ExplainJob = {
-  readonly request: ExplainRequest;
-  readonly value: unknown;
-};
 
 /**
  * The host side of one Package Graph panel. Each state is built from the store and the layout cache when it is posted
  * or a message is checked, so a message is always judged against the graph as it is now. Nothing is posted before the
  * page's `ready` or while hidden; hiding resets `ready` because the page is rebuilt on show. Every state post is followed
  * by the run states of its tasks, the Atomizer counts of its groups and a held `showTasks` or `showPackage`, through the
- * `GraphTaskFeed`. An edge explanation is posted only if the panel is still shown and ready after its read.
- * A change of either tree toggle posts the state again, under the same gate. One `explainEdge` is answered at a time; the one waiting behind it is replaced by each newer request, so a page that floods them costs one read in flight and one waiting.
+ * `GraphTaskFeed`. A change of either tree toggle posts the state again, under the same gate.
+ * Edge explanations and manifest opens go to `GraphLookups`.
  */
 export class GraphSession {
   private readonly root: string;
@@ -33,8 +27,8 @@ export class GraphSession {
   private isVisible = false;
   private isReady = false;
   private isDisposed = false;
-  private readonly explains = new LatestWins<ExplainJob>();
   private readonly images: GraphImageSaver;
+  private readonly lookups: GraphLookups;
   private readonly feed: GraphTaskFeed;
   private readonly feeds: GraphFeeds;
 
@@ -44,6 +38,18 @@ export class GraphSession {
     this.ports = ports;
     this.feeds = feeds;
     this.images = new GraphImageSaver(root, ports);
+
+    const lookupGate: LookupGate = {
+      root,
+      ports,
+      state: (): GraphState => this.stateNow(),
+      canPost: (): boolean => this.canPost(),
+      drop: (value: unknown): void => {
+        this.drop(value);
+      }
+    };
+
+    this.lookups = new GraphLookups(lookupGate);
 
     const gate: TaskFeedGate = {
       canPost: (): boolean => this.canPost(),
@@ -111,6 +117,7 @@ export class GraphSession {
     for (const unsubscribe of this.unsubscribes) unsubscribe();
 
     this.feed.stop();
+    this.lookups.dispose();
 
     if (this.isVisible) this.ports.setPanelVisible(false);
   }
@@ -157,6 +164,12 @@ export class GraphSession {
       return;
     }
 
+    if (isLookupMessage(message)) {
+      await this.lookups.receive(message, value);
+
+      return;
+    }
+
     switch (message.type) {
       case 'ready':
         this.isReady = true;
@@ -174,14 +187,6 @@ export class GraphSession {
         this.ports.info(`graph layout ${message.engine} ${message.ms} ms`);
 
         return;
-      case 'explainEdge':
-        await this.explains.run({ request: message, value }, async (job) => this.answer(job));
-
-        return;
-      case 'openManifest':
-        await this.answer({ request: message, value });
-
-        return;
       case 'exportImage':
         await this.images.save(message.png);
 
@@ -194,18 +199,6 @@ export class GraphSession {
     const context: RequestContext = { state: this.stateNow(), root: this.root, coordinator, ports: this.ports, feeds: this.feeds };
 
     return context;
-  }
-
-  private async answer(job: ExplainJob): Promise<void> {
-    if (this.isDisposed) return;
-
-    const { request, value } = job;
-    const state = this.stateNow();
-    const canPost = (): boolean => this.canPost();
-    const context: ExplainContext = { state, root: this.root, ports: this.ports, canPost };
-    const isHandled = await answerRequest(request, context);
-
-    if (!isHandled) this.drop(value);
   }
 
   private drop(value: unknown): void {

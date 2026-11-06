@@ -145,3 +145,42 @@ export const manifestEntriesOf = (text: string, dependency: string): ManifestEnt
 
   return entries;
 };
+
+const aliasKeysOfField = (fieldObject: Node | null, dependency: string): string[] => {
+  const keys: string[] = [];
+
+  for (const property of fieldObject?.children ?? []) {
+    const [keyNode, valueNode] = property.children ?? [];
+    const key = stringValueOf(keyNode);
+    const value = stringValueOf(valueNode);
+    const isAlias = isAliasOf(value, dependency);
+
+    if (key !== null && key !== dependency && isAlias) keys.push(key);
+  }
+
+  return keys;
+};
+
+/**
+ * The raw keys of `text`'s `MANIFEST_FIELDS` entries that alias `dependency` under another name (`npm:` / `workspace:`), in
+ * field order, each once, at most `MANIFEST_ENTRIES_MAX`; `[]` when the text has no object root. Never cut: the import
+ * matcher compares them with specifiers (spec D5 rule 2).
+ */
+export const aliasKeysOf = (text: string, dependency: string): string[] => {
+  const root = parsedRootOf(text);
+
+  if (root === null) return [];
+
+  const keys = new Set<string>();
+
+  for (const field of MANIFEST_FIELDS) {
+    const fieldObject = fieldObjectOf(root, field);
+    const inField = aliasKeysOfField(fieldObject, dependency);
+
+    for (const key of inField) keys.add(key);
+  }
+
+  const listed = [...keys];
+
+  return listed.slice(0, MANIFEST_ENTRIES_MAX);
+};

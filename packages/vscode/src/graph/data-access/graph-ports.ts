@@ -1,4 +1,4 @@
-import { readSmallFile } from '@turbo-console/core';
+import { readSmallFile, scanPackageImports } from '@turbo-console/core';
 import type { GraphHostMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
@@ -15,7 +15,7 @@ import { GRAPH_ASSET_DIR, GRAPH_VIEW_TYPE } from '../common/graph.const.ts';
 import { cacheKeyOf, layoutEntryOf } from '../utils/graph-cache.util.ts';
 import { graphHtml } from '../utils/graph-webview.util.ts';
 
-/** The editor effects of the Package Graph: panels over `createWebviewPanel`, the layout cache in `workspaceState`, manifest reads and opens, and the output channel. */
+/** The editor effects of the Package Graph: panels over `createWebviewPanel`, the layout cache in `workspaceState`, manifest reads and opens, import scans, and the output channel. */
 export const editorGraphHost = (extensionUri: vscode.Uri, output: Output, state: GraphStore): GraphHost => {
   const assetRoot = vscode.Uri.joinPath(extensionUri, ...GRAPH_ASSET_DIR);
   const options = panelOptionsOf(assetRoot);
@@ -48,6 +48,7 @@ export const editorGraphHost = (extensionUri: vscode.Uri, output: Output, state:
     writeCache,
     readText,
     openAt,
+    scanImports: scanPackageImports,
     log: output.error,
     info: output.info,
     pickSaveUri,
