@@ -9,6 +9,7 @@ import type { EdgeImportsResult } from '../../bridge/common/graph-imports.type.t
 import type { ManifestContext, ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { DetailsViews } from '../common/details.type.ts';
 import type { ImportsState } from '../common/imports-state.type.ts';
+import type { InspectionInput } from '../common/inspection.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
@@ -72,6 +73,8 @@ const REPLY_ROWS = [
   { label: 'a none reply with skipped 2', result: NONE_SKIPPED, state: NONE_FRESH },
   { label: 'a failed reply', result: FAILED, state: FAILED }
 ];
+
+const SELECT_WEB: InspectionInput = { kind: 'select', name: 'web', via: 'list' };
 
 const NEW_HASH_STATE = { ...STATE_STUB, hash: 'h2' };
 
@@ -277,6 +280,20 @@ describe('FEATURE: LinkLookups', () => {
       await settled();
 
       expect(importsState()).toStrictEqual(SCANNING);
+    });
+
+    describe('WHEN web is selected', () => {
+      beforeEach(() => {
+        rig.side.filtering.inspection.input(SELECT_WEB);
+      });
+
+      it('THEN the last view built is the package', () => {
+        expect(built.mock.lastCall?.[0].kind).toBe('package');
+      });
+
+      it('THEN no imports are held', () => {
+        expect(importsState()).toBeNull();
+      });
     });
   });
 
