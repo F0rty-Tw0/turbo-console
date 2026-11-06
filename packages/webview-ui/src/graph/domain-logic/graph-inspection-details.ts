@@ -11,7 +11,7 @@ const CANVAS_ESCAPE: InspectionInput = { kind: 'escape', where: 'canvas' };
 const PANEL_ESCAPE: InspectionInput = { kind: 'escape', where: 'panel' };
 
 /** Asks the host for the manifest entry behind the link `source` → `target`. */
-export const postExplain = (bridge: Bridge, source: string, target: string): void => {
+const postExplain = (bridge: Bridge, source: string, target: string): void => {
   bridge.post({ type: 'explainEdge', source, target });
 };
 
