@@ -1,41 +1,42 @@
+import { LinkLookups } from './graph-details-lookups.ts';
 import { shownHintOf } from './graph-details-picking.ts';
-import { focusedNameOf, hadFocusOf, refocusList, updateExplain, updateView } from './graph-details-render.ts';
-import { emptyOf, wireExplain, wiredViewOf } from './graph-details-wire.ts';
+import { focusedNameOf, hadFocusOf, refocusList, updateView } from './graph-details-render.ts';
+import { emptyOf, wiredViewOf } from './graph-details-wire.ts';
 import { onPanelKey } from './graph-inspection-details.ts';
 import type { GraphEdgeExplainedMessage } from '../../bridge/common/graph-message.type.ts';
-import type { ExplainState } from '../common/details.type.ts';
 import type {
   DetailsContext,
   DetailsEnv,
   DetailsPlan,
   DetailsView,
   GraphDetailsDeps,
-  ShownExplain,
   ShownHint,
   ShownInspection
 } from '../common/graph-details.type.ts';
+import type { LinkInspection } from '../common/inspection.type.ts';
 import { detailsPlanOf } from '../utils/details-plan.util.ts';
-import { explainPlanOf, explainStateOf, isReplyFor } from '../utils/explain-state.util.ts';
 
 const NOTHING_SHOWN: ShownInspection = { kind: 'none' };
 
 /**
  * The details panel: one view at a time for the inspection, swapped, updated in place or rebuilt by `show`, with
- * the spec §4.5 focus rules; the explain replies; the canvas hint while picking; open state and the overlay layout.
+ * the spec §4.5 focus rules; the link look-ups (`LinkLookups`); the canvas hint while picking; open state and the
+ * overlay layout.
  */
 export class GraphDetails {
   private readonly deps: GraphDetailsDeps;
+  private readonly lookups: LinkLookups;
   private aside: HTMLElement | null = null;
   private content: HTMLElement | null = null;
   private view: DetailsView | null = null;
   private shown: ShownInspection | null = null;
   private context: DetailsContext | null = null;
-  private explain: ShownExplain | null = null;
   private hint: ShownHint | null = null;
   private open = true;
 
   public constructor(deps: GraphDetailsDeps) {
     this.deps = deps;
+    this.lookups = new LinkLookups(deps, (): DetailsEnv => this.envOf());
     deps.page.details.addEventListener('click', (): void => this.toggle());
     deps.overlay.addEventListener('change', (): void => this.relayout());
   }
@@ -86,24 +87,12 @@ export class GraphDetails {
 
   /** A reply for the shown link updates the explain block in place, or builds it again when its shape changed. */
   public explained(message: GraphEdgeExplainedMessage): void {
-    const { view } = this;
-    const isReply = isReplyFor(message, this.shown);
+    this.lookups.explained(message, this.view);
+  }
 
-    if (!isReply || view?.kind !== 'link') return;
-
-    const state = explainStateOf(message.result, message.target);
-    const isUpdated = this.updatedExplain(state);
-
-    if (isUpdated) return;
-
-    const hadFocus = view.explain.contains(document.activeElement);
-    const details = this.deps.views.explain(state);
-
-    view.explain.replaceChildren(details.root);
-    this.explain = { state, details };
-    wireExplain(details, message.source, (): ExplainState | null => this.explain?.state ?? null, this.envOf());
-
-    if (hadFocus) view.heading.focus();
+  /** A same-hash state asks the host again about the shown link. */
+  public reasked(link: LinkInspection): void {
+    this.lookups.reasked(link);
   }
 
   public isOpen(): boolean {
@@ -142,32 +131,16 @@ export class GraphDetails {
     return isUpdated;
   }
 
-  private updatedExplain(state: ExplainState): boolean {
-    const { explain } = this;
-
-    if (explain === null) return false;
-
-    const plan = explainPlanOf(explain.state, state);
-
-    if (plan === 'rebuild') return false;
-
-    updateExplain(explain.details, state);
-    this.explain = { state, details: explain.details };
-
-    return true;
-  }
-
   /** A view built with `hadFocus` (see `hadFocusOf`) takes focus to its heading (spec §4.5). */
   private build(content: HTMLElement, inspection: ShownInspection, context: DetailsContext, hadFocus: boolean): void {
     const view = wiredViewOf(inspection, context, this.envOf());
 
     content.replaceChildren(view.root);
     this.view = view;
-    this.explain = null;
 
     if (hadFocus) view.heading.focus();
 
-    if (inspection.kind === 'link') this.deps.onExplain(inspection.source, inspection.target);
+    this.lookups.built(inspection);
   }
 
   private toggle(): void {

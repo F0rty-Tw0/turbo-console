@@ -1,5 +1,5 @@
 import { GraphDetails } from './graph-details.ts';
-import { detailsDepsOf, folderActionsOf, postExplain, postOpenDetails, wireInspectionKeys } from './graph-inspection-details.ts';
+import { detailsDepsOf, folderActionsOf, postOpenDetails, wireInspectionKeys } from './graph-inspection-details.ts';
 import { GraphInspectionFolders } from './graph-inspection-folders.ts';
 import { keepClearInspection } from './graph-keep-clear.ts';
 import { InspectionCanvas } from './inspection-canvas.ts';
@@ -156,13 +156,13 @@ export class GraphInspection {
     if (restored !== null) this.apply(restored, true);
   }
 
-  /** A same-hash state: relabels a shown package's task count in place, or asks again for a shown link's entry. */
+  /** A same-hash state: relabels a shown package's task count in place, or asks the details to ask again about a shown link. */
   public refreshed(isChanged: boolean): void {
     const plan = sameHashPlanOf(this.inspection, isChanged);
 
     if (plan.isUpdate) this.apply(this.inspection, false);
 
-    if (plan.reask !== null) postExplain(this.deps.bridge, plan.reask.source, plan.reask.target);
+    if (plan.reask !== null) this.details.reasked(plan.reask);
   }
 
   public explained(message: GraphEdgeExplainedMessage): void {

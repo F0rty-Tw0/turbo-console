@@ -26,8 +26,9 @@ import {
 import type { ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { CandidateKey } from '../common/details.type.ts';
 import type { TraceDirection } from '../common/trace.type.ts';
+import { MANIFEST_ENTRY_STUB } from '../test/stubs/manifest-entry.stub.ts';
 
-const ENTRY: ManifestEntry = { field: 'devDependencies', key: 'ui', spec: '^1.0.0', line: 9, context: {} };
+const ENTRY: ManifestEntry = { ...MANIFEST_ENTRY_STUB, field: 'devDependencies' };
 
 const FILE = 'apps/web/package.json';
 
@@ -140,15 +141,13 @@ describe('FEATURE: details text', () => {
 
   describe('GIVEN a manifest entry on 0-based line 9', () => {
     it('WHEN its label is built THEN it names the field and the 1-based line', () => {
-      const entry: ManifestEntry = { ...ENTRY, field: 'dependencies' };
-
-      const label = entryLabelOf(entry);
+      const label = entryLabelOf({ ...MANIFEST_ENTRY_STUB, field: 'dependencies', line: 9 });
 
       expect(label).toBe('dependencies, line 10');
     });
 
     it('WHEN its row text is built THEN the key and spec are quoted', () => {
-      const text = entryRowTextOf(ENTRY);
+      const text = entryRowTextOf({ ...ENTRY, key: 'ui', spec: '^1.0.0' });
 
       expect(text).toBe('"ui": "^1.0.0"');
     });

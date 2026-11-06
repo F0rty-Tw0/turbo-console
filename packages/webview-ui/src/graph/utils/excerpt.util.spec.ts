@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { excerptRowsOf } from './excerpt.util.ts';
 import type { ManifestContext, ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { ExcerptRow } from '../common/details.type.ts';
-
-const ENTRY: ManifestEntry = { field: 'dependencies', key: 'ui', spec: '^1.0.0', line: 9, context: {} };
+import { MANIFEST_ENTRY_STUB } from '../test/stubs/manifest-entry.stub.ts';
 
 const ENTRY_TEXT = '"ui": "^1.0.0"';
 
@@ -13,6 +12,8 @@ const rowOf = (number: number, text: string, isEntry: boolean): ExcerptRow => {
 
   return row;
 };
+
+const ENTRY: ManifestEntry = { ...MANIFEST_ENTRY_STUB, key: 'ui', spec: '^1.0.0', line: 9, context: {} };
 
 const entryWith = (context: ManifestContext): ManifestEntry => {
   const entry: ManifestEntry = { ...ENTRY, context };

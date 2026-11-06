@@ -17,7 +17,7 @@ type PackageSideParts = {
 type DetailsRig = PackageSideDepsMock & PackageSideParts;
 
 /** A `GraphPackageSide`, whose first draw mounts the details panel, over the mocked deps and a saved flat view. */
-const rigOf = (): DetailsRig => {
+const detailsRigOf = (): DetailsRig => {
   const mock = packageSideDepsMock();
   const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false };
   const modes = new ViewStateModes(mock.saver, SAVED_FLAT_STUB);
@@ -37,7 +37,7 @@ describe('FEATURE: GraphDetails mount', () => {
 
   beforeEach(() => {
     stubPackageSideGlobals();
-    rig = rigOf();
+    rig = detailsRigOf();
   });
 
   afterEach(() => {
