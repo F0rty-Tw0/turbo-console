@@ -1,7 +1,7 @@
 import { dynamicImportAt, requireAt, requireSpecifierAt } from './import-calls.util.ts';
 import { importClauseOf } from './import-clause.util.ts';
 import { lineIndexOf, lineStartsOf, lineTextOf } from './source-lines.util.ts';
-import { isPunct, isWord } from './source-token-match.util.ts';
+import { isAnyWord, isPunct, isWord, startOf } from './source-token-match.util.ts';
 import { sourceTokensOf } from './source-tokens.util.ts';
 import type { ImportClause } from '../common/import-clause.type.ts';
 import type { ImportForm, SourceImport } from '../common/import-scan.type.ts';
@@ -15,14 +15,12 @@ type FormHead = {
   readonly start: number;
 };
 
-const startOf = (tokens: SourceToken[], index: number): number => tokens[index]?.start ?? 0;
-
 const isTypeModifierAt = (tokens: SourceToken[], index: number): boolean => {
   const follower = tokens[index + 1];
   const isTypeWord = isWord(tokens[index], 'type');
   const isBrace = isPunct(follower, '{');
   const isStar = isPunct(follower, '*');
-  const isWordFollower = follower?.kind === 'word';
+  const isWordFollower = isAnyWord(follower);
   const isFromOrAs = follower?.value === 'from' || follower?.value === 'as';
   const isBindingWord = isWordFollower && !isFromOrAs;
   const isModifierFollower = isBrace || isStar || isBindingWord;
@@ -112,14 +110,17 @@ const exportAt = (tokens: SourceToken[], index: number): ImportForm | null => {
 const formAt = (tokens: SourceToken[], index: number): ImportForm | null => {
   const token = tokens[index];
   const isProperty = isPunct(tokens[index - 1], '.');
+  const isImport = isWord(token, 'import');
+  const isExport = isWord(token, 'export');
+  const isRequire = isWord(token, 'require');
 
-  if (token?.kind !== 'word' || isProperty) return null;
+  if (isProperty) return null;
 
-  if (token.value === 'import') return importAt(tokens, index);
+  if (isImport) return importAt(tokens, index);
 
-  if (token.value === 'export') return exportAt(tokens, index);
+  if (isExport) return exportAt(tokens, index);
 
-  if (token.value === 'require') return requireAt(tokens, index);
+  if (isRequire) return requireAt(tokens, index);
 
   return null;
 };

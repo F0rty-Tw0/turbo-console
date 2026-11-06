@@ -1,4 +1,4 @@
-import { isPunct, isWord } from './source-token-match.util.ts';
+import { isPunct, isWord, startOf } from './source-token-match.util.ts';
 import type { ImportForm } from '../common/import-scan.type.ts';
 import type { SourceToken } from '../common/source-token.type.ts';
 
@@ -16,7 +16,7 @@ export const requireSpecifierAt = (tokens: SourceToken[], index: number): Source
 
 export const requireAt = (tokens: SourceToken[], index: number): ImportForm | null => {
   const specifier = requireSpecifierAt(tokens, index);
-  const start = tokens[index]?.start ?? 0;
+  const start = startOf(tokens, index);
 
   if (!specifier) return null;
 
@@ -36,7 +36,7 @@ export const dynamicImportAt = (tokens: SourceToken[], index: number): ImportFor
   if (!isOpen || !isEnd || !isQuoted) return null;
 
   const isType = isWord(tokens[index - 1], 'typeof');
-  const start = tokens[index]?.start ?? 0;
+  const start = startOf(tokens, index);
   const form: ImportForm = { specifier: specifier.value, kind: 'dynamic', isType, start, next: index + 3 };
 
   return form;
