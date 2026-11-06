@@ -47,13 +47,16 @@ describe('FEATURE: walk name rules', () => {
   });
 
   describe('GIVEN a failed subdir read', () => {
-    it.each(['EACCES', 'EPERM', 'ENOENT', 'ENOTDIR'])('WHEN the error code is %s THEN the dir is only left out', (code) => {
-      const error = Object.assign(new Error('read failed'), { code });
+    it.each(['EACCES', 'EPERM', 'ENOENT', 'ENOTDIR', 'ENAMETOOLONG'])(
+      'WHEN the error code is %s THEN the dir is only left out',
+      (code) => {
+        const error = Object.assign(new Error('read failed'), { code });
 
-      const actual = isUnreadableDirError(error);
+        const actual = isUnreadableDirError(error);
 
-      expect(actual).toBe(true);
-    });
+        expect(actual).toBe(true);
+      }
+    );
 
     it.each(['EMFILE', 'EIO'])('WHEN the error code is %s THEN the scan must fail', (code) => {
       const error = Object.assign(new Error('read failed'), { code });

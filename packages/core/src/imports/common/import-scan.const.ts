@@ -10,7 +10,7 @@ export const TOP_BUILD_DIRS: ReadonlySet<string> = new Set(['dist', 'build', 'ou
 export const NODE_MODULES_DIR = 'node_modules';
 
 /** Read errors that leave one subdir out of a walk (OQ4); any other code (EMFILE, EIO) fails the scan. */
-export const UNREADABLE_DIR_CODES: ReadonlySet<string> = new Set(['EACCES', 'EPERM', 'ENOENT', 'ENOTDIR']);
+export const UNREADABLE_DIR_CODES: ReadonlySet<string> = new Set(['EACCES', 'EPERM', 'ENOENT', 'ENOTDIR', 'ENAMETOOLONG']);
 
 /** D8 caps per package scan; `fileBytes` matches `readSmallFile`'s default, which is not exported. */
 export const IMPORT_SCAN_CAPS: ImportScanCaps = { files: 5000, entries: 50_000, timeMs: 4000, fileBytes: 1024 * 1024, reads: 8 };
