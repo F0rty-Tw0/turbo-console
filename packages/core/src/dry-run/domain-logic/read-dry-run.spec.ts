@@ -2,8 +2,9 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { readDryRun } from './read-dry-run.ts';
 import { TurboBinary } from '../../binary/common/turbo-binary.ts';
-import type { RunTurboOptions, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
+import type { ExitStallCheck, RunTurboOptions, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import type * as runTurboModule from '../../shared/turbo/data-access/run-turbo.ts';
+import { isJsonEnd, jsonExitCode } from '../../shared/turbo/utils/stalled-exit-code.util.ts';
 
 const runTurbo = vi.hoisted(() => vi.fn<typeof runTurboModule.runTurbo>());
 
@@ -15,8 +16,6 @@ vi.mock('../../shared/turbo/data-access/run-turbo.ts', () => {
 });
 
 const RESULT: TurboResult = { stdout: '', stderr: '', exitCode: 1 };
-
-const COMPLETE = '{\n  "tasks": []\n}\n';
 
 const rejectionOf = (rejection: unknown): unknown => rejection;
 
@@ -31,17 +30,11 @@ describe('FEATURE: readDryRun exit-stall check', () => {
     options = runTurbo.mock.lastCall?.[3];
   });
 
-  describe('GIVEN the check readDryRun passes to runTurbo', () => {
-    it('WHEN a stalled dry run printed complete JSON THEN its exit code reads 0', () => {
-      expect(options?.exitStallCheck?.exitCodeOf(COMPLETE)).toBe(0);
-    });
+  describe('GIVEN a dry run request', () => {
+    it('WHEN readDryRun runs turbo THEN it passes the JSON check to runTurbo', () => {
+      const expected: ExitStallCheck = { isEnd: isJsonEnd, exitCodeOf: jsonExitCode };
 
-    it('WHEN a stalled dry run printed cut-off JSON THEN it has no exit code', () => {
-      expect(options?.exitStallCheck?.exitCodeOf('{\n  "tasks": [')).toBeNull();
-    });
-
-    it('WHEN the stdout tail ends the JSON object THEN it is an end', () => {
-      expect(options?.exitStallCheck?.isEnd(COMPLETE)).toBe(true);
+      expect(options?.exitStallCheck).toStrictEqual(expected);
     });
   });
 });

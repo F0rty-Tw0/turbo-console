@@ -5,8 +5,9 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { overrideVersion } from './override-turbo.ts';
-import type { RunTurboOptions, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
+import type { ExitStallCheck, RunTurboOptions, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import type * as runTurboModule from '../../shared/turbo/data-access/run-turbo.ts';
+import { isVersionEnd, versionExitCode } from '../../shared/turbo/utils/stalled-exit-code.util.ts';
 
 const runTurbo = vi.hoisted(() => vi.fn<typeof runTurboModule.runTurbo>());
 
@@ -37,17 +38,11 @@ describe('FEATURE: overrideVersion exit-stall check', () => {
     await rm(dir, { recursive: true, force: true, maxRetries: 5 });
   });
 
-  describe('GIVEN the check overrideVersion passes to runTurbo', () => {
-    it('WHEN a stalled --version printed its whole line THEN its exit code reads 0', () => {
-      expect(options?.exitStallCheck?.exitCodeOf('2.11.7\n')).toBe(0);
-    });
+  describe('GIVEN an override binary', () => {
+    it('WHEN overrideVersion runs --version THEN it passes the version-line check to runTurbo', () => {
+      const expected: ExitStallCheck = { isEnd: isVersionEnd, exitCodeOf: versionExitCode };
 
-    it('WHEN a stalled --version printed no newline yet THEN it has no exit code', () => {
-      expect(options?.exitStallCheck?.exitCodeOf('2.11')).toBeNull();
-    });
-
-    it('WHEN the stdout tail is the whole version line THEN it is an end', () => {
-      expect(options?.exitStallCheck?.isEnd('2.11.7\n')).toBe(true);
+      expect(options?.exitStallCheck).toStrictEqual(expected);
     });
   });
 });
