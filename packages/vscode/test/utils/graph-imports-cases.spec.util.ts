@@ -20,6 +20,12 @@ type ImportsPaths = {
   readonly dependencyDir: string;
 };
 
+/** Which of `node_modules` and `node_modules/x` the case created: a dir that was there before is neither written into nor removed. */
+type NewDirs = {
+  readonly isModulesNew: boolean;
+  readonly isDependencyNew: boolean;
+};
+
 /** The two lines the case writes into the dependent's `src`: a type-only static import and a dynamic import of a subpath of the target. */
 type ImportLines = {
   readonly typeLine: string;
@@ -56,12 +62,16 @@ const writeAll = async (path: string, text: string): Promise<void> => {
   await writeFile(path, text);
 };
 
-/** Writes the dependent's `src/u8-imports.ts`, plus a file under `node_modules` the walk must not enter (no `package.json`, so no package reload). */
-const writeImports = async (paths: ImportsPaths, link: GraphFixtureLink): Promise<void> => {
+/**
+ * Writes the dependent's `src/u8-imports.ts`, plus a file under `node_modules` the walk must not enter (no `package.json`, so no
+ * package reload) when `node_modules/x` is new.
+ */
+const writeImports = async (paths: ImportsPaths, link: GraphFixtureLink, newDirs: NewDirs): Promise<void> => {
   const { typeLine, dynamicLine } = linesOf(link.target);
 
   await writeAll(paths.source, `${typeLine}\n${dynamicLine}`);
-  await writeAll(join(paths.dependencyDir, 'index.ts'), `import '${link.target}';`);
+
+  if (newDirs.isDependencyNew) await writeAll(join(paths.dependencyDir, 'index.ts'), `import '${link.target}';`);
 };
 
 const sitesOf = (target: string): ImportSite[] => {
@@ -94,13 +104,14 @@ const closeIfActive = async (path: string): Promise<void> => {
   if (active === vscode.Uri.file(path).fsPath) await vscode.commands.executeCommand(CLOSE_EDITOR);
 };
 
-/** Removes what `writeImports` wrote; `node_modules` goes only when the case created it (`isModulesNew`). */
-const removeImports = async (paths: ImportsPaths, isModulesNew: boolean): Promise<void> => {
+/** Removes what `writeImports` wrote; `node_modules/x` and `node_modules` go only when the case created them. */
+const removeImports = async (paths: ImportsPaths, newDirs: NewDirs): Promise<void> => {
   await closeIfActive(paths.source);
   await rm(paths.source, { force: true });
-  await rm(paths.dependencyDir, { force: true, recursive: true });
 
-  if (isModulesNew) await rm(paths.modules, { force: true, recursive: true });
+  if (newDirs.isDependencyNew) await rm(paths.dependencyDir, { force: true, recursive: true });
+
+  if (newDirs.isModulesNew) await rm(paths.modules, { force: true, recursive: true });
 };
 
 const scanStep = async (scene: GraphScene, link: GraphFixtureLink): Promise<void> => {
@@ -144,12 +155,14 @@ export const importsCase = async (scene: GraphScene): Promise<void> => {
 
   const paths = pathsOf(join(scene.root, pkg.path));
   const isModulesNew = !(await isPresent(paths.modules));
+  const isDependencyNew = !(await isPresent(paths.dependencyDir));
+  const newDirs: NewDirs = { isModulesNew, isDependencyNew };
 
   try {
-    await writeImports(paths, link);
+    await writeImports(paths, link, newDirs);
     await step("L13-18: scanImports lists the link's two src imports of its target", async () => scanStep(scene, link));
     await step("L13-19: openImport opens the dynamic import's line", async () => openStep(scene, link, paths));
   } finally {
-    await removeImports(paths, isModulesNew);
+    await removeImports(paths, newDirs);
   }
 };
