@@ -73,3 +73,17 @@ export type PackageImportScan = {
   readonly skipped: number;
   readonly limit: ImportScanLimit | null;
 };
+
+export type ImportScanInput = {
+  /** A's absolute dir. */
+  readonly dir: string;
+  /** Workspace root: the tsconfig chain stays within it (D6). */
+  readonly root: string;
+  /** Absolute dirs of every other workspace package, `join`/`resolve`-normalised (OQ8); the walk never enters them (D7). */
+  readonly skipDirs: ReadonlySet<string>;
+  readonly cache: ImportFileStore;
+  readonly signal: AbortSignal;
+  /** Tests only; defaults `IMPORT_SCAN_CAPS` (D8) and `Date.now`. */
+  readonly caps?: ImportScanCaps | undefined;
+  readonly now?: (() => number) | undefined;
+};
