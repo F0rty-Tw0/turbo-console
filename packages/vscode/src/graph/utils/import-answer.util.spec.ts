@@ -1,12 +1,13 @@
-import type { ImportScanLimit, PackageImportScan, SourceImport } from '@turbo-console/core';
+import type { ImportScanLimit, SourceImport } from '@turbo-console/core';
 import { ENTRY_TEXT_MAX } from '@turbo-console/webview-ui';
-import type { EdgeImportsResult, ImportKind, ImportLimit, ImportSite } from '@turbo-console/webview-ui';
+import type { ImportKind, ImportLimit, ImportSite } from '@turbo-console/webview-ui';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { answerImports } from './import-answer.util.ts';
+import { TARGET_NAME } from '../test/common/import-edge.const.ts';
+import { IMPORT_EDGE_STUB } from '../test/stubs/import-edge.stub.ts';
 import {
-  IMPORT_EDGE,
-  TARGET_NAME,
+  answerOf,
   foundSitesOf,
   frozenScanOf,
   importScanOf,
@@ -21,8 +22,6 @@ const ELLIPSIS = String.fromCodePoint(0x2026);
 const SHOWN = String.fromCodePoint(0xfffd);
 
 const LIMITS: ImportScanLimit[] = ['files', 'entries', 'time'];
-
-const answerOf = (scan: PackageImportScan): EdgeImportsResult => answerImports(frozenScanOf(scan), IMPORT_EDGE);
 
 const onlySiteOf = (source: SourceImport): ImportSite | undefined => {
   const result = answerOf(importScanOf([scannedFileOf('x.ts', [source])]));
@@ -113,7 +112,7 @@ describe('FEATURE: answer one edge imports from a package scan', () => {
     it('WHEN answered THEN it does not throw', () => {
       const scan = frozenScanOf(importScanOf([matchedFileOf('z.ts', 9, 2), matchedFileOf('a.ts', 7, 1)]));
 
-      expect(() => answerImports(scan, IMPORT_EDGE)).not.toThrow();
+      expect(() => answerImports(scan, IMPORT_EDGE_STUB)).not.toThrow();
     });
   });
 

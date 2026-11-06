@@ -1,14 +1,11 @@
-import type { PackageImportScan } from '@turbo-console/core';
 import { IMPORT_SITES_MAX, MANIFEST_FILE_MAX } from '@turbo-console/webview-ui';
-import type { EdgeImportsResult } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { answerImports } from './import-answer.util.ts';
 import {
-  IMPORT_EDGE,
+  answerOf,
   foundSitesOf,
-  frozenScanOf,
   importScanOf,
+  linesUpTo,
   matchedFileOf,
   scannedFileOf,
   sourceImportOf
@@ -17,10 +14,6 @@ import {
 const LONG_FILE = `${'p'.repeat(MANIFEST_FILE_MAX - 2)}.ts`;
 
 const EXACT_FILE = `${'p'.repeat(MANIFEST_FILE_MAX - 3)}.ts`;
-
-const answerOf = (scan: PackageImportScan): EdgeImportsResult => answerImports(frozenScanOf(scan), IMPORT_EDGE);
-
-const linesUpTo = (count: number): number[] => Array.from({ length: count }, (_none, line) => line);
 
 describe('FEATURE: answer counts', () => {
   describe('GIVEN the IMPORT_SITES_MAX cap', () => {
@@ -54,7 +47,8 @@ describe('FEATURE: answer counts', () => {
     });
 
     it('WHEN it holds 1 site and x.ts holds 200 THEN all 200 sites of x.ts are sent and total is 201', () => {
-      const files = [matchedFileOf(LONG_FILE, 1), matchedFileOf('x.ts', ...linesUpTo(IMPORT_SITES_MAX))];
+      const lines = linesUpTo(IMPORT_SITES_MAX);
+      const files = [matchedFileOf(LONG_FILE, 1), matchedFileOf('x.ts', ...lines)];
 
       const result = answerOf(importScanOf(files));
       const sentFiles = new Set(foundSitesOf(result).map((site) => site.file));

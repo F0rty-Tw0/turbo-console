@@ -1,22 +1,16 @@
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 import { importMatchOf } from './import-match.util.ts';
 import type { ImportEdge } from '../common/import-match.type.ts';
+import { IMPORT_ROOT, SOURCE_DIR, TARGET_DIR } from '../test/common/import-edge.const.ts';
+import { IMPORT_EDGE_STUB } from '../test/stubs/import-edge.stub.ts';
 
-const ROOT = resolve('/ws');
-
-const A = join(ROOT, 'packages', 'a');
-
-const B = join(ROOT, 'packages', 'b');
-
-const FROM = join(A, 'src');
-
-const EDGE: ImportEdge = { names: ['@company/ui'], targetDir: B, sourceDir: A };
+const FROM = join(SOURCE_DIR, 'src');
 
 const edgeOf = (patch: Partial<ImportEdge>): ImportEdge => {
-  const edge: ImportEdge = { ...EDGE, ...patch };
+  const edge: ImportEdge = { ...IMPORT_EDGE_STUB, ...patch };
 
   return edge;
 };
@@ -33,7 +27,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
       ['@company', null],
       ['@company/ui?raw', null]
     ])('WHEN %j is imported from A/src THEN via is %s', (specifier, expected) => {
-      const via = importMatchOf(specifier, FROM, EDGE);
+      const via = importMatchOf(specifier, FROM, IMPORT_EDGE_STUB);
 
       expect(via).toBe(expected);
     });
@@ -64,10 +58,10 @@ describe('FEATURE: import specifier to dependency edge', () => {
       ['../../c/x', null],
       ['../../bx/x', null],
       ['../../../outside', null],
-      [join(B, 'x'), null],
+      [join(TARGET_DIR, 'x'), null],
       ['node:fs', null]
     ])('WHEN %j is imported THEN via is %s', (specifier, expected) => {
-      const via = importMatchOf(specifier, FROM, EDGE);
+      const via = importMatchOf(specifier, FROM, IMPORT_EDGE_STUB);
 
       expect(via).toBe(expected);
     });
@@ -94,7 +88,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
       ['../../src/x', 'relative'],
       ['../..', 'relative']
     ])('WHEN %j is imported from a file under A/src THEN via is %s', (specifier, expected) => {
-      const sourceDir = join(B, 'plugin');
+      const sourceDir = join(TARGET_DIR, 'plugin');
 
       const via = importMatchOf(specifier, join(sourceDir, 'src'), edgeOf({ sourceDir }));
 
@@ -105,7 +99,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
       ['.', null],
       ['..', 'relative']
     ])('WHEN %j is imported from a file at the top of A THEN via is %s', (specifier, expected) => {
-      const sourceDir = join(B, 'plugin');
+      const sourceDir = join(TARGET_DIR, 'plugin');
 
       const via = importMatchOf(specifier, sourceDir, edgeOf({ sourceDir }));
 
@@ -118,7 +112,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
       ['../sub/x', 'relative'],
       ['./x', null]
     ])('WHEN %j is imported THEN via is %s', (specifier, expected) => {
-      const edge = edgeOf({ targetDir: join(A, 'sub') });
+      const edge = edgeOf({ targetDir: join(SOURCE_DIR, 'sub') });
 
       const via = importMatchOf(specifier, FROM, edge);
 
@@ -131,9 +125,9 @@ describe('FEATURE: import specifier to dependency edge', () => {
       ['./packages/b/x', 'relative'],
       ['./scripts/x', null]
     ])('WHEN %j is imported from the root THEN via is %s', (specifier, expected) => {
-      const edge = edgeOf({ sourceDir: ROOT });
+      const edge = edgeOf({ sourceDir: IMPORT_ROOT });
 
-      const via = importMatchOf(specifier, ROOT, edge);
+      const via = importMatchOf(specifier, IMPORT_ROOT, edge);
 
       expect(via).toBe(expected);
     });
@@ -141,7 +135,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
 
   describe('GIVEN a specifier that is a name and looks relative', () => {
     it('WHEN ./@company/ui is imported THEN via is null', () => {
-      const via = importMatchOf('./@company/ui', FROM, EDGE);
+      const via = importMatchOf('./@company/ui', FROM, IMPORT_EDGE_STUB);
 
       expect(via).toBeNull();
     });

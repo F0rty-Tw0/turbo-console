@@ -1,21 +1,9 @@
-import { join, resolve } from 'node:path';
-
 import type { PackageImportScan, ScannedFile, SourceImport } from '@turbo-console/core';
 import type { EdgeImportsResult, ImportSite } from '@turbo-console/webview-ui';
 
-import type { ImportEdge } from '../../common/import-match.type.ts';
-
-const ROOT = resolve('/ws');
-
-/** B's package name in the edge below. */
-export const TARGET_NAME = '@company/ui';
-
-/** The edge A → B the answer specs ask about: A and B are sibling packages. */
-export const IMPORT_EDGE: ImportEdge = {
-  names: [TARGET_NAME],
-  targetDir: join(ROOT, 'packages', 'b'),
-  sourceDir: join(ROOT, 'packages', 'a')
-};
+import { answerImports } from '../../utils/import-answer.util.ts';
+import { TARGET_NAME } from '../common/import-edge.const.ts';
+import { IMPORT_EDGE_STUB } from '../stubs/import-edge.stub.ts';
 
 /** A static, value import of `specifier` on `line`; `patch` overrides any field. */
 export const sourceImportOf = (specifier: string, line: number, patch: Partial<SourceImport> = {}): SourceImport => {
@@ -50,7 +38,19 @@ export const frozenScanOf = (scan: PackageImportScan): PackageImportScan => {
 
   Object.freeze(copy.files);
 
-  return Object.freeze(copy);
+  const frozen = Object.freeze(copy);
+
+  return frozen;
+};
+
+/** The answer for the stub edge from a frozen copy of `scan`. */
+export const answerOf = (scan: PackageImportScan): EdgeImportsResult => answerImports(frozenScanOf(scan), IMPORT_EDGE_STUB);
+
+/** The lines 0 … count - 1, ascending. */
+export const linesUpTo = (count: number): number[] => {
+  const lines = Array(count).keys();
+
+  return [...lines];
 };
 
 /** A scanned file with one import of B on each of `lines`. */

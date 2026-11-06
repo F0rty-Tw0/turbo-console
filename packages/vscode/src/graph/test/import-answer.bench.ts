@@ -5,7 +5,9 @@ import { IMPORT_SITES_MAX, MANIFEST_FILE_MAX } from '@turbo-console/webview-ui';
 import type { EdgeImportsResult } from '@turbo-console/webview-ui';
 
 import { answerImports } from '../utils/import-answer.util.ts';
-import { IMPORT_EDGE, TARGET_NAME, importScanOf, scannedFileOf, sourceImportOf } from './utils/import-scan.spec.util.ts';
+import { TARGET_NAME } from './common/import-edge.const.ts';
+import { IMPORT_EDGE_STUB } from './stubs/import-edge.stub.ts';
+import { importScanOf, linesUpTo, scannedFileOf, sourceImportOf } from './utils/import-scan.spec.util.ts';
 
 const DIRS = 25;
 const FILES_PER_DIR = 10;
@@ -16,8 +18,6 @@ const INDENT = ' '.repeat(8);
 /** 250 files x 12 matches + 5 long-path files x 2 matches. */
 const EXPECTED_TOTAL = 3_010;
 
-const range = (count: number): number[] => Array.from({ length: count }, (_, index) => index);
-
 const nameSpecifierOf = (index: number): string => {
   if (index === 0) return TARGET_NAME;
 
@@ -26,10 +26,10 @@ const nameSpecifierOf = (index: number): string => {
 
 /** 20 specifiers: 8 by name, 4 relative into B, 4 relative staying in A, 4 other packages. */
 const specifiersOf = (): string[] => {
-  const byName = range(8).map(nameSpecifierOf);
-  const intoTarget = range(4).map((index) => `../../../b/src/x${index}`);
-  const inSource = range(4).map((index) => `./y${index}`);
-  const others = range(4).map((index) => `@company/other${index}`);
+  const byName = linesUpTo(8).map(nameSpecifierOf);
+  const intoTarget = linesUpTo(4).map((index) => `../../../b/src/x${index}`);
+  const inSource = linesUpTo(4).map((index) => `./y${index}`);
+  const others = linesUpTo(4).map((index) => `@company/other${index}`);
 
   return [...byName, ...intoTarget, ...inSource, ...others];
 };
@@ -57,8 +57,8 @@ const longFileOf = (index: number): ScannedFile => {
 };
 
 const scanOf = (): PackageImportScan => {
-  const shortFiles = range(DIRS).flatMap((dir) => range(FILES_PER_DIR).map((index) => shortFileOf(dir, index)));
-  const longFiles = range(LONG_FILES).map(longFileOf);
+  const shortFiles = linesUpTo(DIRS).flatMap((dir) => linesUpTo(FILES_PER_DIR).map((index) => shortFileOf(dir, index)));
+  const longFiles = linesUpTo(LONG_FILES).map(longFileOf);
 
   return importScanOf([...shortFiles, ...longFiles]);
 };
@@ -75,11 +75,11 @@ const isExpectedAnswer = (result: EdgeImportsResult): boolean => {
 
 const SCAN = scanOf();
 
-const CHECKED = answerImports(SCAN, IMPORT_EDGE);
+const CHECKED = answerImports(SCAN, IMPORT_EDGE_STUB);
 const IS_EXPECTED = isExpectedAnswer(CHECKED);
 
 if (!IS_EXPECTED) throw new Error('answer-imports-5000 fixture drifted from its expected answer');
 
-const benches: BenchDescriptor[] = [bench('answer-imports-5000', () => answerImports(SCAN, IMPORT_EDGE), { gate: true })];
+const benches: BenchDescriptor[] = [bench('answer-imports-5000', () => answerImports(SCAN, IMPORT_EDGE_STUB), { gate: true })];
 
 export default benches;
