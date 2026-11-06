@@ -1,4 +1,5 @@
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -266,7 +267,7 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
     });
 
     afterEach(() => {
-      rmSync(dir, { recursive: true, force: true });
+      rmSync(dir, { recursive: true, force: true, maxRetries: 5 });
     });
 
     it('WHEN the path goes through a symlinked dir THEN realPath gives the real location', async () => {
@@ -278,8 +279,9 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
       symlinkSync(target, link, 'junction');
 
       const real = await host.realPath(join(link, 'x.ts'));
+      const realTarget = await realpath(target);
 
-      expect(real).toBe(join(realpathSync(target), 'x.ts'));
+      expect(real).toBe(join(realTarget, 'x.ts'));
     });
 
     it('WHEN the path is missing THEN realPath gives null', async () => {
