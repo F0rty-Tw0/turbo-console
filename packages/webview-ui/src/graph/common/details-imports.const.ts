@@ -1,0 +1,39 @@
+import type { ImportKind, ImportLimit, ImportVia } from '../../bridge/common/graph-imports.type.ts';
+
+/** The rows the imports block shows before "Show more" (spec D14). */
+export const IMPORTS_FOLD_AT = 20;
+
+export const SCAN_AGAIN_TITLE = 'Scan the files again';
+
+export const NO_IMPORTS_WORD = 'No imports found';
+
+/** The word of a none reply that skipped files: the scan did not see every file. */
+export const NONE_IN_SCANNED_WORD = 'None found in scanned files';
+
+export const SCAN_FAILED_WORD = "Couldn't scan";
+
+export const SCANNING_AGAIN_TEXT = 'Scanning again…';
+
+export const TYPE_TAG = 'type';
+
+/** The tag a row shows for how it brings the module in; a plain `import` shows none. */
+export const KIND_TAGS: Readonly<Record<ImportKind, string | null>> = {
+  static: null,
+  reexport: 're-export',
+  dynamic: 'dynamic',
+  require: 'require'
+};
+
+/** The tag a row shows for how it names the target; the package name shows none. */
+export const VIA_TAGS: Readonly<Record<ImportVia, string | null>> = {
+  name: null,
+  relative: 'relative path',
+  alias: 'alias'
+};
+
+/** The numbers mirror the core scan caps; a cap change must update them (spec D14). */
+export const LIMIT_NOTES: Readonly<Record<ImportLimit, string>> = {
+  files: 'Stopped at 5,000 files; there may be more.',
+  entries: 'Stopped at 50,000 folder entries; there may be more.',
+  time: 'Stopped after 4 s; there may be more.'
+};
