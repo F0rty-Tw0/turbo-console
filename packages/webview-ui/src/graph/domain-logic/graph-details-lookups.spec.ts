@@ -76,6 +76,13 @@ const REPLY_ROWS = [
 
 const SELECT_WEB: InspectionInput = { kind: 'select', name: 'web', via: 'list' };
 
+const TAP_BUNDLE_WEB_TO_UI: InspectionInput = { kind: 'tapBundle', source: 'web', target: 'ui' };
+
+const NON_LINK_ROWS = [
+  { label: 'web is selected', input: SELECT_WEB, kind: 'package' },
+  { label: 'the web to ui bundle is tapped', input: TAP_BUNDLE_WEB_TO_UI, kind: 'bundle' }
+];
+
 const NEW_HASH_STATE = { ...STATE_STUB, hash: 'h2' };
 
 const NO_EDGES_STATE = { ...NEW_HASH_STATE, edges: [] };
@@ -282,13 +289,13 @@ describe('FEATURE: LinkLookups', () => {
       expect(importsState()).toStrictEqual(SCANNING);
     });
 
-    describe('WHEN web is selected', () => {
+    describe.each(NON_LINK_ROWS)('WHEN $label', ({ input, kind }) => {
       beforeEach(() => {
-        rig.side.filtering.inspection.input(SELECT_WEB);
+        rig.side.filtering.inspection.input(input);
       });
 
-      it('THEN the last view built is the package', () => {
-        expect(built.mock.lastCall?.[0].kind).toBe('package');
+      it('THEN the last view built is not a link', () => {
+        expect(built.mock.lastCall?.[0].kind).toBe(kind);
       });
 
       it('THEN no imports are held', () => {
