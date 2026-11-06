@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 
+import type { GraphHostMessage } from '@turbo-console/webview-ui';
 import { describe, expect, it, vi } from 'vitest';
 
 import { GraphSession } from './graph-session.ts';
@@ -43,7 +44,7 @@ const shownSession = (): ShownSession => {
 
 const FOUND_ONE = { kind: 'found', total: 1 };
 
-const edgeImportsOf = (ports: GraphPorts): unknown[] => postedOf(ports).filter((message) => message.type === 'edgeImports');
+const edgeImportsOf = (ports: GraphPorts): GraphHostMessage[] => postedOf(ports).filter((message) => message.type === 'edgeImports');
 
 describe('FEATURE: graph session import requests (spec D10, D12)', () => {
   describe('GIVEN a scanImports request', () => {
@@ -72,32 +73,50 @@ describe('FEATURE: graph session import requests (spec D10, D12)', () => {
       const { session, ports } = shownSession();
 
       await session.receive({ type: 'ready' });
-      await session.receive(JSON.parse('{"type":"scanImports","source":"web"}'));
+      await session.receive({ type: 'scanImports', source: 'web' });
 
       expect(ports.scanImports).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('Dropped a graph message'));
     });
 
-    it('WHEN a scan is pending and explainEdge web → a arrives THEN its edgeExplained is posted before the scan settles', async () => {
-      const { session, ports } = shownSession();
-      const pending = pendingScanOf(ports);
+    describe('WHEN a scan is pending and explainEdge web → a arrives', () => {
+      it('THEN its edgeExplained is posted before the scan settles', async () => {
+        const { session, ports } = shownSession();
+        const pending = pendingScanOf(ports);
 
-      await session.receive({ type: 'ready' });
+        await session.receive({ type: 'ready' });
 
-      const scanning = session.receive({ type: 'scanImports', source: 'web', target: 'a' });
+        const scanning = session.receive({ type: 'scanImports', source: 'web', target: 'a' });
 
-      await vi.waitFor(() => {
-        expect(ports.scanImports).toHaveBeenCalledTimes(1);
+        await vi.waitFor(() => {
+          expect(ports.scanImports).toHaveBeenCalledTimes(1);
+        });
+        await session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+
+        expect(postedOf(ports).at(-1)).toMatchObject({ type: 'edgeExplained', source: 'web', target: 'a' });
+        expect(edgeImportsOf(ports)).toHaveLength(0);
+
+        pending.resolve(importScanOf([]));
+        await scanning;
       });
-      await session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
 
-      expect(postedOf(ports).at(-1)).toMatchObject({ type: 'edgeExplained', source: 'web', target: 'a' });
-      expect(edgeImportsOf(ports)).toHaveLength(0);
+      it('THEN its edgeImports is posted once the scan resolves', async () => {
+        const { session, ports } = shownSession();
+        const pending = pendingScanOf(ports);
 
-      pending.resolve(importScanOf([]));
-      await scanning;
+        await session.receive({ type: 'ready' });
 
-      expect(edgeImportsOf(ports)).toHaveLength(1);
+        const scanning = session.receive({ type: 'scanImports', source: 'web', target: 'a' });
+
+        await vi.waitFor(() => {
+          expect(ports.scanImports).toHaveBeenCalledTimes(1);
+        });
+        await session.receive({ type: 'explainEdge', source: 'web', target: 'a' });
+        pending.resolve(importScanOf([]));
+        await scanning;
+
+        expect(edgeImportsOf(ports)).toHaveLength(1);
+      });
     });
 
     it('WHEN the panel is disposed while a scan is pending THEN its signal is aborted and no edgeImports is posted', async () => {
@@ -152,6 +171,7 @@ describe('FEATURE: graph session import requests (spec D10, D12)', () => {
       await session.receive({ type: 'ready' });
       await session.receive({ type: 'openImport', packageName: 'web', file: 'src/x.ts', line: 4 });
 
+      expect(ports.readText).toHaveBeenCalledWith(file);
       expect(ports.openAt).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(file));
     });
