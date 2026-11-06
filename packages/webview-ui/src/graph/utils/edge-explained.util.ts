@@ -1,12 +1,7 @@
 import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
-import {
-  ENTRY_TEXT_MAX,
-  MANIFEST_ENTRIES_MAX,
-  MANIFEST_FIELDS,
-  MANIFEST_FILE_MAX,
-  MANIFEST_LINE_MAX
-} from '../../bridge/common/graph-message.const.ts';
+import { ENTRY_TEXT_MAX, MANIFEST_ENTRIES_MAX, MANIFEST_FIELDS, MANIFEST_FILE_MAX } from '../../bridge/common/graph-message.const.ts';
 import type { ManifestField } from '../../bridge/common/graph-message.type.ts';
+import { isManifestLine } from '../../bridge/utils/number.util.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { isShortString, isString } from '../../bridge/utils/string.util.ts';
 
@@ -28,16 +23,14 @@ const isEntry = (value: unknown): boolean => {
 
   const { field, key, spec, line, context } = value;
 
-  if (typeof line !== 'number') return false;
+  if (!isManifestLine(line)) return false;
 
   const isField = isManifestField(field);
   const isKey = isShortString(key, ENTRY_TEXT_MAX + 1);
   const isSpec = isShortString(spec, ENTRY_TEXT_MAX + 1);
-  const isWhole = Number.isInteger(line);
-  const isLine = isWhole && line >= 0 && line <= MANIFEST_LINE_MAX;
   const isEntryShape = isField && isKey && isSpec;
 
-  if (!isEntryShape || !isLine) return false;
+  if (!isEntryShape) return false;
 
   return isContext(context, line);
 };

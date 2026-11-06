@@ -5,25 +5,15 @@ import {
   IMPORT_LIMITS,
   IMPORT_SITES_MAX,
   IMPORT_VIAS,
-  MANIFEST_FILE_MAX,
-  MANIFEST_LINE_MAX
+  MANIFEST_FILE_MAX
 } from '../../bridge/common/graph-message.const.ts';
+import { isCount, isManifestLine } from '../../bridge/utils/number.util.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { isShortString, isString } from '../../bridge/utils/string.util.ts';
-
-const isCount = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value >= 0;
 
 const isWordOf = (table: Readonly<Record<string, true>>, value: unknown): boolean => isString(value) && Object.hasOwn(table, value);
 
 const isLimit = (limit: unknown): boolean => limit === null || isWordOf(IMPORT_LIMITS, limit);
-
-const isLine = (line: unknown): boolean => {
-  if (typeof line !== 'number') return false;
-
-  const isWhole = Number.isInteger(line);
-
-  return isWhole && line >= 0 && line <= MANIFEST_LINE_MAX;
-};
 
 const isFile = (file: unknown): boolean => isShortString(file, MANIFEST_FILE_MAX) && file !== '';
 
@@ -32,7 +22,7 @@ const isSite = (value: unknown): boolean => {
 
   const { file, line, specifier, text, kind, via, isType } = value;
 
-  const isPlace = isFile(file) && isLine(line);
+  const isPlace = isFile(file) && isManifestLine(line);
   const isCut = isShortString(specifier, ENTRY_TEXT_MAX + 1) && isShortString(text, ENTRY_TEXT_MAX + 1);
   const isWords = isWordOf(IMPORT_KINDS, kind) && isWordOf(IMPORT_VIAS, via);
 
