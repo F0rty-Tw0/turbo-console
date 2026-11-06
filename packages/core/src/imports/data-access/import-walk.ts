@@ -2,16 +2,16 @@ import type { Dirent } from 'node:fs';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { compareText } from '../../shared/text/utils/compare-text.util.ts';
 import type { ImportScanLimit } from '../common/import-scan.type.ts';
 import type { ImportScanRun, ImportWalk, WalkedFile } from '../common/import-walk.type.ts';
-import { isSourceName, isWalkedDirName } from '../utils/import-walk.util.ts';
+import { isSourceName, isUnreadableDirError, isWalkedDirName } from '../utils/import-walk.util.ts';
 
 /** What the walk has listed and counted so far; a set `limit` ends the whole walk. */
 type WalkState = {
   readonly files: WalkedFile[];
-  // eslint-disable-next-line local/readonly-type-properties -- the walk counts entries as it reads them
+  // eslint-disable-next-line local/readonly-type-properties -- the walk counts entries and sets limit as it reads
   entries: number;
-
   limit: ImportScanLimit | null;
 };
 
@@ -24,11 +24,7 @@ type WalkPlace = {
 
 type EntryStep = 'enter' | 'list' | 'skip';
 
-const byName = (left: Dirent, right: Dirent): number => {
-  if (left.name < right.name) return -1;
-
-  return left.name > right.name ? 1 : 0;
-};
+const byName = (left: Dirent, right: Dirent): number => compareText(left.name, right.name);
 
 const readEntries = async (place: WalkPlace): Promise<Dirent[]> => {
   try {
@@ -36,7 +32,10 @@ const readEntries = async (place: WalkPlace): Promise<Dirent[]> => {
 
     return entries.sort(byName);
   } catch (error) {
-    if (place.depth === 0) throw error;
+    const isUnreadable = isUnreadableDirError(error);
+    const isSkippable = place.depth > 0 && isUnreadable;
+
+    if (!isSkippable) throw error;
 
     return [];
   }
@@ -48,9 +47,14 @@ const stepOf = (entry: Dirent, path: string, run: ImportScanRun, isTop: boolean)
   if (isLink) return 'skip';
 
   const isDirectory = entry.isDirectory();
-  const isWalked = isWalkedDirName(entry.name, isTop) && !run.skipDirs.has(path);
 
-  if (isDirectory) return isWalked ? 'enter' : 'skip';
+  if (isDirectory) {
+    const isWalkedName = isWalkedDirName(entry.name, isTop);
+    const isSkipped = run.skipDirs.has(path);
+    const isEntered = isWalkedName && !isSkipped;
+
+    return isEntered ? 'enter' : 'skip';
+  }
 
   const isSource = entry.isFile() && isSourceName(entry.name);
 
@@ -114,7 +118,7 @@ const walkDir = async (state: WalkState, run: ImportScanRun, place: WalkPlace): 
 /**
  * The source files under `run.dir` by the T3 rules, in walk order (OQ3), up to the files / entries / time caps (OQ1,
  * OQ2). Rejects with `signal.reason` when aborted and with the raw error when `run.dir` itself cannot be read; a
- * subdir that cannot be read is left out (OQ4).
+ * subdir that is not accessible, gone or not a dir is left out (OQ4), and any other read error rejects.
  */
 export const walkSourceFiles = async (run: ImportScanRun): Promise<ImportWalk> => {
   const state: WalkState = { files: [], entries: 0, limit: null };

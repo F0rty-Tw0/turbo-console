@@ -14,8 +14,16 @@ import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
 
 type ReaddirOptions = { readonly withFileTypes: true };
 
-const listing = vi.hoisted(() => {
-  const state = { isReversed: false };
+type ReaddirFailure = { readonly path: string; readonly error: Error };
+
+type ListingState = {
+  // eslint-disable-next-line local/readonly-type-properties -- cases set what the readdir mock does
+  isReversed: boolean;
+  failure: ReaddirFailure | null;
+};
+
+const listing = vi.hoisted((): ListingState => {
+  const state: ListingState = { isReversed: false, failure: null };
 
   return state;
 });
@@ -24,7 +32,13 @@ const listing = vi.hoisted(() => {
 vi.mock('node:fs/promises', async (importOriginal) => {
   const real = await importOriginal<typeof fsPromises>();
 
+  const failureOf = (path: string): Error | null => (listing.failure?.path === path ? listing.failure.error : null);
+
   const readdir = async (path: string, options: ReaddirOptions): Promise<Dirent[]> => {
+    const failure = failureOf(path);
+
+    if (failure !== null) throw failure;
+
     const entries = await real.readdir(path, options);
     const copy = [...entries];
     const reversed = copy.reverse();
@@ -69,6 +83,13 @@ const T3_FILES = ['.eslintrc.cjs', 'a.ts', 'generated/g.ts', 'src/a.mts', 'src/b
 
 const namesOf = (walk: ImportWalk): string[] => walk.files.map((walked) => walked.file);
 
+const treeOf = (names: string[], text: string = SOURCE_TEXT): Record<string, string> => {
+  const entries = names.map((name): [string, string] => [name, text]);
+  const tree = Object.fromEntries(entries);
+
+  return tree;
+};
+
 const capsOf = (patch: Partial<ImportScanCaps>): ImportScanCaps => {
   const caps: ImportScanCaps = { ...IMPORT_SCAN_CAPS, ...patch };
 
@@ -87,6 +108,7 @@ describe('FEATURE: walking a package for source files', () => {
 
   beforeEach(async () => {
     listing.isReversed = false;
+    listing.failure = null;
     dir = await mkdtemp(join(tmpdir(), 'import-scan-'));
   });
 
@@ -109,25 +131,35 @@ describe('FEATURE: walking a package for source files', () => {
     it('WHEN a file is listed THEN its path is the absolute path with OS separators', async () => {
       const walk = await walkSourceFiles(runOf());
 
-      const listed = walk.files.find((walked) => walked.file === 'src/a.mts');
-
-      expect(listed?.path).toBe(join(dir, 'src', 'a.mts'));
+      expect(walk.files).toContainEqual({ file: 'src/a.mts', path: join(dir, 'src', 'a.mts') });
     });
   });
 
-  describe('GIVEN 10 names listed in reverse beside dir e/ holding x.ts', () => {
+  describe('GIVEN 12 names listed in reverse, among them Z.ts, _x.ts and dir e/ holding x.ts', () => {
     it('WHEN walked THEN the names come back in code-unit order with a dir at its sorted position', async () => {
-      const scrambled = ['f', 'b', 'j', 'd', 'h', 'a', 'i', 'c', 'g', 'e'];
+      const names = ['f.ts', 'b.ts', 'j.ts', 'd.ts', 'h.ts', 'a.ts', 'i.ts', 'c.ts', 'g.ts', 'e.ts', '_x.ts', 'Z.ts', 'e/x.ts'];
 
       listing.isReversed = true;
 
-      await writeImportTree(dir, { 'e/x.ts': SOURCE_TEXT });
-
-      for (const name of scrambled) await writeImportTree(dir, { [`${name}.ts`]: SOURCE_TEXT });
+      await writeImportTree(dir, treeOf(names));
 
       const walk = await walkSourceFiles(runOf());
 
-      expect(namesOf(walk)).toStrictEqual(['a.ts', 'b.ts', 'c.ts', 'd.ts', 'e/x.ts', 'e.ts', 'f.ts', 'g.ts', 'h.ts', 'i.ts', 'j.ts']);
+      expect(namesOf(walk)).toStrictEqual([
+        'Z.ts',
+        '_x.ts',
+        'a.ts',
+        'b.ts',
+        'c.ts',
+        'd.ts',
+        'e/x.ts',
+        'e.ts',
+        'f.ts',
+        'g.ts',
+        'h.ts',
+        'i.ts',
+        'j.ts'
+      ]);
     });
   });
 
@@ -174,6 +206,18 @@ describe('FEATURE: walking a package for source files', () => {
   });
 
   describe('GIVEN a dir that cannot be read', () => {
+    it('WHEN subdir sub/ fails to read with EMFILE THEN the walk rejects with that error', async () => {
+      const error = Object.assign(new Error('too many open files'), { code: 'EMFILE' });
+
+      await writeImportTree(dir, treeOf(['a.ts', 'sub/x.ts', 'z.ts']));
+
+      listing.failure = { path: join(dir, 'sub'), error };
+
+      const walking = walkSourceFiles(runOf());
+
+      await expect(walking).rejects.toBe(error);
+    });
+
     it('WHEN run.dir does not exist THEN it rejects with code ENOENT', async () => {
       const missing = join(dir, 'missing');
 
@@ -205,9 +249,7 @@ describe('FEATURE: walking a package for source files', () => {
 
   describe('GIVEN 5 sources a.ts to e.ts', () => {
     beforeEach(async () => {
-      const names = ['a', 'b', 'c', 'd', 'e'];
-
-      for (const name of names) await writeImportTree(dir, { [`${name}.ts`]: SOURCE_TEXT });
+      await writeImportTree(dir, treeOf(['a.ts', 'b.ts', 'c.ts', 'd.ts', 'e.ts']));
     });
 
     it('WHEN caps.files is 3 THEN a.ts, b.ts, c.ts are listed and limit is files', async () => {
@@ -230,7 +272,7 @@ describe('FEATURE: walking a package for source files', () => {
       const pngs = Array.from({ length: 10 }, (_, index) => `b${index}.png`);
       const names = ['a.ts', ...pngs, 'c.ts'];
 
-      for (const name of names) await writeImportTree(dir, { [name]: '' });
+      await writeImportTree(dir, treeOf(names, ''));
     });
 
     it('WHEN caps.entries is 5 THEN a.ts is listed and limit is entries', async () => {
@@ -245,6 +287,19 @@ describe('FEATURE: walking a package for source files', () => {
 
       expect(namesOf(walk)).toStrictEqual(['a.ts', 'c.ts']);
       expect(walk.limit).toBeNull();
+    });
+  });
+
+  describe('GIVEN a.ts, sub/p0.png to sub/p3.png and z.ts', () => {
+    it('WHEN caps.entries is 5 THEN only a.ts is listed and limit is entries, as the count spans dirs', async () => {
+      const pngs = Array.from({ length: 4 }, (_, index) => `sub/p${index}.png`);
+
+      await writeImportTree(dir, treeOf(['a.ts', ...pngs, 'z.ts'], ''));
+
+      const walk = await walkSourceFiles(runOf({ caps: capsOf({ entries: 5 }) }));
+
+      expect(namesOf(walk)).toStrictEqual(['a.ts']);
+      expect(walk.limit).toBe('entries');
     });
   });
 
@@ -268,6 +323,20 @@ describe('FEATURE: walking a package for source files', () => {
 
       expect(namesOf(walk)).toStrictEqual([]);
       expect(walk.limit).toBe('time');
+    });
+
+    it('WHEN the signal is aborted while the walk runs THEN it rejects with signal.reason', async () => {
+      const controller = new AbortController();
+      const reason = new Error('stop');
+      const isOverTime = (): boolean => {
+        controller.abort(reason);
+
+        return false;
+      };
+
+      const walking = walkSourceFiles(runOf({ signal: controller.signal, isOverTime }));
+
+      await expect(walking).rejects.toBe(reason);
     });
 
     it('WHEN the signal is aborted before the walk THEN it rejects with signal.reason', async () => {
