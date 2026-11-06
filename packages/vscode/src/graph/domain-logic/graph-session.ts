@@ -7,7 +7,7 @@ import { isRequestMessage, requestHandledOf } from './graph-requests.ts';
 import { GraphTaskFeed } from './graph-task-feed.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { GraphFeeds, GraphPorts, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
+import type { GraphFeeds, GraphPorts, LookupGate, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
 import { graphStateOfRoot, persistentIdsOfRoot, runIdsOfRoot, shownOf } from '../utils/graph-state.util.ts';
 
@@ -38,7 +38,8 @@ export class GraphSession {
     this.ports = ports;
     this.feeds = feeds;
     this.images = new GraphImageSaver(root, ports);
-    this.lookups = new GraphLookups({
+
+    const lookupGate: LookupGate = {
       root,
       ports,
       state: (): GraphState => this.stateNow(),
@@ -46,7 +47,9 @@ export class GraphSession {
       drop: (value: unknown): void => {
         this.drop(value);
       }
-    });
+    };
+
+    this.lookups = new GraphLookups(lookupGate);
 
     const gate: TaskFeedGate = {
       canPost: (): boolean => this.canPost(),
