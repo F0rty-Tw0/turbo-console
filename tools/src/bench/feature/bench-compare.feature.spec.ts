@@ -51,7 +51,9 @@ describe('FEATURE: bench-compare CLI', () => {
     it('WHEN compared THEN stdout shows the failing row', async () => {
       await runBenchCompare(join(root, 'base'), join(root, 'head'));
 
-      expect(process.stdout.write).toHaveBeenCalledWith(expect.stringMatching(/^core\/parse +1\.000 +1\.200 +1\.200 +gated +FAIL$/m));
+      expect(process.stdout.write).toHaveBeenCalledWith(
+        expect.stringMatching(/^core\/parse +1\.000 +1\.200 +1\.200 +1\.200 +gated +FAIL$/m)
+      );
     });
   });
 

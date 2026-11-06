@@ -35,4 +35,38 @@ describe('FEATURE: the bench gate under per-process noise', () => {
       expect(failed).toBe(true);
     });
   });
+
+  // PR #265 touched no benched code: one of six base runs settled in the fast mode (249 ms, usually 295-387), every head run
+  // stayed slow, so the fastest runs differed by 1.19x while the middle runs differed by 1.01x.
+  describe('GIVEN one fast base run among slow ones and head runs that are all slow', () => {
+    it('WHEN base and head are compared THEN the gate passes', () => {
+      const failed = compareRuns([249.285, 310, 330, 340, 360, 387], [295.862, 310, 330, 345, 360, 380]);
+
+      expect(failed).toBe(false);
+    });
+  });
+
+  describe('GIVEN every head run 20% slower than the base run it pairs with', () => {
+    it('WHEN base and head are compared THEN the gate fails', () => {
+      const failed = compareRuns([10, 30, 20, 25, 15, 18], [12, 36, 24, 30, 18, 21.6]);
+
+      expect(failed).toBe(true);
+    });
+  });
+
+  describe('GIVEN head runs whose fastest regressed 1.16x but whose middle is 1.07x', () => {
+    it('WHEN base and head are compared THEN the gate passes', () => {
+      const failed = compareRuns([100, 110, 120], [116, 118, 119]);
+
+      expect(failed).toBe(false);
+    });
+  });
+
+  describe('GIVEN head runs whose middle regressed 1.3x but whose fastest did not', () => {
+    it('WHEN base and head are compared THEN the gate passes', () => {
+      const failed = compareRuns([100, 100, 100], [100, 130, 130]);
+
+      expect(failed).toBe(false);
+    });
+  });
 });
