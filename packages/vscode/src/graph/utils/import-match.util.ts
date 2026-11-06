@@ -22,11 +22,14 @@ const isRelativeInto = (specifier: string, fromDir: string, edge: ImportEdge): b
 
   const path = resolve(fromDir, specifier);
   const isInTarget = isWithin(targetDir, path);
+
+  if (!isInTarget) return false;
+
   const isInSource = isWithin(sourceDir, path);
   const isTargetInSource = isWithin(sourceDir, targetDir);
   const isOwnFile = isInSource && !isTargetInSource;
 
-  return isInTarget && !isOwnFile;
+  return !isOwnFile;
 };
 
 /** How `specifier`, imported from a file in `fromDir` (absolute), names B (D5 rules 1–3, first wins), or `null`. Rule 4 (`alias`) arrives with U8g. */

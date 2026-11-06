@@ -62,6 +62,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
       ['.', null],
       ['..', null],
       ['../../c/x', null],
+      ['../../bx/x', null],
       ['../../../outside', null],
       [join(B, 'x'), null],
       ['node:fs', null]
