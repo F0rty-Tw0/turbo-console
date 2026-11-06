@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { scanPackageImports } from './scan-package-imports.ts';
-import type { ImportScanInput, PackageImportScan } from '../common/import-scan.type.ts';
+import type { CachedFile, ImportScanInput, PackageImportScan } from '../common/import-scan.type.ts';
 import { ImportFileCache } from '../data-access/import-file-cache.ts';
 import { DATE, DATE_LATER } from '../test/common/scan-dates.const.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
@@ -53,6 +53,14 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
 
   const openedNames = (): string[] => openedNamesOf(reads.opened, dir);
 
+  const cachedNamesOf = (scanned: string): string[] => {
+    const files = input.cache.filesOf(scanned);
+
+    const names = files.keys();
+
+    return Array.from(names);
+  };
+
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'import-scan-'));
     input = inputOf(dir, new ImportFileCache());
@@ -74,26 +82,46 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
       reads.opened.length = 0;
     });
 
-    it('WHEN rescanned with no change THEN none of its files is opened and the result equals the first', async () => {
+    it('WHEN rescanned with no change THEN none of its files is opened', async () => {
+      await scanPackageImports(input);
+
+      const opened = openedNames();
+
+      expect(opened).toStrictEqual([]);
+    });
+
+    it('WHEN rescanned with no change THEN the result equals the first', async () => {
       const second = await scanPackageImports(input);
 
-      expect([openedNames(), second]).toStrictEqual([[], first]);
+      expect(second).toStrictEqual(first);
     });
 
     it('WHEN a.ts is rewritten to the same length and set back to its old mtime THEN the specifier is still A1', async () => {
       await fixAt('a.ts', importOf('A2'), DATE);
 
       const second = await scanPackageImports(input);
+      const specifiers = specifiersOf(second);
 
-      expect(specifiersOf(second)).toStrictEqual(['A1', 'B1']);
+      expect(specifiers).toStrictEqual(['A1', 'B1']);
     });
 
-    it('WHEN a.ts is rewritten to a new length at its old mtime THEN a.ts alone is opened again and its new specifier is listed', async () => {
+    it('WHEN a.ts is rewritten to a new length at its old mtime THEN a.ts alone is opened again', async () => {
+      await fixAt('a.ts', importOf('A22'), DATE);
+
+      await scanPackageImports(input);
+
+      const opened = openedNames();
+
+      expect(opened).toStrictEqual(['a.ts']);
+    });
+
+    it('WHEN a.ts is rewritten to a new length at its old mtime THEN its new specifier is listed', async () => {
       await fixAt('a.ts', importOf('A22'), DATE);
 
       const second = await scanPackageImports(input);
+      const specifiers = specifiersOf(second);
 
-      expect([openedNames(), specifiersOf(second)]).toStrictEqual([['a.ts'], ['A22', 'B1']]);
+      expect(specifiers).toStrictEqual(['A22', 'B1']);
     });
 
     it('WHEN a.ts is touched to a new mtime with the same text THEN a.ts alone is opened again', async () => {
@@ -101,7 +129,9 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
 
       await scanPackageImports(input);
 
-      expect(openedNames()).toStrictEqual(['a.ts']);
+      const opened = openedNames();
+
+      expect(opened).toStrictEqual(['a.ts']);
     });
 
     it('WHEN b.ts is deleted THEN the cache has no b.ts', async () => {
@@ -109,7 +139,7 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
 
       await scanPackageImports(input);
 
-      const cached = Array.from(input.cache.filesOf(dir).keys());
+      const cached = cachedNamesOf(dir);
 
       expect(cached).toStrictEqual(['a.ts']);
     });
@@ -132,33 +162,53 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
     it('WHEN rescanned again THEN no file is opened', async () => {
       await scanPackageImports(input);
 
-      expect(openedNames()).toStrictEqual([]);
+      const opened = openedNames();
+
+      expect(opened).toStrictEqual([]);
     });
   });
 
-  it('GIVEN a scan stopped by caps.files 2 over three files WHEN rescanned with default caps THEN only the file past the stop is opened', async () => {
-    await writeImportTree(dir, { 'a.ts': importOf('A'), 'b.ts': importOf('B'), 'c.ts': importOf('C') });
-    const stopped = inputOf(dir, input.cache, { caps: capsOf({ files: 2 }) });
+  describe('GIVEN a scan stopped by caps.files 2 over three files', () => {
+    it('WHEN rescanned with default caps THEN only the file past the stop is opened', async () => {
+      await writeImportTree(dir, { 'a.ts': importOf('A'), 'b.ts': importOf('B'), 'c.ts': importOf('C') });
+      const stopped = inputOf(dir, input.cache, { caps: capsOf({ files: 2 }) });
 
-    await scanPackageImports(stopped);
-    reads.opened.length = 0;
+      await scanPackageImports(stopped);
+      reads.opened.length = 0;
 
-    await scanPackageImports(input);
+      await scanPackageImports(input);
 
-    expect(openedNames()).toStrictEqual(['c.ts']);
+      const opened = openedNames();
+
+      expect(opened).toStrictEqual(['c.ts']);
+    });
   });
 
-  it('GIVEN packages/a scanned, then the root scanned with packages/a in skipDirs THEN the cache keeps the same map for packages/a', async () => {
-    await writeImportTree(dir, { 'packages/a/a.ts': importOf('A'), 'r.ts': importOf('R') });
-    const packageDir = join(dir, 'packages', 'a');
+  describe('GIVEN packages/a scanned, then the root scanned with packages/a in skipDirs', () => {
+    let packageDir = '';
+    let first: ReadonlyMap<string, CachedFile> = new Map();
 
-    await scanPackageImports(inputOf(packageDir, input.cache));
+    beforeEach(async () => {
+      await writeImportTree(dir, { 'packages/a/a.ts': importOf('A'), 'r.ts': importOf('R') });
+      packageDir = join(dir, 'packages', 'a');
 
-    const first = input.cache.filesOf(packageDir);
-    const skipDirs = new Set([packageDir]);
+      await scanPackageImports(inputOf(packageDir, input.cache));
 
-    await scanPackageImports({ ...input, skipDirs });
+      first = input.cache.filesOf(packageDir);
 
-    expect(input.cache.filesOf(packageDir)).toBe(first);
+      await scanPackageImports({ ...input, skipDirs: new Set([packageDir]) });
+    });
+
+    it('WHEN the cache is read THEN it keeps the same map for packages/a', () => {
+      const kept = input.cache.filesOf(packageDir);
+
+      expect(kept).toBe(first);
+    });
+
+    it('WHEN the cache is read THEN the root map holds r.ts only', () => {
+      const cached = cachedNamesOf(dir);
+
+      expect(cached).toStrictEqual(['r.ts']);
+    });
   });
 });
