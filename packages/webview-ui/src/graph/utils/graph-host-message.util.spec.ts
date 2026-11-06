@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import { isGraphHostMessage } from './graph-host-message.util.ts';
 import type { Positions } from '../../bridge/common/graph-state.type.ts';
-import { HOST_EDGES_STUB, HOST_GRAPH_STUB, HOST_PACKAGES_STUB, HOST_TASK_STUB } from '../test/stubs/graph-host-message.stub.ts';
+import {
+  HOST_EDGES_STUB,
+  HOST_GRAPH_STUB,
+  HOST_PACKAGES_STUB,
+  HOST_TASK_STUB,
+  IMPORT_SITE_STUB
+} from '../test/stubs/graph-host-message.stub.ts';
 import { graphWithTaskOf, stateMessageOf, without } from '../test/utils/graph-host-message.spec.util.ts';
 
 const NO_TARGET_EDGE = { source: 'app' };
@@ -20,21 +26,13 @@ const OBJECT_NAMES = [
 
 const FAILED_IMPORTS = { kind: 'failed' };
 
-const IMPORT_SITE = {
-  file: 'src/a.ts',
-  line: 2,
-  specifier: 'core',
-  text: "import 'core';",
-  kind: 'static',
-  isType: false,
-  via: 'name'
-};
-
-const FOUND_IMPORTS = { kind: 'found', scanned: 4, skipped: 0, total: 1, limit: null, sites: [IMPORT_SITE] };
+const FOUND_IMPORTS = { kind: 'found', scanned: 4, skipped: 0, total: 1, limit: null, sites: [IMPORT_SITE_STUB] };
 
 const DONE_IMPORTS = { kind: 'done' };
 
 const IMPORTS = { type: 'edgeImports', source: 'web', target: 'core', result: FAILED_IMPORTS };
+
+const FOUND_IMPORTS_MESSAGE = { ...IMPORTS, result: FOUND_IMPORTS };
 
 const ROOT_PACKAGES = [{ name: '//', bareName: '//', path: '', tags: [], taskCount: 0 }];
 
@@ -216,9 +214,9 @@ describe('FEATURE: isGraphHostMessage', () => {
 
   describe('GIVEN an edgeImports message', () => {
     it.each([
-      ['a failed result', IMPORTS],
-      ['a found result', { ...IMPORTS, result: FOUND_IMPORTS }]
-    ])('WHEN it has %s THEN it is accepted', (_name, message) => {
+      { label: 'a failed result', message: IMPORTS },
+      { label: 'a found result', message: FOUND_IMPORTS_MESSAGE }
+    ])('WHEN it has $label THEN it is accepted', ({ message }) => {
       const isMessage = isGraphHostMessage(message);
 
       expect(isMessage).toBe(true);

@@ -36,61 +36,66 @@ const OVER_SIDE = 'c'.repeat(202);
 
 const MISSING = { kind: 'missing', file: 'package.json' };
 
-const ACCEPTED: [string, UnknownRecord][] = [
-  ['one entry', explainedOf(foundOf([entryOf()]))],
-  ['eight entries', explainedOf(foundOf(entriesOf(8)))],
-  ['each of the four fields', explainedOf(foundOf(fieldEntriesOf()))],
-  ['key and spec of 201 characters, line 0 and 1 000 000', explainedOf(foundOf(longEntries()))],
-  ['missing', explainedOf(MISSING)],
-  ['unreadable, file of 1 024 characters', explainedOf({ kind: 'unreadable', file: 'f'.repeat(1_024) })],
-  ['both context sides', explainedOf(foundOf([withContext({ before: 'a', after: 'b' })]))],
-  ['an empty context', explainedOf(foundOf([withContext({})]))],
-  ['context sides that are undefined', explainedOf(foundOf([withContext({ before: undefined, after: undefined })]))],
-  ['empty context sides', explainedOf(foundOf([withContext({ before: '', after: '' })]))],
-  ['context sides of 201 characters', explainedOf(foundOf([withContext({ before: SIDE_MAX, after: SIDE_MAX })]))],
-  ['line 0 and only an after side', explainedOf(foundOf([withContext({ after: 'b' }, 0)]))],
-  ['an extra context key', explainedOf(foundOf([withContext({ before: 'a', extra: 1 })]))],
-  ['names like Object members', explainedOf(foundOf([entryOf({ key: '__proto__' })]), { source: '__proto__', target: 'constructor' })]
+const NO_TARGET = { type: 'edgeExplained', source: 'web', result: MISSING };
+
+const ACCEPTED = [
+  { label: 'one entry', record: explainedOf(foundOf([entryOf()])) },
+  { label: 'eight entries', record: explainedOf(foundOf(entriesOf(8))) },
+  { label: 'each of the four fields', record: explainedOf(foundOf(fieldEntriesOf())) },
+  { label: 'key and spec of 201 characters, line 0 and 1 000 000', record: explainedOf(foundOf(longEntries())) },
+  { label: 'missing', record: explainedOf(MISSING) },
+  { label: 'unreadable, file of 1 024 characters', record: explainedOf({ kind: 'unreadable', file: 'f'.repeat(1_024) }) },
+  { label: 'both context sides', record: explainedOf(foundOf([withContext({ before: 'a', after: 'b' })])) },
+  { label: 'an empty context', record: explainedOf(foundOf([withContext({})])) },
+  { label: 'context sides that are undefined', record: explainedOf(foundOf([withContext({ before: undefined, after: undefined })])) },
+  { label: 'empty context sides', record: explainedOf(foundOf([withContext({ before: '', after: '' })])) },
+  { label: 'context sides of 201 characters', record: explainedOf(foundOf([withContext({ before: SIDE_MAX, after: SIDE_MAX })])) },
+  { label: 'line 0 and only an after side', record: explainedOf(foundOf([withContext({ after: 'b' }, 0)])) },
+  { label: 'an extra context key', record: explainedOf(foundOf([withContext({ before: 'a', extra: 1 })])) },
+  {
+    label: 'names like Object members',
+    record: explainedOf(foundOf([entryOf({ key: '__proto__' })]), { source: '__proto__', target: 'constructor' })
+  }
 ];
 
-const REJECTED: [string, UnknownRecord][] = [
-  ['no entries', explainedOf(foundOf([]))],
-  ['nine entries', explainedOf(foundOf(entriesOf(9)))],
-  ['entries not an array', explainedOf(foundOf([], { entries: entryOf() }))],
-  ['a null entry', explainedOf(foundOf([null]))],
-  ['a sparse entries array of length 1', explainedOf(foundOf(new Array(1)))],
-  ['an unknown field', explainedOf(foundOf([entryOf({ field: 'scripts' })]))],
-  ['a field named like an Object member', explainedOf(foundOf([entryOf({ field: 'constructor' })]))],
-  ['a key of 202 characters', explainedOf(foundOf([entryOf({ key: 'k'.repeat(202) })]))],
-  ['a spec of 202 characters', explainedOf(foundOf([entryOf({ spec: 's'.repeat(202) })]))],
-  ['a numeric key', explainedOf(foundOf([entryOf({ key: 1 })]))],
-  ['a line of -1', explainedOf(foundOf([entryOf({ line: -1 })]))],
-  ['a line of 1 000 001', explainedOf(foundOf([entryOf({ line: 1_000_001 })]))],
-  ['a fractional line', explainedOf(foundOf([entryOf({ line: 1.5 })]))],
-  ['a NaN line', explainedOf(foundOf([entryOf({ line: NaN })]))],
-  ['a string line', explainedOf(foundOf([entryOf({ line: '3' })]))],
-  ['no context', explainedOf(foundOf([entryOf({ context: undefined })]))],
-  ['a null context', explainedOf(foundOf([entryOf({ context: null })]))],
-  ['a string context', explainedOf(foundOf([entryOf({ context: 'a' })]))],
-  ['a numeric context', explainedOf(foundOf([entryOf({ context: 1 })]))],
-  ['a before side of 202 characters', explainedOf(foundOf([withContext({ before: OVER_SIDE })]))],
-  ['an after side of 202 characters', explainedOf(foundOf([withContext({ after: OVER_SIDE })]))],
-  ['a numeric before side', explainedOf(foundOf([withContext({ before: 1 })]))],
-  ['a null after side', explainedOf(foundOf([withContext({ after: null })]))],
-  ['a before side on line 0', explainedOf(foundOf([withContext({ before: 'x' }, 0)]))],
-  ['an empty before side on line 0', explainedOf(foundOf([withContext({ before: '' }, 0)]))],
-  ['a file of 1 025 characters', explainedOf({ kind: 'missing', file: 'f'.repeat(1_025) })],
-  ['a numeric file', explainedOf({ kind: 'unreadable', file: 1 })],
-  ['missing with no file', explainedOf({ kind: 'missing' })],
-  ['an unknown kind', explainedOf({ kind: 'found-ish', file: 'p' })],
-  ['a null result', explainedOf(null)],
-  ['a numeric source', explainedOf(MISSING, { source: 1 })],
-  ['no target', { type: 'edgeExplained', source: 'web', result: MISSING }]
+const REJECTED = [
+  { label: 'no entries', record: explainedOf(foundOf([])) },
+  { label: 'nine entries', record: explainedOf(foundOf(entriesOf(9))) },
+  { label: 'entries not an array', record: explainedOf(foundOf([], { entries: entryOf() })) },
+  { label: 'a null entry', record: explainedOf(foundOf([null])) },
+  { label: 'a sparse entries array of length 1', record: explainedOf(foundOf(new Array(1))) },
+  { label: 'an unknown field', record: explainedOf(foundOf([entryOf({ field: 'scripts' })])) },
+  { label: 'a field named like an Object member', record: explainedOf(foundOf([entryOf({ field: 'constructor' })])) },
+  { label: 'a key of 202 characters', record: explainedOf(foundOf([entryOf({ key: 'k'.repeat(202) })])) },
+  { label: 'a spec of 202 characters', record: explainedOf(foundOf([entryOf({ spec: 's'.repeat(202) })])) },
+  { label: 'a numeric key', record: explainedOf(foundOf([entryOf({ key: 1 })])) },
+  { label: 'a line of -1', record: explainedOf(foundOf([entryOf({ line: -1 })])) },
+  { label: 'a line of 1 000 001', record: explainedOf(foundOf([entryOf({ line: 1_000_001 })])) },
+  { label: 'a fractional line', record: explainedOf(foundOf([entryOf({ line: 1.5 })])) },
+  { label: 'a NaN line', record: explainedOf(foundOf([entryOf({ line: NaN })])) },
+  { label: 'a string line', record: explainedOf(foundOf([entryOf({ line: '3' })])) },
+  { label: 'no context', record: explainedOf(foundOf([entryOf({ context: undefined })])) },
+  { label: 'a null context', record: explainedOf(foundOf([entryOf({ context: null })])) },
+  { label: 'a string context', record: explainedOf(foundOf([entryOf({ context: 'a' })])) },
+  { label: 'a numeric context', record: explainedOf(foundOf([entryOf({ context: 1 })])) },
+  { label: 'a before side of 202 characters', record: explainedOf(foundOf([withContext({ before: OVER_SIDE })])) },
+  { label: 'an after side of 202 characters', record: explainedOf(foundOf([withContext({ after: OVER_SIDE })])) },
+  { label: 'a numeric before side', record: explainedOf(foundOf([withContext({ before: 1 })])) },
+  { label: 'a null after side', record: explainedOf(foundOf([withContext({ after: null })])) },
+  { label: 'a before side on line 0', record: explainedOf(foundOf([withContext({ before: 'x' }, 0)])) },
+  { label: 'an empty before side on line 0', record: explainedOf(foundOf([withContext({ before: '' }, 0)])) },
+  { label: 'a file of 1 025 characters', record: explainedOf({ kind: 'missing', file: 'f'.repeat(1_025) }) },
+  { label: 'a numeric file', record: explainedOf({ kind: 'unreadable', file: 1 }) },
+  { label: 'missing with no file', record: explainedOf({ kind: 'missing' }) },
+  { label: 'an unknown kind', record: explainedOf({ kind: 'found-ish', file: 'p' }) },
+  { label: 'a null result', record: explainedOf(null) },
+  { label: 'a numeric source', record: explainedOf(MISSING, { source: 1 }) },
+  { label: 'no target', record: NO_TARGET }
 ];
 
 describe('FEATURE: isEdgeExplained', () => {
   describe('GIVEN a well-formed edgeExplained record', () => {
-    it.each(ACCEPTED)('WHEN it has %s THEN it is accepted', (_label, record) => {
+    it.each(ACCEPTED)('WHEN it has $label THEN it is accepted', ({ record }) => {
       const isExplained = isEdgeExplained(record);
 
       expect(isExplained).toBe(true);
@@ -98,7 +103,7 @@ describe('FEATURE: isEdgeExplained', () => {
   });
 
   describe('GIVEN a malformed edgeExplained record', () => {
-    it.each(REJECTED)('WHEN it has %s THEN it is rejected', (_label, record) => {
+    it.each(REJECTED)('WHEN it has $label THEN it is rejected', ({ record }) => {
       const isExplained = isEdgeExplained(record);
 
       expect(isExplained).toBe(false);
