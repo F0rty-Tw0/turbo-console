@@ -3,8 +3,6 @@ import type { ImportKind, ImportLimit, ImportVia } from '../../bridge/common/gra
 /** The rows the imports block shows before "Show more" (spec D14). */
 export const IMPORTS_FOLD_AT = 20;
 
-export const SCAN_AGAIN_TITLE = 'Scan the files again';
-
 export const NO_IMPORTS_WORD = 'No imports found';
 
 /** The word of a none reply that skipped files: the scan did not see every file. */
