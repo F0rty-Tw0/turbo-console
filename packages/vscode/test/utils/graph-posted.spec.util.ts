@@ -1,6 +1,7 @@
 import type {
   GraphAtomsMessage,
   GraphEdgeExplainedMessage,
+  GraphEdgeImportsMessage,
   GraphReady,
   GraphRunState,
   GraphRunsMessage,
@@ -37,6 +38,20 @@ export const explainedFor = (api: TurboConsoleApi, root: string, source: string,
 
   for (const message of posted) {
     const isReply = message.type === 'edgeExplained' && message.source === source && message.target === target;
+
+    if (isReply) newest = message;
+  }
+
+  return newest;
+};
+
+/** The newest `edgeImports` reply to the `source` to `target` request, `null` before there is one. */
+export const importsFor = (api: TurboConsoleApi, root: string, source: string, target: string): GraphEdgeImportsMessage | null => {
+  const posted = api.graph.posted(root);
+  let newest: GraphEdgeImportsMessage | null = null;
+
+  for (const message of posted) {
+    const isReply = message.type === 'edgeImports' && message.source === source && message.target === target;
 
     if (isReply) newest = message;
   }

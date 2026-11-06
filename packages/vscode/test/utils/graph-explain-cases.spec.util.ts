@@ -62,7 +62,7 @@ const contextOf = (lines: string[], line: number): ManifestContext => {
 };
 
 /** The first graph edge whose dependent is a manifest package, with its entry's spec and line found independently of the host's parser. */
-const fixtureLinkOf = async (scene: GraphScene): Promise<GraphFixtureLink> => {
+export const fixtureLinkOf = async (scene: GraphScene): Promise<GraphFixtureLink> => {
   const { api, root, manifest } = scene;
   const state = lastGraphState(api, root);
 
