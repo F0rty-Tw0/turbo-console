@@ -10,13 +10,19 @@ import type {
   AtomFile,
   AtomGroup,
   AtomResult,
+  CachedFile,
   CachedWorkspace,
   DryRun,
   DryRunRequest,
   DryRunState,
+  ImportFileCache,
+  ImportScanCaps,
+  ImportScanInput,
+  ImportScanLimit,
   LockfileName,
   PackageEdge,
   PackageGraph,
+  PackageImportScan,
   PackageManager,
   PackageManagerName,
   PackageManagerSource,
@@ -28,9 +34,12 @@ import type {
   RunSummary,
   RunTasksMatch,
   RunToMatch,
+  ScannedFile,
+  SourceImport,
   TaskDefinition,
   TaskNode,
   TaskOutcome,
+  TsconfigPaths,
   TurboBinary,
   TurboErrorKind,
   TurboVersionRange,
@@ -40,12 +49,13 @@ import type {
 
 /**
  * Spec §4.8: M0's runtime exports plus M1's readers, `TurboException` and (M2) the text cleaners `plainLine` and
- * `plainLines`. The task-name check `assertTaskName` and the boundary check `isWithin` are public: the vscode run flow
+ * `plainLines`, and (U8) the import scan: `scanPackageImports` and the `ImportFileCache` it reads and fills. The task-name check `assertTaskName` and the boundary check `isWithin` are public: the vscode run flow
  * uses them. Spawning, model building and the turbo-name check (`runTurbo`, `queryTurbo`, `buildWorkspaceModel`,
  * `assertTurboName`) stay internal; `TurboBinary` is a type-only export.
  */
 const RUNTIME_EXPORTS = [
   'AFFECTED_TASKS_QUERY',
+  'ImportFileCache',
   'PACKAGE_GRAPH_QUERY',
   'PACKAGE_NAME',
   'RUN_LOG_OBJECT_MAX',
@@ -74,6 +84,7 @@ const RUNTIME_EXPORTS = [
   'resolveTurbo',
   'runLogEventOf',
   'runSummarySchema',
+  'scanPackageImports',
   'scanRunLog',
   'turboRunAllArgs',
   'turboRunArgs'
@@ -122,6 +133,14 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<RunTasksMatch>().toHaveProperty('outcomes');
       expectTypeOf<AtomResult['outcome']>().toEqualTypeOf<'passed' | 'failed' | 'cached'>();
       expectTypeOf<TurboVersionRange>().toHaveProperty('maxExclusive');
+      expectTypeOf<ImportScanLimit>().toEqualTypeOf<'files' | 'entries' | 'time'>();
+      expectTypeOf<SourceImport['kind']>().toEqualTypeOf<'static' | 'reexport' | 'dynamic' | 'require'>();
+      expectTypeOf<PackageImportScan['tsconfigPaths']>().toEqualTypeOf<TsconfigPaths | null>();
+      expectTypeOf<ScannedFile>().toHaveProperty('imports');
+      expectTypeOf<ImportScanCaps>().toHaveProperty('reads');
+      expectTypeOf<CachedFile>().toHaveProperty('mtimeMs');
+      expectTypeOf<ImportScanInput>().toHaveProperty('signal');
+      expectTypeOf<ImportFileCache>().toExtend<ImportScanInput['cache']>();
     });
 
     it('WHEN TurboErrorKind is imported THEN it is the exact kind union', () => {
