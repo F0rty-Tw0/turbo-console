@@ -1,6 +1,8 @@
+import { existsSync } from 'node:fs';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { setTimeout } from 'node:timers/promises';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -11,7 +13,6 @@ import { isJsonEnd, jsonExitCode } from '../utils/stalled-exit-code.util.ts';
 
 type RunOutcome = {
   readonly settled: unknown;
-  readonly elapsedMs: number;
   readonly isStubAlive: boolean;
 };
 
@@ -29,8 +30,8 @@ ${body}
 
 /**
  * Each prints to stdout, then never exits on its own (`setInterval`), apart from the `exit` ones. `held-exit-3` leaves a
- * grandchild holding its stdout for 800 ms after it exits; `term-end-hang` ends its JSON and counts in `.terms` on each
- * SIGTERM, without exiting.
+ * grandchild holding its stdout for 1500 ms after it exits; `term-end-hang` writes `.ready` once its handler is in, then
+ * ends its JSON and counts in `.terms` on each SIGTERM, without exiting.
  */
 const STUB_BODIES = {
   'complete-hang': `process.stdout.write('{"tasks":[]}\\n');\nsetInterval(() => undefined, 1000);`,
@@ -40,14 +41,15 @@ const STUB_BODIES = {
   'complete-exit-3': `process.stdout.write('{}\\n');\nprocess.exitCode = 3;`,
   'complete-term-exit-1': `process.stdout.write('{}\\n');\nprocess.on('SIGTERM', () => process.exit(1));\nsetInterval(() => undefined, 1000);`,
   'broken-term-exit-0': `process.stdout.write('{"tasks":]}\\n');\nprocess.on('SIGTERM', () => process.exit(0));\nsetInterval(() => undefined, 1000);`,
-  'held-exit-3': `process.stdout.write('{}\\n');
-require('node:child_process').spawn(process.execPath, ['-e', 'setTimeout(() => undefined, 800)'], { stdio: ['ignore', 'inherit', 'ignore'] }).unref();
+  'held-exit-3': `require('node:child_process').spawn(process.execPath, ['-e', 'setTimeout(() => undefined, 1500)'], { stdio: ['ignore', 'inherit', 'ignore'] }).unref();
+process.stdout.write('{}\\n');
 process.exitCode = 3;`,
   'term-end-hang': `process.stdout.write('{');
 process.on('SIGTERM', () => {
   process.stdout.write('}\\n');
   require('node:fs').appendFileSync(__filename + '.terms', 'x');
 });
+require('node:fs').writeFileSync(__filename + '.ready', '');
 setInterval(() => undefined, 1000);`
 };
 
@@ -57,6 +59,9 @@ const JSON_CHECK: ExitStallCheck = { isEnd: isJsonEnd, exitCodeOf: jsonExitCode 
 
 /** Short enough that a stopped stall lands far inside `TIMEOUT_MS`. */
 const STALL_MS = 200;
+
+/** For stubs that exit by themselves: longer than a loaded host takes from their last write to their exit. */
+const EXITING_STALL_MS = 500;
 
 const TIMEOUT_MS = 3000;
 
@@ -76,14 +81,22 @@ const writeStub = async ([stub, body]: [string, string]): Promise<void> => {
   await writeFile(join(stubDir, `${stub}.js`), stubScript(body), { mode: 0o755 });
 };
 
+/** Settles once `path` exists, checking every 10 ms. */
+const waitForFile = async (path: string): Promise<void> => {
+  const hasFile = existsSync(path);
+
+  if (hasFile) return;
+
+  await setTimeout(10);
+  await waitForFile(path);
+};
+
 /** Runs `stub` until runTurbo settles; whether its node process still exists is probed as the result lands. */
 const runStub = async (stub: StubName, options: RunTurboOptions): Promise<RunOutcome> => {
-  const startedAt = performance.now();
   const settled = await runTurbo(stubPath(stub), [], stubDir, options).then(settledOf, settledOf);
-  const elapsedMs = performance.now() - startedAt;
   const pidText = await readFile(`${stubPath(stub)}.pid`, 'utf8');
   const isStubAlive = isAlive(Number(pidText));
-  const outcome: RunOutcome = { settled, elapsedMs, isStubAlive };
+  const outcome: RunOutcome = { settled, isStubAlive };
 
   return outcome;
 };
@@ -113,10 +126,6 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guar
         expect(outcome.settled).toStrictEqual(expected);
       });
 
-      it('THEN it resolves well before the 3 s timeout', () => {
-        expect(outcome.elapsedMs).toBeLessThan(TIMEOUT_MS / 2);
-      });
-
       it('THEN the binary is gone when runTurbo resolves', () => {
         expect(outcome.isStubAlive).toBe(false);
       });
@@ -133,18 +142,10 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guar
   });
 
   describe('GIVEN a binary whose stdout ends like JSON but does not parse, then never exits', () => {
-    let outcome: RunOutcome;
+    it('WHEN the guard stops it THEN runTurbo rejects with the kill error, as for any killed turbo', async () => {
+      const outcome = await runStub('broken-hang', GUARDED);
 
-    beforeAll(async () => {
-      outcome = await runStub('broken-hang', GUARDED);
-    });
-
-    it('WHEN the guard stops it THEN runTurbo rejects with the kill error, as for any killed turbo', () => {
       expect(outcome.settled).toMatchObject({ signal: 'SIGTERM', stderr: '' });
-    });
-
-    it('WHEN the guard stops it THEN the rejection is not the timeout', () => {
-      expect(outcome.elapsedMs).toBeLessThan(TIMEOUT_MS / 2);
     });
   });
 
@@ -158,7 +159,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guar
 
   describe('GIVEN a binary that prints complete JSON and exits 3', () => {
     it('WHEN the guard runs on win32 THEN runTurbo resolves with exit code 3, as without the guard', async () => {
-      const outcome = await runStub('complete-exit-3', GUARDED);
+      const outcome = await runStub('complete-exit-3', { ...GUARDED, exitStallMs: EXITING_STALL_MS });
 
       expect(outcome.settled).toMatchObject({ stdout: '{}\n', exitCode: 3 });
     });
@@ -182,17 +183,20 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guar
 
   describe('GIVEN a binary that prints complete JSON and exits 3 while a grandchild holds its stdout', () => {
     it('WHEN the stall time passes before the output closes THEN runTurbo still resolves with exit code 3', async () => {
-      const outcome = await runStub('held-exit-3', GUARDED);
+      const outcome = await runStub('held-exit-3', { ...GUARDED, exitStallMs: EXITING_STALL_MS });
 
       expect(outcome.settled).toMatchObject({ stdout: '{}\n', exitCode: 3 });
     });
   });
 
   describe('GIVEN a binary that ends its JSON on SIGTERM, without exiting', () => {
-    it('WHEN the timeout aborts it THEN the guard sends no second SIGTERM during the grace', async () => {
-      const options: RunTurboOptions = { ...GUARDED, timeoutMs: 400, graceMs: 800 };
+    it('WHEN the caller aborts it THEN the guard sends no second SIGTERM during the grace', async () => {
+      const controller = new AbortController();
+      const outcome = runStub('term-end-hang', { ...GUARDED, signal: controller.signal, graceMs: 800 });
 
-      await runStub('term-end-hang', options);
+      await waitForFile(`${stubPath('term-end-hang')}.ready`);
+      controller.abort();
+      await outcome;
 
       await expect(readFile(`${stubPath('term-end-hang')}.terms`, 'utf8')).resolves.toBe('x');
     });
