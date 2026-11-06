@@ -32,7 +32,10 @@ export type ImportScanCaps = {
   readonly reads: number;
 };
 
-/** One file's last lex: the `lstat` it was read under, and what `importsOf` found. */
+/**
+ * One file's last lex: the `lstat` it was read under, and what `importsOf` found. `imports` is the array every later
+ * scan hands out for that file; never mutate it.
+ */
 export type CachedFile = {
   readonly mtimeMs: number;
   readonly size: number;
@@ -53,7 +56,10 @@ export type TsconfigPaths = {
   readonly paths: Readonly<Record<string, string[]>>;
 };
 
-/** `file` is posix, relative to `dir`; only files with at least one import are listed, in walk order. */
+/**
+ * `file` is posix, relative to `dir`; only files with at least one import are listed, in walk order. `imports` is the
+ * cache's own array (`CachedFile.imports`); never mutate it.
+ */
 export type ScannedFile = {
   readonly file: string;
   readonly imports: SourceImport[];
