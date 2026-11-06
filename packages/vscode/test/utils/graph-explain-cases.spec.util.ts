@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import type { ManifestContext } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
-import { explainedFor, lastGraphState } from './graph-posted.spec.util.ts';
+import { isExplained, lastGraphState, newestReplyFor } from './graph-posted.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
 import { ROOT_PACKAGE_NAME } from '../common/graph.const.ts';
 import type { GraphFixtureLink, GraphScene } from '../common/graph.type.ts';
@@ -62,7 +62,7 @@ const contextOf = (lines: string[], line: number): ManifestContext => {
 };
 
 /** The first graph edge whose dependent is a manifest package, with its entry's spec and line found independently of the host's parser. */
-const fixtureLinkOf = async (scene: GraphScene): Promise<GraphFixtureLink> => {
+export const fixtureLinkOf = async (scene: GraphScene): Promise<GraphFixtureLink> => {
   const { api, root, manifest } = scene;
   const state = lastGraphState(api, root);
 
@@ -93,12 +93,12 @@ export const explainCase = async (scene: GraphScene): Promise<void> => {
   await step("L13-4: explainEdge answers with the link's dependencies entry", async () => {
     const link = await fixtureLinkOf(scene);
     const pkg = manifest.packages.find((candidate): boolean => candidate.name === link.source);
-    const isReplied = (): boolean => explainedFor(api, root, link.source, link.target) !== null;
+    const isReplied = (): boolean => newestReplyFor(api, root, link, isExplained) !== null;
 
     await api.graph.receive(root, { type: 'explainEdge', source: link.source, target: link.target });
     await waitFor('edge explained', isReplied);
 
-    const reply = explainedFor(api, root, link.source, link.target);
+    const reply = newestReplyFor(api, root, link, isExplained);
 
     if (reply === null || pkg === undefined) throw new Error('no edgeExplained reply was posted');
 
