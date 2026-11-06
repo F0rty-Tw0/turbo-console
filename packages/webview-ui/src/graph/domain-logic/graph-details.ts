@@ -3,13 +3,13 @@ import { shownHintOf } from './graph-details-picking.ts';
 import { focusedNameOf, hadFocusOf, refocusList, updateView } from './graph-details-render.ts';
 import { emptyOf, wiredViewOf } from './graph-details-wire.ts';
 import { onPanelKey } from './graph-inspection-details.ts';
-import type { GraphEdgeExplainedMessage } from '../../bridge/common/graph-message.type.ts';
 import type {
   DetailsContext,
   DetailsEnv,
   DetailsPlan,
   DetailsView,
   GraphDetailsDeps,
+  LookupReply,
   ShownHint,
   ShownInspection
 } from '../common/graph-details.type.ts';
@@ -85,9 +85,9 @@ export class GraphDetails {
     this.context = context;
   }
 
-  /** A reply for the shown link updates the explain block in place, or builds it again when its shape changed. */
-  public explained(message: GraphEdgeExplainedMessage): void {
-    this.lookups.explained(message, this.view);
+  /** A reply for the shown link: its manifest entry updates the explain block, its imports are held. */
+  public replied(message: LookupReply): void {
+    this.lookups.replied(message, this.view);
   }
 
   /** A same-hash state asks the host again about the shown link. */

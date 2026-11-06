@@ -1,7 +1,11 @@
+import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGraphController } from './graph-controller.ts';
+import { LinkLookups } from './graph-details-lookups.ts';
+import type { EdgeImportsResult } from '../../bridge/common/graph-imports.type.ts';
 import type { GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphController } from '../common/graph-page.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { LARGE_STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
@@ -9,6 +13,7 @@ import { SINGLE_TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 import { taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
+import { importsReplyOf } from '../test/utils/imports-reply.spec.util.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
 
@@ -21,6 +26,15 @@ const LARGE_ENTRIES: [string, Position][] = LARGE_STATE_STUB.packages.map(entryO
 
 const LARGE_POSITIONS: Positions = Object.fromEntries(LARGE_ENTRIES);
 
+const FAILED_RESULT: EdgeImportsResult = { kind: 'failed' };
+
+/** A result kind the page does not know, as the host never sends it. */
+const UNKNOWN_RESULT = { kind: 'done' };
+
+const IMPORTS_FAILED = importsReplyOf('web', 'ui', FAILED_RESULT);
+
+const IMPORTS_UNKNOWN_KIND = { ...IMPORTS_FAILED, result: UNKNOWN_RESULT };
+
 describe('FEATURE: createGraphController', () => {
   let mock: PackageSideDepsMock;
 
@@ -31,6 +45,30 @@ describe('FEATURE: createGraphController', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  describe('GIVEN no link shown', () => {
+    let replied: MockInstance<LinkLookups['replied']>;
+    let controller: GraphController;
+
+    beforeEach(() => {
+      replied = vi.spyOn(LinkLookups.prototype, 'replied');
+      controller = createGraphController(mock.deps);
+    });
+
+    it('WHEN a valid edgeImports arrives THEN the link look-ups are handed it once', () => {
+      controller.receive(IMPORTS_FAILED);
+
+      expect(replied).toHaveBeenCalledTimes(1);
+      expect(replied).toHaveBeenCalledWith(IMPORTS_FAILED, null);
+    });
+
+    it('WHEN an edgeImports with an unknown result kind arrives THEN the look-ups are not handed it', () => {
+      controller.receive(IMPORTS_UNKNOWN_KIND);
+
+      expect(replied).not.toHaveBeenCalled();
+    });
   });
 
   it('GIVEN a grouping choice saved with a bad camera WHEN a large graph is laid out THEN its folder opens collapsed', async () => {

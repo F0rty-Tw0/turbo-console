@@ -14,7 +14,8 @@ import type {
   LayoutDoneMessage,
   OpenDetailsMessage,
   OpenManifestMessage,
-  PositionsMessage
+  PositionsMessage,
+  ScanImportsMessage
 } from '../../common/graph.type.ts';
 
 const isPositions = (message: GraphWebviewMessage): message is PositionsMessage => message.type === 'positions';
@@ -24,6 +25,8 @@ const isLayoutDone = (message: GraphWebviewMessage): message is LayoutDoneMessag
 const isOpenDetails = (message: GraphWebviewMessage): message is OpenDetailsMessage => message.type === 'openDetails';
 
 const isExplainEdge = (message: GraphWebviewMessage): message is ExplainEdgeMessage => message.type === 'explainEdge';
+
+const isScanImports = (message: GraphWebviewMessage): message is ScanImportsMessage => message.type === 'scanImports';
 
 const isOpenManifest = (message: GraphWebviewMessage): message is OpenManifestMessage => message.type === 'openManifest';
 
@@ -40,6 +43,8 @@ export const layoutDonePosted = (posted: GraphWebviewMessage[]): LayoutDoneMessa
 export const openDetailsPosted = (posted: GraphWebviewMessage[]): OpenDetailsMessage[] => posted.filter(isOpenDetails);
 
 export const explainEdgePosted = (posted: GraphWebviewMessage[]): ExplainEdgeMessage[] => posted.filter(isExplainEdge);
+
+export const scanImportsPosted = (posted: GraphWebviewMessage[]): ScanImportsMessage[] => posted.filter(isScanImports);
 
 export const openManifestPosted = (posted: GraphWebviewMessage[]): OpenManifestMessage[] => posted.filter(isOpenManifest);
 

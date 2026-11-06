@@ -97,10 +97,8 @@ class GraphPageController {
         this.reveal.request(message.name);
         break;
       case 'edgeExplained':
-        this.packages.filtering.inspection.explained(message);
-        break;
       case 'edgeImports':
-        // Routed in U8e3.
+        this.packages.filtering.inspection.replied(message);
         break;
       case 'runs':
         this.tasks.selection.runs(message.runs, message.owners ?? NO_OWNERS);

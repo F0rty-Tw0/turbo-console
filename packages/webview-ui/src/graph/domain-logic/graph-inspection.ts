@@ -5,9 +5,9 @@ import { keepClearInspection } from './graph-keep-clear.ts';
 import { InspectionCanvas } from './inspection-canvas.ts';
 import { scheduleSave } from './inspection-save.ts';
 import { recheckedOf, restoredOf, showInspectionBar, shownPartsOf } from './inspection-shown.ts';
-import type { GraphEdgeExplainedMessage } from '../../bridge/common/graph-message.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FolderActions } from '../common/folder-actions.type.ts';
+import type { LookupReply } from '../common/graph-details.type.ts';
 import type { GraphInspectionDeps, InspectionSave, KeepClearDeps } from '../common/graph-inspection.type.ts';
 import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
@@ -165,8 +165,8 @@ export class GraphInspection {
     if (plan.reask !== null) this.details.reasked(plan.reask);
   }
 
-  public explained(message: GraphEdgeExplainedMessage): void {
-    this.details.explained(message);
+  public replied(message: LookupReply): void {
+    this.details.replied(message);
   }
 
   /** Forgets the inspection without saving it, for a page about to show another graph or none; the panel stays. */

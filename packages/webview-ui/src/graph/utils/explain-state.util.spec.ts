@@ -12,6 +12,7 @@ import type { ExplainState } from '../common/details.type.ts';
 import type { ExplainPlan } from '../common/graph-details.type.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import { MANIFEST_ENTRY_STUB } from '../test/stubs/manifest-entry.stub.ts';
+import { importsReplyOf } from '../test/utils/imports-reply.spec.util.ts';
 
 const FILE = 'a/package.json';
 
@@ -59,12 +60,6 @@ const reply = (source: string, target: string): GraphEdgeExplainedMessage => {
   return message;
 };
 
-const importsReply = (source: string, target: string): GraphEdgeImportsMessage => {
-  const message: GraphEdgeImportsMessage = { type: 'edgeImports', source, target, result: IMPORTS_FAILED };
-
-  return message;
-};
-
 const link = (source: string, target: string): Inspection => {
   const inspection: Inspection = { kind: 'link', source, target };
 
@@ -103,8 +98,18 @@ const REPLY_ROWS: ReplyRow[] = [
   { title: 'the shown link', message: reply('web', 'ui'), current: link('web', 'ui'), expected: true },
   { title: 'the shown link reversed', message: reply('ui', 'web'), current: link('web', 'ui'), expected: false },
   { title: 'another source into the shown target', message: reply('admin', 'ui'), current: link('web', 'ui'), expected: false },
-  { title: 'the shown link as imports', message: importsReply('web', 'ui'), current: link('web', 'ui'), expected: true },
-  { title: 'another link as imports', message: importsReply('admin', 'ui'), current: link('web', 'ui'), expected: false },
+  {
+    title: 'the shown link as imports',
+    message: importsReplyOf('web', 'ui', IMPORTS_FAILED),
+    current: link('web', 'ui'),
+    expected: true
+  },
+  {
+    title: 'another link as imports',
+    message: importsReplyOf('admin', 'ui', IMPORTS_FAILED),
+    current: link('web', 'ui'),
+    expected: false
+  },
   { title: 'a link while a package shows', message: reply('web', 'ui'), current: PKG_WEB, expected: false },
   { title: 'a link before anything shows', message: reply('web', 'ui'), current: null, expected: false },
   {
