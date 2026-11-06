@@ -1,21 +1,15 @@
 import { join } from 'node:path';
 
-import type { GraphPackage } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { scanDirsOf } from './scan-dirs.util.ts';
 import { IMPORT_ROOT } from '../test/common/import-edge.const.ts';
+import { graphPackageOf } from '../test/utils/graph-model.spec.util.ts';
 
-const packageOf = (name: string, path: string): GraphPackage => {
-  const info: GraphPackage = { name, bareName: name, path, tags: [], taskCount: 0 };
-
-  return info;
-};
-
-const ROOT_PACKAGE = packageOf('r', '');
-const A = packageOf('a', 'packages/a');
-const B = packageOf('b', 'packages/b');
-const C = packageOf('c', 'packages/b/c');
+const ROOT_PACKAGE = graphPackageOf('r', '');
+const A = graphPackageOf('a', 'packages/a');
+const B = graphPackageOf('b', 'packages/b');
+const C = graphPackageOf('c', 'packages/b/c');
 const PACKAGES = [ROOT_PACKAGE, A, B, C];
 const A_DIR = join(IMPORT_ROOT, 'packages', 'a');
 const B_DIR = join(IMPORT_ROOT, 'packages', 'b');
@@ -41,7 +35,15 @@ describe('FEATURE: scan dirs of an edge', () => {
       expect(dirs).toStrictEqual({ sourceDir: IMPORT_ROOT, targetDir: A_DIR, skipDirs: new Set([A_DIR, B_DIR, C_DIR]) });
     });
 
-    it('WHEN b → c (B nested in A) is built THEN c and a are skipped', () => {
+    it('WHEN the source is a copy of a THEN a is still not skipped', () => {
+      const copyOfA = { ...A };
+
+      const dirs = scanDirsOf(IMPORT_ROOT, PACKAGES, copyOfA, B);
+
+      expect(dirs.skipDirs).toStrictEqual(new Set([B_DIR, C_DIR]));
+    });
+
+    it('WHEN b → c (target nested in source) is built THEN c and a are skipped', () => {
       const dirs = scanDirsOf(IMPORT_ROOT, PACKAGES, B, C);
 
       expect(dirs).toStrictEqual({ sourceDir: B_DIR, targetDir: C_DIR, skipDirs: new Set([A_DIR, C_DIR]) });
