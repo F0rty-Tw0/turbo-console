@@ -59,7 +59,7 @@ export type GraphDetailsDeps = {
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the panel overlays the canvas. */
   readonly overlay: MediaQueryList;
   readonly onInput: (input: InspectionInput) => void;
-  /** The link view was built: ask the host for the manifest entry behind it. */
+  /** A link view was built or a same-hash state arrived: ask the host for the manifest entry behind it. */
   readonly onExplain: (source: string, target: string) => void;
   readonly onOpenDetails: (name: string) => void;
   readonly onFocus: (name: string) => void;
