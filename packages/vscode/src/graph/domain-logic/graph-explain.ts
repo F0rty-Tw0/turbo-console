@@ -65,7 +65,8 @@ const openManifest = async (packageName: string, line: number, state: GraphReady
 /**
  * Answers a page request against the graph in `context`: `explainEdge` reads the dependent's `package.json` and posts
  * the `edgeExplained` reply when `canPost` still allows it after the read; `openManifest` opens a listed package's
- * `package.json` at the line once a read shows it is a small regular file. `false` means the request is not for this graph (a state that is not a graph, an unlisted
+ * `package.json` at the line once a read shows it is a small regular file, and opens nothing when `canPost` no longer
+ * allows it after that read. `false` means the request is not for this graph (a state that is not a graph, an unlisted
  * package, a pair with no edge): nothing was read, posted or opened. Names are only ever keys of a `Map`.
  */
 export const answerRequest = async (request: ExplainRequest, context: ExplainContext): Promise<boolean> => {

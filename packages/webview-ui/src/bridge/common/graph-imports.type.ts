@@ -36,7 +36,11 @@ type ImportsNone = {
 
 type ImportsFailed = { readonly kind: 'failed' };
 
-/** What the host found in the dependent's source files for one edge; `sites` holds 1 to `IMPORT_SITES_MAX`, `total` counts every matched site, also in files whose path was too long to send (spec D11, D13). */
+/**
+ * What the host found in the dependent's source files for one edge; `sites` holds 1 to `IMPORT_SITES_MAX`. `total` counts every
+ * matched site, also those not sent: sites in a file whose path was too long to send, and sites on a line past
+ * `MANIFEST_LINE_MAX` (that site's file still counts in `scanned`) (spec D11, D13).
+ */
 export type EdgeImportsResult = ImportsFound | ImportsNone | ImportsFailed;
 
 export type GraphEdgeImportsMessage = {
