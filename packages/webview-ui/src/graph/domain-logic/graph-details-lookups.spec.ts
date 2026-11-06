@@ -5,18 +5,19 @@ import { LinkLookups } from './graph-details-lookups.ts';
 import { GraphFrames } from './graph-frames.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { ViewStateModes } from './view-state-modes.ts';
-import type { WebviewMessage } from '../../bridge/common/details-message.type.ts';
-import type { EdgeImportsResult, GraphEdgeImportsMessage } from '../../bridge/common/graph-imports.type.ts';
-import type { GraphWebviewMessage, ManifestContext, ManifestEntry } from '../../bridge/common/graph-message.type.ts';
+import type { EdgeImportsResult } from '../../bridge/common/graph-imports.type.ts';
+import type { ManifestContext, ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { DetailsViews } from '../common/details.type.ts';
 import type { ImportsState } from '../common/imports-state.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
 import { SAVED_FLAT_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
+import { SCAN_WEB_TO_UI_STUB } from '../test/stubs/graph-posted-message.stub.ts';
 import { MANIFEST_ENTRY_STUB, MANIFEST_FILE_STUB } from '../test/stubs/manifest-entry.stub.ts';
 import { foundReplyOf } from '../test/utils/explain-reply.spec.util.ts';
 import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { importsReplyOf } from '../test/utils/imports-reply.spec.util.ts';
 import { postedOf } from '../test/utils/posted-messages.spec.util.ts';
 import { lastReturnOf } from '../test/utils/spy-return.spec.util.ts';
 
@@ -26,8 +27,6 @@ type PackageSideParts = {
 };
 
 type DetailsRig = PackageSideDepsMock & PackageSideParts;
-
-type PostedMessage = WebviewMessage | GraphWebviewMessage;
 
 const CONTEXT_BEFORE: ManifestContext = { before: '  "dependencies": {' };
 
@@ -48,11 +47,9 @@ const detailsRigOf = (): DetailsRig => {
   return rig;
 };
 
-const WEB_TO_UI_POSTED = [{ type: 'explainEdge', source: 'web', target: 'ui' }];
-
 const EXPLAIN_WEB_TO_UI = { type: 'explainEdge', source: 'web', target: 'ui' };
 
-const SCAN_WEB_TO_UI = { type: 'scanImports', source: 'web', target: 'ui' };
+const EXPLAIN_TWICE = [EXPLAIN_WEB_TO_UI, EXPLAIN_WEB_TO_UI];
 
 const SCAN_UI_TO_CORE = { type: 'scanImports', source: 'ui', target: 'core' };
 
@@ -76,21 +73,9 @@ const REPLY_ROWS = [
   { label: 'a failed reply', result: FAILED, state: FAILED }
 ];
 
-const NO_EDGES_STATE = { ...STATE_STUB, hash: 'h2', edges: [] };
+const NEW_HASH_STATE = { ...STATE_STUB, hash: 'h2' };
 
-const importsReplyOf = (source: string, target: string, result: EdgeImportsResult): GraphEdgeImportsMessage => {
-  const reply: GraphEdgeImportsMessage = { type: 'edgeImports', source, target, result };
-
-  return reply;
-};
-
-/** The `explainEdge` and `scanImports` messages the page posted so far, in order. */
-const requestsOf = (rig: PackageSideDepsMock): PostedMessage[] => {
-  const posted = vi.mocked(rig.deps.bridge.post).mock.calls.map(([message]) => message);
-  const isRequest = ({ type }: PostedMessage): boolean => type === 'explainEdge' || type === 'scanImports';
-
-  return posted.filter(isRequest);
-};
+const NO_EDGES_STATE = { ...NEW_HASH_STATE, edges: [] };
 
 /** The `LinkLookups` the last `built` call ran on, read through the prototype spy (spec OQ7). */
 const lookupsOf = (built: MockInstance<LinkLookups['built']>): LinkLookups => {
@@ -133,29 +118,29 @@ describe('FEATURE: LinkLookups', () => {
   });
 
   describe('GIVEN a drawn graph', () => {
-    it('WHEN a link is tapped THEN explainEdge is posted once for it', () => {
-      tapWebToUi();
+    describe('WHEN a link is tapped', () => {
+      beforeEach(() => {
+        tapWebToUi();
+      });
 
-      expect(postedOf(rig, 'explainEdge')).toStrictEqual(WEB_TO_UI_POSTED);
-    });
+      it('THEN explainEdge then scanImports are posted for it', () => {
+        expect(postedOf(rig, 'explainEdge', 'scanImports')).toStrictEqual([EXPLAIN_WEB_TO_UI, SCAN_WEB_TO_UI_STUB]);
+      });
 
-    it('WHEN a link is tapped THEN explainEdge then scanImports are posted for it and the imports are scanning', () => {
-      tapWebToUi();
-
-      expect(requestsOf(rig)).toStrictEqual([EXPLAIN_WEB_TO_UI, SCAN_WEB_TO_UI]);
-      expect(importsState()).toStrictEqual(SCANNING);
+      it('THEN the imports are scanning', () => {
+        expect(importsState()).toStrictEqual(SCANNING);
+      });
     });
 
     it('WHEN a package is selected THEN no explainEdge or scanImports is posted and no imports are held', () => {
       rig.side.filtering.inspection.input({ kind: 'select', name: 'web', via: 'list' });
 
-      expect(postedOf(rig, 'explainEdge')).toStrictEqual([]);
-      expect(postedOf(rig, 'scanImports')).toStrictEqual([]);
+      expect(postedOf(rig, 'explainEdge', 'scanImports')).toStrictEqual([]);
       expect(importsState()).toBeNull();
     });
   });
 
-  describe('GIVEN a link shown and asked about', () => {
+  describe('GIVEN a link shown', () => {
     beforeEach(() => {
       tapWebToUi();
     });
@@ -176,6 +161,7 @@ describe('FEATURE: LinkLookups', () => {
       rig.side.show(STATE_STUB, 2);
       rig.side.filtering.inspection.replied(importsReplyOf('web', 'ui', FOUND));
 
+      expect(postedOf(rig, 'scanImports')).toHaveLength(2);
       expect(importsState()).toStrictEqual(FOUND_FRESH);
     });
 
@@ -194,72 +180,14 @@ describe('FEATURE: LinkLookups', () => {
       });
 
       it('THEN scanImports was posted only once', () => {
-        expect(postedOf(rig, 'scanImports')).toStrictEqual([SCAN_WEB_TO_UI]);
+        expect(postedOf(rig, 'scanImports')).toStrictEqual([SCAN_WEB_TO_UI_STUB]);
       });
-    });
-  });
-
-  describe('GIVEN a found reply held for the link', () => {
-    beforeEach(() => {
-      tapWebToUi();
-      rig.side.filtering.inspection.replied(importsReplyOf('web', 'ui', FOUND));
-    });
-
-    it('WHEN a same-hash state arrives THEN scanImports is posted again and the list is marked refreshing', () => {
-      rig.side.show(STATE_STUB, 2);
-
-      expect(postedOf(rig, 'scanImports')).toStrictEqual([SCAN_WEB_TO_UI, SCAN_WEB_TO_UI]);
-      expect(importsState()).toStrictEqual(FOUND_STALE);
-    });
-  });
-
-  describe('GIVEN a failed reply held for the link', () => {
-    beforeEach(() => {
-      tapWebToUi();
-      rig.side.filtering.inspection.replied(importsReplyOf('web', 'ui', FAILED));
-    });
-
-    it('WHEN a same-hash state arrives THEN the imports are scanning again', () => {
-      rig.side.show(STATE_STUB, 2);
-
-      expect(importsState()).toStrictEqual(SCANNING);
-    });
-  });
-
-  describe('GIVEN links tapped in turn, web to ui, ui to core, web to ui, with no reply to the aborted scans', () => {
-    beforeEach(() => {
-      tapWebToUi();
-      tapUiToCore();
-      tapWebToUi();
-      rig.side.filtering.inspection.replied(importsReplyOf('web', 'ui', FOUND));
-    });
-
-    it('THEN scanImports was posted three times in order', () => {
-      expect(postedOf(rig, 'scanImports')).toStrictEqual([SCAN_WEB_TO_UI, SCAN_UI_TO_CORE, SCAN_WEB_TO_UI]);
-    });
-
-    it('THEN the imports are found for web to ui', () => {
-      expect(importsState()).toStrictEqual(FOUND_FRESH);
-    });
-
-    it('WHEN a late reply for ui to core arrives THEN the held state is the same object', () => {
-      const held = importsState();
-
-      rig.side.filtering.inspection.replied(importsReplyOf('ui', 'core', FOUND));
-
-      expect(importsState()).toBe(held);
-    });
-  });
-
-  describe('GIVEN a link shown', () => {
-    beforeEach(() => {
-      tapWebToUi();
     });
 
     it('WHEN a same-hash state arrives THEN explainEdge is posted again for it', () => {
       rig.side.show(STATE_STUB, 2);
 
-      expect(postedOf(rig, 'explainEdge')).toStrictEqual([...WEB_TO_UI_POSTED, ...WEB_TO_UI_POSTED]);
+      expect(postedOf(rig, 'explainEdge')).toStrictEqual(EXPLAIN_TWICE);
     });
 
     it('WHEN a found reply for it arrives THEN the explain block is built once with the found state', () => {
@@ -285,13 +213,17 @@ describe('FEATURE: LinkLookups', () => {
     describe('WHEN a new hash keeps the link and the same reply arrives again', () => {
       beforeEach(async () => {
         rig.side.filtering.inspection.replied(foundReplyOf('web', 'ui', MANIFEST_ENTRY_STUB));
-        rig.side.show({ ...STATE_STUB, hash: 'h2' }, 2);
+        rig.side.show(NEW_HASH_STATE, 2);
         await settled();
         rig.side.filtering.inspection.replied(foundReplyOf('web', 'ui', MANIFEST_ENTRY_STUB));
       });
 
       it('THEN explainEdge is posted again for it', () => {
-        expect(postedOf(rig, 'explainEdge')).toStrictEqual([...WEB_TO_UI_POSTED, ...WEB_TO_UI_POSTED]);
+        expect(postedOf(rig, 'explainEdge')).toStrictEqual(EXPLAIN_TWICE);
+      });
+
+      it('THEN scanImports is posted again for it', () => {
+        expect(postedOf(rig, 'scanImports')).toStrictEqual([SCAN_WEB_TO_UI_STUB, SCAN_WEB_TO_UI_STUB]);
       });
 
       it('THEN the explain block is built again', () => {
@@ -311,6 +243,78 @@ describe('FEATURE: LinkLookups', () => {
       rig.side.filtering.inspection.replied(foundReplyOf('web', 'ui', ENTRY_WITH_CONTEXT));
 
       expect(document.activeElement).toBe(heading);
+    });
+  });
+
+  describe('GIVEN a found reply held for the link', () => {
+    beforeEach(() => {
+      tapWebToUi();
+      rig.side.filtering.inspection.replied(importsReplyOf('web', 'ui', FOUND));
+    });
+
+    describe('WHEN a same-hash state arrives', () => {
+      beforeEach(() => {
+        rig.side.show(STATE_STUB, 2);
+      });
+
+      it('THEN scanImports is posted again', () => {
+        expect(postedOf(rig, 'scanImports')).toStrictEqual([SCAN_WEB_TO_UI_STUB, SCAN_WEB_TO_UI_STUB]);
+      });
+
+      it('THEN the list is marked refreshing', () => {
+        expect(importsState()).toStrictEqual(FOUND_STALE);
+      });
+    });
+
+    it('WHEN another link is tapped THEN the imports are scanning, not the held list marked refreshing', () => {
+      tapUiToCore();
+
+      expect(importsState()).toStrictEqual(SCANNING);
+    });
+
+    it('WHEN a new hash keeps the link THEN the imports are scanning, not the held list marked refreshing', async () => {
+      rig.side.show(NEW_HASH_STATE, 2);
+      await settled();
+
+      expect(importsState()).toStrictEqual(SCANNING);
+    });
+  });
+
+  describe('GIVEN a failed reply held for the link', () => {
+    beforeEach(() => {
+      tapWebToUi();
+      rig.side.filtering.inspection.replied(importsReplyOf('web', 'ui', FAILED));
+    });
+
+    it('WHEN a same-hash state arrives THEN the imports are scanning again', () => {
+      rig.side.show(STATE_STUB, 2);
+
+      expect(importsState()).toStrictEqual(SCANNING);
+    });
+  });
+
+  describe('GIVEN web to ui, ui to core, web to ui tapped with no reply to the aborted scans, and a found reply for web to ui', () => {
+    beforeEach(() => {
+      tapWebToUi();
+      tapUiToCore();
+      tapWebToUi();
+      rig.side.filtering.inspection.replied(importsReplyOf('web', 'ui', FOUND));
+    });
+
+    it('THEN scanImports was posted three times in order', () => {
+      expect(postedOf(rig, 'scanImports')).toStrictEqual([SCAN_WEB_TO_UI_STUB, SCAN_UI_TO_CORE, SCAN_WEB_TO_UI_STUB]);
+    });
+
+    it('THEN the imports are found for web to ui', () => {
+      expect(importsState()).toStrictEqual(FOUND_FRESH);
+    });
+
+    it('WHEN a late reply for ui to core arrives THEN the held state is the same object', () => {
+      const held = importsState();
+
+      rig.side.filtering.inspection.replied(importsReplyOf('ui', 'core', FOUND));
+
+      expect(importsState()).toBe(held);
     });
   });
 

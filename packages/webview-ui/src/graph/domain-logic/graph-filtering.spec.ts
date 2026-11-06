@@ -10,6 +10,7 @@ import { NO_INSPECTION } from '../common/inspection.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { GROUPED_POSITIONS_STUB, SAVED_FLAT_STUB, SAVED_GROUPED_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
+import { SCAN_WEB_TO_UI_STUB } from '../test/stubs/graph-posted-message.stub.ts';
 import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 import { bundle, folderInspection, link, pkg } from '../test/utils/inspections.spec.util.ts';
 import { postedOf } from '../test/utils/posted-messages.spec.util.ts';
@@ -21,8 +22,6 @@ type DrawnSide = {
 };
 
 type FilteringRig = PackageSideDepsMock & DrawnSide;
-
-const SCAN_WEB_TO_UI = { type: 'scanImports', source: 'web', target: 'ui' };
 
 const WEB_FOCUS: GraphFocus = { kind: 'package', name: 'web' };
 
@@ -273,9 +272,8 @@ describe('FEATURE: GraphFiltering bundle inspection', () => {
       expect(rig.side.filtering.inspection.current()).toStrictEqual(pkg('web'));
     });
 
-    it('WHEN the bundle is shown THEN neither explainEdge nor scanImports is posted', () => {
-      expect(postedOf(rig, 'explainEdge')).toStrictEqual([]);
-      expect(postedOf(rig, 'scanImports')).toStrictEqual([]);
+    it('THEN neither explainEdge nor scanImports is posted', () => {
+      expect(postedOf(rig, 'explainEdge', 'scanImports')).toStrictEqual([]);
     });
 
     it('WHEN Explain of the row is clicked THEN the link is explained, its imports asked for, and the packages folder is expanded', () => {
@@ -284,7 +282,7 @@ describe('FEATURE: GraphFiltering bundle inspection', () => {
       const live = rig.side.filtering.folders.collapsed();
 
       expect(rig.side.filtering.inspection.current()).toStrictEqual(link('web', 'ui'));
-      expect(postedOf(rig, 'scanImports')).toStrictEqual([SCAN_WEB_TO_UI]);
+      expect(postedOf(rig, 'scanImports')).toStrictEqual([SCAN_WEB_TO_UI_STUB]);
       expect([...live]).not.toContain('packages');
     });
 
