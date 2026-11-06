@@ -8,11 +8,9 @@ import {
 } from '../../bridge/common/graph-message.const.ts';
 import type { ManifestField } from '../../bridge/common/graph-message.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-import { isString } from '../../bridge/utils/string.util.ts';
+import { isShortString, isString } from '../../bridge/utils/string.util.ts';
 
 const isManifestField = (value: unknown): value is ManifestField => MANIFEST_FIELDS.some((field) => field === value);
-
-const isShortString = (value: unknown, max: number): boolean => isString(value) && value.length <= max;
 
 const isSide = (side: unknown): boolean => side === undefined || isShortString(side, ENTRY_TEXT_MAX + 1);
 
