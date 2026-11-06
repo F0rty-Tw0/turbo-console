@@ -4,12 +4,15 @@ import { join } from 'node:path';
 
 import { runTurbo } from './run-turbo.ts';
 import { SINGLE_PACKAGE } from '../common/turbo-args.const.ts';
-import type { QueryTurboOptions, TurboResult } from '../common/turbo.type.ts';
+import type { ExitStallCheck, QueryTurboOptions, RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
+import { isJsonEnd, queryExitCode } from '../utils/stalled-exit-code.util.ts';
+
+const QUERY_STALL_CHECK: ExitStallCheck = { isEnd: isJsonEnd, exitCodeOf: queryExitCode };
 
 /**
  * Runs `turbo query <query>` in `cwd` with the turbo binary at `binaryPath`. `variables` go to a JSON file passed with
  * `-V <file>`, never into the query text; the file's temp dir is removed afterwards, whatever turbo did. `singlePackage`
- * ends the argv with `--single-package`.
+ * ends the argv with `--single-package`. A turbo that stalls on exit after printing its JSON settles by that JSON.
  */
 export const queryTurbo = async (
   binaryPath: string,
@@ -17,7 +20,8 @@ export const queryTurbo = async (
   cwd: string,
   options: QueryTurboOptions = {}
 ): Promise<TurboResult> => {
-  const { variables, singlePackage, ...runOptions } = options;
+  const { variables, singlePackage, ...callerOptions } = options;
+  const runOptions: RunTurboOptions = { ...callerOptions, exitStallCheck: QUERY_STALL_CHECK };
   const flags: string[] = [];
 
   if (singlePackage === true) flags.push(SINGLE_PACKAGE);
