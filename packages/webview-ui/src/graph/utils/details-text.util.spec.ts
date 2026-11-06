@@ -141,13 +141,13 @@ describe('FEATURE: details text', () => {
 
   describe('GIVEN a manifest entry on 0-based line 9', () => {
     it('WHEN its label is built THEN it names the field and the 1-based line', () => {
-      const label = entryLabelOf(MANIFEST_ENTRY_STUB);
+      const label = entryLabelOf({ ...MANIFEST_ENTRY_STUB, field: 'dependencies', line: 9 });
 
       expect(label).toBe('dependencies, line 10');
     });
 
     it('WHEN its row text is built THEN the key and spec are quoted', () => {
-      const text = entryRowTextOf(ENTRY);
+      const text = entryRowTextOf({ ...ENTRY, key: 'ui', spec: '^1.0.0' });
 
       expect(text).toBe('"ui": "^1.0.0"');
     });

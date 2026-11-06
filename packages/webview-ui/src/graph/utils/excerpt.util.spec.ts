@@ -13,8 +13,10 @@ const rowOf = (number: number, text: string, isEntry: boolean): ExcerptRow => {
   return row;
 };
 
+const ENTRY: ManifestEntry = { ...MANIFEST_ENTRY_STUB, key: 'ui', spec: '^1.0.0', line: 9, context: {} };
+
 const entryWith = (context: ManifestContext): ManifestEntry => {
-  const entry: ManifestEntry = { ...MANIFEST_ENTRY_STUB, context };
+  const entry: ManifestEntry = { ...ENTRY, context };
 
   return entry;
 };
@@ -62,7 +64,7 @@ describe('FEATURE: excerptRowsOf', () => {
 
   describe('GIVEN an entry with no context', () => {
     it('WHEN its key is __proto__ THEN the entry row holds the key as text', () => {
-      const entry: ManifestEntry = { ...MANIFEST_ENTRY_STUB, key: '__proto__', spec: 'x' };
+      const entry: ManifestEntry = { ...ENTRY, key: '__proto__', spec: 'x' };
 
       const rows = excerptRowsOf(entry);
 
@@ -70,7 +72,7 @@ describe('FEATURE: excerptRowsOf', () => {
     });
 
     it('WHEN its spec is the source text of a number THEN the entry row quotes it', () => {
-      const entry: ManifestEntry = { ...MANIFEST_ENTRY_STUB, spec: '1' };
+      const entry: ManifestEntry = { ...ENTRY, spec: '1' };
 
       const rows = excerptRowsOf(entry);
 
