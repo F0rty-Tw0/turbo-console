@@ -21,6 +21,7 @@ describe('FEATURE: import scan failures', () => {
   let scans: ImportScans;
 
   beforeEach(() => {
+    vi.mocked(answerImports).mockClear();
     ports = graphPortsMock();
     scans = new ImportScans(scansGateOf(ports));
   });
