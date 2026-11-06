@@ -57,6 +57,10 @@ describe('FEATURE: the ports of one graph panel', () => {
       expect(ports.openAt).toBe(fakes.host.openAt);
     });
 
+    it('WHEN the ports are built THEN scanImports is the host one', () => {
+      expect(ports.scanImports).toBe(fakes.host.scanImports);
+    });
+
     it('WHEN the ports are built THEN executeCommand is the host one', () => {
       expect(ports.executeCommand).toBe(fakes.host.executeCommand);
     });

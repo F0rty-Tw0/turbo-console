@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { ImportFileCache } from '@turbo-console/core';
 import { graphCsp } from '@turbo-console/webview-ui';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
@@ -252,6 +253,36 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
       const missing = host.readText(join(dir, 'none.json'));
 
       await expect(missing).rejects.toThrow('ENOENT');
+    });
+  });
+
+  describe('GIVEN a dir holding a source file', () => {
+    let dir: string;
+
+    beforeEach(() => {
+      dir = mkdtempSync(join(tmpdir(), 'graph-scan-'));
+    });
+
+    afterEach(() => {
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    it("WHEN scanImports scans it THEN it lists a.ts with its import of 'b'", async () => {
+      writeFileSync(join(dir, 'a.ts'), "import { x } from 'b';\n");
+
+      const scan = await host.scanImports({
+        dir,
+        root: dir,
+        skipDirs: new Set<string>(),
+        cache: new ImportFileCache(),
+        signal: new AbortController().signal
+      });
+
+      const imported = { specifier: 'b', kind: 'static', isType: false, line: 0, text: "import { x } from 'b';" };
+
+      const files = [{ file: 'a.ts', imports: [imported] }];
+
+      expect(scan).toStrictEqual({ files, tsconfigPaths: null, scanned: 1, skipped: 0, limit: null });
     });
   });
 
