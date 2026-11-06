@@ -1,3 +1,4 @@
+import type { ImportKind, ImportLimit, ImportVia } from './graph-imports.type.ts';
 import type { GraphAtomOutcome, ManifestField } from './graph-message.type.ts';
 import type { GraphRunState } from './graph-state.type.ts';
 
@@ -18,6 +19,15 @@ export const MANIFEST_FILE_MAX = 1_024;
 
 /** The most import sites one `edgeImports` reply carries; the rest count only in `total` (spec D8, D11). */
 export const IMPORT_SITES_MAX = 200;
+
+/** The import kinds a site may carry; a `Record`, so a new kind must be added here. */
+export const IMPORT_KINDS: Readonly<Record<ImportKind, true>> = { static: true, reexport: true, dynamic: true, require: true };
+
+/** The ways a site may name the target; a `Record`, so a new way must be added here. */
+export const IMPORT_VIAS: Readonly<Record<ImportVia, true>> = { name: true, relative: true, alias: true };
+
+/** The limits a scan may stop at; a `Record`, so a new limit must be added here. */
+export const IMPORT_LIMITS: Readonly<Record<ImportLimit, true>> = { files: true, entries: true, time: true };
 
 /** The highest `taskCount` the page accepts. */
 export const TASK_COUNT_MAX = 100_000;
