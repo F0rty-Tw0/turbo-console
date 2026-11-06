@@ -1,4 +1,4 @@
-import { IMPORT_SITES_MAX, MANIFEST_FILE_MAX } from '@turbo-console/webview-ui';
+import { IMPORT_SITES_MAX, MANIFEST_FILE_MAX, MANIFEST_LINE_MAX } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -71,6 +71,29 @@ describe('FEATURE: answer counts', () => {
       const result = answerOf(importScanOf([other, matchedFileOf('a.ts', 4)], { scanned: 5, skipped: 2 }));
 
       expect(result).toMatchObject({ kind: 'found', scanned: 5, skipped: 2, total: 1 });
+    });
+  });
+
+  describe('GIVEN a site on a line past MANIFEST_LINE_MAX', () => {
+    it('WHEN its file also holds a site on line 1 THEN only line 1 is sent, total 2 and the counts are unchanged', () => {
+      const files = [matchedFileOf('x.ts', 1, MANIFEST_LINE_MAX + 1)];
+
+      const result = answerOf(importScanOf(files, { scanned: 5, skipped: 2 }));
+
+      expect(result).toMatchObject({ kind: 'found', scanned: 5, skipped: 2, total: 2 });
+      expect(foundSitesOf(result).map((site) => site.line)).toStrictEqual([1]);
+    });
+
+    it('WHEN it is the only match THEN it is none with the counts unchanged', () => {
+      const result = answerOf(importScanOf([matchedFileOf('x.ts', MANIFEST_LINE_MAX + 1)], { scanned: 5, skipped: 2 }));
+
+      expect(result).toStrictEqual({ kind: 'none', scanned: 5, skipped: 2, limit: null });
+    });
+
+    it('WHEN it sits exactly on MANIFEST_LINE_MAX THEN it is sent', () => {
+      const result = answerOf(importScanOf([matchedFileOf('x.ts', MANIFEST_LINE_MAX)]));
+
+      expect(foundSitesOf(result).map((site) => site.line)).toStrictEqual([MANIFEST_LINE_MAX]);
     });
   });
 

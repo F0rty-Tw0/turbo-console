@@ -49,6 +49,15 @@ describe('FEATURE: graph read helpers', () => {
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('Not a readable thing: /ws/a.json');
     });
 
+    it('WHEN the read gives text but the panel can no longer post THEN nothing opens', async () => {
+      vi.mocked(ports.readText).mockResolvedValue('{}');
+      context = { ...context, canPost: (): boolean => false };
+
+      await openReadable(context, '/ws/a.json', 3, 'thing');
+
+      expect(ports.openAt).not.toHaveBeenCalled();
+    });
+
     it('WHEN the read rejects THEN nothing opens and the failure is logged', async () => {
       vi.mocked(ports.readText).mockRejectedValue(new Error('EACCES'));
 

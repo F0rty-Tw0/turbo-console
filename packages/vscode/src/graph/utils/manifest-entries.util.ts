@@ -184,3 +184,12 @@ export const aliasKeysOf = (text: string, dependency: string): string[] => {
 
   return listed.slice(0, MANIFEST_ENTRIES_MAX);
 };
+
+/** The target's name, then the source's raw keys that alias it; just the target's name when the source's `package.json` is unreadable. */
+export const namesOf = (target: string, text: string | null): string[] => {
+  if (text === null) return [target];
+
+  const aliases = aliasKeysOf(text, target);
+
+  return [target, ...aliases];
+};

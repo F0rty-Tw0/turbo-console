@@ -19,7 +19,7 @@ export const logUnreadable = (context: ExplainContext, absolute: string, what: s
 
 /**
  * Opens `absolute` at `line` once a read shows it is a small regular file; else logs `Not a readable <what>:
- * <absolute>`. Never rejects.
+ * <absolute>`. A panel that can no longer post after the read opens nothing. Never rejects.
  */
 export const openReadable = async (context: ExplainContext, absolute: string, line: number, what: string): Promise<void> => {
   const text = await textOf(context, absolute);
@@ -29,6 +29,10 @@ export const openReadable = async (context: ExplainContext, absolute: string, li
 
     return;
   }
+
+  const canPost = context.canPost();
+
+  if (!canPost) return;
 
   try {
     await context.ports.openAt(absolute, line);

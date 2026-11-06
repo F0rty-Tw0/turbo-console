@@ -245,6 +245,8 @@ describe('FEATURE: webview-ui package entry', () => {
         | 'layoutDone'
         | 'explainEdge'
         | 'openManifest'
+        | 'scanImports'
+        | 'openImport'
         | 'exportImage'
         | 'runTask'
         | 'stopTask'

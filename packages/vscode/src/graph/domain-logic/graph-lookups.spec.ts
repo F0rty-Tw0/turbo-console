@@ -1,18 +1,25 @@
 import { join } from 'node:path';
 
+import type { PackageImportScan } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { GraphLookups, isLookupMessage } from './graph-lookups.ts';
-import type { ExplainRequest, GraphPorts, LookupGate } from '../common/graph.type.ts';
+import type { ExplainRequest, GraphPorts, LookupGate, LookupRequest } from '../common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import { GRAPH_STATE_STUB } from '../test/stubs/graph-model.stub.ts';
+import { importScanOf } from '../test/utils/import-scan.spec.util.ts';
+import { pendingScanOf } from '../test/utils/import-scans.spec.util.ts';
 
 const WEB_TO_A: ExplainRequest = { type: 'explainEdge', source: 'web', target: 'a' };
 const WEB_TO_X: ExplainRequest = { type: 'explainEdge', source: 'web', target: '@org/x' };
 const A_TO_X: ExplainRequest = { type: 'explainEdge', source: 'a', target: '@org/x' };
 const GHOST_TO_A: ExplainRequest = { type: 'explainEdge', source: 'ghost', target: 'a' };
 const OPEN_WEB: ExplainRequest = { type: 'openManifest', packageName: 'web', line: 3 };
+const SCAN_WEB_A: LookupRequest = { type: 'scanImports', source: 'web', target: 'a' };
+const SCAN_WEB_X: LookupRequest = { type: 'scanImports', source: 'web', target: '@org/x' };
+const SCAN_GHOST_A: LookupRequest = { type: 'scanImports', source: 'ghost', target: 'a' };
+const OPEN_IMPORT_WEB: LookupRequest = { type: 'openImport', packageName: 'web', file: 'src/x.ts', line: 4 };
 
 describe('FEATURE: graph lookups', () => {
   let ports: GraphPorts;
@@ -82,6 +89,39 @@ describe('FEATURE: graph lookups', () => {
     });
   });
 
+  describe('GIVEN a scanImports whose scan is still pending', () => {
+    let pending: PromiseWithResolvers<PackageImportScan>;
+    let first: Promise<void>;
+
+    const askAgain = async (request: LookupRequest = SCAN_WEB_A): Promise<void> => lookups.receive(request, 'again');
+
+    const settle = async (): Promise<void> => {
+      pending.resolve(importScanOf([]));
+      await first;
+    };
+
+    beforeEach(() => {
+      pending = pendingScanOf(ports);
+      first = lookups.receive(SCAN_WEB_A, 'first');
+    });
+
+    it('WHEN the scan settled and the edge is asked again THEN a second reply is posted', async () => {
+      await settle();
+      await askAgain();
+
+      expect(ports.post).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN another edge of the same package is asked THEN each edge gets its reply', async () => {
+      const second = askAgain(SCAN_WEB_X);
+
+      await settle();
+      await second;
+
+      expect(ports.post).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('GIVEN a request the graph answers', () => {
     it('WHEN an explainEdge for a listed edge arrives THEN a reply is posted and nothing is dropped', async () => {
       await lookups.receive(WEB_TO_A, 'listed');
@@ -102,6 +142,27 @@ describe('FEATURE: graph lookups', () => {
     });
   });
 
+  describe('GIVEN a scanImports after dispose', () => {
+    it('WHEN it names an unlisted edge THEN nothing is scanned or dropped', async () => {
+      lookups.dispose();
+      await lookups.receive(SCAN_GHOST_A, 'late');
+
+      expect(ports.scanImports).not.toHaveBeenCalled();
+      expect(drop).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN an openImport after dispose', () => {
+    it('WHEN it arrives THEN nothing is read, opened or dropped', async () => {
+      lookups.dispose();
+      await lookups.receive(OPEN_IMPORT_WEB, 'late');
+
+      expect(ports.readText).not.toHaveBeenCalled();
+      expect(ports.openAt).not.toHaveBeenCalled();
+      expect(drop).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a page message', () => {
     it('WHEN it is an explainEdge THEN it is a lookup', () => {
       const isLookup = isLookupMessage(WEB_TO_A);
@@ -111,6 +172,15 @@ describe('FEATURE: graph lookups', () => {
 
     it('WHEN it is an openManifest THEN it is a lookup', () => {
       const isLookup = isLookupMessage(OPEN_WEB);
+
+      expect(isLookup).toBe(true);
+    });
+
+    it.each([
+      ['a scanImports', SCAN_WEB_A],
+      ['an openImport', OPEN_IMPORT_WEB]
+    ])('WHEN it is %s THEN it is a lookup', (_label, message) => {
+      const isLookup = isLookupMessage(message);
 
       expect(isLookup).toBe(true);
     });

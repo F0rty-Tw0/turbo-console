@@ -75,6 +75,14 @@ type ExplainTag = { readonly type: 'explainEdge' | 'openManifest' };
 /** A page request to look into the graph: the reply to an edge or the opening of a package's manifest. */
 export type ExplainRequest = Extract<GraphWebviewMessage, ExplainTag>;
 
+type ImportTag = { readonly type: 'scanImports' | 'openImport' };
+
+/** A page request about one link's imports: scan the dependent, or open one site (module-private: only `LookupRequest` reads it). */
+type ImportRequest = Extract<GraphWebviewMessage, ImportTag>;
+
+/** Every request `GraphLookups` answers. */
+export type LookupRequest = ExplainRequest | ImportRequest;
+
 /** What `answerRequest` needs of the session: the state it judges against, the workspace root, the ports and whether a reply may still be posted. */
 export type ExplainContext = {
   readonly state: GraphState;

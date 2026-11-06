@@ -1,48 +1,25 @@
 import { ImportFileCache } from '@turbo-console/core';
-import type { ImportScanInput, PackageImportScan } from '@turbo-console/core';
+import type { ImportScanInput } from '@turbo-console/core';
 import type { EdgeImportsResult, GraphEdgeImportsMessage } from '@turbo-console/webview-ui';
 
 import { textOf } from './graph-read.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { ExplainContext, ScanGate } from '../common/graph.type.ts';
-import type { ImportEdge, ScanDirs } from '../common/import-match.type.ts';
+import type { AnsweredOutcome, ImportEdge, ScanDirs, ScanOutcome, ScanRun } from '../common/import-match.type.ts';
 import { hasEdge, manifestFilesOf, packagesByName } from '../utils/graph-package.util.ts';
 import { answerImports } from '../utils/import-answer.util.ts';
-import { aliasKeysOf } from '../utils/manifest-entries.util.ts';
+import { namesOf } from '../utils/manifest-entries.util.ts';
 import { scanDirsOf } from '../utils/scan-dirs.util.ts';
 
-type ScannedOutcome = { readonly kind: 'scan'; readonly scan: PackageImportScan };
-
-type FailedOutcome = { readonly kind: 'failed' };
-
-type AbortedOutcome = { readonly kind: 'aborted' };
-
-type AnsweredOutcome = ScannedOutcome | FailedOutcome;
-
-type ScanOutcome = AnsweredOutcome | AbortedOutcome;
-
-type ScanRun = {
-  readonly dir: string;
-  readonly controller: AbortController;
-  readonly outcome: Promise<ScanOutcome>;
-};
-
-const ABORTED: AbortedOutcome = { kind: 'aborted' };
-const FAILED_SCAN: FailedOutcome = { kind: 'failed' };
+const ABORTED: ScanOutcome = { kind: 'aborted' };
+const FAILED_SCAN: ScanOutcome = { kind: 'failed' };
 const FAILED_REPLY: EdgeImportsResult = { kind: 'failed' };
-
-/** The target's name, then the source's raw keys that alias it; just the target's name when the source's `package.json` is unreadable. */
-const namesOf = (target: string, text: string | null): string[] => {
-  if (text === null) return [target];
-
-  const aliases = aliasKeysOf(text, target);
-
-  return [target, ...aliases];
-};
 
 /**
  * The import scans of one panel (spec D10 T2): one scan in flight; an ask for the package being scanned joins it, an ask for
- * another package aborts it; an aborted scan posts nothing. One `ImportFileCache` for the panel's life (D9).
+ * another package aborts it; an aborted scan posts nothing. One `ImportFileCache` for the panel's life (D9). An ask for an edge
+ * the run in flight is already asked for returns at once: it joins the pending ask, which posts the one reply with the names it
+ * read when it started. A run is dropped once it settles, so the next ask for that edge starts a fresh run.
  */
 export class ImportScans {
   private readonly gate: ScanGate;
@@ -54,7 +31,10 @@ export class ImportScans {
     this.gate = gate;
   }
 
-  /** `false` at once when the graph does not list the edge; else `true` once the scan settled and the reply was posted or held back. */
+  /**
+   * `false` at once when the graph does not list the edge; `true` at once for an edge the run in flight is already asked for;
+   * else `true` once the scan settled and the reply was posted or held back.
+   */
   public async ask(source: string, target: string): Promise<boolean> {
     const { root, ports, canPost } = this.gate;
     const state = this.gate.state();
@@ -72,6 +52,13 @@ export class ImportScans {
 
     const dirs = scanDirsOf(root, state.packages, from, to);
     const run = this.runFor(dirs);
+    const key = JSON.stringify([source, target]);
+    const isAsked = run.asked.has(key);
+
+    if (isAsked) return true;
+
+    run.asked.add(key);
+
     const context: ExplainContext = { state, root, ports, canPost };
     const { absolute } = manifestFilesOf(root, from);
     const text = await textOf(context, absolute).catch(() => null);
@@ -106,7 +93,7 @@ export class ImportScans {
 
     const controller = new AbortController();
     const outcome = this.settle(dirs, controller);
-    const run: ScanRun = { dir: dirs.sourceDir, controller, outcome };
+    const run: ScanRun = { dir: dirs.sourceDir, controller, outcome, asked: new Set<string>() };
     const clear = (): void => {
       if (this.running === run) this.running = undefined;
     };
@@ -129,7 +116,7 @@ export class ImportScans {
   private async scanOutcomeOf(input: ImportScanInput): Promise<ScanOutcome> {
     try {
       const scan = await this.gate.ports.scanImports(input);
-      const done: ScannedOutcome = { kind: 'scan', scan };
+      const done: ScanOutcome = { kind: 'scan', scan };
 
       return done;
     } catch (error: unknown) {

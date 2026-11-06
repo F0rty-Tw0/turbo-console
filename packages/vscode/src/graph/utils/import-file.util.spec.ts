@@ -20,7 +20,8 @@ describe('FEATURE: import file path rules', () => {
     ['a.mjs', join(A, 'a.mjs')],
     ['a.cjs', join(A, 'a.cjs')],
     ['./src/a.ts', join(A, 'src', 'a.ts')],
-    ['src/..x.ts', join(A, 'src', '..x.ts')]
+    ['src/..x.ts', join(A, 'src', '..x.ts')],
+    ['src/a b.ts', join(A, 'src', 'a b.ts')]
   ])('GIVEN %j WHEN checked THEN it opens %s', (file, expected) => {
     const absolute = importFileOf(IMPORT_ROOT, PACKAGE_PATH, file);
 
@@ -52,7 +53,11 @@ describe('FEATURE: import file path rules', () => {
     ['src/a.ts:s.ts'],
     ['/ws/packages/a/src/a.ts'],
     ['C:/x.ts'],
-    ['src\\a.ts']
+    ['src\\a.ts'],
+    ['src/a\0.ts'],
+    ['src/a\n.ts'],
+    ['src/a\t.ts'],
+    ['src/a\u001f.ts']
   ])('GIVEN %j WHEN checked THEN it is null', (file) => {
     const absolute = importFileOf(IMPORT_ROOT, PACKAGE_PATH, file);
 
