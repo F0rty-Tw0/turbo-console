@@ -19,6 +19,15 @@ export const forcesRender = (): void => {
   probe.forceRender();
 };
 
+/** Runs in the page: turns off Cytoscape's layered texture cache, then redraws; throws when the page exposes no probe. */
+export const drawsWithoutLayers = (): void => {
+  const probe = window.__tcGraphProbe;
+
+  if (probe === undefined) throw new Error('graph e2e: the page exposes no probe to draw without layers with');
+
+  probe.drawWithoutLayers();
+};
+
 /**
  * Runs in the page, so it uses no module scope: `true` once the probe counted no Cytoscape render for `quietMs`, `false`
  * after `timeoutMs`; throws when the page exposes no probe, so a missing probe never reads as a quiet canvas.
