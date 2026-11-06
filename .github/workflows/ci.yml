@@ -1,15 +1,12 @@
 name: CI
 
+# Diag branch only (F-U7-17): a probe-only copy of ci.yml, dispatched with
+# `gh workflow run ci.yml --ref diag/fu717-turbo-exit-probe`. Arm A = turbo's default local:rw cache, arm B = --cache=local:r.
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-  # Regenerates the theme screenshot baselines; see packages/webview-ui/playwright.screenshot.config.ts.
   workflow_dispatch:
     inputs:
       update-snapshots:
-        description: Write new screenshot baselines and upload them as an artifact
+        description: Unused on the diag branch
         type: boolean
         default: false
 
@@ -17,15 +14,14 @@ permissions:
   contents: read
 
 jobs:
-  check:
-    # A baseline run only needs the screenshots job.
-    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.update-snapshots) }}
+  probe:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
+        arm: [A, B]
+        shard: [1, 2, 3]
+    runs-on: windows-latest
+    timeout-minutes: 40
     permissions:
       contents: read
 
@@ -50,269 +46,32 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps --only-shell chromium
-
-      # Windows temp dirs on runner.temp (D:): file creates under the default C: temp dir cost 15-60 ms each and time out
-      # repo-gen's fixture tests. Windows only, because Node on Linux also falls back to TMP/TEMP when TMPDIR is unset.
+      # Same as ci.yml: the contract spec's fixtures live under runner.temp (D:).
       - name: Move Windows temp dirs to runner.temp
-        if: runner.os == 'Windows'
         run: |
           "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
           "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
 
-      # Windows runs 2 tasks at a time: at turbo's default of 10, the vitest suites oversubscribe the 4-vCPU runner and the
-      # first repo-gen fixture test waits behind them (28-40 s against its 60 s timeout, 2-5 s once they drain).
-      - name: Check
-        run: pnpm turbo run lint typecheck test build contract e2e ${{ runner.os == 'Windows' && '--concurrency=2' || '' }}
+      - name: Build repo-gen
+        run: pnpm turbo run build --filter=@turbo-console/repo-gen
 
-      # SHA = actions/upload-artifact@v7.0.2
-      # Playwright keeps a trace per failed e2e (retain-on-failure); without it a one-off CI failure has only the log.
-      - name: Upload e2e traces
-        if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: e2e-results-${{ matrix.os }}-${{ github.run_attempt }}
-          path: packages/webview-ui/test-results/
-          if-no-files-found: ignore
-          retention-days: 14
-
-      # SHA = actions/cache@v6.1.0
-      - name: Cache VS Code test build
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: packages/vscode/.vscode-test/vscode-*
-          key: vscode-${{ runner.os }}-${{ hashFiles('packages/vscode/test/integration.const.ts') }}
-
-      - name: Integration (Linux)
-        if: runner.os == 'Linux'
-        run: xvfb-run -a pnpm turbo run integration
-
-      - name: Integration
-        if: runner.os != 'Linux'
-        run: pnpm turbo run integration
-
-      # Last and !cancelled(), so drift doesn't hide the Linux check and integration results. Linux only: .gitattributes
-      # forces LF, so formatting is the same on every OS and one check is enough.
-      - name: Format
-        if: ${{ !cancelled() && runner.os == 'Linux' }}
-        run: pnpm exec prettier --check .
-
-  bench:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    concurrency:
-      group: bench-${{ github.event.pull_request.number }}
-      cancel-in-progress: true
-    permissions:
-      contents: read
-
-    steps:
-      # SHA = actions/checkout@v7.0.1
-      - name: Checkout base
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-          path: base
-          persist-credentials: false
-
-      # The PR merge commit, so head is benched as it would merge rather than against a stale base tip.
-      # SHA = actions/checkout@v7.0.1
-      - name: Checkout head
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ github.sha }}
-          path: head
-          persist-credentials: false
-
-      # SHA = pnpm/action-setup@v6.1.0
-      - name: Setup pnpm
-        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-        with:
-          package_json_file: head/package.json
-
-      # SHA = actions/setup-node@v7.1.0
-      - name: Setup Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version-file: head/.nvmrc
-          cache: pnpm
-          cache-dependency-path: head/pnpm-lock.yaml
-
-      - name: Install and build base
-        working-directory: base
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm turbo run build
-
-      - name: Install and build head
-        working-directory: head
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm turbo run build
-
-      # The webview-ui bench suite drives Chromium. A base without the suite just carries an unused browser.
-      - name: Install Chromium for base
-        working-directory: base
-        run: pnpm --filter @turbo-console/webview-ui exec playwright install --with-deps --only-shell chromium
-
-      # With one Playwright version on both sides this install is a no-op; it matters when the PR bumps Playwright.
-      - name: Install Chromium for head
-        working-directory: head
-        run: pnpm --filter @turbo-console/webview-ui exec playwright install --with-deps --only-shell chromium
-
-      # Order alternates B,H / H,B / B,H so steady runner drift hits both sides alike; one task at a time so benches do
-      # not share CPUs. A failed base run only warns: its iteration is skipped and the compare runs without it. When every
-      # base run fails, a turbo dry run (which reads turbo.jsonc and package turbo.json files too) counts base's bench
-      # tasks that have a script; if there are any the step fails, since a broken baseline would otherwise disable the
-      # gate. Without any, base has no benches and the compare reports no baseline. A dry run that fails for any other
-      # reason than a missing bench task fails the step. A PR whose own change breaks base benches (e.g. a .nvmrc or
-      # packageManager bump) can carry the bench-baseline-broken label to compare without a baseline instead; labels come
-      # from the triggering event, so push after adding it. Results are cleared before each run and copied only after a
-      # successful one, so no stale file is counted.
-      # On CI runners a bench process still settles in a fast or a slow mode after the warmup (#200: 18.1 vs 20.9 ms for
-      # parse-package-graph-stretch-300), more than the gate allows, so three draws per side can fail unchanged code. When
-      # a gated bench regressed (compare exit 1), rounds 4-6 (H,B / B,H / H,B) run and the draws are compared again. A
-      # bench fails only when both the fastest and the middle (median) of the draws per side are past the threshold: a real
-      # slowdown slows every draw and stays red, while one fast draw on base (#265: 249 ms against a usual 295-387) moves
-      # only the fastest. Missing gated benches or a compare error (exit 3) fail at once, and so do rounds 4-6 with a
-      # failed base run, since head would then get more draws than base.
-      - name: Bench and compare
-        shell: bash
+      - name: Probe
         env:
-          BASELINE_BROKEN: ${{ contains(github.event.pull_request.labels.*.name, 'bench-baseline-broken') }}
-        run: |
-          base_runs=0
-
-          results() {
-            find "$1" -path '*/node_modules' -prune -o -type f -path '*/.bench/results.json' "${@:2}"
-          }
-
-          bench_side() {
-            local side="$1" i="$2" file package
-            results "$side" -exec rm -f {} +
-            if [ "$side" = base ]; then
-              if ! (cd base && pnpm turbo run bench --concurrency=1); then
-                echo "::warning::base bench run failed; comparing without it"
-                return 0
-              fi
-              base_runs=$((base_runs + 1))
-            else
-              (cd head && pnpm turbo run bench --concurrency=1)
-            fi
-            results "$side" -print | while read -r file; do
-              package="${file#"$side"/}"
-              package="${package%/.bench/results.json}"
-              mkdir -p "runs/$side/$i/$package"
-              cp -P "$file" "runs/$side/$i/$package/results.json"
-            done
-          }
-
-          rounds() {
-            local i order side
-            for i in "$@"; do
-              if [ $((i % 2)) = 0 ]; then order='head base'; else order='base head'; fi
-              for side in $order; do
-                bench_side "$side" "$i"
-              done
-            done
-          }
-
-          rounds 1 2 3
-
-          if [ "$base_runs" = 0 ]; then
-            dry_run_err=$(mktemp)
-            if base_dry_run=$(cd base && pnpm turbo run bench --dry=json 2>"$dry_run_err"); then
-              base_benches=$(jq '[.tasks[] | select(.task == "bench" and .command != "<NONEXISTENT>")] | length' <<<"$base_dry_run")
-            elif grep -q 'Could not find task `bench`' "$dry_run_err"; then
-              base_benches=0
-            else
-              cat "$dry_run_err" >&2
-              echo "::error::turbo could not dry-run base's bench task"
-              exit 1
-            fi
-            if [ "$base_benches" != 0 ] && [ "$BASELINE_BROKEN" = true ]; then
-              echo "::warning::no base bench run succeeded; bench-baseline-broken label set, comparing without a baseline"
-            elif [ "$base_benches" != 0 ]; then
-              echo "::error::no base bench run succeeded"
-              exit 1
-            fi
-          fi
-
-          compared=0
-          node head/tools/dist/bench-compare.js runs/base runs/head || compared=$?
-          if [ "$compared" = 1 ]; then
-            echo "::warning::a gated bench regressed; confirming with three more rounds"
-            first_base_runs=$base_runs
-            rounds 4 5 6
-            if [ $((base_runs - first_base_runs)) != 3 ]; then
-              echo "::error::a base bench run failed in rounds 4-6; keeping the first compare"
-              exit 1
-            fi
-            node head/tools/dist/bench-compare.js runs/base runs/head
-          elif [ "$compared" != 0 ]; then
-            exit "$compared"
-          fi
-
-  screenshots:
-    # A baseline run always passes, so it gets its own check name and never masks a red PR check on the same SHA.
-    name: ${{ (github.event_name == 'workflow_dispatch' && inputs.update-snapshots) && 'screenshots (update baselines)' || 'screenshots' }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    # Tag = catalogs.dev['@playwright/test'] in pnpm-workspace.yaml; tools/src/ci/feature/playwright-image.guard.spec.ts fails when they differ.
-    container:
-      image: mcr.microsoft.com/playwright:v1.64.0-noble
-      options: --ipc=host
-    permissions:
-      contents: read
-
-    steps:
-      # SHA = actions/checkout@v7.0.1
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      # SHA = pnpm/action-setup@v6.1.0
-      - name: Setup pnpm
-        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-
-      # SHA = actions/setup-node@v7.1.0
-      - name: Setup Node
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build webview-ui
-        run: pnpm turbo run build --filter=@turbo-console/webview-ui
-
-      # Push and pull_request runs never take the update path: inputs is empty outside workflow_dispatch.
-      - name: Screenshots
-        run: pnpm --filter @turbo-console/webview-ui run screenshots ${{ (github.event_name == 'workflow_dispatch' && inputs.update-snapshots) && '--update-snapshots=all' || '' }}
+          PROBE_ARM: ${{ matrix.arm }}
+          PROBE_SHARD: ${{ matrix.shard }}
+          PROBE_MINUTES: '25'
+          PROBE_CONCURRENCY: '4'
+          PROBE_GIT_SPAWNS: ${{ matrix.arm == 'A' && matrix.shard == 1 && '3000' || '0' }}
+          PROBE_OUT: ${{ runner.temp }}/probe-out
+        run: node packages/core/diag/turbo-exit-probe.ts
 
       # SHA = actions/upload-artifact@v7.0.2
-      - name: Upload actual, expected and diff PNGs
-        if: failure()
+      - name: Upload probe results
+        # always(): still uploads when the job hits its timeout mid-probe.
+        if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: screenshots-diff-${{ github.run_attempt }}
-          path: packages/webview-ui/test-results/
-          if-no-files-found: ignore
-          retention-days: 14
-
-      # SHA = actions/upload-artifact@v7.0.2
-      # Only after a green capture: the folder also holds the checked-out baselines, so a crashed run would upload stale PNGs.
-      # if-no-files-found only catches a missing folder; the rerun-and-cmp step of the baseline procedure catches stale PNGs.
-      - name: Upload new baselines
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update-snapshots }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: screenshots-baselines-${{ github.run_attempt }}
-          path: packages/webview-ui/e2e/screenshots/
-          if-no-files-found: error
+          name: probe-${{ matrix.arm }}-${{ matrix.shard }}
+          path: ${{ runner.temp }}/probe-out/
+          if-no-files-found: warn
           retention-days: 14
