@@ -7,11 +7,12 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { scanPackageImports } from './scan-package-imports.ts';
-import { IMPORT_SCAN_CAPS } from '../common/import-scan.const.ts';
-import type { ImportScanCaps, PackageImportScan, SourceImport } from '../common/import-scan.type.ts';
+import type { PackageImportScan, SourceImport } from '../common/import-scan.type.ts';
 import { ImportFileCache } from '../data-access/import-file-cache.ts';
 import { DATE, DATE_LATER } from '../test/common/scan-dates.const.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
+import { openedNamesOf } from '../test/utils/opened-names.spec.util.ts';
+import { capsOf } from '../test/utils/scan-caps.spec.util.ts';
 import { inputOf } from '../test/utils/scan-input.spec.util.ts';
 
 const reads = vi.hoisted(() => {
@@ -54,12 +55,6 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 const IMPORT_B = "import b from 'B';";
 
 const STATIC_B: SourceImport = { specifier: 'B', kind: 'static', isType: false, line: 0, text: IMPORT_B };
-
-const capsOf = (patch: Partial<ImportScanCaps>): ImportScanCaps => {
-  const caps: ImportScanCaps = { ...IMPORT_SCAN_CAPS, ...patch };
-
-  return caps;
-};
 
 const onOpenOf = (suffix: string, action: () => void): ((path: string) => Promise<void>) => {
   const hook = async (path: string): Promise<void> => {
@@ -181,7 +176,7 @@ describe('FEATURE: scan one package for its imports', () => {
       await writeImportTree(dir, { 'a.ts': fit, 'b.ts': `${fit} ` });
 
       const scan = await scanPackageImports(inputOf(dir, new ImportFileCache(), { caps: capsOf({ fileBytes: 64 }) }));
-      const opened = reads.opened.map((path) => path.slice(dir.length + 1));
+      const opened = openedNamesOf(reads.opened, dir);
 
       expect([scan.scanned, scan.skipped, opened]).toStrictEqual([1, 1, ['a.ts']]);
     });

@@ -6,11 +6,12 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { scanPackageImports } from './scan-package-imports.ts';
-import { IMPORT_SCAN_CAPS } from '../common/import-scan.const.ts';
-import type { ImportScanCaps, ImportScanInput, PackageImportScan } from '../common/import-scan.type.ts';
+import type { ImportScanInput, PackageImportScan } from '../common/import-scan.type.ts';
 import { ImportFileCache } from '../data-access/import-file-cache.ts';
 import { DATE, DATE_LATER } from '../test/common/scan-dates.const.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
+import { openedNamesOf } from '../test/utils/opened-names.spec.util.ts';
+import { capsOf } from '../test/utils/scan-caps.spec.util.ts';
 import { inputOf } from '../test/utils/scan-input.spec.util.ts';
 
 const reads = vi.hoisted(() => {
@@ -50,7 +51,7 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
     await utimes(path, date, date);
   };
 
-  const openedNames = (): string[] => reads.opened.map((path) => path.slice(dir.length + 1));
+  const openedNames = (): string[] => openedNamesOf(reads.opened, dir);
 
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'import-scan-'));
@@ -121,7 +122,7 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
       await utimes(join(dir, 'a.ts'), DATE_LATER, DATE_LATER);
       reads.opened.length = 0;
 
-      const caps: ImportScanCaps = { ...IMPORT_SCAN_CAPS, reads: 1 };
+      const caps = capsOf({ reads: 1 });
       const now = (): number => (reads.opened.length > 0 ? caps.timeMs : 0);
 
       await scanPackageImports(inputOf(dir, input.cache, { caps, now }));
@@ -137,8 +138,7 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
 
   it('GIVEN a scan stopped by caps.files 2 over three files WHEN rescanned with default caps THEN only the file past the stop is opened', async () => {
     await writeImportTree(dir, { 'a.ts': importOf('A'), 'b.ts': importOf('B'), 'c.ts': importOf('C') });
-    const caps: ImportScanCaps = { ...IMPORT_SCAN_CAPS, files: 2 };
-    const stopped = inputOf(dir, input.cache, { caps });
+    const stopped = inputOf(dir, input.cache, { caps: capsOf({ files: 2 }) });
 
     await scanPackageImports(stopped);
     reads.opened.length = 0;

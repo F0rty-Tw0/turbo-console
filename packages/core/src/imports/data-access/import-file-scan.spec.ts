@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { scanFile } from './import-file-scan.ts';
 import type { CachedFile, SourceImport } from '../common/import-scan.type.ts';
 import type { FileOutcome, WalkedFile } from '../common/import-walk.type.ts';
+import { DATE_LATER } from '../test/common/scan-dates.const.ts';
 import { CACHED_FILE_STUB } from '../test/stubs/import-scan.stub.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
 
@@ -41,8 +42,6 @@ const CAN_DENY_READ = process.platform !== 'win32' && process.getuid?.() !== 0;
 const CAN_SYMLINK = process.platform !== 'win32';
 
 const MAX_BYTES = 64;
-
-const DATE_LATER = new Date('2026-01-01T00:01:00Z');
 
 const IMPORT_A = "import a from 'A';";
 
