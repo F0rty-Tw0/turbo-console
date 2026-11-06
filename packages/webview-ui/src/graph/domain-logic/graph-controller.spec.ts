@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGraphController } from './graph-controller.ts';
+import { LinkLookups } from './graph-details-lookups.ts';
+import type { EdgeImportsResult, GraphEdgeImportsMessage } from '../../bridge/common/graph-imports.type.ts';
 import type { GraphPackage, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
@@ -21,6 +23,15 @@ const LARGE_ENTRIES: [string, Position][] = LARGE_STATE_STUB.packages.map(entryO
 
 const LARGE_POSITIONS: Positions = Object.fromEntries(LARGE_ENTRIES);
 
+const FAILED_RESULT: EdgeImportsResult = { kind: 'failed' };
+
+/** A result kind the page does not know, as the host never sends it. */
+const UNKNOWN_RESULT = { kind: 'done' };
+
+const IMPORTS_FAILED: GraphEdgeImportsMessage = { type: 'edgeImports', source: 'web', target: 'ui', result: FAILED_RESULT };
+
+const IMPORTS_UNKNOWN_KIND = { ...IMPORTS_FAILED, result: UNKNOWN_RESULT };
+
 describe('FEATURE: createGraphController', () => {
   let mock: PackageSideDepsMock;
 
@@ -31,6 +42,28 @@ describe('FEATURE: createGraphController', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  describe('GIVEN no link shown', () => {
+    it('WHEN a valid edgeImports arrives THEN the link look-ups are handed it once', () => {
+      const replied = vi.spyOn(LinkLookups.prototype, 'replied');
+      const controller = createGraphController(mock.deps);
+
+      controller.receive(IMPORTS_FAILED);
+
+      expect(replied).toHaveBeenCalledTimes(1);
+      expect(replied.mock.calls[0]?.[0]).toStrictEqual(IMPORTS_FAILED);
+    });
+
+    it('WHEN an edgeImports with an unknown result kind arrives THEN the look-ups are not handed it', () => {
+      const replied = vi.spyOn(LinkLookups.prototype, 'replied');
+      const controller = createGraphController(mock.deps);
+
+      controller.receive(IMPORTS_UNKNOWN_KIND);
+
+      expect(replied).not.toHaveBeenCalled();
+    });
   });
 
   it('GIVEN a grouping choice saved with a bad camera WHEN a large graph is laid out THEN its folder opens collapsed', async () => {
