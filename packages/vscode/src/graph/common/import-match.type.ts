@@ -4,3 +4,10 @@ export type ImportEdge = {
   readonly targetDir: string | null;
   readonly sourceDir: string;
 };
+
+/** The dirs one scan of A for edge A → B needs: A's, B's (`null` for the root package, D5) and the package dirs the walk of A never enters (D7). */
+export type ScanDirs = {
+  readonly sourceDir: string;
+  readonly targetDir: string | null;
+  readonly skipDirs: ReadonlySet<string>;
+};
