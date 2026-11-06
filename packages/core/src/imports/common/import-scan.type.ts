@@ -16,3 +16,18 @@ export type ImportForm = {
   readonly start: number;
   readonly next: number;
 };
+
+/** Why a scan stopped before it finished: the walk listed `files` or `entries` past their caps, or `timeMs` ran out. */
+export type ImportScanLimit = 'files' | 'entries' | 'time';
+
+export type ImportScanCaps = {
+  /** Source files one scan lists. */
+  readonly files: number;
+  /** Directory entries one walk reads. */
+  readonly entries: number;
+  readonly timeMs: number;
+  /** A larger source file is skipped, never read. */
+  readonly fileBytes: number;
+  /** Files read at once. */
+  readonly reads: number;
+};
