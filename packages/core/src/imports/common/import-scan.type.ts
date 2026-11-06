@@ -32,7 +32,10 @@ export type ImportScanCaps = {
   readonly reads: number;
 };
 
-/** One file's last lex: the `lstat` it was read under, and what `importsOf` found. */
+/**
+ * One file's last lex: the `lstat` it was read under, and what `importsOf` found. `imports` is the array every later
+ * scan hands out for that file; never mutate it.
+ */
 export type CachedFile = {
   readonly mtimeMs: number;
   readonly size: number;
@@ -45,4 +48,28 @@ export type ImportFileStore = {
   readonly filesOf: (dir: string) => ReadonlyMap<string, CachedFile>;
   /** Replaces `dir`'s map; clears every map first when the total would pass `IMPORT_CACHE_MAX`. */
   readonly swap: (dir: string, files: ReadonlyMap<string, CachedFile>) => void;
+};
+
+/** Effective tsconfig `paths` of A (D6): `baseUrl` is the absolute dir the targets resolve against. */
+export type TsconfigPaths = {
+  readonly baseUrl: string;
+  readonly paths: Readonly<Record<string, string[]>>;
+};
+
+/**
+ * `file` is posix, relative to `dir`; only files with at least one import are listed, in walk order. `imports` is the
+ * cache's own array (`CachedFile.imports`); never mutate it.
+ */
+export type ScannedFile = {
+  readonly file: string;
+  readonly imports: SourceImport[];
+};
+
+export type PackageImportScan = {
+  readonly files: ScannedFile[];
+  /** `null` before U8g, and when A has no tsconfig or no `paths`. */
+  readonly tsconfigPaths: TsconfigPaths | null;
+  readonly scanned: number;
+  readonly skipped: number;
+  readonly limit: ImportScanLimit | null;
 };
