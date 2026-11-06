@@ -3,14 +3,17 @@ import type { TurboBinary } from '../../binary/common/index.ts';
 import { toTurboException } from '../../shared/errors/utils/turbo-error.util.ts';
 import { dryRunSchema } from '../../shared/turbo/common/dry-run.schema.ts';
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
-import type { RunTurboOptions, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
+import type { ExitStallCheck, RunTurboOptions, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import { lazyCompiled } from '../../shared/turbo/data-access/compiled-schema.ts';
 import { runTurbo } from '../../shared/turbo/data-access/run-turbo.ts';
 import { runTurboJson } from '../../shared/turbo/data-access/turbo-json.ts';
+import { isJsonEnd, jsonExitCode } from '../../shared/turbo/utils/stalled-exit-code.util.ts';
 import type { DryRunRequest, DryRunState, ReadDryRunOptions } from '../common/dry-run-state.type.ts';
 import { dryRunArgs, toDryRunStates } from '../utils/dry-run.util.ts';
 
 const COMMAND = 'run --dry=json';
+
+const DRY_RUN_STALL_CHECK: ExitStallCheck = { isEnd: isJsonEnd, exitCodeOf: jsonExitCode };
 
 const compiledDryRunSchema = lazyCompiled(dryRunSchema);
 
@@ -26,7 +29,11 @@ export const readDryRun = async (
   request: DryRunRequest,
   options: ReadDryRunOptions = {}
 ): Promise<DryRunState[]> => {
-  const runOptions: RunTurboOptions = { timeoutMs: TURBO_BUDGET_MS.dryRun, signal: options.signal };
+  const runOptions: RunTurboOptions = {
+    timeoutMs: TURBO_BUDGET_MS.dryRun,
+    signal: options.signal,
+    exitStallCheck: DRY_RUN_STALL_CHECK
+  };
 
   try {
     const args = dryRunArgs(request);
