@@ -1,8 +1,9 @@
-import { ENTRY_TEXT_MAX, MANIFEST_ENTRIES_MAX, MANIFEST_FIELDS } from '@turbo-console/webview-ui';
+import { MANIFEST_ENTRIES_MAX, MANIFEST_FIELDS } from '@turbo-console/webview-ui';
 import type { ManifestContext, ManifestEntry, ManifestField } from '@turbo-console/webview-ui';
 import { parseTree } from 'jsonc-parser';
 import type { Node } from 'jsonc-parser';
 
+import { cut } from './entry-text.util.ts';
 import { lineAt, linesOf } from '../../shared/utils/text-line.util.ts';
 
 type ManifestQuery = {
@@ -12,19 +13,9 @@ type ManifestQuery = {
   readonly dependency: string;
 };
 
-const HIGH_SURROGATE_FIRST = 0xd800;
-const HIGH_SURROGATE_LAST = 0xdbff;
-
-const PAIR_SAFE_MAX = ENTRY_TEXT_MAX - 1;
-
 const NO_SIDE: ManifestContext = {};
 
 const ALIAS_PREFIXES = ['npm:', 'workspace:'];
-
-/** ALM, LRM and RLM, the embeddings and overrides, and the isolates. */
-const BIDI_CONTROLS = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/gu;
-
-const SHOWN_CONTROL = '\uFFFD';
 
 const stringValueOf = (node: Node | undefined): string | null => {
   if (node === undefined) return null;
@@ -32,20 +23,6 @@ const stringValueOf = (node: Node | undefined): string | null => {
   if (typeof node.value !== 'string') return null;
 
   return node.value;
-};
-
-const isHighSurrogate = (unit: number): boolean => unit >= HIGH_SURROGATE_FIRST && unit <= HIGH_SURROGATE_LAST;
-
-/** Shows bidi and invisible control characters as U+FFFD before the length cut, so file text cannot reorder the excerpt. */
-const cut = (raw: string): string => {
-  const text = raw.replace(BIDI_CONTROLS, SHOWN_CONTROL);
-
-  if (text.length <= ENTRY_TEXT_MAX) return text;
-
-  const splitsPair = isHighSurrogate(text.charCodeAt(PAIR_SAFE_MAX));
-  const keptUnits = splitsPair ? PAIR_SAFE_MAX : ENTRY_TEXT_MAX;
-
-  return `${text.slice(0, keptUnits)}…`;
 };
 
 const isAliasOf = (spec: string | null, dependency: string): boolean => {
