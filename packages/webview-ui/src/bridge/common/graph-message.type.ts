@@ -1,3 +1,4 @@
+import type { GraphEdgeImportsMessage } from './graph-imports.type.ts';
 import type { GraphRunState, GraphState, Positions, Routes } from './graph-state.type.ts';
 
 /** The `package.json` field that holds a dependency entry. */
@@ -93,6 +94,7 @@ export type GraphAtomsMessage = {
 export type GraphHostMessage =
   | GraphStateMessage
   | GraphEdgeExplainedMessage
+  | GraphEdgeImportsMessage
   | GraphRunsMessage
   | GraphShowTasksMessage
   | GraphShowPackageMessage

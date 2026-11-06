@@ -24,6 +24,7 @@ import type {
   GraphAtomsMessage,
   GraphEdge,
   GraphEdgeExplainedMessage,
+  GraphEdgeImportsMessage,
   GraphHostMessage,
   GraphPackage,
   GraphReady,
@@ -126,10 +127,11 @@ type PositionsKey = { readonly type: 'positions' };
 type ExportImageKey = { readonly type: 'exportImage' };
 type RunTaskKey = { readonly type: 'runTask' };
 
-/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, root tasks title, root task package, layout version and route bend limit constants; everything else is wire-contract types. The webview-only bridge stays internal. */
+/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, the import sites cap, root tasks title, root task package, layout version and route bend limit constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
   'ENTRY_TEXT_MAX',
   'ICON_ID_PATTERN',
+  'IMPORT_SITES_MAX',
   'LAYOUT_VERSION',
   'MANIFEST_ENTRIES_MAX',
   'MANIFEST_FIELDS',
@@ -224,6 +226,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphHostMessage>().toEqualTypeOf<
         | ExpectedStateMessage
         | ExpectedExplainedMessage
+        | GraphEdgeImportsMessage
         | GraphRunsMessage
         | GraphShowTasksMessage
         | ExpectedShowPackageMessage

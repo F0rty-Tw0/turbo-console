@@ -18,6 +18,8 @@ const OBJECT_NAMES = [
   { name: 'constructor', bareName: 'constructor', path: 'packages/constructor', tags: ['constructor'], taskCount: 0 }
 ];
 
+const FAILED_IMPORTS = { kind: 'failed' };
+
 const ROOT_PACKAGES = [{ name: '//', bareName: '//', path: '', tags: [], taskCount: 0 }];
 
 const STRING_PACKAGES = ['app'];
@@ -320,7 +322,11 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a showTasks message with a numeric task id', { type: 'showTasks', taskIds: [1] }],
       ['a showTasks message with no taskIds', { type: 'showTasks' }],
       ['a showPackage message with no name', { type: 'showPackage' }],
-      ['a showPackage message with a numeric name', { type: 'showPackage', name: 7 }]
+      ['a showPackage message with a numeric name', { type: 'showPackage', name: 7 }],
+      [
+        'an edgeImports message, which has no page guard until U8e',
+        { type: 'edgeImports', source: 'web', target: 'core', result: FAILED_IMPORTS }
+      ]
     ])('WHEN it is %s THEN it is rejected', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);
 
