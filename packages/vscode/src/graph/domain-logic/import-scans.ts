@@ -74,7 +74,7 @@ export class ImportScans {
     const run = this.runFor(dirs);
     const context: ExplainContext = { state, root, ports, canPost };
     const { absolute } = manifestFilesOf(root, from);
-    const text = await textOf(context, absolute);
+    const text = await textOf(context, absolute).catch(() => null);
     const names = namesOf(target, text);
     const edge: ImportEdge = { names, targetDir: dirs.targetDir, sourceDir: dirs.sourceDir };
     const outcome = await run.outcome;

@@ -89,4 +89,29 @@ describe('FEATURE: import scan failures', () => {
       expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('EPIPE'));
     });
   });
+
+  describe("GIVEN web's package.json", () => {
+    it('WHEN the read rejects and the log throws THEN web → a still resolves true and is answered', async () => {
+      vi.mocked(ports.readText).mockRejectedValueOnce(new Error('EACCES'));
+      vi.mocked(ports.log).mockImplementation(() => {
+        throw new Error('log is gone');
+      });
+
+      const isAnswered = await scans.ask('web', 'a');
+
+      expect(isAnswered).toBe(true);
+      expect(postedOf(ports)).toHaveLength(1);
+    });
+
+    it.each([
+      ['the read gives null', null],
+      ['the read holds no JSON object', '[]']
+    ])('WHEN %s THEN web → a is answered with the names [a] only', async (_, text) => {
+      vi.mocked(ports.readText).mockResolvedValueOnce(text);
+
+      await scans.ask('web', 'a');
+
+      expect(answerImports).toHaveBeenLastCalledWith(expect.anything(), expect.objectContaining({ names: ['a'] }));
+    });
+  });
 });
