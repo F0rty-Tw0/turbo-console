@@ -72,11 +72,19 @@ describe('FEATURE: open an import site', () => {
       expect(ports.openAt).not.toHaveBeenCalled();
     });
 
-    it.each([
-      ['the file', SOURCE_FILE],
-      ['the package dir', PACKAGE_DIR]
-    ])('WHEN realPath gives null for %s THEN it is false and nothing is read', async (_label, unresolved) => {
-      vi.mocked(ports.realPath).mockImplementation(async (path) => Promise.resolve(path === unresolved ? null : path));
+    it('WHEN realPath gives null for the file (deleted since the scan) THEN it is true, logged once, and nothing is read or opened', async () => {
+      vi.mocked(ports.realPath).mockImplementation(async (path) => Promise.resolve(path === SOURCE_FILE ? null : path));
+
+      const handled = await openImport('web', 'src/x.ts', 4, context);
+
+      expect(handled).toBe(true);
+      expect(ports.log).toHaveBeenCalledExactlyOnceWith(`Not a readable source file: ${SOURCE_FILE}`);
+      expect(ports.readText).not.toHaveBeenCalled();
+      expect(ports.openAt).not.toHaveBeenCalled();
+    });
+
+    it('WHEN realPath gives null for the package dir THEN it is false and nothing is read', async () => {
+      vi.mocked(ports.realPath).mockImplementation(async (path) => Promise.resolve(path === PACKAGE_DIR ? null : path));
 
       const handled = await openImport('web', 'src/x.ts', 4, context);
 
@@ -84,7 +92,7 @@ describe('FEATURE: open an import site', () => {
       expect(ports.readText).not.toHaveBeenCalled();
     });
 
-    it('WHEN the root is reached through a symlink (both real paths move together) THEN it reads and opens the real file', async () => {
+    it('WHEN the root is reached through a symlink (both real paths move together) THEN it reads and opens the path as given', async () => {
       const realFile = join(IMPORT_ROOT, '..', 'real-ws', 'apps', 'web', 'src', 'x.ts');
       const realDir = join(IMPORT_ROOT, '..', 'real-ws', 'apps', 'web');
 
@@ -94,8 +102,8 @@ describe('FEATURE: open an import site', () => {
       const handled = await openImport('web', 'src/x.ts', 4, context);
 
       expect(handled).toBe(true);
-      expect(ports.readText).toHaveBeenCalledExactlyOnceWith(realFile);
-      expect(ports.openAt).toHaveBeenCalledExactlyOnceWith(realFile, 4);
+      expect(ports.readText).toHaveBeenCalledExactlyOnceWith(SOURCE_FILE);
+      expect(ports.openAt).toHaveBeenCalledExactlyOnceWith(SOURCE_FILE, 4);
     });
 
     it('WHEN the read gives null THEN nothing opens, the unreadable file is logged once, and it is true', async () => {

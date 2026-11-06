@@ -12,6 +12,11 @@ export const textOf = async (context: ExplainContext, absolute: string): Promise
   }
 };
 
+/** Logs `Not a readable <what>: <absolute>`. */
+export const logUnreadable = (context: ExplainContext, absolute: string, what: string): void => {
+  context.ports.log(logTextOf(`Not a readable ${what}: ${absolute}`));
+};
+
 /**
  * Opens `absolute` at `line` once a read shows it is a small regular file; else logs `Not a readable <what>:
  * <absolute>`. Never rejects.
@@ -20,7 +25,7 @@ export const openReadable = async (context: ExplainContext, absolute: string, li
   const text = await textOf(context, absolute);
 
   if (text === null) {
-    context.ports.log(logTextOf(`Not a readable ${what}: ${absolute}`));
+    logUnreadable(context, absolute, what);
 
     return;
   }
