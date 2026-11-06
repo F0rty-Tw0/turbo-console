@@ -1,6 +1,10 @@
 import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import { existsSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { PassThrough } from 'node:stream';
-import { setImmediate as nextImmediate, setTimeout } from 'node:timers/promises';
+import { setImmediate as nextImmediate } from 'node:timers/promises';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -9,17 +13,14 @@ import { watchExitStall } from './exit-stall.ts';
 import type { ExitStallCheck, RunTurboOptions } from '../common/turbo.type.ts';
 import { isJsonEnd, jsonExitCode } from '../utils/stalled-exit-code.util.ts';
 
-/** Prints `{"a":{}`, which ends like JSON, then `,"b":1` 150 ms later, which does not; exits by itself after 5 s. */
+/** Prints `{"a":{}`, which ends like JSON; on stdin input `,"b":1`, which does not, then creates the file its argument names. */
 const LATE_CHUNK = `process.stdout.write('{"a":{}');
-setTimeout(() => process.stdout.write(',"b":1'), 150);
+process.stdin.once('data', () => process.stdout.write(',"b":1', () => require('node:fs').writeFileSync(process.argv[1], '')));
 setTimeout(() => process.exit(0), 5000);`;
 
 const JSON_CHECK: ExitStallCheck = { isEnd: isJsonEnd, exitCodeOf: jsonExitCode };
 
 const STALL_MS = 100;
-
-/** Longer than `LATE_CHUNK`'s 150 ms gap plus `STALL_MS`: the stall timer is overdue and the second chunk waits in the pipe. */
-const BLOCK_MS = 600;
 
 const GUARDED: RunTurboOptions = { exitStallCheck: JSON_CHECK, exitStallMs: STALL_MS, platform: 'win32' };
 
@@ -28,6 +29,15 @@ const blockLoop = (ms: number): void => {
   const cell = new Int32Array(new SharedArrayBuffer(4));
 
   Atomics.wait(cell, 0, 0, ms);
+};
+
+/** Blocks the loop in 10 ms slices until `path` exists or `slices` run out, then 2 stall times; vitest's timeout cannot fire meanwhile. */
+const blockPastFile = (path: string, slices: number): void => {
+  blockLoop(10);
+  const hasFile = existsSync(path);
+
+  if (hasFile || slices === 0) blockLoop(STALL_MS * 2);
+  else blockPastFile(path, slices - 1);
 };
 
 /** Advances the faked timers by `ms`, then lets the deferred check, a real `setImmediate`, run. */
@@ -39,15 +49,19 @@ const passMs = async (ms: number): Promise<void> => {
 describe('FEATURE: exit-stall watch', () => {
   describe('GIVEN a child whose second chunk waits in the pipe while the host loop is blocked past the stall time', () => {
     it('WHEN the overdue stall timer fires THEN the check sees that chunk and onStall is not called', async () => {
-      const child = spawn(process.execPath, ['-e', LATE_CHUNK]);
+      const flagPath = join(tmpdir(), `exit-stall-${process.pid}`);
+      const child = spawn(process.execPath, ['-e', LATE_CHUNK, flagPath]);
       const onStall = vi.fn<(check: ExitStallCheck) => void>();
       const stop = watchExitStall(child, GUARDED, collectTail(child.stdout), onStall);
-      const blockAfterFirstChunk = (): NodeJS.Immediate => setImmediate(blockLoop, BLOCK_MS);
 
-      child.stdout.once('data', blockAfterFirstChunk);
-      await setTimeout(BLOCK_MS + STALL_MS * 5);
+      await once(child.stdout, 'data');
+      child.stdin.write('go');
+      setImmediate(blockPastFile, flagPath, 300);
+      await once(child.stdout, 'data');
+      await nextImmediate();
       stop();
       child.kill('SIGKILL');
+      rmSync(flagPath, { force: true });
 
       expect(onStall).not.toHaveBeenCalled();
     });
@@ -124,6 +138,17 @@ describe('FEATURE: exit-stall watch timing', () => {
       stdout.write('{}');
       vi.advanceTimersByTime(STALL_MS);
       stop();
+      await nextImmediate();
+
+      expect(onStall).not.toHaveBeenCalled();
+    });
+
+    it.each(['stdout', 'stderr'] as const)('WHEN a %s chunk precedes the deferred check THEN onStall is not called', async (name) => {
+      const streams = { stdout, stderr };
+
+      stdout.write('{}');
+      vi.advanceTimersByTime(STALL_MS);
+      streams[name].write('{}');
       await nextImmediate();
 
       expect(onStall).not.toHaveBeenCalled();
