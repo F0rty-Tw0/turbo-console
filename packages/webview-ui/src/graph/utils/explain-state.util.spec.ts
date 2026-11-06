@@ -10,10 +10,9 @@ import type {
 import type { ExplainState } from '../common/details.type.ts';
 import type { ExplainPlan } from '../common/graph-details.type.ts';
 import type { Inspection } from '../common/inspection.type.ts';
+import { MANIFEST_ENTRY_STUB } from '../test/stubs/manifest-entry.stub.ts';
 
 const FILE = 'a/package.json';
-
-const E: ManifestEntry = { field: 'dependencies', key: 'ui', spec: '^1.0.0', line: 2, context: {} };
 
 const X_BEFORE: ManifestContext = { before: 'x' };
 
@@ -21,11 +20,11 @@ const Y_BEFORE: ManifestContext = { before: 'y' };
 
 const Y_AFTER: ManifestContext = { after: 'y' };
 
-const BEFORE_X: ManifestEntry = { ...E, context: X_BEFORE };
+const BEFORE_X: ManifestEntry = { ...MANIFEST_ENTRY_STUB, context: X_BEFORE };
 
-const BEFORE_Y_MOVED: ManifestEntry = { ...E, line: 4, context: Y_BEFORE };
+const BEFORE_Y_MOVED: ManifestEntry = { ...MANIFEST_ENTRY_STUB, line: 4, context: Y_BEFORE };
 
-const AFTER_Y: ManifestEntry = { ...E, context: Y_AFTER };
+const AFTER_Y: ManifestEntry = { ...MANIFEST_ENTRY_STUB, context: Y_AFTER };
 
 const found = (entries: ManifestEntry[]): ExplainState => {
   const state: ExplainState = { kind: 'found', file: FILE, entries };
@@ -35,13 +34,17 @@ const found = (entries: ManifestEntry[]): ExplainState => {
 
 const READING: ExplainState = { kind: 'reading', file: FILE };
 
+const ONE_ENTRY: ExplainState = found([MANIFEST_ENTRY_STUB]);
+
+const TWO_ENTRIES: ExplainState = found([MANIFEST_ENTRY_STUB, MANIFEST_ENTRY_STUB]);
+
 const MISSING: ExplainState = { kind: 'missing', file: FILE, target: 'ui' };
 
 const UNREADABLE: ExplainState = { kind: 'unreadable', file: FILE };
 
-const FOUND_RESULT: EdgeExplainResult = { kind: 'found', file: FILE, entries: [E] };
+const FOUND_RESULT: EdgeExplainResult = { kind: 'found', file: FILE, entries: [MANIFEST_ENTRY_STUB] };
 
-const FOUND_STATE: ExplainState = { kind: 'found', file: FILE, entries: [E] };
+const FOUND_STATE: ExplainState = { kind: 'found', file: FILE, entries: [MANIFEST_ENTRY_STUB] };
 
 const MISSING_RESULT: EdgeExplainResult = { kind: 'missing', file: FILE };
 
@@ -102,10 +105,10 @@ const REPLY_ROWS: ReplyRow[] = [
 ];
 
 const EXPLAIN_PLAN_ROWS: ExplainPlanRow[] = [
-  { title: 'reading, then two entries', previous: READING, next: found([E, E]), expected: 'rebuild' },
-  { title: 'two entries, then the same two', previous: found([E, E]), next: found([E, E]), expected: 'update' },
-  { title: 'two entries, then one', previous: found([E, E]), next: found([E]), expected: 'rebuild' },
-  { title: 'one row, then two rows', previous: found([E]), next: found([BEFORE_X]), expected: 'rebuild' },
+  { title: 'reading, then two entries', previous: READING, next: TWO_ENTRIES, expected: 'rebuild' },
+  { title: 'two entries, then the same two', previous: TWO_ENTRIES, next: TWO_ENTRIES, expected: 'update' },
+  { title: 'two entries, then one', previous: TWO_ENTRIES, next: ONE_ENTRY, expected: 'rebuild' },
+  { title: 'one row, then two rows', previous: ONE_ENTRY, next: found([BEFORE_X]), expected: 'rebuild' },
   {
     title: 'the same rows with new text and numbers',
     previous: found([BEFORE_X]),
@@ -116,7 +119,7 @@ const EXPLAIN_PLAN_ROWS: ExplainPlanRow[] = [
   { title: 'missing, then missing', previous: MISSING, next: MISSING, expected: 'update' },
   { title: 'unreadable, then unreadable', previous: UNREADABLE, next: UNREADABLE, expected: 'update' },
   { title: 'reading, then reading', previous: READING, next: READING, expected: 'update' },
-  { title: 'one entry, then unreadable', previous: found([E]), next: UNREADABLE, expected: 'rebuild' }
+  { title: 'one entry, then unreadable', previous: ONE_ENTRY, next: UNREADABLE, expected: 'rebuild' }
 ];
 
 describe('FEATURE: explain state', () => {
