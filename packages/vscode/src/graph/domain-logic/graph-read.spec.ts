@@ -11,7 +11,7 @@ describe('FEATURE: graph read helpers', () => {
 
   beforeEach(() => {
     ports = graphPortsMock();
-    context = { state: GRAPH_STATE_STUB, root: '/ws', ports, canPost: () => true };
+    context = { state: GRAPH_STATE_STUB, root: '/ws', ports, canPost: (): boolean => true };
   });
 
   describe('GIVEN textOf', () => {
