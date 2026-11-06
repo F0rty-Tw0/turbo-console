@@ -24,6 +24,7 @@ export type GraphHostFakes = {
   readonly views: ViewFake<GraphHostMessage>[];
   readonly cached: Map<string, GraphLayoutCacheEntry>;
   readonly readText: Mock<GraphHost['readText']>;
+  readonly realPath: Mock<GraphHost['realPath']>;
   readonly openAt: Mock<GraphHost['openAt']>;
   readonly scanImports: Mock<GraphHost['scanImports']>;
   readonly log: Mock<GraphHost['log']>;

@@ -253,25 +253,5 @@ describe('FEATURE: graph explain', () => {
       expect(ports.openAt).not.toHaveBeenCalled();
       expect(ports.log).toHaveBeenCalledExactlyOnceWith(`Not a readable package.json: ${absolute}`);
     });
-
-    it('WHEN readText rejects THEN nothing opens and the failure is logged', async () => {
-      vi.mocked(ports.readText).mockRejectedValue(new Error('EACCES'));
-
-      const handled = await answerRequest({ type: 'openManifest', packageName: 'web', line: 1 }, context);
-
-      expect(handled).toBe(true);
-      expect(ports.openAt).not.toHaveBeenCalled();
-      expect(ports.log).toHaveBeenCalledWith('EACCES');
-    });
-
-    it('WHEN openAt rejects THEN the failure is logged and the result is true', async () => {
-      vi.mocked(ports.readText).mockResolvedValue('{}');
-      vi.mocked(ports.openAt).mockRejectedValue(new Error('no editor'));
-
-      const handled = await answerRequest({ type: 'openManifest', packageName: 'web', line: 1 }, context);
-
-      expect(handled).toBe(true);
-      expect(ports.log).toHaveBeenCalledExactlyOnceWith('no editor');
-    });
   });
 });

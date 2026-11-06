@@ -37,6 +37,7 @@ export const graphHostMock = (): GraphHostFakes => {
   const open = vi.fn<GraphHost['open']>(openView);
   const { readCache, writeCache } = memoryCacheMock(cached);
   const readText = vi.fn<GraphHost['readText']>();
+  const realPath = vi.fn<GraphHost['realPath']>(async (path) => Promise.resolve(path));
   const openAt = vi.fn<GraphHost['openAt']>();
   const scanImports = vi.fn<GraphHost['scanImports']>();
   const log = vi.fn<GraphHost['log']>();
@@ -46,7 +47,7 @@ export const graphHostMock = (): GraphHostFakes => {
   const showInfo = vi.fn<GraphHost['showInfo']>();
   const showError = vi.fn<GraphHost['showError']>();
   const executeCommand = vi.fn<GraphHost['executeCommand']>().mockResolvedValue(undefined);
-  const effects = { readText, openAt, scanImports, log, info, pickSaveUri, writeBytes, showInfo, showError, executeCommand };
+  const effects = { readText, realPath, openAt, scanImports, log, info, pickSaveUri, writeBytes, showInfo, showError, executeCommand };
   const host: GraphHost = { open, readCache, writeCache, ...effects };
   const fakes: GraphHostFakes = { host, open, views, cached, ...effects };
 

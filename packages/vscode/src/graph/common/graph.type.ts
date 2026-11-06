@@ -10,10 +10,11 @@ import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 
 /**
  * Editor effects of one graph panel. `openDetails` and `openAt` may reject; `readText` rejects on a file it cannot open and gives
- * `null` for one over the read cap; `scanImports` is core's `scanPackageImports`: it rejects with `signal.reason` on an abort and
- * with the raw error when the dir cannot be read; `pickSaveUri` gives the chosen path or `null` on a cancel and may reject, as may
- * `writeBytes`; `executeCommand` runs a registered command and may reject; `log` (failures), `info`, `showInfo` and `showError`
- * take one clean line and must not throw.
+ * `null` for one over the read cap; `realPath` gives the path with its symlinks resolved, `null` when it cannot and never
+ * rejects; `scanImports` is core's `scanPackageImports`: it rejects with `signal.reason` on an abort and with the raw error
+ * when the dir cannot be read; `pickSaveUri` gives the chosen path or `null` on a cancel and may reject, as may `writeBytes`;
+ * `executeCommand` runs a registered command and may reject; `log` (failures), `info`, `showInfo` and `showError` take one
+ * clean line and must not throw.
  */
 export type GraphPorts = {
   readonly post: (message: GraphHostMessage) => void;
@@ -21,6 +22,7 @@ export type GraphPorts = {
   readonly writeCache: (root: string, grouping: LayoutGrouping, entry: GraphLayoutCacheEntry) => void;
   readonly openDetails: (packageName: string) => Promise<void>;
   readonly readText: (path: string) => Promise<string | null>;
+  readonly realPath: (path: string) => Promise<string | null>;
   readonly openAt: (path: string, line: number) => Promise<void>;
   readonly scanImports: (input: ImportScanInput) => Promise<PackageImportScan>;
   readonly setPanelVisible: (visible: boolean) => void;

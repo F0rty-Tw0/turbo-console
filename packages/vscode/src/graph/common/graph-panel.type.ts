@@ -24,6 +24,7 @@ export type GraphHost = {
   readonly readCache: GraphPorts['readCache'];
   readonly writeCache: GraphPorts['writeCache'];
   readonly readText: GraphPorts['readText'];
+  readonly realPath: GraphPorts['realPath'];
   readonly openAt: GraphPorts['openAt'];
   readonly scanImports: GraphPorts['scanImports'];
   readonly log: (text: string) => void;

@@ -2,7 +2,7 @@ import { ImportFileCache } from '@turbo-console/core';
 import type { ImportScanInput, PackageImportScan } from '@turbo-console/core';
 import type { EdgeImportsResult, GraphEdgeImportsMessage } from '@turbo-console/webview-ui';
 
-import { textOf } from './graph-explain.ts';
+import { textOf } from './graph-read.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { ExplainContext, ScanGate } from '../common/graph.type.ts';
 import type { ImportEdge, ScanDirs } from '../common/import-match.type.ts';

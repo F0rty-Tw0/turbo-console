@@ -1,22 +1,11 @@
 import { MANIFEST_FILE_MAX, MANIFEST_LINE_MAX } from '@turbo-console/webview-ui';
 import type { EdgeExplainResult, GraphEdgeExplainedMessage, GraphReady } from '@turbo-console/webview-ui';
 
-import { logTextOf } from '../../shared/utils/log-text.util.ts';
+import { openReadable, textOf } from './graph-read.ts';
 import { MANIFEST_FILE } from '../common/graph.const.ts';
 import type { ExplainContext, ExplainRequest } from '../common/graph.type.ts';
 import { hasEdge, manifestFilesOf, packagesByName } from '../utils/graph-package.util.ts';
 import { manifestEntriesOf } from '../utils/manifest-entries.util.ts';
-
-/** The failure of a read is logged and counts as an unreadable file. */
-export const textOf = async (context: ExplainContext, absolute: string): Promise<string | null> => {
-  try {
-    return await context.ports.readText(absolute);
-  } catch (error: unknown) {
-    context.ports.log(logTextOf(error));
-
-    return null;
-  }
-};
 
 const resultOf = (text: string | null, shown: string, target: string): EdgeExplainResult => {
   const isShownTooLong = shown.length > MANIFEST_FILE_MAX;
@@ -67,19 +56,8 @@ const openManifest = async (packageName: string, line: number, state: GraphReady
   if (pkg === undefined) return false;
 
   const { absolute } = manifestFilesOf(context.root, pkg);
-  const text = await textOf(context, absolute);
 
-  if (text === null) {
-    context.ports.log(logTextOf(`Not a readable package.json: ${absolute}`));
-
-    return true;
-  }
-
-  try {
-    await context.ports.openAt(absolute, line);
-  } catch (error: unknown) {
-    context.ports.log(logTextOf(error));
-  }
+  await openReadable(context, absolute, line, 'package.json');
 
   return true;
 };

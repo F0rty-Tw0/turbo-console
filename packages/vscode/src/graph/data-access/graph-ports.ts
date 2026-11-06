@@ -1,3 +1,5 @@
+import { realpath } from 'node:fs/promises';
+
 import { readSmallFile, scanPackageImports } from '@turbo-console/core';
 import type { GraphHostMessage, LayoutGrouping } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
@@ -36,6 +38,7 @@ export const editorGraphHost = (extensionUri: vscode.Uri, output: Output, state:
     });
   };
   const readText = async (path: string): Promise<string | null> => readSmallFile(path);
+  const realPath = async (path: string): Promise<string | null> => realpath(path).catch(() => null);
   const openAt = async (path: string, line: number): Promise<void> => {
     const cursor = new vscode.Position(line, 0);
     const selection = new vscode.Range(cursor, cursor);
@@ -47,6 +50,7 @@ export const editorGraphHost = (extensionUri: vscode.Uri, output: Output, state:
     readCache,
     writeCache,
     readText,
+    realPath,
     openAt,
     scanImports: scanPackageImports,
     log: output.error,
