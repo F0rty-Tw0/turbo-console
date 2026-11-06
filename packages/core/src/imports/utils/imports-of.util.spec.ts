@@ -154,6 +154,7 @@ describe('FEATURE: finding import forms in a source', () => {
       'import x from variable',
       "import { a { b } } from 'S'",
       "import { a( } from 'S'",
+      "import {{} from 'S'",
       "import { a; } from 'S'",
       "import { a b c d e } from 'S'",
       'export {a}',
