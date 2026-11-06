@@ -36,6 +36,14 @@ const A_TO_X = importsReplyOf('a', '@org/x', NONE_OF_ZERO);
 const ROOT_PACKAGES = [...GRAPH_STATE_STUB.packages, graphPackageOf('r', '')];
 const ROOT_EDGES = [...GRAPH_STATE_STUB.edges, { source: 'web', target: 'r' }];
 const ROOT_STATE: GraphState = { ...GRAPH_STATE_STUB, packages: ROOT_PACKAGES, edges: ROOT_EDGES };
+const COLLIDING_PACKAGES = [
+  ...GRAPH_STATE_STUB.packages,
+  graphPackageOf('a|b', 'packages/a'),
+  graphPackageOf('c', 'packages/c'),
+  graphPackageOf('b|c', 'packages/bc')
+];
+const COLLIDING_EDGES = [...GRAPH_STATE_STUB.edges, { source: 'a|b', target: 'c' }, { source: 'a', target: 'b|c' }];
+const COLLIDING_STATE: GraphState = { ...GRAPH_STATE_STUB, packages: COLLIDING_PACKAGES, edges: COLLIDING_EDGES };
 
 describe('FEATURE: import scans of one panel', () => {
   let ports: GraphPorts;
@@ -133,14 +141,42 @@ describe('FEATURE: import scans of one panel', () => {
       expect(postedOf(ports)).toStrictEqual([WEB_TO_A, WEB_TO_X]);
     });
 
-    it('WHEN web → a is asked again THEN it joins: one scan, and two replies for web → a are posted', async () => {
+    it("WHEN web → a is asked again THEN it joins: one scan and one read of web's package.json", async () => {
       const second = scans.ask('web', 'a');
 
       pending.resolve(IMPORTS_A);
       await Promise.all([first, second]);
 
       expect(ports.scanImports).toHaveBeenCalledTimes(1);
-      expect(postedOf(ports)).toStrictEqual([WEB_TO_A, WEB_TO_A]);
+      expect(ports.readText).toHaveBeenCalledTimes(1);
+    });
+
+    it('WHEN 20 more asks for web → a arrive THEN each is true and one reply for web → a is posted', async () => {
+      const asks = Array.from({ length: 20 }, async () => scans.ask('web', 'a'));
+
+      pending.resolve(IMPORTS_A);
+      await first;
+
+      const answers = await Promise.all(asks);
+
+      expect(answers).toStrictEqual(Array.from({ length: 20 }, () => true));
+      expect(postedOf(ports)).toStrictEqual([WEB_TO_A]);
+    });
+
+    it("WHEN a → @org/x is asked, then web → a again before web's aborted scan settles THEN web → a is answered", async () => {
+      const scanOfA = pendingScanOf(ports);
+      const second = scans.ask('a', '@org/x');
+
+      vi.mocked(ports.scanImports).mockResolvedValue(IMPORTS_A);
+
+      const third = scans.ask('web', 'a');
+      const [webInput, aInput] = scanInputsOf(ports);
+
+      pending.reject(webInput?.signal.reason);
+      scanOfA.reject(aInput?.signal.reason);
+      await Promise.all([first, second, third]);
+
+      expect(postedOf(ports)).toStrictEqual([WEB_TO_A]);
     });
 
     it("WHEN a → @org/x is asked THEN web's signal is aborted, no reply for web → a is posted, and a → @org/x is answered", async () => {
@@ -277,6 +313,18 @@ describe('FEATURE: import scans of one panel', () => {
       await second;
 
       expect(postedOf(ports)).toStrictEqual([A_TO_X]);
+    });
+  });
+
+  describe('GIVEN two packages in one dir whose edges collide under a plain join', () => {
+    it('WHEN a|b → c and a → b|c are asked at once THEN each edge gets its reply', async () => {
+      state = COLLIDING_STATE;
+
+      await Promise.all([scans.ask('a|b', 'c'), scans.ask('a', 'b|c')]);
+
+      const replies = [importsReplyOf('a|b', 'c', NONE_OF_ZERO), importsReplyOf('a', 'b|c', NONE_OF_ZERO)];
+
+      expect(postedOf(ports)).toStrictEqual(replies);
     });
   });
 

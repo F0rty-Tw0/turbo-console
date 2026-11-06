@@ -105,25 +105,6 @@ describe('FEATURE: graph lookups', () => {
       first = lookups.receive(SCAN_WEB_A, 'first');
     });
 
-    it('WHEN 20 asks for the same edge arrive THEN the scan runs once', async () => {
-      const asks = Array.from({ length: 20 }, async () => askAgain());
-
-      await settle();
-      await Promise.all(asks);
-
-      expect(ports.scanImports).toHaveBeenCalledTimes(1);
-    });
-
-    it('WHEN 20 asks for the same edge arrive THEN one reply is posted and nothing is dropped', async () => {
-      const asks = Array.from({ length: 20 }, async () => askAgain());
-
-      await settle();
-      await Promise.all(asks);
-
-      expect(ports.post).toHaveBeenCalledTimes(1);
-      expect(drop).not.toHaveBeenCalled();
-    });
-
     it('WHEN the scan settled and the edge is asked again THEN a second reply is posted', async () => {
       await settle();
       await askAgain();
@@ -138,19 +119,6 @@ describe('FEATURE: graph lookups', () => {
       await second;
 
       expect(ports.post).toHaveBeenCalledTimes(2);
-    });
-  });
-
-  describe('GIVEN two edges whose names collide under a plain join', () => {
-    it('WHEN both are asked at once THEN each is asked and dropped as unlisted', async () => {
-      const bar: LookupRequest = { type: 'scanImports', source: 'a|b', target: 'c' };
-      const baz: LookupRequest = { type: 'scanImports', source: 'a', target: 'b|c' };
-
-      await Promise.all([lookups.receive(bar, 'bar'), lookups.receive(baz, 'baz')]);
-
-      expect(drop).toHaveBeenCalledTimes(2);
-      expect(drop).toHaveBeenCalledWith('bar');
-      expect(drop).toHaveBeenCalledWith('baz');
     });
   });
 
