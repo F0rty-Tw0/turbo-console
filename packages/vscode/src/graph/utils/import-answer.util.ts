@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
 
 import type { PackageImportScan, SourceImport } from '@turbo-console/core';
-import { IMPORT_SITES_MAX, MANIFEST_FILE_MAX } from '@turbo-console/webview-ui';
+import { IMPORT_SITES_MAX, MANIFEST_FILE_MAX, MANIFEST_LINE_MAX } from '@turbo-console/webview-ui';
 import type { EdgeImportsResult, ImportKind, ImportLimit, ImportSite, ImportVia } from '@turbo-console/webview-ui';
 
 import { cutEntryText } from './entry-text.util.ts';
@@ -27,7 +27,9 @@ const compareMatch = (left: Match, right: Match): number => {
   return byFile === 0 ? byLine : byFile;
 };
 
-const isSendable = (match: Match): boolean => match.file.length <= MANIFEST_FILE_MAX;
+const isFileSendable = (match: Match): boolean => match.file.length <= MANIFEST_FILE_MAX;
+
+const isSendable = (match: Match): boolean => isFileSendable(match) && match.source.line <= MANIFEST_LINE_MAX;
 
 const siteOf = (match: Match): ImportSite => {
   const { file, source, via } = match;
@@ -64,13 +66,14 @@ const matchesOf = (scan: PackageImportScan, edge: ImportEdge): Match[] => {
 /**
  * The D11 reply for edge A → B from one scan of A: every import `importMatchOf` matches, sorted by file then line, at
  * most `IMPORT_SITES_MAX` sent, each `text` / `specifier` cut (D13). A file whose path is over `MANIFEST_FILE_MAX` sends
- * no site but counts its sites in `total` and moves from `scanned` to `skipped`; `none` when no site is left. Never
+ * no site but counts its sites in `total` and moves from `scanned` to `skipped`; a site past `MANIFEST_LINE_MAX` is not sent
+ * either, only counted in `total`; `none` when no site is left. Never
  * mutates `scan`: its arrays are the import cache's own (U8b).
  */
 export const answerImports = (scan: PackageImportScan, edge: ImportEdge): EdgeImportsResult => {
   const matches = matchesOf(scan, edge);
   const kept = matches.filter(isSendable);
-  const droppedFiles = new Set(matches.filter((match) => !isSendable(match)).map((match) => match.file));
+  const droppedFiles = new Set(matches.filter((match) => !isFileSendable(match)).map((match) => match.file));
   const sites = kept.toSorted(compareMatch).slice(0, IMPORT_SITES_MAX).map(siteOf);
   const scanned = scan.scanned - droppedFiles.size;
   const skipped = scan.skipped + droppedFiles.size;
