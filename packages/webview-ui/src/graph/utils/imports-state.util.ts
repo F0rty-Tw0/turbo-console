@@ -5,7 +5,7 @@ const SCANNING: ImportsState = { kind: 'scanning' };
 
 const FAILED: ImportsState = { kind: 'failed' };
 
-/** The state after the page asks for the imports of the shown link: a held list turns stale, a held scan stays (spec D14, T1). */
+/** The state after the page asks for the imports of the shown link: nothing or a failed scan starts a scan, a held list turns stale, a held scan stays (spec D14, T1). */
 export const askedImportsOf = (state: ImportsState | null): ImportsState => {
   if (state === null) return SCANNING;
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { explainPlanOf, explainStateOf, isReplyFor } from './explain-state.util.ts';
-import type { GraphEdgeImportsMessage } from '../../bridge/common/graph-imports.type.ts';
+import type { EdgeImportsResult, GraphEdgeImportsMessage } from '../../bridge/common/graph-imports.type.ts';
 import type {
   EdgeExplainResult,
   GraphEdgeExplainedMessage,
@@ -51,7 +51,7 @@ const MISSING_RESULT: EdgeExplainResult = { kind: 'missing', file: FILE };
 
 const UNREADABLE_RESULT: EdgeExplainResult = { kind: 'unreadable', file: FILE };
 
-const IMPORTS_FAILED: GraphEdgeImportsMessage['result'] = { kind: 'failed' };
+const IMPORTS_FAILED: EdgeImportsResult = { kind: 'failed' };
 
 const reply = (source: string, target: string): GraphEdgeExplainedMessage => {
   const message: GraphEdgeExplainedMessage = { type: 'edgeExplained', source, target, result: MISSING_RESULT };
