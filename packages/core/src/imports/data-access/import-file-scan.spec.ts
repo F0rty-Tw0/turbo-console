@@ -11,7 +11,7 @@ import type { FileOutcome, WalkedFile } from '../common/import-walk.type.ts';
 import { CACHED_FILE_STUB } from '../test/stubs/import-scan.stub.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
 
-/** chmod has no effect on Windows, and root reads any file. */
+/** Hook awaited before each real `open`; a row swaps `beforeOpen` to change the file first. */
 const reads = vi.hoisted(() => {
   const proceed = async (): Promise<void> => Promise.resolve();
   const beforeOpen: (path: string) => Promise<void> = proceed;
@@ -35,6 +35,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   return mocked;
 });
 
+/** chmod has no effect on Windows, and root reads any file. */
 const CAN_DENY_READ = process.platform !== 'win32' && process.getuid?.() !== 0;
 
 const CAN_SYMLINK = process.platform !== 'win32';
