@@ -29,7 +29,9 @@ type ScanRun = {
 
 const ABORTED: AbortedOutcome = { kind: 'aborted' };
 const FAILED_SCAN: FailedOutcome = { kind: 'failed' };
-/** B's name, then A's raw keys that alias it; just B's name when A's `package.json` is unreadable. */
+const FAILED_REPLY: EdgeImportsResult = { kind: 'failed' };
+
+/** The target's name, then the source's raw keys that alias it; just the target's name when the source's `package.json` is unreadable. */
 const namesOf = (target: string, text: string | null): string[] => {
   if (text === null) return [target];
 
@@ -37,8 +39,6 @@ const namesOf = (target: string, text: string | null): string[] => {
 
   return [target, ...aliases];
 };
-
-const FAILED: EdgeImportsResult = { kind: 'failed' };
 
 /**
  * The import scans of one panel (spec D10 T2): one scan in flight; an ask for the package being scanned joins it, an ask for
@@ -73,12 +73,17 @@ export class ImportScans {
     const dirs = scanDirsOf(root, state.packages, from, to);
     const run = this.runFor(dirs);
     const context: ExplainContext = { state, root, ports, canPost };
-    const text = await textOf(context, manifestFilesOf(root, from).absolute);
+    const { absolute } = manifestFilesOf(root, from);
+    const text = await textOf(context, absolute);
     const names = namesOf(target, text);
     const edge: ImportEdge = { names, targetDir: dirs.targetDir, sourceDir: dirs.sourceDir };
     const outcome = await run.outcome;
 
-    if (outcome.kind !== 'aborted') this.reply(source, target, this.resultOf(outcome, edge));
+    if (outcome.kind === 'aborted') return true;
+
+    const result = this.resultOf(outcome, edge);
+
+    this.reply(source, target, result);
 
     return true;
   }
@@ -128,21 +133,23 @@ export class ImportScans {
 
       return done;
     } catch (error: unknown) {
-      if (!input.signal.aborted) this.report(error);
+      if (!input.signal.aborted) {
+        this.report(error);
+      }
 
       return FAILED_SCAN;
     }
   }
 
   private resultOf(outcome: AnsweredOutcome, edge: ImportEdge): EdgeImportsResult {
-    if (outcome.kind === 'failed') return FAILED;
+    if (outcome.kind === 'failed') return FAILED_REPLY;
 
     try {
       return answerImports(outcome.scan, edge);
     } catch (error: unknown) {
       this.report(error);
 
-      return FAILED;
+      return FAILED_REPLY;
     }
   }
 
