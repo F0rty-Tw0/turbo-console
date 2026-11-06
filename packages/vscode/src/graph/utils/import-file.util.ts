@@ -17,7 +17,7 @@ const isControlChar = (char: string): boolean => (char.codePointAt(0) ?? SPACE_C
 
 /**
  * The absolute path of `file` (posix, relative to the package's dir) when D12 allows opening it, else `null`. A backslash or
- * a control character (NUL, newline) bars it.
+ * any character below U+0020 (NUL, tab, newline and the other C0 controls) bars it.
  */
 export const importFileOf = (root: string, packagePath: string, file: string): string | null => {
   const hasBarredChar = file.includes('\\') || Array.from(file).some(isControlChar);
