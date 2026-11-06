@@ -85,6 +85,10 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
     expect(forceRender).toHaveBeenCalledTimes(1);
   });
 
+  it('GIVEN a headless Cytoscape, which has no layered texture cache WHEN the probe draws without layers THEN it throws', () => {
+    expect(() => probe.drawWithoutLayers()).toThrow('graph e2e: no layered texture cache');
+  });
+
   describe('GIVEN b drawn as a ghost on the path a, b, c', () => {
     it('WHEN the nodes are read THEN b is a highlighted ghost with a dashed border', () => {
       const node = nodeOf(probe, 'b');

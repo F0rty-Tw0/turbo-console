@@ -2,6 +2,7 @@ import type { EdgeSingular, NodeSingular } from 'cytoscape';
 
 import { packageEdges, packageNodes } from './graph-boxes.ts';
 import { probeFolderLinksOf, probeFoldersOf } from './graph-probe-folders.ts';
+import { drawWithoutLayers } from './graph-probe-layers.ts';
 import { edgeLinesOf, folderLinkLinesOf } from './graph-probe-lines.ts';
 import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
@@ -118,7 +119,6 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
     renders += 1;
   });
 
-  const renderCount = (): number => renders;
   const probe: GraphProbe = {
     ...facts,
     nodes,
@@ -131,8 +131,9 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
     edgeColor,
     zoom,
     pan,
-    renderCount,
-    forceRender: (): void => void view.cy().forceRender()
+    renderCount: (): number => renders,
+    forceRender: (): void => void view.cy().forceRender(),
+    drawWithoutLayers: (): void => drawWithoutLayers(view.cy())
   };
 
   return probe;
