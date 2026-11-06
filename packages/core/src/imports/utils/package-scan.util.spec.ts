@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { packageScanOf } from './package-scan.util.ts';
-import type { CachedFile } from '../common/import-scan.type.ts';
+import type { CachedFile, TsconfigPaths } from '../common/import-scan.type.ts';
 import type { FileOutcome, ImportWalk, WalkedFile } from '../common/import-walk.type.ts';
 import { CACHED_FILE_STUB, SOURCE_IMPORT_STUB } from '../test/stubs/import-scan.stub.ts';
 
@@ -42,6 +42,7 @@ describe('FEATURE: assemble a package scan', () => {
         skipped: 1,
         limit: null
       });
+      expectTypeOf(scan.tsconfigPaths).toEqualTypeOf<TsconfigPaths | null>();
     });
 
     it('WHEN assembled THEN cached holds the two scanned files only, keyed by file', () => {
