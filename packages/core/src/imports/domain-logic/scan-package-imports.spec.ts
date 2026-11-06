@@ -7,7 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { scanPackageImports } from './scan-package-imports.ts';
-import type { PackageImportScan, SourceImport } from '../common/import-scan.type.ts';
+import type { ImportScanInput, PackageImportScan, SourceImport } from '../common/import-scan.type.ts';
 import { ImportFileCache } from '../data-access/import-file-cache.ts';
 import { DATE, DATE_LATER } from '../test/common/scan-dates.const.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
@@ -88,10 +88,9 @@ describe('FEATURE: scan one package for its imports', () => {
   describe('GIVEN src/a.ts importing B and an import-free src/b.ts', () => {
     it('WHEN scanned THEN only a.ts is listed, both are scanned, and tsconfigPaths is null', async () => {
       await writeImportTree(dir, { 'src/a.ts': IMPORT_B, 'src/b.ts': 'export {};\n' });
+      const listed = [{ file: 'src/a.ts', imports: [STATIC_B] }];
 
       const scan = await scanPackageImports(inputOf(dir, new ImportFileCache()));
-
-      const listed = [{ file: 'src/a.ts', imports: [STATIC_B] }];
 
       expect(scan).toStrictEqual({
         files: listed,
@@ -103,82 +102,140 @@ describe('FEATURE: scan one package for its imports', () => {
     });
   });
 
-  it('GIVEN node_modules/x/index.ts importing B WHEN scanned THEN that file is not listed', async () => {
-    await writeImportTree(dir, { 'node_modules/x/index.ts': IMPORT_B, 'a.ts': IMPORT_B });
+  describe('GIVEN node_modules/x/index.ts and a.ts, both importing B', () => {
+    it('WHEN scanned THEN only a.ts is listed', async () => {
+      await writeImportTree(dir, { 'node_modules/x/index.ts': IMPORT_B, 'a.ts': IMPORT_B });
 
-    const scan = await scanPackageImports(inputOf(dir, new ImportFileCache()));
+      const scan = await scanPackageImports(inputOf(dir, new ImportFileCache()));
+      const listed = filesOf(scan);
 
-    expect(filesOf(scan)).toStrictEqual(['a.ts']);
+      expect(listed).toStrictEqual(['a.ts']);
+    });
   });
 
-  it('GIVEN packages/a holds a.ts and the root holds r.ts WHEN the root is scanned with packages/a in skipDirs THEN only r.ts is listed', async () => {
-    await writeImportTree(dir, { 'packages/a/a.ts': IMPORT_B, 'r.ts': IMPORT_B });
-    const skipDirs = new Set([join(dir, 'packages', 'a')]);
+  describe('GIVEN packages/a holds a.ts and the root holds r.ts', () => {
+    it('WHEN the root is scanned with packages/a in skipDirs THEN only r.ts is listed', async () => {
+      await writeImportTree(dir, { 'packages/a/a.ts': IMPORT_B, 'r.ts': IMPORT_B });
+      const skipDirs = new Set([join(dir, 'packages', 'a')]);
 
-    const scan = await scanPackageImports(inputOf(dir, new ImportFileCache(), { skipDirs }));
+      const scan = await scanPackageImports(inputOf(dir, new ImportFileCache(), { skipDirs }));
+      const listed = filesOf(scan);
 
-    expect(filesOf(scan)).toStrictEqual(['r.ts']);
+      expect(listed).toStrictEqual(['r.ts']);
+    });
   });
 
-  it('GIVEN a finished scan, then dir removed WHEN scanned again THEN it rejects with ENOENT and the cache keeps its first map', async () => {
-    await writeImportTree(dir, { 'a.ts': IMPORT_B });
-    const input = inputOf(dir, new ImportFileCache());
+  describe('GIVEN a finished scan, then dir removed', () => {
+    it('WHEN scanned again THEN it rejects with ENOENT and the cache keeps its first map', async () => {
+      await writeImportTree(dir, { 'a.ts': IMPORT_B });
+      const input = inputOf(dir, new ImportFileCache());
 
-    await scanPackageImports(input);
+      await scanPackageImports(input);
 
-    const first = input.cache.filesOf(dir);
+      const first = input.cache.filesOf(dir);
 
-    await rm(dir, { recursive: true, force: true });
+      await rm(dir, { recursive: true, force: true });
 
-    await expect(scanPackageImports(input)).rejects.toMatchObject({ code: 'ENOENT' });
-    expect(input.cache.filesOf(dir)).toBe(first);
+      await expect(scanPackageImports(input)).rejects.toMatchObject({ code: 'ENOENT' });
+      expect(input.cache.filesOf(dir)).toBe(first);
+    });
   });
 
   describe('GIVEN the D8 limits', () => {
-    it("WHEN caps.files is 2 over three files THEN two are scanned, limit is 'files' and the cache holds those two", async () => {
-      await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.ts': IMPORT_B, 'c.ts': IMPORT_B });
-      const input = inputOf(dir, new ImportFileCache(), { caps: capsOf({ files: 2 }) });
+    let scan: PackageImportScan = { files: [], tsconfigPaths: null, scanned: 0, skipped: 0, limit: null };
+    let cached: string[] = [];
 
-      const scan = await scanPackageImports(input);
-      const cached = Array.from(input.cache.filesOf(dir).keys());
+    /** Scans `dir` with `patch` over a fresh cache, keeping the result and the cached file names. */
+    const scanWith = async (patch: Partial<ImportScanInput>): Promise<void> => {
+      const input = inputOf(dir, new ImportFileCache(), patch);
 
-      expect([scan.scanned, scan.limit, cached]).toStrictEqual([2, 'files', ['a.ts', 'b.ts']]);
-    });
+      scan = await scanPackageImports(input);
 
-    it("WHEN caps.entries is 2 over a.ts, b.png, c.ts THEN one is scanned and limit is 'entries'", async () => {
-      await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.png': '', 'c.ts': IMPORT_B });
+      const files = input.cache.filesOf(dir);
 
-      const scan = await scanPackageImports(inputOf(dir, new ImportFileCache(), { caps: capsOf({ entries: 2 }) }));
+      cached = Array.from(files.keys());
+    };
 
-      expect([scan.scanned, scan.limit]).toStrictEqual([1, 'entries']);
-    });
-
-    it("WHEN caps.reads is 1 and the clock passes timeMs as b.ts opens THEN two are scanned, limit is 'time' and the cache holds both", async () => {
-      await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.ts': IMPORT_B, 'c.ts': IMPORT_B });
-      let nowMs = 0;
-      const now = (): number => nowMs;
-      const caps = capsOf({ reads: 1 });
-      const input = inputOf(dir, new ImportFileCache(), { caps, now });
-
-      reads.beforeOpen = onOpenOf('b.ts', () => {
-        nowMs = caps.timeMs;
+    describe('GIVEN caps.files 2 over three files', () => {
+      beforeEach(async () => {
+        await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.ts': IMPORT_B, 'c.ts': IMPORT_B });
+        await scanWith({ caps: capsOf({ files: 2 }) });
       });
 
-      const scan = await scanPackageImports(input);
-      const cached = Array.from(input.cache.filesOf(dir).keys());
+      it('WHEN scanned THEN two are scanned', () => {
+        expect(scan.scanned).toBe(2);
+      });
 
-      expect([scan.scanned, scan.limit, cached]).toStrictEqual([2, 'time', ['a.ts', 'b.ts']]);
+      it("WHEN scanned THEN limit is 'files'", () => {
+        expect(scan.limit).toBe('files');
+      });
+
+      it('WHEN scanned THEN the cache holds those two', () => {
+        expect(cached).toStrictEqual(['a.ts', 'b.ts']);
+      });
     });
 
-    it('WHEN caps.fileBytes is 64 over a 64-byte a.ts and a 65-byte b.ts THEN one is scanned, one skipped and b.ts is never opened', async () => {
-      const fit = IMPORT_B.padEnd(64);
+    describe('GIVEN caps.entries 2 over a.ts, b.png, c.ts', () => {
+      beforeEach(async () => {
+        await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.png': '', 'c.ts': IMPORT_B });
+        await scanWith({ caps: capsOf({ entries: 2 }) });
+      });
 
-      await writeImportTree(dir, { 'a.ts': fit, 'b.ts': `${fit} ` });
+      it('WHEN scanned THEN one is scanned', () => {
+        expect(scan.scanned).toBe(1);
+      });
 
-      const scan = await scanPackageImports(inputOf(dir, new ImportFileCache(), { caps: capsOf({ fileBytes: 64 }) }));
-      const opened = openedNamesOf(reads.opened, dir);
+      it("WHEN scanned THEN limit is 'entries'", () => {
+        expect(scan.limit).toBe('entries');
+      });
+    });
 
-      expect([scan.scanned, scan.skipped, opened]).toStrictEqual([1, 1, ['a.ts']]);
+    describe('GIVEN caps.reads 1 and a clock that passes timeMs as b.ts opens', () => {
+      beforeEach(async () => {
+        await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.ts': IMPORT_B, 'c.ts': IMPORT_B });
+        let nowMs = 0;
+        const caps = capsOf({ reads: 1 });
+
+        reads.beforeOpen = onOpenOf('b.ts', () => {
+          nowMs = caps.timeMs;
+        });
+        await scanWith({ caps, now: () => nowMs });
+      });
+
+      it('WHEN scanned THEN two are scanned', () => {
+        expect(scan.scanned).toBe(2);
+      });
+
+      it("WHEN scanned THEN limit is 'time'", () => {
+        expect(scan.limit).toBe('time');
+      });
+
+      it('WHEN scanned THEN the cache holds both', () => {
+        expect(cached).toStrictEqual(['a.ts', 'b.ts']);
+      });
+    });
+
+    describe('GIVEN caps.fileBytes 64 over a 64-byte a.ts and a 65-byte b.ts', () => {
+      beforeEach(async () => {
+        const fit = IMPORT_B.padEnd(64);
+
+        await writeImportTree(dir, { 'a.ts': fit, 'b.ts': `${fit} ` });
+        await scanWith({ caps: capsOf({ fileBytes: 64 }) });
+      });
+
+      it('WHEN scanned THEN one is scanned', () => {
+        expect(scan.scanned).toBe(1);
+      });
+
+      it('WHEN scanned THEN one is skipped', () => {
+        expect(scan.skipped).toBe(1);
+      });
+
+      it('WHEN scanned THEN b.ts is never opened', () => {
+        const opened = openedNamesOf(reads.opened, dir);
+
+        expect(opened).toStrictEqual(['a.ts']);
+      });
     });
 
     it('WHEN caps.reads is 2 over six files whose opens wait a tick THEN two are in flight at most', async () => {
@@ -192,19 +249,25 @@ describe('FEATURE: scan one package for its imports', () => {
       expect(reads.maxInFlight).toBe(2);
     });
 
-    it("WHEN caps.files is 2 and the clock passes timeMs as a.ts opens THEN one is scanned and limit is 'files'", async () => {
-      await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.ts': IMPORT_B, 'c.ts': IMPORT_B });
-      let nowMs = 0;
-      const now = (): number => nowMs;
-      const caps = capsOf({ files: 2, reads: 1 });
+    describe('GIVEN caps.files 2, caps.reads 1 and a clock that passes timeMs as a.ts opens', () => {
+      beforeEach(async () => {
+        await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.ts': IMPORT_B, 'c.ts': IMPORT_B });
+        let nowMs = 0;
+        const caps = capsOf({ files: 2, reads: 1 });
 
-      reads.beforeOpen = onOpenOf('a.ts', () => {
-        nowMs = caps.timeMs;
+        reads.beforeOpen = onOpenOf('a.ts', () => {
+          nowMs = caps.timeMs;
+        });
+        await scanWith({ caps, now: () => nowMs });
       });
 
-      const scan = await scanPackageImports(inputOf(dir, new ImportFileCache(), { caps, now }));
+      it('WHEN scanned THEN one is scanned', () => {
+        expect(scan.scanned).toBe(1);
+      });
 
-      expect([scan.scanned, scan.limit]).toStrictEqual([1, 'files']);
+      it("WHEN scanned THEN limit is 'files'", () => {
+        expect(scan.limit).toBe('files');
+      });
     });
   });
 
