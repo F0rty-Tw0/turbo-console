@@ -8,9 +8,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { walkSourceFiles } from './import-walk.ts';
 import { IMPORT_SCAN_CAPS } from '../common/import-scan.const.ts';
-import type { ImportScanCaps } from '../common/import-scan.type.ts';
 import type { ImportScanRun, ImportWalk } from '../common/import-walk.type.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
+import { capsOf } from '../test/utils/scan-caps.spec.util.ts';
 
 type ReaddirOptions = { readonly withFileTypes: true };
 
@@ -88,12 +88,6 @@ const treeOf = (names: string[], text: string = SOURCE_TEXT): Record<string, str
   const tree = Object.fromEntries(entries);
 
   return tree;
-};
-
-const capsOf = (patch: Partial<ImportScanCaps>): ImportScanCaps => {
-  const caps: ImportScanCaps = { ...IMPORT_SCAN_CAPS, ...patch };
-
-  return caps;
 };
 
 describe('FEATURE: walking a package for source files', () => {
