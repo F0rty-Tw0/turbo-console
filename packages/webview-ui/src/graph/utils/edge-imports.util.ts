@@ -35,7 +35,7 @@ const isSites = (sites: unknown, total: unknown): boolean => {
   const isCounted = sites.length >= 1 && sites.length <= IMPORT_SITES_MAX;
   const isTotal = isCount(total) && total >= sites.length;
 
-  return isCounted && isTotal && sites.every(isSite);
+  return isCounted && isTotal && Array.from(sites).every(isSite);
 };
 
 const isCounts = (result: UnknownRecord): boolean => {

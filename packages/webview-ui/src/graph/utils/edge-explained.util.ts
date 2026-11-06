@@ -40,7 +40,7 @@ const isEntries = (entries: unknown): boolean => {
 
   const isCounted = entries.length >= 1 && entries.length <= MANIFEST_ENTRIES_MAX;
 
-  return isCounted && entries.every(isEntry);
+  return isCounted && Array.from(entries).every(isEntry);
 };
 
 const isResult = (result: unknown): boolean => {

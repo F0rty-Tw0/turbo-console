@@ -58,6 +58,7 @@ const REJECTED: [string, UnknownRecord][] = [
   ['nine entries', explainedOf(foundOf(entriesOf(9)))],
   ['entries not an array', explainedOf(foundOf([], { entries: entryOf() }))],
   ['a null entry', explainedOf(foundOf([null]))],
+  ['a sparse entries array of length 1', explainedOf(foundOf(new Array(1)))],
   ['an unknown field', explainedOf(foundOf([entryOf({ field: 'scripts' })]))],
   ['a field named like an Object member', explainedOf(foundOf([entryOf({ field: 'constructor' })]))],
   ['a key of 202 characters', explainedOf(foundOf([entryOf({ key: 'k'.repeat(202) })]))],

@@ -78,6 +78,7 @@ const REJECTED: [string, UnknownRecord][] = [
   ['a total below the sites sent', importsOf(foundOf({ sites: sitesOf(2), total: 1 }))],
   ['sites that are not an array', importsOf(foundOf({ sites: siteOf() }))],
   ['a null site', importsOf(foundOf({ sites: [null] }))],
+  ['a sparse sites array of length 1', importsOf(foundOf({ sites: new Array(1), total: 1 }))],
   ['a scanned of -1', importsOf(foundOf({ scanned: -1 }))],
   ['a scanned of 1.5', importsOf(foundOf({ scanned: 1.5 }))],
   ['a string skipped', importsOf(foundOf({ skipped: '3' }))],
