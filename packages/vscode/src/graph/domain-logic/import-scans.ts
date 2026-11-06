@@ -2,10 +2,11 @@ import { ImportFileCache } from '@turbo-console/core';
 import type { ImportScanInput, PackageImportScan } from '@turbo-console/core';
 import type { EdgeImportsResult, GraphEdgeImportsMessage } from '@turbo-console/webview-ui';
 
-import { hasEdge, manifestFilesOf, packagesByName, textOf } from './graph-explain.ts';
+import { textOf } from './graph-explain.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { ExplainContext, LookupGate } from '../common/graph.type.ts';
 import type { ImportEdge, ScanDirs } from '../common/import-match.type.ts';
+import { hasEdge, manifestFilesOf, packagesByName } from '../utils/graph-package.util.ts';
 import { answerImports } from '../utils/import-answer.util.ts';
 import { aliasKeysOf } from '../utils/manifest-entries.util.ts';
 import { scanDirsOf } from '../utils/scan-dirs.util.ts';
