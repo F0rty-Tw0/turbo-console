@@ -5,8 +5,12 @@ import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { errnoCode, isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { failedMessage, ioMessage } from '../../shared/errors/utils/turbo-message.util.ts';
 import { TURBO_BUDGET_MS } from '../../shared/turbo/common/turbo-budget.const.ts';
+import type { ExitStallCheck, RunTurboOptions } from '../../shared/turbo/common/turbo.type.ts';
 import { runTurbo } from '../../shared/turbo/data-access/run-turbo.ts';
 import { untilAborted } from '../../shared/turbo/data-access/until-aborted.ts';
+import { isVersionEnd, versionExitCode } from '../../shared/turbo/utils/stalled-exit-code.util.ts';
+
+const VERSION_STALL_CHECK: ExitStallCheck = { isEnd: isVersionEnd, exitCodeOf: versionExitCode };
 
 /**
  * `--version` per override file state: path, device, inode, mtime, ctime and size. ctime is in the key because
@@ -31,7 +35,7 @@ const statOverride = async (path: string): Promise<Stats> => {
 
 /** No caller's signal: the spawn is shared, so one caller's abort must not fail the others. The budget still bounds it. */
 const spawnVersion = async (path: string, root: string): Promise<string> => {
-  const options = { timeoutMs: TURBO_BUDGET_MS.version };
+  const options: RunTurboOptions = { timeoutMs: TURBO_BUDGET_MS.version, exitStallCheck: VERSION_STALL_CHECK };
   const result = await runTurbo(path, ['--version'], root, options);
 
   if (result.exitCode !== 0) throw new TurboException('failed', failedMessage('--version', result.exitCode, result.stderr));
