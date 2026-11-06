@@ -1,45 +1,14 @@
-import { join } from 'node:path';
-
 import { MANIFEST_FILE_MAX, MANIFEST_LINE_MAX } from '@turbo-console/webview-ui';
-import type { EdgeExplainResult, GraphEdge, GraphEdgeExplainedMessage, GraphPackage, GraphReady } from '@turbo-console/webview-ui';
+import type { EdgeExplainResult, GraphEdgeExplainedMessage, GraphReady } from '@turbo-console/webview-ui';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
+import { MANIFEST_FILE } from '../common/graph.const.ts';
 import type { ExplainContext, ExplainRequest } from '../common/graph.type.ts';
+import { hasEdge, manifestFilesOf, packagesByName } from '../utils/graph-package.util.ts';
 import { manifestEntriesOf } from '../utils/manifest-entries.util.ts';
 
-const MANIFEST_FILE = 'package.json';
-
-type ManifestFiles = {
-  readonly shown: string;
-  readonly absolute: string;
-};
-
-/** `shown` is the manifest's path under the workspace root as the page names it; `absolute` is the file to read. */
-const manifestFilesOf = (root: string, pkg: GraphPackage): ManifestFiles => {
-  const isRootPackage = pkg.path === '';
-  const shown = isRootPackage ? MANIFEST_FILE : `${pkg.path}/${MANIFEST_FILE}`;
-  const absolute = join(root, pkg.path, MANIFEST_FILE);
-  const files: ManifestFiles = { shown, absolute };
-
-  return files;
-};
-
-const packagesByName = (state: GraphReady): Map<string, GraphPackage> => {
-  const byName = new Map<string, GraphPackage>();
-
-  for (const pkg of state.packages) byName.set(pkg.name, pkg);
-
-  return byName;
-};
-
-const hasEdge = (edges: GraphEdge[], source: string, target: string): boolean => {
-  const isEdge = (edge: GraphEdge): boolean => edge.source === source && edge.target === target;
-
-  return edges.some(isEdge);
-};
-
 /** The failure of a read is logged and counts as an unreadable file. */
-const textOf = async (context: ExplainContext, absolute: string): Promise<string | null> => {
+export const textOf = async (context: ExplainContext, absolute: string): Promise<string | null> => {
   try {
     return await context.ports.readText(absolute);
   } catch (error: unknown) {

@@ -34,6 +34,9 @@ export const GRAPH_PANEL_ID_PREFIX = 'graph\0';
 /** A graph hash as `graphHashOf` makes it: eight lower-case hex digits. */
 export const GRAPH_HASH_PATTERN = /^[0-9a-f]{8}$/;
 
+/** The manifest file of every package, named under its folder. */
+export const MANIFEST_FILE = 'package.json';
+
 /** npm's limit on a package name's length; no workspace package has a longer one. */
 export const PACKAGE_NAME_MAX = 214;
 
