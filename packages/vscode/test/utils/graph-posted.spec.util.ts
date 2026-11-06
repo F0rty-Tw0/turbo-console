@@ -32,7 +32,7 @@ export const lastGraphState = (api: TurboConsoleApi, root: string): GraphReady |
   return states.at(-1) ?? null;
 };
 
-/** What the host posts back to one `source` to `target` edge request. */
+/** The two ends of the edge a request names: the dependent `source` and the dependency `target`. */
 type EdgeEnds = { readonly source: string; readonly target: string };
 
 type EdgeReply = GraphEdgeExplainedMessage | GraphEdgeImportsMessage;
