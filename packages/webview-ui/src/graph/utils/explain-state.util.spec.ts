@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { explainPlanOf, explainStateOf, isReplyFor } from './explain-state.util.ts';
+import type { EdgeImportsResult, GraphEdgeImportsMessage } from '../../bridge/common/graph-imports.type.ts';
 import type {
   EdgeExplainResult,
   GraphEdgeExplainedMessage,
@@ -50,8 +51,16 @@ const MISSING_RESULT: EdgeExplainResult = { kind: 'missing', file: FILE };
 
 const UNREADABLE_RESULT: EdgeExplainResult = { kind: 'unreadable', file: FILE };
 
+const IMPORTS_FAILED: EdgeImportsResult = { kind: 'failed' };
+
 const reply = (source: string, target: string): GraphEdgeExplainedMessage => {
   const message: GraphEdgeExplainedMessage = { type: 'edgeExplained', source, target, result: MISSING_RESULT };
+
+  return message;
+};
+
+const importsReply = (source: string, target: string): GraphEdgeImportsMessage => {
+  const message: GraphEdgeImportsMessage = { type: 'edgeImports', source, target, result: IMPORTS_FAILED };
 
   return message;
 };
@@ -72,7 +81,7 @@ type StateRow = {
 
 type ReplyRow = {
   readonly title: string;
-  readonly message: GraphEdgeExplainedMessage;
+  readonly message: GraphEdgeExplainedMessage | GraphEdgeImportsMessage;
   readonly current: Inspection | null;
   readonly expected: boolean;
 };
@@ -94,6 +103,8 @@ const REPLY_ROWS: ReplyRow[] = [
   { title: 'the shown link', message: reply('web', 'ui'), current: link('web', 'ui'), expected: true },
   { title: 'the shown link reversed', message: reply('ui', 'web'), current: link('web', 'ui'), expected: false },
   { title: 'another source into the shown target', message: reply('admin', 'ui'), current: link('web', 'ui'), expected: false },
+  { title: 'the shown link as imports', message: importsReply('web', 'ui'), current: link('web', 'ui'), expected: true },
+  { title: 'another link as imports', message: importsReply('admin', 'ui'), current: link('web', 'ui'), expected: false },
   { title: 'a link while a package shows', message: reply('web', 'ui'), current: PKG_WEB, expected: false },
   { title: 'a link before anything shows', message: reply('web', 'ui'), current: null, expected: false },
   {
@@ -131,7 +142,7 @@ describe('FEATURE: explain state', () => {
     });
   });
 
-  describe('GIVEN an edgeExplained message', () => {
+  describe('GIVEN an edgeExplained or edgeImports message', () => {
     it.each(REPLY_ROWS)('WHEN it answers $title THEN it matches: $expected', (row) => {
       const isReply = isReplyFor(row.message, row.current);
 
