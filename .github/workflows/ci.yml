@@ -1,7 +1,8 @@
 name: CI
 
 # Diag branch only (F-U7-17): a probe-only copy of ci.yml, dispatched with
-# `gh workflow run ci.yml --ref diag/fu717-turbo-exit-probe`. Arm A = baseline turboEnv, arm C = turboEnv + TURBO_TELEMETRY_DISABLED=1 and DO_NOT_TRACK=1.
+# `gh workflow run ci.yml --ref diag/fu717-turbo-exit-probe`. Round 3 runs arm A only (baseline turboEnv) and, for the
+# first 5 killed hangs per shard, saves thread tables, a minidump and cdb stacks (packages/core/diag/deep-capture.ts).
 on:
   workflow_dispatch:
     inputs:
@@ -18,10 +19,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arm: [A, C]
+        arm: [A]
         shard: [1, 2, 3]
     runs-on: windows-latest
-    timeout-minutes: 40
+    # Rounds 1-2 used 40; the extra 10 cover dumps and cdb runs after the 25-minute probe window.
+    timeout-minutes: 50
     permissions:
       contents: read
 
@@ -55,6 +57,34 @@ jobs:
       - name: Build repo-gen
         run: pnpm turbo run build --filter=@turbo-console/repo-gen
 
+      - name: Check debug tools
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+          $isAdmin = ([Security.Principal.WindowsPrincipal]$identity).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+          "user=$($identity.Name) elevated=$isAdmin"
+          $known = 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x64\cdb.exe'
+          "cdb at known path: $(Test-Path $known)"
+          $cdb = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\*\Debuggers\x64\cdb.exe', 'C:\Program Files\Windows Kits\*\Debuggers\x64\cdb.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($cdb) {
+            "cdb found: $($cdb.FullName)"
+            "PROBE_CDB=$($cdb.FullName)" >> $env:GITHUB_ENV
+          } else {
+            'cdb.exe NOT found: hangs keep their first 3 dumps instead of stack.txt'
+          }
+
+      - name: Fetch procdump (minidump fallback)
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:RUNNER_TEMP 'procdump'
+          Invoke-WebRequest https://download.sysinternals.com/files/Procdump.zip -OutFile "$dir.zip"
+          Expand-Archive "$dir.zip" -DestinationPath $dir -Force
+          $exe = Join-Path $dir 'procdump64.exe'
+          "procdump64 present: $(Test-Path $exe)"
+          if (Test-Path $exe) { "PROBE_PROCDUMP=$exe" >> $env:GITHUB_ENV }
+
       - name: Probe
         env:
           PROBE_ARM: ${{ matrix.arm }}
@@ -62,6 +92,7 @@ jobs:
           PROBE_MINUTES: '25'
           PROBE_CONCURRENCY: '4'
           PROBE_OUT: ${{ runner.temp }}/probe-out
+          PROBE_SYMBOL_CACHE: ${{ runner.temp }}\symcache
         run: node packages/core/diag/turbo-exit-probe.ts
 
       # SHA = actions/upload-artifact@v7.0.2

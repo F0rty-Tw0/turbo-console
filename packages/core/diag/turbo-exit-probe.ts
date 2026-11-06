@@ -11,6 +11,8 @@ import type { FixtureHandle } from '@turbo-console/repo-gen';
 
 import { devTurboPath } from '../src/shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { turboEnv } from '../src/shared/turbo/utils/turbo-env.util.ts';
+import { analyzeDump, captureLive, selfTestCapture } from './deep-capture.ts';
+import type { DeepCapture } from './deep-capture.ts';
 
 type ProcRow = { pid: number; ppid: number; name: string; commandLine: string; created: string };
 
@@ -44,6 +46,7 @@ type Hang = {
   turboDetails: TurboDetail[];
   lastStderr: string[];
   dir: string;
+  deep: DeepCapture | null;
 };
 
 const IS_WINDOWS = process.platform === 'win32';
@@ -67,6 +70,9 @@ const STALL_MS = Number(process.env['PROBE_STALL_MS'] ?? 15_000);
 const LATE_SNAPSHOT_MS = Number(process.env['PROBE_LATE_SNAPSHOT_MS'] ?? 60_000);
 
 const KILL_MS = Number(process.env['PROBE_KILL_MS'] ?? 120_000);
+
+/** Killed hangs per shard that get thread tables, a minidump and cdb stacks before the kill. */
+const DEEP_CAPTURES = Number(process.env['PROBE_DEEP_CAPTURES'] ?? 5);
 
 const TURBO = devTurboPath();
 
@@ -203,6 +209,8 @@ const hangs: Hang[] = [];
 
 let nextIndex = 0;
 
+let deepCaptureCount = 0;
+
 const runOne = async (index: number, worker: number, fixture: FixtureHandle): Promise<Launch> => {
   const startedAt = performance.now();
   const elapsed = (): number => Math.round(performance.now() - startedAt);
@@ -259,13 +267,24 @@ const runOne = async (index: number, worker: number, fixture: FixtureHandle): Pr
     }
 
     const hasClosedBeforeKill = await closedWithin(KILL_MS);
+    let deep: DeepCapture | null = null;
 
     if (!hasClosedBeforeKill) {
       killed = true;
-      snapshots.push(await snapshot(child.pid, startedAt));
+      const killSnapshot = await snapshot(child.pid, startedAt);
+      const pid = child.pid;
+      const isDeep = IS_WINDOWS && pid !== undefined && deepCaptureCount < DEEP_CAPTURES;
+
+      if (isDeep) deepCaptureCount++;
+
+      const conhostPids = killSnapshot.descendants.filter((row) => /^conhost/i.test(row.name)).map((row) => row.pid);
+      const live = isDeep ? await captureLive(pid, conhostPids, hangDir) : null;
+
+      snapshots.push(killSnapshot);
       turboDetails.push(await turboDetail(child.pid, startedAt));
       await killTree(child);
-      await closedWithin(KILL_MS + 30_000);
+      await closedWithin(elapsed() + 30_000);
+      deep = live === null ? null : await analyzeDump(live, hangDir, true);
     }
 
     const closeMs = hasClosedBeforeKill ? elapsed() : null;
@@ -279,14 +298,15 @@ const runOne = async (index: number, worker: number, fixture: FixtureHandle): Pr
       snapshots,
       turboDetails,
       lastStderr: lastLines(stderr, 40),
-      dir: fixture.dir
+      dir: fixture.dir,
+      deep
     };
 
     hangs.push(hang);
     await writeFile(join(hangDir, 'stdout.txt'), stdout);
     await writeFile(join(hangDir, 'stderr.txt'), stderr);
     await writeFile(join(hangDir, 'hang.json'), JSON.stringify(hang, null, 2));
-    console.log(`HANG launch ${index}: exitMs=${exitMs} closeMs=${closeMs} killed=${killed}`);
+    console.log(`HANG launch ${index}: exitMs=${exitMs} closeMs=${closeMs} killed=${killed} deep=${deep?.stack ?? 'none'}`);
   }
 
   const closeMs = killed ? null : elapsed();
@@ -325,6 +345,9 @@ const main = async (): Promise<void> => {
   console.log(
     `probe arm=${ARM} shard=${SHARD} turbo=${TURBO} args=${ARGS.join(' ')} concurrency=${CONCURRENCY} telemetryOff=${telemetryOff}`
   );
+  const selfTest = IS_WINDOWS ? await selfTestCapture(join(OUT, 'selftest')) : 'not windows';
+
+  console.log(`deep-capture self-test: ${JSON.stringify(selfTest, null, 2)}`);
   await warmFixtureCache(PRESETS['target-like']);
 
   const startedAt = performance.now();
@@ -349,6 +372,10 @@ const main = async (): Promise<void> => {
     wallSeconds: Math.round((performance.now() - startedAt) / 1000),
     launches: launches.length,
     hangCount: hangs.length,
+    deepCaptures: deepCaptureCount,
+    cdb: process.env['PROBE_CDB'] ?? null,
+    procdump: process.env['PROBE_PROCDUMP'] ?? null,
+    selfTest,
     nonZeroCount: nonZero.length,
     nonZero: nonZero.slice(0, 50),
     cacheEntryCounts,
