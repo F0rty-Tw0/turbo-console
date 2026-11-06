@@ -93,7 +93,7 @@ describe('FEATURE: graph lookups', () => {
 
   describe('GIVEN a request the graph does not answer', () => {
     it('WHEN an explainEdge names an unlisted package THEN nothing is read and the raw message is dropped', async () => {
-      const value = { type: 'explainEdge', source: 'ghost', target: 'a' };
+      const value = { ...GHOST_TO_A, raw: true };
 
       await lookups.receive(GHOST_TO_A, value);
 
