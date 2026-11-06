@@ -31,7 +31,8 @@ const filesOfTree = (): Record<string, string> => {
 
 /**
  * `scanPackageImports` over a 2,000-file temp tree of about 9 MB. "Cold" scans over an empty lex cache, "warm" over a
- * cache one scan filled; the OS page cache is warm in both. The tree is removed when the process exits: the runner
+ * cache one scan filled; the OS page cache is warm in both. On Linux dev boxes `tmpdir()` is usually tmpfs, which may
+ * flatter warm by up to about 2x over a disk-backed tree. The tree is removed when the process exits: the runner
  * times every bench after loading every file, so no dispose can run earlier.
  */
 const dir = await mkdtemp(join(tmpdir(), 'import-scan-bench-'));
