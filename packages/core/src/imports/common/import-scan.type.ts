@@ -1,8 +1,6 @@
-import type { ImportForm } from './import-form.type.ts';
-
 export type SourceImport = {
   readonly specifier: string;
-  readonly kind: ImportForm['kind'];
+  readonly kind: 'static' | 'reexport' | 'dynamic' | 'require';
   readonly isType: boolean;
   /** 0-based line of the form's first keyword (D13). */
   readonly line: number;
