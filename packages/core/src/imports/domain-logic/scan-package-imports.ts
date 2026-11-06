@@ -49,7 +49,7 @@ const readFiles = async (run: ImportScanRun, walk: ImportWalk, previous: Readonl
 /**
  * Every import in the source files of `input.dir` (T3 walk, D8 caps), re-lexing only files whose `mtimeMs` or `size`
  * changed since the last finished scan of that dir (D9). The cache is replaced when the scan finishes, also when a cap
- * stopped it. Rejects with `signal.reason` when aborted, and when `dir` itself cannot be read; either leaves the cache
+ * stopped it; a walked file the clock stopped before keeps its entry. Rejects with `signal.reason` when aborted, and when `dir` itself cannot be read; either leaves the cache
  * as it was.
  */
 export const scanPackageImports = async (input: ImportScanInput): Promise<PackageImportScan> => {
@@ -67,7 +67,7 @@ export const scanPackageImports = async (input: ImportScanInput): Promise<Packag
   input.signal.throwIfAborted();
 
   const timeLimit = phase.isTimeStopped ? 'time' : null;
-  const result = packageScanOf(walk, phase.outcomes, walk.limit ?? timeLimit);
+  const result = packageScanOf(walk, phase.outcomes, walk.limit ?? timeLimit, previous);
 
   input.cache.swap(input.dir, result.cached);
 

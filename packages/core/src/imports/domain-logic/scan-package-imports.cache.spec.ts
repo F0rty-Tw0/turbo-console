@@ -114,6 +114,27 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
     });
   });
 
+  describe('GIVEN a finished scan of a.ts, b.ts, c.ts, then a.ts touched and a rescan the clock stops once a.ts opens', () => {
+    beforeEach(async () => {
+      await writeImportTree(dir, { 'a.ts': importOf('A'), 'b.ts': importOf('B'), 'c.ts': importOf('C') });
+      await scanPackageImports(input);
+      await utimes(join(dir, 'a.ts'), DATE_LATER, DATE_LATER);
+      reads.opened.length = 0;
+
+      const caps: ImportScanCaps = { ...IMPORT_SCAN_CAPS, reads: 1 };
+      const now = (): number => (reads.opened.length > 0 ? caps.timeMs : 0);
+
+      await scanPackageImports(inputOf(dir, input.cache, { caps, now }));
+      reads.opened.length = 0;
+    });
+
+    it('WHEN rescanned again THEN no file is opened', async () => {
+      await scanPackageImports(input);
+
+      expect(openedNames()).toStrictEqual([]);
+    });
+  });
+
   it('GIVEN a scan stopped by caps.files 2 over three files WHEN rescanned with default caps THEN only the file past the stop is opened', async () => {
     await writeImportTree(dir, { 'a.ts': importOf('A'), 'b.ts': importOf('B'), 'c.ts': importOf('C') });
     const caps: ImportScanCaps = { ...IMPORT_SCAN_CAPS, files: 2 };
