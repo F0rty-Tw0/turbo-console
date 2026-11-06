@@ -13,6 +13,7 @@ export const GRAPH_ICON_IDS = [
   'git-commit',
   'file-text',
   'file',
+  'file-code',
   'info',
   'warning',
   'eye-closed',
