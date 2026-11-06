@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -255,6 +255,37 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
       const missing = host.readText(join(dir, 'none.json'));
 
       await expect(missing).rejects.toThrow('ENOENT');
+    });
+  });
+
+  describe('GIVEN a path to resolve', () => {
+    let dir: string;
+
+    beforeEach(() => {
+      dir = mkdtempSync(join(tmpdir(), 'graph-real-'));
+    });
+
+    afterEach(() => {
+      rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('WHEN the path goes through a symlinked dir THEN realPath gives the real location', async () => {
+      const target = join(dir, 'target');
+      const link = join(dir, 'link');
+
+      mkdirSync(target);
+      writeFileSync(join(target, 'x.ts'), 'x');
+      symlinkSync(target, link, 'junction');
+
+      const real = await host.realPath(join(link, 'x.ts'));
+
+      expect(real).toBe(join(realpathSync(target), 'x.ts'));
+    });
+
+    it('WHEN the path is missing THEN realPath gives null', async () => {
+      const real = await host.realPath(join(dir, 'none.ts'));
+
+      expect(real).toBeNull();
     });
   });
 

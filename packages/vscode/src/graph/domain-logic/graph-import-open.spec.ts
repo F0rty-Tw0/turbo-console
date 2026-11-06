@@ -11,7 +11,9 @@ import { GRAPH_STATE_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const LOADING: GraphState = { kind: 'loading' };
 
-const SOURCE_FILE = join(IMPORT_ROOT, 'apps', 'web', 'src', 'x.ts');
+const PACKAGE_DIR = join(IMPORT_ROOT, 'apps', 'web');
+
+const SOURCE_FILE = join(PACKAGE_DIR, 'src', 'x.ts');
 
 describe('FEATURE: open an import site', () => {
   let ports: GraphPorts;
@@ -55,6 +57,45 @@ describe('FEATURE: open an import site', () => {
 
       expect(handled).toBe(false);
       expect(ports.readText).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the file is a symlink that resolves outside the package THEN it is false and nothing is read', async () => {
+      const outside = join(IMPORT_ROOT, 'secret', 'x.ts');
+
+      vi.mocked(ports.realPath).mockImplementation(async (path) => Promise.resolve(path === SOURCE_FILE ? outside : path));
+      vi.mocked(ports.readText).mockResolvedValue('secret');
+
+      const handled = await openImport('web', 'src/x.ts', 4, context);
+
+      expect(handled).toBe(false);
+      expect(ports.readText).not.toHaveBeenCalled();
+      expect(ports.openAt).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['the file', SOURCE_FILE],
+      ['the package dir', PACKAGE_DIR]
+    ])('WHEN realPath gives null for %s THEN it is false and nothing is read', async (_label, unresolved) => {
+      vi.mocked(ports.realPath).mockImplementation(async (path) => Promise.resolve(path === unresolved ? null : path));
+
+      const handled = await openImport('web', 'src/x.ts', 4, context);
+
+      expect(handled).toBe(false);
+      expect(ports.readText).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the root is reached through a symlink (both real paths move together) THEN it reads and opens the real file', async () => {
+      const realFile = join(IMPORT_ROOT, '..', 'real-ws', 'apps', 'web', 'src', 'x.ts');
+      const realDir = join(IMPORT_ROOT, '..', 'real-ws', 'apps', 'web');
+
+      vi.mocked(ports.realPath).mockImplementation(async (path) => Promise.resolve(path === PACKAGE_DIR ? realDir : realFile));
+      vi.mocked(ports.readText).mockResolvedValue('import "a";');
+
+      const handled = await openImport('web', 'src/x.ts', 4, context);
+
+      expect(handled).toBe(true);
+      expect(ports.readText).toHaveBeenCalledExactlyOnceWith(realFile);
+      expect(ports.openAt).toHaveBeenCalledExactlyOnceWith(realFile, 4);
     });
 
     it('WHEN the read gives null THEN nothing opens, the unreadable file is logged once, and it is true', async () => {
