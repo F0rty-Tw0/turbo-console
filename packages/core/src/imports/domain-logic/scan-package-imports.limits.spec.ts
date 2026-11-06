@@ -79,6 +79,7 @@ describe('FEATURE: stop a package import scan at the D8 limits', () => {
   });
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     await rm(dir, { recursive: true, force: true });
   });
 
@@ -177,10 +178,9 @@ describe('FEATURE: stop a package import scan at the D8 limits', () => {
 
   it('WHEN the wall clock jumps a day ahead mid-scan THEN the default clock hits no time limit', async () => {
     await writeImportTree(dir, { 'a.ts': IMPORT_B });
-    const wallClock = vi.spyOn(Date, 'now').mockReturnValueOnce(0).mockReturnValue(86_400_000);
+    vi.spyOn(Date, 'now').mockReturnValueOnce(0).mockReturnValue(86_400_000);
 
     await scanWith({});
-    wallClock.mockRestore();
 
     expect(scan.limit).toBeNull();
   });
