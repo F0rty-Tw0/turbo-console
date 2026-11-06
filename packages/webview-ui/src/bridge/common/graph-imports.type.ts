@@ -50,7 +50,10 @@ export type GraphEdgeImportsMessage = {
   readonly result: EdgeImportsResult;
 };
 
-/** The page asking the host to scan the dependent of one link for imports of its target (spec D1, D11). */
+/**
+ * The page asking the host to scan the dependent of one link for imports of its target (spec D1, D11). A repeat ask for the
+ * same link while its scan runs gets no reply of its own: the pending ask's one `edgeImports` answers both.
+ */
 export type GraphScanImportsMessage = {
   readonly type: 'scanImports';
   readonly source: string;
