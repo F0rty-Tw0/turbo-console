@@ -25,13 +25,15 @@ export function isLookupMessage(message: GraphWebviewMessage): message is Lookup
 /**
  * The page's look-ups into the graph. One `explainEdge` is answered at a time; the one waiting behind it is replaced by each
  * newer request, so a page that floods them costs one read in flight and one waiting. An `openManifest` is answered at once,
- * never behind a read. A scan runs in `ImportScans`, apart from the explain queue, so neither waits for the other (spec D1). A reply is posted only if the panel is still shown and ready after its read; after `dispose` nothing
- * more is read.
+ * never behind a read. A scan runs in `ImportScans`, apart from the explain queue, so neither waits for the other (spec D1);
+ * a `scanImports` for an edge already being asked returns at once, as the pending ask posts the one reply. A reply is posted
+ * only if the panel is still shown and ready after its read; after `dispose` nothing more is read.
  */
 export class GraphLookups {
   private readonly gate: LookupGate;
   private readonly explains = new LatestWins<LookupJob>();
   private readonly scans: ImportScans;
+  private readonly scanning = new Set<string>();
   private isDisposed = false;
 
   public constructor(gate: LookupGate) {
@@ -49,13 +51,12 @@ export class GraphLookups {
         await this.answer({ request, value });
 
         return;
-      case 'scanImports': {
-        const isHandled = await this.scans.ask(request.source, request.target);
+      case 'scanImports':
+        if (this.isDisposed) return;
 
-        if (!isHandled) this.gate.drop(value);
+        await this.scan(request.source, request.target, value);
 
         return;
-      }
       case 'openImport': {
         if (this.isDisposed) return;
 
@@ -78,6 +79,24 @@ export class GraphLookups {
     const context: ExplainContext = { state: state(), root, ports, canPost };
 
     return context;
+  }
+
+  private async scan(source: string, target: string, value: unknown): Promise<void> {
+    const key = JSON.stringify([source, target]);
+
+    const isScanning = this.scanning.has(key);
+
+    if (isScanning) return;
+
+    this.scanning.add(key);
+
+    try {
+      const isHandled = await this.scans.ask(source, target);
+
+      if (!isHandled) this.gate.drop(value);
+    } finally {
+      this.scanning.delete(key);
+    }
   }
 
   private async answer(job: LookupJob): Promise<void> {
