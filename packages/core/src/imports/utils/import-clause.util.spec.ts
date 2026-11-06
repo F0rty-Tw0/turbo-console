@@ -34,7 +34,19 @@ describe('FEATURE: reading the clause of an import or export', () => {
       expect(nextValueOf(text)).toBe('from');
     });
 
-    it.each(["import 'S'", 'import {a', "import x, from 'S'"])('WHEN the clause of %j is read THEN it is null', (text) => {
+    it("WHEN the clause of import x = require('S') is read THEN it is a lone binding and next points at =", () => {
+      expect(clauseOf("import x = require('S')")).toMatchObject({ hasBinding: true, items: 0, typeItems: 0 });
+      expect(nextValueOf("import x = require('S')")).toBe('=');
+    });
+
+    it.each([
+      "import 'S'",
+      "import {a} = require('S')",
+      "import x, {a} = require('S')",
+      "import * as n = require('S')",
+      'import {a',
+      "import x, from 'S'"
+    ])('WHEN the clause of %j is read THEN it is null', (text) => {
       expect(clauseOf(text)).toBeNull();
     });
   });

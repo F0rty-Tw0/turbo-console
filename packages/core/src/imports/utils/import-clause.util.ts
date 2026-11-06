@@ -100,6 +100,16 @@ const clauseAt = (tokens: SourceToken[], from: number, hasBinding: boolean): Imp
   return clause;
 };
 
+const isClosedAt = (tokens: SourceToken[], clause: ImportClause, clauseStart: number): boolean => {
+  const isFollowedByFrom = isWord(tokens[clause.next], 'from');
+  const isBare = clause.next === clauseStart;
+  const isEqualsNext = isPunct(tokens[clause.next], '=');
+  const isLoneDefaultBeforeEquals = isBare && clause.hasBinding && isEqualsNext;
+
+  return isFollowedByFrom || isLoneDefaultBeforeEquals;
+};
+
+/** The clause ends at `from`, or at `=` after a lone default binding (`import x = require('S')`). */
 export const importClauseOf = (tokens: SourceToken[], from: number): ImportClause | null => {
   const hasDefault = isAnyWord(tokens[from]);
   let clauseStart = from;
@@ -115,10 +125,10 @@ export const importClauseOf = (tokens: SourceToken[], from: number): ImportClaus
 
   if (!clause) return null;
 
-  const isFollowedByFrom = isWord(tokens[clause.next], 'from');
   const isCommaDangling = hasComma && clause.next === clauseStart;
+  const isClosed = isClosedAt(tokens, clause, clauseStart);
 
-  if (!isFollowedByFrom || isCommaDangling) return null;
+  if (!isClosed || isCommaDangling) return null;
 
   return clause;
 };
