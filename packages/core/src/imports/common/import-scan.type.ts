@@ -1,4 +1,4 @@
-type SourceImport = {
+export type SourceImport = {
   readonly specifier: string;
   readonly kind: 'static' | 'reexport' | 'dynamic' | 'require';
   readonly isType: boolean;

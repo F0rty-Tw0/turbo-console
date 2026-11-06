@@ -5,6 +5,9 @@
  */
 export const GENERATED_BLOCK_KEYWORDS = 7;
 
+/** Counted forms in one block: default import, `import type`, multi-line named import, `export * from`, `import()`, `require()`. */
+export const GENERATED_BLOCK_IMPORTS = 6;
+
 /** Replaced by the block index, so every specifier is unique and checkable. */
 export const GENERATED_BLOCK_MARK = '#';
 
