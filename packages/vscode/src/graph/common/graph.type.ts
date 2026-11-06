@@ -77,6 +77,15 @@ export type ExplainContext = {
   readonly canPost: () => boolean;
 };
 
+/** What `GraphLookups` needs of its session: the root, the ports, the state built now, whether a reply may still be posted, and the drop-and-log of a message it does not answer. */
+export type LookupGate = {
+  readonly root: string;
+  readonly ports: GraphPorts;
+  readonly state: () => GraphState;
+  readonly canPost: () => boolean;
+  readonly drop: (value: unknown) => void;
+};
+
 /**
  * `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now, `runIds` the ids a run can report
  * and `persistentIds` the ids whose running word is `continuous`, without the rest of the state.
