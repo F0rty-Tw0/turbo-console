@@ -4,7 +4,7 @@ import type { EdgeImportsResult, GraphEdgeImportsMessage } from '@turbo-console/
 
 import { textOf } from './graph-explain.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { ExplainContext, LookupGate } from '../common/graph.type.ts';
+import type { ExplainContext, ScanGate } from '../common/graph.type.ts';
 import type { ImportEdge, ScanDirs } from '../common/import-match.type.ts';
 import { hasEdge, manifestFilesOf, packagesByName } from '../utils/graph-package.util.ts';
 import { answerImports } from '../utils/import-answer.util.ts';
@@ -45,12 +45,12 @@ const FAILED: EdgeImportsResult = { kind: 'failed' };
  * another package aborts it; an aborted scan posts nothing. One `ImportFileCache` for the panel's life (D9).
  */
 export class ImportScans {
-  private readonly gate: Omit<LookupGate, 'drop'>;
+  private readonly gate: ScanGate;
   private readonly cache = new ImportFileCache();
   private running: ScanRun | undefined;
   private isDisposed = false;
 
-  public constructor(gate: Omit<LookupGate, 'drop'>) {
+  public constructor(gate: ScanGate) {
     this.gate = gate;
   }
 

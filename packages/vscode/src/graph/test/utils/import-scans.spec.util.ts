@@ -2,13 +2,13 @@ import type { ImportScanInput, PackageImportScan } from '@turbo-console/core';
 import type { EdgeImportsResult, GraphEdgeImportsMessage, GraphHostMessage } from '@turbo-console/webview-ui';
 import { vi } from 'vitest';
 
-import type { GraphPorts, LookupGate } from '../../common/graph.type.ts';
+import type { GraphPorts, ScanGate } from '../../common/graph.type.ts';
 import { IMPORT_ROOT } from '../common/import-edge.const.ts';
 import { GRAPH_STATE_STUB } from '../stubs/graph-model.stub.ts';
 
 /** The gate `ImportScans` takes: `IMPORT_ROOT`, the stub graph and a panel that can post; `patch` overrides any of them. */
-export const scansGateOf = (ports: GraphPorts, patch: Partial<Omit<LookupGate, 'drop'>> = {}): Omit<LookupGate, 'drop'> => {
-  const gate: Omit<LookupGate, 'drop'> = { root: IMPORT_ROOT, ports, state: () => GRAPH_STATE_STUB, canPost: () => true, ...patch };
+export const scansGateOf = (ports: GraphPorts, patch: Partial<ScanGate> = {}): ScanGate => {
+  const gate: ScanGate = { root: IMPORT_ROOT, ports, state: () => GRAPH_STATE_STUB, canPost: () => true, ...patch };
 
   return gate;
 };

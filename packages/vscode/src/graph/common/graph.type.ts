@@ -90,6 +90,9 @@ export type LookupGate = {
   readonly drop: (value: unknown) => void;
 };
 
+/** What `ImportScans` needs of its session: a `LookupGate` without the drop-and-log, which only `GraphLookups` uses. */
+export type ScanGate = Omit<LookupGate, 'drop'>;
+
 /**
  * `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now, `runIds` the ids a run can report
  * and `persistentIds` the ids whose running word is `continuous`, without the rest of the state.
