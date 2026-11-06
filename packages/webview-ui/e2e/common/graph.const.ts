@@ -53,7 +53,7 @@ export const MS_PER_SECOND = 1000;
  * log lines): about 2x spread on one runner image, inferred to be host CPU loss counted as thread time. Their budgets
  * sit about 1.7x over the worst reading, still under the ~3150 ms an unpatched Cytoscape would read there (inferred);
  * Linux and Windows keep the tight budgets on the same code and catch a lost patch anyway. Stopgap until C58's
- * calibrated budget.
+ * calibrated budget. It also gives the grouped first frame the Windows 3 s budget (see `GROUPED_FIRST_FRAME_MS`).
  */
 export const IS_MAC_RUNNER = process.platform === 'darwin';
 
