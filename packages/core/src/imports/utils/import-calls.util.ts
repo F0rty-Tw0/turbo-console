@@ -1,5 +1,5 @@
 import { isPunct, isWord } from './source-token-match.util.ts';
-import type { ImportForm } from '../common/import-form.type.ts';
+import type { ImportForm } from '../common/import-scan.type.ts';
 import type { SourceToken } from '../common/source-token.type.ts';
 
 export const requireSpecifierAt = (tokens: SourceToken[], index: number): SourceToken | null => {

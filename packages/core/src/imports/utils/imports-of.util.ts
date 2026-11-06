@@ -3,11 +3,17 @@ import { importClauseOf } from './import-clause.util.ts';
 import { lineIndexOf, lineStartsOf, lineTextOf } from './source-lines.util.ts';
 import { isPunct, isWord } from './source-token-match.util.ts';
 import { sourceTokensOf } from './source-tokens.util.ts';
-import type { ClauseKind, FormHead } from '../common/form-head.type.ts';
 import type { ImportClause } from '../common/import-clause.type.ts';
-import type { ImportForm } from '../common/import-form.type.ts';
-import type { SourceImport } from '../common/import-scan.type.ts';
+import type { ImportForm, SourceImport } from '../common/import-scan.type.ts';
 import type { SourceToken } from '../common/source-token.type.ts';
+
+type ClauseKind = Extract<ImportForm['kind'], 'static' | 'reexport'>;
+
+type FormHead = {
+  readonly kind: ClauseKind;
+  readonly isModifier: boolean;
+  readonly start: number;
+};
 
 const startOf = (tokens: SourceToken[], index: number): number => tokens[index]?.start ?? 0;
 

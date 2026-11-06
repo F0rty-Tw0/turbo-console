@@ -7,13 +7,3 @@ export type ImportClause = {
   readonly typeItems: number;
   readonly items: number;
 };
-
-export type ItemRange = {
-  readonly start: number;
-  readonly end: number;
-};
-
-export type NamedItems = {
-  readonly next: number;
-  readonly ranges: ItemRange[];
-};

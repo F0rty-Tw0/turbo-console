@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { dynamicImportAt, requireAt, requireSpecifierAt } from './import-calls.util.ts';
 import { sourceTokensOf } from './source-tokens.util.ts';
-import type { ImportForm } from '../common/import-form.type.ts';
+import type { ImportForm } from '../common/import-scan.type.ts';
 
 const formOf = (kind: ImportForm['kind'], specifier: string, next: number, isType = false): ImportForm => {
   const form: ImportForm = { specifier, kind, isType, start: 0, next };
