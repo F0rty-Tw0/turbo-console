@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { ImportFileCache } from './import-file-cache.ts';
 import type { CachedFile } from '../common/import-scan.type.ts';
@@ -51,11 +51,15 @@ describe('FEATURE: import file cache', () => {
   });
 
   describe('GIVEN A holds 19,999 files', () => {
-    it('WHEN B swaps in 1 THEN A and B both stay (total 20,000)', () => {
-      const cache = new ImportFileCache();
+    let cache = new ImportFileCache();
+
+    beforeEach(() => {
+      cache = new ImportFileCache();
 
       cache.swap('/a', mapOf(19_999, 'a'));
+    });
 
+    it('WHEN B swaps in 1 THEN A and B both stay (total 20,000)', () => {
       cache.swap('/b', mapOf(1, 'b'));
 
       expect(cache.filesOf('/a').size).toBe(19_999);
@@ -63,10 +67,6 @@ describe('FEATURE: import file cache', () => {
     });
 
     it('WHEN B swaps in 2 THEN A is empty and B holds 2', () => {
-      const cache = new ImportFileCache();
-
-      cache.swap('/a', mapOf(19_999, 'a'));
-
       cache.swap('/b', mapOf(2, 'b'));
 
       expect(cache.filesOf('/a').size).toBe(0);
