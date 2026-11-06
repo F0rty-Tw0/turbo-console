@@ -11,6 +11,7 @@ import {
 import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
 import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
 import type { GraphHostMessage } from '../../bridge/common/graph-message.type.ts';
+import { isCount } from '../../bridge/utils/number.util.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { isString } from '../../bridge/utils/string.util.ts';
 
@@ -27,7 +28,7 @@ const isPackage = (value: unknown): boolean => {
 
   const { name, bareName, path, tags, taskCount } = value;
   const hasTags = Array.isArray(tags) && tags.every(isString);
-  const hasTaskCount = typeof taskCount === 'number' && Number.isInteger(taskCount) && taskCount >= 0 && taskCount <= TASK_COUNT_MAX;
+  const hasTaskCount = isCount(taskCount) && taskCount <= TASK_COUNT_MAX;
   const hasNames = isString(name) && isString(bareName) && isString(path);
 
   return hasNames && hasTags && hasTaskCount;
