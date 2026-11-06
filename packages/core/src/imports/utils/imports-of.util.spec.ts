@@ -52,7 +52,8 @@ describe('FEATURE: finding import forms in a source', () => {
       "import type {A} from 'S'",
       "import type A from 'S'",
       "import {type A, type B} from 'S'",
-      "import {type A as B} from 'S'"
+      "import {type A as B} from 'S'",
+      "export import type x from 'S'"
     ]);
     const rows = [...plainRows, ...typeRows];
 
@@ -119,6 +120,8 @@ describe('FEATURE: finding import forms in a source', () => {
       "require('S')",
       "import x = require('S')",
       "export import x = require('S')",
+      "export import type x = require('S')",
+      "export type x = require('S')",
       "[...require('S')]"
     ]);
     const typeRows = rowsOf('require', true, ["import type x = require('S')"]);
@@ -152,7 +155,10 @@ describe('FEATURE: finding import forms in a source', () => {
       "import { a { b } } from 'S'",
       "import { a( } from 'S'",
       "import { a; } from 'S'",
-      "import { a b c d e } from 'S'"
+      "import { a b c d e } from 'S'",
+      'export {a}',
+      'import A = N.B',
+      'export import A = N.B'
     ]);
 
     it.each(rows)('WHEN %j is scanned THEN the sites are %j', (source, expected) => {
