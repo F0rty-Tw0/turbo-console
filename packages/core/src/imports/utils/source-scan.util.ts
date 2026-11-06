@@ -41,12 +41,15 @@ const isWideSpaceCode = (code: number): boolean => {
   return isEdge || isNarrow;
 };
 
-const isSpaceCode = (code: number): boolean => {
-  const isAsciiSpace = code <= SPACE;
+export const isSpaceCode = (code: number): boolean => {
+  if (code <= SPACE) return true;
+
+  if (code < NON_ASCII_MIN) return false;
+
   const isUnicodeSpace = isUnicodeSpaceCode(code);
   const isWideSpace = isWideSpaceCode(code);
 
-  return isAsciiSpace || isUnicodeSpace || isWideSpace;
+  return isUnicodeSpace || isWideSpace;
 };
 
 const isWordCode = (code: number): boolean => {
