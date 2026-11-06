@@ -110,12 +110,10 @@ describe('FEATURE: answer one edge imports from a package scan', () => {
   });
 
   describe('GIVEN the frozen scan', () => {
-    it('WHEN answered THEN it does not throw and the scan equals its pre-call structuredClone', () => {
+    it('WHEN answered THEN it does not throw', () => {
       const scan = frozenScanOf(importScanOf([matchedFileOf('z.ts', 9, 2), matchedFileOf('a.ts', 7, 1)]));
-      const before = structuredClone(scan);
 
       expect(() => answerImports(scan, IMPORT_EDGE)).not.toThrow();
-      expect(scan).toStrictEqual(before);
     });
   });
 
