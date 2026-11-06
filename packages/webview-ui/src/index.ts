@@ -44,6 +44,15 @@ export type {
 } from './bridge/common/graph-message.type.ts';
 
 export type {
+  EdgeImportsResult,
+  GraphEdgeImportsMessage,
+  ImportKind,
+  ImportLimit,
+  ImportSite,
+  ImportVia
+} from './bridge/common/graph-imports.type.ts';
+
+export type {
   EdgeRoute,
   GraphAtomFile,
   GraphAtomGroup,
@@ -64,6 +73,7 @@ export type { WebviewSlots } from './shell/common/webview-html.type.ts';
 
 export {
   ENTRY_TEXT_MAX,
+  IMPORT_SITES_MAX,
   MANIFEST_ENTRIES_MAX,
   MANIFEST_FIELDS,
   MANIFEST_FILE_MAX,

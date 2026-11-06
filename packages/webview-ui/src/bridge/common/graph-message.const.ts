@@ -16,6 +16,9 @@ export const MANIFEST_LINE_MAX = 1_000_000;
 /** The longest `package.json` path an explained edge names; the page rejects a longer one. */
 export const MANIFEST_FILE_MAX = 1_024;
 
+/** The most import sites one `edgeImports` reply carries; the rest count only in `total` (spec D8, D11). */
+export const IMPORT_SITES_MAX = 200;
+
 /** The highest `taskCount` the page accepts. */
 export const TASK_COUNT_MAX = 100_000;
 
