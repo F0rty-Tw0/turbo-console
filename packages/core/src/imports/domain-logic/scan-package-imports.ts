@@ -56,7 +56,7 @@ export const scanPackageImports = async (input: ImportScanInput): Promise<Packag
   input.signal.throwIfAborted();
 
   const caps = input.caps ?? IMPORT_SCAN_CAPS;
-  const now = input.now ?? Date.now;
+  const now = input.now ?? ((): number => performance.now());
   const start = now();
   const isOverTime = (): boolean => now() - start >= caps.timeMs;
   const run: ImportScanRun = { dir: input.dir, skipDirs: input.skipDirs, caps, signal: input.signal, isOverTime };

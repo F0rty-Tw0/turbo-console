@@ -271,6 +271,20 @@ describe('FEATURE: scan one package for its imports', () => {
     });
   });
 
+  describe('GIVEN a wall clock that jumps a day ahead after the scan starts', () => {
+    it('WHEN scanned with the default clock THEN no time limit is hit', async () => {
+      await writeImportTree(dir, { 'a.ts': IMPORT_B });
+      const day = 24 * 60 * 60 * 1000;
+      const wallClock = vi.spyOn(Date, 'now').mockReturnValueOnce(0).mockReturnValue(day);
+
+      const scan = await scanPackageImports(inputOf(dir, new ImportFileCache()));
+
+      wallClock.mockRestore();
+
+      expect(scan.limit).toBeNull();
+    });
+  });
+
   describe('GIVEN an abort', () => {
     it('WHEN the signal is aborted before the scan THEN it rejects with signal.reason and nothing is opened', async () => {
       await writeImportTree(dir, { 'a.ts': IMPORT_B });

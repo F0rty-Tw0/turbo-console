@@ -83,7 +83,7 @@ export type ImportScanInput = {
   readonly skipDirs: ReadonlySet<string>;
   readonly cache: ImportFileStore;
   readonly signal: AbortSignal;
-  /** Tests only; defaults `IMPORT_SCAN_CAPS` (D8) and `Date.now`. */
+  /** Tests only; defaults `IMPORT_SCAN_CAPS` (D8) and the monotonic `performance.now`. */
   readonly caps?: ImportScanCaps | undefined;
   readonly now?: (() => number) | undefined;
 };
