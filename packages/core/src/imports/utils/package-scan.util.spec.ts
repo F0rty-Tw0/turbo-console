@@ -60,12 +60,13 @@ describe('FEATURE: assemble a package scan', () => {
     });
   });
 
-  describe('GIVEN a.ts scanned, b.ts unreached, and a previous map holding b.ts and the unwalked z.ts', () => {
-    it('WHEN assembled THEN cached holds a.ts and the previous b.ts entry, not z.ts', () => {
-      const walk = withNames(['a.ts', 'b.ts']);
-      const outcomes: FileOutcome[] = [{ kind: 'scanned', cached: CACHED_FILE_STUB }, { kind: 'unreached' }];
+  describe('GIVEN a.ts scanned, b.ts unreached, c.ts skipped, and a previous map holding b.ts, c.ts and the unwalked z.ts', () => {
+    it('WHEN assembled THEN cached holds a.ts and the previous b.ts entry, not c.ts or z.ts', () => {
+      const walk = withNames(['a.ts', 'b.ts', 'c.ts']);
+      const outcomes: FileOutcome[] = [{ kind: 'scanned', cached: CACHED_FILE_STUB }, { kind: 'unreached' }, { kind: 'skipped' }];
       const previous = new Map([
         ['b.ts', NO_IMPORTS],
+        ['c.ts', NO_IMPORTS],
         ['z.ts', NO_IMPORTS]
       ]);
 
