@@ -1,8 +1,9 @@
-import { chmod, lstat, mkdtemp, rm, symlink, unlink, utimes, writeFile } from 'node:fs/promises';
+import { appendFile, chmod, lstat, mkdtemp, rm, symlink, unlink, utimes, writeFile } from 'node:fs/promises';
+import type * as fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { scanFile } from './import-file-scan.ts';
 import type { CachedFile, SourceImport } from '../common/import-scan.type.ts';
@@ -11,13 +12,34 @@ import { CACHED_FILE_STUB } from '../test/stubs/import-scan.stub.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
 
 /** chmod has no effect on Windows, and root reads any file. */
+const reads = vi.hoisted(() => {
+  const proceed = async (): Promise<void> => Promise.resolve();
+  const beforeOpen: (path: string) => Promise<void> = proceed;
+  const state = { beforeOpen, proceed };
+
+  return state;
+});
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const real = await importOriginal<typeof fsPromises>();
+
+  /** Runs `reads.beforeOpen` before the real open. */
+  const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
+    await reads.beforeOpen(String(args[0]));
+
+    return real.open(...args);
+  };
+
+  const mocked = { ...real, open };
+
+  return mocked;
+});
+
 const CAN_DENY_READ = process.platform !== 'win32' && process.getuid?.() !== 0;
 
 const CAN_SYMLINK = process.platform !== 'win32';
 
 const MAX_BYTES = 64;
-
-const DATE = new Date('2026-01-01T00:00:00Z');
 
 const DATE_LATER = new Date('2026-01-01T00:01:00Z');
 
@@ -49,6 +71,7 @@ describe('FEATURE: scan one source file', () => {
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'import-scan-'));
     walked = { file: 'a.ts', path: join(dir, 'a.ts') };
+    reads.beforeOpen = reads.proceed;
   });
 
   afterEach(async () => {
@@ -61,10 +84,10 @@ describe('FEATURE: scan one source file', () => {
     });
 
     it("WHEN scanned with no known entry THEN it is scanned with that import and the file's lstat mtimeMs and size", async () => {
-      const outcome = await scanFile(walked, undefined, MAX_BYTES);
       const stats = await statOf();
-
       const cached: CachedFile = { mtimeMs: stats.mtimeMs, size: stats.size, imports: [STATIC_A] };
+
+      const outcome = await scanFile(walked, undefined, MAX_BYTES);
 
       expect(outcome).toStrictEqual({ kind: 'scanned', cached });
     });
@@ -133,6 +156,17 @@ describe('FEATURE: scan one source file', () => {
 
       expect(outcome).toStrictEqual({ kind: 'skipped' });
     });
+
+    it('WHEN a maxBytes file grows past maxBytes after its lstat, before its open THEN it is skipped', async () => {
+      const padding = ' '.repeat(MAX_BYTES - IMPORT_A.length);
+
+      await writeImportTree(dir, { 'a.ts': `${IMPORT_A}${padding}` });
+      reads.beforeOpen = async (path: string): Promise<void> => appendFile(path, ' ');
+
+      const outcome = await scanFile(walked, undefined, MAX_BYTES);
+
+      expect(outcome).toStrictEqual({ kind: 'skipped' });
+    });
   });
 
   describe('GIVEN a file that cannot be scanned', () => {
@@ -164,13 +198,14 @@ describe('FEATURE: scan one source file', () => {
     });
   });
 
-  it('GIVEN a file with no imports WHEN scanned THEN it is scanned with imports []', async () => {
-    await writeImportTree(dir, { 'a.ts': 'export {};\n' });
-    await utimes(walked.path, DATE, DATE);
+  describe('GIVEN a file with no imports', () => {
+    it('WHEN scanned THEN it is scanned with imports []', async () => {
+      await writeImportTree(dir, { 'a.ts': 'export {};\n' });
 
-    const outcome = await scanFile(walked, CACHED_FILE_STUB, MAX_BYTES);
-    const cached = cachedOf(outcome);
+      const outcome = await scanFile(walked, CACHED_FILE_STUB, MAX_BYTES);
+      const cached = cachedOf(outcome);
 
-    expect(cached.imports).toStrictEqual([]);
+      expect(cached.imports).toStrictEqual([]);
+    });
   });
 });
