@@ -1,4 +1,4 @@
-import { openReadable } from './graph-explain.ts';
+import { openReadable } from './graph-read.ts';
 import type { ExplainContext } from '../common/graph.type.ts';
 import { packagesByName } from '../utils/graph-package.util.ts';
 import { importFileOf } from '../utils/import-file.util.ts';
