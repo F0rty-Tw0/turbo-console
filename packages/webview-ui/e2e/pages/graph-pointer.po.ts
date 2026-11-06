@@ -6,7 +6,7 @@ import { CANVAS_QUIET_MS, CANVAS_QUIET_TIMEOUT_MS, NEXT_FRAME } from '../common/
 import type { PressPngs, QuietWindow } from '../common/graph.type.ts';
 import type { ScreenClip, ViewportPoint } from '../common/playwright.type.ts';
 import { maxChannelDeltaOf } from '../test/utils/graph-press-delta.spec.util.ts';
-import { settlesQuiet } from '../test/utils/graph-quiet-canvas.spec.util.ts';
+import { drawsWithoutLayers, settlesQuiet } from '../test/utils/graph-quiet-canvas.spec.util.ts';
 
 /** Half the side, in px, of the square around the pointer that a press must leave unchanged. */
 const PRESS_HALF_PX = 60;
@@ -48,12 +48,14 @@ export class GraphPointer extends GraphHover {
    * Presses and releases the mouse where the pointer rests, keeping the largest channel change between a shot of the
    * square around it from before the press and one from while the button is held, both of a quiet canvas, and the
    * renders after the press's own frame. Shots past the noise are attached; throws when the canvas drew during the
-   * first shot.
+   * first shot. Both shots draw without Cytoscape's layered texture cache, since a press frame never uses it and an
+   * idle frame drawn from it shifts anti-aliased edges by about 50 levels.
    */
   public async press(): Promise<void> {
     const point = this.restingPoint();
     const clip = this.clipAround(point);
 
+    await this.page.evaluate(drawsWithoutLayers);
     await this.waitForQuietCanvas();
     await this.page.evaluate(NEXT_FRAME);
 
