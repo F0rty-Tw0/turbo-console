@@ -41,7 +41,7 @@ const isWideSpaceCode = (code: number): boolean => {
   return isEdge || isNarrow;
 };
 
-const isSpaceCode = (code: number): boolean => {
+export const isSpaceCode = (code: number): boolean => {
   const isAsciiSpace = code <= SPACE;
   const isUnicodeSpace = isUnicodeSpaceCode(code);
   const isWideSpace = isWideSpaceCode(code);

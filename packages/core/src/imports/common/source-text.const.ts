@@ -32,3 +32,21 @@ export const IDEOGRAPHIC_SPACE_CODE = 0x3000;
 
 /** `SourceImport.text` is the raw line sliced to this many UTF-16 units; the host cuts it further, D13. */
 export const SOURCE_LINE_MAX = 1000;
+
+/** A `/` after one of these words starts a regex, not a division, D3. */
+export const REGEX_AFTER_WORDS: ReadonlySet<string> = new Set([
+  'return',
+  'typeof',
+  'instanceof',
+  'in',
+  'of',
+  'new',
+  'delete',
+  'void',
+  'throw',
+  'case',
+  'do',
+  'else',
+  'yield',
+  'await'
+]);
