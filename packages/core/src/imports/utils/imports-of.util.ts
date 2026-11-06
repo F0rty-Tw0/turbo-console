@@ -1,4 +1,4 @@
-import { dynamicImportAt, requireAt, requireSpecifierAt } from './import-calls.util.ts';
+import { dynamicImportAt, requireAt } from './import-calls.util.ts';
 import { importClauseOf } from './import-clause.util.ts';
 import { lineIndexOf, lineStartsOf, lineTextOf } from './source-lines.util.ts';
 import { isAnyWord, isPunct, isWord, startOf } from './source-token-match.util.ts';
@@ -36,13 +36,13 @@ const isAllTypeItems = (clause: ImportClause): boolean => {
 };
 
 const equalsRequireAt = (tokens: SourceToken[], clause: ImportClause, head: FormHead): ImportForm | null => {
-  const specifier = requireSpecifierAt(tokens, clause.next + 1);
+  const required = requireAt(tokens, clause.next + 1);
   const isEquals = isPunct(tokens[clause.next], '=');
 
-  if (!isEquals || !specifier) return null;
+  if (!isEquals || !required) return null;
 
   const { isModifier, start } = head;
-  const form: ImportForm = { specifier: specifier.value, kind: 'require', isType: isModifier, start, next: clause.next + 5 };
+  const form: ImportForm = { ...required, isType: isModifier, start };
 
   return form;
 };
@@ -65,7 +65,8 @@ const clauseFormAt = (tokens: SourceToken[], index: number, kind: ClauseKind): I
   const clauseOffset = isModifier ? 2 : 1;
   const clauseFrom = index + clauseOffset;
   const clause = importClauseOf(tokens, clauseFrom);
-  const head: FormHead = { kind, isModifier, start: startOf(tokens, index) };
+  const start = startOf(tokens, index);
+  const head: FormHead = { kind, isModifier, start };
 
   if (!clause) return null;
 
@@ -102,7 +103,8 @@ const exportAt = (tokens: SourceToken[], index: number): ImportForm | null => {
 
   if (inner?.kind !== 'require') return null;
 
-  const form: ImportForm = { ...inner, isType: false, start: startOf(tokens, index) };
+  const start = startOf(tokens, index);
+  const form: ImportForm = { ...inner, isType: false, start };
 
   return form;
 };
