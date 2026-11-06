@@ -9,17 +9,6 @@ import type { ExitStallCheck, RunTurboOptions, TurboResult } from '../common/tur
 import { isAlive } from '../test/utils/process.spec.util.ts';
 import { isJsonEnd, jsonExitCode } from '../utils/stalled-exit-code.util.ts';
 
-type StubName =
-  | 'complete-hang'
-  | 'half-hang'
-  | 'broken-hang'
-  | 'late-end-hang'
-  | 'complete-exit-3'
-  | 'complete-term-exit-1'
-  | 'broken-term-exit-0'
-  | 'held-exit-3'
-  | 'term-end-hang';
-
 type RunOutcome = {
   readonly settled: unknown;
   readonly elapsedMs: number;
@@ -43,7 +32,7 @@ ${body}
  * grandchild holding its stdout for 800 ms after it exits; `term-end-hang` ends its JSON and counts in `.terms` on each
  * SIGTERM, without exiting.
  */
-const STUB_BODIES: Record<StubName, string> = {
+const STUB_BODIES = {
   'complete-hang': `process.stdout.write('{"tasks":[]}\\n');\nsetInterval(() => undefined, 1000);`,
   'half-hang': `process.stdout.write('{"tasks":[');\nsetInterval(() => undefined, 1000);`,
   'broken-hang': `process.stdout.write('{"tasks":]}\\n');\nsetInterval(() => undefined, 1000);`,
@@ -62,17 +51,7 @@ process.on('SIGTERM', () => {
 setInterval(() => undefined, 1000);`
 };
 
-const STUB_NAMES: StubName[] = [
-  'complete-hang',
-  'half-hang',
-  'broken-hang',
-  'late-end-hang',
-  'complete-exit-3',
-  'complete-term-exit-1',
-  'broken-term-exit-0',
-  'held-exit-3',
-  'term-end-hang'
-];
+type StubName = keyof typeof STUB_BODIES;
 
 const JSON_CHECK: ExitStallCheck = { isEnd: isJsonEnd, exitCodeOf: jsonExitCode };
 
@@ -93,8 +72,8 @@ let stubDir = '';
 
 const stubPath = (stub: StubName): string => join(stubDir, `${stub}.js`);
 
-const writeStub = async (stub: StubName): Promise<void> => {
-  await writeFile(stubPath(stub), stubScript(STUB_BODIES[stub]), { mode: 0o755 });
+const writeStub = async ([stub, body]: [string, string]): Promise<void> => {
+  await writeFile(join(stubDir, `${stub}.js`), stubScript(body), { mode: 0o755 });
 };
 
 /** Runs `stub` until runTurbo settles; whether its node process still exists is probed as the result lands. */
@@ -113,7 +92,7 @@ const runStub = async (stub: StubName, options: RunTurboOptions): Promise<RunOut
 describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guard', () => {
   beforeAll(async () => {
     stubDir = await mkdtemp(join(tmpdir(), 'run-turbo-exit-stall-'));
-    await Promise.all(STUB_NAMES.map(writeStub));
+    await Promise.all(Object.entries(STUB_BODIES).map(writeStub));
   });
 
   afterAll(async () => {
