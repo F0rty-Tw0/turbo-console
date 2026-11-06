@@ -51,7 +51,8 @@ describe('FEATURE: finding import forms in a source', () => {
     const typeRows = rowsOf('static', true, [
       "import type {A} from 'S'",
       "import type A from 'S'",
-      "import {type A, type B} from 'S'"
+      "import {type A, type B} from 'S'",
+      "import {type A as B} from 'S'"
     ]);
     const rows = [...plainRows, ...typeRows];
 
@@ -146,7 +147,11 @@ describe('FEATURE: finding import forms in a source', () => {
       "x.import('S')",
       "x?.import('S')",
       'export const a = 1',
-      'import x from variable'
+      'import x from variable',
+      "import { a { b } } from 'S'",
+      "import { a( } from 'S'",
+      "import { a; } from 'S'",
+      "import { a b c d e } from 'S'"
     ]);
 
     it.each(rows)('WHEN %j is scanned THEN the sites are %j', (source, expected) => {
@@ -176,6 +181,15 @@ describe('FEATURE: finding import forms in a source', () => {
       const specifiers = importsOf(source).map((site) => site.specifier);
 
       expect(specifiers).toStrictEqual(['A', 'B']);
+    });
+
+    it('WHEN an unclosed export brace precedes an import THEN the import is found', () => {
+      const source = "export {a\nimport 'b'";
+      const expected = [staticOf('b', 1, "import 'b'")];
+
+      const sites = importsOf(source);
+
+      expect(sites).toStrictEqual(expected);
     });
   });
 

@@ -2,61 +2,63 @@ import { isAnyWord, isPunct, isWord } from './source-token-match.util.ts';
 import type { ImportClause } from '../common/import-clause.type.ts';
 import type { SourceToken } from '../common/source-token.type.ts';
 
-type ItemRange = {
-  readonly start: number;
-  readonly end: number;
-};
-
 type NamedItems = {
   readonly next: number;
-  readonly ranges: ItemRange[];
+  readonly itemStarts: number[];
 };
 
-const depthChangeOf = (token: SourceToken | undefined): number => {
-  const isOpen = isPunct(token, '{');
-  const isClose = isPunct(token, '}');
+/** The longest named item is `type a as b`. */
+const NAMED_ITEM_TOKENS_MAX = 4;
 
-  if (isOpen) return 1;
+const isOutsideNamedItems = (token: SourceToken | undefined): boolean => {
+  const isBrace = isPunct(token, '{');
+  const isParen = isPunct(token, '(');
+  const isSemicolon = isPunct(token, ';');
 
-  if (isClose) return -1;
-
-  return 0;
+  return isBrace || isParen || isSemicolon;
 };
 
-const isTypeItem = (tokens: SourceToken[], start: number, end: number): boolean => {
+const isTypeItem = (tokens: SourceToken[], start: number): boolean => {
   const follower = tokens[start + 1];
   const isTypeWord = isWord(tokens[start], 'type');
-  const isInRange = start + 1 < end;
   const isWordFollower = isAnyWord(follower);
-  const isFollowedByWord = isInRange && isWordFollower;
   const isAs = isWord(follower, 'as');
 
-  return isTypeWord && isFollowedByWord && !isAs;
+  return isTypeWord && isWordFollower && !isAs;
 };
 
+const itemStartAfter = (index: number, itemStart: number, endsItem: boolean): number => {
+  const hasItem = itemStart >= 0;
+
+  if (endsItem) return -1;
+
+  if (hasItem) return itemStart;
+
+  return index;
+};
+
+/** Named items never nest: the walk stops at a token no item holds instead of scanning on to a far `}`. */
 const namedItemsOf = (tokens: SourceToken[], open: number): NamedItems | null => {
-  const ranges: ItemRange[] = [];
-  let depth = 1;
+  const itemStarts: number[] = [];
   let itemStart = -1;
 
   for (let index = open + 1; index < tokens.length; index += 1) {
     const token = tokens[index];
+    const isClose = isPunct(token, '}');
     const isComma = isPunct(token, ',');
-
-    depth += depthChangeOf(token);
-
-    const isSeparator = isComma && depth === 1;
-    const endsItem = isSeparator || depth === 0;
+    const endsItem = isClose || isComma;
     const hasItem = itemStart >= 0;
+    const isItemTooLong = hasItem && index - itemStart > NAMED_ITEM_TOKENS_MAX;
+    const isOutside = isOutsideNamedItems(token);
 
-    if (endsItem && hasItem) ranges.push({ start: itemStart, end: index });
+    if (isOutside || isItemTooLong) return null;
 
-    if (endsItem) itemStart = -1;
+    if (endsItem && hasItem) itemStarts.push(itemStart);
 
-    if (!endsItem && !hasItem) itemStart = index;
+    itemStart = itemStartAfter(index, itemStart, endsItem);
 
-    if (depth === 0) {
-      const named: NamedItems = { next: index + 1, ranges };
+    if (isClose) {
+      const named: NamedItems = { next: index + 1, itemStarts };
 
       return named;
     }
@@ -70,8 +72,8 @@ const namedClauseAt = (tokens: SourceToken[], open: number, hasBinding: boolean)
 
   if (!named) return null;
 
-  const typeRanges = named.ranges.filter((range) => isTypeItem(tokens, range.start, range.end));
-  const clause: ImportClause = { next: named.next, hasBinding, typeItems: typeRanges.length, items: named.ranges.length };
+  const typeStarts = named.itemStarts.filter((start) => isTypeItem(tokens, start));
+  const clause: ImportClause = { next: named.next, hasBinding, typeItems: typeStarts.length, items: named.itemStarts.length };
 
   return clause;
 };
