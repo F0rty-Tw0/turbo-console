@@ -92,13 +92,7 @@ describe('FEATURE: scan one package for its imports', () => {
 
       const scan = await scanPackageImports(inputOf(dir, new ImportFileCache()));
 
-      expect(scan).toStrictEqual({
-        files: listed,
-        tsconfigPaths: null,
-        scanned: 2,
-        skipped: 0,
-        limit: null
-      });
+      expect(scan).toStrictEqual({ files: listed, tsconfigPaths: null, scanned: 2, skipped: 0, limit: null });
     });
   });
 
@@ -249,6 +243,16 @@ describe('FEATURE: scan one package for its imports', () => {
       expect(reads.maxInFlight).toBe(2);
     });
 
+    it('WHEN the wall clock jumps a day ahead mid-scan THEN the default clock hits no time limit', async () => {
+      await writeImportTree(dir, { 'a.ts': IMPORT_B });
+      const wallClock = vi.spyOn(Date, 'now').mockReturnValueOnce(0).mockReturnValue(86_400_000);
+
+      await scanWith({});
+      wallClock.mockRestore();
+
+      expect(scan.limit).toBeNull();
+    });
+
     describe('GIVEN caps.files 2, caps.reads 1 and a clock that passes timeMs as a.ts opens', () => {
       beforeEach(async () => {
         await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.ts': IMPORT_B, 'c.ts': IMPORT_B });
@@ -268,20 +272,6 @@ describe('FEATURE: scan one package for its imports', () => {
       it("WHEN scanned THEN limit is 'files'", () => {
         expect(scan.limit).toBe('files');
       });
-    });
-  });
-
-  describe('GIVEN a wall clock that jumps a day ahead after the scan starts', () => {
-    it('WHEN scanned with the default clock THEN no time limit is hit', async () => {
-      await writeImportTree(dir, { 'a.ts': IMPORT_B });
-      const day = 24 * 60 * 60 * 1000;
-      const wallClock = vi.spyOn(Date, 'now').mockReturnValueOnce(0).mockReturnValue(day);
-
-      const scan = await scanPackageImports(inputOf(dir, new ImportFileCache()));
-
-      wallClock.mockRestore();
-
-      expect(scan.limit).toBeNull();
     });
   });
 
