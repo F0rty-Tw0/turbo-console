@@ -13,7 +13,7 @@ const SHOWN_CONTROL = '\uFFFD';
 const isHighSurrogate = (unit: number): boolean => unit >= HIGH_SURROGATE_FIRST && unit <= HIGH_SURROGATE_LAST;
 
 /** Shows bidi and invisible control characters as U+FFFD before the length cut, so file text cannot reorder the excerpt. Shared by manifest entries and import sites (spec D13). */
-export const cut = (raw: string): string => {
+export const cutEntryText = (raw: string): string => {
   const text = raw.replace(BIDI_CONTROLS, SHOWN_CONTROL);
 
   if (text.length <= ENTRY_TEXT_MAX) return text;

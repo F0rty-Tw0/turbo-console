@@ -4,7 +4,7 @@ import type { PackageImportScan, SourceImport } from '@turbo-console/core';
 import { IMPORT_SITES_MAX, MANIFEST_FILE_MAX } from '@turbo-console/webview-ui';
 import type { EdgeImportsResult, ImportKind, ImportLimit, ImportSite, ImportVia } from '@turbo-console/webview-ui';
 
-import { cut } from './entry-text.util.ts';
+import { cutEntryText } from './entry-text.util.ts';
 import { importMatchOf } from './import-match.util.ts';
 import type { ImportEdge } from '../common/import-match.type.ts';
 
@@ -35,8 +35,8 @@ const siteOf = (match: Match): ImportSite => {
   const site: ImportSite = {
     file,
     line: source.line,
-    specifier: cut(source.specifier),
-    text: cut(source.text.trimStart()),
+    specifier: cutEntryText(source.specifier),
+    text: cutEntryText(source.text.trimStart()),
     kind,
     isType: source.isType,
     via
