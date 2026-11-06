@@ -1,9 +1,6 @@
+import { isPunct, isWord } from './source-token-match.util.ts';
 import type { ImportClause, ItemRange, NamedItems } from '../common/import-clause.type.ts';
 import type { SourceToken } from '../common/source-token.type.ts';
-
-const isPunct = (token: SourceToken | undefined, value: string): boolean => token?.kind === 'punct' && token.value === value;
-
-const isWord = (token: SourceToken | undefined, value: string): boolean => token?.kind === 'word' && token.value === value;
 
 const isAnyWord = (token: SourceToken | undefined): boolean => token?.kind === 'word';
 
