@@ -31,6 +31,9 @@ export type TurboResult = {
   readonly exitCode: number;
 };
 
+/** What a turbo process wrote, with or without an exit code. */
+export type TurboOutput = Pick<TurboResult, 'stdout' | 'stderr'>;
+
 /** Plain `major.minor.patch` bounds: `min` is included, `maxExclusive` is not. */
 export type TurboVersionRange = {
   readonly min: string;
@@ -38,8 +41,20 @@ export type TurboVersionRange = {
 };
 
 /**
+ * How `runTurbo` reads the output of a turbo that went quiet without exiting (the Windows exit stall, see `runTurbo`).
+ * `isEnd` gets the last 64 Ki characters of stdout and must be cheap: an output past that size cannot be parsed from its
+ * tail. `exitCodeOf` gets the whole stdout once turbo is stopped and returns the exit code turbo would have had, or
+ * `null` when the output is not complete.
+ */
+export type ExitStallCheck = {
+  readonly isEnd: (tail: string) => boolean;
+  readonly exitCodeOf: (stdout: string) => number | null;
+};
+
+/**
  * Per-call spawn limits; `graceMs` bounds the wait for exit after the abort kill, `maxBuffer` each of stdout and stderr (bytes).
- * `maxRssBytes` (turbo's resident memory bound) and `rssPollMs` (how often it is read) are test seams, not user settings.
+ * `exitStallCheck` turns on the Windows exit-stall guard. `maxRssBytes` (turbo's resident memory bound), `rssPollMs` (how often
+ * it is read), `exitStallMs` (how long a finished turbo may stay quiet) and `platform` are test seams, not user settings.
  */
 export type RunTurboOptions = {
   readonly timeoutMs?: number | undefined;
@@ -48,6 +63,9 @@ export type RunTurboOptions = {
   readonly maxBuffer?: number | undefined;
   readonly maxRssBytes?: number | undefined;
   readonly rssPollMs?: number | undefined;
+  readonly exitStallCheck?: ExitStallCheck | undefined;
+  readonly exitStallMs?: number | undefined;
+  readonly platform?: NodeJS.Platform | undefined;
 };
 
 type QueryVariables = {
