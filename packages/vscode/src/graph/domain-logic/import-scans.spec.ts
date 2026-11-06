@@ -154,6 +154,21 @@ describe('FEATURE: import scans of one panel', () => {
       expect(postedOf(ports)).toStrictEqual([A_TO_X]);
     });
 
+    it("WHEN a → @org/x is asked and web's scan then settles THEN a → @org/x asked again joins a's scan: two scans, not three", async () => {
+      const scanOfA = pendingScanOf(ports);
+      const second = scans.ask('a', '@org/x');
+
+      pending.resolve(IMPORTS_A);
+      await first;
+
+      const third = scans.ask('a', '@org/x');
+
+      scanOfA.resolve(IMPORTS_A);
+      await Promise.all([second, third]);
+
+      expect(ports.scanImports).toHaveBeenCalledTimes(2);
+    });
+
     it('WHEN the panel cannot post when the scan resolves THEN nothing is posted', async () => {
       canPost.mockReturnValue(false);
       pending.resolve(IMPORTS_A);
@@ -216,13 +231,18 @@ describe('FEATURE: import scans of one panel', () => {
     it.each([
       ['the read gives null', null],
       ['the read holds no JSON object', '[]']
-    ])("WHEN %s THEN the scan runs with names [a] and src/x.ts's import of 'a' is listed", async (_title, text) => {
-      vi.mocked(ports.readText).mockResolvedValue(text);
-      vi.mocked(ports.scanImports).mockResolvedValue(IMPORTS_A);
-      await scans.ask('web', 'a');
+    ])(
+      "WHEN %s THEN the scan runs with names [a] and only src/x.ts's import of 'a' is listed, not 'ui-alias/y'",
+      async (_title, text) => {
+        const unaliased = importScanOf([scannedFileOf('src/x.ts', [sourceImportOf('a', 0), sourceImportOf('ui-alias/y', 1)])]);
 
-      expect(postedOf(ports)).toStrictEqual([WEB_TO_A]);
-    });
+        vi.mocked(ports.readText).mockResolvedValue(text);
+        vi.mocked(ports.scanImports).mockResolvedValue(unaliased);
+        await scans.ask('web', 'a');
+
+        expect(postedOf(ports)).toStrictEqual([WEB_TO_A]);
+      }
+    );
 
     it('WHEN the read rejects THEN the failure is logged and the scan still runs', async () => {
       vi.mocked(ports.readText).mockRejectedValue(new Error('EACCES'));
@@ -233,22 +253,29 @@ describe('FEATURE: import scans of one panel', () => {
       expect(postedOf(ports)).toStrictEqual([WEB_TO_A]);
     });
 
-    it("WHEN web → a's read is still pending and a → @org/x is asked THEN web's scan is aborted, a → @org/x is answered and nothing is posted for web → a", async () => {
+    it("WHEN web → a's read is still pending and a → @org/x is asked THEN web's scan is aborted, a's scan is not, and only a → @org/x is answered", async () => {
       const read = Promise.withResolvers<string | null>();
-      const scan = pendingScanOf(ports);
+      const scanOfWeb = pendingScanOf(ports);
+      const scanOfA = pendingScanOf(ports);
 
       vi.mocked(ports.readText).mockReturnValueOnce(read.promise);
 
       const first = scans.ask('web', 'a');
       const second = scans.ask('a', '@org/x');
-      const [webInput] = scanInputsOf(ports);
+      const [webInput, aInput] = scanInputsOf(ports);
 
-      await second;
+      expect(scanInputsOf(ports)).toHaveLength(2);
+
       read.resolve(null);
-      scan.resolve(IMPORTS_A);
+      scanOfWeb.resolve(IMPORTS_A);
       await first;
 
       expect(webInput?.signal.aborted).toBe(true);
+      expect(aInput?.signal.aborted).toBe(false);
+
+      scanOfA.resolve(importScanOf([]));
+      await second;
+
       expect(postedOf(ports)).toStrictEqual([A_TO_X]);
     });
   });
