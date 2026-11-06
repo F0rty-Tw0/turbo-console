@@ -128,7 +128,7 @@ export class ImportScans {
 
       return done;
     } catch (error: unknown) {
-      if (!input.signal.aborted) this.gate.ports.log(logTextOf(error));
+      if (!input.signal.aborted) this.report(error);
 
       return FAILED_SCAN;
     }
@@ -140,7 +140,7 @@ export class ImportScans {
     try {
       return answerImports(outcome.scan, edge);
     } catch (error: unknown) {
-      this.gate.ports.log(logTextOf(error));
+      this.report(error);
 
       return FAILED;
     }
@@ -158,6 +158,19 @@ export class ImportScans {
 
     const message: GraphEdgeImportsMessage = { type: 'edgeImports', source, target, result };
 
-    this.gate.ports.post(message);
+    try {
+      this.gate.ports.post(message);
+    } catch (error: unknown) {
+      this.report(error);
+    }
+  }
+
+  /** A log that throws is dropped: `ask` and `settle` never reject, and a failing log must not undo that. */
+  private report(error: unknown): void {
+    try {
+      this.gate.ports.log(logTextOf(error));
+    } catch {
+      return;
+    }
   }
 }

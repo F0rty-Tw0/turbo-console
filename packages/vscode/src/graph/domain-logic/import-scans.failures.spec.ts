@@ -1,3 +1,4 @@
+import type { PackageImportScan } from '@turbo-console/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ImportScans } from './import-scans.ts';
@@ -24,39 +25,68 @@ describe('FEATURE: import scan failures', () => {
     scans = new ImportScans(scansGateOf(ports));
   });
 
-  it('WHEN the scan rejects with an error (not an abort) THEN failed is posted for each joined ask and the error is logged once', async () => {
-    const pending = pendingScanOf(ports);
-    const first = scans.ask('web', 'a');
-    const second = scans.ask('web', '@org/x');
+  describe('GIVEN a scan of web in flight', () => {
+    let pending: PromiseWithResolvers<PackageImportScan>;
+    let first: Promise<boolean>;
+    let second: Promise<boolean>;
 
-    pending.reject(new Error('EMFILE'));
-    await Promise.all([first, second]);
-
-    expect(postedOf(ports)).toStrictEqual([
-      importsReplyOf('web', 'a', { kind: 'failed' }),
-      importsReplyOf('web', '@org/x', { kind: 'failed' })
-    ]);
-    expect(ports.log).toHaveBeenCalledTimes(1);
-    expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('EMFILE'));
-  });
-
-  it('WHEN answerImports throws for web → a THEN failed is posted for it, the error logged, and web → @org/x is still answered', async () => {
-    const pending = pendingScanOf(ports);
-
-    vi.mocked(answerImports).mockImplementationOnce(() => {
-      throw new Error('boom');
+    beforeEach(() => {
+      pending = pendingScanOf(ports);
+      first = scans.ask('web', 'a');
+      second = scans.ask('web', '@org/x');
     });
 
-    const first = scans.ask('web', 'a');
-    const second = scans.ask('web', '@org/x');
+    it('WHEN the scan rejects with an error (not an abort) THEN failed is posted for each joined ask and the error is logged once', async () => {
+      pending.reject(new Error('EMFILE'));
+      await Promise.all([first, second]);
 
-    pending.resolve(importScanOf([]));
-    await Promise.all([first, second]);
+      expect(postedOf(ports)).toStrictEqual([
+        importsReplyOf('web', 'a', { kind: 'failed' }),
+        importsReplyOf('web', '@org/x', { kind: 'failed' })
+      ]);
+      expect(ports.log).toHaveBeenCalledTimes(1);
+      expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('EMFILE'));
+    });
 
-    expect(postedOf(ports)).toStrictEqual([
-      importsReplyOf('web', 'a', { kind: 'failed' }),
-      importsReplyOf('web', '@org/x', { kind: 'none', scanned: 0, skipped: 0, limit: null })
-    ]);
-    expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('boom'));
+    it('WHEN the scan rejects and the log throws THEN both asks resolve true and web → a is scanned afresh, not joined to the dead run', async () => {
+      vi.mocked(ports.log).mockImplementation(() => {
+        throw new Error('log is gone');
+      });
+      pending.reject(new Error('EMFILE'));
+
+      const answered = await Promise.all([first, second]);
+      const isAnsweredAgain = await scans.ask('web', 'a');
+
+      expect(answered).toStrictEqual([true, true]);
+      expect(isAnsweredAgain).toBe(true);
+      expect(ports.scanImports).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN answerImports throws for web → a THEN failed is posted for it, the error logged, and web → @org/x is still answered', async () => {
+      vi.mocked(answerImports).mockImplementationOnce(() => {
+        throw new Error('boom');
+      });
+      pending.resolve(importScanOf([]));
+      await Promise.all([first, second]);
+
+      expect(postedOf(ports)).toStrictEqual([
+        importsReplyOf('web', 'a', { kind: 'failed' }),
+        importsReplyOf('web', '@org/x', { kind: 'none', scanned: 0, skipped: 0, limit: null })
+      ]);
+      expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('boom'));
+    });
+
+    it('WHEN the post throws THEN both asks still resolve true and the error is logged', async () => {
+      vi.mocked(ports.post).mockImplementation(() => {
+        throw new Error('EPIPE');
+      });
+      pending.resolve(importScanOf([]));
+
+      const answered = await Promise.all([first, second]);
+
+      expect(answered).toStrictEqual([true, true]);
+      expect(ports.log).toHaveBeenCalledTimes(2);
+      expect(ports.log).toHaveBeenCalledWith(expect.stringContaining('EPIPE'));
+    });
   });
 });
