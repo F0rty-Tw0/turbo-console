@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import { isGraphHostMessage } from './graph-host-message.util.ts';
 import type { Positions } from '../../bridge/common/graph-state.type.ts';
-import { HOST_EDGES_STUB, HOST_GRAPH_STUB, HOST_PACKAGES_STUB, HOST_TASK_STUB } from '../test/stubs/graph-host-message.stub.ts';
+import {
+  HOST_EDGES_STUB,
+  HOST_GRAPH_STUB,
+  HOST_PACKAGES_STUB,
+  HOST_TASK_STUB,
+  IMPORT_SITE_STUB
+} from '../test/stubs/graph-host-message.stub.ts';
 import { graphWithTaskOf, stateMessageOf, without } from '../test/utils/graph-host-message.spec.util.ts';
 
 const NO_TARGET_EDGE = { source: 'app' };
@@ -19,6 +25,14 @@ const OBJECT_NAMES = [
 ];
 
 const FAILED_IMPORTS = { kind: 'failed' };
+
+const FOUND_IMPORTS = { kind: 'found', scanned: 4, skipped: 0, total: 1, limit: null, sites: [IMPORT_SITE_STUB] };
+
+const DONE_IMPORTS = { kind: 'done' };
+
+const IMPORTS = { type: 'edgeImports', source: 'web', target: 'core', result: FAILED_IMPORTS };
+
+const FOUND_IMPORTS_MESSAGE = { ...IMPORTS, result: FOUND_IMPORTS };
 
 const ROOT_PACKAGES = [{ name: '//', bareName: '//', path: '', tags: [], taskCount: 0 }];
 
@@ -198,6 +212,23 @@ describe('FEATURE: isGraphHostMessage', () => {
     });
   });
 
+  describe('GIVEN an edgeImports message', () => {
+    it.each([
+      { label: 'a failed result', message: IMPORTS },
+      { label: 'a found result', message: FOUND_IMPORTS_MESSAGE }
+    ])('WHEN it has $label THEN it is accepted', ({ message }) => {
+      const isMessage = isGraphHostMessage(message);
+
+      expect(isMessage).toBe(true);
+    });
+
+    it('WHEN its result is of an unknown kind THEN it is rejected', () => {
+      const isMessage = isGraphHostMessage({ ...IMPORTS, result: DONE_IMPORTS });
+
+      expect(isMessage).toBe(false);
+    });
+  });
+
   describe('GIVEN a runs message', () => {
     it.each([
       ['no runs', {}],
@@ -322,11 +353,7 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a showTasks message with a numeric task id', { type: 'showTasks', taskIds: [1] }],
       ['a showTasks message with no taskIds', { type: 'showTasks' }],
       ['a showPackage message with no name', { type: 'showPackage' }],
-      ['a showPackage message with a numeric name', { type: 'showPackage', name: 7 }],
-      [
-        'an edgeImports message, which has no page guard until U8e',
-        { type: 'edgeImports', source: 'web', target: 'core', result: FAILED_IMPORTS }
-      ]
+      ['a showPackage message with a numeric name', { type: 'showPackage', name: 7 }]
     ])('WHEN it is %s THEN it is rejected', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);
 

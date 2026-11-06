@@ -1,18 +1,11 @@
 import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
-import {
-  ENTRY_TEXT_MAX,
-  MANIFEST_ENTRIES_MAX,
-  MANIFEST_FIELDS,
-  MANIFEST_FILE_MAX,
-  MANIFEST_LINE_MAX
-} from '../../bridge/common/graph-message.const.ts';
+import { ENTRY_TEXT_MAX, MANIFEST_ENTRIES_MAX, MANIFEST_FIELDS, MANIFEST_FILE_MAX } from '../../bridge/common/graph-message.const.ts';
 import type { ManifestField } from '../../bridge/common/graph-message.type.ts';
+import { isManifestLine } from '../../bridge/utils/number.util.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-import { isString } from '../../bridge/utils/string.util.ts';
+import { isShortString, isString } from '../../bridge/utils/string.util.ts';
 
 const isManifestField = (value: unknown): value is ManifestField => MANIFEST_FIELDS.some((field) => field === value);
-
-const isShortString = (value: unknown, max: number): boolean => isString(value) && value.length <= max;
 
 const isSide = (side: unknown): boolean => side === undefined || isShortString(side, ENTRY_TEXT_MAX + 1);
 
@@ -30,16 +23,14 @@ const isEntry = (value: unknown): boolean => {
 
   const { field, key, spec, line, context } = value;
 
-  if (typeof line !== 'number') return false;
+  if (!isManifestLine(line)) return false;
 
   const isField = isManifestField(field);
   const isKey = isShortString(key, ENTRY_TEXT_MAX + 1);
   const isSpec = isShortString(spec, ENTRY_TEXT_MAX + 1);
-  const isWhole = Number.isInteger(line);
-  const isLine = isWhole && line >= 0 && line <= MANIFEST_LINE_MAX;
   const isEntryShape = isField && isKey && isSpec;
 
-  if (!isEntryShape || !isLine) return false;
+  if (!isEntryShape) return false;
 
   return isContext(context, line);
 };
@@ -49,7 +40,7 @@ const isEntries = (entries: unknown): boolean => {
 
   const isCounted = entries.length >= 1 && entries.length <= MANIFEST_ENTRIES_MAX;
 
-  return isCounted && entries.every(isEntry);
+  return isCounted && Array.from(entries).every(isEntry);
 };
 
 const isResult = (result: unknown): boolean => {

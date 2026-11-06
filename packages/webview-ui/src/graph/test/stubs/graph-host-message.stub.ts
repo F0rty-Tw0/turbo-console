@@ -1,4 +1,16 @@
+import type { ImportSite } from '../../../bridge/common/graph-imports.type.ts';
 import type { GraphEdge } from '../../../bridge/common/graph-state.type.ts';
+
+/** One valid import site, a static `import 'core';` on line 3 of `src/a.ts`, as a host sends it. */
+export const IMPORT_SITE_STUB: ImportSite = {
+  file: 'src/a.ts',
+  line: 3,
+  specifier: 'core',
+  text: "import 'core';",
+  kind: 'static',
+  isType: false,
+  via: 'name'
+};
 
 /** Two valid package rows, `app` and `core`, as a host sends them. */
 export const HOST_PACKAGES_STUB: Record<string, unknown>[] = [
