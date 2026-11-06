@@ -345,7 +345,7 @@ describe('FEATURE: graph session messages', () => {
       const { session, ports } = shownSession();
 
       vi.mocked(ports.readText).mockResolvedValue('{}');
-
+      await session.receive({ type: 'ready' });
       await session.receive({ type: 'openManifest', packageName: 'web', line: 3 });
 
       expect(ports.openAt).toHaveBeenCalledExactlyOnceWith(join('/ws', 'apps/web', 'package.json'), 3);

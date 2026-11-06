@@ -11,13 +11,20 @@ const isBarredSegment = (segment: string): boolean => {
   return isParent || isModules || hasWindowsMark;
 };
 
-/** The absolute path of `file` (posix, relative to the package's dir) when D12 allows opening it, else `null`. */
+const SPACE_CODE = 32;
+
+const isControlChar = (char: string): boolean => (char.codePointAt(0) ?? SPACE_CODE) < SPACE_CODE;
+
+/**
+ * The absolute path of `file` (posix, relative to the package's dir) when D12 allows opening it, else `null`. A backslash or
+ * a control character (NUL, newline) bars it.
+ */
 export const importFileOf = (root: string, packagePath: string, file: string): string | null => {
-  const hasBackslash = file.includes('\\');
+  const hasBarredChar = file.includes('\\') || Array.from(file).some(isControlChar);
   const isAbsolute = win32.isAbsolute(file);
   const hasBarredSegment = file.split('/').some(isBarredSegment);
   const isSource = isSourceName(file);
-  const isAllowed = isSource && !hasBackslash && !isAbsolute && !hasBarredSegment;
+  const isAllowed = isSource && !hasBarredChar && !isAbsolute && !hasBarredSegment;
 
   if (!isAllowed) return null;
 
