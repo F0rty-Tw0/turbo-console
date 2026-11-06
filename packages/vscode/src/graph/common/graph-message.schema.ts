@@ -1,4 +1,4 @@
-import { MANIFEST_LINE_MAX, TASK_COUNT_MAX } from '@turbo-console/webview-ui';
+import { MANIFEST_FILE_MAX, MANIFEST_LINE_MAX, TASK_COUNT_MAX } from '@turbo-console/webview-ui';
 import {
   array,
   boolean,
@@ -37,6 +37,15 @@ const explainEdgeSchema = object({ type: literal('explainEdge'), source: package
 const openManifestSchema = object({
   type: literal('openManifest'),
   packageName: packageNameSchema,
+  line: int().check(gte(0), lte(MANIFEST_LINE_MAX))
+});
+
+const scanImportsSchema = object({ type: literal('scanImports'), source: packageNameSchema, target: packageNameSchema });
+
+const openImportSchema = object({
+  type: literal('openImport'),
+  packageName: packageNameSchema,
+  file: string().check(maxLength(MANIFEST_FILE_MAX)),
   line: int().check(gte(0), lte(MANIFEST_LINE_MAX))
 });
 
@@ -81,6 +90,8 @@ export const graphMessageSchema = discriminatedUnion('type', [
   layoutDoneSchema,
   explainEdgeSchema,
   openManifestSchema,
+  scanImportsSchema,
+  openImportSchema,
   exportImageSchema,
   runTaskSchema,
   stopTaskSchema,

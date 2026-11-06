@@ -45,3 +45,18 @@ export type GraphEdgeImportsMessage = {
   readonly target: string;
   readonly result: EdgeImportsResult;
 };
+
+/** The page asking the host to scan the dependent of one link for imports of its target (spec D1, D11). */
+export type GraphScanImportsMessage = {
+  readonly type: 'scanImports';
+  readonly source: string;
+  readonly target: string;
+};
+
+/** The page asking the host to open one import site: `file` relative to the package's dir, `line` 0-based (spec D12). */
+export type GraphOpenImportMessage = {
+  readonly type: 'openImport';
+  readonly packageName: string;
+  readonly file: string;
+  readonly line: number;
+};

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { GraphLookups, isLookupMessage } from './graph-lookups.ts';
-import type { ExplainRequest, GraphPorts, LookupGate } from '../common/graph.type.ts';
+import type { ExplainRequest, GraphPorts, LookupGate, LookupRequest } from '../common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import { GRAPH_STATE_STUB } from '../test/stubs/graph-model.stub.ts';
 
@@ -13,6 +13,8 @@ const WEB_TO_X: ExplainRequest = { type: 'explainEdge', source: 'web', target: '
 const A_TO_X: ExplainRequest = { type: 'explainEdge', source: 'a', target: '@org/x' };
 const GHOST_TO_A: ExplainRequest = { type: 'explainEdge', source: 'ghost', target: 'a' };
 const OPEN_WEB: ExplainRequest = { type: 'openManifest', packageName: 'web', line: 3 };
+const SCAN_WEB_A: LookupRequest = { type: 'scanImports', source: 'web', target: 'a' };
+const OPEN_IMPORT_WEB: LookupRequest = { type: 'openImport', packageName: 'web', file: 'src/x.ts', line: 4 };
 
 describe('FEATURE: graph lookups', () => {
   let ports: GraphPorts;
@@ -102,6 +104,17 @@ describe('FEATURE: graph lookups', () => {
     });
   });
 
+  describe('GIVEN an openImport after dispose', () => {
+    it('WHEN it arrives THEN nothing is read, opened or dropped', async () => {
+      lookups.dispose();
+      await lookups.receive(OPEN_IMPORT_WEB, 'late');
+
+      expect(ports.readText).not.toHaveBeenCalled();
+      expect(ports.openAt).not.toHaveBeenCalled();
+      expect(drop).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a page message', () => {
     it('WHEN it is an explainEdge THEN it is a lookup', () => {
       const isLookup = isLookupMessage(WEB_TO_A);
@@ -111,6 +124,15 @@ describe('FEATURE: graph lookups', () => {
 
     it('WHEN it is an openManifest THEN it is a lookup', () => {
       const isLookup = isLookupMessage(OPEN_WEB);
+
+      expect(isLookup).toBe(true);
+    });
+
+    it.each([
+      ['a scanImports', SCAN_WEB_A],
+      ['an openImport', OPEN_IMPORT_WEB]
+    ])('WHEN it is %s THEN it is a lookup', (_label, message) => {
+      const isLookup = isLookupMessage(message);
 
       expect(isLookup).toBe(true);
     });

@@ -7,6 +7,7 @@ import {
 import type {
   EdgeImportsResult,
   GraphEdgeImportsMessage,
+  GraphWebviewMessage,
   ImportKind,
   ImportLimit,
   ImportSite,
@@ -51,6 +52,23 @@ type ExpectedMessage = {
   readonly result: ExpectedResult;
 };
 
+type ScanImportsKey = { readonly type: 'scanImports' };
+
+type OpenImportKey = { readonly type: 'openImport' };
+
+type ExpectedScanImportsMessage = {
+  readonly type: 'scanImports';
+  readonly source: string;
+  readonly target: string;
+};
+
+type ExpectedOpenImportMessage = {
+  readonly type: 'openImport';
+  readonly packageName: string;
+  readonly file: string;
+  readonly line: number;
+};
+
 describe('FEATURE: webview-ui package entry, import contract', () => {
   describe('GIVEN the package entry point', () => {
     it('WHEN the import contract is read THEN IMPORT_SITES_MAX is 200 and each import type has its exact shape', () => {
@@ -61,6 +79,8 @@ describe('FEATURE: webview-ui package entry, import contract', () => {
       expectTypeOf<ImportSite>().toEqualTypeOf<ExpectedSite>();
       expectTypeOf<EdgeImportsResult>().toEqualTypeOf<ExpectedResult>();
       expectTypeOf<GraphEdgeImportsMessage>().toEqualTypeOf<ExpectedMessage>();
+      expectTypeOf<Extract<GraphWebviewMessage, ScanImportsKey>>().toEqualTypeOf<ExpectedScanImportsMessage>();
+      expectTypeOf<Extract<GraphWebviewMessage, OpenImportKey>>().toEqualTypeOf<ExpectedOpenImportMessage>();
     });
   });
 });
