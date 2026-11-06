@@ -147,8 +147,9 @@ export type GraphProbe = {
   /** Redraws the canvas at once (Cytoscape's `forceRender`), which counts as a `render`: lets a test finish a texture rebuild before it counts renders. */
   readonly forceRender: () => void;
   /**
-   * Turns off Cytoscape's layered texture cache, then redraws: every later frame draws each element directly, as a press
-   * frame does, so two shots compare the same drawing path. Throws when the renderer has no such cache.
+   * Turns off Cytoscape's layered texture cache, then redraws: every later frame draws each element from its own
+   * texture cache, as a press frame does, so two shots compare the same drawing path. Throws when the renderer has no
+   * such cache.
    */
   readonly drawWithoutLayers: () => void;
   /** From the latest `graph` state's message event to the first Cytoscape `render` after it; `null` until that render. */

@@ -34,9 +34,9 @@ const layerCacheOf = (cy: ProbeLayerSource): unknown => {
 };
 
 /**
- * Makes every later frame draw each element directly, the way a press frame always does, then redraws: an idle frame
- * otherwise draws a resampled layer bitmap whose edges differ from the direct frame's. Throws when the renderer has no
- * such cache, so a Cytoscape that renames it fails here and not as a pixel flake.
+ * Makes every later frame draw each element from its own texture cache, the way a press frame always does, then
+ * redraws: an idle frame otherwise draws a resampled layer bitmap whose edges differ from the per-element frame's.
+ * Throws when the renderer has no such cache, so a Cytoscape that renames it fails here and not as a pixel flake.
  */
 export const drawWithoutLayers = (cy: ProbeLayerSource): void => {
   const cache = layerCacheOf(cy);
