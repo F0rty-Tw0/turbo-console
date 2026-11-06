@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { ImportFileCache } from '@turbo-console/core';
+import type { ImportScanInput } from '@turbo-console/core';
 import { graphCsp } from '@turbo-console/webview-ui';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
@@ -18,6 +19,7 @@ import { CSP_SOURCE_STUB } from '../../shared/test/stubs/csp-source.stub.ts';
 import type { GraphHost, GraphStore } from '../common/graph-panel.type.ts';
 import { GRAPH_VIEW_TYPE } from '../common/graph.const.ts';
 import { GRAPH_HASH_STUB, POSITIONS_STUB, ROUTES_STUB } from '../test/stubs/graph-model.stub.ts';
+import { importScanOf, scannedFileOf, sourceImportOf } from '../test/utils/import-scan.spec.util.ts';
 import { copyGraphPageRoot } from '../test/utils/page-root.spec.util.ts';
 
 type CreatePanel = (viewType: string, title: string, column: number, options: unknown) => PanelFake;
@@ -257,10 +259,12 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
   });
 
   describe('GIVEN a dir holding a source file', () => {
+    const imported = sourceImportOf('b', 0);
     let dir: string;
 
     beforeEach(() => {
       dir = mkdtempSync(join(tmpdir(), 'graph-scan-'));
+      writeFileSync(join(dir, 'a.ts'), `${imported.text}\n`);
     });
 
     afterEach(() => {
@@ -268,21 +272,20 @@ describe('FEATURE: the editor effects of the Package Graph', () => {
     });
 
     it("WHEN scanImports scans it THEN it lists a.ts with its import of 'b'", async () => {
-      writeFileSync(join(dir, 'a.ts'), "import { x } from 'b';\n");
-
-      const scan = await host.scanImports({
+      const abort = new AbortController();
+      const input: ImportScanInput = {
         dir,
         root: dir,
         skipDirs: new Set<string>(),
         cache: new ImportFileCache(),
-        signal: new AbortController().signal
-      });
+        signal: abort.signal
+      };
+      const files = [scannedFileOf('a.ts', [imported])];
+      const expected = importScanOf(files);
 
-      const imported = { specifier: 'b', kind: 'static', isType: false, line: 0, text: "import { x } from 'b';" };
+      const scan = await host.scanImports(input);
 
-      const files = [{ file: 'a.ts', imports: [imported] }];
-
-      expect(scan).toStrictEqual({ files, tsconfigPaths: null, scanned: 1, skipped: 0, limit: null });
+      expect(scan).toStrictEqual(expected);
     });
   });
 
