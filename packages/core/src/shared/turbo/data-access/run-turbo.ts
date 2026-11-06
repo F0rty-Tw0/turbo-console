@@ -4,12 +4,14 @@ import { once } from 'node:events';
 
 import { checkCwd } from './check-cwd.ts';
 import { collectTail } from './collect-tail.ts';
+import { watchExitStall } from './exit-stall.ts';
 import { killTree } from './kill-tree.ts';
+import { settleTurbo } from './settle-turbo.ts';
 import { watchMemory } from './watch-memory.ts';
 import { MemoryLimitError } from '../common/memory-limit.exception.ts';
 import { SKIP_INFER } from '../common/turbo-args.const.ts';
 import { DEFAULT_RSS_POLL_MS, MAX_RSS_BYTES, RSS_POLL_MS } from '../common/turbo-memory.const.ts';
-import type { RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
+import type { ExitStallCheck, RunTurboOptions, TurboResult } from '../common/turbo.type.ts';
 import { abortGraceMs } from '../utils/abort-grace.util.ts';
 import { turboEnv } from '../utils/turbo-env.util.ts';
 
@@ -96,27 +98,6 @@ const watchChild = (child: ChildProcess, options: RunTurboOptions, memory: Abort
   return watchMemory(child.pid, { maxRssBytes, intervalMs, onExceeded });
 };
 
-/** M0's mapping: an exit code, non-zero included, resolves; none (spawn failure, a signal, maxBuffer) rejects, with `stderr`. */
-const settle = (
-  resolvers: PromiseWithResolvers<TurboResult>,
-  error: ExecFileException | null,
-  stdout: string,
-  stderr: string
-): void => {
-  if (error !== null) Object.assign(error, { stderr });
-  const exitCode = error === null ? 0 : error.code;
-
-  if (typeof exitCode !== 'number') {
-    resolvers.reject(error);
-
-    return;
-  }
-
-  const result: TurboResult = { stdout, stderr, exitCode };
-
-  resolvers.resolve(result);
-};
-
 /**
  * Runs the native turbo binary at `binaryPath` (`<binaryPath> --skip-infer ...args`) in `cwd`, with no shell, under the hardened env
  * from `turboEnv`: no inherited `GIT_*` or turbo credential variables, local cache only, no remote cache, git fsmonitor off. The
@@ -130,6 +111,10 @@ const settle = (
  * and taskkill. After `graceMs` turbo is killed outright, at once on POSIX for a memory abort; on POSIX that reaches turbo's pid
  * only, so a task ignoring SIGTERM can outlive it (follow-up). Known limit: after turbo exits, a leftover
  * process holding its stdout delays the result past any timeout: the abort is detached at turbo's exit and turbo's pid is gone.
+ * Exit-stall guard, a workaround for turbo 2.11 deadlocking in `ExitProcess` on Windows after its output (upstream bug, see
+ * `watchExitStall`; remove once the minimum supported turbo has the fix): with `exitStallCheck` on win32, a turbo quiet for
+ * `exitStallMs` (5 s) after a stdout tail `isEnd` accepts is stopped like an abort and resolves with the exit code `exitCodeOf`
+ * reads from its whole stdout, or rejects with execFile's kill error when that output is not complete.
  */
 export const runTurbo = async (
   binaryPath: string,
@@ -148,9 +133,10 @@ export const runTurbo = async (
   const env = turboEnv(process.env);
   const execOptions = { cwd, env, maxBuffer: options.maxBuffer ?? MAX_BUFFER, windowsHide: true };
   let isAborting = false;
+  let stalledCheck: ExitStallCheck | undefined;
 
   const onDone = (error: ExecFileException | null, stdout: string, stderr: string): void => {
-    if (!isAborting) settle(resolvers, error, stdout, stderr);
+    if (!isAborting) settleTurbo(resolvers, error, { stdout, stderr }, stalledCheck);
   };
 
   const child = execFile(binaryPath, [SKIP_INFER, ...args], execOptions, onDone);
@@ -158,11 +144,19 @@ export const runTurbo = async (
   const readStdout = collectTail(child.stdout);
   const stopWatch = watchChild(child, options, memory);
 
+  const onStall = (check: ExitStallCheck): void => {
+    stalledCheck = check;
+    void stopChild(child, options.graceMs ?? GRACE_MS);
+  };
+
+  const stopStallWatch = watchExitStall(child, options, readStdout, onStall);
+
   const rejectAborted = (): void => resolvers.reject(abortError(signal, readStderr(), readStdout()));
 
   const onAbort = (): void => {
     isAborting = true;
     stopWatch();
+    stopStallWatch();
 
     // Required, not defensive: a failed spawn has no pid until its `error` tick, and on macOS (posix_spawn) libuv's
     // pid is 0 then, so any `child.kill` here would be `kill(0)` and signal our own process group.
@@ -180,6 +174,7 @@ export const runTurbo = async (
 
   const detach = (): void => {
     stopWatch();
+    stopStallWatch();
     signal.removeEventListener('abort', onAbort);
   };
 
