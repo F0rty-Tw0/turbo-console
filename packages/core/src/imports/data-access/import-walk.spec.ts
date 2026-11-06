@@ -135,7 +135,7 @@ describe('FEATURE: walking a package for source files', () => {
     });
   });
 
-  describe('GIVEN 12 names listed in reverse, among them Z.ts, _x.ts and dir e/ holding x.ts', () => {
+  describe('GIVEN 12 files listed in reverse, among them Z.ts and _x.ts, beside dir e/ holding x.ts', () => {
     it('WHEN walked THEN the names come back in code-unit order with a dir at its sorted position', async () => {
       const names = ['f.ts', 'b.ts', 'j.ts', 'd.ts', 'h.ts', 'a.ts', 'i.ts', 'c.ts', 'g.ts', 'e.ts', '_x.ts', 'Z.ts', 'e/x.ts'];
       const sorted = ['Z.ts', '_x.ts', 'a.ts', 'b.ts', 'c.ts', 'd.ts', 'e/x.ts', 'e.ts', 'f.ts', 'g.ts', 'h.ts', 'i.ts', 'j.ts'];
@@ -177,7 +177,7 @@ describe('FEATURE: walking a package for source files', () => {
 
   describe('GIVEN symlinks to a source file and to a dir of sources', () => {
     it.skipIf(!CAN_SYMLINK)('WHEN walked THEN neither link is followed', async () => {
-      await writeImportTree(dir, { 'src/real.ts': SOURCE_TEXT, 'other/o.ts': SOURCE_TEXT });
+      await writeImportTree(dir, treeOf(['src/real.ts', 'other/o.ts']));
       await symlink(join(dir, 'src', 'real.ts'), join(dir, 'src', 'link.ts'));
       await symlink(join(dir, 'other'), join(dir, 'lib'));
 
@@ -209,7 +209,7 @@ describe('FEATURE: walking a package for source files', () => {
     });
 
     it.skipIf(!CAN_DENY_READ)('WHEN subdir locked/ is chmod 000 THEN its files are left out and the rest is listed', async () => {
-      await writeImportTree(dir, { 'a.ts': SOURCE_TEXT, 'locked/x.ts': SOURCE_TEXT, 'z.ts': SOURCE_TEXT });
+      await writeImportTree(dir, treeOf(['a.ts', 'locked/x.ts', 'z.ts']));
       await chmod(join(dir, 'locked'), 0o000);
 
       try {
@@ -287,7 +287,7 @@ describe('FEATURE: walking a package for source files', () => {
 
   describe('GIVEN a.ts, sub/x.ts and z.ts', () => {
     beforeEach(async () => {
-      await writeImportTree(dir, { 'a.ts': SOURCE_TEXT, 'sub/x.ts': SOURCE_TEXT, 'z.ts': SOURCE_TEXT });
+      await writeImportTree(dir, treeOf(['a.ts', 'sub/x.ts', 'z.ts']));
     });
 
     it('WHEN isOverTime turns true after its first call THEN only a.ts is listed and limit is time', async () => {

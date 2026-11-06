@@ -51,7 +51,7 @@ describe('FEATURE: import file cache', () => {
   });
 
   describe('GIVEN A holds 19,999 files', () => {
-    let cache = new ImportFileCache();
+    let cache: ImportFileCache;
 
     beforeEach(() => {
       cache = new ImportFileCache();
