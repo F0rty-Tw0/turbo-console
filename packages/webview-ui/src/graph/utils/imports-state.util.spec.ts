@@ -59,25 +59,27 @@ const REPLIED_ROWS: RepliedRow[] = [
 ];
 
 describe('FEATURE: imports state', () => {
-  describe('GIVEN a held imports state', () => {
-    it.each(ASKED_ROWS)('WHEN $label is held and the link is asked THEN it becomes $outcome', (row) => {
-      const state = askedImportsOf(row.state);
+  describe.each(ASKED_ROWS)('GIVEN $label is held', ({ state, outcome, expected }) => {
+    it(`WHEN the link is asked THEN it becomes ${outcome}`, () => {
+      const next = askedImportsOf(state);
 
-      expect(state).toStrictEqual(row.expected);
-    });
-
-    it('WHEN a scan is held and the link is asked THEN the same object comes back', () => {
-      const state = askedImportsOf(SCANNING);
-
-      expect(state).toBe(SCANNING);
+      expect(next).toStrictEqual(expected);
     });
   });
 
-  describe('GIVEN a reply from the host', () => {
-    it.each(REPLIED_ROWS)('WHEN it carries $label THEN the state becomes $outcome', (row) => {
-      const state = repliedImportsOf(row.result);
+  describe('GIVEN a scan is held', () => {
+    it('WHEN the link is asked THEN the same object comes back', () => {
+      const next = askedImportsOf(SCANNING);
 
-      expect(state).toStrictEqual(row.expected);
+      expect(next).toBe(SCANNING);
+    });
+  });
+
+  describe.each(REPLIED_ROWS)('GIVEN a reply carrying $label', ({ result, outcome, expected }) => {
+    it(`WHEN it is applied THEN the state becomes ${outcome}`, () => {
+      const state = repliedImportsOf(result);
+
+      expect(state).toStrictEqual(expected);
     });
   });
 });
