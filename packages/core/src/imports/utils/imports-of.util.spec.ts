@@ -53,6 +53,7 @@ describe('FEATURE: finding import forms in a source', () => {
       "import type A from 'S'",
       "import {type A, type B} from 'S'",
       "import {type A as B} from 'S'",
+      'import {type "a-b" as x} from \'S\'',
       "export import type x from 'S'"
     ]);
     const rows = [...plainRows, ...typeRows];

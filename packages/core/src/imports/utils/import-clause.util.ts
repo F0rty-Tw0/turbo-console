@@ -18,13 +18,16 @@ const isOutsideNamedItems = (token: SourceToken | undefined): boolean => {
   return isBrace || isParen || isSemicolon;
 };
 
+/** A `type` modifier is followed by the item's name: a word, or a string (`type "a-b" as x`). */
 const isTypeItem = (tokens: SourceToken[], start: number): boolean => {
   const follower = tokens[start + 1];
   const isTypeWord = isWord(tokens[start], 'type');
   const isWordFollower = isAnyWord(follower);
+  const isStringFollower = follower?.kind === 'string';
+  const isNameFollower = isWordFollower || isStringFollower;
   const isAs = isWord(follower, 'as');
 
-  return isTypeWord && isWordFollower && !isAs;
+  return isTypeWord && isNameFollower && !isAs;
 };
 
 const itemStartAfter = (index: number, itemStart: number, endsItem: boolean): number => {
