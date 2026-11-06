@@ -238,5 +238,35 @@ describe('FEATURE: scan one package for its imports', () => {
       await expect(scanPackageImports({ ...input, signal: controller.signal })).rejects.toBe(reason);
       expect(input.cache.filesOf(dir)).toBe(first);
     });
+
+    describe('GIVEN caps.reads 1 over a.ts, b.ts, c.ts and an abort as a.ts opens', () => {
+      const reason = new Error('stop');
+      let rejection: unknown = null;
+
+      beforeEach(async () => {
+        await writeImportTree(dir, { 'a.ts': IMPORT_B, 'b.ts': IMPORT_B, 'c.ts': IMPORT_B });
+        const controller = new AbortController();
+
+        reads.beforeOpen = onOpenOf('a.ts', () => {
+          controller.abort(reason);
+        });
+
+        const scanning = scanPackageImports(
+          inputOf(dir, new ImportFileCache(), { caps: capsOf({ reads: 1 }), signal: controller.signal })
+        );
+
+        rejection = await scanning.catch((error: unknown) => error);
+      });
+
+      it('WHEN scanned THEN it rejects with signal.reason', () => {
+        expect(rejection).toBe(reason);
+      });
+
+      it('WHEN scanned THEN only a.ts is opened', () => {
+        const opened = openedNamesOf(reads.opened, dir);
+
+        expect(opened).toStrictEqual(['a.ts']);
+      });
+    });
   });
 });
