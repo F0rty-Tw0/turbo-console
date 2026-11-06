@@ -15,6 +15,11 @@ const postExplain = (bridge: Bridge, source: string, target: string): void => {
   bridge.post({ type: 'explainEdge', source, target });
 };
 
+/** Asks the host to scan the dependent of the link `source` → `target` for imports of its target. */
+const postScanImports = (bridge: Bridge, source: string, target: string): void => {
+  bridge.post({ type: 'scanImports', source, target });
+};
+
 export const postOpenDetails = (bridge: Bridge, name: string): void => {
   bridge.post({ type: 'openDetails', packageName: name });
 };
@@ -50,6 +55,7 @@ export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActi
     overlay,
     onInput: (input): void => actions.input(input),
     onExplain: (source, target): void => postExplain(bridge, source, target),
+    onScanImports: (source, target): void => postScanImports(bridge, source, target),
     onOpenDetails: (name): void => actions.openDetailsOf(name),
     onFocus: (name): void => deps.onFocusOn(name),
     onExclude: (name): void => deps.onExclude(name),

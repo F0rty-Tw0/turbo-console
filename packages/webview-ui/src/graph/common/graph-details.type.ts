@@ -14,6 +14,11 @@ import type { DrawnGraph } from './graph-page.type.ts';
 import type { Inspection, InspectionInput, PickingInspection, TraceInspection } from './inspection.type.ts';
 import type { PageElements } from './page-elements.type.ts';
 import type { TraceCandidates, TraceResult } from './trace.type.ts';
+import type { GraphEdgeImportsMessage } from '../../bridge/common/graph-imports.type.ts';
+import type { GraphEdgeExplainedMessage } from '../../bridge/common/graph-message.type.ts';
+
+/** A host reply about one link: its manifest entry or its imports. */
+export type LookupReply = GraphEdgeExplainedMessage | GraphEdgeImportsMessage;
 
 /** How `show` changes the panel: a new view, the shown view updated in place, or the same view built again. */
 export type DetailsPlan = 'swap' | 'update' | 'rebuild';
@@ -61,6 +66,8 @@ export type GraphDetailsDeps = {
   readonly onInput: (input: InspectionInput) => void;
   /** A link view was built or a same-hash state arrived: ask the host for the manifest entry behind it. */
   readonly onExplain: (source: string, target: string) => void;
+  /** Asks the host to scan the link's dependent for imports of its target (spec D15). */
+  readonly onScanImports: (source: string, target: string) => void;
   readonly onOpenDetails: (name: string) => void;
   readonly onFocus: (name: string) => void;
   readonly onExclude: (name: string) => void;
