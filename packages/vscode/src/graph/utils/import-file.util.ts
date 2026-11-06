@@ -2,7 +2,14 @@ import { join, win32 } from 'node:path';
 
 import { isSourceName, isWithin } from '@turbo-console/core';
 
-const isBarredSegment = (segment: string): boolean => segment === '..' || segment === 'node_modules';
+/** `..`, `node_modules` in any case (case-insensitive disks), and a `:` (NTFS stream, drive) or `~` (8.3 short name). */
+const isBarredSegment = (segment: string): boolean => {
+  const isParent = segment === '..';
+  const isModules = segment.toLowerCase() === 'node_modules';
+  const hasWindowsMark = segment.includes(':') || segment.includes('~');
+
+  return isParent || isModules || hasWindowsMark;
+};
 
 /** The absolute path of `file` (posix, relative to the package's dir) when D12 allows opening it, else `null`. */
 export const importFileOf = (root: string, packagePath: string, file: string): string | null => {
