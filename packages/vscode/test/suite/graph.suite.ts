@@ -11,8 +11,8 @@ import { readManifest, readSuiteEnv } from '../utils/suite-input.spec.util.ts';
 
 /**
  * L13: the package graph on a `target-like` copy of its own with a root task (M4-1 spec §7). The cases run in order and share the window:
- * case 2 closes the graph panel and reopens it, so the root-task and toggle cases (12 to 14) and the explain and imports cases follow the reopen; the toggle
- * cases restore both toggles. The Details case, which makes a second editor, is followed only by the task cases, which show and run a task in the
+ * case 2 closes the graph panel and reopens it, so the root-task and toggle cases (12 to 14) and the explain and imports
+ * cases follow the reopen; the toggle cases restore both toggles. The Details case, which makes a second editor, is followed only by the task cases, which show and run a task in the
  * same window. The three owner cases (run a task whose dependency blocks on a `go` file) follow the run-repaint case in the open panel. The Details task-graph and focus cases come next: they open a Details panel and post to the open graph panel. Show All Task Graphs closes.
  */
 export const run = async (): Promise<void> => {

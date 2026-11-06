@@ -2,6 +2,7 @@ import type {
   GraphAtomsMessage,
   GraphEdgeExplainedMessage,
   GraphEdgeImportsMessage,
+  GraphHostMessage,
   GraphReady,
   GraphRunState,
   GraphRunsMessage,
@@ -31,27 +32,27 @@ export const lastGraphState = (api: TurboConsoleApi, root: string): GraphReady |
   return states.at(-1) ?? null;
 };
 
-/** The newest `edgeExplained` reply to the `source` to `target` request, `null` before there is one. */
-export const explainedFor = (api: TurboConsoleApi, root: string, source: string, target: string): GraphEdgeExplainedMessage | null => {
+/** What the host posts back to one `source` to `target` edge request. */
+type EdgeEnds = { readonly source: string; readonly target: string };
+
+type EdgeReply = GraphEdgeExplainedMessage | GraphEdgeImportsMessage;
+
+export const isExplained = (message: GraphHostMessage): message is GraphEdgeExplainedMessage => message.type === 'edgeExplained';
+
+export const isImports = (message: GraphHostMessage): message is GraphEdgeImportsMessage => message.type === 'edgeImports';
+
+/** The newest reply of the kind `isKind` accepts to the request for `edge`, `null` before there is one. */
+export const newestReplyFor = <Reply extends EdgeReply>(
+  api: TurboConsoleApi,
+  root: string,
+  edge: EdgeEnds,
+  isKind: (message: GraphHostMessage) => message is Reply
+): Reply | null => {
   const posted = api.graph.posted(root);
-  let newest: GraphEdgeExplainedMessage | null = null;
+  let newest: Reply | null = null;
 
   for (const message of posted) {
-    const isReply = message.type === 'edgeExplained' && message.source === source && message.target === target;
-
-    if (isReply) newest = message;
-  }
-
-  return newest;
-};
-
-/** The newest `edgeImports` reply to the `source` to `target` request, `null` before there is one. */
-export const importsFor = (api: TurboConsoleApi, root: string, source: string, target: string): GraphEdgeImportsMessage | null => {
-  const posted = api.graph.posted(root);
-  let newest: GraphEdgeImportsMessage | null = null;
-
-  for (const message of posted) {
-    const isReply = message.type === 'edgeImports' && message.source === source && message.target === target;
+    const isReply = isKind(message) && message.source === edge.source && message.target === edge.target;
 
     if (isReply) newest = message;
   }

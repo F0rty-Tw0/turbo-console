@@ -1,31 +1,54 @@
 import assert from 'node:assert/strict';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import type { ImportSite } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
 import { fixtureLinkOf } from './graph-explain-cases.spec.util.ts';
-import { importsFor } from './graph-posted.spec.util.ts';
+import { isImports, newestReplyFor } from './graph-posted.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
 import type { GraphFixtureLink, GraphScene } from '../common/graph.type.ts';
 
 const SOURCE_FILE = 'src/u8-imports.ts';
 const CLOSE_EDITOR = 'workbench.action.closeActiveEditor';
 
-/** What the case wrote: the dependent's dir, its source file and a file under its `node_modules`; a `finally` removes them. */
-type WrittenImports = {
-  readonly dir: string;
+/** Where the case writes: the dependent's source file, and a package `x` under its `node_modules`; `finally` removes only these. */
+type ImportsPaths = {
   readonly source: string;
-  readonly dependency: string;
+  readonly modules: string;
+  readonly dependencyDir: string;
 };
 
 /** The two lines the case writes into the dependent's `src`: a type-only static import and a dynamic import of a subpath of the target. */
-const linesOf = (target: string): string[] => {
+type ImportLines = {
+  readonly typeLine: string;
+  readonly dynamicLine: string;
+};
+
+const linesOf = (target: string): ImportLines => {
   const typeLine = `import type { Thing } from '${target}';`;
   const dynamicLine = `export const load = async (): Promise<unknown> => import('${target}/sub');`;
+  const lines: ImportLines = { typeLine, dynamicLine };
 
-  return [typeLine, dynamicLine];
+  return lines;
+};
+
+const pathsOf = (dir: string): ImportsPaths => {
+  const modules = join(dir, 'node_modules');
+  const paths: ImportsPaths = { source: join(dir, 'src', 'u8-imports.ts'), modules, dependencyDir: join(modules, 'x') };
+
+  return paths;
+};
+
+const isPresent = async (path: string): Promise<boolean> => {
+  try {
+    await access(path);
+
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const writeAll = async (path: string, text: string): Promise<void> => {
@@ -34,25 +57,20 @@ const writeAll = async (path: string, text: string): Promise<void> => {
 };
 
 /** Writes the dependent's `src/u8-imports.ts`, plus a file under `node_modules` the walk must not enter (no `package.json`, so no package reload). */
-const writeImports = async (dir: string, link: GraphFixtureLink): Promise<WrittenImports> => {
-  const source = join(dir, 'src', 'u8-imports.ts');
-  const dependency = join(dir, 'node_modules', 'x', 'index.ts');
+const writeImports = async (paths: ImportsPaths, link: GraphFixtureLink): Promise<void> => {
+  const { typeLine, dynamicLine } = linesOf(link.target);
 
-  await writeAll(source, linesOf(link.target).join('\n'));
-  await writeAll(dependency, `import '${link.target}';`);
-
-  const written: WrittenImports = { dir, source, dependency };
-
-  return written;
+  await writeAll(paths.source, `${typeLine}\n${dynamicLine}`);
+  await writeAll(join(paths.dependencyDir, 'index.ts'), `import '${link.target}';`);
 };
 
 const sitesOf = (target: string): ImportSite[] => {
-  const [typeLine, dynamicLine] = linesOf(target);
+  const { typeLine, dynamicLine } = linesOf(target);
   const typeSite: ImportSite = {
     file: SOURCE_FILE,
     line: 0,
     specifier: target,
-    text: typeLine ?? '',
+    text: typeLine,
     kind: 'static',
     isType: true,
     via: 'name'
@@ -61,7 +79,7 @@ const sitesOf = (target: string): ImportSite[] => {
     file: SOURCE_FILE,
     line: 1,
     specifier: `${target}/sub`,
-    text: dynamicLine ?? '',
+    text: dynamicLine,
     kind: 'dynamic',
     isType: false,
     via: 'name'
@@ -76,20 +94,23 @@ const closeIfActive = async (path: string): Promise<void> => {
   if (active === vscode.Uri.file(path).fsPath) await vscode.commands.executeCommand(CLOSE_EDITOR);
 };
 
-const removeImports = async (written: WrittenImports): Promise<void> => {
-  await closeIfActive(written.source);
-  await rm(written.source, { force: true });
-  await rm(join(written.dir, 'node_modules'), { force: true, recursive: true });
+/** Removes what `writeImports` wrote; `node_modules` goes only when the case created it (`isModulesNew`). */
+const removeImports = async (paths: ImportsPaths, isModulesNew: boolean): Promise<void> => {
+  await closeIfActive(paths.source);
+  await rm(paths.source, { force: true });
+  await rm(paths.dependencyDir, { force: true, recursive: true });
+
+  if (isModulesNew) await rm(paths.modules, { force: true, recursive: true });
 };
 
 const scanStep = async (scene: GraphScene, link: GraphFixtureLink): Promise<void> => {
   const { api, root } = scene;
-  const isReplied = (): boolean => importsFor(api, root, link.source, link.target) !== null;
+  const isReplied = (): boolean => newestReplyFor(api, root, link, isImports) !== null;
 
   await api.graph.receive(root, { type: 'scanImports', source: link.source, target: link.target });
   await waitFor('edge imports', isReplied);
 
-  const result = importsFor(api, root, link.source, link.target)?.result;
+  const result = newestReplyFor(api, root, link, isImports)?.result;
 
   if (result?.kind !== 'found') throw new Error(`the reply is ${result?.kind ?? 'missing'}, not found`);
 
@@ -99,9 +120,9 @@ const scanStep = async (scene: GraphScene, link: GraphFixtureLink): Promise<void
   assert.equal(result.limit, null);
 };
 
-const openStep = async (scene: GraphScene, link: GraphFixtureLink, written: WrittenImports): Promise<void> => {
+const openStep = async (scene: GraphScene, link: GraphFixtureLink, paths: ImportsPaths): Promise<void> => {
   const { api, root } = scene;
-  const expectedPath = vscode.Uri.file(written.source).fsPath;
+  const expectedPath = vscode.Uri.file(paths.source).fsPath;
   const isAtLine = (): boolean => {
     const editor = vscode.window.activeTextEditor;
 
@@ -121,12 +142,14 @@ export const importsCase = async (scene: GraphScene): Promise<void> => {
 
   if (pkg === undefined) throw new Error(`the manifest has no package ${link.source}`);
 
-  const written = await writeImports(join(scene.root, pkg.path), link);
+  const paths = pathsOf(join(scene.root, pkg.path));
+  const isModulesNew = !(await isPresent(paths.modules));
 
   try {
+    await writeImports(paths, link);
     await step("L13-18: scanImports lists the link's two src imports of its target", async () => scanStep(scene, link));
-    await step("L13-19: openImport opens the dynamic import's line", async () => openStep(scene, link, written));
+    await step("L13-19: openImport opens the dynamic import's line", async () => openStep(scene, link, paths));
   } finally {
-    await removeImports(written);
+    await removeImports(paths, isModulesNew);
   }
 };
