@@ -6,7 +6,6 @@ import { checkCwd } from './check-cwd.ts';
 import { collectTail } from './collect-tail.ts';
 import { watchExitStall } from './exit-stall.ts';
 import { killTree } from './kill-tree.ts';
-import { settleTurbo } from './settle-turbo.ts';
 import { watchMemory } from './watch-memory.ts';
 import { MemoryLimitError } from '../common/memory-limit.exception.ts';
 import { SKIP_INFER } from '../common/turbo-args.const.ts';
@@ -99,6 +98,35 @@ const watchChild = (child: ChildProcess, options: RunTurboOptions, memory: Abort
 };
 
 /**
+ * M0's mapping: an exit code, non-zero included, resolves; none (spawn failure, a signal, maxBuffer) rejects, with `stderr`.
+ * A turbo the exit-stall guard stopped (`stalledCheck`, see `watchExitStall`) takes the exit code `exitCodeOf` reads from its
+ * whole stdout instead of the kill's (taskkill leaves 1), and rejects with the kill error when that output is not complete;
+ * one that exited 0 by itself before that kill keeps M0's mapping.
+ */
+const settle = (
+  resolvers: PromiseWithResolvers<TurboResult>,
+  error: ExecFileException | null,
+  output: Pick<TurboResult, 'stdout' | 'stderr'>,
+  stalledCheck: ExitStallCheck | undefined
+): void => {
+  if (error !== null) Object.assign(error, { stderr: output.stderr });
+  const errorCode = error?.code;
+  const stalledCode = stalledCheck?.exitCodeOf(output.stdout);
+  const failedCode = stalledCheck === undefined ? errorCode : stalledCode;
+  const exitCode = error === null ? 0 : failedCode;
+
+  if (typeof exitCode !== 'number') {
+    resolvers.reject(error);
+
+    return;
+  }
+
+  const result: TurboResult = { ...output, exitCode };
+
+  resolvers.resolve(result);
+};
+
+/**
  * Runs the native turbo binary at `binaryPath` (`<binaryPath> --skip-infer ...args`) in `cwd`, with no shell, under the hardened env
  * from `turboEnv`: no inherited `GIT_*` or turbo credential variables, local cache only, no remote cache, git fsmonitor off. The
  * target repo's `.git/config` is otherwise trusted. Resolves with turbo's exit code, non-zero included. Rejects before spawning with
@@ -111,8 +139,8 @@ const watchChild = (child: ChildProcess, options: RunTurboOptions, memory: Abort
  * and taskkill. After `graceMs` turbo is killed outright, at once on POSIX for a memory abort; on POSIX that reaches turbo's pid
  * only, so a task ignoring SIGTERM can outlive it (follow-up). Known limit: after turbo exits, a leftover
  * process holding its stdout delays the result past any timeout: the abort is detached at turbo's exit and turbo's pid is gone.
- * Exit-stall guard, a workaround for turbo 2.11 deadlocking in `ExitProcess` on Windows after its output (upstream bug, see
- * `watchExitStall`; remove once the minimum supported turbo has the fix): with `exitStallCheck` on win32, a turbo quiet for
+ * Exit-stall guard, a workaround for turbo 2.11 deadlocking in `ExitProcess` on Windows after its output (F-U7-17, see
+ * `watchExitStall`; remove once the minimum supported turbo exits cleanly on Windows): with `exitStallCheck` on win32, a turbo quiet for
  * `exitStallMs` (5 s) after a stdout tail `isEnd` accepts is stopped like an abort and resolves with the exit code `exitCodeOf`
  * reads from its whole stdout, or rejects with execFile's kill error when that output is not complete.
  */
@@ -136,7 +164,7 @@ export const runTurbo = async (
   let stalledCheck: ExitStallCheck | undefined;
 
   const onDone = (error: ExecFileException | null, stdout: string, stderr: string): void => {
-    if (!isAborting) settleTurbo(resolvers, error, { stdout, stderr }, stalledCheck);
+    if (!isAborting) settle(resolvers, error, { stdout, stderr }, stalledCheck);
   };
 
   const child = execFile(binaryPath, [SKIP_INFER, ...args], execOptions, onDone);
@@ -146,7 +174,7 @@ export const runTurbo = async (
 
   const onStall = (check: ExitStallCheck): void => {
     stalledCheck = check;
-    void stopChild(child, options.graceMs ?? GRACE_MS);
+    void stopChild(child, options.graceMs ?? GRACE_MS).catch(noop);
   };
 
   const stopStallWatch = watchExitStall(child, options, readStdout, onStall);

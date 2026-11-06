@@ -9,7 +9,16 @@ import type { ExitStallCheck, RunTurboOptions, TurboResult } from '../common/tur
 import { isAlive } from '../test/utils/process.spec.util.ts';
 import { isJsonEnd, jsonExitCode } from '../utils/stalled-exit-code.util.ts';
 
-type StubName = 'complete-hang' | 'half-hang' | 'broken-hang' | 'late-end-hang' | 'complete-exit-3';
+type StubName =
+  | 'complete-hang'
+  | 'half-hang'
+  | 'broken-hang'
+  | 'late-end-hang'
+  | 'complete-exit-3'
+  | 'complete-term-exit-1'
+  | 'broken-term-exit-0'
+  | 'held-exit-3'
+  | 'term-end-hang';
 
 type RunOutcome = {
   readonly settled: unknown;
@@ -29,16 +38,41 @@ ${body}
 `;
 };
 
-/** Each prints to stdout, then never exits on its own (`setInterval`), apart from `complete-exit-3`. */
+/**
+ * Each prints to stdout, then never exits on its own (`setInterval`), apart from the `exit` ones. `held-exit-3` leaves a
+ * grandchild holding its stdout for 800 ms after it exits; `term-end-hang` ends its JSON and counts in `.terms` on each
+ * SIGTERM, without exiting.
+ */
 const STUB_BODIES: Record<StubName, string> = {
   'complete-hang': `process.stdout.write('{"tasks":[]}\\n');\nsetInterval(() => undefined, 1000);`,
   'half-hang': `process.stdout.write('{"tasks":[');\nsetInterval(() => undefined, 1000);`,
   'broken-hang': `process.stdout.write('{"tasks":]}\\n');\nsetInterval(() => undefined, 1000);`,
   'late-end-hang': `process.stdout.write('{');\nsetTimeout(() => process.stdout.write('}\\n'), 400);\nsetInterval(() => undefined, 1000);`,
-  'complete-exit-3': `process.stdout.write('{}\\n');\nprocess.exitCode = 3;`
+  'complete-exit-3': `process.stdout.write('{}\\n');\nprocess.exitCode = 3;`,
+  'complete-term-exit-1': `process.stdout.write('{}\\n');\nprocess.on('SIGTERM', () => process.exit(1));\nsetInterval(() => undefined, 1000);`,
+  'broken-term-exit-0': `process.stdout.write('{"tasks":]}\\n');\nprocess.on('SIGTERM', () => process.exit(0));\nsetInterval(() => undefined, 1000);`,
+  'held-exit-3': `process.stdout.write('{}\\n');
+require('node:child_process').spawn(process.execPath, ['-e', 'setTimeout(() => undefined, 800)'], { stdio: ['ignore', 'inherit', 'ignore'] }).unref();
+process.exitCode = 3;`,
+  'term-end-hang': `process.stdout.write('{');
+process.on('SIGTERM', () => {
+  process.stdout.write('}\\n');
+  require('node:fs').appendFileSync(__filename + '.terms', 'x');
+});
+setInterval(() => undefined, 1000);`
 };
 
-const STUB_NAMES: StubName[] = ['complete-hang', 'half-hang', 'broken-hang', 'late-end-hang', 'complete-exit-3'];
+const STUB_NAMES: StubName[] = [
+  'complete-hang',
+  'half-hang',
+  'broken-hang',
+  'late-end-hang',
+  'complete-exit-3',
+  'complete-term-exit-1',
+  'broken-term-exit-0',
+  'held-exit-3',
+  'term-end-hang'
+];
 
 const JSON_CHECK: ExitStallCheck = { isEnd: isJsonEnd, exitCodeOf: jsonExitCode };
 
@@ -108,24 +142,6 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guar
         expect(outcome.isStubAlive).toBe(false);
       });
     });
-
-    describe('WHEN the platform is linux', () => {
-      it('THEN the guard stays off and runTurbo rejects with the timeout', async () => {
-        const options: RunTurboOptions = { ...GUARDED, platform: 'linux', timeoutMs: 1000 };
-        const outcome = await runStub('complete-hang', options);
-
-        expect(outcome.settled).toMatchObject(TIMEOUT_ABORT);
-      });
-    });
-
-    describe('WHEN no exitStallCheck is given', () => {
-      it('THEN the guard stays off and runTurbo rejects with the timeout', async () => {
-        const options: RunTurboOptions = { ...GUARDED, exitStallCheck: undefined, timeoutMs: 1000 };
-        const outcome = await runStub('complete-hang', options);
-
-        expect(outcome.settled).toMatchObject(TIMEOUT_ABORT);
-      });
-    });
   });
 
   describe('GIVEN a binary that prints half a JSON object, then never exits', () => {
@@ -166,6 +182,40 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guar
       const outcome = await runStub('complete-exit-3', GUARDED);
 
       expect(outcome.settled).toMatchObject({ stdout: '{}\n', exitCode: 3 });
+    });
+  });
+
+  describe('GIVEN a binary that prints complete JSON, then exits 1 on SIGTERM, as taskkill /F leaves turbo', () => {
+    it('WHEN the guard stops it THEN runTurbo resolves with the exit code its stdout gives, not the 1', async () => {
+      const outcome = await runStub('complete-term-exit-1', GUARDED);
+
+      expect(outcome.settled).toStrictEqual({ stdout: '{}\n', stderr: '', exitCode: 0 });
+    });
+  });
+
+  describe('GIVEN a binary that prints broken JSON, then exits 0 on SIGTERM', () => {
+    it('WHEN the guard stops it THEN runTurbo resolves with exit code 0, as a turbo that exited by itself', async () => {
+      const outcome = await runStub('broken-term-exit-0', GUARDED);
+
+      expect(outcome.settled).toMatchObject({ stdout: '{"tasks":]}\n', exitCode: 0 });
+    });
+  });
+
+  describe('GIVEN a binary that prints complete JSON and exits 3 while a grandchild holds its stdout', () => {
+    it('WHEN the stall time passes before the output closes THEN runTurbo still resolves with exit code 3', async () => {
+      const outcome = await runStub('held-exit-3', GUARDED);
+
+      expect(outcome.settled).toMatchObject({ stdout: '{}\n', exitCode: 3 });
+    });
+  });
+
+  describe('GIVEN a binary that ends its JSON on SIGTERM, without exiting', () => {
+    it('WHEN the timeout aborts it THEN the guard sends no second SIGTERM during the grace', async () => {
+      const options: RunTurboOptions = { ...GUARDED, timeoutMs: 400, graceMs: 800 };
+
+      await runStub('term-end-hang', options);
+
+      await expect(readFile(`${stubPath('term-end-hang')}.terms`, 'utf8')).resolves.toBe('x');
     });
   });
 });

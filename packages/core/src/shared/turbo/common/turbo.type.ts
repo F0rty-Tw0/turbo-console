@@ -31,9 +31,6 @@ export type TurboResult = {
   readonly exitCode: number;
 };
 
-/** What a turbo process wrote, with or without an exit code. */
-export type TurboOutput = Pick<TurboResult, 'stdout' | 'stderr'>;
-
 /** Plain `major.minor.patch` bounds: `min` is included, `maxExclusive` is not. */
 export type TurboVersionRange = {
   readonly min: string;
