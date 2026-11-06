@@ -1,9 +1,10 @@
 import { vi } from 'vitest';
 
-import type { Bridge } from '../../../bridge/common/bridge.type.ts';
+import type { WebviewMessage } from '../../../bridge/common/details-message.type.ts';
+import type { GraphWebviewMessage } from '../../../bridge/common/graph-message.type.ts';
 import type { PackageSideDepsMock } from '../common/graph-package-side.type.ts';
 
-type PostedMessage = Parameters<Bridge['post']>[0];
+type PostedMessage = WebviewMessage | GraphWebviewMessage;
 
 /** The messages the page posted to the host so far, in order, of one `type`. */
 export const postedOf = (rig: PackageSideDepsMock, type: PostedMessage['type']): PostedMessage[] => {

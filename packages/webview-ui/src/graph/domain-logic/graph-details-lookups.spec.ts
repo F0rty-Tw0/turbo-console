@@ -4,18 +4,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GraphFrames } from './graph-frames.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { ViewStateModes } from './view-state-modes.ts';
-import type {
-  EdgeExplainResult,
-  GraphEdgeExplainedMessage,
-  ManifestContext,
-  ManifestEntry
-} from '../../bridge/common/graph-message.type.ts';
+import type { ManifestContext, ManifestEntry } from '../../bridge/common/graph-message.type.ts';
 import type { DetailsViews } from '../common/details.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { SAVED_FLAT_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
-import { postedOf } from '../test/utils/graph-details.spec.util.ts';
+import { MANIFEST_ENTRY_STUB, MANIFEST_FILE_STUB } from '../test/stubs/manifest-entry.stub.ts';
+import { foundReplyOf } from '../test/utils/explain-reply.spec.util.ts';
 import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { postedOf } from '../test/utils/posted-messages.spec.util.ts';
+import { lastReturnOf } from '../test/utils/spy-return.spec.util.ts';
 
 type PackageSideParts = {
   readonly side: GraphPackageSide;
@@ -24,17 +22,11 @@ type PackageSideParts = {
 
 type DetailsRig = PackageSideDepsMock & PackageSideParts;
 
-const FILE = 'apps/web/package.json';
-
-const NO_CONTEXT: ManifestContext = {};
-
 const CONTEXT_BEFORE: ManifestContext = { before: '  "dependencies": {' };
 
-const ENTRY: ManifestEntry = { field: 'dependencies', key: 'ui', spec: '^1.0.0', line: 2, context: NO_CONTEXT };
+const ENTRY_SAME_SHAPE: ManifestEntry = { ...MANIFEST_ENTRY_STUB, spec: '^2.0.0' };
 
-const ENTRY_SAME_SHAPE: ManifestEntry = { ...ENTRY, spec: '^2.0.0' };
-
-const ENTRY_WITH_CONTEXT: ManifestEntry = { ...ENTRY, context: CONTEXT_BEFORE };
+const ENTRY_WITH_CONTEXT: ManifestEntry = { ...MANIFEST_ENTRY_STUB, context: CONTEXT_BEFORE };
 
 /** A `GraphPackageSide`, whose first draw mounts the details panel, over the mocked deps and a saved flat view. */
 const detailsRigOf = (): DetailsRig => {
@@ -49,25 +41,9 @@ const detailsRigOf = (): DetailsRig => {
   return rig;
 };
 
-const foundReplyOf = (source: string, target: string, entry: ManifestEntry): GraphEdgeExplainedMessage => {
-  const result: EdgeExplainResult = { kind: 'found', file: FILE, entries: [entry] };
-  const message: GraphEdgeExplainedMessage = { type: 'edgeExplained', source, target, result };
-
-  return message;
-};
-
 const WEB_TO_UI_POSTED = [{ type: 'explainEdge', source: 'web', target: 'ui' }];
 
-/** What `spy` returned on its latest call; throws when it has not returned yet. */
-const lastReturnOf = <Result>(spy: Mock<(...args: never[]) => Result>): Result => {
-  const last = spy.mock.results.at(-1);
-
-  if (last?.type !== 'return') throw new Error('the spy has not returned yet');
-
-  return last.value;
-};
-
-describe('FEATURE: GraphDetails link look-ups', () => {
+describe('FEATURE: LinkLookups', () => {
   let rig: DetailsRig;
   let explain: Mock<DetailsViews['explain']>;
   let link: Mock<DetailsViews['link']>;
@@ -116,51 +92,61 @@ describe('FEATURE: GraphDetails link look-ups', () => {
     });
 
     it('WHEN a found reply for it arrives THEN the explain block is built once with the found state', () => {
-      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', ENTRY));
+      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', MANIFEST_ENTRY_STUB));
 
       expect(explain).toHaveBeenCalledTimes(1);
-      expect(explain).toHaveBeenCalledWith({ kind: 'found', file: FILE, entries: [ENTRY] });
+      expect(explain).toHaveBeenCalledWith({ kind: 'found', file: MANIFEST_FILE_STUB, entries: [MANIFEST_ENTRY_STUB] });
     });
 
     it('WHEN a second found reply of the same shape arrives THEN the block is updated in place', () => {
-      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', ENTRY));
+      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', MANIFEST_ENTRY_STUB));
       rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', ENTRY_SAME_SHAPE));
 
       expect(explain).toHaveBeenCalledTimes(1);
     });
 
     it('WHEN a reply for another link arrives THEN the block is not built', () => {
-      rig.side.filtering.inspection.explained(foundReplyOf('ui', 'core', ENTRY));
+      rig.side.filtering.inspection.explained(foundReplyOf('ui', 'core', MANIFEST_ENTRY_STUB));
 
       expect(explain).not.toHaveBeenCalled();
     });
 
-    it('WHEN a new hash keeps the link and the same reply arrives again THEN it is asked again and the block is built again', async () => {
-      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', ENTRY));
-      rig.side.show({ ...STATE_STUB, hash: 'h2' }, 2);
-      await settled();
-      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', ENTRY));
+    describe('WHEN a new hash keeps the link and the same reply arrives again', () => {
+      beforeEach(async () => {
+        rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', MANIFEST_ENTRY_STUB));
+        rig.side.show({ ...STATE_STUB, hash: 'h2' }, 2);
+        await settled();
+        rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', MANIFEST_ENTRY_STUB));
+      });
 
-      expect(postedOf(rig, 'explainEdge')).toStrictEqual([...WEB_TO_UI_POSTED, ...WEB_TO_UI_POSTED]);
-      expect(explain).toHaveBeenCalledTimes(2);
+      it('THEN explainEdge is posted again for it', () => {
+        expect(postedOf(rig, 'explainEdge')).toStrictEqual([...WEB_TO_UI_POSTED, ...WEB_TO_UI_POSTED]);
+      });
+
+      it('THEN the explain block is built again', () => {
+        expect(explain).toHaveBeenCalledTimes(2);
+      });
     });
 
     it('WHEN focus is in the explain block and a reply of another shape arrives THEN the heading takes the focus', () => {
-      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', ENTRY));
+      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', MANIFEST_ENTRY_STUB));
 
       const [first] = lastReturnOf(explain).entries;
+      const { heading } = lastReturnOf(link);
 
-      first?.open.focus();
+      if (!first) throw new Error('the found reply built no entry row');
+
+      first.open.focus();
       rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', ENTRY_WITH_CONTEXT));
 
-      expect(document.activeElement).toBe(lastReturnOf(link).heading);
+      expect(document.activeElement).toBe(heading);
     });
   });
 
   describe('GIVEN a package shown', () => {
     it('WHEN a reply for a link arrives THEN the block is not built', () => {
       rig.side.filtering.inspection.input({ kind: 'select', name: 'web', via: 'list' });
-      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', ENTRY));
+      rig.side.filtering.inspection.explained(foundReplyOf('web', 'ui', MANIFEST_ENTRY_STUB));
 
       expect(explain).not.toHaveBeenCalled();
     });
