@@ -11,6 +11,7 @@ import {
   sourceImportOf
 } from '../test/utils/import-scan.spec.util.ts';
 
+// Starts with 'p' so it sorts before 'x.ts': the drop-before-cut row needs the dropped site first.
 const LONG_FILE = `${'p'.repeat(MANIFEST_FILE_MAX - 2)}.ts`;
 
 const EXACT_FILE = `${'p'.repeat(MANIFEST_FILE_MAX - 3)}.ts`;
