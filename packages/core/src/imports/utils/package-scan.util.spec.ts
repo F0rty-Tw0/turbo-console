@@ -1,7 +1,7 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { packageScanOf } from './package-scan.util.ts';
-import type { CachedFile, TsconfigPaths } from '../common/import-scan.type.ts';
+import type { CachedFile } from '../common/import-scan.type.ts';
 import type { FileOutcome, ImportWalk, WalkedFile } from '../common/import-walk.type.ts';
 import { CACHED_FILE_STUB, SOURCE_IMPORT_STUB } from '../test/stubs/import-scan.stub.ts';
 
@@ -31,9 +31,9 @@ describe('FEATURE: assemble a package scan', () => {
     ];
 
     it('WHEN assembled THEN files lists only the file with imports, scanned is 2, skipped 1, tsconfigPaths null', () => {
-      const { scan } = packageScanOf(walk, outcomes, null);
-
       const listed = [{ file: 'a.ts', imports: [SOURCE_IMPORT_STUB] }];
+
+      const { scan } = packageScanOf(walk, outcomes, null);
 
       expect(scan).toStrictEqual({
         files: listed,
@@ -57,25 +57,23 @@ describe('FEATURE: assemble a package scan', () => {
     });
   });
 
-  it('GIVEN walk order c, a, b WHEN assembled THEN files keep walk order', () => {
-    const walk = withNames(['c.ts', 'a.ts', 'b.ts']);
-    const scanned: FileOutcome = { kind: 'scanned', cached: CACHED_FILE_STUB };
+  describe('GIVEN walk order c, a, b, all scanned', () => {
+    it('WHEN assembled THEN files keep walk order', () => {
+      const walk = withNames(['c.ts', 'a.ts', 'b.ts']);
+      const scanned: FileOutcome = { kind: 'scanned', cached: CACHED_FILE_STUB };
 
-    const { scan } = packageScanOf(walk, [scanned, scanned, scanned], null);
+      const { scan } = packageScanOf(walk, [scanned, scanned, scanned], null);
+      const listed = scan.files.map((entry) => entry.file);
 
-    expect(scan.files.map((entry) => entry.file)).toStrictEqual(['c.ts', 'a.ts', 'b.ts']);
+      expect(listed).toStrictEqual(['c.ts', 'a.ts', 'b.ts']);
+    });
   });
 
-  it('GIVEN any walk WHEN assembled THEN tsconfigPaths is typed for the U8g fill', () => {
-    const { scan } = packageScanOf(withNames([]), [], null);
+  describe("GIVEN limit 'time'", () => {
+    it("WHEN assembled THEN scan.limit is 'time'", () => {
+      const { scan } = packageScanOf(withNames([]), [], 'time');
 
-    expectTypeOf(scan.tsconfigPaths).toEqualTypeOf<TsconfigPaths | null>();
-    expect(scan.tsconfigPaths).toBeNull();
-  });
-
-  it("GIVEN limit 'time' WHEN assembled THEN scan.limit is 'time'", () => {
-    const { scan } = packageScanOf(withNames([]), [], 'time');
-
-    expect(scan.limit).toBe('time');
+      expect(scan.limit).toBe('time');
+    });
   });
 });

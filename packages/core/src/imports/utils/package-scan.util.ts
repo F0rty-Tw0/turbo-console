@@ -12,12 +12,12 @@ export const packageScanOf = (walk: ImportWalk, outcomes: FileOutcome[], limit: 
   let scanned = 0;
   let skipped = 0;
 
-  walk.files.forEach((walked, index) => {
+  for (const [index, walked] of walk.files.entries()) {
     const outcome = outcomes[index];
 
     if (outcome?.kind === 'skipped') skipped += 1;
 
-    if (outcome?.kind !== 'scanned') return;
+    if (outcome?.kind !== 'scanned') continue;
 
     const imports = outcome.cached.imports;
 
@@ -25,7 +25,7 @@ export const packageScanOf = (walk: ImportWalk, outcomes: FileOutcome[], limit: 
     scanned += 1;
 
     if (imports.length > 0) files.push({ file: walked.file, imports });
-  });
+  }
 
   const scan: PackageImportScan = { files, tsconfigPaths: null, scanned, skipped, limit };
   const result: PackageScanResult = { scan, cached };
