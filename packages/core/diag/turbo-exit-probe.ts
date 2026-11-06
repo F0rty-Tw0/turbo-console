@@ -16,6 +16,8 @@ type ProcRow = { pid: number; ppid: number; name: string; commandLine: string; c
 
 type Snapshot = { atMs: number; descendants: ProcRow[]; gitOrTurboAnywhere: ProcRow[]; error?: string };
 
+type TurboDetail = { atMs: number; text: string; error?: string };
+
 type Launch = {
   index: number;
   worker: number;
@@ -27,7 +29,7 @@ type Launch = {
   killed: boolean;
   cacheEntries: number | null;
   tasksLine: string | null;
-  spawnError?: string;
+  spawnError: string | undefined;
   disposeError?: string;
 };
 
@@ -39,11 +41,10 @@ type Hang = {
   stallSeconds: number;
   killed: boolean;
   snapshots: Snapshot[];
+  turboDetails: TurboDetail[];
   lastStderr: string[];
   dir: string;
 };
-
-type GitSlow = { index: number; ms: number; error?: string };
 
 const IS_WINDOWS = process.platform === 'win32';
 
@@ -59,8 +60,6 @@ const MINUTES = Number(process.env['PROBE_MINUTES'] ?? 25);
 
 const CONCURRENCY = Number(process.env['PROBE_CONCURRENCY'] ?? 4);
 
-const GIT_SPAWNS = Number(process.env['PROBE_GIT_SPAWNS'] ?? 0);
-
 /** Override only to smoke the stall path locally. */
 const STALL_MS = Number(process.env['PROBE_STALL_MS'] ?? 15_000);
 
@@ -69,15 +68,16 @@ const LATE_SNAPSHOT_MS = Number(process.env['PROBE_LATE_SNAPSHOT_MS'] ?? 60_000)
 
 const KILL_MS = Number(process.env['PROBE_KILL_MS'] ?? 120_000);
 
-const GIT_SLOW_MS = 5000;
-
 const TURBO = devTurboPath();
 
-const BASE_ARGS = ['--skip-infer', 'run', 'build', '--summarize', '--log-order=stream', '-vvv'];
+const ARGS = ['--skip-infer', 'run', 'build', '--summarize', '--log-order=stream', '-vvv'];
 
-const ARGS = ARM === 'B' ? [...BASE_ARGS, '--cache=local:r'] : BASE_ARGS;
+/** Arm C turns turbo's telemetry client off, to test whether its HTTP send keeps turbo.exe alive after teardown. */
+const TELEMETRY_OFF = { TURBO_TELEMETRY_DISABLED: '1', DO_NOT_TRACK: '1' };
 
-const ENV = turboEnv(process.env);
+const BASE_ENV = turboEnv(process.env);
+
+const ENV = ARM === 'C' ? { ...BASE_ENV, ...TELEMETRY_OFF } : BASE_ENV;
 
 const PS_COMMAND =
   "$ErrorActionPreference='SilentlyContinue'; Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId,Name,CommandLine,@{n='Created';e={if ($_.CreationDate) { $_.CreationDate.ToString('o') }}} | ConvertTo-Json -Compress";
@@ -146,6 +146,30 @@ const snapshot = async (pid: number | undefined, startedAt: number): Promise<Sna
     return { atMs, descendants, gitOrTurboAnywhere };
   } catch (error) {
     return { atMs, descendants: [], gitOrTurboAnywhere: [], error: String(error) };
+  }
+};
+
+const detailArgs = (pid: number): [string, string[]] => {
+  const psCommand = `Get-Process -Id ${pid} | Select-Object Id,@{n='Threads';e={$_.Threads.Count}},HandleCount,CPU | ConvertTo-Json -Compress`;
+
+  return IS_WINDOWS
+    ? ['powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', psCommand]]
+    : ['ps', ['-o', 'pid=,nlwp=,time=', '-p', String(pid)]];
+};
+
+const turboDetail = async (pid: number | undefined, startedAt: number): Promise<TurboDetail> => {
+  const atMs = Math.round(performance.now() - startedAt);
+
+  if (pid === undefined) return { atMs, text: '', error: 'no pid' };
+
+  const [file, args] = detailArgs(pid);
+
+  try {
+    const text = await execText(file, args, { timeoutMs: 30_000 });
+
+    return { atMs, text: text.trim() };
+  } catch (error) {
+    return { atMs, text: '', error: String(error) };
   }
 };
 
@@ -221,6 +245,7 @@ const runOne = async (index: number, worker: number, fixture: FixtureHandle): Pr
     stalled = true;
     const hangDir = join(OUT, 'hangs', `launch-${index}`);
     const snapshots = [await snapshot(child.pid, startedAt)];
+    const turboDetails = [await turboDetail(child.pid, startedAt)];
 
     await mkdir(hangDir, { recursive: true });
     await writeFile(join(hangDir, 'stdout-at-stall.txt'), stdout);
@@ -228,13 +253,17 @@ const runOne = async (index: number, worker: number, fixture: FixtureHandle): Pr
 
     const hasClosedBeforeLate = await closedWithin(LATE_SNAPSHOT_MS);
 
-    if (!hasClosedBeforeLate) snapshots.push(await snapshot(child.pid, startedAt));
+    if (!hasClosedBeforeLate) {
+      snapshots.push(await snapshot(child.pid, startedAt));
+      turboDetails.push(await turboDetail(child.pid, startedAt));
+    }
 
     const hasClosedBeforeKill = await closedWithin(KILL_MS);
 
     if (!hasClosedBeforeKill) {
       killed = true;
       snapshots.push(await snapshot(child.pid, startedAt));
+      turboDetails.push(await turboDetail(child.pid, startedAt));
       await killTree(child);
       await closedWithin(KILL_MS + 30_000);
     }
@@ -248,6 +277,7 @@ const runOne = async (index: number, worker: number, fixture: FixtureHandle): Pr
       stallSeconds: (elapsed() - STALL_MS) / 1000,
       killed,
       snapshots,
+      turboDetails,
       lastStderr: lastLines(stderr, 40),
       dir: fixture.dir
     };
@@ -281,54 +311,31 @@ const workerLoop = async (worker: number, deadline: number): Promise<void> => {
 
     launches.push(launch);
 
-    if (index % 100 === 0) console.log(`launch ${index}: exit=${launch.exitCode} closeMs=${launch.closeMs} cache=${launch.cacheEntries}`);
+    if (index % 100 === 0)
+      console.log(`launch ${index}: exit=${launch.exitCode} closeMs=${launch.closeMs} cache=${launch.cacheEntries}`);
   }
-};
-
-const gitLoop = async (): Promise<{ spawns: number; slow: GitSlow[]; p50: number; p99: number; max: number }> => {
-  const fixture = await fixtureFor(PRESETS['target-like']);
-  const slow: GitSlow[] = [];
-  const durations: number[] = [];
-
-  for (let index = 0; index < GIT_SPAWNS; index++) {
-    const startedAt = performance.now();
-    let error: string | undefined;
-
-    try {
-      await execText('git', ['rev-parse', 'HEAD'], { cwd: fixture.dir, timeoutMs: KILL_MS });
-    } catch (caught) {
-      error = String(caught);
-    }
-
-    const ms = Math.round(performance.now() - startedAt);
-
-    durations.push(ms);
-
-    if (ms > GIT_SLOW_MS || error !== undefined) slow.push({ index, ms, error });
-  }
-
-  await fixture.dispose().catch(() => undefined);
-  const sorted = durations.toSorted((a, b) => a - b);
-
-  return { spawns: durations.length, slow, p50: percentile(sorted, 0.5), p99: percentile(sorted, 0.99), max: sorted.at(-1) ?? 0 };
 };
 
 const percentile = (sorted: number[], p: number): number => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0;
 
 const main = async (): Promise<void> => {
   await mkdir(OUT, { recursive: true });
-  console.log(`probe arm=${ARM} shard=${SHARD} turbo=${TURBO} args=${ARGS.join(' ')} concurrency=${CONCURRENCY}`);
+  const telemetryOff = ENV['TURBO_TELEMETRY_DISABLED'] === '1';
+
+  console.log(
+    `probe arm=${ARM} shard=${SHARD} turbo=${TURBO} args=${ARGS.join(' ')} concurrency=${CONCURRENCY} telemetryOff=${telemetryOff}`
+  );
   await warmFixtureCache(PRESETS['target-like']);
 
   const startedAt = performance.now();
   const deadline = startedAt + MINUTES * 60_000;
   const workers = Array.from({ length: CONCURRENCY }, (_, worker) => workerLoop(worker, deadline));
-  const git = GIT_SPAWNS > 0 ? gitLoop() : Promise.resolve(null);
-  const settled = await Promise.allSettled([Promise.all(workers), git]);
+  const settled = await Promise.allSettled(workers);
   const errors = settled.filter((result) => result.status === 'rejected').map((result) => String(result.reason));
-  const gitResult = settled[1].status === 'fulfilled' ? settled[1].value : null;
   const closeTimes = launches.flatMap((launch) => (launch.closeMs === null ? [] : [launch.closeMs])).toSorted((a, b) => a - b);
-  const nonZero = launches.filter((launch) => launch.exitCode !== 0).map((launch) => ({ index: launch.index, exitCode: launch.exitCode, signal: launch.signal, spawnError: launch.spawnError }));
+  const nonZero = launches
+    .filter((launch) => launch.exitCode !== 0)
+    .map((launch) => ({ index: launch.index, exitCode: launch.exitCode, signal: launch.signal, spawnError: launch.spawnError }));
   const cacheEntryCounts = [...new Set(launches.map((launch) => launch.cacheEntries))];
   const tasksLines = [...new Set(launches.map((launch) => launch.tasksLine))];
   const summary = {
@@ -336,6 +343,7 @@ const main = async (): Promise<void> => {
     shard: SHARD,
     platform: process.platform,
     args: ARGS,
+    telemetryOff,
     concurrency: CONCURRENCY,
     stallMs: STALL_MS,
     wallSeconds: Math.round((performance.now() - startedAt) / 1000),
@@ -353,7 +361,6 @@ const main = async (): Promise<void> => {
       max: closeTimes.at(-1) ?? 0
     },
     hangs,
-    git: gitResult,
     errors
   };
 

@@ -1,7 +1,7 @@
 name: CI
 
 # Diag branch only (F-U7-17): a probe-only copy of ci.yml, dispatched with
-# `gh workflow run ci.yml --ref diag/fu717-turbo-exit-probe`. Arm A = turbo's default local:rw cache, arm B = --cache=local:r.
+# `gh workflow run ci.yml --ref diag/fu717-turbo-exit-probe`. Arm A = baseline turboEnv, arm C = turboEnv + TURBO_TELEMETRY_DISABLED=1 and DO_NOT_TRACK=1.
 on:
   workflow_dispatch:
     inputs:
@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arm: [A, B]
+        arm: [A, C]
         shard: [1, 2, 3]
     runs-on: windows-latest
     timeout-minutes: 40
@@ -61,7 +61,6 @@ jobs:
           PROBE_SHARD: ${{ matrix.shard }}
           PROBE_MINUTES: '25'
           PROBE_CONCURRENCY: '4'
-          PROBE_GIT_SPAWNS: ${{ matrix.arm == 'A' && matrix.shard == 1 && '3000' || '0' }}
           PROBE_OUT: ${{ runner.temp }}/probe-out
         run: node packages/core/diag/turbo-exit-probe.ts
 
