@@ -1,4 +1,10 @@
-import { DECLARATION_SUFFIXES, NODE_MODULES_DIR, SOURCE_SUFFIXES, TOP_BUILD_DIRS } from '../common/import-scan.const.ts';
+import {
+  DECLARATION_SUFFIXES,
+  NODE_MODULES_DIR,
+  SOURCE_SUFFIXES,
+  TOP_BUILD_DIRS,
+  UNREADABLE_DIR_CODES
+} from '../common/import-scan.const.ts';
 
 const endsWithAny = (name: string, suffixes: string[]): boolean => suffixes.some((suffix) => name.endsWith(suffix));
 
@@ -14,4 +20,13 @@ export const isWalkedDirName = (name: string, isTop: boolean): boolean => {
   const isTopBuildDir = isTop && TOP_BUILD_DIRS.has(name);
 
   return !isTopBuildDir;
+};
+
+/** Whether a failed subdir read only leaves that dir out (no access, gone, not a dir); anything else must fail the scan. */
+export const isUnreadableDirError = (error: unknown): boolean => {
+  if (!(error instanceof Error) || !('code' in error)) return false;
+
+  const { code } = error;
+
+  return typeof code === 'string' && UNREADABLE_DIR_CODES.has(code);
 };

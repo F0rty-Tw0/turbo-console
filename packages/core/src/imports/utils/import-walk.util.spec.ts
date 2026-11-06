@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isSourceName, isWalkedDirName } from './import-walk.util.ts';
+import { isSourceName, isUnreadableDirError, isWalkedDirName } from './import-walk.util.ts';
 
 describe('FEATURE: walk name rules', () => {
   describe('GIVEN a file name', () => {
@@ -43,6 +43,30 @@ describe('FEATURE: walk name rules', () => {
       const actual = isWalkedDirName(name, isTop);
 
       expect(actual).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a failed subdir read', () => {
+    it.each(['EACCES', 'EPERM', 'ENOENT', 'ENOTDIR'])('WHEN the error code is %s THEN the dir is only left out', (code) => {
+      const error = Object.assign(new Error('read failed'), { code });
+
+      const actual = isUnreadableDirError(error);
+
+      expect(actual).toBe(true);
+    });
+
+    it.each(['EMFILE', 'EIO'])('WHEN the error code is %s THEN the scan must fail', (code) => {
+      const error = Object.assign(new Error('read failed'), { code });
+
+      const actual = isUnreadableDirError(error);
+
+      expect(actual).toBe(false);
+    });
+
+    it.each([new Error('no code'), 'ENOENT', null])('WHEN the error is %j without a code THEN the scan must fail', (error) => {
+      const actual = isUnreadableDirError(error);
+
+      expect(actual).toBe(false);
     });
   });
 });
