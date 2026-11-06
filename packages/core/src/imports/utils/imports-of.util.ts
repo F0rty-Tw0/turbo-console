@@ -63,8 +63,8 @@ const fromFormAt = (tokens: SourceToken[], clause: ImportClause, head: FormHead)
 const clauseFormAt = (tokens: SourceToken[], index: number, kind: ClauseKind): ImportForm | null => {
   const isModifier = isTypeModifierAt(tokens, index + 1);
   const clauseOffset = isModifier ? 2 : 1;
-  const clauseFrom = index + clauseOffset;
-  const clause = importClauseOf(tokens, clauseFrom);
+  const clauseIndex = index + clauseOffset;
+  const clause = importClauseOf(tokens, clauseIndex);
   const start = startOf(tokens, index);
   const head: FormHead = { kind, isModifier, start };
 

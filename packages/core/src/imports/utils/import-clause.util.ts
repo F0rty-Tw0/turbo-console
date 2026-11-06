@@ -89,18 +89,18 @@ const starClauseAt = (tokens: SourceToken[], star: number, hasBinding: boolean):
   return clause;
 };
 
-const clauseAt = (tokens: SourceToken[], from: number, hasBinding: boolean): ImportClause | null => {
-  const token = tokens[from];
+const clauseAt = (tokens: SourceToken[], clauseIndex: number, hasBinding: boolean): ImportClause | null => {
+  const token = tokens[clauseIndex];
   const isBrace = isPunct(token, '{');
   const isStar = isPunct(token, '*');
 
-  if (isBrace) return namedClauseAt(tokens, from, hasBinding);
+  if (isBrace) return namedClauseAt(tokens, clauseIndex, hasBinding);
 
-  if (isStar) return starClauseAt(tokens, from, hasBinding);
+  if (isStar) return starClauseAt(tokens, clauseIndex, hasBinding);
 
   if (!hasBinding) return null;
 
-  const clause: ImportClause = { next: from, hasBinding, typeItems: 0, items: 0 };
+  const clause: ImportClause = { next: clauseIndex, hasBinding, typeItems: 0, items: 0 };
 
   return clause;
 };
@@ -115,9 +115,9 @@ const isClosedAt = (tokens: SourceToken[], clause: ImportClause, clauseStart: nu
 };
 
 /** The clause ends at `from`, or at `=` after a lone default binding (`import x = require('S')`). */
-export const importClauseOf = (tokens: SourceToken[], from: number): ImportClause | null => {
-  const hasDefault = isAnyWord(tokens[from]);
-  let clauseStart = from;
+export const importClauseOf = (tokens: SourceToken[], clauseIndex: number): ImportClause | null => {
+  const hasDefault = isAnyWord(tokens[clauseIndex]);
+  let clauseStart = clauseIndex;
 
   if (hasDefault) clauseStart += 1;
 
