@@ -174,6 +174,7 @@ export const runTurbo = async (
 
   const onStall = (check: ExitStallCheck): void => {
     stalledCheck = check;
+    // once(child, 'exit') in stopChild rejects when the child emits 'error' during the stop; execFile's callback reports it.
     void stopChild(child, options.graceMs ?? GRACE_MS).catch(noop);
   };
 
