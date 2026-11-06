@@ -1,5 +1,6 @@
 import { excerptRowsOf } from './excerpt.util.ts';
-import type { EdgeExplainResult, GraphEdgeExplainedMessage, ManifestEntry } from '../../bridge/common/graph-message.type.ts';
+import type { EdgeExplainResult, ManifestEntry } from '../../bridge/common/graph-message.type.ts';
+import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { ExplainState, MissingExplain } from '../common/details.type.ts';
 import type { ExplainPlan } from '../common/graph-details.type.ts';
 import type { Inspection } from '../common/inspection.type.ts';
@@ -13,8 +14,8 @@ export const explainStateOf = (result: EdgeExplainResult, target: string): Expla
   return missing;
 };
 
-/** A reply counts only while its exact link is shown; a stale or reversed one is dropped. */
-export const isReplyFor = (message: GraphEdgeExplainedMessage, current: Inspection | null): boolean => {
+/** Whether a reply (`edgeExplained` or `edgeImports`) is for the link shown now; a stale or reversed one is dropped. */
+export const isReplyFor = (message: GraphEdge, current: Inspection | null): boolean => {
   if (current?.kind !== 'link') return false;
 
   return message.source === current.source && message.target === current.target;
