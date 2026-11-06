@@ -106,6 +106,35 @@ describe('FEATURE: open an import site', () => {
       expect(ports.openAt).toHaveBeenCalledExactlyOnceWith(SOURCE_FILE, 4);
     });
 
+    it('WHEN canPost turns false while realPath resolves THEN nothing opens and it is true', async () => {
+      let isOpen = true;
+
+      vi.mocked(ports.realPath).mockImplementation(async (path) => {
+        isOpen = false;
+
+        return Promise.resolve(path);
+      });
+      vi.mocked(ports.readText).mockResolvedValue('import "a";');
+
+      const handled = await openImport('web', 'src/x.ts', 4, { ...context, canPost: (): boolean => isOpen });
+
+      expect(handled).toBe(true);
+      expect(ports.openAt).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['a NUL byte', 'src/x\0.ts'],
+      ['a newline', 'src/x\n.ts']
+    ])('WHEN the file holds %s THEN it is false and nothing is read or opened', async (_label, file) => {
+      vi.mocked(ports.readText).mockResolvedValue('import "a";');
+
+      const handled = await openImport('web', file, 4, context);
+
+      expect(handled).toBe(false);
+      expect(ports.readText).not.toHaveBeenCalled();
+      expect(ports.openAt).not.toHaveBeenCalled();
+    });
+
     it('WHEN the read gives null THEN nothing opens, the unreadable file is logged once, and it is true', async () => {
       const handled = await openImport('web', 'src/x.ts', 4, context);
 

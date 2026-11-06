@@ -1,7 +1,7 @@
 import { MANIFEST_ENTRIES_MAX } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { aliasKeysOf } from './manifest-entries.util.ts';
+import { aliasKeysOf, namesOf } from './manifest-entries.util.ts';
 
 const DEPENDENCY = '@company/ui';
 const ALIAS_SPEC = `npm:${DEPENDENCY}@^1`;
@@ -79,6 +79,20 @@ describe('FEATURE: alias keys of a dependency', () => {
       const keys = aliasKeysOf(text, DEPENDENCY);
 
       expect(keys).toStrictEqual(expected);
+    });
+  });
+});
+
+describe('FEATURE: names an edge matches', () => {
+  describe("GIVEN the source's package.json text", () => {
+    it.each([
+      ['null (unreadable)', [DEPENDENCY], null],
+      ['an npm alias of the target', [DEPENDENCY, 'ui-alias'], '{"dependencies":{"ui-alias":"npm:@company/ui@^1"}}'],
+      ['no alias of the target', [DEPENDENCY], '{"dependencies":{"@company/ui":"^1"}}']
+    ])('WHEN it is %s THEN the names are %j', (_title, expected, text) => {
+      const names = namesOf(DEPENDENCY, text);
+
+      expect(names).toStrictEqual(expected);
     });
   });
 });

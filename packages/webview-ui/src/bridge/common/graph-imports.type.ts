@@ -36,7 +36,11 @@ type ImportsNone = {
 
 type ImportsFailed = { readonly kind: 'failed' };
 
-/** What the host found in the dependent's source files for one edge; `sites` holds 1 to `IMPORT_SITES_MAX`, `total` counts every matched site, also in files whose path was too long to send (spec D11, D13). */
+/**
+ * What the host found in the dependent's source files for one edge; `sites` holds 1 to `IMPORT_SITES_MAX`. `total` counts every
+ * matched site, also those not sent: sites in a file whose path was too long to send, and sites on a line past
+ * `MANIFEST_LINE_MAX` (that site's file still counts in `scanned`) (spec D11, D13).
+ */
 export type EdgeImportsResult = ImportsFound | ImportsNone | ImportsFailed;
 
 export type GraphEdgeImportsMessage = {
@@ -44,4 +48,22 @@ export type GraphEdgeImportsMessage = {
   readonly source: string;
   readonly target: string;
   readonly result: EdgeImportsResult;
+};
+
+/**
+ * The page asking the host to scan the dependent of one link for imports of its target (spec D1, D11). A repeat ask for the
+ * same link while its scan runs gets no reply of its own: the pending ask's one `edgeImports` answers both.
+ */
+export type GraphScanImportsMessage = {
+  readonly type: 'scanImports';
+  readonly source: string;
+  readonly target: string;
+};
+
+/** The page asking the host to open one import site: `file` relative to the package's dir, `line` 0-based (spec D12). */
+export type GraphOpenImportMessage = {
+  readonly type: 'openImport';
+  readonly packageName: string;
+  readonly file: string;
+  readonly line: number;
 };

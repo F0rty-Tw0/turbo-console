@@ -10,10 +10,10 @@ export const ENTRY_TEXT_MAX = 200;
 /** The most entries one explained edge carries. */
 export const MANIFEST_ENTRIES_MAX = 8;
 
-/** The highest 0-based `package.json` line the page and the host accept. */
+/** The highest 0-based line the page and the host accept: a `package.json` entry's, or an import site's. */
 export const MANIFEST_LINE_MAX = 1_000_000;
 
-/** The longest `package.json` path an explained edge names; the page rejects a longer one. */
+/** The longest file path a reply names, a `package.json` or an import site's file; the page rejects a longer one. */
 export const MANIFEST_FILE_MAX = 1_024;
 
 /** The most import sites one `edgeImports` reply carries; the rest count only in `total` (spec D8, D11). */

@@ -1,4 +1,4 @@
-import type { GraphEdgeImportsMessage } from './graph-imports.type.ts';
+import type { GraphEdgeImportsMessage, GraphOpenImportMessage, GraphScanImportsMessage } from './graph-imports.type.ts';
 import type { GraphRunState, GraphState, Positions, Routes } from './graph-state.type.ts';
 
 /** The `package.json` field that holds a dependency entry. */
@@ -181,6 +181,8 @@ export type GraphWebviewMessage =
   | GraphLayoutDoneMessage
   | GraphExplainEdgeMessage
   | GraphOpenManifestMessage
+  | GraphScanImportsMessage
+  | GraphOpenImportMessage
   | GraphExportImageMessage
   | GraphRunTaskMessage
   | GraphStopTaskMessage
