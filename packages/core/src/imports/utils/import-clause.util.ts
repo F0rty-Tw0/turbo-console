@@ -79,9 +79,12 @@ const namedClauseAt = (tokens: SourceToken[], open: number, hasBinding: boolean)
 };
 
 const starClauseAt = (tokens: SourceToken[], star: number, hasBinding: boolean): ImportClause => {
+  const name = tokens[star + 2];
   const hasAs = isWord(tokens[star + 1], 'as');
-  const isNameWord = isAnyWord(tokens[star + 2]);
-  const isNamespace = hasAs && isNameWord;
+  const isNameWord = isAnyWord(name);
+  const isNameString = name?.kind === 'string';
+  const isName = isNameWord || isNameString;
+  const isNamespace = hasAs && isName;
   let next = star + 1;
 
   if (isNamespace) next = star + 3;

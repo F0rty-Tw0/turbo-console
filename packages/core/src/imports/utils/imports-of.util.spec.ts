@@ -68,6 +68,7 @@ describe('FEATURE: finding import forms in a source', () => {
       "export {a} from 'S'",
       "export * from 'S'",
       "export * as n from 'S'",
+      'export * as "a-b" from \'S\'',
       "export {type A, b} from 'S'",
       "export {} from 'S'"
     ]);
