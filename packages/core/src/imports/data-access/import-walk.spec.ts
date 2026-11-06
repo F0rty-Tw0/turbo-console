@@ -138,6 +138,7 @@ describe('FEATURE: walking a package for source files', () => {
   describe('GIVEN 12 names listed in reverse, among them Z.ts, _x.ts and dir e/ holding x.ts', () => {
     it('WHEN walked THEN the names come back in code-unit order with a dir at its sorted position', async () => {
       const names = ['f.ts', 'b.ts', 'j.ts', 'd.ts', 'h.ts', 'a.ts', 'i.ts', 'c.ts', 'g.ts', 'e.ts', '_x.ts', 'Z.ts', 'e/x.ts'];
+      const sorted = ['Z.ts', '_x.ts', 'a.ts', 'b.ts', 'c.ts', 'd.ts', 'e/x.ts', 'e.ts', 'f.ts', 'g.ts', 'h.ts', 'i.ts', 'j.ts'];
 
       listing.isReversed = true;
 
@@ -145,34 +146,15 @@ describe('FEATURE: walking a package for source files', () => {
 
       const walk = await walkSourceFiles(runOf());
 
-      expect(namesOf(walk)).toStrictEqual([
-        'Z.ts',
-        '_x.ts',
-        'a.ts',
-        'b.ts',
-        'c.ts',
-        'd.ts',
-        'e/x.ts',
-        'e.ts',
-        'f.ts',
-        'g.ts',
-        'h.ts',
-        'i.ts',
-        'j.ts'
-      ]);
+      expect(namesOf(walk)).toStrictEqual(sorted);
     });
   });
 
   describe('GIVEN nested packages', () => {
     beforeEach(async () => {
-      await writeImportTree(dir, {
-        'r.ts': SOURCE_TEXT,
-        'packages/a/a.ts': SOURCE_TEXT,
-        'packages/b/b.ts': SOURCE_TEXT,
-        'packages/b/sub/x.ts': SOURCE_TEXT,
-        'packages/c/c.ts': SOURCE_TEXT,
-        'tools/t.ts': SOURCE_TEXT
-      });
+      const names = ['r.ts', 'packages/a/a.ts', 'packages/b/b.ts', 'packages/b/sub/x.ts', 'packages/c/c.ts', 'tools/t.ts'];
+
+      await writeImportTree(dir, treeOf(names));
     });
 
     it('WHEN packages/b is in skipDirs THEN none of it is listed and packages/c is', async () => {
