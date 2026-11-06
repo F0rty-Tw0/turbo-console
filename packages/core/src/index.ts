@@ -38,6 +38,21 @@ export { readAtomResults } from './run-summary/domain-logic/read-atom-results.ts
 
 export { readSmallFile } from './shared/fs/data-access/small-file.ts';
 
+export { ImportFileCache } from './imports/data-access/import-file-cache.ts';
+
+export { scanPackageImports } from './imports/domain-logic/scan-package-imports.ts';
+
+export type {
+  CachedFile,
+  ImportScanCaps,
+  ImportScanInput,
+  ImportScanLimit,
+  PackageImportScan,
+  ScannedFile,
+  SourceImport,
+  TsconfigPaths
+} from './imports/common/import-scan.type.ts';
+
 export type { RunAllOptions, RunTaskOptions } from './run-args/common/run-args.type.ts';
 
 export { turboRunAllArgs, turboRunArgs } from './run-args/utils/run-args.util.ts';
