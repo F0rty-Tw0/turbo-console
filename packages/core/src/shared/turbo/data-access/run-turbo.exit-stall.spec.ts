@@ -81,14 +81,14 @@ const writeStub = async ([stub, body]: [string, string]): Promise<void> => {
   await writeFile(join(stubDir, `${stub}.js`), stubScript(body), { mode: 0o755 });
 };
 
-/** Settles once `path` exists, checking every 10 ms. */
-const waitForFile = async (path: string): Promise<void> => {
+/** Settles once `path` exists, checking every 10 ms, or after `tries` checks. */
+const waitForFile = async (path: string, tries: number): Promise<void> => {
   const hasFile = existsSync(path);
 
-  if (hasFile) return;
+  if (hasFile || tries === 0) return;
 
   await setTimeout(10);
-  await waitForFile(path);
+  await waitForFile(path, tries - 1);
 };
 
 /** Runs `stub` until runTurbo settles; whether its node process still exists is probed as the result lands. */
@@ -194,7 +194,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guar
       const controller = new AbortController();
       const outcome = runStub('term-end-hang', { ...GUARDED, signal: controller.signal, graceMs: 800 });
 
-      await waitForFile(`${stubPath('term-end-hang')}.ready`);
+      await waitForFile(`${stubPath('term-end-hang')}.ready`, 300);
       controller.abort();
       await outcome;
 

@@ -49,7 +49,7 @@ const passMs = async (ms: number): Promise<void> => {
 describe('FEATURE: exit-stall watch', () => {
   describe('GIVEN a child whose second chunk waits in the pipe while the host loop is blocked past the stall time', () => {
     it('WHEN the overdue stall timer fires THEN the check sees that chunk and onStall is not called', async () => {
-      const flagPath = join(tmpdir(), `exit-stall-${process.pid}`);
+      const flagPath = join(tmpdir(), `exit-stall-${process.pid}-${Date.now()}`);
       const child = spawn(process.execPath, ['-e', LATE_CHUNK, flagPath]);
       const onStall = vi.fn<(check: ExitStallCheck) => void>();
       const stop = watchExitStall(child, GUARDED, collectTail(child.stdout), onStall);
