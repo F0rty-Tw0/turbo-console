@@ -61,18 +61,14 @@ const explain = async (source: string, target: string, state: GraphReady, contex
   return true;
 };
 
-const openManifest = async (packageName: string, line: number, state: GraphReady, context: ExplainContext): Promise<boolean> => {
-  const pkg = packagesByName(state).get(packageName);
-
-  if (pkg === undefined) return false;
-
-  const { absolute } = manifestFilesOf(context.root, pkg);
+/** Opens `absolute` at `line` once a read shows it is a small regular file; else logs `Not a readable <what>: <absolute>`. Never rejects. */
+export const openReadable = async (context: ExplainContext, absolute: string, line: number, what: string): Promise<void> => {
   const text = await textOf(context, absolute);
 
   if (text === null) {
-    context.ports.log(logTextOf(`Not a readable package.json: ${absolute}`));
+    context.ports.log(logTextOf(`Not a readable ${what}: ${absolute}`));
 
-    return true;
+    return;
   }
 
   try {
@@ -80,6 +76,16 @@ const openManifest = async (packageName: string, line: number, state: GraphReady
   } catch (error: unknown) {
     context.ports.log(logTextOf(error));
   }
+};
+
+const openManifest = async (packageName: string, line: number, state: GraphReady, context: ExplainContext): Promise<boolean> => {
+  const pkg = packagesByName(state).get(packageName);
+
+  if (pkg === undefined) return false;
+
+  const { absolute } = manifestFilesOf(context.root, pkg);
+
+  await openReadable(context, absolute, line, 'package.json');
 
   return true;
 };
