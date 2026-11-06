@@ -49,7 +49,8 @@ import type {
 
 /**
  * Spec §4.8: M0's runtime exports plus M1's readers, `TurboException` and (M2) the text cleaners `plainLine` and
- * `plainLines`, and (U8) the import scan: `scanPackageImports` and the `ImportFileCache` it reads and fills. The
+ * `plainLines`, and (U8) the import scan: `scanPackageImports` and the `ImportFileCache` it reads and fills, and
+ * `isSourceName`, which the host's `openImport` checks (spec D12). The
  * task-name check `assertTaskName` and the boundary check `isWithin` are public: the vscode run flow uses them.
  * Spawning, model building and the turbo-name check (`runTurbo`, `queryTurbo`, `buildWorkspaceModel`,
  * `assertTurboName`) stay internal; `TurboBinary` is a type-only export.
@@ -69,6 +70,7 @@ const RUNTIME_EXPORTS = [
   'assertTaskName',
   'atomGroupsOf',
   'dryRunSchema',
+  'isSourceName',
   'isUnknownRunLog',
   'isWithin',
   'loadWorkspace',

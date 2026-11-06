@@ -42,6 +42,8 @@ export { ImportFileCache } from './imports/data-access/import-file-cache.ts';
 
 export { scanPackageImports } from './imports/domain-logic/scan-package-imports.ts';
 
+export { isSourceName } from './imports/utils/import-walk.util.ts';
+
 export type {
   CachedFile,
   ImportScanCaps,
