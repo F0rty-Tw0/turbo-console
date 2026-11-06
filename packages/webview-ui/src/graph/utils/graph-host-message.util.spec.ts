@@ -20,6 +20,22 @@ const OBJECT_NAMES = [
 
 const FAILED_IMPORTS = { kind: 'failed' };
 
+const IMPORT_SITE = {
+  file: 'src/a.ts',
+  line: 2,
+  specifier: 'core',
+  text: "import 'core';",
+  kind: 'static',
+  isType: false,
+  via: 'name'
+};
+
+const FOUND_IMPORTS = { kind: 'found', scanned: 4, skipped: 0, total: 1, limit: null, sites: [IMPORT_SITE] };
+
+const DONE_IMPORTS = { kind: 'done' };
+
+const IMPORTS = { type: 'edgeImports', source: 'web', target: 'core', result: FAILED_IMPORTS };
+
 const ROOT_PACKAGES = [{ name: '//', bareName: '//', path: '', tags: [], taskCount: 0 }];
 
 const STRING_PACKAGES = ['app'];
@@ -198,6 +214,23 @@ describe('FEATURE: isGraphHostMessage', () => {
     });
   });
 
+  describe('GIVEN an edgeImports message', () => {
+    it.each([
+      ['a failed result', IMPORTS],
+      ['a found result', { ...IMPORTS, result: FOUND_IMPORTS }]
+    ])('WHEN it has %s THEN it is accepted', (_name, message) => {
+      const isMessage = isGraphHostMessage(message);
+
+      expect(isMessage).toBe(true);
+    });
+
+    it('WHEN its result is of an unknown kind THEN it is rejected', () => {
+      const isMessage = isGraphHostMessage({ ...IMPORTS, result: DONE_IMPORTS });
+
+      expect(isMessage).toBe(false);
+    });
+  });
+
   describe('GIVEN a runs message', () => {
     it.each([
       ['no runs', {}],
@@ -322,11 +355,7 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a showTasks message with a numeric task id', { type: 'showTasks', taskIds: [1] }],
       ['a showTasks message with no taskIds', { type: 'showTasks' }],
       ['a showPackage message with no name', { type: 'showPackage' }],
-      ['a showPackage message with a numeric name', { type: 'showPackage', name: 7 }],
-      [
-        'an edgeImports message, which has no page guard until U8e',
-        { type: 'edgeImports', source: 'web', target: 'core', result: FAILED_IMPORTS }
-      ]
+      ['a showPackage message with a numeric name', { type: 'showPackage', name: 7 }]
     ])('WHEN it is %s THEN it is rejected', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);
 

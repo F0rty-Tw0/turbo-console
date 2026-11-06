@@ -100,7 +100,7 @@ class GraphPageController {
         this.packages.filtering.inspection.explained(message);
         break;
       case 'edgeImports':
-        // Routed in U8e; `isGraphHostMessage` still rejects it.
+        // Routed in U8e3.
         break;
       case 'runs':
         this.tasks.selection.runs(message.runs, message.owners ?? NO_OWNERS);

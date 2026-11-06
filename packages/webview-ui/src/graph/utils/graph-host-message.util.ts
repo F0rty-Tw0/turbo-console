@@ -1,4 +1,5 @@
 import { isEdgeExplained } from './edge-explained.util.ts';
+import { isEdgeImports } from './edge-imports.util.ts';
 import {
   isAtomGroupList,
   isAtomStateRecord,
@@ -95,8 +96,8 @@ const isRunsMessage = (value: UnknownRecord): boolean => {
 
 /**
  * Narrows a posted value to a `state` message, by its state's `kind` and shape down to each package's name, bare name, path, tags and task
- * count, each edge end, each task's fields, each atom group's files and the two shown flags; to an `edgeExplained` message by its names and
- * result; to a `runs` message by its run states and its optional owners; to a `showTasks` message by its task ids; to a `showPackage` message by
+ * count, each edge end, each task's fields, each atom group's files and the two shown flags; to an `edgeExplained` or `edgeImports` message
+ * by its names and whole result; to a `runs` message by its run states and its optional owners; to a `showTasks` message by its task ids; to a `showPackage` message by
  * its package name; or to an `atoms` message by its counts lines and the four outcome words. Anything else is ignored. The payload itself comes from the extension host,
  * which builds it.
  */
@@ -108,6 +109,8 @@ export const isGraphHostMessage = (value: unknown): value is GraphHostMessage =>
       return isGraphState(value['state']);
     case 'edgeExplained':
       return isEdgeExplained(value);
+    case 'edgeImports':
+      return isEdgeImports(value);
     case 'runs':
       return isRunsMessage(value);
     case 'showTasks':
