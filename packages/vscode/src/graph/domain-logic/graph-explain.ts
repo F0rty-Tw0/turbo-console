@@ -15,7 +15,7 @@ type ManifestFiles = {
 };
 
 /** `shown` is the manifest's path under the workspace root as the page names it; `absolute` is the file to read. */
-const manifestFilesOf = (root: string, pkg: GraphPackage): ManifestFiles => {
+export const manifestFilesOf = (root: string, pkg: GraphPackage): ManifestFiles => {
   const isRootPackage = pkg.path === '';
   const shown = isRootPackage ? MANIFEST_FILE : `${pkg.path}/${MANIFEST_FILE}`;
   const absolute = join(root, pkg.path, MANIFEST_FILE);
@@ -24,7 +24,7 @@ const manifestFilesOf = (root: string, pkg: GraphPackage): ManifestFiles => {
   return files;
 };
 
-const packagesByName = (state: GraphReady): Map<string, GraphPackage> => {
+export const packagesByName = (state: GraphReady): Map<string, GraphPackage> => {
   const byName = new Map<string, GraphPackage>();
 
   for (const pkg of state.packages) byName.set(pkg.name, pkg);
@@ -32,14 +32,14 @@ const packagesByName = (state: GraphReady): Map<string, GraphPackage> => {
   return byName;
 };
 
-const hasEdge = (edges: GraphEdge[], source: string, target: string): boolean => {
+export const hasEdge = (edges: GraphEdge[], source: string, target: string): boolean => {
   const isEdge = (edge: GraphEdge): boolean => edge.source === source && edge.target === target;
 
   return edges.some(isEdge);
 };
 
 /** The failure of a read is logged and counts as an unreadable file. */
-const textOf = async (context: ExplainContext, absolute: string): Promise<string | null> => {
+export const textOf = async (context: ExplainContext, absolute: string): Promise<string | null> => {
   try {
     return await context.ports.readText(absolute);
   } catch (error: unknown) {
