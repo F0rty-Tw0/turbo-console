@@ -8,6 +8,7 @@ import type { ImportsDetails } from '../common/details-view.type.ts';
 import type { ImportsState } from '../common/imports-state.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
+import { childrenOf, rowTextsWith, textOf, textsWith, withClass, withClassIn } from '../test/utils/class-elements.spec.util.ts';
 import { foundOf, noneOf, sitesOf } from '../test/utils/import-sites.spec.util.ts';
 import { importsModelOf } from '../utils/imports-model.util.ts';
 
@@ -26,11 +27,9 @@ const TAGGED_SITE: ImportSite = { ...IMPORT_SITE_STUB, line: 0, kind: 'dynamic',
 
 const PLAIN_SITE: ImportSite = { ...IMPORT_SITE_STUB, line: 1 };
 
-const LATE_A_SITES = sitesOf(4).slice(3);
-
 const B_SITES = sitesOf(2, 'src/b.ts');
 
-const TWO_FILES: ImportSite[] = [...LATE_A_SITES, ...B_SITES];
+const TWO_FILES: ImportSite[] = [IMPORT_SITE_STUB, ...B_SITES];
 
 const builtFrom = (state: ImportsState): Built => {
   const model = importsModelOf(state, LINK, false);
@@ -38,40 +37,6 @@ const builtFrom = (state: ImportsState): Built => {
   const built: Built = { model, view };
 
   return built;
-};
-
-/** `element`, then every element under it, depth first. */
-const selfAndBelowOf = (element: Element): Element[] => {
-  const children = Array.from(element.children);
-  const below = children.flatMap(selfAndBelowOf);
-
-  return [element, ...below];
-};
-
-const withClass = (root: Element, className: string): Element[] => {
-  const all = selfAndBelowOf(root);
-
-  return all.filter((element) => element.classList.contains(className));
-};
-
-const withClassIn = (root: Element, outer: string, inner: string): Element[] => {
-  const outers = withClass(root, outer);
-
-  return outers.flatMap((element) => withClass(element, inner));
-};
-
-const childrenOf = (root: Element, className: string): Element[] => {
-  const holders = withClass(root, className);
-
-  return holders.flatMap((holder) => Array.from(holder.children));
-};
-
-const textOf = (element: Element): string | null => element.textContent;
-
-const textsWith = (root: Element, className: string): (string | null)[] => withClass(root, className).map(textOf);
-
-const rowTextsWith = (view: ImportsDetails, className: string): (string | null)[][] => {
-  return view.rows.map((row) => textsWith(row.button, className));
 };
 
 describe('FEATURE: importsView', () => {
@@ -135,6 +100,18 @@ describe('FEATURE: importsView', () => {
       expect(view.rows).toHaveLength(3);
       expect(ariaLabels).toStrictEqual(labels);
       expect(titles).toStrictEqual(labels);
+    });
+
+    it('WHEN built THEN each row accessible name ends with the import text it shows', () => {
+      const { view } = builtFrom(foundOf(TWO_FILES));
+      const ariaLabels = view.rows.map((row) => row.button.getAttribute('aria-label'));
+
+      expect(rowTextsWith(view, 'import-text')).toStrictEqual([["import 'core';"], ["import 'core';"], ["import 'core';"]]);
+      expect(ariaLabels).toStrictEqual([
+        "Open src/a.ts at line 4: import 'core';",
+        "Open src/b.ts at line 1: import 'core';",
+        "Open src/b.ts at line 2: import 'core';"
+      ]);
     });
 
     it('WHEN built THEN each row shows its line number as a reader counts it', () => {
