@@ -57,6 +57,11 @@ const rows: PathsRow[] = [
     expected: effectiveOf(resolve(WS, 'src'), PATHS_1)
   },
   {
+    label: 'A and its base both set baseUrl and the base sets paths',
+    links: [linkOf(A_DIR, { baseUrl: '.' }), linkOf(WS, { baseUrl: './src', paths: PATHS_2 })],
+    expected: effectiveOf(A_DIR, PATHS_2)
+  },
+  {
     label: 'A sets baseUrl and the base sets paths',
     links: [linkOf(A_DIR, { baseUrl: '.' }), linkOf(WS, { paths: PATHS_2 })],
     expected: effectiveOf(A_DIR, PATHS_2)
