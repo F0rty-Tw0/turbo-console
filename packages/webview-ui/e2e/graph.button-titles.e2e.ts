@@ -224,20 +224,21 @@ test.describe('FEATURE: every graph button has a hover title', () => {
   test(
     'GIVEN the web to ui link with 25 import sites, every button of the folded and the unfolded list has a title',
     { annotation: D2 },
-    async ({ detailsImports, graphButtonTitles, graphHost, graphImports, graphLink, graphPage }): Promise<void> => {
-      await test.step('WHEN the web to ui link is tapped and the host finds 25 sites', async (): Promise<void> => {
-        await graphPage.open();
-        await graphHost.sendState(DETAILS_STUB);
-        await graphLink.tapLink('web', 'ui');
-        await graphImports.answerImports(foundOf(25, 25));
-      });
+    async ({ detailsImports, graphButtonTitles, graphImports, shownLink }): Promise<void> => {
+      await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
 
-      await test.step('THEN every visible button has a title', async (): Promise<void> =>
+      await test.step('AND the host finds 25 sites', async (): Promise<void> => graphImports.answerImports(foundOf(25, 25)));
+
+      await test.step('THEN twenty rows are shown', async (): Promise<void> => detailsImports.expectRowCount(20));
+
+      await test.step('AND every visible button has a title', async (): Promise<void> =>
         graphButtonTitles.expectAllTitled('found list'));
 
       await test.step('WHEN Show more is pressed', async (): Promise<void> => detailsImports.showMore());
 
-      await test.step('THEN every visible button still has a title', async (): Promise<void> =>
+      await test.step('THEN all 25 rows are shown', async (): Promise<void> => detailsImports.expectRowCount(25));
+
+      await test.step('AND every visible button still has a title', async (): Promise<void> =>
         graphButtonTitles.expectAllTitled('unfolded list'));
     }
   );

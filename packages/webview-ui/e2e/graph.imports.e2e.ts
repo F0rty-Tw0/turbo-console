@@ -36,15 +36,9 @@ test.describe('FEATURE: graph link imports block', () => {
   test('GIVEN a link with no reply yet, the block says it is looking and Scan again is disabled', async ({
     detailsImports,
     graphDetails,
-    graphHost,
-    graphLink,
-    graphPage
+    shownLink
   }): Promise<void> => {
-    await test.step('WHEN the page is opened, the details graph is sent and the web to ui link is tapped', async (): Promise<void> => {
-      await graphPage.open();
-      await graphHost.sendState(DETAILS_STUB);
-      await graphLink.tapLink('web', 'ui');
-    });
+    await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
 
     await test.step('THEN that link is inspected', async (): Promise<void> =>
       graphDetails.expectInspection(linkInspection('web', 'ui')));
@@ -55,17 +49,12 @@ test.describe('FEATURE: graph link imports block', () => {
 
   test('GIVEN a found reply, the heading counts the sites and the rows are grouped by file', async ({
     detailsImports,
-    graphHost,
     graphImports,
-    graphLink,
-    graphPage
+    shownLink
   }): Promise<void> => {
-    await test.step('WHEN the web to ui link is tapped and the host finds three sites', async (): Promise<void> => {
-      await graphPage.open();
-      await graphHost.sendState(DETAILS_STUB);
-      await graphLink.tapLink('web', 'ui');
-      await graphImports.answerImports(FOUND_WEB_UI_STUB);
-    });
+    await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+    await test.step('AND the host finds three sites', async (): Promise<void> => graphImports.answerImports(FOUND_WEB_UI_STUB));
 
     await test.step('THEN the heading counts three and the rows show one-based lines, text and tags', async (): Promise<void> =>
       detailsImports.expectFound('Imports of ui (3)', FOUND_GROUPS));
@@ -73,17 +62,12 @@ test.describe('FEATURE: graph link imports block', () => {
 
   test('GIVEN a found reply, pressing a row posts one openImport for its zero-based line', async ({
     detailsImports,
-    graphHost,
     graphImports,
-    graphLink,
-    graphPage
+    shownLink
   }): Promise<void> => {
-    await test.step('WHEN the web to ui link is tapped and the host finds three sites', async (): Promise<void> => {
-      await graphPage.open();
-      await graphHost.sendState(DETAILS_STUB);
-      await graphLink.tapLink('web', 'ui');
-      await graphImports.answerImports(FOUND_WEB_UI_STUB);
-    });
+    await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+    await test.step('AND the host finds three sites', async (): Promise<void> => graphImports.answerImports(FOUND_WEB_UI_STUB));
 
     await test.step('THEN the host got no openImport yet', async (): Promise<void> => graphImports.expectNoOpenImport());
 
@@ -95,18 +79,13 @@ test.describe('FEATURE: graph link imports block', () => {
 
   test('GIVEN no import found, a clean scan and a scan that skipped files say different words', async ({
     detailsImports,
-    graphHost,
     graphImports,
-    graphLink,
-    graphPage,
-    graphReplies
+    graphReplies,
+    shownLink
   }): Promise<void> => {
-    await test.step('WHEN the web to ui link is tapped and the host finds nothing in three files', async (): Promise<void> => {
-      await graphPage.open();
-      await graphHost.sendState(DETAILS_STUB);
-      await graphLink.tapLink('web', 'ui');
-      await graphImports.answerImports(NONE_STUB);
-    });
+    await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+    await test.step('AND the host finds nothing in three files', async (): Promise<void> => graphImports.answerImports(NONE_STUB));
 
     await test.step('THEN the block says No imports found with the scanned count', async (): Promise<void> =>
       detailsImports.expectNone('No imports found', NONE_LINE));
@@ -126,18 +105,13 @@ test.describe('FEATURE: graph link imports block', () => {
 
   test('GIVEN a failed scan, Scan again asks the host again without asking to explain again', async ({
     detailsImports,
-    graphHost,
     graphImports,
-    graphLink,
-    graphPage,
-    graphReplies
+    graphReplies,
+    shownLink
   }): Promise<void> => {
-    await test.step('WHEN the web to ui link is tapped and the scan fails', async (): Promise<void> => {
-      await graphPage.open();
-      await graphHost.sendState(DETAILS_STUB);
-      await graphLink.tapLink('web', 'ui');
-      await graphImports.answerImports(FAILED_STUB);
-    });
+    await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+    await test.step('AND the scan fails', async (): Promise<void> => graphImports.answerImports(FAILED_STUB));
 
     await test.step("THEN the block says Couldn't scan and names web", async (): Promise<void> => detailsImports.expectFailed('web'));
 
@@ -154,17 +128,13 @@ test.describe('FEATURE: graph link imports block', () => {
   for (const limit of LIMITS) {
     test(`GIVEN a scan stopped at the ${limit} cap, the block notes it`, async ({
       detailsImports,
-      graphHost,
       graphImports,
-      graphLink,
-      graphPage
+      shownLink
     }): Promise<void> => {
-      await test.step('WHEN the web to ui link is tapped and the host answers with that cap', async (): Promise<void> => {
-        await graphPage.open();
-        await graphHost.sendState(DETAILS_STUB);
-        await graphLink.tapLink('web', 'ui');
-        await graphImports.answerImports(LIMIT_FOUND_STUB[limit]);
-      });
+      await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+      await test.step('AND the host answers with that cap', async (): Promise<void> =>
+        graphImports.answerImports(LIMIT_FOUND_STUB[limit]));
 
       await test.step("THEN the one note is that cap's text", async (): Promise<void> =>
         detailsImports.expectNotes([LIMIT_NOTES[limit]]));
@@ -173,17 +143,12 @@ test.describe('FEATURE: graph link imports block', () => {
 
   test('GIVEN 200 of 250 sites sent, twenty rows show and Show more unfolds them with focus on row 21', async ({
     detailsImports,
-    graphHost,
     graphImports,
-    graphLink,
-    graphPage
+    shownLink
   }): Promise<void> => {
-    await test.step('WHEN the web to ui link is tapped and the host sends 200 of 250 sites', async (): Promise<void> => {
-      await graphPage.open();
-      await graphHost.sendState(DETAILS_STUB);
-      await graphLink.tapLink('web', 'ui');
-      await graphImports.answerImports(foundOf(200, 250));
-    });
+    await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+    await test.step('AND the host sends 200 of 250 sites', async (): Promise<void> => graphImports.answerImports(foundOf(200, 250)));
 
     await test.step('THEN twenty rows are shown', async (): Promise<void> => detailsImports.expectRowCount(20));
 
@@ -203,18 +168,14 @@ test.describe('FEATURE: graph link imports block', () => {
 
   test('GIVEN a found list, Scan again keeps focus through the stale redraw and the reply', async ({
     detailsImports,
-    graphHost,
     graphImports,
-    graphLink,
-    graphPage
+    shownLink
   }): Promise<void> => {
-    await test.step('WHEN the web to ui link is tapped, the host finds three sites and Scan again is focused', async (): Promise<void> => {
-      await graphPage.open();
-      await graphHost.sendState(DETAILS_STUB);
-      await graphLink.tapLink('web', 'ui');
-      await graphImports.answerImports(FOUND_WEB_UI_STUB);
-      await detailsImports.focusScanAgain();
-    });
+    await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+    await test.step('AND the host finds three sites', async (): Promise<void> => graphImports.answerImports(FOUND_WEB_UI_STUB));
+
+    await test.step('AND Scan again is focused', async (): Promise<void> => detailsImports.focusScanAgain());
 
     await test.step('AND Enter is pressed', async (): Promise<void> => detailsImports.pressEnter());
 
@@ -234,17 +195,14 @@ test.describe('FEATURE: graph link imports block', () => {
     detailsImports,
     graphHost,
     graphImports,
-    graphLink,
-    graphPage,
-    graphReplies
+    graphReplies,
+    shownLink
   }): Promise<void> => {
-    await test.step('WHEN the web to ui link is tapped, the host finds three sites and the row of src/a.ts line 4 is focused', async (): Promise<void> => {
-      await graphPage.open();
-      await graphHost.sendState(DETAILS_STUB);
-      await graphLink.tapLink('web', 'ui');
-      await graphImports.answerImports(FOUND_WEB_UI_STUB);
-      await detailsImports.focusRow('src/a.ts', 4);
-    });
+    await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+    await test.step('AND the host finds three sites', async (): Promise<void> => graphImports.answerImports(FOUND_WEB_UI_STUB));
+
+    await test.step('AND the row of src/a.ts line 4 is focused', async (): Promise<void> => detailsImports.focusRow('src/a.ts', 4));
 
     await test.step('AND the same details graph is sent again', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
 
@@ -258,25 +216,25 @@ test.describe('FEATURE: graph link imports block', () => {
 
   test('GIVEN a reply for another link, the shown link keeps scanning and the late reply for the first link is dropped', async ({
     detailsImports,
-    graphHost,
     graphImports,
     graphLink,
-    graphPage
+    shownLink
   }): Promise<void> => {
-    await test.step('WHEN the web to ui link is tapped and the host answers for ui to core', async (): Promise<void> => {
-      await graphPage.open();
-      await graphHost.sendState(DETAILS_STUB);
-      await graphLink.tapLink('web', 'ui');
-      await graphImports.answerImportsFor('ui', 'core', FOUND_WEB_UI_STUB);
-    });
+    await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+    await test.step('AND the host answers for ui to core', async (): Promise<void> =>
+      graphImports.answerImportsFor('ui', 'core', FOUND_WEB_UI_STUB));
 
     await test.step('THEN the web to ui block is still scanning with no rows', async (): Promise<void> =>
       detailsImports.expectScanning('web', 'ui'));
 
-    await test.step('WHEN the ui to core link is tapped and the host answers late for web to ui', async (): Promise<void> => {
-      await graphLink.tapLink('ui', 'core');
-      await graphImports.answerImportsFor('web', 'ui', FOUND_WEB_UI_STUB);
-    });
+    await test.step('WHEN the ui to core link is tapped', async (): Promise<void> => graphLink.tapLink('ui', 'core'));
+
+    await test.step('THEN the ui to core block is scanning with no rows', async (): Promise<void> =>
+      detailsImports.expectScanning('ui', 'core'));
+
+    await test.step('WHEN the host answers late for web to ui', async (): Promise<void> =>
+      graphImports.answerImportsFor('web', 'ui', FOUND_WEB_UI_STUB));
 
     await test.step('THEN the ui to core block is still scanning with no rows', async (): Promise<void> =>
       detailsImports.expectScanning('ui', 'core'));
