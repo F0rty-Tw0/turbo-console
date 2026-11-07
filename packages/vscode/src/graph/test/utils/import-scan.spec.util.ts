@@ -27,7 +27,7 @@ export const importScanOf = (files: ScannedFile[], patch: Partial<PackageImportS
 };
 
 /** The tsconfig paths of A: `paths` resolved from the workspace root. */
-export const tsconfigPathsOf = (paths: Record<string, string[]>): TsconfigPaths => {
+export const aliasPathsOf = (paths: Record<string, string[]>): TsconfigPaths => {
   const tsconfigPaths: TsconfigPaths = { baseUrl: IMPORT_ROOT, paths };
 
   return tsconfigPaths;

@@ -23,22 +23,22 @@ const STAR_TARGET: Record<string, string[]> = { '@b/*': ['b/src/*/index.ts'] };
 
 const ROWS: AliasRow[] = [
   { label: 'an exact key', paths: EXACT, specifier: '@b', targets: ['b/index.ts'] },
-  { label: 'an exact key, longer specifier', paths: EXACT, specifier: '@b/x', targets: [] },
-  { label: 'an exact key, extra leading @', paths: EXACT, specifier: '@@b', targets: [] },
+  { label: 'an exact key', paths: EXACT, specifier: '@b/x', targets: [] },
+  { label: 'an exact key', paths: EXACT, specifier: '@@b', targets: [] },
   { label: 'a wildcard key with two targets', paths: WILDCARD, specifier: '@b/x/y', targets: ['b/src/x/y', 'b/lib/x/y'] },
-  { label: 'two wildcard keys, longer prefix fits', paths: NESTED, specifier: '@b/ui/k', targets: ['ui/k'] },
-  { label: 'two wildcard keys, equal prefixes', paths: TIED, specifier: '@b/zx', targets: ['one/zx'] },
-  { label: 'a suffixed key, the suffix fits', paths: SUFFIXED, specifier: 'icons/a.svg', targets: ['assets/a.svg'] },
-  { label: 'a suffixed key, the suffix differs', paths: SUFFIXED, specifier: 'icons/a.png', targets: [] },
-  { label: 'a suffixed key, empty star match', paths: SUFFIXED, specifier: 'icons/.svg', targets: ['assets/*.svg'] },
+  { label: 'two wildcard keys of unequal prefixes', paths: NESTED, specifier: '@b/ui/k', targets: ['ui/k'] },
+  { label: 'two wildcard keys of equal prefixes', paths: TIED, specifier: '@b/zx', targets: ['one/zx'] },
+  { label: 'a suffixed key', paths: SUFFIXED, specifier: 'icons/a.svg', targets: ['assets/a.svg'] },
+  { label: 'a suffixed key', paths: SUFFIXED, specifier: 'icons/a.png', targets: [] },
+  { label: 'a suffixed key with an empty star', paths: SUFFIXED, specifier: 'icons/.svg', targets: ['assets/*.svg'] },
   { label: 'a key whose prefix and suffix overlap', paths: OVERLAPPING, specifier: 'a', targets: [] },
-  { label: 'a wildcard key, Object.prototype name', paths: ONE_TARGET, specifier: 'constructor', targets: [] },
-  { label: 'a wildcard key, $& in the specifier', paths: ONE_TARGET, specifier: '@b/$&q', targets: ['b/$&q'] },
-  { label: 'a wildcard key, empty star match', paths: STAR_TARGET, specifier: '@b/', targets: ['b/src/*/index.ts'] },
-  { label: 'a catch-all, the specifier is exact', paths: CATCH_ALL, specifier: '@b', targets: ['b'] },
-  { label: 'a catch-all, the specifier is bare', paths: CATCH_ALL, specifier: 'react', targets: ['src/react'] },
+  { label: 'a wildcard key', paths: ONE_TARGET, specifier: 'constructor', targets: [] },
+  { label: 'a wildcard key', paths: ONE_TARGET, specifier: '@b/$&q', targets: ['b/$&q'] },
+  { label: 'a wildcard key with an empty star', paths: STAR_TARGET, specifier: '@b/', targets: ['b/src/*/index.ts'] },
+  { label: 'a catch-all and an exact key', paths: CATCH_ALL, specifier: '@b', targets: ['b'] },
+  { label: 'a catch-all and an exact key', paths: CATCH_ALL, specifier: 'react', targets: ['src/react'] },
   { label: 'an exact key whose target holds a star', paths: STARRED_EXACT, specifier: '@b', targets: ['b/*'] },
-  { label: 'a wildcard key, target without a star', paths: FIXED, specifier: '@b/x', targets: ['b/fixed.ts'] }
+  { label: 'a wildcard key whose target has no star', paths: FIXED, specifier: '@b/x', targets: ['b/fixed.ts'] }
 ];
 
 describe('FEATURE: tsconfig paths targets of a specifier', () => {
