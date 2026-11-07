@@ -1,4 +1,4 @@
-import { test } from './graph-task.fixture.ts';
+import { test } from './graph-imports.fixture.ts';
 import { PROTO_DETAILS_STUB } from './test/stubs/graph-details-edge.stub.ts';
 import { DETAILS_RECOUNT_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import {
@@ -87,7 +87,7 @@ test.describe('FEATURE: graph link explain', () => {
   test(
     'GIVEN a tapped link, the reply lists each manifest entry and each Open at line posts its own line',
     { annotation: AC1 },
-    async ({ graphHost, graphLink, graphPage, graphReplies }): Promise<void> => {
+    async ({ graphHost, graphImports, graphLink, graphPage, graphReplies }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphPage.open());
 
       await test.step('AND the details graph is sent', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
@@ -98,7 +98,7 @@ test.describe('FEATURE: graph link explain', () => {
         graphReplies.expectExplainAsked('web', 'ui', 1));
 
       await test.step('AND the host was asked to scan its imports once', async (): Promise<void> =>
-        graphReplies.expectImportsAsked('web', 'ui', 1));
+        graphImports.expectImportsAsked('web', 'ui', 1));
 
       await test.step('AND the panel reads apps/web/package.json', async (): Promise<void> =>
         graphLink.expectReading('apps/web/package.json'));
