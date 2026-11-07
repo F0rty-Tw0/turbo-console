@@ -70,13 +70,7 @@ const extendsRows: FileRow[] = [
     then: 'the two strings are kept',
     expected: fileWith({ extends: ['./a.json', './b.json'] })
   },
-  { label: 'a numeric extends', text: '{ "extends": 3 }', then: 'the extends is empty', expected: fileWith({}) },
-  {
-    label: 'a leading byte order mark',
-    text: '\uFEFF{ "extends": "./a.json" }',
-    then: 'the extends is read',
-    expected: fileWith({ extends: ['./a.json'] })
-  }
+  { label: 'a numeric extends', text: '{ "extends": 3 }', then: 'the extends is empty', expected: fileWith({}) }
 ];
 
 const pathsRows: FileRow[] = [
@@ -171,6 +165,16 @@ describe('FEATURE: read one tsconfig file', () => {
       const file = tsconfigFileOf(text);
 
       expect(file).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a text with a leading byte order mark', () => {
+    it('WHEN it is parsed THEN the extends is read', () => {
+      const text = '\uFEFF{ "extends": "./a.json" }';
+
+      const file = tsconfigFileOf(text);
+
+      expect(file).toStrictEqual(fileWith({ extends: ['./a.json'] }));
     });
   });
 
