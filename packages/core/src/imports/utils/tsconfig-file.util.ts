@@ -19,21 +19,26 @@ const PARSE_OPTIONS = { allowTrailingComma: true };
 const isText = (value: unknown): value is string => typeof value === 'string';
 
 const isAtMostOneStar = (text: string): boolean => {
-  const starCount = text.split('*').length - 1;
+  const first = text.indexOf('*');
+  const last = text.lastIndexOf('*');
 
-  return starCount <= 1;
+  return first === last;
 };
 
 const extendsOf = (value: unknown): string[] => {
   if (isText(value)) return [value];
 
-  if (!Array.isArray(value)) return [];
+  const isArray = Array.isArray(value);
+
+  if (!isArray) return [];
 
   return value.filter(isText);
 };
 
 const targetsOf = (value: unknown): string[] => {
-  if (!Array.isArray(value)) return [];
+  const isArray = Array.isArray(value);
+
+  if (!isArray) return [];
 
   const texts = value.filter(isText);
 
@@ -49,7 +54,9 @@ const patternsOf = (value: object): Record<string, string[]> => {
     const isKeyKept = isAtMostOneStar(key);
     const isPatternKept = isKeyKept && kept.length > 0;
 
-    if (isPatternKept) entries.push([key, kept]);
+    if (!isPatternKept) continue;
+
+    entries.push([key, kept]);
   }
 
   return Object.fromEntries(entries);
@@ -58,7 +65,9 @@ const patternsOf = (value: object): Record<string, string[]> => {
 const pathsOf = (value: unknown): Record<string, string[]> | null | undefined => {
   if (value === null) return null;
 
-  if (typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const isArray = Array.isArray(value);
+
+  if (typeof value !== 'object' || isArray) return undefined;
 
   return patternsOf(value);
 };
@@ -89,19 +98,18 @@ const parsedFile = (text: string): TsconfigFile | null => {
 };
 
 /**
- * One `tsconfig.json` text (a leading BOM is ignored, as TS does) as the chain needs it (D6): `extends` strings, `compilerOptions.paths` with keys and targets
- * of at most one `*` (a key left with no target is dropped), `compilerOptions.baseUrl` when a string. `null` for a JSONC
- * error, a non-object root or a bad shape; a text nested too deep is `null`, never a throw.
+ * One `tsconfig.json` text (a leading BOM is ignored, as TS does) as the chain needs it (D6): `extends` strings,
+ * `compilerOptions.paths` with keys and targets of at most one `*` (a key left with no target is dropped),
+ * `compilerOptions.baseUrl` when a string. `null` for a JSONC error, a non-object root or a bad shape; never a throw (a
+ * text nested too deep overflows the parser's stack with a `RangeError` and is `null` too).
  */
 export const tsconfigFileOf = (text: string): TsconfigFile | null => {
   try {
     const bare = text.replace(BYTE_ORDER_MARK, '');
 
     return parsedFile(bare);
-  } catch (error) {
-    if (error instanceof RangeError) return null;
-
-    throw error;
+  } catch {
+    return null;
   }
 };
 
