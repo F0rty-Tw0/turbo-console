@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { css, declarationsOf, ruleOf } from './test/utils/graph-css-rules.spec.util.ts';
+import { css, declarationsOf, ruleOf, ruleStartOf } from './test/utils/graph-css-rules.spec.util.ts';
 
 const WIDGET_SELECTOR = '.widget-button';
 
@@ -15,8 +15,6 @@ const BORDER_PATTERN = /border-color:\s*var\(\s*--vscode-inputOption-activeBorde
 
 /** Prettier may wrap the chain, so whitespace is free between its parts. */
 const BORDER_CHAIN_PATTERN = /--tc-widget-border:\s*var\(\s*--vscode-widget-border,\s*var\(--vscode-contrastBorder,/;
-
-const ruleStartOf = (selector: string): number => ruleOf(css, selector)?.index ?? -1;
 
 describe('FEATURE: graph.css widget rules', () => {
   describe('GIVEN the widget button rule', () => {

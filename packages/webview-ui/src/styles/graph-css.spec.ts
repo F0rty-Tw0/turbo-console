@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { RULE_PATTERN, bodyOf, css, declarationsOf, rawCss, ruleOf, selectorOf } from './test/utils/graph-css-rules.spec.util.ts';
+import { RULE_PATTERN, bodyOf, css, declarationsOf, rawCss, ruleStartOf, selectorOf } from './test/utils/graph-css-rules.spec.util.ts';
 import { OVERLAY_MEDIA_QUERY } from '../graph/common/graph.const.ts';
 
 const COLOUR_LITERAL_PATTERN = /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i;
@@ -21,8 +21,6 @@ const PACKAGE_ROW_SELECTOR = ".details-view[data-view='package'] .details-row";
 const ORPHAN_SELECTOR = `${PACKAGE_ROW_SELECTOR} > :nth-last-child(1 of :not([hidden])):nth-child(odd of :not([hidden]))`;
 
 const NARROW_ICON_SELECTOR = `${PACKAGE_ROW_SELECTOR} .codicon`;
-
-const ruleStartOf = (selector: string): number => ruleOf(css, selector)?.index ?? -1;
 
 describe('FEATURE: graph.css', () => {
   it('GIVEN the :root rule WHEN it is read THEN it defines the muted token', () => {
