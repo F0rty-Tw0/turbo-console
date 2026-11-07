@@ -3,6 +3,7 @@ import type { CachedFile, ImportScanInput, PackageImportScan } from '../common/i
 import type { FileOutcome, ImportScanRun, ImportWalk } from '../common/import-walk.type.ts';
 import { scanFile } from '../data-access/import-file-scan.ts';
 import { walkSourceFiles } from '../data-access/import-walk.ts';
+import { readTsconfigPaths } from '../data-access/tsconfig-chain.ts';
 import { packageScanOf } from '../utils/package-scan.util.ts';
 
 const UNREACHED: FileOutcome = { kind: 'unreached' };
@@ -50,7 +51,8 @@ const readFiles = async (run: ImportScanRun, walk: ImportWalk, previous: Readonl
  * Every import in the source files of `input.dir` (T3 walk, D8 caps), re-lexing only files whose `mtimeMs` or `size`
  * changed since the last finished scan of that dir (D9). The cache is replaced when the scan finishes, also when a cap
  * stopped it; a walked file the clock stopped before keeps its entry. Rejects with `signal.reason` when aborted, and
- * with the raw error when `dir` itself cannot be read; either leaves the cache as it was.
+ * with the raw error when `dir` itself cannot be read; either leaves the cache as it was. Reads A's tsconfig chain
+ * first, inside the clock (D6); it is read on every scan and never cached.
  */
 export const scanPackageImports = async (input: ImportScanInput): Promise<PackageImportScan> => {
   input.signal.throwIfAborted();
@@ -60,6 +62,7 @@ export const scanPackageImports = async (input: ImportScanInput): Promise<Packag
   const start = now();
   const isOverTime = (): boolean => now() - start >= caps.timeMs;
   const run: ImportScanRun = { dir: input.dir, skipDirs: input.skipDirs, caps, signal: input.signal, isOverTime };
+  const tsconfigPaths = await readTsconfigPaths(input.dir, input.root);
   const walk = await walkSourceFiles(run);
   const previous = input.cache.filesOf(input.dir);
   const phase = await readFiles(run, walk, previous);
@@ -71,5 +74,7 @@ export const scanPackageImports = async (input: ImportScanInput): Promise<Packag
 
   input.cache.swap(input.dir, result.cached);
 
-  return result.scan;
+  const scan: PackageImportScan = { ...result.scan, tsconfigPaths };
+
+  return scan;
 };
