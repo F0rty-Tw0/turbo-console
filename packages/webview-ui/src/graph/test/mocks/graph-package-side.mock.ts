@@ -21,7 +21,7 @@ import { emptyView } from '../../ui/details-empty.ts';
 import { explainView } from '../../ui/details-explain.ts';
 import { folderView } from '../../ui/details-folder.ts';
 import { hintView } from '../../ui/details-hint.ts';
-import { importsView } from '../../ui/details-imports.ts';
+import { importsStatusView, importsView } from '../../ui/details-imports.ts';
 import { linkView } from '../../ui/details-link.ts';
 import { packageView } from '../../ui/details-package.ts';
 import { candidateItems, pickingView } from '../../ui/details-picking.ts';
@@ -48,6 +48,7 @@ export const detailsViewsMock = (): DetailsViews => {
     bundle: bundleView,
     explain: explainView,
     imports: importsView,
+    importsStatus: importsStatusView,
     picking: pickingView,
     trace: traceView,
     folder: folderView,

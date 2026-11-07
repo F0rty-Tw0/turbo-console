@@ -83,6 +83,8 @@ export type GraphDetailsDeps = {
   readonly onFilter: (text: string) => void;
   /** `line` is 0-based. */
   readonly onOpenManifest: (packageName: string, line: number) => void;
+  /** Asks the host to open `file` of `packageName` at the 0-based `line` (spec D12). */
+  readonly onOpenImport: (packageName: string, file: string, line: number) => void;
   readonly onResize: () => void;
   /** The Details button opens and closes this panel only while the package graph owns the canvas. */
   readonly isPackageMode: () => boolean;

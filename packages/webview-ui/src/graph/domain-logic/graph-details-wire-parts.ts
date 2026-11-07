@@ -13,11 +13,17 @@ export const explainInput = (source: string, target: string): InspectionInput =>
   return input;
 };
 
-/** A click on an `aria-disabled` button does nothing; the attribute is read at click time, as updates move it. */
+/** Whether a click on `button` does nothing: it is `aria-disabled`, read at click time, as updates move it. */
+const isAriaDisabled = (button: HTMLButtonElement): boolean => {
+  const disabled = button.getAttribute('aria-disabled');
+
+  return disabled === 'true';
+};
+
+/** A click on an `aria-disabled` button does nothing (see `isAriaDisabled`). */
 export const onClick = (button: HTMLButtonElement, act: () => void): void => {
   button.addEventListener('click', (): void => {
-    const disabled = button.getAttribute('aria-disabled');
-    const isDisabled = disabled === 'true';
+    const isDisabled = isAriaDisabled(button);
 
     if (!isDisabled) act();
   });

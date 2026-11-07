@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { importsView } from './details-imports.ts';
+import { importsStatusView, importsView } from './details-imports.ts';
 import type { ImportSite } from '../../bridge/common/graph-imports.type.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { ImportsViewModel } from '../common/details-imports.type.ts';
@@ -225,6 +225,25 @@ describe('FEATURE: importsView', () => {
       const holders = view.rows.map((row) => withClass(row.button, 'import-tags').length);
 
       expect(holders).toStrictEqual([1, 0]);
+    });
+  });
+});
+
+describe('FEATURE: importsStatusView', () => {
+  afterEach((): void => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN a document', () => {
+    beforeEach((): void => {
+      vi.stubGlobal('document', fakeDocumentMock());
+    });
+
+    it('WHEN built THEN it is an empty, visually hidden p with role status', () => {
+      const status = importsStatusView();
+      const parts = [status.tagName, status.className, status.getAttribute('role'), status.textContent];
+
+      expect(parts).toStrictEqual(['P', 'details-imports-status visually-hidden', 'status', '']);
     });
   });
 });

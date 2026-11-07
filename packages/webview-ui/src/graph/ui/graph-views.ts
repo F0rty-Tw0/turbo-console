@@ -4,7 +4,7 @@ import { emptyView } from './details-empty.ts';
 import { explainView } from './details-explain.ts';
 import { folderView } from './details-folder.ts';
 import { hintView } from './details-hint.ts';
-import { importsView } from './details-imports.ts';
+import { importsStatusView, importsView } from './details-imports.ts';
 import { linkView } from './details-link.ts';
 import { packageView } from './details-package.ts';
 import { candidateItems, pickingView } from './details-picking.ts';
@@ -30,6 +30,7 @@ export const detailsViews: DetailsViews = {
   bundle: bundleView,
   explain: explainView,
   imports: importsView,
+  importsStatus: importsStatusView,
   picking: pickingView,
   trace: traceView,
   folder: folderView,

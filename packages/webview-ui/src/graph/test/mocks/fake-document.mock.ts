@@ -12,6 +12,8 @@ const ignore = (): void => undefined;
 
 const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
+const TAG_SELECTOR = /^[a-z]+$/i;
+
 /** What an element's `ownerDocument` answers: the element focused last, and the body that holds focus once an element loses it. */
 type FakeOwner = {
   readonly activeElement: FakeElement | null;
@@ -20,7 +22,8 @@ type FakeOwner = {
 
 /**
  * The few DOM calls the graph's element builders make, for specs that run without a DOM: the tree and attributes of
- * `FakeNode`, classes, plain properties, listeners by event type, focus with its bubbling `focusin` and the popover open state. An input's `value` follows `defaultValue` until it is set.
+ * `FakeNode`, classes, plain properties, listeners by event type, focus with its bubbling `focusin`, a bubbling `click`,
+ * `closest` by tag and the popover open state. An input's `value` follows `defaultValue` until it is set.
  */
 class FakeElement extends FakeNode {
   public readonly tagName: string;
@@ -85,8 +88,11 @@ class FakeElement extends FakeNode {
     return true;
   }
 
+  /** Fires a `click` here that bubbles up the ancestors, as the DOM does. */
   public click(): void {
-    this.dispatchEvent({ type: 'click' });
+    const event = { type: 'click', target: this };
+
+    this.bubbled(event);
   }
 
   public getBoundingClientRect(): FakeRect {
@@ -103,9 +109,19 @@ class FakeElement extends FakeNode {
 
     this.focused.element = this;
 
-    this.dispatchEvent(event);
+    this.bubbled(event);
+  }
 
-    for (let node = this.parent; node !== null; node = node.parent) if (node instanceof FakeElement) node.dispatchEvent(event);
+  /** Answers only a tag name: this element or its nearest ancestor with that tag; any other selector throws. */
+  public closest(selector: string): FakeElement | null {
+    const isTag = TAG_SELECTOR.test(selector);
+
+    if (!isTag) throw new Error(`the fake closest answers only a tag name, not "${selector}"`);
+
+    const tag = selector.toUpperCase();
+    const chain = this.selfAndAncestors();
+
+    return chain.find((node) => node.tagName === tag) ?? null;
   }
 
   public showPopover(): void {
@@ -119,6 +135,21 @@ class FakeElement extends FakeNode {
   /** Answers only `:popover-open`, from `showPopover` and `hidePopover`; any other selector is false. */
   public matches(selector: string): boolean {
     return selector === ':popover-open' && this.isPopoverOpen;
+  }
+
+  /** Runs the listeners for `event` here, then on each ancestor up to the root. */
+  private bubbled(event: FakeEvent): void {
+    const chain = this.selfAndAncestors();
+
+    for (const node of chain) node.dispatchEvent(event);
+  }
+
+  private selfAndAncestors(): FakeElement[] {
+    const chain: FakeElement[] = [this];
+
+    for (let node = this.parent; node !== null; node = node.parent) if (node instanceof FakeElement) chain.push(node);
+
+    return chain;
   }
 }
 

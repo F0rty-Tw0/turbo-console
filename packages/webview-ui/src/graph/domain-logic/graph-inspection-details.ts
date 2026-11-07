@@ -67,6 +67,7 @@ export const detailsDepsOf = (deps: GraphInspectionDeps, actions: InspectionActi
     onExcludeFolder: (folder): void => deps.onExcludeFolder(folder),
     onFilter: (text): void => actions.canvas.filter(text),
     onOpenManifest: (packageName, line): void => bridge.post({ type: 'openManifest', packageName, line }),
+    onOpenImport: (packageName, file, line): void => bridge.post({ type: 'openImport', packageName, file, line }),
     onResize: (): void => view.resize(),
     isPackageMode: deps.isPackageMode,
     onLayout: (): void => actions.keepClear(),
