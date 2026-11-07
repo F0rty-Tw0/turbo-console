@@ -85,7 +85,7 @@ const rowOf = (site: ImportSite): ImportRowModel => {
   const key = `${site.file}:${site.line}`;
   const number = String(site.line + 1);
   const tags = tagsOf(site);
-  const label = openImportLabelOf(site.file, site.line);
+  const label = openImportLabelOf(site.file, site.line, site.text);
   const row: ImportRowModel = { key, file: site.file, line: site.line, number, text: site.text, tags, label };
 
   return row;

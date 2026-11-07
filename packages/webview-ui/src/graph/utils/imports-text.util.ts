@@ -23,8 +23,8 @@ export const noneTextOf = (source: string, target: string, scanned: number): str
 
 export const failedTextOf = (source: string): string => `Couldn't read the files of ${source}.`;
 
-/** `line` is 0-based, as the host sends it; the label counts from 1 like an editor. */
-export const openImportLabelOf = (file: string, line: number): string => `Open ${file} at line ${line + 1}`;
+/** `line` is 0-based, as the host sends it; the label counts from 1 like an editor. It ends with the import text, so the accessible name holds the visible text. */
+export const openImportLabelOf = (file: string, line: number, text: string): string => `Open ${file} at line ${line + 1}: ${text}`;
 
 export const showMoreTextOf = (count: number): string => `Show ${count} more`;
 
