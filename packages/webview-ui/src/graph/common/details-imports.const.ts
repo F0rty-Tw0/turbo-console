@@ -12,6 +12,8 @@ export const SCAN_FAILED_WORD = "Couldn't scan";
 
 export const SCANNING_AGAIN_TEXT = 'Scanning again…';
 
+export const SCAN_AGAIN_TITLE = 'Scan the files again';
+
 export const TYPE_TAG = 'type';
 
 /** The tag a row shows for how it brings the module in; a plain `import` shows none. */

@@ -26,7 +26,7 @@ import { excerptRowsOf } from '../utils/excerpt.util.ts';
 type StatusIcon = Extract<GraphIconId, 'info' | 'warning'>;
 
 /** A status is a coloured icon and a word, never a coloured border (D18). */
-const statusOf = (id: StatusIcon, word: string): HTMLElement => {
+export const statusOf = (id: StatusIcon, word: string): HTMLElement => {
   const status = textElement('p', 'details-status', '');
   const icon = graphIcon(id);
   const strong = textElement('strong', 'details-status-word', word);
