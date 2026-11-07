@@ -8,17 +8,9 @@ import type { ImportsDetails } from '../common/details-view.type.ts';
 import type { ImportsState } from '../common/imports-state.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
-import {
-  blockOrderOf,
-  childrenOf,
-  rowTextsWith,
-  statusAndLinesOf,
-  textOf,
-  textsWith,
-  withClass,
-  withClassIn
-} from '../test/utils/class-elements.spec.util.ts';
+import { childrenOf, textOf, textsWith, withClass, withClassIn } from '../test/utils/class-elements.spec.util.ts';
 import { foundOf, noneOf, sitesOf } from '../test/utils/import-sites.spec.util.ts';
+import { blockOrderOf, rowTextsWith, statusAndLinesOf } from '../test/utils/imports-view.spec.util.ts';
 import { importsModelOf } from '../utils/imports-model.util.ts';
 
 type Built = {
