@@ -58,7 +58,12 @@ const extendsRows: FileRow[] = [
     text: '{ "extends": ["./a.json",], "compilerOptions": { "baseUrl": ".", }, }',
     expected: fileWith({ extends: ['./a.json'], baseUrl: '.' })
   },
-  { label: 'a numeric extends', text: '{ "extends": 3 }', expected: fileWith({}) }
+  { label: 'a numeric extends', text: '{ "extends": 3 }', expected: fileWith({}) },
+  {
+    label: 'a leading byte order mark',
+    text: '\uFEFF{ "extends": "./a.json" }',
+    expected: fileWith({ extends: ['./a.json'] })
+  }
 ];
 
 const pathsRows: FileRow[] = [

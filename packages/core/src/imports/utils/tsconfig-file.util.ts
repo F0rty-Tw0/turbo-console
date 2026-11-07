@@ -4,6 +4,7 @@ import { getNodeValue, parseTree } from 'jsonc-parser';
 import type { ParseError } from 'jsonc-parser';
 import { looseObject, optional, unknown } from 'zod/mini';
 
+import { BYTE_ORDER_MARK } from '../../shared/text/common/text.const.ts';
 import type { TsconfigFile } from '../common/tsconfig.type.ts';
 
 /** zod 4 rejects a missing `unknown()` key; `optional` lets a file omit it. */
@@ -88,13 +89,15 @@ const parsedFile = (text: string): TsconfigFile | null => {
 };
 
 /**
- * One `tsconfig.json` text as the chain needs it (D6): `extends` strings, `compilerOptions.paths` with keys and targets
+ * One `tsconfig.json` text (a leading BOM is ignored, as TS does) as the chain needs it (D6): `extends` strings, `compilerOptions.paths` with keys and targets
  * of at most one `*` (a key left with no target is dropped), `compilerOptions.baseUrl` when a string. `null` for a JSONC
  * error, a non-object root or a bad shape; a text nested too deep is `null`, never a throw.
  */
 export const tsconfigFileOf = (text: string): TsconfigFile | null => {
   try {
-    return parsedFile(text);
+    const bare = text.replace(BYTE_ORDER_MARK, '');
+
+    return parsedFile(bare);
   } catch (error) {
     if (error instanceof RangeError) return null;
 
