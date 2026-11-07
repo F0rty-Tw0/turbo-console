@@ -157,6 +157,7 @@ export type DetailsViews = {
   readonly bundle: (model: BundleViewModel, isOverlay: boolean) => BundleDetails;
   readonly explain: (state: ExplainState) => ExplainDetails;
   readonly imports: (model: ImportsViewModel) => ImportsDetails;
+  readonly importsStatus: () => HTMLElement;
   readonly picking: (model: PickingViewModel, isOverlay: boolean) => PickingDetails;
   readonly trace: (model: TraceViewModel, isOverlay: boolean) => TraceDetails;
   readonly folder: (model: FolderViewModel) => FolderViewElements;
