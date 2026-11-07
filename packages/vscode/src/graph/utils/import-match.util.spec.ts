@@ -8,6 +8,7 @@ import { importMatchOf } from './import-match.util.ts';
 import type { ImportEdge } from '../common/import-match.type.ts';
 import { IMPORT_ROOT, SOURCE_DIR, TARGET_DIR, TARGET_NAME } from '../test/common/import-edge.const.ts';
 import { IMPORT_EDGE_STUB } from '../test/stubs/import-edge.stub.ts';
+import { tsconfigPathsOf } from '../test/utils/import-scan.spec.util.ts';
 
 type AliasRow = {
   readonly label: string;
@@ -25,25 +26,19 @@ const edgeOf = (patch: Partial<ImportEdge>): ImportEdge => {
   return edge;
 };
 
-const pathsOf = (paths: Record<string, string[]>): TsconfigPaths => {
-  const tsconfigPaths: TsconfigPaths = { baseUrl: IMPORT_ROOT, paths };
-
-  return tsconfigPaths;
-};
-
 const ROOT_EDGE = edgeOf({ targetDir: null });
 const NESTED_EDGE = edgeOf({ sourceDir: join(TARGET_DIR, 'plugin') });
 
-const EXACT_PATHS = pathsOf({ '@ui': ['packages/b/src/index.ts'] });
-const WILDCARD_PATHS = pathsOf({ '@ui/*': ['packages/b/src/*'] });
-const OWN_PREFIX_PATHS = pathsOf({ '@ui/*': ['packages/b/src/*'], '@ui/own/*': ['packages/a/src/*'] });
-const OUTSIDE_PATHS = pathsOf({ '@ui/*': ['packages/c/*'] });
-const TWO_TARGET_PATHS = pathsOf({ '@ui/*': ['packages/c/*', 'packages/b/*'] });
-const DOT_PATHS = pathsOf({ './*': ['packages/b/*'] });
-const SLASH_PATHS = pathsOf({ '/*': ['packages/b/*'] });
-const NAMED_PATHS = pathsOf({ [TARGET_NAME]: ['packages/b/src/index.ts'] });
-const NESTED_PATHS = pathsOf({ '~/*': ['packages/b/plugin/src/*'] });
-const CATCH_ALL_PATHS = pathsOf({ '*': ['packages/b/types/*'] });
+const EXACT_PATHS = tsconfigPathsOf({ '@ui': ['packages/b/src/index.ts'] });
+const WILDCARD_PATHS = tsconfigPathsOf({ '@ui/*': ['packages/b/src/*'] });
+const OWN_PREFIX_PATHS = tsconfigPathsOf({ '@ui/*': ['packages/b/src/*'], '@ui/own/*': ['packages/a/src/*'] });
+const OUTSIDE_PATHS = tsconfigPathsOf({ '@ui/*': ['packages/c/*'] });
+const TWO_TARGET_PATHS = tsconfigPathsOf({ '@ui/*': ['packages/c/*', 'packages/b/*'] });
+const DOT_PATHS = tsconfigPathsOf({ './*': ['packages/b/*'] });
+const SLASH_PATHS = tsconfigPathsOf({ '/*': ['packages/b/*'] });
+const NAMED_PATHS = tsconfigPathsOf({ [TARGET_NAME]: ['packages/b/src/index.ts'] });
+const NESTED_PATHS = tsconfigPathsOf({ '~/*': ['packages/b/plugin/src/*'] });
+const CATCH_ALL_PATHS = tsconfigPathsOf({ '*': ['packages/b/types/*'] });
 
 const ALIAS_ROWS: AliasRow[] = [
   { label: 'an exact key maps into B', tsconfigPaths: EXACT_PATHS, specifier: '@ui', edge: IMPORT_EDGE_STUB, via: 'alias' },
@@ -69,18 +64,20 @@ const ALIAS_ROWS: AliasRow[] = [
     edge: IMPORT_EDGE_STUB,
     via: 'alias'
   },
-  { label: 'a relative specifier matches a ./* key', tsconfigPaths: DOT_PATHS, specifier: './x', edge: IMPORT_EDGE_STUB, via: null },
-  { label: 'an absolute specifier matches a /* key', tsconfigPaths: SLASH_PATHS, specifier: '/x', edge: IMPORT_EDGE_STUB, via: null },
+  { label: 'a ./* key maps into B', tsconfigPaths: DOT_PATHS, specifier: './x', edge: IMPORT_EDGE_STUB, via: null },
+  { label: 'TS treats the name as relative', tsconfigPaths: CATCH_ALL_PATHS, specifier: '.\\x', edge: IMPORT_EDGE_STUB, via: null },
+  { label: 'TS treats the name as relative', tsconfigPaths: CATCH_ALL_PATHS, specifier: '..\\x', edge: IMPORT_EDGE_STUB, via: null },
+  { label: 'TS treats the name as relative', tsconfigPaths: CATCH_ALL_PATHS, specifier: '.', edge: IMPORT_EDGE_STUB, via: null },
+  {
+    label: 'TS applies a /* key to an absolute name',
+    tsconfigPaths: SLASH_PATHS,
+    specifier: '/x',
+    edge: IMPORT_EDGE_STUB,
+    via: 'alias'
+  },
   { label: 'rule 1 and rule 4 both match', tsconfigPaths: NAMED_PATHS, specifier: TARGET_NAME, edge: IMPORT_EDGE_STUB, via: 'name' },
   { label: 'B is the root package', tsconfigPaths: WILDCARD_PATHS, specifier: '@ui/x', edge: ROOT_EDGE, via: null },
-  {
-    label: 'A is nested in B and the target is its own file',
-    tsconfigPaths: NESTED_PATHS,
-    specifier: '~/x',
-    edge: NESTED_EDGE,
-    via: null
-  },
-  { label: 'A has no tsconfig paths', tsconfigPaths: null, specifier: '@ui/x', edge: IMPORT_EDGE_STUB, via: null },
+  { label: 'the target is a file of nested A', tsconfigPaths: NESTED_PATHS, specifier: '~/x', edge: NESTED_EDGE, via: null },
   { label: 'a catch-all key maps into B', tsconfigPaths: CATCH_ALL_PATHS, specifier: 'react', edge: IMPORT_EDGE_STUB, via: 'alias' }
 ];
 
@@ -210,8 +207,16 @@ describe('FEATURE: import specifier to dependency edge', () => {
     });
   });
 
+  describe('GIVEN A without tsconfig paths', () => {
+    it('WHEN @ui/x is imported THEN via is null', () => {
+      const via = importMatchOf('@ui/x', FROM, IMPORT_EDGE_STUB, null);
+
+      expect(via).toBeNull();
+    });
+  });
+
   describe('GIVEN tsconfig paths of A', () => {
-    it.each(ALIAS_ROWS)('WHEN $label THEN via is $via', ({ tsconfigPaths, specifier, edge, via }) => {
+    it.each(ALIAS_ROWS)('WHEN $specifier is imported and $label THEN via is $via', ({ tsconfigPaths, specifier, edge, via }) => {
       const matched = importMatchOf(specifier, FROM, edge, tsconfigPaths);
 
       expect(matched).toBe(via);

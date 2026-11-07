@@ -1,4 +1,4 @@
-import { isAbsolute, resolve } from 'node:path';
+import { resolve } from 'node:path';
 
 import { isWithin } from '@turbo-console/core';
 import type { TsconfigPaths } from '@turbo-console/core';
@@ -6,6 +6,9 @@ import type { ImportVia } from '@turbo-console/webview-ui';
 
 import { aliasTargetsOf } from './alias-targets.util.ts';
 import type { ImportEdge } from '../common/import-match.type.ts';
+
+/** TS `pathIsRelative`: the names TS never maps through `paths`, so a backslash after the dots (`.\x`) counts too. */
+const PATHS_SKIPPED = /^\.\.?(?:$|[\\/])/;
 
 const isNameOf = (specifier: string, name: string): boolean => specifier === name || specifier.startsWith(`${name}/`);
 
@@ -41,11 +44,12 @@ const isRelativeInto = (specifier: string, fromDir: string, edge: ImportEdge): b
 
 const isAliasInto = (specifier: string, edge: ImportEdge, tsconfigPaths: TsconfigPaths | null): boolean => {
   const { targetDir } = edge;
-  const isRelative = isRelativeSpecifier(specifier);
-  const isRooted = isAbsolute(specifier);
-  const isPath = isRelative || isRooted;
 
-  if (targetDir === null || tsconfigPaths === null || isPath) return false;
+  if (targetDir === null || tsconfigPaths === null) return false;
+
+  const isSkipped = PATHS_SKIPPED.test(specifier);
+
+  if (isSkipped) return false;
 
   const { baseUrl, paths } = tsconfigPaths;
   const targets = aliasTargetsOf(specifier, paths);
