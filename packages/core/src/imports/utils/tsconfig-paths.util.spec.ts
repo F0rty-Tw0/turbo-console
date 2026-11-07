@@ -3,9 +3,9 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { tsconfigPathsOf } from './tsconfig-paths.util.ts';
-import { TSCONFIG_FILE_STUB } from '../test/stubs/tsconfig.stub.ts';
 import type { TsconfigPaths } from '../common/import-scan.type.ts';
 import type { TsconfigFile, TsconfigLink } from '../common/tsconfig.type.ts';
+import { TSCONFIG_FILE_STUB } from '../test/stubs/tsconfig.stub.ts';
 
 type PathsRow = {
   readonly label: string;
