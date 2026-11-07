@@ -1,11 +1,21 @@
 import { join } from 'node:path';
 
+import type { TsconfigPaths } from '@turbo-console/core';
+import type { ImportVia } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
 import { importMatchOf } from './import-match.util.ts';
 import type { ImportEdge } from '../common/import-match.type.ts';
-import { IMPORT_ROOT, SOURCE_DIR, TARGET_DIR } from '../test/common/import-edge.const.ts';
+import { IMPORT_ROOT, SOURCE_DIR, TARGET_DIR, TARGET_NAME } from '../test/common/import-edge.const.ts';
 import { IMPORT_EDGE_STUB } from '../test/stubs/import-edge.stub.ts';
+
+type AliasRow = {
+  readonly label: string;
+  readonly tsconfigPaths: TsconfigPaths | null;
+  readonly specifier: string;
+  readonly edge: ImportEdge;
+  readonly via: ImportVia | null;
+};
 
 const FROM = join(SOURCE_DIR, 'src');
 
@@ -14,6 +24,65 @@ const edgeOf = (patch: Partial<ImportEdge>): ImportEdge => {
 
   return edge;
 };
+
+const pathsOf = (paths: Record<string, string[]>): TsconfigPaths => {
+  const tsconfigPaths: TsconfigPaths = { baseUrl: IMPORT_ROOT, paths };
+
+  return tsconfigPaths;
+};
+
+const ROOT_EDGE = edgeOf({ targetDir: null });
+const NESTED_EDGE = edgeOf({ sourceDir: join(TARGET_DIR, 'plugin') });
+
+const EXACT_PATHS = pathsOf({ '@ui': ['packages/b/src/index.ts'] });
+const WILDCARD_PATHS = pathsOf({ '@ui/*': ['packages/b/src/*'] });
+const OWN_PREFIX_PATHS = pathsOf({ '@ui/*': ['packages/b/src/*'], '@ui/own/*': ['packages/a/src/*'] });
+const OUTSIDE_PATHS = pathsOf({ '@ui/*': ['packages/c/*'] });
+const TWO_TARGET_PATHS = pathsOf({ '@ui/*': ['packages/c/*', 'packages/b/*'] });
+const DOT_PATHS = pathsOf({ './*': ['packages/b/*'] });
+const SLASH_PATHS = pathsOf({ '/*': ['packages/b/*'] });
+const NAMED_PATHS = pathsOf({ [TARGET_NAME]: ['packages/b/src/index.ts'] });
+const NESTED_PATHS = pathsOf({ '~/*': ['packages/b/plugin/src/*'] });
+const CATCH_ALL_PATHS = pathsOf({ '*': ['packages/b/types/*'] });
+
+const ALIAS_ROWS: AliasRow[] = [
+  { label: 'an exact key maps into B', tsconfigPaths: EXACT_PATHS, specifier: '@ui', edge: IMPORT_EDGE_STUB, via: 'alias' },
+  {
+    label: 'a wildcard key maps into B',
+    tsconfigPaths: WILDCARD_PATHS,
+    specifier: '@ui/button',
+    edge: IMPORT_EDGE_STUB,
+    via: 'alias'
+  },
+  {
+    label: 'the longest prefix maps into A',
+    tsconfigPaths: OWN_PREFIX_PATHS,
+    specifier: '@ui/own/x',
+    edge: IMPORT_EDGE_STUB,
+    via: null
+  },
+  { label: 'a key maps outside B', tsconfigPaths: OUTSIDE_PATHS, specifier: '@ui/x', edge: IMPORT_EDGE_STUB, via: null },
+  {
+    label: 'one of two targets maps into B',
+    tsconfigPaths: TWO_TARGET_PATHS,
+    specifier: '@ui/x',
+    edge: IMPORT_EDGE_STUB,
+    via: 'alias'
+  },
+  { label: 'a relative specifier matches a ./* key', tsconfigPaths: DOT_PATHS, specifier: './x', edge: IMPORT_EDGE_STUB, via: null },
+  { label: 'an absolute specifier matches a /* key', tsconfigPaths: SLASH_PATHS, specifier: '/x', edge: IMPORT_EDGE_STUB, via: null },
+  { label: 'rule 1 and rule 4 both match', tsconfigPaths: NAMED_PATHS, specifier: TARGET_NAME, edge: IMPORT_EDGE_STUB, via: 'name' },
+  { label: 'B is the root package', tsconfigPaths: WILDCARD_PATHS, specifier: '@ui/x', edge: ROOT_EDGE, via: null },
+  {
+    label: 'A is nested in B and the target is its own file',
+    tsconfigPaths: NESTED_PATHS,
+    specifier: '~/x',
+    edge: NESTED_EDGE,
+    via: null
+  },
+  { label: 'A has no tsconfig paths', tsconfigPaths: null, specifier: '@ui/x', edge: IMPORT_EDGE_STUB, via: null },
+  { label: 'a catch-all key maps into B', tsconfigPaths: CATCH_ALL_PATHS, specifier: 'react', edge: IMPORT_EDGE_STUB, via: 'alias' }
+];
 
 describe('FEATURE: import specifier to dependency edge', () => {
   describe('GIVEN B named @company/ui', () => {
@@ -27,7 +96,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
       ['@company', null],
       ['@company/ui?raw', null]
     ])('WHEN %j is imported from A/src THEN via is %s', (specifier, expected) => {
-      const via = importMatchOf(specifier, FROM, IMPORT_EDGE_STUB);
+      const via = importMatchOf(specifier, FROM, IMPORT_EDGE_STUB, null);
 
       expect(via).toBe(expected);
     });
@@ -41,7 +110,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
     ])('WHEN %j is imported THEN via is %s', (specifier, expected) => {
       const edge = edgeOf({ names: ['@company/ui', 'ui-alias'] });
 
-      const via = importMatchOf(specifier, FROM, edge);
+      const via = importMatchOf(specifier, FROM, edge, null);
 
       expect(via).toBe(expected);
     });
@@ -61,7 +130,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
       [join(TARGET_DIR, 'x'), null],
       ['node:fs', null]
     ])('WHEN %j is imported THEN via is %s', (specifier, expected) => {
-      const via = importMatchOf(specifier, FROM, IMPORT_EDGE_STUB);
+      const via = importMatchOf(specifier, FROM, IMPORT_EDGE_STUB, null);
 
       expect(via).toBe(expected);
     });
@@ -75,7 +144,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
     ])('WHEN %j is imported THEN via is %s', (specifier, expected) => {
       const edge = edgeOf({ names: ['root-pkg'], targetDir: null });
 
-      const via = importMatchOf(specifier, FROM, edge);
+      const via = importMatchOf(specifier, FROM, edge, null);
 
       expect(via).toBe(expected);
     });
@@ -90,7 +159,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
     ])('WHEN %j is imported from a file under A/src THEN via is %s', (specifier, expected) => {
       const sourceDir = join(TARGET_DIR, 'plugin');
 
-      const via = importMatchOf(specifier, join(sourceDir, 'src'), edgeOf({ sourceDir }));
+      const via = importMatchOf(specifier, join(sourceDir, 'src'), edgeOf({ sourceDir }), null);
 
       expect(via).toBe(expected);
     });
@@ -101,7 +170,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
     ])('WHEN %j is imported from a file at the top of A THEN via is %s', (specifier, expected) => {
       const sourceDir = join(TARGET_DIR, 'plugin');
 
-      const via = importMatchOf(specifier, sourceDir, edgeOf({ sourceDir }));
+      const via = importMatchOf(specifier, sourceDir, edgeOf({ sourceDir }), null);
 
       expect(via).toBe(expected);
     });
@@ -114,7 +183,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
     ])('WHEN %j is imported THEN via is %s', (specifier, expected) => {
       const edge = edgeOf({ targetDir: join(SOURCE_DIR, 'sub') });
 
-      const via = importMatchOf(specifier, FROM, edge);
+      const via = importMatchOf(specifier, FROM, edge, null);
 
       expect(via).toBe(expected);
     });
@@ -127,7 +196,7 @@ describe('FEATURE: import specifier to dependency edge', () => {
     ])('WHEN %j is imported from the root THEN via is %s', (specifier, expected) => {
       const edge = edgeOf({ sourceDir: IMPORT_ROOT });
 
-      const via = importMatchOf(specifier, IMPORT_ROOT, edge);
+      const via = importMatchOf(specifier, IMPORT_ROOT, edge, null);
 
       expect(via).toBe(expected);
     });
@@ -135,9 +204,17 @@ describe('FEATURE: import specifier to dependency edge', () => {
 
   describe('GIVEN a specifier that is a name and looks relative', () => {
     it('WHEN ./@company/ui is imported THEN via is null', () => {
-      const via = importMatchOf('./@company/ui', FROM, IMPORT_EDGE_STUB);
+      const via = importMatchOf('./@company/ui', FROM, IMPORT_EDGE_STUB, null);
 
       expect(via).toBeNull();
+    });
+  });
+
+  describe('GIVEN tsconfig paths of A', () => {
+    it.each(ALIAS_ROWS)('WHEN $label THEN via is $via', ({ tsconfigPaths, specifier, edge, via }) => {
+      const matched = importMatchOf(specifier, FROM, edge, tsconfigPaths);
+
+      expect(matched).toBe(via);
     });
   });
 });
