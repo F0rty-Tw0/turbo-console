@@ -1076,9 +1076,14 @@ kbd {
   background: var(--vscode-inputOption-activeBackground);
 }
 
-.icon-button:disabled {
+.icon-button:disabled,
+.icon-button[aria-disabled='true'] {
   opacity: 0.5;
   cursor: default;
+}
+
+.icon-button[aria-disabled='true']:hover {
+  background: none;
 }
 
 .details-guide {
@@ -1304,6 +1309,67 @@ button.details-explain[aria-disabled='true'] {
 
 .excerpt-row.is-entry .excerpt-number {
   color: inherit;
+}
+
+.details-imports-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.details-view h4 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--tc-muted);
+}
+
+.import-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--radius);
+  color: inherit;
+  background: var(--vscode-editor-background);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.import-row:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.import-text {
+  flex: 1 1 0;
+  min-width: 0;
+  font-family: var(--vscode-editor-font-family, monospace);
+  overflow-wrap: anywhere;
+}
+
+.details-imports-block .details-file .details-code {
+  overflow-wrap: anywhere;
+}
+
+.import-tags {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.import-tag {
+  padding: 0 var(--space-1);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--radius);
+  color: var(--vscode-descriptionForeground);
 }
 
 .details-filter {
