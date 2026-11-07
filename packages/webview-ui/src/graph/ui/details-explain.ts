@@ -12,7 +12,7 @@ import type {
   ReadingExplain,
   UnreadableExplain
 } from '../common/details.type.ts';
-import type { GraphIconId } from '../common/graph-icon.type.ts';
+import type { StatusIcon } from '../common/graph-icon.type.ts';
 import {
   entryLabelOf,
   missingTextOf,
@@ -23,10 +23,8 @@ import {
 } from '../utils/details-text.util.ts';
 import { excerptRowsOf } from '../utils/excerpt.util.ts';
 
-type StatusIcon = Extract<GraphIconId, 'info' | 'warning'>;
-
 /** A status is a coloured icon and a word, never a coloured border (D18). */
-const statusOf = (id: StatusIcon, word: string): HTMLElement => {
+export const statusOf = (id: StatusIcon, word: string): HTMLElement => {
   const status = textElement('p', 'details-status', '');
   const icon = graphIcon(id);
   const strong = textElement('strong', 'details-status-word', word);

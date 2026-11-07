@@ -1081,6 +1081,15 @@ kbd {
   cursor: default;
 }
 
+/* The global [aria-disabled] rule dims it; a second opacity here would double the dim. */
+.icon-button[aria-disabled='true'] {
+  cursor: default;
+}
+
+.icon-button[aria-disabled='true']:hover {
+  background: none;
+}
+
 .details-guide {
   display: flex;
   flex-direction: column;
@@ -1304,6 +1313,70 @@ button.details-explain[aria-disabled='true'] {
 
 .excerpt-row.is-entry .excerpt-number {
   color: inherit;
+}
+
+.details-imports-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.details-imports-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+
+.details-view h4 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--tc-muted);
+}
+
+.import-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--radius);
+  color: inherit;
+  background: var(--vscode-editor-background);
+  font: inherit;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.import-row:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.import-text {
+  flex: 1 1 0;
+  min-width: 0;
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+
+.import-tags {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.import-tag {
+  padding: 0 var(--space-1);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: var(--radius);
+  color: var(--vscode-descriptionForeground);
 }
 
 .details-filter {

@@ -43,7 +43,7 @@ const DYNAMIC_TYPE_ROW: ImportRowModel = {
   number: '1',
   text: "import 'core';",
   tags: ['type', 'dynamic'],
-  label: 'Open src/a.ts at line 1'
+  label: "Open src/a.ts at line 1: import 'core';"
 };
 
 const NONE_LINE = 'No file in web imports ui (3 files scanned).';

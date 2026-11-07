@@ -117,10 +117,10 @@ describe('FEATURE: imports text', () => {
   });
 
   describe('GIVEN an import row', () => {
-    it('WHEN its 0-based line 3 is labelled THEN the label counts from 1', () => {
-      const label = openImportLabelOf('src/a.ts', 3);
+    it('WHEN its 0-based line 3 is labelled THEN the label counts from 1 and ends with the import text', () => {
+      const label = openImportLabelOf('src/a.ts', 3, "import 'core';");
 
-      expect(label).toBe('Open src/a.ts at line 4');
+      expect(label).toBe("Open src/a.ts at line 4: import 'core';");
     });
 
     it.each(TAGS_ROWS)('WHEN it is $label THEN its tags are in the order type, kind, via', ({ site, expected }) => {

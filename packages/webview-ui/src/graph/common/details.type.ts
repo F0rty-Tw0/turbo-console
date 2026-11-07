@@ -1,9 +1,11 @@
+import type { ImportsViewModel } from './details-imports.type.ts';
 import type {
   BundleDetails,
   DetailsElements,
   EmptyDetails,
   ExplainDetails,
   FolderViewElements,
+  ImportsDetails,
   LinkDetails,
   PackageDetails,
   PickingDetails,
@@ -154,6 +156,7 @@ export type DetailsViews = {
   readonly link: (model: LinkViewModel, isOverlay: boolean) => LinkDetails;
   readonly bundle: (model: BundleViewModel, isOverlay: boolean) => BundleDetails;
   readonly explain: (state: ExplainState) => ExplainDetails;
+  readonly imports: (model: ImportsViewModel) => ImportsDetails;
   readonly picking: (model: PickingViewModel, isOverlay: boolean) => PickingDetails;
   readonly trace: (model: TraceViewModel, isOverlay: boolean) => TraceDetails;
   readonly folder: (model: FolderViewModel) => FolderViewElements;

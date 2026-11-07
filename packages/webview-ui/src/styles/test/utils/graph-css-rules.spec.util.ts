@@ -39,3 +39,6 @@ export const declarationsOf = (text: string, selector: string): string => {
 
   return bodyOf(rule);
 };
+
+/** Where the first rule with `selector` starts in `css`, `-1` when no rule has it; a later start wins a tie in the cascade. */
+export const ruleStartOf = (selector: string): number => ruleOf(css, selector)?.index ?? -1;

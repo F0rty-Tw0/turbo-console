@@ -6,6 +6,9 @@ export type GraphIconId = (typeof GRAPH_ICON_IDS)[number];
 /** The ids of the Codicons that mark a task's run state. */
 export type RunStateIconId = Extract<GraphIconId, 'sync' | 'pulse' | 'pass' | 'error' | 'debug-stop'>;
 
+/** The ids of the Codicons that lead a details status: info for a plain note, warning for a failure. */
+export type StatusIcon = Extract<GraphIconId, 'info' | 'warning'>;
+
 /** The actions that draw an icon from `ACTION_ICONS` (spec D10). */
 export type ActionIconKey =
   | 'openDetails'

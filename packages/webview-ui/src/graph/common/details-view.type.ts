@@ -1,3 +1,5 @@
+import type { ImportRowModel } from './details-imports.type.ts';
+
 /** A Details aside and its `div.details-content`, which holds the shown view; the Details bar sits before it. */
 export type DetailsElements = {
   readonly panel: HTMLElement;
@@ -142,4 +144,23 @@ export type ExplainDetails = {
   readonly text: HTMLElement | null;
   readonly entries: ExplainEntry[];
   readonly open: HTMLButtonElement | null;
+};
+
+export type ImportRowElements = {
+  readonly site: ImportRowModel;
+  readonly button: HTMLButtonElement;
+};
+
+/** One file of the imports block: its `rows`, and its `nodes` in draw order (the h4, then each row button). */
+export type ImportGroupElements = {
+  readonly rows: ImportRowElements[];
+  readonly nodes: HTMLElement[];
+};
+
+/** The imports block of one `ImportsViewModel`; `more` is `null` unless rows are folded. */
+export type ImportsDetails = {
+  readonly root: HTMLElement;
+  readonly scanAgain: HTMLButtonElement;
+  readonly rows: ImportRowElements[];
+  readonly more: HTMLButtonElement | null;
 };
