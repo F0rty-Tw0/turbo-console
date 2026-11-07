@@ -34,10 +34,9 @@ const BENCH_EDGE: ImportEdge = {
   sourceDir: join(BENCH_ROOT, 'packages', 'a')
 };
 
-/** 20 specifiers: 6 by name, 4 relative into B, 10 relative staying in A. */
 const PLAIN_MIX: SpecifierMix = { byName: 6, intoTarget: 4, aliasIntoTarget: 0, inSource: 10, aliasInSource: 0 };
 
-/** 20 specifiers: 4 by name, 4 relative into B, 3 alias into B, 6 relative in A, 3 alias in A. */
+/** `@company/ui-src` is not B's name, so only rule 4 matches it; `~/*` maps into A, so those specifiers give `null`. */
 const ALIAS_MIX: SpecifierMix = { byName: 4, intoTarget: 4, aliasIntoTarget: 3, inSource: 6, aliasInSource: 3 };
 
 /** 250 files x (6 by name + 4 relative into B) + 5 long-path files x 2 by name = 2,500 + 10. */
@@ -102,8 +101,11 @@ const longFileOf = (index: number): ScannedFile => {
   return scannedFileOf(file, imports);
 };
 
-const dirFilesOf = (specifiers: string[], dir: number): ScannedFile[] =>
-  linesUpTo(FILES_PER_DIR).map((index) => shortFileOf(specifiers, dir, index));
+const dirFilesOf = (specifiers: string[], dir: number): ScannedFile[] => {
+  const fileOf = (index: number): ScannedFile => shortFileOf(specifiers, dir, index);
+
+  return linesUpTo(FILES_PER_DIR).map(fileOf);
+};
 
 const scanOf = (mix: SpecifierMix, patch: Partial<PackageImportScan>): PackageImportScan => {
   const specifiers = specifiersOf(mix);
@@ -127,9 +129,13 @@ const SCAN = scanOf(PLAIN_MIX, {});
 
 const ALIAS_SCAN = scanOf(ALIAS_MIX, { tsconfigPaths: ALIAS_PATHS });
 
-const IS_EXPECTED = isExpectedAnswer(answerImports(SCAN, BENCH_EDGE), PLAIN_TOTAL);
+const CHECKED = answerImports(SCAN, BENCH_EDGE);
 
-const IS_ALIAS_EXPECTED = isExpectedAnswer(answerImports(ALIAS_SCAN, BENCH_EDGE), ALIAS_TOTAL);
+const ALIAS_CHECKED = answerImports(ALIAS_SCAN, BENCH_EDGE);
+
+const IS_EXPECTED = isExpectedAnswer(CHECKED, PLAIN_TOTAL);
+
+const IS_ALIAS_EXPECTED = isExpectedAnswer(ALIAS_CHECKED, ALIAS_TOTAL);
 
 if (!IS_EXPECTED) throw new Error('answer-imports-5000 fixture drifted from its expected answer');
 
