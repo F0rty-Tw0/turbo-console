@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { extendedPathsOf, tsconfigFileOf } from './tsconfig-file.util.ts';
+import { TSCONFIG_FILE_STUB } from '../test/stubs/tsconfig.stub.ts';
 import type { TsconfigFile } from '../common/tsconfig.type.ts';
 
 type FileRow = {
@@ -20,7 +21,7 @@ type ExtendedRow = {
 const DIR = resolve('/ws/pkg');
 
 const fileWith = (patch: Partial<TsconfigFile>): TsconfigFile => {
-  const file: TsconfigFile = { extends: [], paths: undefined, baseUrl: undefined, ...patch };
+  const file: TsconfigFile = { ...TSCONFIG_FILE_STUB, ...patch };
 
   return file;
 };

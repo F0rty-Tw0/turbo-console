@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { tsconfigPathsOf } from './tsconfig-paths.util.ts';
+import { TSCONFIG_FILE_STUB } from '../test/stubs/tsconfig.stub.ts';
 import type { TsconfigPaths } from '../common/import-scan.type.ts';
 import type { TsconfigFile, TsconfigLink } from '../common/tsconfig.type.ts';
 
@@ -21,7 +22,7 @@ const PATHS_1: Record<string, string[]> = { '@b/*': ['packages/b/src/*'] };
 const PATHS_2: Record<string, string[]> = { '@c': ['packages/c/index.ts'] };
 
 const linkOf = (dir: string, patch: Partial<TsconfigFile>): TsconfigLink => {
-  const file: TsconfigFile = { extends: [], paths: undefined, baseUrl: undefined, ...patch };
+  const file: TsconfigFile = { ...TSCONFIG_FILE_STUB, ...patch };
   const link: TsconfigLink = { dir, file };
 
   return link;
