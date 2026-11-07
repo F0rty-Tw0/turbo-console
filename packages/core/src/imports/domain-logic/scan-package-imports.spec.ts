@@ -141,9 +141,14 @@ describe('FEATURE: scan one package for its imports', () => {
 
     it('WHEN a is scanned THEN x.ts is still listed with its import', async () => {
       const scan = await scanPackageImports(input);
-      const imports = scan.files.map((entry) => entry.imports.map((found) => found.specifier));
+      const listed = scan.files.map((entry) => {
+        const specifiers = entry.imports.map((found) => found.specifier);
+        const listing = { file: entry.file, specifiers };
 
-      expect(imports).toStrictEqual([['@b/y']]);
+        return listing;
+      });
+
+      expect(listed).toStrictEqual([{ file: 'x.ts', specifiers: ['@b/y'] }]);
     });
 
     it('WHEN the base paths are rewritten and a is scanned again over the same cache THEN the new paths are returned', async () => {
@@ -156,31 +161,35 @@ describe('FEATURE: scan one package for its imports', () => {
     });
   });
 
-  describe('GIVEN a finished scan of a/x.ts, then a rescan whose clock passes timeMs once a/tsconfig.json is opened', () => {
-    let scan: PackageImportScan = { files: [], tsconfigPaths: null, scanned: 0, skipped: 0, limit: null };
-    let cached: string[] = [];
+  describe('GIVEN a finished scan of a/x.ts, and a clock that passes timeMs once a/tsconfig.json is opened', () => {
+    let aDir = '';
+    let cache = new ImportFileCache();
+    let rescanInput: ImportScanInput = inputOf(dir, cache);
 
     beforeEach(async () => {
-      const aDir = join(dir, 'a');
+      aDir = join(dir, 'a');
       const aConfig = join(aDir, 'tsconfig.json');
       const caps = capsOf({});
-      const cache = new ImportFileCache();
       const now = (): number => (reads.opened.includes(aConfig) ? caps.timeMs : 0);
 
+      cache = new ImportFileCache();
+      rescanInput = inputOf(aDir, cache, { root: dir, caps, now });
       await writeImportTree(dir, { 'a/tsconfig.json': baseTextOf(PATHS), 'a/x.ts': IMPORT_B });
       await scanPackageImports(inputOf(aDir, cache, { root: dir }));
       reads.opened.length = 0;
-      scan = await scanPackageImports(inputOf(aDir, cache, { root: dir, caps, now }));
-      const names = cache.filesOf(aDir).keys();
-
-      cached = [...names];
     });
 
-    it('WHEN rescanned THEN the paths are still returned', () => {
+    it('WHEN rescanned THEN the paths are still returned', async () => {
+      const scan = await scanPackageImports(rescanInput);
+
       expect(scan.tsconfigPaths?.paths).toStrictEqual(PATHS);
     });
 
-    it("WHEN rescanned THEN the walk stops on the time cap before it lists x.ts, so limit is 'time' and the cache is empty", () => {
+    it("WHEN rescanned THEN the walk stops on the time cap before it lists x.ts, so limit is 'time' and the cache is empty", async () => {
+      const scan = await scanPackageImports(rescanInput);
+      const names = cache.filesOf(aDir).keys();
+      const cached = [...names];
+
       expect({ limit: scan.limit, cached }).toStrictEqual({ limit: 'time', cached: [] });
     });
   });
