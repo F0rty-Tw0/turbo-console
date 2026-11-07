@@ -17,3 +17,8 @@ export const IMPORT_SCAN_CAPS: ImportScanCaps = { files: 5000, entries: 50_000, 
 
 /** D9: entries across every dir's map before a swap clears them all. */
 export const IMPORT_CACHE_MAX = 20_000;
+
+export const TSCONFIG_NAME = 'tsconfig.json';
+
+/** D6: files one chain read attempts, A's own included (OQ1). */
+export const TSCONFIG_CHAIN_MAX = 8;
