@@ -25,10 +25,12 @@ const isInto = (path: string, edge: ImportEdge, targetDir: string): boolean => {
   if (!isInTarget) return false;
 
   const isInSource = isWithin(edge.sourceDir, path);
-  const isTargetInSource = isWithin(edge.sourceDir, targetDir);
-  const isOwnFile = isInSource && !isTargetInSource;
 
-  return !isOwnFile;
+  if (!isInSource) return true;
+
+  const isTargetInSource = isWithin(edge.sourceDir, targetDir);
+
+  return isTargetInSource;
 };
 
 const isRelativeInto = (specifier: string, fromDir: string, edge: ImportEdge): boolean => {
