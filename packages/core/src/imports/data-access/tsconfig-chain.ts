@@ -47,8 +47,8 @@ const readLinkFile = async (path: string, stats: Stats): Promise<TsconfigFile | 
 
 /**
  * The link of one candidate list, as TS reads it: a candidate that was tried before ends the list, and so does the first
- * one that exists, whether or not it reads as a config. Only a missing candidate goes on to the next, and a candidate
- * outside the root is passed over.
+ * one that exists, whether or not it reads as a config. Only a candidate that is missing or a directory (TS needs a
+ * file) goes on to the next, and a candidate outside the root is passed over.
  */
 const linkOf = async (candidates: string[], read: ChainRead): Promise<TsconfigLink | null> => {
   for (const path of candidates) {
@@ -63,7 +63,10 @@ const linkOf = async (candidates: string[], read: ChainRead): Promise<TsconfigLi
 
     const stats = await statOf(path);
 
-    if (stats === null) continue;
+    const isDirectory = stats?.isDirectory() ?? false;
+    const isMissing = stats === null || isDirectory;
+
+    if (isMissing) continue;
 
     const file = await readLinkFile(path, stats);
 
@@ -90,9 +93,9 @@ const pushExtended = (link: TsconfigLink, read: ChainRead): void => {
 /**
  * The effective tsconfig `paths` of package `dir` (D6): `<dir>/tsconfig.json` and its relative `extends`, depth first in
  * TS precedence order, each path within `root`, tried at most once, at most `TSCONFIG_CHAIN_MAX` candidate lists. A list
- * opens at most one file: the first candidate that exists. If that file is not a regular file (a symlink included), is
- * over 1 MiB or is not a valid config, it adds nothing, its `extends` are not followed and the list's later candidates
- * are not tried. Never rejects.
+ * opens at most one file: the first candidate that exists and is not a directory. If that file is not a regular file (a
+ * symlink included), is over 1 MiB or is not a valid config, it adds nothing, its `extends` are not followed and the
+ * list's later candidates are not tried. Never rejects.
  */
 export const readTsconfigPaths = async (dir: string, root: string): Promise<TsconfigPaths | null> => {
   const read: ChainRead = { root, seen: new Set(), stack: [[join(dir, TSCONFIG_NAME)]] };

@@ -171,10 +171,16 @@ const chainRows: ChainRow[] = [
     pathsAt(A_DIR, P1)
   ),
   rowOf(
-    'an ./base that is invalid JSONC next to a valid base.json',
+    'a ./base that is invalid JSONC next to a valid base.json',
     'no paths are returned',
     { [A_CONFIG]: configOf(extendsOf(['./base'])), [`${A_DIR}/base`]: INVALID_JSONC, [`${A_DIR}/base.json`]: configOf(pathsPart(P2)) },
     null
+  ),
+  rowOf(
+    'a ./base that is a directory next to base.json',
+    'the .json file is read',
+    { [A_CONFIG]: configOf(extendsOf(['./base'])), [`${A_DIR}/base/x.txt`]: '', [`${A_DIR}/base.json`]: configOf(pathsPart(P)) },
+    pathsAt(A_DIR, P)
   ),
   rowOf('a diamond over ./base and base.json', 'the paths of base win', DIAMOND_FILES, pathsAt(A_DIR, P1)),
   rowOf('a chain where only the 8th file sets paths', 'its paths are read', chainOf(8), pathsAt(A_DIR, P)),
@@ -210,7 +216,7 @@ const openRows: OpenRow[] = [
   openRowOf('a base above the root', ABOVE_ROOT_FILES, [A_CONFIG]),
   openRowOf('a tsconfig.json over 1 MiB', { [A_CONFIG]: BIG_CONFIG }, []),
   openRowOf(
-    'an ./base that is invalid JSONC next to a valid base.json',
+    'a ./base that is invalid JSONC next to a valid base.json',
     { [A_CONFIG]: configOf(extendsOf(['./base'])), [`${A_DIR}/base`]: INVALID_JSONC, [`${A_DIR}/base.json`]: configOf(pathsPart(P2)) },
     [A_CONFIG, `${A_DIR}/base`]
   ),
