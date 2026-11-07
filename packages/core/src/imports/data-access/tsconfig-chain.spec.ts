@@ -51,6 +51,8 @@ type OpenRow = {
   readonly opened: string[];
 };
 
+const CAN_SYMLINK = process.platform !== 'win32';
+
 const A_DIR = 'packages/a';
 
 const A_CONFIG = `${A_DIR}/tsconfig.json`;
@@ -125,11 +127,20 @@ const ABOVE_ROOT_FILES: Record<string, string> = {
   '../base.json': configOf(pathsPart(P))
 };
 
+const INVALID_JSONC = '{ "compilerOptions": }';
+
+const DIAMOND_FILES: Record<string, string> = {
+  [A_CONFIG]: configOf(extendsOf(['./base', './c'])),
+  [`${A_DIR}/c.json`]: configOf(extendsOf(['./base'])),
+  [`${A_DIR}/base`]: configOf(pathsPart(P1)),
+  [`${A_DIR}/base.json`]: configOf(pathsPart(P2))
+};
+
 const chainRows: ChainRow[] = [
-  rowOf('A has no tsconfig.json', 'there are none', { [`${A_DIR}/x.ts`]: '' }, null),
-  rowOf('A sets paths', 'the paths and the dir of A are read', { [A_CONFIG]: configOf(pathsPart(P)) }, pathsAt(A_DIR, P)),
+  rowOf('no tsconfig.json in A', 'no paths are returned', { [`${A_DIR}/x.ts`]: '' }, null),
+  rowOf('an A that sets paths', 'the paths and the dir of A are read', { [A_CONFIG]: configOf(pathsPart(P)) }, pathsAt(A_DIR, P)),
   rowOf(
-    'A extends a root base that sets baseUrl and paths',
+    'an A that extends a root base setting baseUrl and paths',
     'the paths are read against the root',
     {
       [A_CONFIG]: configOf(extendsOf(['../../tsconfig.base.json'])),
@@ -138,7 +149,7 @@ const chainRows: ChainRow[] = [
     pathsAt('', P)
   ),
   rowOf(
-    'A extends two files that both set paths',
+    'an A that extends two files that both set paths',
     'the later entry wins',
     {
       [A_CONFIG]: configOf(extendsOf(['./a.json', './b.json'])),
@@ -148,48 +159,67 @@ const chainRows: ChainRow[] = [
     pathsAt(A_DIR, P2)
   ),
   rowOf(
-    'A extends ./base and only base.json exists',
+    'an A that extends ./base when only base.json exists',
     'the .json file is read',
     { [A_CONFIG]: configOf(extendsOf(['./base'])), [`${A_DIR}/base.json`]: configOf(pathsPart(P)) },
     pathsAt(A_DIR, P)
   ),
   rowOf(
-    'A and its base both set paths',
+    'an A and a base that both set paths',
     'the paths of A win',
     { [A_CONFIG]: configOf(extendsOf(['./base.json']), pathsPart(P1)), [`${A_DIR}/base.json`]: configOf(pathsPart(P2)) },
     pathsAt(A_DIR, P1)
   ),
-  rowOf('only the 8th file of a chain sets paths', 'its paths are read', chainOf(8), pathsAt(A_DIR, P)),
-  rowOf('only the 9th file of a chain sets paths', 'there are none', chainOf(9), null),
-  rowOf('two files extend each other and one sets paths', 'the paths are read', MUTUAL_FILES, pathsAt(A_DIR, P)),
-  rowOf('a base above the root', 'there are none', ABOVE_ROOT_FILES, null),
   rowOf(
-    'A sets paths and extends a package',
+    'an ./base that is invalid JSONC next to a valid base.json',
+    'no paths are returned',
+    { [A_CONFIG]: configOf(extendsOf(['./base'])), [`${A_DIR}/base`]: INVALID_JSONC, [`${A_DIR}/base.json`]: configOf(pathsPart(P2)) },
+    null
+  ),
+  rowOf('a diamond over ./base and base.json', 'the paths of base win', DIAMOND_FILES, pathsAt(A_DIR, P1)),
+  rowOf('a chain where only the 8th file sets paths', 'its paths are read', chainOf(8), pathsAt(A_DIR, P)),
+  rowOf('a chain where only the 9th file sets paths', 'no paths are returned', chainOf(9), null),
+  rowOf('two files that extend each other, one setting paths', 'the paths are read', MUTUAL_FILES, pathsAt(A_DIR, P)),
+  rowOf('a base above the root', 'no paths are returned', ABOVE_ROOT_FILES, null),
+  rowOf(
+    'an A that sets paths and extends a package',
     'the paths of A are read',
     { [A_CONFIG]: configOf(extendsOf(['@company/tsconfig/base.json']), pathsPart(P)) },
     pathsAt(A_DIR, P)
   ),
   rowOf(
-    'a missing entry comes after the file that sets paths',
+    'a missing entry after the file that sets paths',
     'the paths are read',
     { [A_CONFIG]: configOf(extendsOf(['./base.json', './missing.json'])), [`${A_DIR}/base.json`]: configOf(pathsPart(P)) },
     pathsAt(A_DIR, P)
   ),
   rowOf(
-    'the base has a JSONC error',
-    'there are none',
-    { [A_CONFIG]: configOf(extendsOf(['./base.json'])), [`${A_DIR}/base.json`]: '{ "compilerOptions": }' },
+    'a base with a JSONC error',
+    'no paths are returned',
+    { [A_CONFIG]: configOf(extendsOf(['./base.json'])), [`${A_DIR}/base.json`]: INVALID_JSONC },
     null
   ),
-  rowOf('tsconfig.json is a directory', 'there are none', { [`${A_CONFIG}/`]: '' }, null),
-  rowOf('tsconfig.json is over 1 MiB', 'there are none', { [A_CONFIG]: BIG_CONFIG }, null)
+  rowOf('a tsconfig.json that is a directory', 'no paths are returned', { [`${A_CONFIG}/`]: '' }, null),
+  rowOf('a tsconfig.json over 1 MiB', 'no paths are returned', { [A_CONFIG]: BIG_CONFIG }, null)
 ];
 
 const openRows: OpenRow[] = [
-  openRowOf('A has no tsconfig.json', { [`${A_DIR}/x.ts`]: '' }, []),
+  openRowOf('no tsconfig.json in A', { [`${A_DIR}/x.ts`]: '' }, []),
   openRowOf('a chain of 9 files', chainOf(9), Object.keys(chainOf(8))),
-  openRowOf('two files extend each other', MUTUAL_FILES, [A_CONFIG, `${A_DIR}/a.json`, `${A_DIR}/b.json`]),
-  openRowOf('a base above the root', ABOVE_ROOT_FILES, [A_CONFIG])
+  openRowOf('two files that extend each other', MUTUAL_FILES, [A_CONFIG, `${A_DIR}/a.json`, `${A_DIR}/b.json`]),
+  openRowOf('a base above the root', ABOVE_ROOT_FILES, [A_CONFIG]),
+  openRowOf('a tsconfig.json over 1 MiB', { [A_CONFIG]: BIG_CONFIG }, []),
+  openRowOf(
+    'an ./base that is invalid JSONC next to a valid base.json',
+    { [A_CONFIG]: configOf(extendsOf(['./base'])), [`${A_DIR}/base`]: INVALID_JSONC, [`${A_DIR}/base.json`]: configOf(pathsPart(P2)) },
+    [A_CONFIG, `${A_DIR}/base`]
+  ),
+  openRowOf('a diamond over ./base and base.json', DIAMOND_FILES, [A_CONFIG, `${A_DIR}/c.json`, `${A_DIR}/base`]),
+  openRowOf(
+    'the same invalid bad.json listed twice',
+    { [A_CONFIG]: configOf(extendsOf(['./bad.json', './bad.json'])), [`${A_DIR}/bad.json`]: INVALID_JSONC },
+    [A_CONFIG, `${A_DIR}/bad.json`]
+  )
 ];
 
 describe('FEATURE: read the tsconfig paths of a package', () => {
@@ -223,15 +253,16 @@ describe('FEATURE: read the tsconfig paths of a package', () => {
   });
 
   describe('GIVEN a tree of tsconfig files under the root', () => {
-    it.each(chainRows)('WHEN $label THEN $then', async ({ files, expected }) => {
+    it.each(chainRows)('WHEN read with $label THEN $then', async ({ files, expected }) => {
       await writeImportTree(root, files);
 
+      const expectedPaths = expectedOf(expected);
       const effective = await readTsconfigPaths(aDir, root);
 
-      expect(effective).toStrictEqual(expectedOf(expected));
+      expect(effective).toStrictEqual(expectedPaths);
     });
 
-    it.each(openRows)('WHEN $label THEN only the expected files are opened, each once', async ({ files, opened }) => {
+    it.each(openRows)('WHEN read with $label THEN only the listed files are opened, each once', async ({ files, opened }) => {
       await writeImportTree(root, files);
 
       await readTsconfigPaths(aDir, root);
@@ -241,8 +272,6 @@ describe('FEATURE: read the tsconfig paths of a package', () => {
   });
 
   describe('GIVEN tsconfig.json is a symlink to a valid config', () => {
-    const CAN_SYMLINK = process.platform !== 'win32';
-
     beforeEach(async () => {
       if (!CAN_SYMLINK) return;
 
@@ -250,7 +279,7 @@ describe('FEATURE: read the tsconfig paths of a package', () => {
       await symlink(join(root, 'real.json'), join(aDir, 'tsconfig.json'));
     });
 
-    it.skipIf(!CAN_SYMLINK)('WHEN read THEN there are none', async () => {
+    it.skipIf(!CAN_SYMLINK)('WHEN read THEN no paths are returned', async () => {
       const effective = await readTsconfigPaths(aDir, root);
 
       expect(effective).toBeNull();

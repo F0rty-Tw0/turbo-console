@@ -1,10 +1,11 @@
+import type { Stats } from 'node:fs';
 import { lstat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { READ_NO_FOLLOW } from '../../shared/fs/common/open-flags.const.ts';
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
 import { isWithin } from '../../shared/fs/utils/path-within.util.ts';
-import { TSCONFIG_CHAIN_MAX, TSCONFIG_NAME } from '../common/import-scan.const.ts';
+import { IMPORT_SCAN_CAPS, TSCONFIG_CHAIN_MAX, TSCONFIG_NAME } from '../common/import-scan.const.ts';
 import type { TsconfigPaths } from '../common/import-scan.type.ts';
 import type { TsconfigFile, TsconfigLink } from '../common/tsconfig.type.ts';
 import { extendedPathsOf, tsconfigFileOf } from '../utils/tsconfig-file.util.ts';
@@ -17,15 +18,24 @@ type ChainRead = {
   readonly stack: string[][];
 };
 
-/** `lstat` first, so a missing file opens nothing and a symlink is refused; never rejects. */
-const readLinkFile = async (path: string): Promise<TsconfigFile | null> => {
+/** The `lstat` of `path`, or `null` when it is missing; never rejects. */
+const statOf = async (path: string): Promise<Stats | null> => {
   try {
-    const stats = await lstat(path);
-    const isRegular = stats.isFile();
+    return await lstat(path);
+  } catch {
+    return null;
+  }
+};
 
-    if (!isRegular) return null;
+/** The config at `path` when it is a regular file within the byte cap (no symlink, no oversize open); never rejects. */
+const readLinkFile = async (path: string, stats: Stats): Promise<TsconfigFile | null> => {
+  const isRegular = stats.isFile();
+  const isTooBig = stats.size > IMPORT_SCAN_CAPS.fileBytes;
 
-    const text = await readSmallFile(path, undefined, READ_NO_FOLLOW);
+  if (!isRegular || isTooBig) return null;
+
+  try {
+    const text = await readSmallFile(path, IMPORT_SCAN_CAPS.fileBytes, READ_NO_FOLLOW);
 
     if (text === null) return null;
 
@@ -35,19 +45,29 @@ const readLinkFile = async (path: string): Promise<TsconfigFile | null> => {
   }
 };
 
-/** The first candidate that lies within the root, was not tried yet and reads as a config. */
+/**
+ * The link of one candidate list, as TS reads it: a candidate that was tried before ends the list, and so does the first
+ * one that exists, whether or not it reads as a config. Only a missing candidate goes on to the next, and a candidate
+ * outside the root is passed over.
+ */
 const linkOf = async (candidates: string[], read: ChainRead): Promise<TsconfigLink | null> => {
   for (const path of candidates) {
     const isSeen = read.seen.has(path);
     const isInside = isWithin(read.root, path);
 
-    if (isSeen || !isInside) continue;
+    if (!isInside) continue;
+
+    if (isSeen) return null;
 
     read.seen.add(path);
 
-    const file = await readLinkFile(path);
+    const stats = await statOf(path);
 
-    if (file === null) continue;
+    if (stats === null) continue;
+
+    const file = await readLinkFile(path, stats);
+
+    if (file === null) return null;
 
     const link: TsconfigLink = { dir: dirname(path), file };
 
@@ -69,9 +89,10 @@ const pushExtended = (link: TsconfigLink, read: ChainRead): void => {
 
 /**
  * The effective tsconfig `paths` of package `dir` (D6): `<dir>/tsconfig.json` and its relative `extends`, depth first in
- * TS precedence order, each path within `root`, tried at most once, at most `TSCONFIG_CHAIN_MAX` attempts. A file that
- * is missing, unreadable, not a regular file (a symlink included), over 1 MiB or not a valid config adds nothing and
- * its `extends` are not followed. Never rejects.
+ * TS precedence order, each path within `root`, tried at most once, at most `TSCONFIG_CHAIN_MAX` candidate lists. A list
+ * opens at most one file: the first candidate that exists. If that file is not a regular file (a symlink included), is
+ * over 1 MiB or is not a valid config, it adds nothing, its `extends` are not followed and the list's later candidates
+ * are not tried. Never rejects.
  */
 export const readTsconfigPaths = async (dir: string, root: string): Promise<TsconfigPaths | null> => {
   const read: ChainRead = { root, seen: new Set(), stack: [[join(dir, TSCONFIG_NAME)]] };
