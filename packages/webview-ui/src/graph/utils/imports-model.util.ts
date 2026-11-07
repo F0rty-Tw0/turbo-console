@@ -25,7 +25,7 @@ import type { ImportsState } from '../common/imports-state.type.ts';
 
 const FAILED_STATUS: ImportsStatus = { icon: 'warning', word: SCAN_FAILED_WORD };
 
-const sitesOf = (state: ImportsState): ImportSite[] => {
+const foundSitesOf = (state: ImportsState): ImportSite[] => {
   if (state.kind === 'found') return state.sites;
 
   return [];
@@ -43,25 +43,33 @@ const isRefreshingOf = (state: ImportsState): boolean => {
   return false;
 };
 
-const statusOf = (state: ImportsState): ImportsStatus | null => {
-  if (state.kind === 'failed') return FAILED_STATUS;
+const statusModelOf = (state: ImportsState): ImportsStatus | null => {
+  switch (state.kind) {
+    case 'failed':
+      return FAILED_STATUS;
+    case 'scanning':
+    case 'found':
+      return null;
+    case 'none': {
+      const word = state.skipped > 0 ? NONE_IN_SCANNED_WORD : NO_IMPORTS_WORD;
+      const status: ImportsStatus = { icon: 'info', word };
 
-  if (state.kind !== 'none') return null;
-
-  const word = state.skipped > 0 ? NONE_IN_SCANNED_WORD : NO_IMPORTS_WORD;
-  const status: ImportsStatus = { icon: 'info', word };
-
-  return status;
+      return status;
+    }
+  }
 };
 
 const stateLinesOf = (state: ImportsState, link: GraphEdge): string[] => {
-  if (state.kind === 'scanning') return [lookingTextOf(link.source, link.target)];
-
-  if (state.kind === 'none') return [noneTextOf(link.source, link.target, state.scanned)];
-
-  if (state.kind === 'failed') return [failedTextOf(link.source)];
-
-  return [];
+  switch (state.kind) {
+    case 'scanning':
+      return [lookingTextOf(link.source, link.target)];
+    case 'none':
+      return [noneTextOf(link.source, link.target, state.scanned)];
+    case 'failed':
+      return [failedTextOf(link.source)];
+    case 'found':
+      return [];
+  }
 };
 
 const linesOf = (state: ImportsState, link: GraphEdge): string[] => {
@@ -87,10 +95,16 @@ const groupsOf = (sites: ImportSite[]): ImportGroupModel[] => {
   const byFile = new Map<string, ImportGroupModel>();
 
   for (const site of sites) {
-    const group = byFile.get(site.file) ?? { file: site.file, rows: [] };
+    const row = rowOf(site);
+    const held = byFile.get(site.file);
 
-    group.rows.push(rowOf(site));
-    byFile.set(site.file, group);
+    if (held) {
+      held.rows.push(row);
+    } else {
+      const group: ImportGroupModel = { file: site.file, rows: [row] };
+
+      byFile.set(site.file, group);
+    }
   }
 
   return Array.from(byFile.values());
@@ -126,14 +140,14 @@ const notesOf = (state: ImportsState, count: number): string[] => {
 
 /** What the imports block shows for `state` of `link`; `isOpen` is the fold, open past `IMPORTS_FOLD_AT` rows (spec D14). */
 export const importsModelOf = (state: ImportsState, link: GraphEdge, isOpen: boolean): ImportsViewModel => {
-  const sites = sitesOf(state);
+  const sites = foundSitesOf(state);
   const shown = shownOf(sites, isOpen);
   const isScanning = state.kind === 'scanning' || isRefreshingOf(state);
   const model: ImportsViewModel = {
     heading: importsHeadingOf(link.target, countOf(state)),
     scanLabel: scanAgainLabelOf(link.source, link.target),
     isScanning,
-    status: statusOf(state),
+    status: statusModelOf(state),
     lines: linesOf(state, link),
     groups: groupsOf(shown),
     more: moreOf(sites.length, isOpen),

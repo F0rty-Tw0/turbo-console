@@ -1,3 +1,5 @@
+import type { GraphIconId } from './graph-icon.type.ts';
+
 /** One import row of the block: `key` is `file:line` with the 0-based line, `number` the line as a reader counts it. */
 export type ImportRowModel = {
   readonly key: string;
@@ -17,7 +19,7 @@ export type ImportGroupModel = {
 
 /** A status is a coloured icon and a word. */
 export type ImportsStatus = {
-  readonly icon: 'info' | 'warning';
+  readonly icon: Extract<GraphIconId, 'info' | 'warning'>;
   readonly word: string;
 };
 
