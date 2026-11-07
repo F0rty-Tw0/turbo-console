@@ -1,8 +1,9 @@
-import { test } from './graph-task.fixture.ts';
+import { test } from './graph-imports.fixture.ts';
 import { DETAILS_RECOUNT_STUB, DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { FOUND_UI_STUB, UI_DEV_ENTRY_STUB, UI_ENTRIES_STUB, UI_ENTRY_STUB } from './test/stubs/graph-explain.stub.ts';
 import { DIAMOND_CHAIN_STUB, ERROR_STUB } from './test/stubs/graph-state.stub.ts';
 import { placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
+import { foundOf } from './test/utils/graph-imports.spec.util.ts';
 import { savedWith } from './test/utils/graph-saved-state.spec.util.ts';
 import { OVER_CAP_ROOT_TASK, TARGET_LIKE_UMBRELLA, overCapTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 
@@ -217,6 +218,28 @@ test.describe('FEATURE: every graph button has a hover title', () => {
 
       await test.step('THEN the moved entry Open button title is its new name', async (): Promise<void> =>
         graphButtonTitles.expectTitledAs(MOVED_OPEN_NAME));
+    }
+  );
+
+  test(
+    'GIVEN the web to ui link with 25 import sites, every button of the folded and the unfolded list has a title',
+    { annotation: D2 },
+    async ({ detailsImports, graphButtonTitles, graphImports, shownLink }): Promise<void> => {
+      await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
+
+      await test.step('AND the host finds 25 sites', async (): Promise<void> => graphImports.answerImports(foundOf(25, 25)));
+
+      await test.step('THEN twenty rows are shown', async (): Promise<void> => detailsImports.expectRowCount(20));
+
+      await test.step('AND every visible button has a title', async (): Promise<void> =>
+        graphButtonTitles.expectAllTitled('found list'));
+
+      await test.step('WHEN Show more is pressed', async (): Promise<void> => detailsImports.showMore());
+
+      await test.step('THEN all 25 rows are shown', async (): Promise<void> => detailsImports.expectRowCount(25));
+
+      await test.step('AND every visible button still has a title', async (): Promise<void> =>
+        graphButtonTitles.expectAllTitled('unfolded list'));
     }
   );
 });

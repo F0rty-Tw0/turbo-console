@@ -1,5 +1,5 @@
 import type { BundleViewFacts, FolderLinkFacts } from './common/graph-folders.type.ts';
-import { test } from './graph-toolbar.fixture.ts';
+import { test } from './graph-imports.fixture.ts';
 import { collapsedSavedState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
 import { bundleInspection, folderInspection, linkInspection } from './test/utils/graph-inspection.spec.util.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
@@ -85,6 +85,7 @@ test.describe('FEATURE: folder link bundle', () => {
   });
 
   test('GIVEN packages collapsed, Explain on a bundle row opens that link and expands the folder', async ({
+    detailsImports,
     graphBundle,
     graphDetails,
     graphFolderInspect,
@@ -105,11 +106,16 @@ test.describe('FEATURE: folder link bundle', () => {
 
     await test.step('THEN the bundle is inspected', async (): Promise<void> => graphDetails.expectInspection(DOCS_INSPECTION));
 
+    await test.step('AND the bundle view has no imports block', async (): Promise<void> => detailsImports.expectAbsent());
+
     await test.step('WHEN Explain is pressed on the docs to ui row', async (): Promise<void> =>
       graphBundle.pressExplain('docs', '@acme/ui'));
 
     await test.step('THEN that link is inspected', async (): Promise<void> =>
       graphDetails.expectInspection(linkInspection('docs', '@acme/ui')));
+
+    await test.step('AND the link view scans for imports', async (): Promise<void> =>
+      detailsImports.expectScanning('docs', '@acme/ui'));
 
     await test.step('AND no folder is collapsed any more', async (): Promise<void> => graphFolders.expectFolderLinks([]));
   });
