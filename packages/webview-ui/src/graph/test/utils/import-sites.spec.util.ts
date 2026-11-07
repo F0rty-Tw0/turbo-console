@@ -18,8 +18,8 @@ export const sitesOf = (count: number, file = 'src/a.ts'): ImportSite[] => {
   return lines.map(siteAt);
 };
 
-/** A fresh `found` state over `sites`, 3 files scanned and none skipped; `extra` overrides any field. */
-export const foundOf = (sites: ImportSite[], extra: Partial<FoundState> = {}): FoundState => {
+/** A fresh `found` state over `sites`, 3 files scanned and none skipped; `extra` overrides any field but `kind` and `sites`. */
+export const foundOf = (sites: ImportSite[], extra: Partial<Omit<FoundState, 'kind' | 'sites'>> = {}): FoundState => {
   const state: FoundState = {
     kind: 'found',
     scanned: 3,
@@ -34,8 +34,8 @@ export const foundOf = (sites: ImportSite[], extra: Partial<FoundState> = {}): F
   return state;
 };
 
-/** A fresh `none` state, 3 files scanned and none skipped; `extra` overrides any field. */
-export const noneOf = (extra: Partial<NoneState> = {}): NoneState => {
+/** A fresh `none` state, 3 files scanned and none skipped; `extra` overrides any field but `kind`. */
+export const noneOf = (extra: Partial<Omit<NoneState, 'kind'>> = {}): NoneState => {
   const state: NoneState = { kind: 'none', scanned: 3, skipped: 0, limit: null, isRefreshing: false, ...extra };
 
   return state;
