@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { importsModelOf } from './imports-model.util.ts';
 import type { ImportSite } from '../../bridge/common/graph-imports.type.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
-import type { ImportsViewModel } from '../common/details-imports.type.ts';
+import type { ImportRowModel, ImportsViewModel } from '../common/details-imports.type.ts';
 import type { ImportsState } from '../common/imports-state.type.ts';
 import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
 import { sitesOf } from '../test/utils/import-sites.spec.util.ts';
@@ -61,7 +61,15 @@ const HOST_ORDER: ImportSite[] = [
 
 const DYNAMIC_TYPE_SITE: ImportSite = { ...IMPORT_SITE_STUB, line: 0, kind: 'dynamic', isType: true };
 
-const DYNAMIC_TYPE_ROWS = [{ tags: ['type', 'dynamic'], label: 'Open src/a.ts at line 1' }];
+const DYNAMIC_TYPE_ROW: ImportRowModel = {
+  key: 'src/a.ts:0',
+  file: 'src/a.ts',
+  line: 0,
+  number: '1',
+  text: "import 'core';",
+  tags: ['type', 'dynamic'],
+  label: 'Open src/a.ts at line 1'
+};
 
 const NONE_LINE = 'No file in web imports ui (3 files scanned).';
 
@@ -149,10 +157,10 @@ describe('FEATURE: imports model', () => {
       expect([model.isScanning, model.lines, rowsOf(model).length]).toStrictEqual([true, ['Scanning again…'], 3]);
     });
 
-    it('WHEN a row is a dynamic type import THEN it carries its tags and an Open label', () => {
+    it('WHEN a row is a dynamic type import THEN it carries every row field', () => {
       const model = modelOf(foundOf([DYNAMIC_TYPE_SITE]));
 
-      expect(model.groups).toMatchObject([{ rows: DYNAMIC_TYPE_ROWS }]);
+      expect(model.groups[0]?.rows).toStrictEqual([DYNAMIC_TYPE_ROW]);
     });
   });
 
@@ -224,10 +232,20 @@ describe('FEATURE: imports model', () => {
       ]);
     });
 
-    it('WHEN it is asked for again THEN Scanning again comes first and the status stays', () => {
+    it('WHEN the model is built THEN the heading has no count', () => {
+      const model = modelOf(noneOf());
+
+      expect(model.heading).toBe('Imports of ui');
+    });
+
+    it('WHEN it is asked for again THEN Scanning again comes first, the status stays and it is scanning', () => {
       const model = modelOf(noneOf({ isRefreshing: true }));
 
-      expect([model.lines, model.status?.word]).toStrictEqual([['Scanning again…', NONE_LINE], 'No imports found']);
+      expect([model.lines, model.status?.word, model.isScanning]).toStrictEqual([
+        ['Scanning again…', NONE_LINE],
+        'No imports found',
+        true
+      ]);
     });
   });
 
