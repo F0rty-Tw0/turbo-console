@@ -12,7 +12,6 @@ export type ImportRowFacts = {
   readonly tags: string[];
 };
 
-/** The rows of one file. */
 export type ImportGroupFacts = {
   readonly file: string;
   readonly rows: ImportRowFacts[];

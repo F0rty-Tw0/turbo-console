@@ -1,7 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { SCANNING_AGAIN_TEXT } from '../../src/graph/common/details-imports.const.ts';
 import { DETAILS_LABEL } from '../../src/graph/common/graph.const.ts';
+import { SCAN_AGAIN_NAME, SHOW_MORE_NAME } from '../common/graph-imports.const.ts';
 import type { ImportGroupFacts, ImportRowFacts } from '../common/graph-imports.type.ts';
 
 /** The imports block of the link view: its heading, status, rows by file, Show more, notes and Scan again. */
@@ -10,8 +12,8 @@ export class GraphDetailsImports {
   public readonly files: Locator;
   public readonly heading: Locator;
   public readonly lines: Locator;
-  public readonly liveStatus: Locator;
   public readonly notes: Locator;
+  public readonly numbers: Locator;
   public readonly root: Locator;
   public readonly rows: Locator;
   public readonly scanAgainButton: Locator;
@@ -23,16 +25,16 @@ export class GraphDetailsImports {
   public constructor(page: Page) {
     this.page = page;
     this.root = page.getByRole('complementary', { name: DETAILS_LABEL, exact: true }).locator('section.details-imports');
-    this.liveStatus = this.root.locator('p.details-imports-status');
     this.block = this.root.locator('.details-imports-block');
     this.heading = this.block.getByRole('heading', { level: 3 });
     this.status = this.block.locator('p.details-status');
     this.lines = this.block.locator('p.details-line');
     this.files = this.block.locator('h4.details-file');
     this.rows = this.block.locator('button.import-row');
-    this.showMoreButton = this.block.locator('button.text-button');
+    this.numbers = this.rows.locator('.excerpt-number');
+    this.showMoreButton = this.block.getByRole('button', { name: SHOW_MORE_NAME });
     this.notes = this.block.locator('p.details-muted');
-    this.scanAgainButton = this.block.locator('button.icon-button');
+    this.scanAgainButton = this.block.getByRole('button', { name: SCAN_AGAIN_NAME });
   }
 
   public async scanAgain(): Promise<void> {
@@ -69,12 +71,18 @@ export class GraphDetailsImports {
 
   /** The heading with its count, every file with its rows in order, and no status. */
   public async expectFound(heading: string, groups: ImportGroupFacts[]): Promise<void> {
+    const fileNames = groups.map((group): string => group.file);
+    const allNumbers = groups.flatMap((group): string[] => group.rows.map((row): string => String(row.number)));
+
     await expect(this.heading).toHaveText(heading);
     await expect(this.status).toHaveCount(0);
-    await expect(this.files).toHaveText(groups.map((group): string => group.file));
+    await expect(this.files).toHaveText(fileNames);
+    await expect(this.numbers).toHaveText(allNumbers);
 
     for (const group of groups) {
-      for (const row of group.rows) await this.expectRow(group.file, row);
+      for (const row of group.rows) {
+        await this.expectRow(group.file, row);
+      }
     }
   }
 
@@ -94,9 +102,10 @@ export class GraphDetailsImports {
     await expect(this.notes).toHaveText(notes);
   }
 
-  /** A second scan is running over a kept list: the "Scanning again…" line, Scan again aria-disabled. */
-  public async expectStale(): Promise<void> {
-    await expect(this.lines.first()).toHaveText('Scanning again…');
+  /** A second scan is running over a kept list: the "Scanning again…" line alone, the `rowCount` rows kept, Scan again aria-disabled. */
+  public async expectStale(rowCount: number): Promise<void> {
+    await expect(this.lines).toHaveText([SCANNING_AGAIN_TEXT]);
+    await expect(this.rows).toHaveCount(rowCount);
     await expect(this.scanAgainButton).toHaveAttribute('aria-disabled', 'true');
   }
 
@@ -113,10 +122,6 @@ export class GraphDetailsImports {
     await expect(this.showMoreButton).toHaveText(label);
   }
 
-  public async expectNoShowMore(): Promise<void> {
-    await expect(this.showMoreButton).toHaveCount(0);
-  }
-
   public async expectFocusOnScanAgain(): Promise<void> {
     await expect(this.scanAgainButton).toBeFocused();
   }
@@ -130,7 +135,9 @@ export class GraphDetailsImports {
   }
 
   private rowAt(file: string, number: number): Locator {
-    return this.rows.and(this.page.locator(`[aria-label^="Open ${file} at line ${number}: "]`));
+    const labelled = this.page.locator(`[aria-label^="Open ${file} at line ${number}: "]`);
+
+    return this.rows.and(labelled);
   }
 
   private async expectRow(file: string, facts: ImportRowFacts): Promise<void> {

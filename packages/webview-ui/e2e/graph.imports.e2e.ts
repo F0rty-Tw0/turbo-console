@@ -213,7 +213,8 @@ test.describe('FEATURE: graph link imports block', () => {
 
     await test.step('AND Enter is pressed', async (): Promise<void> => detailsImports.pressEnter());
 
-    await test.step('THEN the list is kept and marked as scanning again', async (): Promise<void> => detailsImports.expectStale());
+    await test.step('THEN the three rows are kept and marked as scanning again', async (): Promise<void> =>
+      detailsImports.expectStale(3));
 
     await test.step('AND focus is still on Scan again', async (): Promise<void> => detailsImports.expectFocusOnScanAgain());
 
