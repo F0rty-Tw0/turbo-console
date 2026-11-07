@@ -20,5 +20,5 @@ export const IMPORT_CACHE_MAX = 20_000;
 
 export const TSCONFIG_NAME = 'tsconfig.json';
 
-/** D6: files one chain read attempts, A's own included (OQ1). */
+/** D6: candidate lists one chain read pops, A's own included, each opening at most one file (OQ1). */
 export const TSCONFIG_CHAIN_MAX = 8;
