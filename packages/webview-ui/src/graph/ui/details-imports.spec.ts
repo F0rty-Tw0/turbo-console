@@ -8,7 +8,16 @@ import type { ImportsDetails } from '../common/details-view.type.ts';
 import type { ImportsState } from '../common/imports-state.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
-import { childrenOf, rowTextsWith, textOf, textsWith, withClass, withClassIn } from '../test/utils/class-elements.spec.util.ts';
+import {
+  blockOrderOf,
+  childrenOf,
+  rowTextsWith,
+  statusAndLinesOf,
+  textOf,
+  textsWith,
+  withClass,
+  withClassIn
+} from '../test/utils/class-elements.spec.util.ts';
 import { foundOf, noneOf, sitesOf } from '../test/utils/import-sites.spec.util.ts';
 import { importsModelOf } from '../utils/imports-model.util.ts';
 
@@ -28,6 +37,14 @@ const TAGGED_SITE: ImportSite = { ...IMPORT_SITE_STUB, line: 0, kind: 'dynamic',
 const PLAIN_SITE: ImportSite = { ...IMPORT_SITE_STUB, line: 1 };
 
 const B_SITES = sitesOf(2, 'src/b.ts');
+
+const FOLDED_A_SITES = sitesOf(13);
+
+const FOLDED_B_SITES = sitesOf(12, 'src/b.ts');
+
+const FOLDED_SITES: ImportSite[] = [...FOLDED_A_SITES, ...FOLDED_B_SITES];
+
+const rowNumbersOf = (count: number): string[] => Array.from({ length: count }, (_blank, index): string => `row ${index + 1}`);
 
 const TWO_FILES: ImportSite[] = [IMPORT_SITE_STUB, ...B_SITES];
 
@@ -129,6 +146,12 @@ describe('FEATURE: importsView', () => {
       expect(keys).toStrictEqual(modelKeys);
     });
 
+    it('WHEN built THEN no p.details-status is drawn', () => {
+      const { view } = builtFrom(foundOf(TWO_FILES));
+
+      expect(withClass(view.root, 'details-status')).toStrictEqual([]);
+    });
+
     it('WHEN built and not refreshing THEN Scan again has no aria-disabled', () => {
       const { view } = builtFrom(foundOf(TWO_FILES));
 
@@ -156,6 +179,12 @@ describe('FEATURE: importsView', () => {
       expect(icons).toHaveLength(1);
       expect(textsWith(view.root, 'details-line')).toStrictEqual(['No file in web imports ui (3 files scanned).']);
     });
+
+    it('WHEN built THEN the status comes before the lines', () => {
+      const { view } = builtFrom(noneOf());
+
+      expect(statusAndLinesOf(view)).toStrictEqual(['status', 'line']);
+    });
   });
 
   describe('GIVEN a found model of 25 sites with the fold closed', () => {
@@ -170,6 +199,15 @@ describe('FEATURE: importsView', () => {
 
       expect(view.more?.textContent).toBe('Show 5 more');
       expect(view.more?.title).toBe('Show 5 more');
+    });
+
+    it('WHEN the 25 sites of 30 sit in two files THEN the block runs h4, rows, h4, rows, Show more, notes', () => {
+      const { view } = builtFrom(foundOf(FOLDED_SITES, { total: 30 }));
+      const aRows = rowNumbersOf(13);
+      const bRows = rowNumbersOf(7);
+      const expected = ['h4 src/a.ts', ...aRows, 'h4 src/b.ts', ...bRows, 'more', 'note'];
+
+      expect(blockOrderOf(view)).toStrictEqual(expected);
     });
   });
 

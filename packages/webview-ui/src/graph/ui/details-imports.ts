@@ -4,8 +4,8 @@ import { graphIcon } from './graph-icon.ts';
 import { iconButton } from './icon-button.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import { SCAN_AGAIN_TITLE } from '../common/details-imports.const.ts';
-import type { ImportGroupModel, ImportRowModel, ImportsViewModel } from '../common/details-imports.type.ts';
-import type { ImportRowElements, ImportsDetails } from '../common/details-view.type.ts';
+import type { ImportGroupModel, ImportRowModel, ImportsStatus, ImportsViewModel } from '../common/details-imports.type.ts';
+import type { ImportGroupElements, ImportRowElements, ImportsDetails } from '../common/details-view.type.ts';
 
 const tagsOf = (row: ImportRowModel): HTMLElement => {
   const tags = textElement('span', 'import-tags', '');
@@ -66,13 +66,19 @@ const headerOf = (model: ImportsViewModel, scanAgain: HTMLButtonElement): HTMLEl
   return header;
 };
 
-const appendGroup = (root: HTMLElement, group: ImportGroupModel): ImportRowElements[] => {
+const groupOf = (group: ImportGroupModel): ImportGroupElements => {
   const rows = group.rows.map(rowOf);
   const buttons = rows.map((row) => row.button);
+  const nodes = [fileHeadingOf(group), ...buttons];
+  const elements: ImportGroupElements = { rows, nodes };
 
-  root.append(fileHeadingOf(group), ...buttons);
+  return elements;
+};
 
-  return rows;
+const statusNodesOf = (status: ImportsStatus | null): HTMLElement[] => {
+  if (status === null) return [];
+
+  return [statusOf(status.icon, status.word)];
 };
 
 const moreOf = (text: string | null): HTMLButtonElement | null => {
@@ -81,27 +87,27 @@ const moreOf = (text: string | null): HTMLButtonElement | null => {
   return actionButton(text);
 };
 
+const moreNodesOf = (more: HTMLButtonElement | null): HTMLElement[] => {
+  if (more === null) return [];
+
+  return [more];
+};
+
 /** The imports block of one `ImportsViewModel`: header with Scan again, status, lines, rows by file, Show more, notes. */
 export const importsView = (model: ImportsViewModel): ImportsDetails => {
   const root = textElement('div', 'details-imports-block', '');
   const scanAgain = scanAgainOf(model);
   const header = headerOf(model, scanAgain);
+  const statusNodes = statusNodesOf(model.status);
   const lines = model.lines.map(lineOf);
-  const notes = model.notes.map((note) => textElement('p', 'details-muted', note));
+  const groups = model.groups.map(groupOf);
+  const groupNodes = groups.flatMap((group) => group.nodes);
+  const rows = groups.flatMap((group) => group.rows);
   const more = moreOf(model.more);
+  const moreNodes = moreNodesOf(more);
+  const notes = model.notes.map((note) => textElement('p', 'details-muted', note));
 
-  root.append(header);
-
-  if (model.status !== null) root.append(statusOf(model.status.icon, model.status.word));
-
-  root.append(...lines);
-
-  const groupRows = model.groups.map((group) => appendGroup(root, group));
-  const rows = groupRows.flat();
-
-  if (more !== null) root.append(more);
-
-  root.append(...notes);
+  root.append(header, ...statusNodes, ...lines, ...groupNodes, ...moreNodes, ...notes);
 
   const view: ImportsDetails = { root, scanAgain, rows, more };
 

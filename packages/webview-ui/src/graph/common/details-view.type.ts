@@ -151,6 +151,12 @@ export type ImportRowElements = {
   readonly button: HTMLButtonElement;
 };
 
+/** One file of the imports block: its `rows`, and its `nodes` in draw order (the h4, then each row button). */
+export type ImportGroupElements = {
+  readonly rows: ImportRowElements[];
+  readonly nodes: HTMLElement[];
+};
+
 /** The imports block of one `ImportsViewModel`; `more` is `null` unless rows are folded. */
 export type ImportsDetails = {
   readonly root: HTMLElement;
