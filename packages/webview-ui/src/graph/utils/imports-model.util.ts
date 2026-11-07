@@ -20,6 +20,7 @@ import {
   NO_IMPORTS_WORD,
   SCANNING_AGAIN_TEXT,
   SCANNING_STATUS_TEXT,
+  SCAN_FAILED_STATUS_TEXT,
   SCAN_FAILED_WORD
 } from '../common/details-imports.const.ts';
 import type { ImportGroupModel, ImportRowModel, ImportsStatus, ImportsViewModel } from '../common/details-imports.type.ts';
@@ -61,8 +62,10 @@ const statusModelOf = (state: ImportsState): ImportsStatus | null => {
   }
 };
 
-/** The status word, else the found count, else scanning; a rescan keeps the text of the reply it shows, so it is not read out again. */
+/** The status word (a failure names the scan), else the found count, else scanning; a rescan keeps the text of the reply it shows, so it is not read out again. */
 const statusTextOf = (state: ImportsState, status: ImportsStatus | null): string => {
+  if (state.kind === 'failed') return SCAN_FAILED_STATUS_TEXT;
+
   if (status !== null) return status.word;
 
   if (state.kind === 'found') return foundTextOf(state.total);

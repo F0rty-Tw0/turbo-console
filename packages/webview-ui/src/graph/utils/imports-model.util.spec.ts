@@ -53,7 +53,7 @@ const STATUS_TEXT_ROWS: StateTextRow[] = [
   { label: 'found with 3 sites', state: foundOf(sitesOf(3)), expected: '3 imports found' },
   { label: 'found with 3 sites and asked again', state: foundOf(sitesOf(3), { isRefreshing: true }), expected: '3 imports found' },
   { label: 'none', state: noneOf(), expected: 'No imports found' },
-  { label: 'failed', state: FAILED, expected: "Couldn't scan" }
+  { label: 'failed', state: FAILED, expected: "Couldn't scan for imports" }
 ];
 
 const LIMIT_ROWS: StateTextRow[] = [
