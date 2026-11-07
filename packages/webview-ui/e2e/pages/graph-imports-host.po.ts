@@ -19,9 +19,9 @@ export class GraphImportsHost {
     this.page = page;
   }
 
-  /** Answers the newest `scanImports` the page posted, once there is one. */
-  public async answerImports(result: EdgeImportsResult): Promise<void> {
-    await expect.poll(async (): Promise<ScanImportsMessage | null> => this.lastAsked()).not.toBeNull();
+  /** Answers the newest `scanImports` the page posted, once the page has posted `askCount` of them. */
+  public async answerImports(result: EdgeImportsResult, askCount = 1): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.askedCount()).toBeGreaterThanOrEqual(askCount);
 
     const asked = await this.lastAsked();
 
@@ -49,6 +49,12 @@ export class GraphImportsHost {
     const messages = await this.openImports();
 
     expect(messages).toEqual([]);
+  }
+
+  private async askedCount(): Promise<number> {
+    const posted = await readPosted(this.page);
+
+    return scanImportsPosted(posted).length;
   }
 
   private async lastAsked(): Promise<ScanImportsMessage | null> {

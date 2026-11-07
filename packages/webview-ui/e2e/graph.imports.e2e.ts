@@ -85,7 +85,9 @@ test.describe('FEATURE: graph link imports block', () => {
       await graphImports.answerImports(FOUND_WEB_UI_STUB);
     });
 
-    await test.step('AND the row of src/a.ts line 4 is pressed', async (): Promise<void> => detailsImports.openRow('src/a.ts', 4));
+    await test.step('THEN the host got no openImport yet', async (): Promise<void> => graphImports.expectNoOpenImport());
+
+    await test.step('WHEN the row of src/a.ts line 4 is pressed', async (): Promise<void> => detailsImports.openRow('src/a.ts', 4));
 
     await test.step('THEN the host got one openImport for line 3 of src/a.ts in web', async (): Promise<void> =>
       graphImports.expectOpenImportPosted([OPEN_A_FIRST]));
@@ -96,7 +98,8 @@ test.describe('FEATURE: graph link imports block', () => {
     graphHost,
     graphImports,
     graphLink,
-    graphPage
+    graphPage,
+    graphReplies
   }): Promise<void> => {
     await test.step('WHEN the web to ui link is tapped and the host finds nothing in three files', async (): Promise<void> => {
       await graphPage.open();
@@ -108,10 +111,12 @@ test.describe('FEATURE: graph link imports block', () => {
     await test.step('THEN the block says No imports found with the scanned count', async (): Promise<void> =>
       detailsImports.expectNone('No imports found', NONE_LINE));
 
-    await test.step('WHEN Scan again is pressed and the host skipped two files', async (): Promise<void> => {
-      await detailsImports.scanAgain();
-      await graphImports.answerImports(NONE_SKIPPED_STUB);
-    });
+    await test.step('WHEN Scan again is pressed', async (): Promise<void> => detailsImports.scanAgain());
+
+    await test.step('THEN the host was asked to scan twice', async (): Promise<void> =>
+      graphReplies.expectImportsAsked('web', 'ui', 2));
+
+    await test.step('WHEN the host skipped two files', async (): Promise<void> => graphImports.answerImports(NONE_SKIPPED_STUB, 2));
 
     await test.step('THEN the block says None found in scanned files', async (): Promise<void> =>
       detailsImports.expectNone('None found in scanned files', NONE_LINE));
@@ -218,7 +223,7 @@ test.describe('FEATURE: graph link imports block', () => {
 
     await test.step('AND focus is still on Scan again', async (): Promise<void> => detailsImports.expectFocusOnScanAgain());
 
-    await test.step('WHEN the host finds the same sites', async (): Promise<void> => graphImports.answerImports(FOUND_WEB_UI_STUB));
+    await test.step('WHEN the host finds the same sites', async (): Promise<void> => graphImports.answerImports(FOUND_WEB_UI_STUB, 2));
 
     await test.step('THEN the block is no longer stale', async (): Promise<void> => detailsImports.expectNotStale());
 
@@ -246,7 +251,7 @@ test.describe('FEATURE: graph link imports block', () => {
     await test.step('THEN the host was asked to scan a second time', async (): Promise<void> =>
       graphReplies.expectImportsAsked('web', 'ui', 2));
 
-    await test.step('WHEN the host finds the same sites', async (): Promise<void> => graphImports.answerImports(FOUND_WEB_UI_STUB));
+    await test.step('WHEN the host finds the same sites', async (): Promise<void> => graphImports.answerImports(FOUND_WEB_UI_STUB, 2));
 
     await test.step('THEN focus is on that row again', async (): Promise<void> => detailsImports.expectFocusOnRow('src/a.ts', 4));
   });
