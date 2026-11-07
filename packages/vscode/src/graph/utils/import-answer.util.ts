@@ -54,7 +54,7 @@ const matchesOf = (scan: PackageImportScan, edge: ImportEdge): Match[] => {
     const fromDir = join(edge.sourceDir, posix.dirname(scanned.file));
 
     for (const source of scanned.imports) {
-      const via = importMatchOf(source.specifier, fromDir, edge, null);
+      const via = importMatchOf(source.specifier, fromDir, edge, scan.tsconfigPaths);
 
       if (via !== null) matches.push({ file: scanned.file, source, via });
     }

@@ -1,10 +1,10 @@
-import type { ImportScanLimit, SourceImport } from '@turbo-console/core';
+import type { ImportScanLimit, SourceImport, TsconfigPaths } from '@turbo-console/core';
 import { ENTRY_TEXT_MAX } from '@turbo-console/webview-ui';
 import type { ImportKind, ImportLimit, ImportSite } from '@turbo-console/webview-ui';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { answerImports } from './import-answer.util.ts';
-import { TARGET_NAME } from '../test/common/import-edge.const.ts';
+import { IMPORT_ROOT, TARGET_NAME } from '../test/common/import-edge.const.ts';
 import { IMPORT_EDGE_STUB } from '../test/stubs/import-edge.stub.ts';
 import {
   answerOf,
@@ -105,6 +105,19 @@ describe('FEATURE: answer one edge imports from a package scan', () => {
       ]);
       expectTypeOf<SourceImport['kind']>().toEqualTypeOf<ImportKind>();
       expectTypeOf<ImportScanLimit>().toEqualTypeOf<ImportLimit>();
+    });
+  });
+
+  describe('GIVEN a scan whose tsconfig paths map @ui/* into B', () => {
+    it('WHEN src/a.ts imports @ui/x THEN one site with via alias is sent and total is 1', () => {
+      const paths: Record<string, string[]> = { '@ui/*': ['packages/b/src/*'] };
+      const tsconfigPaths: TsconfigPaths = { baseUrl: IMPORT_ROOT, paths };
+      const files = [scannedFileOf('src/a.ts', [sourceImportOf('@ui/x', 3)])];
+
+      const result = answerOf(importScanOf(files, { tsconfigPaths }));
+
+      expect(foundSitesOf(result)).toMatchObject([{ file: 'src/a.ts', line: 3, via: 'alias' }]);
+      expect(result).toMatchObject({ kind: 'found', total: 1 });
     });
   });
 
