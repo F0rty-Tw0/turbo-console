@@ -9,6 +9,7 @@ import type {
 import { NEXT_FRAME } from '../common/graph.const.ts';
 import type { ScanImportsMessage } from '../common/graph.type.ts';
 import { postReply } from '../test/utils/graph-host-state.spec.util.ts';
+import { isLinkOf } from '../test/utils/graph-link.spec.util.ts';
 import { openImportPosted, readPosted, scanImportsPosted } from '../test/utils/graph-posted.spec.util.ts';
 
 /** The host stand-in's imports side: the `scanImports` and `openImport` messages the page posted, and the replies it gets. */
@@ -39,6 +40,11 @@ export class GraphImportsHost {
     await this.page.evaluate(NEXT_FRAME);
   }
 
+  /** The page has asked the host to scan the link's dependent for imports exactly `times` times. */
+  public async expectImportsAsked(source: string, target: string, times: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.linkAskedCount(source, target)).toBe(times);
+  }
+
   public async expectOpenImportPosted(messages: GraphOpenImportMessage[]): Promise<void> {
     await expect.poll(async (): Promise<GraphOpenImportMessage[]> => this.openImports()).toEqual(messages);
   }
@@ -55,6 +61,14 @@ export class GraphImportsHost {
     const posted = await readPosted(this.page);
 
     return scanImportsPosted(posted).length;
+  }
+
+  private async linkAskedCount(source: string, target: string): Promise<number> {
+    const posted = await readPosted(this.page);
+    const asked = scanImportsPosted(posted);
+    const isLink = isLinkOf<ScanImportsMessage>(source, target);
+
+    return asked.filter(isLink).length;
   }
 
   private async lastAsked(): Promise<ScanImportsMessage | null> {

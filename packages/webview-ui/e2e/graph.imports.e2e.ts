@@ -80,7 +80,6 @@ test.describe('FEATURE: graph link imports block', () => {
   test('GIVEN no import found, a clean scan and a scan that skipped files say different words', async ({
     detailsImports,
     graphImports,
-    graphReplies,
     shownLink
   }): Promise<void> => {
     await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
@@ -93,7 +92,7 @@ test.describe('FEATURE: graph link imports block', () => {
     await test.step('WHEN Scan again is pressed', async (): Promise<void> => detailsImports.scanAgain());
 
     await test.step('THEN the host was asked to scan twice', async (): Promise<void> =>
-      graphReplies.expectImportsAsked('web', 'ui', 2));
+      graphImports.expectImportsAsked('web', 'ui', 2));
 
     await test.step('WHEN the host skipped two files', async (): Promise<void> => graphImports.answerImports(NONE_SKIPPED_STUB, 2));
 
@@ -118,7 +117,7 @@ test.describe('FEATURE: graph link imports block', () => {
     await test.step('WHEN Scan again is pressed', async (): Promise<void> => detailsImports.scanAgain());
 
     await test.step('THEN the host was asked to scan twice', async (): Promise<void> =>
-      graphReplies.expectImportsAsked('web', 'ui', 2));
+      graphImports.expectImportsAsked('web', 'ui', 2));
 
     await test.step('AND it was asked to explain once', async (): Promise<void> => graphReplies.expectExplainAsked('web', 'ui', 1));
 
@@ -195,7 +194,6 @@ test.describe('FEATURE: graph link imports block', () => {
     detailsImports,
     graphHost,
     graphImports,
-    graphReplies,
     shownLink
   }): Promise<void> => {
     await test.step('WHEN the web to ui link is shown', async (): Promise<void> => shownLink('web', 'ui'));
@@ -207,7 +205,7 @@ test.describe('FEATURE: graph link imports block', () => {
     await test.step('AND the same details graph is sent again', async (): Promise<void> => graphHost.sendState(DETAILS_STUB));
 
     await test.step('THEN the host was asked to scan a second time', async (): Promise<void> =>
-      graphReplies.expectImportsAsked('web', 'ui', 2));
+      graphImports.expectImportsAsked('web', 'ui', 2));
 
     await test.step('WHEN the host finds the same sites', async (): Promise<void> => graphImports.answerImports(FOUND_WEB_UI_STUB, 2));
 
