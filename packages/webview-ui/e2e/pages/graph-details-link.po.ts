@@ -22,7 +22,7 @@ export class GraphDetailsLink {
     this.page = page;
     this.probe = new GraphProbePage(page);
     this.panel = page.getByRole('complementary', { name: DETAILS_LABEL, exact: true });
-    this.explain = this.panel.locator('section[aria-live]');
+    this.explain = this.panel.locator('section.details-explain');
     this.entries = this.explain.getByRole('listitem');
   }
 

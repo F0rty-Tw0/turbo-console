@@ -7,7 +7,7 @@ import type { ExplainState, LinkViewModel } from '../common/details.type.ts';
 
 /**
  * One line, "[source] depends on [target]", with each end a name button and describing the heading, then the explain
- * slot, which starts out reading the dependent's manifest.
+ * slot, which starts out reading the dependent's manifest, then the empty imports slot.
  */
 export const linkView = (model: LinkViewModel, isOverlay: boolean): LinkDetails => {
   const base = viewBase('link', LINK_HEADING_TEXT, isOverlay);
@@ -15,14 +15,15 @@ export const linkView = (model: LinkViewModel, isOverlay: boolean): LinkDetails 
   const target = nameButton(model.target);
   const lead = endsLeadOf(source, target, LINK_LEAD_ID, base.heading);
   const explain = textElement('section', 'details-section details-explain', '');
+  const imports = textElement('section', 'details-section details-imports', '');
   const reading: ExplainState = { kind: 'reading', file: model.file };
   const readingView = explainView(reading);
 
   explain.setAttribute('aria-live', 'polite');
   explain.append(readingView.root);
-  base.root.append(lead, explain);
+  base.root.append(lead, explain, imports);
 
-  const view: LinkDetails = { ...base, kind: 'link', source, target, explain };
+  const view: LinkDetails = { ...base, kind: 'link', source, target, explain, imports };
 
   return view;
 };

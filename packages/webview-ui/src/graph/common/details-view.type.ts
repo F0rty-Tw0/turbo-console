@@ -50,12 +50,13 @@ type PackageParts = {
 
 export type PackageDetails = DetailsViewBase & PackageParts;
 
-/** `explain` is the slot that holds the current `ExplainDetails.root`. */
+/** `explain` and `imports` are the slots that hold the current `ExplainDetails.root` and `ImportsDetails.root`. */
 type LinkParts = {
   readonly kind: 'link';
   readonly source: HTMLButtonElement;
   readonly target: HTMLButtonElement;
   readonly explain: HTMLElement;
+  readonly imports: HTMLElement;
 };
 
 export type LinkDetails = DetailsViewBase & LinkParts;

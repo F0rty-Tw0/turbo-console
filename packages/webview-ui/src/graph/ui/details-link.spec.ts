@@ -53,5 +53,24 @@ describe('FEATURE: linkView', () => {
       expect(described).toBe(leadOf(view));
       expect(textsOf(described)).toStrictEqual(['@acme/web', ' depends on ', '@acme/ui']);
     });
+
+    it('WHEN built THEN the imports slot follows the explain slot', () => {
+      const children = Array.from(view.root.children);
+      const explainAt = children.indexOf(view.explain);
+
+      expect(children[explainAt + 1]).toBe(view.imports);
+    });
+
+    it('WHEN built THEN the imports slot has the details-imports class', () => {
+      expect(view.imports.classList.contains('details-imports')).toBe(true);
+    });
+
+    it('WHEN built THEN the imports slot is not a live region', () => {
+      expect(view.imports.getAttribute('aria-live')).toBeNull();
+    });
+
+    it('WHEN built THEN the imports slot is empty', () => {
+      expect(view.imports.children).toHaveLength(0);
+    });
   });
 });
