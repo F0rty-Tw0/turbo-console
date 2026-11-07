@@ -12,6 +12,9 @@ export const SCAN_FAILED_WORD = "Couldn't scan";
 
 export const SCANNING_AGAIN_TEXT = 'Scanning again…';
 
+/** What the status line reads out while a first scan runs. */
+export const SCANNING_STATUS_TEXT = 'Scanning for imports';
+
 export const SCAN_AGAIN_TITLE = 'Scan the files again';
 
 export const TYPE_TAG = 'type';

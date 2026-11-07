@@ -29,6 +29,8 @@ export type ImportsViewModel = {
   readonly scanLabel: string;
   readonly isScanning: boolean;
   readonly status: ImportsStatus | null;
+  /** What the slot's live status line reads out; never the heading, which browse mode reads right after it. */
+  readonly statusText: string;
   readonly lines: string[];
   readonly groups: ImportGroupModel[];
   readonly more: string | null;
