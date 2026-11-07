@@ -114,7 +114,7 @@ export const importsView = (model: ImportsViewModel): ImportsDetails => {
   return view;
 };
 
-/** The imports slot's live line: empty until a draw writes the heading and status word to it; read out, not shown. */
+/** The imports slot's live line: empty until a draw writes the model's status text to it; read out, not shown. */
 export const importsStatusView = (): HTMLElement => {
   const status = textElement('p', 'details-imports-status visually-hidden', '');
 

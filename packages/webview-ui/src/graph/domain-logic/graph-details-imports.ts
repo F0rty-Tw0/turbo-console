@@ -1,7 +1,6 @@
 import { isAriaDisabled } from './graph-details-wire-parts.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import { IMPORTS_FOLD_AT } from '../common/details-imports.const.ts';
-import type { ImportsViewModel } from '../common/details-imports.type.ts';
 import type { ImportRowElements, ImportsDetails } from '../common/details-view.type.ts';
 import type { DetailsViews } from '../common/details.type.ts';
 import type { DetailsView, GraphDetailsDeps, ShownInspection } from '../common/graph-details.type.ts';
@@ -43,15 +42,6 @@ const mountedSlotOf = (view: DetailsView, views: DetailsViews): ImportsMount | n
   view.imports.append(status);
 
   return mount;
-};
-
-/** What the status line reads out: the heading, then the status word when there is one. */
-const statusTextOf = (model: ImportsViewModel): string => {
-  const { heading, status } = model;
-
-  if (status === null) return heading;
-
-  return `${heading}: ${status.word}`;
 };
 
 /** One swap per draw: the new root replaces the old one, or follows the status line on the first draw. */
@@ -125,7 +115,7 @@ export class ImportsBlock {
     const isOpen = this.isOpenFor(link);
     const model = importsModelOf(state, link, isOpen);
     const details = this.deps.views.imports(model);
-    const statusText = statusTextOf(model);
+    const { statusText } = model;
     const draw: ImportsDraw = { details, state, link };
 
     swapped(mount, this.last, details.root);

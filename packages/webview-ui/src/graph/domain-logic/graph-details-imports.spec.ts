@@ -190,8 +190,8 @@ describe('FEATURE: ImportsBlock', () => {
       expect(document.activeElement).toBe(outside);
     });
 
-    it('THEN the status line reads the heading with the count', () => {
-      expect(statusOf(view.imports)?.textContent).toBe('Imports of ui (3)');
+    it('THEN the status line reads the count without the heading', () => {
+      expect(statusOf(view.imports)?.textContent).toBe('3 imports found');
     });
 
     it('WHEN a failed state is drawn THEN the status line includes the failed word', () => {
