@@ -7,3 +7,9 @@ export type TsconfigFile = {
   readonly paths: Record<string, string[]> | null | undefined;
   readonly baseUrl: string | undefined;
 };
+
+/** A file of the chain with the dir it was read from. */
+export type TsconfigLink = {
+  readonly dir: string;
+  readonly file: TsconfigFile;
+};
