@@ -67,7 +67,7 @@ export type ScannedFile = {
 
 export type PackageImportScan = {
   readonly files: ScannedFile[];
-  /** `null` before U8g, and when A has no tsconfig or no `paths`. */
+  /** `null` when A's `tsconfig.json` chain sets no `paths` (D6). */
   readonly tsconfigPaths: TsconfigPaths | null;
   readonly scanned: number;
   readonly skipped: number;

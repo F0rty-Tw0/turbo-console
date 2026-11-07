@@ -1,4 +1,4 @@
-import { mkdtemp, rm, utimes } from 'node:fs/promises';
+import { mkdtemp, rm, utimes, writeFile } from 'node:fs/promises';
 import type * as fsPromises from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { scanPackageImports } from './scan-package-imports.ts';
-import type { PackageImportScan, SourceImport } from '../common/import-scan.type.ts';
+import type { PackageImportScan, SourceImport, TsconfigPaths } from '../common/import-scan.type.ts';
 import { ImportFileCache } from '../data-access/import-file-cache.ts';
 import { DATE, DATE_LATER } from '../test/common/scan-dates.const.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
@@ -44,6 +44,13 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 const IMPORT_B = "import b from 'B';";
 
 const STATIC_B: SourceImport = { specifier: 'B', kind: 'static', isType: false, line: 0, text: IMPORT_B };
+
+const PATHS: Record<string, string[]> = { '@b/*': ['packages/b/src/*'] };
+
+const PATHS_LATER: Record<string, string[]> = { '@c/*': ['packages/c/src/*'] };
+
+const baseTextOf = (paths: Record<string, string[]>): string =>
+  `{ "compilerOptions": { "baseUrl": ".", "paths": ${JSON.stringify(paths)} } }`;
 
 const filesOf = (scan: PackageImportScan): string[] => scan.files.map((entry) => entry.file);
 
@@ -107,6 +114,44 @@ describe('FEATURE: scan one package for its imports', () => {
 
       await expect(scanPackageImports(input)).rejects.toMatchObject({ code: 'ENOENT' });
       expect(input.cache.filesOf(dir)).toBe(first);
+    });
+  });
+
+  describe('GIVEN a root base config with baseUrl and paths, extended by a/tsconfig.json, and a/x.ts importing @b/y', () => {
+    let aDir = '';
+
+    beforeEach(async () => {
+      aDir = join(dir, 'a');
+      await writeImportTree(dir, {
+        'tsconfig.base.json': baseTextOf(PATHS),
+        'a/tsconfig.json': '{ "extends": "../tsconfig.base.json" }',
+        'a/x.ts': "import y from '@b/y';"
+      });
+    });
+
+    it('WHEN a is scanned THEN tsconfigPaths holds the base paths against the root', async () => {
+      const scan = await scanPackageImports(inputOf(aDir, new ImportFileCache(), { root: dir }));
+
+      const expected: TsconfigPaths = { baseUrl: dir, paths: PATHS };
+
+      expect(scan.tsconfigPaths).toStrictEqual(expected);
+    });
+
+    it('WHEN a is scanned THEN x.ts is still listed with its import', async () => {
+      const scan = await scanPackageImports(inputOf(aDir, new ImportFileCache(), { root: dir }));
+
+      expect(filesOf(scan)).toStrictEqual(['x.ts']);
+    });
+
+    it('WHEN the base paths are rewritten and a is scanned again over the same cache THEN the new paths are returned', async () => {
+      const input = inputOf(aDir, new ImportFileCache(), { root: dir });
+
+      await scanPackageImports(input);
+      await writeFile(join(dir, 'tsconfig.base.json'), baseTextOf(PATHS_LATER));
+
+      const scan = await scanPackageImports(input);
+
+      expect(scan.tsconfigPaths?.paths).toStrictEqual(PATHS_LATER);
     });
   });
 
