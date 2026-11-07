@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { scanPackageImports } from './scan-package-imports.ts';
-import type { PackageImportScan, SourceImport, TsconfigPaths } from '../common/import-scan.type.ts';
+import type { ImportScanInput, PackageImportScan, SourceImport, TsconfigPaths } from '../common/import-scan.type.ts';
 import { ImportFileCache } from '../data-access/import-file-cache.ts';
 import { DATE, DATE_LATER } from '../test/common/scan-dates.const.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
@@ -119,9 +119,11 @@ describe('FEATURE: scan one package for its imports', () => {
 
   describe('GIVEN a root base config with baseUrl and paths, extended by a/tsconfig.json, and a/x.ts importing @b/y', () => {
     let aDir = '';
+    let input: ImportScanInput = inputOf(dir, new ImportFileCache());
 
     beforeEach(async () => {
       aDir = join(dir, 'a');
+      input = inputOf(aDir, new ImportFileCache(), { root: dir });
       await writeImportTree(dir, {
         'tsconfig.base.json': baseTextOf(PATHS),
         'a/tsconfig.json': '{ "extends": "../tsconfig.base.json" }',
@@ -130,28 +132,56 @@ describe('FEATURE: scan one package for its imports', () => {
     });
 
     it('WHEN a is scanned THEN tsconfigPaths holds the base paths against the root', async () => {
-      const scan = await scanPackageImports(inputOf(aDir, new ImportFileCache(), { root: dir }));
-
       const expected: TsconfigPaths = { baseUrl: dir, paths: PATHS };
+
+      const scan = await scanPackageImports(input);
 
       expect(scan.tsconfigPaths).toStrictEqual(expected);
     });
 
     it('WHEN a is scanned THEN x.ts is still listed with its import', async () => {
-      const scan = await scanPackageImports(inputOf(aDir, new ImportFileCache(), { root: dir }));
+      const scan = await scanPackageImports(input);
+      const imports = scan.files.map((entry) => entry.imports.map((found) => found.specifier));
 
-      expect(filesOf(scan)).toStrictEqual(['x.ts']);
+      expect(imports).toStrictEqual([['@b/y']]);
     });
 
     it('WHEN the base paths are rewritten and a is scanned again over the same cache THEN the new paths are returned', async () => {
-      const input = inputOf(aDir, new ImportFileCache(), { root: dir });
-
       await scanPackageImports(input);
       await writeFile(join(dir, 'tsconfig.base.json'), baseTextOf(PATHS_LATER));
 
       const scan = await scanPackageImports(input);
 
       expect(scan.tsconfigPaths?.paths).toStrictEqual(PATHS_LATER);
+    });
+  });
+
+  describe('GIVEN a finished scan of a/x.ts, then a rescan whose clock passes timeMs once a/tsconfig.json is opened', () => {
+    let scan: PackageImportScan = { files: [], tsconfigPaths: null, scanned: 0, skipped: 0, limit: null };
+    let cached: string[] = [];
+
+    beforeEach(async () => {
+      const aDir = join(dir, 'a');
+      const aConfig = join(aDir, 'tsconfig.json');
+      const caps = capsOf({});
+      const cache = new ImportFileCache();
+      const now = (): number => (reads.opened.includes(aConfig) ? caps.timeMs : 0);
+
+      await writeImportTree(dir, { 'a/tsconfig.json': baseTextOf(PATHS), 'a/x.ts': IMPORT_B });
+      await scanPackageImports(inputOf(aDir, cache, { root: dir }));
+      reads.opened.length = 0;
+      scan = await scanPackageImports(inputOf(aDir, cache, { root: dir, caps, now }));
+      const names = cache.filesOf(aDir).keys();
+
+      cached = [...names];
+    });
+
+    it('WHEN rescanned THEN the paths are still returned', () => {
+      expect(scan.tsconfigPaths?.paths).toStrictEqual(PATHS);
+    });
+
+    it("WHEN rescanned THEN the walk stops on the time cap before it lists x.ts, so limit is 'time' and the cache is empty", () => {
+      expect({ limit: scan.limit, cached }).toStrictEqual({ limit: 'time', cached: [] });
     });
   });
 
