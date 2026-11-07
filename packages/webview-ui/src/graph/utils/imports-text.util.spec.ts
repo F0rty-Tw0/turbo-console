@@ -15,6 +15,25 @@ import {
 import type { ImportSite } from '../../bridge/common/graph-imports.type.ts';
 import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
 
+type HeadingRow = {
+  readonly label: string;
+  readonly count: number | null;
+  readonly expected: string;
+};
+
+type NoneRow = {
+  readonly label: string;
+  readonly scanned: number;
+  readonly expected: string;
+};
+
+type SkippedRow = {
+  readonly label: string;
+  readonly scanned: number;
+  readonly skipped: number;
+  readonly expected: string;
+};
+
 type TagsRow = {
   readonly label: string;
   readonly site: ImportSite;
@@ -29,6 +48,31 @@ const DYNAMIC_TYPE_SITE: ImportSite = { ...IMPORT_SITE_STUB, kind: 'dynamic', is
 
 const REQUIRE_SITE: ImportSite = { ...IMPORT_SITE_STUB, kind: 'require' };
 
+const HEADING_ROWS: HeadingRow[] = [
+  { label: 'no count', count: null, expected: 'Imports of ui' },
+  { label: 'a count of 3', count: 3, expected: 'Imports of ui (3)' }
+];
+
+const NONE_ROWS: NoneRow[] = [
+  { label: '3 files', scanned: 3, expected: 'No file in web imports ui (3 files scanned).' },
+  { label: '1 file', scanned: 1, expected: 'No file in web imports ui (1 file scanned).' }
+];
+
+const SKIPPED_ROWS: SkippedRow[] = [
+  {
+    label: '10 files scanned and 1 skipped',
+    scanned: 10,
+    skipped: 1,
+    expected: 'Scanned 10 files, skipped 1 (over 1 MiB, unreadable or path too long).'
+  },
+  {
+    label: '1 file scanned and 2 skipped',
+    scanned: 1,
+    skipped: 2,
+    expected: 'Scanned 1 file, skipped 2 (over 1 MiB, unreadable or path too long).'
+  }
+];
+
 const TAGS_ROWS: TagsRow[] = [
   { label: 'a static import by name', site: IMPORT_SITE_STUB, expected: [] },
   { label: 'a type import by name', site: TYPE_SITE, expected: ['type'] },
@@ -39,10 +83,7 @@ const TAGS_ROWS: TagsRow[] = [
 
 describe('FEATURE: imports text', () => {
   describe('GIVEN the heading', () => {
-    it.each([
-      [null, 'Imports of ui'],
-      [3, 'Imports of ui (3)']
-    ])('WHEN the count is %j THEN it reads %s', (count, expected) => {
+    it.each(HEADING_ROWS)('WHEN there is $label THEN it reads $expected', ({ count, expected }) => {
       const heading = importsHeadingOf('ui', count);
 
       expect(heading).toBe(expected);
@@ -62,10 +103,7 @@ describe('FEATURE: imports text', () => {
       expect(text).toBe('Looking for imports of ui in web…');
     });
 
-    it.each([
-      [3, 'No file in web imports ui (3 files scanned).'],
-      [1, 'No file in web imports ui (1 file scanned).']
-    ])('WHEN %i files were scanned and none imports THEN the line reads %s', (scanned, expected) => {
+    it.each(NONE_ROWS)('WHEN $label were scanned and none imports THEN the line reads $expected', ({ scanned, expected }) => {
       const text = noneTextOf('web', 'ui', scanned);
 
       expect(text).toBe(expected);
@@ -105,10 +143,7 @@ describe('FEATURE: imports text', () => {
       expect(text).toBe('Showing 200 of 250 imports.');
     });
 
-    it.each([
-      [10, 1, 'Scanned 10 files, skipped 1 (over 1 MiB, unreadable or path too long).'],
-      [1, 2, 'Scanned 1 file, skipped 2 (over 1 MiB, unreadable or path too long).']
-    ])('WHEN %i files were scanned and %i skipped THEN the note reads %s', (scanned, skipped, expected) => {
+    it.each(SKIPPED_ROWS)('WHEN $label THEN the note reads $expected', ({ scanned, skipped, expected }) => {
       const text = skippedTextOf(scanned, skipped);
 
       expect(text).toBe(expected);
