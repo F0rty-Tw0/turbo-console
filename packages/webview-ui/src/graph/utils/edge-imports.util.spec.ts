@@ -19,13 +19,13 @@ const siteOf = (over: object = {}): object => {
   return site;
 };
 
-const foundOf = (over: object = {}): object => {
+const foundReplyOf = (over: object = {}): object => {
   const result = { kind: 'found', scanned: 4, skipped: 0, total: 1, limit: null, sites: [siteOf()], ...over };
 
   return result;
 };
 
-const noneOf = (over: object = {}): object => {
+const noneReplyOf = (over: object = {}): object => {
   const result = { kind: 'none', scanned: 4, skipped: 0, limit: null, ...over };
 
   return result;
@@ -39,13 +39,13 @@ const importsOf = (result: unknown, over: object = {}): UnknownRecord => {
 
 const sitesOf = (count: number): object[] => Array.from({ length: count }, (): object => siteOf());
 
-const foundWithSite = (over: object): UnknownRecord => importsOf(foundOf({ sites: [siteOf(over)] }));
+const foundWithSite = (over: object): UnknownRecord => importsOf(foundReplyOf({ sites: [siteOf(over)] }));
 
 const TEXT_MAX = 'c'.repeat(ENTRY_TEXT_MAX + 1);
 
 const OVER_TEXT = 'c'.repeat(ENTRY_TEXT_MAX + 2);
 
-const NO_TARGET = { type: 'edgeImports', source: 'web', result: noneOf() };
+const NO_TARGET = { type: 'edgeImports', source: 'web', result: noneReplyOf() };
 
 const NO_RESULT = { type: 'edgeImports', source: 'web', target: 'core' };
 
@@ -53,43 +53,46 @@ const ARRAY_LIKE_SITES = { length: 1, 0: siteOf() };
 
 const ACCEPTED = [
   { label: 'a failed result', record: importsOf({ kind: 'failed' }) },
-  { label: 'none, skipped 3 and no limit', record: importsOf(noneOf({ skipped: 3, limit: null })) },
-  { label: 'none, limit time', record: importsOf(noneOf({ limit: 'time' })) },
-  { label: 'found with one site', record: importsOf(foundOf()) },
-  { label: 'found with 200 sites and a total of 250', record: importsOf(foundOf({ sites: sitesOf(IMPORT_SITES_MAX), total: 250 })) },
+  { label: 'none, skipped 3 and no limit', record: importsOf(noneReplyOf({ skipped: 3, limit: null })) },
+  { label: 'none, limit time', record: importsOf(noneReplyOf({ limit: 'time' })) },
+  { label: 'found with one site', record: importsOf(foundReplyOf()) },
+  {
+    label: 'found with 200 sites and a total of 250',
+    record: importsOf(foundReplyOf({ sites: sitesOf(IMPORT_SITES_MAX), total: 250 }))
+  },
   { label: 'a site on line 0', record: foundWithSite({ line: 0 }) },
   { label: 'a site on the highest line', record: foundWithSite({ line: MANIFEST_LINE_MAX }) },
   { label: 'a specifier and text of 201 characters', record: foundWithSite({ specifier: TEXT_MAX, text: TEXT_MAX }) },
   { label: 'a file of 1 024 characters', record: foundWithSite({ file: 'f'.repeat(MANIFEST_FILE_MAX) }) },
   { label: 'a type import', record: foundWithSite({ isType: true }) },
-  { label: 'names like Object members', record: importsOf(noneOf(), { source: '__proto__', target: 'constructor' }) }
+  { label: 'names like Object members', record: importsOf(noneReplyOf(), { source: '__proto__', target: 'constructor' }) }
 ];
 
 const REJECTED = [
-  { label: 'a numeric source', record: importsOf(noneOf(), { source: 1 }) },
+  { label: 'a numeric source', record: importsOf(noneReplyOf(), { source: 1 }) },
   { label: 'no target', record: NO_TARGET },
   { label: 'no result', record: NO_RESULT },
   { label: 'a null result', record: importsOf(null) },
   { label: 'an unknown kind', record: importsOf({ kind: 'done' }) },
-  { label: 'found with no sites', record: importsOf(foundOf({ sites: [], total: 0 })) },
-  { label: 'found with 201 sites', record: importsOf(foundOf({ sites: sitesOf(IMPORT_SITES_MAX + 1), total: 250 })) },
-  { label: 'a total below the sites sent', record: importsOf(foundOf({ sites: sitesOf(2), total: 1 })) },
-  { label: 'sites that are not an array', record: importsOf(foundOf({ sites: siteOf() })) },
-  { label: 'array-like sites', record: importsOf(foundOf({ sites: ARRAY_LIKE_SITES })) },
-  { label: 'a null site', record: importsOf(foundOf({ sites: [null] })) },
-  { label: 'a sparse sites array of length 1', record: importsOf(foundOf({ sites: new Array(1), total: 1 })) },
-  { label: 'a scanned of -1', record: importsOf(foundOf({ scanned: -1 })) },
-  { label: 'a scanned of 1.5', record: importsOf(foundOf({ scanned: 1.5 })) },
-  { label: 'an Infinity scanned', record: importsOf(foundOf({ scanned: Infinity })) },
-  { label: 'a scanned of 2 ** 53', record: importsOf(foundOf({ scanned: 2 ** 53 })) },
-  { label: 'a string skipped', record: importsOf(foundOf({ skipped: '3' })) },
-  { label: 'a NaN total', record: importsOf(foundOf({ total: NaN })) },
-  { label: 'an unknown limit', record: importsOf(foundOf({ limit: 'disk' })) },
-  { label: 'a limit named like an Object member', record: importsOf(foundOf({ limit: '__proto__' })) },
-  { label: 'no limit', record: importsOf(foundOf({ limit: undefined })) },
-  { label: 'none with a scanned of -1', record: importsOf(noneOf({ scanned: -1 })) },
-  { label: 'none with a string skipped', record: importsOf(noneOf({ skipped: '3' })) },
-  { label: 'none with an unknown limit', record: importsOf(noneOf({ limit: 'disk' })) },
+  { label: 'found with no sites', record: importsOf(foundReplyOf({ sites: [], total: 0 })) },
+  { label: 'found with 201 sites', record: importsOf(foundReplyOf({ sites: sitesOf(IMPORT_SITES_MAX + 1), total: 250 })) },
+  { label: 'a total below the sites sent', record: importsOf(foundReplyOf({ sites: sitesOf(2), total: 1 })) },
+  { label: 'sites that are not an array', record: importsOf(foundReplyOf({ sites: siteOf() })) },
+  { label: 'array-like sites', record: importsOf(foundReplyOf({ sites: ARRAY_LIKE_SITES })) },
+  { label: 'a null site', record: importsOf(foundReplyOf({ sites: [null] })) },
+  { label: 'a sparse sites array of length 1', record: importsOf(foundReplyOf({ sites: new Array(1), total: 1 })) },
+  { label: 'a scanned of -1', record: importsOf(foundReplyOf({ scanned: -1 })) },
+  { label: 'a scanned of 1.5', record: importsOf(foundReplyOf({ scanned: 1.5 })) },
+  { label: 'an Infinity scanned', record: importsOf(foundReplyOf({ scanned: Infinity })) },
+  { label: 'a scanned of 2 ** 53', record: importsOf(foundReplyOf({ scanned: 2 ** 53 })) },
+  { label: 'a string skipped', record: importsOf(foundReplyOf({ skipped: '3' })) },
+  { label: 'a NaN total', record: importsOf(foundReplyOf({ total: NaN })) },
+  { label: 'an unknown limit', record: importsOf(foundReplyOf({ limit: 'disk' })) },
+  { label: 'a limit named like an Object member', record: importsOf(foundReplyOf({ limit: '__proto__' })) },
+  { label: 'no limit', record: importsOf(foundReplyOf({ limit: undefined })) },
+  { label: 'none with a scanned of -1', record: importsOf(noneReplyOf({ scanned: -1 })) },
+  { label: 'none with a string skipped', record: importsOf(noneReplyOf({ skipped: '3' })) },
+  { label: 'none with an unknown limit', record: importsOf(noneReplyOf({ limit: 'disk' })) },
   { label: 'a site on line -1', record: foundWithSite({ line: -1 }) },
   { label: 'a site on line 1.5', record: foundWithSite({ line: 1.5 }) },
   { label: 'a site past the highest line', record: foundWithSite({ line: MANIFEST_LINE_MAX + 1 }) },
@@ -126,7 +129,7 @@ describe('FEATURE: isEdgeImports', () => {
     });
 
     it.each(Object.keys(IMPORT_LIMITS))('WHEN it has the limit %s THEN it is accepted', (limit) => {
-      const isImports = isEdgeImports(importsOf(noneOf({ limit })));
+      const isImports = isEdgeImports(importsOf(noneReplyOf({ limit })));
 
       expect(isImports).toBe(true);
     });
