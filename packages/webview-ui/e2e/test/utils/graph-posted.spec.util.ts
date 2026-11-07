@@ -2,6 +2,7 @@
 
 import type { Page } from '@playwright/test';
 
+import type { GraphOpenImportMessage } from '../../../src/bridge/common/graph-imports.type.ts';
 import type {
   GraphSetViewToggleMessage,
   GraphShownUmbrellasMessage,
@@ -30,6 +31,8 @@ const isScanImports = (message: GraphWebviewMessage): message is ScanImportsMess
 
 const isOpenManifest = (message: GraphWebviewMessage): message is OpenManifestMessage => message.type === 'openManifest';
 
+const isOpenImport = (message: GraphWebviewMessage): message is GraphOpenImportMessage => message.type === 'openImport';
+
 const isExportImage = (message: GraphWebviewMessage): message is ExportImageMessage => message.type === 'exportImage';
 
 const isShownUmbrellas = (message: GraphWebviewMessage): message is GraphShownUmbrellasMessage => message.type === 'shownUmbrellas';
@@ -47,6 +50,8 @@ export const explainEdgePosted = (posted: GraphWebviewMessage[]): ExplainEdgeMes
 export const scanImportsPosted = (posted: GraphWebviewMessage[]): ScanImportsMessage[] => posted.filter(isScanImports);
 
 export const openManifestPosted = (posted: GraphWebviewMessage[]): OpenManifestMessage[] => posted.filter(isOpenManifest);
+
+export const openImportPosted = (posted: GraphWebviewMessage[]): GraphOpenImportMessage[] => posted.filter(isOpenImport);
 
 export const exportImagePosted = (posted: GraphWebviewMessage[]): ExportImageMessage[] => posted.filter(isExportImage);
 
