@@ -7,6 +7,7 @@ import { answerImports } from './import-answer.util.ts';
 import { TARGET_NAME } from '../test/common/import-edge.const.ts';
 import { IMPORT_EDGE_STUB } from '../test/stubs/import-edge.stub.ts';
 import {
+  aliasPathsOf,
   answerOf,
   foundSitesOf,
   frozenScanOf,
@@ -105,6 +106,19 @@ describe('FEATURE: answer one edge imports from a package scan', () => {
       ]);
       expectTypeOf<SourceImport['kind']>().toEqualTypeOf<ImportKind>();
       expectTypeOf<ImportScanLimit>().toEqualTypeOf<ImportLimit>();
+    });
+  });
+
+  describe('GIVEN a scan whose tsconfig paths map @ui/* into B', () => {
+    it('WHEN src/a.ts imports @ui/x THEN one site with via alias is sent and total is 1', () => {
+      const tsconfigPaths = aliasPathsOf({ '@ui/*': ['packages/b/src/*'] });
+      const files = [scannedFileOf('src/a.ts', [sourceImportOf('@ui/x', 3)])];
+      const sites = [{ file: 'src/a.ts', line: 3, via: 'alias' }];
+      const expected = { kind: 'found', total: 1, sites };
+
+      const result = answerOf(importScanOf(files, { tsconfigPaths }));
+
+      expect(result).toMatchObject(expected);
     });
   });
 

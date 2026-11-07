@@ -1,8 +1,8 @@
-import type { PackageImportScan, ScannedFile, SourceImport } from '@turbo-console/core';
+import type { PackageImportScan, ScannedFile, SourceImport, TsconfigPaths } from '@turbo-console/core';
 import type { EdgeImportsResult, ImportSite } from '@turbo-console/webview-ui';
 
 import { answerImports } from '../../utils/import-answer.util.ts';
-import { TARGET_NAME } from '../common/import-edge.const.ts';
+import { IMPORT_ROOT, TARGET_NAME } from '../common/import-edge.const.ts';
 import { IMPORT_EDGE_STUB } from '../stubs/import-edge.stub.ts';
 
 /** A static, value import of `specifier` on `line`; `patch` overrides any field. */
@@ -24,6 +24,13 @@ export const importScanOf = (files: ScannedFile[], patch: Partial<PackageImportS
   const scan: PackageImportScan = { files, tsconfigPaths: null, scanned: files.length, skipped: 0, limit: null, ...patch };
 
   return scan;
+};
+
+/** The tsconfig paths of A: `paths` resolved from the workspace root. */
+export const aliasPathsOf = (paths: Record<string, string[]>): TsconfigPaths => {
+  const tsconfigPaths: TsconfigPaths = { baseUrl: IMPORT_ROOT, paths };
+
+  return tsconfigPaths;
 };
 
 /** A deep copy of `scan` with every array and object frozen, so an in-place write on the import cache's arrays throws. */
