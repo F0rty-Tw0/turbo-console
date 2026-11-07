@@ -6,11 +6,7 @@ import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { ImportRowModel, ImportsViewModel } from '../common/details-imports.type.ts';
 import type { ImportsState } from '../common/imports-state.type.ts';
 import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
-import { sitesOf } from '../test/utils/import-sites.spec.util.ts';
-
-type FoundState = Extract<ImportsState, Record<'kind', 'found'>>;
-
-type NoneState = Extract<ImportsState, Record<'kind', 'none'>>;
+import { foundOf, noneOf, sitesOf } from '../test/utils/import-sites.spec.util.ts';
 
 type LimitRow = {
   readonly label: string;
@@ -24,30 +20,9 @@ const SCANNING: ImportsState = { kind: 'scanning' };
 
 const FAILED: ImportsState = { kind: 'failed' };
 
-const foundOf = (sites: ImportSite[], extra: Partial<FoundState> = {}): FoundState => {
-  const state: FoundState = {
-    kind: 'found',
-    scanned: 3,
-    skipped: 0,
-    total: sites.length,
-    sites,
-    limit: null,
-    isRefreshing: false,
-    ...extra
-  };
-
-  return state;
-};
-
-const noneOf = (extra: Partial<NoneState> = {}): NoneState => {
-  const state: NoneState = { kind: 'none', scanned: 3, skipped: 0, limit: null, isRefreshing: false, ...extra };
-
-  return state;
-};
-
 const modelOf = (state: ImportsState, isOpen = false): ImportsViewModel => importsModelOf(state, LINK, isOpen);
 
-const rowsOf = (model: ImportsViewModel): string[] => {
+const keysOf = (model: ImportsViewModel): string[] => {
   const keys = model.groups.flatMap((group) => group.rows.map((row) => row.key));
 
   return keys;
@@ -134,7 +109,7 @@ describe('FEATURE: imports model', () => {
     it('WHEN the model is built THEN a key is the file and its 0-based line', () => {
       const model = modelOf(foundOf(HOST_ORDER));
 
-      expect(rowsOf(model)).toStrictEqual(['src/b.ts:0', 'src/a.ts:3', 'src/a.ts:9']);
+      expect(keysOf(model)).toStrictEqual(['src/b.ts:0', 'src/a.ts:3', 'src/a.ts:9']);
     });
 
     it('WHEN the model is built THEN a number is the line counted from 1', () => {
@@ -154,7 +129,7 @@ describe('FEATURE: imports model', () => {
     it('WHEN it is asked for again THEN it keeps the groups and reads Scanning again', () => {
       const model = modelOf(foundOf(HOST_ORDER, { isRefreshing: true }));
 
-      expect([model.isScanning, model.lines, rowsOf(model).length]).toStrictEqual([true, ['Scanning again…'], 3]);
+      expect([model.isScanning, model.lines, keysOf(model).length]).toStrictEqual([true, ['Scanning again…'], 3]);
     });
 
     it('WHEN a row is a dynamic type import THEN it carries every row field', () => {
@@ -168,19 +143,19 @@ describe('FEATURE: imports model', () => {
     it('WHEN 25 sites are folded THEN 20 rows show with Show 5 more', () => {
       const model = modelOf(foundOf(sitesOf(25)));
 
-      expect([rowsOf(model).length, model.more]).toStrictEqual([20, 'Show 5 more']);
+      expect([keysOf(model).length, model.more]).toStrictEqual([20, 'Show 5 more']);
     });
 
     it('WHEN 25 sites are open THEN all 25 rows show and the button is gone', () => {
       const model = modelOf(foundOf(sitesOf(25)), true);
 
-      expect([rowsOf(model).length, model.more]).toStrictEqual([25, null]);
+      expect([keysOf(model).length, model.more]).toStrictEqual([25, null]);
     });
 
     it('WHEN exactly 20 sites are folded THEN 20 rows show and the button is gone', () => {
       const model = modelOf(foundOf(sitesOf(20)));
 
-      expect([rowsOf(model).length, model.more]).toStrictEqual([20, null]);
+      expect([keysOf(model).length, model.more]).toStrictEqual([20, null]);
     });
   });
 
@@ -208,7 +183,9 @@ describe('FEATURE: imports model', () => {
         'Stopped after 4 s; there may be more.'
       ]);
     });
+  });
 
+  describe('GIVEN the scan stopped at a cap', () => {
     it.each(LIMIT_ROWS)('WHEN it is $label THEN the limit text is the last note', ({ state, expected }) => {
       const model = modelOf(state);
 
