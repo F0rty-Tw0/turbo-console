@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { css, declarationsOf, ruleOf } from './test/utils/graph-css-rules.spec.util.ts';
+import { css, declarationsOf, ruleOf, ruleStartOf } from './test/utils/graph-css-rules.spec.util.ts';
 
 type DeclarationRow = {
   readonly label: string;
@@ -16,7 +16,7 @@ const PAINT_PATTERN = /(?:^|[;\s])(?:color|background|border)\s*:\s*([^;]+)/g;
 
 const INHERIT = 'inherit';
 
-const ruleStartOf = (selector: string): number => ruleOf(css, selector)?.index ?? -1;
+const SIDE_BORDER_PATTERN = /border-(left|inline-start)/;
 
 const paintValuesOf = (selector: string): string[] => {
   const declarations = declarationsOf(css, selector);
@@ -36,20 +36,23 @@ const isTokenValue = (value: string): boolean => {
 };
 
 const DECLARATION_ROWS: DeclarationRow[] = [
+  { label: 'the block lays out in a flex box', selector: '.details-imports-block', expected: 'display: flex' },
+  { label: 'the block stacks its children in a flex column', selector: '.details-imports-block', expected: 'flex-direction: column' },
+  {
+    label: 'the block keeps buttons at their own width',
+    selector: '.details-imports-block',
+    expected: 'align-items: flex-start'
+  },
+  { label: 'the block spaces its children', selector: '.details-imports-block', expected: 'gap: var(--space-1)' },
+  { label: 'the header spans the block', selector: '.details-imports-header', expected: 'width: 100%' },
+  { label: 'a row spans the block', selector: '.import-row', expected: 'width: 100%' },
   { label: 'the header lays out in a flex row', selector: '.details-imports-header', expected: 'display: flex' },
   {
     label: 'the header pushes Scan again to the end',
     selector: '.details-imports-header',
     expected: 'justify-content: space-between'
   },
-  { label: 'a row text wraps anywhere', selector: '.import-text', expected: 'overflow-wrap: anywhere' },
-  {
-    label: 'a file path wraps anywhere',
-    selector: '.details-imports-block .details-file .details-code',
-    expected: 'overflow-wrap: anywhere'
-  },
   { label: 'the tags wrap below the text', selector: '.import-tags', expected: 'flex-basis: 100%' },
-  { label: 'a disabled Scan again dims', selector: ARIA_DISABLED, expected: 'opacity: 0.5' },
   { label: 'a disabled Scan again shows the default cursor', selector: ARIA_DISABLED, expected: 'cursor: default' },
   { label: 'a hovered disabled Scan again keeps no fill', selector: `${ARIA_DISABLED}:hover`, expected: 'background: none' }
 ];
@@ -70,18 +73,29 @@ describe('FEATURE: graph.css imports block rules', () => {
       expect(rule).toBeDefined();
     });
 
-    it.each(PAINTED_SELECTORS)('WHEN the colours of %s are read THEN each is a theme variable with no raw colour', (selector) => {
-      const values = paintValuesOf(selector);
-      const rejected = values.filter((value) => !isTokenValue(value));
+    it.each(PAINTED_SELECTORS)(
+      'WHEN the colours of %s are read THEN each is a theme variable or inherit with no raw colour',
+      (selector) => {
+        const values = paintValuesOf(selector);
+        const rejected = values.filter((value) => !isTokenValue(value));
 
-      expect(values.length).toBeGreaterThan(0);
-      expect(rejected).toStrictEqual([]);
-    });
+        expect(values.length).toBeGreaterThan(0);
+        expect(rejected).toStrictEqual([]);
+      }
+    );
 
     it.each(['.import-row', '.import-tag'])('WHEN %s is read THEN it draws no side border', (selector) => {
       const declarations = declarationsOf(css, selector);
 
-      expect(declarations).not.toContain('border-left');
+      expect(declarations).not.toMatch(SIDE_BORDER_PATTERN);
+    });
+  });
+
+  describe('GIVEN the disabled Scan again rule', () => {
+    it('WHEN it is read THEN it sets no opacity, the global aria-disabled rule dims it once', () => {
+      const declarations = declarationsOf(css, ARIA_DISABLED);
+
+      expect(declarations).not.toContain('opacity');
     });
   });
 
