@@ -1,0 +1,104 @@
+import { resolve } from 'node:path';
+
+import { describe, expect, it } from 'vitest';
+
+import { tsconfigPathsOf } from './tsconfig-paths.util.ts';
+import type { TsconfigPaths } from '../common/import-scan.type.ts';
+import type { TsconfigFile, TsconfigLink } from '../common/tsconfig.type.ts';
+import { TSCONFIG_FILE_STUB } from '../test/stubs/tsconfig.stub.ts';
+
+type PathsRow = {
+  readonly label: string;
+  readonly links: TsconfigLink[];
+  readonly then: string;
+  readonly expected: TsconfigPaths | null;
+};
+
+const WS = resolve('/ws');
+
+const A_DIR = resolve('/ws/packages/a');
+
+const PATHS_1: Record<string, string[]> = { '@b/*': ['packages/b/src/*'] };
+
+const PATHS_2: Record<string, string[]> = { '@c': ['packages/c/index.ts'] };
+
+const linkOf = (dir: string, patch: Partial<TsconfigFile>): TsconfigLink => {
+  const file: TsconfigFile = { ...TSCONFIG_FILE_STUB, ...patch };
+  const link: TsconfigLink = { dir, file };
+
+  return link;
+};
+
+const effectiveOf = (baseUrl: string, paths: Record<string, string[]>): TsconfigPaths => {
+  const effective: TsconfigPaths = { baseUrl, paths };
+
+  return effective;
+};
+
+const rows: PathsRow[] = [
+  { label: 'no links', links: [], then: 'there are none', expected: null },
+  {
+    label: 'A sets paths',
+    links: [linkOf(A_DIR, { paths: PATHS_1 })],
+    then: 'the paths and dir of A are used',
+    expected: effectiveOf(A_DIR, PATHS_1)
+  },
+  {
+    label: 'A and its base both set paths',
+    links: [linkOf(A_DIR, { paths: PATHS_1 }), linkOf(WS, { paths: PATHS_2 })],
+    then: 'the paths of A beat the base',
+    expected: effectiveOf(A_DIR, PATHS_1)
+  },
+  {
+    label: 'only the base sets paths',
+    links: [linkOf(A_DIR, {}), linkOf(WS, { paths: PATHS_2 })],
+    then: 'the paths and dir of the base are used',
+    expected: effectiveOf(WS, PATHS_2)
+  },
+  {
+    label: 'A sets paths and the base sets baseUrl',
+    links: [linkOf(A_DIR, { paths: PATHS_1 }), linkOf(WS, { baseUrl: './src' })],
+    then: 'the baseUrl of the base is applied to A paths',
+    expected: effectiveOf(resolve(WS, 'src'), PATHS_1)
+  },
+  {
+    label: 'A and its base both set baseUrl and the base sets paths',
+    links: [linkOf(A_DIR, { baseUrl: '.' }), linkOf(WS, { baseUrl: './src', paths: PATHS_2 })],
+    then: 'the baseUrl of A goes with the base paths',
+    expected: effectiveOf(A_DIR, PATHS_2)
+  },
+  {
+    label: 'A sets baseUrl and the base sets paths',
+    links: [linkOf(A_DIR, { baseUrl: '.' }), linkOf(WS, { paths: PATHS_2 })],
+    then: 'the baseUrl of A beats the base',
+    expected: effectiveOf(A_DIR, PATHS_2)
+  },
+  {
+    label: 'A sets paths to null and the base sets paths',
+    links: [linkOf(A_DIR, { paths: null }), linkOf(WS, { paths: PATHS_2 })],
+    then: 'there are none',
+    expected: null
+  },
+  {
+    label: 'A sets paths to an empty record and the base sets paths',
+    links: [linkOf(A_DIR, { paths: {} }), linkOf(WS, { paths: PATHS_2 })],
+    then: 'there are none',
+    expected: null
+  },
+  {
+    label: 'A sets a baseUrl above itself beside its paths',
+    links: [linkOf(A_DIR, { baseUrl: '../..', paths: PATHS_1 })],
+    then: 'the baseUrl above A is kept',
+    expected: effectiveOf(resolve(A_DIR, '../..'), PATHS_1)
+  }
+];
+
+describe('FEATURE: effective tsconfig paths of a chain', () => {
+  describe('GIVEN a chain of links, nearest first', () => {
+    it.each(rows)('WHEN $label THEN $then', ({ links, expected }) => {
+      const effective = tsconfigPathsOf(links);
+
+      expect(effective).toStrictEqual(expected);
+    });
+  });
+});

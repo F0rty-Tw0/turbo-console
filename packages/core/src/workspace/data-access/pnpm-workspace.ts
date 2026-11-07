@@ -5,13 +5,12 @@ import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import { errnoCode, isMissing } from '../../shared/errors/utils/errno.util.ts';
 import { ioMessage } from '../../shared/errors/utils/turbo-message.util.ts';
 import { readSmallFile } from '../../shared/fs/data-access/small-file.ts';
+import { BYTE_ORDER_MARK } from '../../shared/text/common/text.const.ts';
 import { untilAborted } from '../../shared/turbo/data-access/until-aborted.ts';
 
 const INLINE_LIST = /^\[(.*)\]$/;
 
 const TRAILING_COMMENT = /\s+#.*$/;
-
-const BYTE_ORDER_MARK = /^\uFEFF/;
 
 /** A filesystem error naming `absolute`, as `io`. */
 const ioError = (absolute: string, error: unknown): TurboException =>
