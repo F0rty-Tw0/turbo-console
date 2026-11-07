@@ -1,5 +1,6 @@
 import {
   failedTextOf,
+  foundTextOf,
   importsHeadingOf,
   lookingTextOf,
   noneTextOf,
@@ -18,6 +19,8 @@ import {
   NONE_IN_SCANNED_WORD,
   NO_IMPORTS_WORD,
   SCANNING_AGAIN_TEXT,
+  SCANNING_STATUS_TEXT,
+  SCAN_FAILED_STATUS_TEXT,
   SCAN_FAILED_WORD
 } from '../common/details-imports.const.ts';
 import type { ImportGroupModel, ImportRowModel, ImportsStatus, ImportsViewModel } from '../common/details-imports.type.ts';
@@ -57,6 +60,17 @@ const statusModelOf = (state: ImportsState): ImportsStatus | null => {
       return status;
     }
   }
+};
+
+/** The status word (a failure names the scan), else the found count, else scanning; a rescan keeps the text of the reply it shows, so it is not read out again. */
+const statusTextOf = (state: ImportsState, status: ImportsStatus | null): string => {
+  if (state.kind === 'failed') return SCAN_FAILED_STATUS_TEXT;
+
+  if (status !== null) return status.word;
+
+  if (state.kind === 'found') return foundTextOf(state.total);
+
+  return SCANNING_STATUS_TEXT;
 };
 
 const stateLinesOf = (state: ImportsState, link: GraphEdge): string[] => {
@@ -143,11 +157,13 @@ export const importsModelOf = (state: ImportsState, link: GraphEdge, isOpen: boo
   const sites = foundSitesOf(state);
   const shown = shownOf(sites, isOpen);
   const isScanning = state.kind === 'scanning' || isRefreshingOf(state);
+  const status = statusModelOf(state);
   const model: ImportsViewModel = {
     heading: importsHeadingOf(link.target, countOf(state)),
     scanLabel: scanAgainLabelOf(link.source, link.target),
     isScanning,
-    status: statusModelOf(state),
+    status,
+    statusText: statusTextOf(state, status),
     lines: linesOf(state, link),
     groups: groupsOf(shown),
     more: moreOf(sites.length, isOpen),

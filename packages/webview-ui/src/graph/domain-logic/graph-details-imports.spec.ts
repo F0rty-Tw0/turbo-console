@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ImportsBlock } from './graph-details-imports.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import { IMPORTS_STATUS_DELAY_MS } from '../common/details-imports.const.ts';
 import type { ImportRowElements, ImportsDetails, LinkDetails } from '../common/details-view.type.ts';
 import type { DetailsViews, LinkViewModel } from '../common/details.type.ts';
 import type { GraphDetailsDeps } from '../common/graph-details.type.ts';
@@ -74,6 +75,7 @@ describe('FEATURE: ImportsBlock', () => {
   };
 
   beforeEach((): void => {
+    vi.useFakeTimers();
     vi.stubGlobal('document', fakeDocumentMock());
     stubElementClass();
     views = detailsViewsMock();
@@ -85,6 +87,7 @@ describe('FEATURE: ImportsBlock', () => {
   });
 
   afterEach((): void => {
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -107,6 +110,30 @@ describe('FEATURE: ImportsBlock', () => {
 
       expect(onRescan).not.toHaveBeenCalled();
     });
+
+    it('THEN the new status line is still empty', () => {
+      expect(statusOf(view.imports)?.textContent).toBe('');
+    });
+
+    it('WHEN the status delay passes THEN the status line reads Scanning for imports', () => {
+      vi.advanceTimersByTime(IMPORTS_STATUS_DELAY_MS);
+
+      expect(statusOf(view.imports)?.textContent).toBe('Scanning for imports');
+    });
+
+    it('WHEN three found sites are drawn and then the status delay passes THEN the status line reads the found count', () => {
+      block.drawn(FOUND, LINK);
+      vi.advanceTimersByTime(IMPORTS_STATUS_DELAY_MS);
+
+      expect(statusOf(view.imports)?.textContent).toBe('3 imports found');
+    });
+
+    it('WHEN another link is mounted and the status delay passes THEN its status line stays empty until it is drawn', () => {
+      remounted(UI_TO_CORE_MODEL, UI_TO_CORE);
+      vi.advanceTimersByTime(IMPORTS_STATUS_DELAY_MS);
+
+      expect(statusOf(view.imports)?.textContent).toBe('');
+    });
   });
 
   describe('GIVEN a link view mounted and then a view that is not a link', () => {
@@ -121,9 +148,10 @@ describe('FEATURE: ImportsBlock', () => {
     });
   });
 
-  describe('GIVEN a link view with three found sites drawn', () => {
+  describe('GIVEN a link view with three found sites drawn and the status delay passed', () => {
     beforeEach((): void => {
       block.drawn(FOUND, LINK);
+      vi.advanceTimersByTime(IMPORTS_STATUS_DELAY_MS);
     });
 
     it('WHEN Scan again is clicked THEN a scan of web to ui is asked', () => {
@@ -190,8 +218,8 @@ describe('FEATURE: ImportsBlock', () => {
       expect(document.activeElement).toBe(outside);
     });
 
-    it('THEN the status line reads the heading with the count', () => {
-      expect(statusOf(view.imports)?.textContent).toBe('Imports of ui (3)');
+    it('THEN the status line reads the count without the heading', () => {
+      expect(statusOf(view.imports)?.textContent).toBe('3 imports found');
     });
 
     it('WHEN a failed state is drawn THEN the status line includes the failed word', () => {

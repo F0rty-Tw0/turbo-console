@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   failedTextOf,
+  foundTextOf,
   importsHeadingOf,
   lookingTextOf,
   noneTextOf,
@@ -24,6 +25,12 @@ type HeadingRow = {
 type NoneRow = {
   readonly label: string;
   readonly scanned: number;
+  readonly expected: string;
+};
+
+type FoundRow = {
+  readonly label: string;
+  readonly total: number;
   readonly expected: string;
 };
 
@@ -58,6 +65,11 @@ const NONE_ROWS: NoneRow[] = [
   { label: '1 file', scanned: 1, expected: 'No file in web imports ui (1 file scanned).' }
 ];
 
+const FOUND_ROWS: FoundRow[] = [
+  { label: '3 imports', total: 3, expected: '3 imports found' },
+  { label: '1 import', total: 1, expected: '1 import found' }
+];
+
 const SKIPPED_ROWS: SkippedRow[] = [
   {
     label: '10 files scanned and 1 skipped',
@@ -87,6 +99,14 @@ describe('FEATURE: imports text', () => {
       const heading = importsHeadingOf('ui', count);
 
       expect(heading).toBe(expected);
+    });
+  });
+
+  describe('GIVEN the status line of a found reply', () => {
+    it.each(FOUND_ROWS)('WHEN there are $label THEN it reads $expected', ({ total, expected }) => {
+      const text = foundTextOf(total);
+
+      expect(text).toBe(expected);
     });
   });
 

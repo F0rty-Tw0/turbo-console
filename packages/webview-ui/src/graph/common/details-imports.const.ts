@@ -12,6 +12,15 @@ export const SCAN_FAILED_WORD = "Couldn't scan";
 
 export const SCANNING_AGAIN_TEXT = 'Scanning again…';
 
+/** How long a new imports status line stays empty before its first text, so a screen reader has the `role=status` line in the accessibility tree and reads the text out as a change. */
+export const IMPORTS_STATUS_DELAY_MS = 100;
+
+/** What the status line reads out while a first scan runs. */
+export const SCANNING_STATUS_TEXT = 'Scanning for imports';
+
+/** What the status line reads out when a scan fails; the visible line keeps the short `SCAN_FAILED_WORD`. */
+export const SCAN_FAILED_STATUS_TEXT = "Couldn't scan for imports";
+
 export const SCAN_AGAIN_TITLE = 'Scan the files again';
 
 export const TYPE_TAG = 'type';

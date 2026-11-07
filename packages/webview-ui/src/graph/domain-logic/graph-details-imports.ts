@@ -1,7 +1,6 @@
 import { isAriaDisabled } from './graph-details-wire-parts.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
-import { IMPORTS_FOLD_AT } from '../common/details-imports.const.ts';
-import type { ImportsViewModel } from '../common/details-imports.type.ts';
+import { IMPORTS_FOLD_AT, IMPORTS_STATUS_DELAY_MS } from '../common/details-imports.const.ts';
 import type { ImportRowElements, ImportsDetails } from '../common/details-view.type.ts';
 import type { DetailsViews } from '../common/details.type.ts';
 import type { DetailsView, GraphDetailsDeps, ShownInspection } from '../common/graph-details.type.ts';
@@ -12,10 +11,10 @@ import { importsModelOf } from '../utils/imports-model.util.ts';
 
 type ImportsBlockDeps = Pick<GraphDetailsDeps, 'views' | 'onOpenImport'>;
 
-/** A link view's `imports` slot and the live status line that stays in it across draws. */
+/** A link view's `imports` slot and the writer of the live status line that stays in it across draws. */
 type ImportsMount = {
   readonly slot: HTMLElement;
-  readonly status: HTMLElement;
+  readonly writeStatus: (text: string) => void;
 };
 
 /** The last draw: its elements, and the state and link it was drawn from. */
@@ -33,25 +32,43 @@ const SCAN_KEY = 'scan';
 /** The focus key Show more redraws with, wherever focus was: the first row past the fold, else Scan again. */
 const MORE_KEY = 'more';
 
+/**
+ * The writer of a new status line: it holds the text until `IMPORTS_STATUS_DELAY_MS` after the line is mounted, since a
+ * `role=status` line inserted and filled in one task is often not read out, then writes it at once; a write that
+ * changes nothing is skipped, so a same-text redraw is not read out again. A line dropped with its view before the delay
+ * still gets its text, off the page, where no screen reader reads it.
+ */
+const statusWriterOf = (status: HTMLElement): ((text: string) => void) => {
+  let held = '';
+  let isLive = false;
+  const written = (): void => {
+    if (status.textContent !== held) status.textContent = held;
+  };
+  const wentLive = (): void => {
+    isLive = true;
+    written();
+  };
+
+  setTimeout(wentLive, IMPORTS_STATUS_DELAY_MS);
+
+  return (text: string): void => {
+    held = text;
+
+    if (isLive) written();
+  };
+};
+
 /** Appends a new status line to a link view's `imports` slot; `null`, and nothing appended, for any other view. */
 const mountedSlotOf = (view: DetailsView, views: DetailsViews): ImportsMount | null => {
   if (view.kind !== 'link') return null;
 
   const status = views.importsStatus();
-  const mount: ImportsMount = { slot: view.imports, status };
+  const writeStatus = statusWriterOf(status);
+  const mount: ImportsMount = { slot: view.imports, writeStatus };
 
   view.imports.append(status);
 
   return mount;
-};
-
-/** What the status line reads out: the heading, then the status word when there is one. */
-const statusTextOf = (model: ImportsViewModel): string => {
-  const { heading, status } = model;
-
-  if (status === null) return heading;
-
-  return `${heading}: ${status.word}`;
 };
 
 /** One swap per draw: the new root replaces the old one, or follows the status line on the first draw. */
@@ -109,7 +126,7 @@ export class ImportsBlock {
     if (!isSameLink) this.openLink = null;
   }
 
-  /** Draws `state` of `link` in the mounted slot, if any: reads focus, swaps once, then writes the status line and focus. */
+  /** Draws `state` of `link` in the mounted slot, if any: reads focus, swaps once, then hands the status line its text and moves focus. */
   public drawn(state: ImportsState, link: GraphEdge): void {
     const key = this.focusKeyOf();
 
@@ -125,13 +142,10 @@ export class ImportsBlock {
     const isOpen = this.isOpenFor(link);
     const model = importsModelOf(state, link, isOpen);
     const details = this.deps.views.imports(model);
-    const statusText = statusTextOf(model);
     const draw: ImportsDraw = { details, state, link };
 
     swapped(mount, this.last, details.root);
-
-    if (mount.status.textContent !== statusText) mount.status.textContent = statusText;
-
+    mount.writeStatus(model.statusText);
     this.wire(draw);
     refocused(details, key);
     this.last = draw;

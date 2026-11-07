@@ -28,6 +28,8 @@ export const openImportLabelOf = (file: string, line: number, text: string): str
 
 export const showMoreTextOf = (count: number): string => `Show ${count} more`;
 
+export const foundTextOf = (total: number): string => `${pluralOf(total, 'import', 'imports')} found`;
+
 export const showingTextOf = (shown: number, total: number): string => `Showing ${shown} of ${total} imports.`;
 
 export const skippedTextOf = (scanned: number, skipped: number): string => {

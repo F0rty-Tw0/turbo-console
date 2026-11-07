@@ -8,7 +8,7 @@ import type { ImportsState } from '../common/imports-state.type.ts';
 import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
 import { foundOf, noneOf, sitesOf } from '../test/utils/import-sites.spec.util.ts';
 
-type LimitRow = {
+type StateTextRow = {
   readonly label: string;
   readonly state: ImportsState;
   readonly expected: string;
@@ -48,7 +48,15 @@ const DYNAMIC_TYPE_ROW: ImportRowModel = {
 
 const NONE_LINE = 'No file in web imports ui (3 files scanned).';
 
-const LIMIT_ROWS: LimitRow[] = [
+const STATUS_TEXT_ROWS: StateTextRow[] = [
+  { label: 'scanning', state: SCANNING, expected: 'Scanning for imports' },
+  { label: 'found with 3 sites', state: foundOf(sitesOf(3)), expected: '3 imports found' },
+  { label: 'found with 3 sites and asked again', state: foundOf(sitesOf(3), { isRefreshing: true }), expected: '3 imports found' },
+  { label: 'none', state: noneOf(), expected: 'No imports found' },
+  { label: 'failed', state: FAILED, expected: "Couldn't scan for imports" }
+];
+
+const LIMIT_ROWS: StateTextRow[] = [
   {
     label: 'found with the files limit',
     state: foundOf(sitesOf(2), { limit: 'files' }),
@@ -83,6 +91,7 @@ describe('FEATURE: imports model', () => {
         scanLabel: 'Scan web for imports of ui again',
         isScanning: true,
         status: null,
+        statusText: 'Scanning for imports',
         lines: ['Looking for imports of ui in web…'],
         groups: [],
         more: null,
@@ -182,6 +191,20 @@ describe('FEATURE: imports model', () => {
         'Scanned 3 files, skipped 1 (over 1 MiB, unreadable or path too long).',
         'Stopped after 4 s; there may be more.'
       ]);
+    });
+  });
+
+  describe('GIVEN the live status line', () => {
+    it.each(STATUS_TEXT_ROWS)('WHEN the state is $label THEN it reads $expected', ({ state, expected }) => {
+      const model = modelOf(state);
+
+      expect(model.statusText).toBe(expected);
+    });
+
+    it.each(STATUS_TEXT_ROWS)('WHEN the state is $label THEN it does not read the heading', ({ state }) => {
+      const model = modelOf(state);
+
+      expect(model.statusText).not.toContain(model.heading);
     });
   });
 
