@@ -14,7 +14,7 @@ export const explainInput = (source: string, target: string): InspectionInput =>
 };
 
 /** Whether a click on `button` does nothing: it is `aria-disabled`, read at click time, as updates move it. */
-const isAriaDisabled = (button: HTMLButtonElement): boolean => {
+export const isAriaDisabled = (button: HTMLButtonElement): boolean => {
   const disabled = button.getAttribute('aria-disabled');
 
   return disabled === 'true';
