@@ -6,19 +6,14 @@ import type { DetailsEnv, GraphDetailsDeps, ShownHint, ShownPicking } from '../c
 import type { Inspection, InspectionInput } from '../common/inspection.type.ts';
 import type { TraceCandidates } from '../common/trace.type.ts';
 import { filteredCandidatesOf, firstCandidateOf } from '../utils/candidate-filter.util.ts';
+import { closestButtonOf } from '../utils/closest-button.util.ts';
 import { pickingModelOf } from '../utils/details-model.util.ts';
 import { candidateTitleOf } from '../utils/details-text.util.ts';
 
 const CANCEL: InspectionInput = { kind: 'cancel' };
 
 /** The button a delegated click landed on, when it carries a `data-name`. */
-export const namedButtonOf = (event: Event): HTMLButtonElement | null => {
-  const { target } = event;
-
-  if (!(target instanceof Element)) return null;
-
-  return target.closest<HTMLButtonElement>('button[data-name]');
-};
+export const namedButtonOf = (event: Event): HTMLButtonElement | null => closestButtonOf(event, 'button[data-name]');
 
 const filteredOf = (view: PickingDetails, picking: ShownPicking, packages: GraphPackage[]): TraceCandidates => {
   return filteredCandidatesOf(picking.candidates, packages, view.filter.value);
