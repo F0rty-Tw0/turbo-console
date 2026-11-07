@@ -45,8 +45,8 @@ const longestMatchOf = (specifier: string, paths: Readonly<Record<string, string
 /**
  * The targets of the `paths` key TS picks for `specifier` (D5 rule 4): an exact key first, else the one-`*` key with the
  * longest prefix before `*` whose prefix and suffix both fit (first key on a tie), each target's `*` replaced by the text it
- * matched; an exact key's targets as written; `[]` when no key matches. Keys and targets hold at most one `*` (core filters
- * them, D6).
+ * matched, or the targets as written when it matched empty text (TS `matchedStar ? replaceFirstStar : subst`); an exact
+ * key's targets as written; `[]` when no key matches. Keys and targets hold at most one `*` (core filters them, D6).
  */
 export const aliasTargetsOf = (specifier: string, paths: Readonly<Record<string, string[]>>): string[] => {
   const exact = Object.hasOwn(paths, specifier) ? paths[specifier] : undefined;
@@ -58,6 +58,10 @@ export const aliasTargetsOf = (specifier: string, paths: Readonly<Record<string,
   if (best === null) return [];
 
   const matched = best.matched;
+  const isEmptyMatch = matched === '';
+
+  if (isEmptyMatch) return [...best.targets];
+
   const substitute = (target: string): string => target.replace('*', () => matched);
 
   return best.targets.map(substitute);
