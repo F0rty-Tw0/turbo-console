@@ -17,6 +17,13 @@ export const stubPackageSideGlobals = (): void => {
     vi.stubGlobal(name, NoDomClass);
 };
 
+/** Makes `instanceof Element` hold for the stubbed fake document's elements, for a spec that clicks into a delegated listener. */
+export const stubElementClass = (): void => {
+  const probe = document.createElement('span');
+
+  vi.stubGlobal('Element', probe.constructor);
+};
+
 /** Resolves after the timers queued so far: the package side's first draw has settled. */
 export const settled = async (): Promise<void> => {
   const wait = (resolve: () => void): void => {
