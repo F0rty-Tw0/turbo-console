@@ -16,8 +16,9 @@ import { IMPORT_SITE_STUB } from '../test/stubs/graph-host-message.stub.ts';
 import { SAVED_FLAT_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { SCAN_WEB_TO_UI_STUB } from '../test/stubs/graph-posted-message.stub.ts';
 import { MANIFEST_ENTRY_STUB, MANIFEST_FILE_STUB } from '../test/stubs/manifest-entry.stub.ts';
+import { withClass } from '../test/utils/class-elements.spec.util.ts';
 import { foundReplyOf } from '../test/utils/explain-reply.spec.util.ts';
-import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { settled, stubElementClass, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 import { importsReplyOf } from '../test/utils/imports-reply.spec.util.ts';
 import { postedOf } from '../test/utils/posted-messages.spec.util.ts';
 import { lastReturnOf } from '../test/utils/spy-return.spec.util.ts';
@@ -60,6 +61,8 @@ const NONE_SKIPPED: EdgeImportsResult = { kind: 'none', scanned: 3, skipped: 2, 
 
 const FAILED: EdgeImportsResult = { kind: 'failed' };
 
+const OPEN_A_TS_LINE_3 = { type: 'openImport', packageName: 'web', file: 'src/a.ts', line: 3 };
+
 const SCANNING: ImportsState = { kind: 'scanning' };
 
 const FOUND_FRESH: ImportsState = { ...FOUND, isRefreshing: false };
@@ -101,6 +104,7 @@ describe('FEATURE: LinkLookups', () => {
   let built: MockInstance<LinkLookups['built']>;
   let explain: Mock<DetailsViews['explain']>;
   let link: Mock<DetailsViews['link']>;
+  let imports: Mock<DetailsViews['imports']>;
 
   const tapWebToUi = (): void => {
     rig.side.filtering.inspection.input({ kind: 'tapLink', source: 'web', target: 'ui' });
@@ -118,6 +122,7 @@ describe('FEATURE: LinkLookups', () => {
     rig = detailsRigOf();
     explain = vi.spyOn(rig.deps.views, 'explain');
     link = vi.spyOn(rig.deps.views, 'link');
+    imports = vi.spyOn(rig.deps.views, 'imports');
     rig.side.show(STATE_STUB, 1);
     await settled();
   });
@@ -140,12 +145,29 @@ describe('FEATURE: LinkLookups', () => {
       it('THEN the imports are scanning', () => {
         expect(importsState()).toStrictEqual(SCANNING);
       });
+
+      it('THEN the link view slot holds one imports block', () => {
+        const blocks = withClass(lastReturnOf(link).imports, 'details-imports-block');
+
+        expect(blocks).toHaveLength(1);
+      });
+
+      it('THEN the imports block is drawn once, as scanning', () => {
+        const scanning = imports.mock.calls.map(([model]) => model.isScanning);
+
+        expect(scanning).toStrictEqual([true]);
+      });
     });
 
-    it('WHEN a package is selected THEN no explainEdge or scanImports is posted and no imports are held', () => {
+    it('WHEN a package is selected THEN no explainEdge or scanImports is posted', () => {
       rig.side.filtering.inspection.input({ kind: 'select', name: 'web', via: 'list' });
 
       expect(postedOf(rig, 'explainEdge', 'scanImports')).toStrictEqual([]);
+    });
+
+    it('WHEN a package is selected THEN no imports are held', () => {
+      rig.side.filtering.inspection.input({ kind: 'select', name: 'web', via: 'list' });
+
       expect(importsState()).toBeNull();
     });
   });
@@ -165,6 +187,13 @@ describe('FEATURE: LinkLookups', () => {
       rig.side.filtering.inspection.replied(importsReplyOf('ui', 'core', FOUND));
 
       expect(importsState()).toStrictEqual(SCANNING);
+    });
+
+    it('WHEN a found reply for another link and then one for it arrive THEN the block is drawn again for it only', () => {
+      rig.side.filtering.inspection.replied(importsReplyOf('ui', 'core', FOUND));
+      rig.side.filtering.inspection.replied(importsReplyOf('web', 'ui', FOUND));
+
+      expect(imports.mock.calls.map(([model]) => model.heading)).toStrictEqual(['Imports of ui', 'Imports of ui (1)']);
     });
 
     it('WHEN the ask got no reply and a same-hash state arrives and then one found reply THEN the imports are found', () => {
@@ -274,6 +303,20 @@ describe('FEATURE: LinkLookups', () => {
       it('THEN the list is marked refreshing', () => {
         expect(importsState()).toStrictEqual(FOUND_STALE);
       });
+    });
+
+    it('WHEN its Scan again is clicked THEN scanImports alone is posted again', () => {
+      stubElementClass();
+      lastReturnOf(imports).scanAgain.click();
+
+      expect(postedOf(rig, 'explainEdge', 'scanImports')).toStrictEqual([EXPLAIN_WEB_TO_UI, SCAN_WEB_TO_UI_STUB, SCAN_WEB_TO_UI_STUB]);
+    });
+
+    it('WHEN its row is clicked THEN openImport is posted for src/a.ts at the 0-based line 3', () => {
+      stubElementClass();
+      lastReturnOf(imports).rows[0]?.button.click();
+
+      expect(postedOf(rig, 'openImport')).toStrictEqual([OPEN_A_TS_LINE_3]);
     });
 
     it('WHEN another link is tapped THEN the imports are scanning, not the held list marked refreshing', () => {

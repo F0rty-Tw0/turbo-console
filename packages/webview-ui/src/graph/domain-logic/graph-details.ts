@@ -140,7 +140,7 @@ export class GraphDetails {
 
     if (hadFocus) view.heading.focus();
 
-    this.lookups.built(inspection);
+    this.lookups.built(inspection, view);
   }
 
   private toggle(): void {

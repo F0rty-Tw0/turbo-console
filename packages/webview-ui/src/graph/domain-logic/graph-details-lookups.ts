@@ -1,7 +1,9 @@
+import { ImportsBlock } from './graph-details-imports.ts';
 import { updateExplain } from './graph-details-render.ts';
 import { wireExplain } from './graph-details-wire.ts';
 import type { GraphEdgeImportsMessage } from '../../bridge/common/graph-imports.type.ts';
 import type { GraphEdgeExplainedMessage } from '../../bridge/common/graph-message.type.ts';
+import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { ExplainState } from '../common/details.type.ts';
 import type {
   DetailsEnv,
@@ -18,25 +20,28 @@ import { askedImportsOf, repliedImportsOf } from '../utils/imports-state.util.ts
 
 /**
  * The shown link's look-ups: asks the host for its manifest entry and its imports when a link view is built or a
- * same-hash state arrives, applies the reply for the shown link to the view's explain block, in place or rebuilt, and
- * holds its imports: the state is keyed by the shown link, never by ask; a link the host does not answer stays scanning
- * until a rebuild (spec D15, OQ6).
+ * same-hash state arrives, applies the reply for the shown link to the view's explain block, in place or rebuilt,
+ * holds its imports and draws its imports block: the state is keyed by the shown link, never by ask; a link the host
+ * does not answer stays scanning until a rebuild (spec D15, OQ6).
  */
 export class LinkLookups {
   private readonly deps: GraphDetailsDeps;
   private readonly env: () => DetailsEnv;
+  private readonly block: ImportsBlock;
   private explain: ShownExplain | null = null;
   private imports: ImportsState | null = null;
 
   public constructor(deps: GraphDetailsDeps, env: () => DetailsEnv) {
     this.deps = deps;
     this.env = env;
+    this.block = new ImportsBlock(deps, (link): void => this.rescanned(link));
   }
 
-  /** A view was built for `inspection`: its explain block and imports start empty, and a link is asked about. */
-  public built(inspection: ShownInspection): void {
+  /** `view` was built for `inspection`: its explain block and imports start empty, and a link is asked about. */
+  public built(inspection: ShownInspection, view: DetailsView): void {
     this.explain = null;
     this.imports = null;
+    this.block.mounted(view, inspection);
 
     if (inspection.kind === 'link') this.asked(inspection);
   }
@@ -89,13 +94,22 @@ export class LinkLookups {
   private imported(message: GraphEdgeImportsMessage): void {
     const isReply = isReplyFor(message, this.env().shown());
 
-    if (isReply) this.imports = repliedImportsOf(message.result);
+    if (!isReply) return;
+
+    this.imports = repliedImportsOf(message.result);
+    this.block.drawn(this.imports, message);
   }
 
   private asked(link: LinkInspection): void {
-    this.imports = askedImportsOf(this.imports);
     this.deps.onExplain(link.source, link.target);
+    this.rescanned(link);
+  }
+
+  /** Asks the host to scan for the link's imports again and draws the asked state (T1). */
+  private rescanned(link: GraphEdge): void {
+    this.imports = askedImportsOf(this.imports);
     this.deps.onScanImports(link.source, link.target);
+    this.block.drawn(this.imports, link);
   }
 
   private updatedExplain(state: ExplainState): boolean {
