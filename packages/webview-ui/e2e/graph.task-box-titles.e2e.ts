@@ -8,19 +8,37 @@ import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.
 
 /**
  * A task state the titles are checked on: `isLarge` for the 280 and 300 task states, whose layout runs 3-5x slower on
- * the Windows and macOS runners; `isCrossed` while master draws lines through its titles.
+ * the Windows and macOS runners; `CROSSED` while master draws lines through its titles. Slice B
+ * (feat/g24a-title-slot, ELK title slots) moves these rows to `CLEAR`.
  */
 type TitleRow = {
   readonly name: string;
   readonly state: () => GraphReady;
   readonly isLarge: boolean;
-  readonly isCrossed: boolean;
+  readonly titles: TitleCheck;
+};
+
+/** What a row expects of its titles once laid out, and the check that proves it given the title count. */
+type TitleCheck = {
+  readonly then: string;
+  readonly expect: (titles: GraphBoxTitles, count: number) => Promise<void>;
+};
+
+/** Master draws lines through these titles. */
+const CROSSED: TitleCheck = {
+  then: 'drawn lines still cross package box titles',
+  expect: async (titles, count): Promise<void> => titles.expectTitlesCrossed(count)
+};
+
+const CLEAR: TitleCheck = {
+  then: 'no drawn line crosses a package box title',
+  expect: async (titles, count): Promise<void> => titles.expectNoTitleCrossed(count)
 };
 
 const ROWS: TitleRow[] = [
-  { name: 'repo-gen-like', state: repoGenLikeTasksState, isLarge: true, isCrossed: true },
-  { name: 'stretch build-only', state: buildOnlyStretchState, isLarge: true, isCrossed: true },
-  { name: 'target-like', state: (): GraphReady => targetLikeTasksState(), isLarge: false, isCrossed: false }
+  { name: 'repo-gen-like', state: repoGenLikeTasksState, isLarge: true, titles: CROSSED },
+  { name: 'stretch build-only', state: buildOnlyStretchState, isLarge: true, titles: CROSSED },
+  { name: 'target-like', state: (): GraphReady => targetLikeTasksState(), isLarge: false, titles: CLEAR }
 ];
 
 const LAYOUTS = [
@@ -29,6 +47,11 @@ const LAYOUTS = [
 ];
 
 const idOf = (task: GraphTask): string => task.id;
+
+const packageNameOf = (task: GraphTask): string => task.packageName;
+
+/** One package box title per package with a shown task. */
+const titleCountOf = (state: GraphReady): number => new Set(state.tasks.map(packageNameOf)).size;
 
 /** A saved task view of `state` with every task chosen, the cap lifted, grouped or flat. */
 const everyTaskSaved = (state: GraphReady, isGrouped: boolean): GraphViewState => {
@@ -41,7 +64,7 @@ const everyTaskSaved = (state: GraphReady, isGrouped: boolean): GraphViewState =
 test.describe('FEATURE: task box titles clear of lines', () => {
   for (const row of ROWS)
     for (const layout of LAYOUTS)
-      test(`GIVEN the ${row.name} tasks ${layout.name} with every task chosen, no drawn line crosses a package box title`, async ({
+      test(`GIVEN the ${row.name} tasks ${layout.name} with every task chosen, ${row.titles.then}`, async ({
         graphHost,
         graphPage,
         graphProbe,
@@ -49,8 +72,6 @@ test.describe('FEATURE: task box titles clear of lines', () => {
         page
       }): Promise<void> => {
         test.slow(row.isLarge, 'a 280 or 300 task ELK layout');
-        // Slice B (feat/g24a-title-slot, ELK title slots) flips these rows to passing.
-        test.fail(row.isCrossed, 'master draws lines through these package box titles');
 
         const state = row.state();
         const graphBoxTitles = new GraphBoxTitles(page);
@@ -64,7 +85,6 @@ test.describe('FEATURE: task box titles clear of lines', () => {
 
         await test.step('AND every task is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(state.tasks.map(idOf)));
 
-        await test.step('THEN no drawn line crosses a package box title', async (): Promise<void> =>
-          graphBoxTitles.expectNoTitleCrossed());
+        await test.step(`THEN ${row.titles.then}`, async (): Promise<void> => row.titles.expect(graphBoxTitles, titleCountOf(state)));
       });
 });
