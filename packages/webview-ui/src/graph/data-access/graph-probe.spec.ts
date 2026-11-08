@@ -89,6 +89,10 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
     expect(() => probe.drawWithoutLayers()).toThrow('graph e2e: no layered texture cache');
   });
 
+  it('GIVEN a headless Cytoscape, which queues no rendered style WHEN the dirty edge ends are read THEN there are none', () => {
+    expect(probe.dirtyEdgeEndIds()).toStrictEqual([]);
+  });
+
   describe('GIVEN b drawn as a ghost on the path a, b, c', () => {
     it('WHEN the nodes are read THEN b is a highlighted ghost with a dashed border', () => {
       const node = nodeOf(probe, 'b');

@@ -152,6 +152,11 @@ export type GraphProbe = {
    * such cache.
    */
   readonly drawWithoutLayers: () => void;
+  /**
+   * The sorted ids of the nodes whose edges Cytoscape still marks dirty, so every read of those edges' endpoints (the
+   * flow overlay reads them each frame) recomputes their projections; `[]` once its rendered style queue is flushed.
+   */
+  readonly dirtyEdgeEndIds: () => string[];
   /** From the latest `graph` state's message event to the first Cytoscape `render` after it; `null` until that render. */
   readonly firstFrameMs: () => number | null;
   readonly layoutEngine: () => LayoutEngine | null;

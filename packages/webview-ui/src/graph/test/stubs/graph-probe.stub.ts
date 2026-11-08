@@ -16,6 +16,7 @@ export const GRAPH_PROBE_STUB: GraphProbe = {
   renderCount: () => 0,
   forceRender: () => undefined,
   drawWithoutLayers: () => undefined,
+  dirtyEdgeEndIds: () => [],
   firstFrameMs: () => null,
   layoutEngine: () => null,
   visibleIds: () => [],
