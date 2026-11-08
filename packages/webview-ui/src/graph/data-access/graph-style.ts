@@ -134,11 +134,20 @@ const minWidthOf = (box: NodeSingular): number => {
 };
 
 /**
- * A box's width without its padding, so its title ends a padding short of each side of the frame. Cytoscape resolves
- * `text-max-width` before `min-width`, so on the first style apply `box.width()` is still its children's; the task box's
- * `minWidth` is the width it is about to take.
+ * A task box's `minWidth`, the title width its `min-width` never lets the box go under, so the title draws whole; a box
+ * without one (a folder box while exporting) takes its width without its padding, so its title ends a padding short of
+ * each side of the frame. Only that box reads `box.width()`: on a compound it recomputes the children's bounds, which
+ * every style apply of every task box paid on a large open.
  */
-const titleWidthOf = (box: NodeSingular): string => `${Math.max(box.width(), minWidthOf(box))}px`;
+const titleWidthOf = (box: NodeSingular): string => {
+  const minWidth = minWidthOf(box);
+
+  if (minWidth > 0) return `${minWidth}px`;
+
+  const width = box.width();
+
+  return `${width}px`;
+};
 
 /**
  * A box's title centred in the top padding band, inside the frame, cut with an ellipsis when wider than the box. A folder
