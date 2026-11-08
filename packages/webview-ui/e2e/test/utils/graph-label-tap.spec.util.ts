@@ -1,4 +1,4 @@
-import type { ProbeRect } from '../../../src/graph/common/graph-probe.type.ts';
+import type { ProbeRect } from '../../../src/graph/common/graph-probe-titles.type.ts';
 import type { LinkEnds, ViewportPoint } from '../../common/playwright.type.ts';
 
 /** How far in from a label box's corner a tap lands: inside the box. */
