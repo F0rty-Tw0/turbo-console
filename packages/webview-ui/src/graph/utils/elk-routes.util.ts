@@ -1,5 +1,6 @@
 import type { ElkEdge, ElkNode, ElkPoint } from 'elkjs/lib/elk-api.js';
 
+import { isTitleTieId } from './task-compound.util.ts';
 import type { EdgeRoute, Position, Routes } from '../../bridge/common/graph-state.type.ts';
 import { ROUTE_BENDS_MAX } from '../common/graph-layout.const.ts';
 
@@ -11,11 +12,12 @@ const positionOf = (point: ElkPoint): Position => {
   return position;
 };
 
-/** The edge's first section as a route, or no entry for an edge ELK left unrouted. */
+/** The edge's first section as a route, or no entry for an edge ELK left unrouted or a title tie. */
 const routeEntriesOf = (edge: ElkEdge): RouteEntry[] => {
   const section = edge.sections?.[0];
+  const isTie = isTitleTieId(edge.id);
 
-  if (section === undefined) return [];
+  if (section === undefined || isTie) return [];
 
   const bendPoints = section.bendPoints ?? [];
   const bends = bendPoints.map(positionOf);

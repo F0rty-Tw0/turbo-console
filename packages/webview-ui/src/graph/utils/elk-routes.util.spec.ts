@@ -135,6 +135,18 @@ describe('FEATURE: routesOf', () => {
   });
 });
 
+describe('FEATURE: routesOf with a titled-row box', () => {
+  describe('GIVEN a box whose title tie ELK routed beside a routed link', () => {
+    const tie: ElkEdge = { id: 'title-tie:api', sources: ['title-slot:api'], targets: ['api#build'], sections: [SECTION] };
+    const box: ElkNode = { id: 'pkg:api', edges: [tie] };
+    const laidOut: ElkNode = { id: 'root', children: [box], edges: [SECTIONED_EDGE] };
+
+    it('WHEN the routes are read THEN the link has one and the tie has none', () => {
+      expect(Object.keys(routesOf(laidOut))).toStrictEqual(['e']);
+    });
+  });
+});
+
 describe('FEATURE: postableRoutesOf', () => {
   describe('GIVEN a route with exactly ROUTE_BENDS_MAX bends', () => {
     it('WHEN filtered THEN it is kept', () => {
