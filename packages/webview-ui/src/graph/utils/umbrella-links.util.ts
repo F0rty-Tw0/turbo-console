@@ -10,6 +10,12 @@ import type { RouteSegments } from '../common/route-segments.type.ts';
 /** A link's two end centres. */
 type Ends = { readonly source: Position; readonly target: Position };
 
+/** A link's end centres as the layout placed them and as the open boxes moved them. */
+type LinkEnds = { readonly base: Ends; readonly now: Ends };
+
+/** Cytoscape clips the line at the node border for this endpoint; a px offset is drawn as given, which would put the arrow under the node. */
+const OUTSIDE_ENDPOINT = 'outside-to-node';
+
 const centreOf = (positions: Positions, id: string): Position | undefined =>
   Object.hasOwn(positions, id) ? positions[id] : undefined;
 
@@ -39,37 +45,70 @@ export const openUmbrellaRouteOf = (route: EdgeRoute, base: Ends, now: Ends, box
   return open;
 };
 
-const linkSegmentsOf = (placement: AtomPlacement, atoms: AtomPositions, link: GraphEdge): RouteSegments | null => {
+/**
+ * The segments of a link out of an open umbrella that has no base route, as after a drag straightened it: straight down
+ * from the box bottom under the umbrella's centre to its target's centre, clipped at the target's border so the arrow stays
+ * outside it. `null` when its ends coincide.
+ */
+const unroutedOpenSegmentsOf = (now: Ends, box: BoxBounds): RouteSegments | null => {
+  const start: Position = { x: now.source.x, y: box.y + box.height };
+  const route: EdgeRoute = { start, bends: [], end: now.target };
+  const segments = routeSegmentsOf(route, now.source, now.target);
+
+  if (segments === null) return null;
+
+  const clipped: RouteSegments = { ...segments, tgtEnd: OUTSIDE_ENDPOINT };
+
+  return clipped;
+};
+
+const openSegmentsOf = (route: EdgeRoute | undefined, ends: LinkEnds, box: BoxBounds): RouteSegments | null => {
+  if (route === undefined) return unroutedOpenSegmentsOf(ends.now, box);
+
+  const open = openUmbrellaRouteOf(route, ends.base, ends.now, box);
+
+  return routeSegmentsOf(open, ends.now.source, ends.now.target);
+};
+
+const linkSegmentsOf = (
+  placement: AtomPlacement,
+  boxes: AtomPositions['boxes'],
+  link: GraphEdge,
+  ends: LinkEnds
+): RouteSegments | null => {
   const id = edgeIdOf(link);
   const route = Object.hasOwn(placement.routes, id) ? placement.routes[id] : undefined;
-  const base = endsOf(placement.base, link);
-  const now = endsOf(atoms.positions, link);
   const boxId = `${ATOM_BOX_PREFIX}${link.source}`;
-  const box = Object.hasOwn(atoms.boxes, boxId) ? atoms.boxes[boxId] : undefined;
+  const box = Object.hasOwn(boxes, boxId) ? boxes[boxId] : undefined;
 
-  if (route === undefined || base === null || now === null) return null;
+  if (box !== undefined) return openSegmentsOf(route, ends, box);
 
-  if (box === undefined) return routeSegmentsOf(route, base.source, base.target);
+  if (route === undefined) return null;
 
-  const open = openUmbrellaRouteOf(route, base, now, box);
-
-  return routeSegmentsOf(open, now.source, now.target);
+  return routeSegmentsOf(route, ends.base.source, ends.base.target);
 };
 
 /**
- * The segments of each routed link out of an umbrella the placement draws, by edge id, once `atoms` placed the nodes: one
- * whose umbrella is open leaves its box's bottom (`openUmbrellaRouteOf`), any other is on its base route again, the
- * segments it was drawn on when placed. A link with no route, an end not placed, or ends that coincide is left out.
+ * The segments of each link out of an umbrella the placement draws, by edge id, once `atoms` placed the nodes: one whose
+ * umbrella is open leaves its box's bottom (`openUmbrellaRouteOf`, or straight under the umbrella when it has no route),
+ * any other is on its base route again, the segments it was drawn on when placed. `null` draws a link straight: one with
+ * no route whose umbrella is collapsed, or one whose ends coincide. A link with an end not placed is left out.
  */
-export const umbrellaLinkSegmentsOf = (placement: AtomPlacement, atoms: AtomPositions): Map<string, RouteSegments> => {
-  const segments = new Map<string, RouteSegments>();
+export const umbrellaLinkSegmentsOf = (placement: AtomPlacement, atoms: AtomPositions): Map<string, RouteSegments | null> => {
+  const segments = new Map<string, RouteSegments | null>();
   const isFromUmbrella = (link: GraphEdge): boolean => placement.sizes.has(link.source);
   const umbrellaLinks = placement.links.filter(isFromUmbrella);
 
   for (const link of umbrellaLinks) {
-    const linkSegments = linkSegmentsOf(placement, atoms, link);
+    const base = endsOf(placement.base, link);
+    const now = endsOf(atoms.positions, link);
 
-    if (linkSegments !== null) segments.set(edgeIdOf(link), linkSegments);
+    if (base === null || now === null) continue;
+
+    const ends: LinkEnds = { base, now };
+    const linkSegments = linkSegmentsOf(placement, atoms.boxes, link, ends);
+
+    segments.set(edgeIdOf(link), linkSegments);
   }
 
   return segments;

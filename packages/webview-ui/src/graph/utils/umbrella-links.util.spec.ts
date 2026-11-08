@@ -91,12 +91,34 @@ describe('FEATURE: umbrellaLinkSegmentsOf', () => {
   });
 
   describe('GIVEN an umbrella link with no route, as after a drag straightened it', () => {
-    it('WHEN the umbrella is open THEN the link is left out', () => {
+    it('WHEN the umbrella is open THEN the link runs from the box bottom under the umbrella to the border of its target', () => {
+      const expected = new Map([[LINK_ID, segmentsOf([0.625], [0], '0px 100px', 'outside-to-node')]]);
       const placement = placementOf([LINK], {}, BASE);
 
       const segments = umbrellaLinkSegmentsOf(placement, OPEN_ATOMS);
 
-      expect(segments.size).toBe(0);
+      expect(segments).toStrictEqual(expected);
+    });
+
+    it('WHEN the umbrella is collapsed THEN the link is drawn straight', () => {
+      const expected = new Map([[LINK_ID, null]]);
+      const placement = placementOf([LINK], {}, BASE);
+
+      const segments = umbrellaLinkSegmentsOf(placement, SHIFTED_ATOMS);
+
+      expect(segments).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a routed umbrella link whose ends now coincide', () => {
+    it('WHEN the umbrella is open THEN the link is drawn straight', () => {
+      const expected = new Map([[LINK_ID, null]]);
+      const positions: Positions = { ...BASE, [TARGET]: UMBRELLA_AT };
+      const atoms: AtomPositions = { positions, boxes: OPEN_BOXES };
+
+      const segments = umbrellaLinkSegmentsOf(PLACEMENT, atoms);
+
+      expect(segments).toStrictEqual(expected);
     });
   });
 

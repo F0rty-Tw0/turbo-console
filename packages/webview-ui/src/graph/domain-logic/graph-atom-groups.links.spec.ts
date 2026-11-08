@@ -59,7 +59,8 @@ const boxDropOf = (): number => {
   return box.y + box.height - umbrella.y;
 };
 
-const lastSegmentsOf = (rig: AtomRig): ReadonlyMap<string, RouteSegments> | undefined => rig.atoms.setSegments.mock.lastCall?.[0];
+const lastSegmentsOf = (rig: AtomRig): ReadonlyMap<string, RouteSegments | null> | undefined =>
+  rig.atoms.setSegments.mock.lastCall?.[0];
 
 describe('FEATURE: the links out of an expanded Atomizer umbrella', () => {
   let rig: AtomRig;
@@ -91,12 +92,33 @@ describe('FEATURE: the links out of an expanded Atomizer umbrella', () => {
       expect(lastSegmentsOf(rig)).toStrictEqual(expected);
     });
 
-    it('WHEN a drag straightened the link and the umbrella is then toggled THEN the link is left as it is', () => {
+    it('WHEN a drag straightened the link and the umbrella is then toggled THEN the link leaves the box bottom under the umbrella', () => {
+      const expected = `0px ${boxDropOf()}px`;
+
       groups.rebased(layoutOf(BASE));
 
       groups.toggle(UMBRELLA);
 
-      expect(lastSegmentsOf(rig)?.size).toBe(0);
+      expect(lastSegmentsOf(rig)?.get(LINK_ID)?.srcEnd).toBe(expected);
+    });
+
+    it('WHEN a drag straightened the link and the umbrella is then toggled THEN the link ends outside its target', () => {
+      groups.rebased(layoutOf(BASE));
+
+      groups.toggle(UMBRELLA);
+
+      expect(lastSegmentsOf(rig)?.get(LINK_ID)?.tgtEnd).toBe('outside-to-node');
+    });
+
+    it('WHEN a drag straightened the link and the umbrella is then toggled twice THEN the link is drawn straight again', () => {
+      const expected = new Map([[LINK_ID, null]]);
+
+      groups.rebased(layoutOf(BASE));
+
+      groups.toggle(UMBRELLA);
+      groups.toggle(UMBRELLA);
+
+      expect(lastSegmentsOf(rig)).toStrictEqual(expected);
     });
   });
 });
