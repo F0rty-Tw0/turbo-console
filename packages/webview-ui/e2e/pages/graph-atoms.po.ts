@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { GraphAtomLinks } from './graph-atom-links.po.ts';
 import { GraphCanvas } from './graph-canvas.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphTimings } from './graph-timings.po.ts';
@@ -49,8 +50,9 @@ const expectShift = (id: string, moved: number, expected: number): void => {
   expect(moved, `${id} moved by ${expected}`).toBeCloseTo(expected, 1);
 };
 
-/** The Atomizer groups of the task graph: toggling one with a double tap, its file nodes and box, and how long a toggle took. */
+/** The Atomizer groups of the task graph: toggling one with a double tap, its file nodes, box and links, and how long a toggle took. */
 export class GraphAtoms {
+  public readonly links: GraphAtomLinks;
   private readonly canvas: GraphCanvas;
   private readonly probe: GraphProbePage;
   private readonly timings: GraphTimings;
@@ -58,6 +60,7 @@ export class GraphAtoms {
   private collapseSamples: number[] = [];
 
   public constructor(page: Page) {
+    this.links = new GraphAtomLinks(page);
     this.canvas = new GraphCanvas(page);
     this.probe = new GraphProbePage(page);
     this.timings = new GraphTimings(page);
