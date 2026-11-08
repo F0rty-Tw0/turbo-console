@@ -1,6 +1,7 @@
 import type { AtomDrawSpec } from './atom-layout.type.ts';
 import type { TaskNaming } from './graph-task.type.ts';
 import type { NodeSize } from './node-size.type.ts';
+import type { RouteSegments } from './route-segments.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphTask, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
@@ -68,6 +69,8 @@ export type AtomCanvas = {
   readonly collapse: (umbrellaId: string, pkgBoxId: string) => void;
   /** Moves each drawn node in `positions` to its centre; an id not drawn is skipped. */
   readonly setPositions: (positions: Positions) => void;
+  /** Draws each drawn link in `segments`, by edge id, on its segments as a routed link; an id not drawn is skipped. */
+  readonly setSegments: (segments: ReadonlyMap<string, RouteSegments>) => void;
   /** Gives each drawn file in `outcomes` the class of its outcome in place of the one it had. */
   readonly setOutcomes: (outcomes: Record<string, GraphAtomOutcome>) => void;
   /** Whether the canvas lets the user drag nodes: it does not while any group is expanded. */
