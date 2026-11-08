@@ -8,12 +8,14 @@ import { GraphGroupingPage } from './graph-grouping.po.ts';
 import { GraphHost } from './graph-host.po.ts';
 import { GraphLook } from './graph-look.po.ts';
 import { GraphPackageList } from './graph-package-list.po.ts';
+import { GraphPointer } from './graph-pointer.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphTaskHost } from './graph-task-host.po.ts';
 import { GraphToolbar } from './graph-toolbar.po.ts';
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { GraphPage } from './graph.po.ts';
 import type { GraphAtomGroupState } from '../../src/bridge/common/graph-message.type.ts';
+import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { TaskRuns } from '../../src/graph/common/task-details.type.ts';
 import type { ShotSetup, TaskShotSetup } from '../common/graph-shots.type.ts';
 import type { ThemeStub } from '../common/graph-theme.type.ts';
@@ -36,6 +38,7 @@ export class GraphShots {
   private readonly list: GraphPackageList;
   private readonly graph: GraphPage;
   private readonly page: Page;
+  private readonly pointer: GraphPointer;
   private readonly probe: GraphProbePage;
   private readonly toolbar: GraphToolbar;
   private readonly widgets: GraphWidgetsPage;
@@ -51,6 +54,7 @@ export class GraphShots {
     this.look = new GraphLook(page);
     this.list = new GraphPackageList(page);
     this.graph = new GraphPage(page);
+    this.pointer = new GraphPointer(page);
     this.probe = new GraphProbePage(page);
     this.toolbar = new GraphToolbar(page);
     this.widgets = new GraphWidgetsPage(page);
@@ -143,11 +147,25 @@ export class GraphShots {
     await expect.poll(isSelected).toBe(true);
   }
 
-  /** Codicons drawn, canvas at its container's size, two frames painted, and no hover style under the mouse. */
+  /**
+   * Fit pressed on a settled canvas, then the canvas quiet again. The frame Fit leaves behind depends on whether
+   * Cytoscape had finished refining its textures when Fit was pressed, so the press waits for `settle`; the wait after
+   * it guards the shot against Fit's own late redraws.
+   */
+  public async fit(): Promise<void> {
+    await this.graph.pressButton(FIT_LABEL);
+    await this.pointer.waitForQuietCanvas();
+  }
+
+  /**
+   * Codicons drawn, canvas at its container's size, two frames painted, no hover style under the mouse, and the canvas
+   * quiet: a freshly drawn graph still refines its textures, and an input or shot during that work varies run to run.
+   */
   private async settle(): Promise<void> {
     await this.page.mouse.move(PARKED_MOUSE.x, PARKED_MOUSE.y);
     await this.toolbar.expectCodiconLoaded();
     await this.grouping.expectCanvasFitsContainer();
     await this.page.evaluate(NEXT_FRAME);
+    await this.pointer.waitForQuietCanvas();
   }
 }
