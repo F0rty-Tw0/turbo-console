@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { paddedOptionsOf } from './elk-options.util.ts';
 import { elkTaskGraphOf, taskLayoutKeyOf } from './elk-task-graph.util.ts';
+import { titleSlotIdOf } from './task-compound.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { LAYERING_DEFAULT } from '../common/graph-layout.const.ts';
 import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
@@ -36,6 +37,10 @@ const UMBRELLA_SIZE: NodeSize = { width: 200, height: 48 };
 
 const firstLeafOf = (compound: ElkNode | undefined): ElkNode | undefined => compound?.children?.[0];
 
+const topOf = (node: ElkNode): number => node.y ?? 0;
+
+const leftOf = (node: ElkNode): number => node.x ?? 0;
+
 const childIdsOf = (node: ElkNode): string[] => {
   const children = node.children ?? [];
 
@@ -60,6 +65,9 @@ const compoundAt = (graph: ElkNode, ids: string[]): ElkNode => {
 
   return found;
 };
+
+/** The child of `box` with `id`; `MISSING` where it has none. */
+const leafAt = (box: ElkNode, id: string): ElkNode => box.children?.find((child) => child.id === id) ?? MISSING;
 
 /** `web#build` alone, its leaf `leafWidth` wide, its package title `titleWidth` wide, laid out by the real ELK. */
 const layoutOf = async (leafWidth: number, titleWidth: number): Promise<ElkNode> => {
@@ -140,6 +148,17 @@ describe('FEATURE: elkTaskGraphOf', () => {
     });
   });
 
+  describe('GIVEN the root // with one turbo task and a title width', () => {
+    it('WHEN built THEN pkg:// holds the title slot and the task, tied together in its own edges', () => {
+      const graph = graphOf([taskOf('//#build', [])], new Set(['//#build']), NO_SIZES, new Map([['//', 60]]));
+      const root = compoundAt(graph, ['pkg://']);
+
+      expect(childIdsOf(root)).toStrictEqual([titleSlotIdOf('//'), '//#build']);
+      expect(root.edges?.map((edge) => edge.id)).toStrictEqual(['title-tie://']);
+      expect(graph.edges).toStrictEqual([]);
+    });
+  });
+
   describe('GIVEN app with the turbo task app#build and the script app#dev', () => {
     const tasks = [taskOf('app#build', []), scriptOf('app#dev', [])];
     const shown = new Set(['app#build', 'app#dev']);
@@ -169,6 +188,12 @@ describe('FEATURE: elkTaskGraphOf', () => {
       expect(scripts.layoutOptions?.['elk.nodeSize.minimum']).toBe(`(0, ${40 + 2 * FOLDER_PADDING_PX})`);
     });
 
+    it('WHEN both are shown THEN pkg:app has no title slot', () => {
+      const graph = graphOf(tasks, shown, NO_SIZES, titles);
+
+      expect(childIdsOf(compoundAt(graph, ['pkg:app']))).not.toContain(titleSlotIdOf('app'));
+    });
+
     it('WHEN only the turbo task is shown THEN pkg:app has no scripts compound', () => {
       const graph = graphOf(tasks, new Set(['app#build']));
       const app = compoundAt(graph, ['pkg:app']);
@@ -194,13 +219,31 @@ describe('FEATURE: elkTaskGraphOf', () => {
   });
 
   describe('GIVEN a package title of 130, laid out by the real ELK', { timeout: REAL_ELK_TIMEOUT_MS }, () => {
-    it('WHEN its one leaf is 80 wide THEN the box is 194 wide, 96 high, and the leaf stays at the padding', async () => {
+    it('WHEN its one leaf is 80 wide THEN the box is 194 wide and taller than master by at most 21', async () => {
       const graph = await layoutOf(80, 130);
-      const box = compoundOf(graph, 'pkg:web');
-      const leaf = firstLeafOf(box);
+      const box = compoundAt(graph, ['pkg:web']);
 
-      expect(box).toMatchObject({ width: 194, height: 96 });
-      expect(leaf?.x).toBe(32);
+      expect(box.width).toBe(194);
+      expect(box.height).toBeGreaterThan(96);
+      expect(box.height).toBeLessThanOrEqual(117);
+    });
+
+    it('WHEN its one leaf is 80 wide THEN the slot sits at the top padding and the leaf below it', async () => {
+      const graph = await layoutOf(80, 130);
+      const box = compoundAt(graph, ['pkg:web']);
+      const slot = leafAt(box, titleSlotIdOf('web'));
+      const leaf = leafAt(box, 'web#build');
+
+      expect(slot.y).toBe(8);
+      expect(topOf(leaf)).toBeGreaterThanOrEqual(topOf(slot) + 13);
+    });
+
+    it('WHEN its one leaf is 80 wide THEN the leaf sits inside the paddings, no longer pinned left', async () => {
+      const graph = await layoutOf(80, 130);
+      const leaf = leafAt(compoundAt(graph, ['pkg:web']), 'web#build');
+
+      expect(leftOf(leaf)).toBeGreaterThanOrEqual(32);
+      expect(leftOf(leaf) + 80).toBeLessThanOrEqual(162);
     });
 
     it('WHEN its one leaf is 200 wide THEN the box keeps the task-driven 264 (the minimum never shrinks)', async () => {

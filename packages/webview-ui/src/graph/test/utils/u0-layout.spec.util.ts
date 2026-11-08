@@ -12,6 +12,7 @@ import { drawnGraphOf } from '../../utils/drawn-graph.util.ts';
 import { layoutGraphOf } from '../../utils/elk-graph.util.ts';
 import { elkTaskGraphOf } from '../../utils/elk-task-graph.util.ts';
 import { folderOf } from '../../utils/folder-group.util.ts';
+import { isTitleSlotId, isTitleTieId } from '../../utils/task-compound.util.ts';
 import type { LayoutQuality } from '../common/layout-quality.type.ts';
 import type { U0PackageRecord, U0TaskInput, U0TaskRecord, U0TaskView, U0View } from '../common/u0-workspace.type.ts';
 import { TASK_STATE_STUB } from '../stubs/graph-task.stub.ts';
@@ -108,16 +109,18 @@ export const u0ShownIdsOf = (view: U0TaskView): string[] => {
 /** The edge ids of a captured view's ELK request at any depth, sorted. */
 export const u0CapturedEdgeIdsOf = (view: U0View): string[] => capturedEdgeIds[view];
 
-/** The leaf ids of an ELK graph at any depth, sorted. */
+/** The task leaf ids of an ELK graph at any depth, sorted; title placeholders are no tasks. */
 export const sortedLeafIdsOf = (graph: ElkNode): string[] => {
-  const ids = placementOf(graph).leaves.map((leaf) => leaf.id);
+  const { leaves } = placementOf(graph);
+  const ids = leaves.map((leaf) => leaf.id).filter((id) => !isTitleSlotId(id));
 
   return ids.sort();
 };
 
-/** The edge ids of an ELK graph at any depth, sorted. */
+/** The task edge ids of an ELK graph at any depth, sorted; title ties are no task links. */
 export const sortedEdgeIdsOf = (graph: ElkNode): string[] => {
-  const ids = edgesUnder(graph).map((edge) => edge.id);
+  const edges = edgesUnder(graph);
+  const ids = edges.map((edge) => edge.id).filter((id) => !isTitleTieId(id));
 
   return ids.sort();
 };

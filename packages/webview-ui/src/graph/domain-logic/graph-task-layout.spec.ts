@@ -16,6 +16,7 @@ import { NAMING_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { taskModeRigOf, taskSavedOf } from '../test/utils/graph-task-mode.spec.util.ts';
 import { atomPositionsOf } from '../utils/atom-positions.util.ts';
+import { titleSlotIdOf } from '../utils/task-compound.util.ts';
 
 const API_AT: Position = { x: 10, y: 20 };
 
@@ -31,7 +32,8 @@ const UMBRELLA_SIZE: NodeSize = { width: 200, height: 48 };
 
 const firstCompoundOf = (graph: ElkNode): ElkNode | undefined => graph.children?.[0];
 
-const firstLeafOf = (compound: ElkNode | undefined): ElkNode | undefined => compound?.children?.[0];
+const leafNamed = (compound: ElkNode | undefined, id: string): ElkNode | undefined =>
+  compound?.children?.find((child) => child.id === id);
 
 const UMBRELLA_FILES = [{ id: 'api#build--a.spec.ts', specPath: 'a.spec.ts', isLive: false }];
 
@@ -113,11 +115,19 @@ describe('FEATURE: GraphTaskLayout', () => {
       layout.atoms.received([UMBRELLA_GROUP]);
     });
 
+    it('WHEN a layout is laid out THEN the umbrella box holds a title slot and the umbrella', async () => {
+      await landWith('k0', sizes);
+
+      const leaves = firstCompoundOf(rig.runs.graphOf(0))?.children ?? [];
+
+      expect(leaves.map((leaf) => leaf.id)).toStrictEqual([titleSlotIdOf('api'), 'api#build']);
+    });
+
     it('WHEN a layout is laid out THEN ELK gets the umbrella at its own size', async () => {
       await landWith('k0', sizes);
 
       const compound = firstCompoundOf(rig.runs.graphOf(0));
-      const leaf = firstLeafOf(compound);
+      const leaf = leafNamed(compound, 'api#build');
 
       expect(leaf).toMatchObject({ id: 'api#build', ...UMBRELLA_SIZE });
     });
@@ -164,7 +174,7 @@ describe('FEATURE: GraphTaskLayout', () => {
 
       const leaves = firstCompoundOf(rig.runs.graphOf(1))?.children ?? [];
 
-      expect(leaves.map((leaf) => leaf.id)).toStrictEqual(['api#build']);
+      expect(leaves.map((leaf) => leaf.id)).toStrictEqual([titleSlotIdOf('api'), 'api#build']);
       expect(rig.view.atoms.expand).toHaveBeenCalledOnce();
     });
 

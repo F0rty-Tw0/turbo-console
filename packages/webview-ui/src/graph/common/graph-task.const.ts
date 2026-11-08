@@ -17,6 +17,15 @@ export const DEFAULT_TASK_DEPTH = 1;
 /** Starts every package compound id of the task graph; package names hold no `:`, so no task id starts this way. */
 export const TASK_BOX_PREFIX = 'pkg:';
 
+/** Starts the id of a titled-row box's title placeholder leaf; no task id starts this way. */
+export const TITLE_SLOT_PREFIX = 'title-slot:';
+
+/** Starts the id of the edge that ties a titled-row box's placeholder to its task. */
+export const TITLE_TIE_PREFIX = 'title-tie:';
+
+/** A titled-row box's ELK padding: a thin top, since its title sits in the placeholder row, 32 px on the other sides. */
+export const TITLED_ROW_PADDING = '[top=8,left=32,bottom=32,right=32]';
+
 /** The class of every package compound of the task graph, which draws its package name on the page; folder boxes have DOM header rows instead. */
 export const TASK_BOX_CLASS = 'task-box';
 

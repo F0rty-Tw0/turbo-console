@@ -1,8 +1,17 @@
+import type { ElkNode } from 'elkjs/lib/elk-api.js';
+
 import { folderIdOf } from './folder-id.util.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
-import { ROOT_TASK_PACKAGE, SCRIPTS_BOX_PREFIX, TASK_BOX_PREFIX } from '../common/graph-task.const.ts';
+import {
+  ROOT_TASK_PACKAGE,
+  SCRIPTS_BOX_PREFIX,
+  TASK_BOX_PREFIX,
+  TITLED_ROW_PADDING,
+  TITLE_SLOT_PREFIX,
+  TITLE_TIE_PREFIX
+} from '../common/graph-task.const.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
-import { FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import { FOLDER_PADDING_PX, NODE_FONT_SIZE } from '../common/graph.const.ts';
 import type { ElkOptions } from '../common/layout.type.ts';
 
 /** The compound id of a task's package; the root package `//` gives `pkg://`. */
@@ -82,4 +91,31 @@ export const compoundOptionsOf = (titleWidth: number | undefined, base: ElkOptio
   const options = { ...base, 'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': minimum };
 
   return options;
+};
+
+/** The id of the placeholder leaf that holds a titled-row box's title; the root `//` gives `title-slot://`. */
+export const titleSlotIdOf = (packageName: string): string => `${TITLE_SLOT_PREFIX}${packageName}`;
+
+/** The id of the edge that ties a titled-row box's placeholder to its task. */
+export const titleTieIdOf = (packageName: string): string => `${TITLE_TIE_PREFIX}${packageName}`;
+
+export const isTitleSlotId = (id: string): boolean => id.startsWith(TITLE_SLOT_PREFIX);
+
+export const isTitleTieId = (id: string): boolean => id.startsWith(TITLE_TIE_PREFIX);
+
+/** A titled-row box: a package box with a title width, exactly one turbo leaf (an umbrella counts) and no Scripts box. */
+export const isTitledRow = (titleWidth: number | undefined, turboLeaves: ElkNode[], scriptsBoxes: ElkNode[]): titleWidth is number =>
+  titleWidth !== undefined && turboLeaves.length === 1 && scriptsBoxes.length === 0;
+
+/**
+ * A titled-row box: a title placeholder leaf above its one `leaf`, tied to it by an edge in the box's own `edges` (not the
+ * root's, so packing never joins components), so ELK keeps links off the title; its padding is thin at the top.
+ */
+export const titledRowOf = (packageName: string, leaf: ElkNode, titleWidth: number, layoutOptions: ElkOptions): ElkNode => {
+  const slot: ElkNode = { id: titleSlotIdOf(packageName), width: titleWidth, height: NODE_FONT_SIZE };
+  const tie = { id: titleTieIdOf(packageName), sources: [slot.id], targets: [leaf.id] };
+  const options = { ...layoutOptions, 'elk.padding': TITLED_ROW_PADDING };
+  const box: ElkNode = { id: taskBoxIdOf(packageName), layoutOptions: options, children: [slot, leaf], edges: [tie] };
+
+  return box;
 };

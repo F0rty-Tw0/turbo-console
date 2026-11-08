@@ -4,7 +4,16 @@ import { edgeIdOf } from './edge-id.util.ts';
 import { elkEdgeOf } from './elk-grouped-graph.util.ts';
 import { groupedRootOptionsOf, paddedOptionsOf, taskLayeringOf } from './elk-options.util.ts';
 import { packComponentsOf } from './elk-pack.util.ts';
-import { compoundOptionsOf, folderBoxIdOf, scriptsBoxIdOf, taskBoxIdOf, taskFolderOf, taskPackagesOf } from './task-compound.util.ts';
+import {
+  compoundOptionsOf,
+  folderBoxIdOf,
+  isTitledRow,
+  scriptsBoxIdOf,
+  taskBoxIdOf,
+  taskFolderOf,
+  taskPackagesOf,
+  titledRowOf
+} from './task-compound.util.ts';
 import type { GraphEdge, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { LAYOUT_VERSION } from '../common/graph-layout.const.ts';
 import type { NodeSizer } from '../common/graph-page.type.ts';
@@ -104,7 +113,8 @@ const rootChildrenOf = (
  * scripts; tasks are sized by `sizes` or else their names, every link at the root so ELK routes links across packages and
  * into the nested Scripts compounds (`INCLUDE_CHILDREN`). While `naming` is grouped each package compound sits in its
  * folder compound; ungrouped the package compounds are the root children. Root children no link joins are packed into
- * wrappers (`packComponentsOf`).
+ * wrappers (`packComponentsOf`). A package compound with a title width, one turbo task and no Scripts compound is a
+ * titled-row box (`titledRowOf`): a title placeholder above its task, tied to it.
  */
 export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkNode => {
   const { tasks, shown, sizes, titleWidths, naming } = request;
@@ -122,8 +132,15 @@ export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkN
     const turboLeaves = own.filter((task) => task.isTurboTask).map(leafOf);
     const scriptLeaves = own.filter((task) => !task.isTurboTask).map(leafOf);
     const scriptsBoxes = scriptsBoxesOf(packageName, scriptLeaves, titleWidths, base);
+    const [onlyLeaf] = turboLeaves;
+    const titleWidth = titleWidths.get(packageName);
+    const layoutOptions = compoundOptionsOf(titleWidth, base);
+
+    if (onlyLeaf !== undefined && isTitledRow(titleWidth, turboLeaves, scriptsBoxes)) {
+      return titledRowOf(packageName, onlyLeaf, titleWidth, layoutOptions);
+    }
+
     const children = [...turboLeaves, ...scriptsBoxes];
-    const layoutOptions = compoundOptionsOf(titleWidths.get(packageName), base);
     const compound: ElkNode = { id: taskBoxIdOf(packageName), layoutOptions, children };
 
     return compound;
