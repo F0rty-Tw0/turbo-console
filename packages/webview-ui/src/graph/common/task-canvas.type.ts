@@ -1,5 +1,6 @@
 import type { AtomDrawSpec } from './atom-layout.type.ts';
 import type { TaskNaming } from './graph-task.type.ts';
+import type { BoxFrames } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { RouteSegments } from './route-segments.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
@@ -7,14 +8,16 @@ import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts
 import type { GraphTask, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 
 /**
- * What task mode draws: the shown tasks, their centres, the route of each link that has one, the node sizer for their
- * names, the size of each umbrella that has one of its own, the label of each umbrella that has a counts line, and the
+ * What task mode draws: the shown tasks, their centres, the route of each link that has one, the frame of each titled-row
+ * box, the node sizer for their names, the size of each umbrella that has one of its own, the label of each umbrella that has a counts line, and the
  * title text width of each package.
  */
 export type TaskDrawing = {
   readonly tasks: GraphTask[];
   readonly positions: Positions;
   readonly routes: Routes;
+  /** The ELK frame of each titled-row box, by box id; a box with none draws as any package box. */
+  readonly boxFrames: BoxFrames;
   readonly sizeOf: (name: string) => NodeSize;
   readonly sizes: ReadonlyMap<string, NodeSize>;
   readonly labels: ReadonlyMap<string, string>;
