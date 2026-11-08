@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GraphAtomGroups } from './graph-atom-groups.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
-import { BASE, E2E_CI, LIB_CI, SIZES, TASKS, atomRigOf, statesOf } from '../test/utils/graph-atom-groups.spec.util.ts';
+import { BASE, E2E_CI, LIB_CI, SIZES, TASKS, atomRigOf, layoutOf, statesOf } from '../test/utils/graph-atom-groups.spec.util.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA = 'app#e2e-ci';
@@ -105,7 +105,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
   describe('GIVEN a layout is placed with the umbrella', () => {
     beforeEach(() => {
       groups.received([E2E_CI]);
-      groups.placed(new Set(['app#e2e-ci']), BASE, SIZES, TASKS);
+      groups.placed(new Set(['app#e2e-ci']), layoutOf(BASE), SIZES, TASKS);
     });
 
     it('WHEN atoms arrive for it THEN setCounts gets its counts without the name', () => {
@@ -123,7 +123,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
     it('WHEN the group is received and placed again THEN a later atoms message keeps the counts it had', () => {
       groups.states(COUNTED_E2E_CI);
       groups.received([E2E_CI]);
-      groups.placed(new Set(['app#e2e-ci']), BASE, SIZES, TASKS);
+      groups.placed(new Set(['app#e2e-ci']), layoutOf(BASE), SIZES, TASKS);
 
       groups.states(UNKNOWN_GONE);
 
@@ -140,7 +140,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
   describe('GIVEN a layout is placed where one known umbrella is a plain-sized task', () => {
     beforeEach(() => {
       groups.received([LIB_CI, E2E_CI]);
-      groups.placed(new Set(['app#e2e-ci', 'lib#e2e-ci']), BASE, SIZES, TASKS);
+      groups.placed(new Set(['app#e2e-ci', 'lib#e2e-ci']), layoutOf(BASE), SIZES, TASKS);
     });
 
     it('WHEN atoms name both THEN setCounts gets only the umbrella the layout sized', () => {
@@ -156,7 +156,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
     it('WHEN two umbrellas are shown THEN shownUmbrellas posts both ids once, sorted', () => {
       groups.received([LIB_CI, E2E_CI]);
 
-      groups.placed(new Set(['lib#e2e-ci', 'app#e2e-ci', 'app#build']), BASE, SIZES, TASKS);
+      groups.placed(new Set(['lib#e2e-ci', 'app#e2e-ci', 'app#build']), layoutOf(BASE), SIZES, TASKS);
 
       expect(rig.post.mock.calls).toStrictEqual([[{ type: 'shownUmbrellas', ids: ['app#e2e-ci', 'lib#e2e-ci'] }]]);
     });
@@ -164,7 +164,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
     it('WHEN no umbrella is shown THEN nothing is posted', () => {
       groups.received([E2E_CI]);
 
-      groups.placed(new Set(['app#build']), BASE, new Map(), TASKS);
+      groups.placed(new Set(['app#build']), layoutOf(BASE), new Map(), TASKS);
 
       expect(rig.post).not.toHaveBeenCalled();
     });
@@ -173,7 +173,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
   describe('GIVEN a layout is placed whose umbrella is a package script', () => {
     it('WHEN the umbrella is expanded THEN its files are drawn in the Scripts box of its package', () => {
       groups.received([E2E_CI]);
-      groups.placed(SHOWN_UMBRELLA, BASE, SIZES, [scriptOf(UMBRELLA, [])]);
+      groups.placed(SHOWN_UMBRELLA, layoutOf(BASE), SIZES, [scriptOf(UMBRELLA, [])]);
 
       groups.toggle(UMBRELLA);
 
@@ -182,7 +182,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
 
     it('WHEN a turbo umbrella is expanded THEN its files are drawn in its package box', () => {
       groups.received([E2E_CI]);
-      groups.placed(SHOWN_UMBRELLA, BASE, SIZES, [taskOf(UMBRELLA, [])]);
+      groups.placed(SHOWN_UMBRELLA, layoutOf(BASE), SIZES, [taskOf(UMBRELLA, [])]);
 
       groups.toggle(UMBRELLA);
 
@@ -193,7 +193,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
   describe('GIVEN reshown', () => {
     it('WHEN it follows a placement with a shown umbrella THEN shownUmbrellas posts its id again', () => {
       groups.received([E2E_CI]);
-      groups.placed(new Set(['app#e2e-ci']), BASE, SIZES, TASKS);
+      groups.placed(new Set(['app#e2e-ci']), layoutOf(BASE), SIZES, TASKS);
 
       groups.reshown();
 
@@ -210,7 +210,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
 
     it('WHEN it follows a placement with no umbrella shown THEN nothing is posted', () => {
       groups.received([E2E_CI]);
-      groups.placed(new Set(['app#build']), BASE, new Map(), TASKS);
+      groups.placed(new Set(['app#build']), layoutOf(BASE), new Map(), TASKS);
 
       groups.reshown();
 
@@ -221,7 +221,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
   describe('GIVEN the layout is cleared', () => {
     beforeEach(() => {
       groups.received([E2E_CI]);
-      groups.placed(new Set(['app#e2e-ci']), BASE, SIZES, TASKS);
+      groups.placed(new Set(['app#e2e-ci']), layoutOf(BASE), SIZES, TASKS);
       rig.post.mockClear();
       groups.clear();
     });

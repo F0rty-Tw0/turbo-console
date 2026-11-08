@@ -5,7 +5,7 @@ import type { GraphAtomGroupState } from '../../bridge/common/graph-message.type
 import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
-import { BASE, E2E_CI, SIZE, SIZES, TASKS, atomRigOf, groupOf } from '../test/utils/graph-atom-groups.spec.util.ts';
+import { BASE, E2E_CI, SIZE, SIZES, TASKS, atomRigOf, groupOf, layoutOf } from '../test/utils/graph-atom-groups.spec.util.ts';
 import { atomPositionsOf } from '../utils/atom-positions.util.ts';
 
 const UMBRELLA = 'app#e2e-ci';
@@ -55,7 +55,7 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
     rig = atomRigOf();
     groups = new GraphAtomGroups(rig.deps);
     groups.received([E2E_CI]);
-    groups.placed(SHOWN, BASE, SIZES, TASKS);
+    groups.placed(SHOWN, layoutOf(BASE), SIZES, TASKS);
     rig.atoms.setGrabbable.mockClear();
   });
 
@@ -152,7 +152,7 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
     });
 
     it('WHEN the layout was dragged and the group then expands THEN the positions start from the dragged base', () => {
-      groups.rebased(MOVED_BASE);
+      groups.rebased(layoutOf(MOVED_BASE));
 
       groups.toggle(UMBRELLA);
 
@@ -200,7 +200,7 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
     });
 
     it('WHEN a layout is placed with the group still shown THEN it is drawn again on the new base', () => {
-      groups.placed(SHOWN, MOVED_BASE, SIZES, TASKS);
+      groups.placed(SHOWN, layoutOf(MOVED_BASE), SIZES, TASKS);
 
       expect(rig.atoms.expand).toHaveBeenCalledOnce();
       expect(rig.atoms.setPositions).toHaveBeenLastCalledWith(expandedPositionsOf(E2E_CI, MOVED_BASE));
@@ -208,8 +208,8 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
     });
 
     it('WHEN a layout is placed without the group THEN its entry is dropped and grabbing returns', () => {
-      groups.placed(new Set(['app#build']), BASE, new Map(), TASKS);
-      groups.placed(SHOWN, BASE, SIZES, TASKS);
+      groups.placed(new Set(['app#build']), layoutOf(BASE), new Map(), TASKS);
+      groups.placed(SHOWN, layoutOf(BASE), SIZES, TASKS);
 
       expect(rig.atoms.expand).not.toHaveBeenCalled();
       expect(rig.atoms.setGrabbable).toHaveBeenLastCalledWith(true);
@@ -217,7 +217,7 @@ describe('FEATURE: expanding an Atomizer group of the task graph', () => {
 
     it('WHEN the layout is cleared THEN the group collapses, grabbing returns and the next layout starts collapsed', () => {
       groups.clear();
-      groups.placed(SHOWN, BASE, SIZES, TASKS);
+      groups.placed(SHOWN, layoutOf(BASE), SIZES, TASKS);
 
       expect(rig.atoms.collapse).toHaveBeenCalledExactlyOnceWith(UMBRELLA, 'pkg:app');
       expect(rig.atoms.setGrabbable).toHaveBeenLastCalledWith(true);

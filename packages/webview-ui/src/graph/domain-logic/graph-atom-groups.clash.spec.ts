@@ -10,6 +10,7 @@ import type { TaskCanvas } from '../common/task-canvas.type.ts';
 import { createAtomCanvas } from '../data-access/graph-atom-view.ts';
 import { createTaskCanvas } from '../data-access/graph-task-view.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
+import { layoutOf } from '../test/utils/graph-atom-groups.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA = 'web#e2e-ci';
@@ -88,7 +89,7 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
 
     groups = new GraphAtomGroups(deps);
     groups.received([GROUP]);
-    groups.placed(new Set([UMBRELLA]), POSITIONS, SIZES, TASKS);
+    groups.placed(new Set([UMBRELLA]), layoutOf(POSITIONS), SIZES, TASKS);
   });
 
   afterEach(() => {

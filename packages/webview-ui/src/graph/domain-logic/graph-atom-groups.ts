@@ -1,11 +1,12 @@
 import { GraphAtomExpansion } from './graph-atom-expansion.ts';
 import { GraphAtomTiming } from './graph-atom-timing.ts';
 import type { GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
-import type { GraphAtomGroup, GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { GraphAtomGroup, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { ATOM_BOX_PREFIX, ATOM_MORE_PREFIX } from '../common/graph-atom.const.ts';
-import type { AtomGroupsDeps, AtomPlacement } from '../common/graph-atom.type.ts';
+import type { AtomGroupsDeps, AtomLayout, AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import { atomSpecOf, outcomesOf } from '../utils/atom-spec.util.ts';
+import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
 import { parentIdOf } from '../utils/task-compound.util.ts';
 
 const pkgBoxEntryOf = (task: GraphTask): [string, string] => [task.id, parentIdOf(task)];
@@ -114,21 +115,24 @@ export class GraphAtomGroups {
   }
 
   /**
-   * Keeps the layout just placed, whose canvas was drawn collapsed, and reports its umbrellas to the host. A group still
-   * shown stays expanded, drawn again on the new base; one no longer shown is dropped.
+   * Keeps the layout just placed, whose canvas was drawn collapsed at its centres and on its routes, and reports its
+   * umbrellas to the host. A group still shown stays expanded, drawn again on the new base; one no longer shown is dropped.
    */
-  public placed(shown: ReadonlySet<string>, base: Positions, sizes: ReadonlyMap<string, NodeSize>, tasks: GraphTask[]): void {
+  public placed(shown: ReadonlySet<string>, layout: AtomLayout, sizes: ReadonlyMap<string, NodeSize>, tasks: GraphTask[]): void {
     const pkgBoxes = new Map(tasks.map(pkgBoxEntryOf));
+    const taskIds = tasks.map((task) => task.id);
+    const links = taskEdgesOf(tasks, new Set(taskIds));
+    const { positions: base, routes } = layout;
 
-    this.placement = { shown, base, sizes, pkgBoxes };
+    this.placement = { shown, base, sizes, pkgBoxes, links, routes };
     this.expansion.forget();
     this.reshown();
     this.sync();
   }
 
-  /** Keeps the dragged centres as the base the groups expand from; groups are collapsed while a drag can happen. */
-  public rebased(base: Positions): void {
-    if (this.placement !== null) this.placement = { ...this.placement, base };
+  /** Keeps the dragged centres and the routes the drag left as the base the groups expand from; groups are collapsed while a drag can happen. */
+  public rebased(layout: AtomLayout): void {
+    if (this.placement !== null) this.placement = { ...this.placement, base: layout.positions, routes: layout.routes };
   }
 
   /** Expands or collapses the group the node is the umbrella, the box or a file of; any other node changes nothing. */
