@@ -29,9 +29,8 @@ export const framedOf = (cy: Core): Collection => {
   return shown.union(shown.parents()).union(collapsed).union(lines);
 };
 
-/** Fits the camera to `framedOf`; with nothing framed the camera stays. */
-export const fitVisible = (cy: Core, paddingPx: number): void => {
-  const framed = framedOf(cy);
+/** Fits the camera to `framed`, `framedOf` unless given; with nothing framed the camera stays. */
+export const fitVisible = (cy: Core, paddingPx: number, framed: Collection = framedOf(cy)): void => {
   const nothingShown = framed.empty();
 
   if (nothingShown) return;
@@ -39,9 +38,11 @@ export const fitVisible = (cy: Core, paddingPx: number): void => {
   cy.fit(framed, paddingPx);
 };
 
-/** The floored viewport a first open uses in place of `fitVisible`, from the box that fit would get; `null` keeps the true fit. */
-export const openViewportOf = (cy: Core, paddingPx: number): Viewport | null => {
-  const framed = framedOf(cy);
+/**
+ * The floored viewport a first open uses in place of `fitVisible`, from the box that fit would get to `framed`,
+ * `framedOf` unless given; `null` keeps the true fit.
+ */
+export const openViewportOf = (cy: Core, paddingPx: number, framed: Collection = framedOf(cy)): Viewport | null => {
   const nothingShown = framed.empty();
 
   if (nothingShown) return null;
