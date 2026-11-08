@@ -55,5 +55,19 @@ describe('FEATURE: taskRulesOf box width', () => {
 
       expect(box.width()).toBe(plain.width());
     });
+
+    it('WHEN first styled THEN the title max width is its own 200 px, which draws it whole, not the wider box', () => {
+      const box = boxOf({ childWidth: 300, minWidth: 200 });
+
+      expect(box.style('text-max-width')).toBe('200px');
+    });
+  });
+
+  describe('GIVEN a 300 px task in a box with no title width', () => {
+    it('WHEN first styled THEN the title max width is the box width', () => {
+      const box = boxOf({ childWidth: 300, minWidth: 0 });
+
+      expect(box.style('text-max-width')).toBe(`${box.width()}px`);
+    });
   });
 });
