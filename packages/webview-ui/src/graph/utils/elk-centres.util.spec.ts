@@ -94,4 +94,16 @@ describe('FEATURE: nestedCentresOf', () => {
       expect(Object.hasOwn(centres, '__proto__')).toBe(true);
     });
   });
+
+  it('GIVEN a titled-row box WHEN converted THEN its title slot has no centre', () => {
+    const slot: ElkNode = { id: 'title-slot:api', x: 20, y: 8, width: 60, height: 13 };
+    const leaf: ElkNode = { id: 'api#build', x: 10, y: 41, width: 80, height: 32 };
+    const box: ElkNode = { id: 'pkg:api', x: 0, y: 0, children: [slot, leaf] };
+    const laidOut: ElkNode = { id: 'root', children: [box] };
+    const centre: Position = { x: 50, y: 57 };
+
+    const centres = nestedCentresOf(laidOut);
+
+    expect(centres).toStrictEqual({ 'api#build': centre });
+  });
 });
