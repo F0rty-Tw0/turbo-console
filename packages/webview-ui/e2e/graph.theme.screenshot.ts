@@ -14,7 +14,6 @@ import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 import { taskCanvasShotSetup } from './test/utils/graph-task-canvas.spec.util.ts';
 import { taskShotSetup } from './test/utils/graph-task-shot.spec.util.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
-import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
 
 const THEMES = [
   { name: 'dark', theme: THEME_DARK_STUB },
@@ -142,7 +141,6 @@ test.describe('FEATURE: theme screenshots of the grouped task canvas', () => {
   for (const { name, theme } of THEMES) {
     test(`GIVEN the ${name} theme, the grouped task canvas matches task-canvas-${name}.png`, async ({
       graphCanvas,
-      graphPage,
       page
     }): Promise<void> => {
       const shots = new GraphShots(page);
@@ -150,7 +148,7 @@ test.describe('FEATURE: theme screenshots of the grouped task canvas', () => {
       await test.step('WHEN every task of the three-folder state is laid out grouped in task mode', async (): Promise<void> =>
         shots.openTasks(TASK_CANVAS_SETUP, theme));
 
-      await test.step('AND Fit is pressed', async (): Promise<void> => graphPage.pressButton(FIT_LABEL));
+      await test.step('AND Fit is pressed and the canvas goes quiet', async (): Promise<void> => shots.fit());
 
       await test.step('AND every box is in view', async (): Promise<void> => graphCanvas.expectAllNodesInView());
 
