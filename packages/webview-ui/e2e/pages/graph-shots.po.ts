@@ -148,15 +148,19 @@ export class GraphShots {
   }
 
   /**
-   * Fit pressed, then the canvas quiet. Fit moves the camera, so Cytoscape redraws from its layered texture cache once
-   * the camera rests; a shot taken before that frame differs along every anti-aliased edge.
+   * Fit pressed on a settled canvas, then the canvas quiet again. The frame Fit leaves behind depends on whether
+   * Cytoscape had finished refining its textures when Fit was pressed, so the press waits for `settle`; the wait after
+   * it keeps the shot off Fit's own late redraws.
    */
   public async fit(): Promise<void> {
     await this.graph.pressButton(FIT_LABEL);
     await this.pointer.waitForQuietCanvas();
   }
 
-  /** Codicons drawn, canvas at its container's size, two frames painted, no hover style under the mouse, canvas quiet. */
+  /**
+   * Codicons drawn, canvas at its container's size, two frames painted, no hover style under the mouse, and the canvas
+   * quiet: a freshly drawn graph still refines its textures, and an input or shot during that work varies run to run.
+   */
   private async settle(): Promise<void> {
     await this.page.mouse.move(PARKED_MOUSE.x, PARKED_MOUSE.y);
     await this.toolbar.expectCodiconLoaded();
