@@ -68,7 +68,8 @@ describe('FEATURE: probeTitlesOf', () => {
       expect(names).toStrictEqual([{ id: 'pkg:web', text: 'web' }]);
     });
 
-    // Headless Cytoscape measures no font, so the label rect has no height here; the e2e reads real label sizes.
+    // Headless Cytoscape measures no font, so the label rect is empty here: this row pins only that the label is not the
+    // box. The e2e rows guard the real label rect (a crossed row fails on an empty one).
     it('WHEN the titles are probed THEN the label is the title alone: inside the box, narrower and shorter than it', () => {
       const { label, box } = firstTitleOf(cy, ORIGIN);
       const isInside = label.left >= box.left && label.top >= box.top && label.left + label.width <= box.left + box.width;
