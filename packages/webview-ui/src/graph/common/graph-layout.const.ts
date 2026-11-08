@@ -3,6 +3,13 @@ import type { ElkLayering, ElkOptions } from './layout.type.ts';
 /** The layout algorithm's version: it enters the layout hash, so a change to how routes or positions are built drops every cached layout. */
 export const LAYOUT_VERSION = 3;
 
+/**
+ * The task layout's version: it enters the task layout key only, so a change to how task boxes are laid out or sized drops
+ * every saved task camera and memory entry. `LAYOUT_VERSION` also seeds the host's package-graph hash, so it cannot move
+ * for a task-only change. 4 is above every `LAYOUT_VERSION` a saved task key ended with.
+ */
+export const TASK_LAYOUT_VERSION = 4;
+
 /** An edge route with more bends than this is not a route: the page leaves it out of its post and the host drops it alone. */
 export const ROUTE_BENDS_MAX = 64;
 

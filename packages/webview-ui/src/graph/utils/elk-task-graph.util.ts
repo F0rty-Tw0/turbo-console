@@ -15,7 +15,7 @@ import {
   titledRowOf
 } from './task-compound.util.ts';
 import type { GraphEdge, GraphTask } from '../../bridge/common/graph-state.type.ts';
-import { LAYOUT_VERSION } from '../common/graph-layout.const.ts';
+import { TASK_LAYOUT_VERSION } from '../common/graph-layout.const.ts';
 import type { NodeSizer } from '../common/graph-page.type.ts';
 import type { TaskLayoutRequest, TaskNaming } from '../common/graph-task.type.ts';
 import type { ElkOptions } from '../common/layout.type.ts';
@@ -167,7 +167,7 @@ const folderPairsOf = (drawn: GraphTask[], naming: TaskNaming): [string, string]
 /**
  * What a task layout depends on: the sorted shown task ids, the sorted ids of the links between them, when a shown task
  * has a file count, those counts by sorted id, and last the grouping, the scope bit (box titles, so box widths, follow
- * it) and, while grouped, each shown package's folder, and as the very last element the layout version. Without counts
+ * it) and, while grouped, each shown package's folder, and as the very last element the task layout version. Without counts
  * the key is the one of a graph with none; a key saved before the last element existed never equals one built now.
  */
 export const taskLayoutKeyOf = (
@@ -185,7 +185,7 @@ export const taskLayoutKeyOf = (
   const withCounts = [...parts, counts];
   const keyed = counts.length === 0 ? parts : withCounts;
   const grouping = [naming.grouped, naming.scopeShown, folderPairsOf(drawn, naming)];
-  const withGrouping = [...keyed, grouping, LAYOUT_VERSION];
+  const withGrouping = [...keyed, grouping, TASK_LAYOUT_VERSION];
 
   return JSON.stringify(withGrouping);
 };
