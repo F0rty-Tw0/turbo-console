@@ -1,5 +1,7 @@
 import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
+import { isTitleSlotId, isTitleTieId } from './task-compound.util.ts';
+
 /** A package is a node without children; a folder compound has some. */
 export const isElkLeaf = (node: ElkNode): boolean => {
   const children = node.children ?? [];
@@ -11,6 +13,9 @@ const leavesOf = (node: ElkNode): ElkNode[] => {
   const children = node.children ?? [];
   const leavesUnder = (child: ElkNode): ElkNode[] => {
     const isLeaf = isElkLeaf(child);
+    const isSlot = isTitleSlotId(child.id);
+
+    if (isSlot) return [];
 
     if (isLeaf) return [child];
 
@@ -20,9 +25,10 @@ const leavesOf = (node: ElkNode): ElkNode[] => {
   return children.flatMap(leavesUnder);
 };
 
-/** The edges of `node` then of every compound below it, depth-first. */
+/** The edges of `node` then of every compound below it, depth-first; a title tie is no link. */
 const edgesUnder = (node: ElkNode): ElkEdge[] => {
-  const own = node.edges ?? [];
+  const edges = node.edges ?? [];
+  const own = edges.filter((edge) => !isTitleTieId(edge.id));
   const children = node.children ?? [];
   const below = children.flatMap(edgesUnder);
 
@@ -30,7 +36,7 @@ const edgesUnder = (node: ElkNode): ElkEdge[] => {
 };
 
 /**
- * The graph with every package leaf lifted to the root in depth-first order and every edge of every depth kept (the root's
+ * The graph with every package leaf (but no title slot) lifted to the root in depth-first order and every edge of every depth kept (the root's
  * first), for the fallback layout and the grid.
  */
 export const flatElkGraphOf = (graph: ElkNode): ElkNode => {
