@@ -5,7 +5,7 @@ import type { GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/
 import type { GraphAtomFile, GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
-import { BASE, SIZES, TASKS, atomRigOf, groupOf } from '../test/utils/graph-atom-groups.spec.util.ts';
+import { BASE, SIZES, TASKS, atomRigOf, groupOf, layoutOf } from '../test/utils/graph-atom-groups.spec.util.ts';
 
 const UMBRELLA = 'app#e2e-ci';
 
@@ -75,7 +75,7 @@ describe('FEATURE: a capped Atomizer group toggled by its count node and redrawn
 
   const placeGroup = (fileCount: number): void => {
     groups.received([groupOf(UMBRELLA, fileCount)]);
-    groups.placed(SHOWN, BASE, SIZES, TASKS);
+    groups.placed(SHOWN, layoutOf(BASE), SIZES, TASKS);
   };
 
   beforeEach(() => {

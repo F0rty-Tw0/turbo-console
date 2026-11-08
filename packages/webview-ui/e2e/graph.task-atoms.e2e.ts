@@ -68,6 +68,9 @@ const SKIPPED_GROUPS = { [TARGET_LIKE_UMBRELLA]: SKIPPED_STATE };
 
 const SHOWN_POST = [TARGET_LIKE_UMBRELLA];
 
+/** The umbrella's links, to `feat-1#build` and `feat-2#build`. */
+const UMBRELLA_LINK_COUNT = 2;
+
 const PACKAGE_NAMES = stateNamesOf(targetLikeTasksState());
 
 test.describe('FEATURE: graph task mode with an Atomizer group', () => {
@@ -163,6 +166,66 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
 
       await test.step('AND only the nodes right of or below the umbrella moved by the extra width and height of the box', async (): Promise<void> =>
         graphAtoms.expectNeighboursShifted(before, [TARGET_LIKE_UMBRELLA, ...FILE_IDS], umbrella, extraOf(umbrella)));
+    }
+  );
+
+  test(
+    'GIVEN the umbrella chosen and the target-like state sent, a double tap on the umbrella draws its links from the box bottom past its files, and a second one draws them where they were',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, openUmbrella }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+
+      const before = await test.step('AND its two links are read', async () =>
+        graphAtoms.links.pointsFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT));
+
+      await test.step('AND the umbrella is double tapped', async (): Promise<void> => {
+        await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
+        await graphAtoms.expectFilesDrawn(FILE_IDS, true);
+      });
+
+      await test.step('THEN no link crosses a file', async (): Promise<void> => graphAtoms.links.expectThroughFiles(FILE_IDS, 0));
+
+      await test.step('WHEN the umbrella is double tapped again', async (): Promise<void> => {
+        await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
+        await graphAtoms.expectFilesDrawn(FILE_IDS, false);
+      });
+
+      await test.step('THEN its links are drawn where they were', async (): Promise<void> =>
+        graphAtoms.links.expectPointsFrom(TARGET_LIKE_UMBRELLA, before));
+    }
+  );
+
+  test(
+    'GIVEN the umbrella chosen and dragged, which straightens its links, a double tap on it draws them from the box bottom past its files, and a second one draws them straight again',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, graphCanvas, openUmbrella }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+
+      await test.step('AND the umbrella is dragged by 40 px right', async (): Promise<void> =>
+        graphCanvas.dragNode(TARGET_LIKE_UMBRELLA, 40, 0));
+
+      const dragged = await test.step('AND its two links are straight and its centre is read', async () => {
+        await graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+
+        return graphAtoms.links.centreOf(TARGET_LIKE_UMBRELLA);
+      });
+
+      await test.step('AND the umbrella is double tapped', async (): Promise<void> => {
+        await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
+        await graphAtoms.expectFilesDrawn(FILE_IDS, true);
+      });
+
+      await test.step('THEN no link crosses a file', async (): Promise<void> => graphAtoms.links.expectThroughFiles(FILE_IDS, 0));
+
+      await test.step('WHEN the umbrella is double tapped again', async (): Promise<void> => {
+        await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
+        await graphAtoms.expectFilesDrawn(FILE_IDS, false);
+      });
+
+      await test.step('THEN the umbrella is back where it was dragged and its links are drawn straight again', async (): Promise<void> => {
+        await graphAtoms.links.expectCentreOf(TARGET_LIKE_UMBRELLA, dragged);
+        await graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+      });
     }
   );
 

@@ -56,7 +56,9 @@ const PLACEMENT: AtomPlacement = {
   shown: new Set(['web#e2e-ci', CLASH_ID]),
   base: POSITIONS,
   sizes: SIZES,
-  pkgBoxes: PKG_BOXES
+  pkgBoxes: PKG_BOXES,
+  links: [],
+  routes: {}
 };
 
 const parentIdOf = (cy: Core, id: string): string => {

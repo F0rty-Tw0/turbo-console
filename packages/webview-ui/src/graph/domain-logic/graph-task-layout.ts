@@ -93,7 +93,7 @@ export class GraphTaskLayout {
 
     this.placed = moved;
     this.deps.view.tasks.setRoutes(routes);
-    this.atoms.rebased(positions);
+    this.atoms.rebased(moved);
     this.remember(moved);
   }
 
@@ -177,7 +177,7 @@ export class GraphTaskLayout {
       naming: request.naming
     });
     this.placed = result;
-    this.atoms.placed(request.shown, result.positions, request.sizes, request.tasks);
+    this.atoms.placed(request.shown, result, request.sizes, request.tasks);
     screen.showNotice(engineNoticeOf(result.engine));
 
     if (isSavedCamera) view.setViewport(saved.zoom, saved.pan);

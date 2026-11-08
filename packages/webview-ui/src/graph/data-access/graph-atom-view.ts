@@ -13,7 +13,9 @@ import {
   ATOM_OUTCOME_CLASSES,
   ATOM_UMBRELLA_CLASS
 } from '../common/graph-atom.const.ts';
+import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import { TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import type { RouteSegments } from '../common/route-segments.type.ts';
 import type { AtomCanvas } from '../common/task-canvas.type.ts';
 import { moreIdOf } from '../utils/atom-spec.util.ts';
 
@@ -87,6 +89,26 @@ const setFileOutcomes = (cy: Core, outcomes: Record<string, GraphAtomOutcome>): 
   };
 
   cy.batch((): void => Object.entries(outcomes).forEach(markFile));
+};
+
+/** Draws each drawn link in `segments`, by edge id, on its segments as a routed link, or straight for `null`; any other id is skipped. */
+const setLinkSegments = (cy: Core, segments: ReadonlyMap<string, RouteSegments | null>): void => {
+  const routeEdge = (data: RouteSegments | null, id: string): void => {
+    const edge = cy.getElementById(id);
+    const isDrawn = edge.nonempty();
+
+    if (!isDrawn) return;
+
+    if (data === null) {
+      edge.removeClass(ROUTED_CLASS);
+
+      return;
+    }
+
+    edge.data(data).addClass(ROUTED_CLASS);
+  };
+
+  cy.batch((): void => segments.forEach(routeEdge));
 };
 
 /**
@@ -163,6 +185,7 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
 
     cy.batch((): void => Object.entries(positions).forEach(moveNode));
   };
+  const setSegments = (segments: ReadonlyMap<string, RouteSegments | null>): void => setLinkSegments(cy, segments);
   const setOutcomes = (outcomes: Record<string, GraphAtomOutcome>): void => setFileOutcomes(cy, outcomes);
   const setGrabbable = (isGrabbable: boolean): void => void cy.autoungrabify(!isGrabbable);
   const isAtomNode = (id: string): boolean => {
@@ -170,7 +193,7 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
 
     return node.hasClass(ATOM_BOX_CLASS) || node.hasClass(ATOM_FILE_CLASS) || node.hasClass(ATOM_MORE_CLASS);
   };
-  const canvas: AtomCanvas = { expand, collapse, setPositions, setOutcomes, setGrabbable, isAtomNode };
+  const canvas: AtomCanvas = { expand, collapse, setPositions, setSegments, setOutcomes, setGrabbable, isAtomNode };
 
   titleFilesOn(cy);
 
