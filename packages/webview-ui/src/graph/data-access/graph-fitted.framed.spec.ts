@@ -4,14 +4,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createFittedCamera } from './graph-fitted.ts';
 import { graphStyleOf } from './graph-style.ts';
-import { fitVisible, framedOf, openViewportOf } from './graph-visibility.ts';
+import { fitVisible, openViewportOf } from './graph-visibility.ts';
 import type * as visibility from './graph-visibility.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { largeGroupedElementsOf } from '../test/utils/open-scenes.spec.util.ts';
 
 vi.mock('./graph-visibility.ts', async (importOriginal) => {
   const real = await importOriginal<typeof visibility>();
-  const spied = { framedOf: vi.fn(real.framedOf), openViewportOf: vi.fn(real.openViewportOf), fitVisible: vi.fn(real.fitVisible) };
+  const spied = { openViewportOf: vi.fn(real.openViewportOf), fitVisible: vi.fn(real.fitVisible) };
   const mocked = { ...real, ...spied };
 
   return mocked;
@@ -39,9 +39,19 @@ describe('FEATURE: createFittedCamera reads the framed set once per frame', () =
 
   describe('GIVEN a graph that fits above the floor', () => {
     it('WHEN the camera opens THEN the framed set is built once for both the floor check and the fit', () => {
+      const edges = vi.spyOn(cy, 'edges');
+
       createFittedCamera(cy, { onViewport: vi.fn(), onRefit: vi.fn() }).open();
 
-      expect(framedOf).toHaveBeenCalledTimes(1);
+      expect(edges.mock.calls).toStrictEqual([[':visible']]);
+    });
+
+    it('WHEN the camera fits THEN the framed set is built once', () => {
+      const edges = vi.spyOn(cy, 'edges');
+
+      createFittedCamera(cy, { onViewport: vi.fn(), onRefit: vi.fn() }).fit();
+
+      expect(edges.mock.calls).toStrictEqual([[':visible']]);
     });
 
     it('WHEN the camera opens THEN the fit gets the framed set the floor check measured', () => {
