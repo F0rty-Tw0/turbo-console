@@ -48,6 +48,37 @@ export class GraphAtomLinks {
     await expect.poll(async (): Promise<Record<string, ViewportPoint[]>> => this.drawnPointsFrom(umbrellaId)).toEqual(points);
   }
 
+  /**
+   * `count` lines out of `umbrellaId` are drawn straight: unrouted, one segment each. Read from the line state, not page
+   * points, so it holds whatever the camera and however late Cytoscape recomputes the drawn ends.
+   */
+  public async expectStraightFrom(umbrellaId: string, count: number): Promise<void> {
+    const straightCountOf = async (): Promise<number> => {
+      const lines = await readEdgeLines(this.page);
+      const isStraightFrom = (line: ProbeEdgeLine): boolean =>
+        line.source === umbrellaId && line.isDrawn && !line.isRouted && line.points.length === 2;
+
+      return lines.filter(isStraightFrom).length;
+    };
+
+    await expect.poll(straightCountOf).toBe(count);
+  }
+
+  /** The model centre of node `id`, rounded to hundredths. */
+  public async centreOf(id: string): Promise<ViewportPoint> {
+    const nodes = await this.probe.nodes();
+    const node = nodes.find((candidate: ProbeNode): boolean => candidate.id === id);
+
+    if (node === undefined) throw new Error(`graph e2e: node ${id} is not drawn`);
+
+    return roundedPointOf({ x: node.x, y: node.y });
+  }
+
+  /** Node `id` sits at `centre`, to hundredths of a model px. */
+  public async expectCentreOf(id: string, centre: ViewportPoint): Promise<void> {
+    await expect.poll(async (): Promise<ViewportPoint> => this.centreOf(id)).toEqual(centre);
+  }
+
   /** `count` pairs of a drawn line and one of the `fileIds` have the line cross the file's box, `THROUGH_INSET_PX` in. */
   public async expectThroughFiles(fileIds: string[], count: number): Promise<void> {
     await expect.poll(async (): Promise<number> => this.throughFilesOf(fileIds)).toBe(count);

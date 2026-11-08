@@ -204,8 +204,11 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
       await test.step('AND the umbrella is dragged by 40 px right', async (): Promise<void> =>
         graphCanvas.dragNode(TARGET_LIKE_UMBRELLA, 40, 0));
 
-      const before = await test.step('AND its two straight links are read', async () =>
-        graphAtoms.links.pointsFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT));
+      const dragged = await test.step('AND its two links are straight and its centre is read', async () => {
+        await graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+
+        return graphAtoms.links.centreOf(TARGET_LIKE_UMBRELLA);
+      });
 
       await test.step('AND the umbrella is double tapped', async (): Promise<void> => {
         await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
@@ -219,8 +222,10 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
         await graphAtoms.expectFilesDrawn(FILE_IDS, false);
       });
 
-      await test.step('THEN its links are drawn straight where they were', async (): Promise<void> =>
-        graphAtoms.links.expectPointsFrom(TARGET_LIKE_UMBRELLA, before));
+      await test.step('THEN the umbrella is back where it was dragged and its links are drawn straight again', async (): Promise<void> => {
+        await graphAtoms.links.expectCentreOf(TARGET_LIKE_UMBRELLA, dragged);
+        await graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+      });
     }
   );
 
