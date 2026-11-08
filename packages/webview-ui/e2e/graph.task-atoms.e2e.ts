@@ -196,6 +196,35 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
   );
 
   test(
+    'GIVEN the umbrella chosen and dragged, which straightens its links, a double tap on it draws them from the box bottom past its files, and a second one draws them straight again',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, graphCanvas, openUmbrella }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+
+      await test.step('AND the umbrella is dragged by 40 px right', async (): Promise<void> =>
+        graphCanvas.dragNode(TARGET_LIKE_UMBRELLA, 40, 0));
+
+      const before = await test.step('AND its two straight links are read', async () =>
+        graphAtoms.links.pointsFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT));
+
+      await test.step('AND the umbrella is double tapped', async (): Promise<void> => {
+        await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
+        await graphAtoms.expectFilesDrawn(FILE_IDS, true);
+      });
+
+      await test.step('THEN no link crosses a file', async (): Promise<void> => graphAtoms.links.expectThroughFiles(FILE_IDS, 0));
+
+      await test.step('WHEN the umbrella is double tapped again', async (): Promise<void> => {
+        await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
+        await graphAtoms.expectFilesDrawn(FILE_IDS, false);
+      });
+
+      await test.step('THEN its links are drawn straight where they were', async (): Promise<void> =>
+        graphAtoms.links.expectPointsFrom(TARGET_LIKE_UMBRELLA, before));
+    }
+  );
+
+  test(
     'GIVEN the umbrella chosen and its group expanded, hovering a file shows its whole spec path as the canvas tooltip until the pointer leaves it',
     { annotation: SPEC_3_4 },
     async ({ graphAtoms, graphHover, openUmbrella }): Promise<void> => {
