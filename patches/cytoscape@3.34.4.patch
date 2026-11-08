@@ -233,6 +233,39 @@ index 0330661a8d2a5af043d0594a1c84782a7e193c20..fa25df6ef16015f7bb7903a869c2e087
  
    function removeChildRef( parent, ele ){
      ele = ele[0];
+diff --git a/src/collection/style.mjs b/src/collection/style.mjs
+index 1639068d7b96c2247f37be84144fcdf912fbcc5f..70df55114c5c0e4c1dde99fe22d071c544b2aa64 100644
+--- a/src/collection/style.mjs
++++ b/src/collection/style.mjs
+@@ -294,11 +294,9 @@ let elesfn = ({
+ 
+       if( !hasCompoundNodes ){ return parentOpacity; }
+ 
+-      let parents = !_p.data.parent ? null : ele.parents();
+-
+-      if( parents ){
+-        for( let i = 0; i < parents.length; i++ ){
+-          let parent = parents[ i ];
++      // patched: walk the parent refs parents() reads, nearest first, as checkCompound does
++      if( _p.data.parent ){
++        for( let parent = _p.parent; parent; parent = parent._private.parent ){
+           let opacity = parent.pstyle( 'opacity' ).value;
+ 
+           parentOpacity = opacity * parentOpacity;
+@@ -338,11 +336,8 @@ let elesfn = ({
+ 
+ function checkCompound( ele, parentOk ){
+   let _p = ele._private;
+-  let parents = _p.data.parent ? ele.parents() : null;
+-
+-  if( parents ){ for( let i = 0; i < parents.length; i++ ){
+-    let parent = parents[ i ];
+-
++  // patched: walk the parent refs parents() reads, nearest first, instead of spawning a parents() collection per check
++  if( _p.data.parent ){ for( let parent = _p.parent; parent; parent = parent._private.parent ){
+     if( !parentOk( parent ) ){ return false; }
+   } }
+ 
 diff --git a/src/extensions/renderer/base/coord-ele-math/rendered-style.mjs b/src/extensions/renderer/base/coord-ele-math/rendered-style.mjs
 index 563b687e07e212a17e4728c3ad88dd4ef540251d..cb8d862e6c525d1dd0d6657874a79c8f99d2971f 100644
 --- a/src/extensions/renderer/base/coord-ele-math/rendered-style.mjs
