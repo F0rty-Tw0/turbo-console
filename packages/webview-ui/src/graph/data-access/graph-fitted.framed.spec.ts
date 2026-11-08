@@ -54,6 +54,18 @@ describe('FEATURE: createFittedCamera reads the framed set once per frame', () =
       expect(edges.mock.calls).toStrictEqual([[':visible']]);
     });
 
+    it('WHEN a fitted camera refits on a resize THEN the framed set is built once', () => {
+      const camera = createFittedCamera(cy, { onViewport: vi.fn(), onRefit: vi.fn() });
+
+      camera.fit();
+
+      const edges = vi.spyOn(cy, 'edges');
+
+      camera.resized();
+
+      expect(edges.mock.calls).toStrictEqual([[':visible']]);
+    });
+
     it('WHEN the camera opens THEN the fit gets the framed set the floor check measured', () => {
       createFittedCamera(cy, { onViewport: vi.fn(), onRefit: vi.fn() }).open();
 
