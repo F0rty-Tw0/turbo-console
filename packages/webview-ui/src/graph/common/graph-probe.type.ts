@@ -1,3 +1,4 @@
+import type { ProbeRect, ProbeTitle } from './graph-probe-titles.type.ts';
 import type { Inspection } from './inspection.type.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 
@@ -101,14 +102,6 @@ export type ProbeFolder = {
   readonly packages: string[];
 };
 
-/** A box in page CSS pixels. */
-export type ProbeRect = {
-  readonly left: number;
-  readonly top: number;
-  readonly width: number;
-  readonly height: number;
-};
-
 /** A drawn folder link: an end reads the folder key when it is a collapsed folder, else the package name. */
 export type ProbeFolderLink = {
   readonly source: string;
@@ -168,6 +161,8 @@ export type GraphProbe = {
   readonly folders: () => ProbeFolder[];
   /** The drawn folder links in drawing order. */
   readonly folderLinks: () => ProbeFolderLink[];
+  /** Every task mode package box with its title; `[]` outside task mode. */
+  readonly boxTitles: () => ProbeTitle[];
   /** From the latest collapse or expand to the first frame drawn after it; `null` until that frame. */
   readonly toggleMs: () => number | null;
   /** From the latest expand or collapse of an Atomizer group to the first frame drawn after it; `null` until that frame. */

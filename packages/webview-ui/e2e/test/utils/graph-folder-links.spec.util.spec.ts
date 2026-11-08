@@ -4,7 +4,8 @@ import { countsOf, idsNotEndingOn, isReady, routedLinksOf, routedPackageEndOf } 
 import { folderAt } from './graph-foreign-boxes.spec.util.ts';
 import { nodeAt } from './graph-geometry.spec.util.ts';
 import { lineThrough } from './graph-lines.spec.util.ts';
-import type { ProbeEdgeLine, ProbeFolder, ProbeFolderLink, ProbeNode, ProbeRect } from '../../../src/graph/common/graph-probe.type.ts';
+import type { ProbeRect } from '../../../src/graph/common/graph-probe-titles.type.ts';
+import type { ProbeEdgeLine, ProbeFolder, ProbeFolderLink, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import type { LinkRead, RoutedLink } from '../../common/graph-folder-links.type.ts';
 import type { ViewportPoint } from '../../common/playwright.type.ts';
 

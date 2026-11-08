@@ -2,7 +2,8 @@ import type { BoundingBox12, Core, EdgeSingular, NodeSingular } from 'cytoscape'
 
 import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { ProbeFolder, ProbeFolderLink, ProbeRect } from '../common/graph-probe.type.ts';
+import type { ProbeRect } from '../common/graph-probe-titles.type.ts';
+import type { ProbeFolder, ProbeFolderLink } from '../common/graph-probe.type.ts';
 import { BOX_COLLAPSED_CLASS, FOLDER_HIDDEN_CLASS, FOLDER_ID_PREFIX, FOLDER_LINK_CLASS } from '../common/graph.const.ts';
 import { collapsedIdOf, folderOfElementId } from '../utils/folder-id.util.ts';
 

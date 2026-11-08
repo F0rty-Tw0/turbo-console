@@ -6,8 +6,10 @@ import { probeFolderLinksOf, probeFoldersOf } from './graph-probe-folders.ts';
 import { drawWithoutLayers } from './graph-probe-layers.ts';
 import { edgeLinesOf, folderLinkLinesOf } from './graph-probe-lines.ts';
 import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
+import { probeTitlesOf } from './graph-probe-titles.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
+import type { ProbeTitle } from '../common/graph-probe-titles.type.ts';
 import type {
   GraphProbe,
   ProbeEdge,
@@ -127,6 +129,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
     folders,
     folderLinks,
     folderLinkLines,
+    boxTitles: (): ProbeTitle[] => probeTitlesOf(view.cy(), originOf()),
     edgeColor,
     zoom: (): number => view.viewport().zoom,
     pan: (): Position => view.viewport().pan,
