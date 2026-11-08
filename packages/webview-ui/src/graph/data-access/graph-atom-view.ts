@@ -91,13 +91,21 @@ const setFileOutcomes = (cy: Core, outcomes: Record<string, GraphAtomOutcome>): 
   cy.batch((): void => Object.entries(outcomes).forEach(markFile));
 };
 
-/** Draws each drawn link in `segments`, by edge id, on its segments as a routed link; any other id is skipped. */
-const setLinkSegments = (cy: Core, segments: ReadonlyMap<string, RouteSegments>): void => {
-  const routeEdge = (data: RouteSegments, id: string): void => {
+/** Draws each drawn link in `segments`, by edge id, on its segments as a routed link, or straight for `null`; any other id is skipped. */
+const setLinkSegments = (cy: Core, segments: ReadonlyMap<string, RouteSegments | null>): void => {
+  const routeEdge = (data: RouteSegments | null, id: string): void => {
     const edge = cy.getElementById(id);
     const isDrawn = edge.nonempty();
 
-    if (isDrawn) edge.data(data).addClass(ROUTED_CLASS);
+    if (!isDrawn) return;
+
+    if (data === null) {
+      edge.removeClass(ROUTED_CLASS);
+
+      return;
+    }
+
+    edge.data(data).addClass(ROUTED_CLASS);
   };
 
   cy.batch((): void => segments.forEach(routeEdge));
@@ -177,7 +185,7 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
 
     cy.batch((): void => Object.entries(positions).forEach(moveNode));
   };
-  const setSegments = (segments: ReadonlyMap<string, RouteSegments>): void => setLinkSegments(cy, segments);
+  const setSegments = (segments: ReadonlyMap<string, RouteSegments | null>): void => setLinkSegments(cy, segments);
   const setOutcomes = (outcomes: Record<string, GraphAtomOutcome>): void => setFileOutcomes(cy, outcomes);
   const setGrabbable = (isGrabbable: boolean): void => void cy.autoungrabify(!isGrabbable);
   const isAtomNode = (id: string): boolean => {

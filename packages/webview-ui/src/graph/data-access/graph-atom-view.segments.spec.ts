@@ -76,4 +76,14 @@ describe('FEATURE: createAtomCanvas setSegments', () => {
       expect(cy.elements()).toHaveLength(before);
     });
   });
+
+  describe('GIVEN a link drawn on segments', () => {
+    it('WHEN it is set to null THEN it is drawn straight again', () => {
+      atoms.setSegments(new Map([[LINK_ID, SEGMENTS]]));
+
+      atoms.setSegments(new Map([[LINK_ID, null]]));
+
+      expect(cy.getElementById(LINK_ID).hasClass(ROUTED_CLASS)).toBe(false);
+    });
+  });
 });
