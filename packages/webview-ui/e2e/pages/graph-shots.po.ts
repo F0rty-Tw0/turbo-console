@@ -150,7 +150,7 @@ export class GraphShots {
   /**
    * Fit pressed on a settled canvas, then the canvas quiet again. The frame Fit leaves behind depends on whether
    * Cytoscape had finished refining its textures when Fit was pressed, so the press waits for `settle`; the wait after
-   * it keeps the shot off Fit's own late redraws.
+   * it guards the shot against Fit's own late redraws.
    */
   public async fit(): Promise<void> {
     await this.graph.pressButton(FIT_LABEL);
