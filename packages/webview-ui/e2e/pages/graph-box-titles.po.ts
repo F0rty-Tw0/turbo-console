@@ -13,6 +13,9 @@ import { readBoxTitles, titleCrossingsOf } from '../test/utils/graph-title-cross
 /** How far, in model pixels, a framed box may be drawn from its ELK frame and its title from the placeholder (spec AC 2). */
 const FRAME_TOLERANCE_PX = 4;
 
+/** How far, in model pixels, one framed box may be drawn from its ELK frame: below a 2 px run outline's shift. */
+const ON_FRAME_PX = 1;
+
 /** The package box titles the probe lists, and the ones a drawn line crosses: how many, and their box ids. */
 type TitleCrossings = {
   readonly titles: number;
@@ -126,6 +129,17 @@ export class GraphBoxTitles {
     const gap = expect.poll(async (): Promise<number> => this.modelBoxGapOf(id, modelBox));
 
     await gap.toBeLessThanOrEqual(FRAME_TOLERANCE_PX);
+  }
+
+  /** The framed box `id` is drawn within 1 px of each side of its ELK frame. */
+  public async expectOnFrame(id: string): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.frameErrorOf(id)).toBeLessThanOrEqual(ON_FRAME_PX);
+  }
+
+  private async frameErrorOf(id: string): Promise<number> {
+    const title = await this.titleOf(id);
+
+    return title.frameError ?? Infinity;
   }
 
   private async isTitleFramed(id: string): Promise<boolean> {

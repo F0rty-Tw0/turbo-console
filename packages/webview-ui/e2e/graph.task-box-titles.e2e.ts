@@ -1,3 +1,4 @@
+import type { RunOutline } from './common/graph.type.ts';
 import { test } from './graph-task.fixture.ts';
 import { GraphBoxTitles } from './pages/graph-box-titles.po.ts';
 import { buildOnlyStretchState, repoGenLikeTasksState } from './test/utils/graph-box-titles.spec.util.ts';
@@ -12,6 +13,9 @@ const SPEC_3_4 = { description: 'M5-2 spec 3.4', type: 'requirement' };
 const UMBRELLA_BOX = 'pkg:app-1';
 
 const FILE_IDS = targetLikeFileIds();
+
+/** A running task's 2 px outline in the default theme stub, as Cytoscape reports it. */
+const RUNNING_OUTLINE: RunOutline = { width: 2, colour: 'rgb(191,136,3)' };
 
 /**
  * A task state the titles are checked on: `isLarge` for the 280 and 300 task states, whose layout runs 3-5x slower on
@@ -114,8 +118,43 @@ test.describe('FEATURE: task box titles clear of lines', () => {
       await test.step('AND it is drawn within 4 px of its box before the expand', async (): Promise<void> =>
         graphBoxTitles.expectModelBoxNear(UMBRELLA_BOX, modelBox));
 
+      await test.step('AND it is drawn within 1 px of its ELK frame', async (): Promise<void> =>
+        graphBoxTitles.expectOnFrame(UMBRELLA_BOX));
+
       await test.step('AND no drawn line crosses its title', async (): Promise<void> =>
         graphBoxTitles.expectTitleUncrossed(UMBRELLA_BOX));
+    }
+  );
+
+  test(
+    'GIVEN the target-like umbrella alone in its framed box, its run outline does not move the box off its frame, nor after an expand and collapse',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, graphTaskHost, graphTaskProbe, openUmbrella, page }): Promise<void> => {
+      const graphBoxTitles = new GraphBoxTitles(page);
+
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+
+      await test.step('AND the umbrella box is framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, true));
+
+      await test.step('AND the umbrella runs', async (): Promise<void> =>
+        graphTaskHost.sendRuns({ [TARGET_LIKE_UMBRELLA]: 'running' }));
+
+      await test.step('AND its run outline is drawn', async (): Promise<void> =>
+        graphTaskProbe.expectRunOutline(TARGET_LIKE_UMBRELLA, RUNNING_OUTLINE));
+
+      await test.step('THEN its box is drawn within 1 px of its ELK frame', async (): Promise<void> =>
+        graphBoxTitles.expectOnFrame(UMBRELLA_BOX));
+
+      await test.step('WHEN the umbrella is expanded', async (): Promise<void> => graphAtoms.toggle(TARGET_LIKE_UMBRELLA));
+
+      await test.step('AND its box is not framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, false));
+
+      await test.step('AND it is collapsed', async (): Promise<void> => graphAtoms.toggle(TARGET_LIKE_UMBRELLA));
+
+      await test.step('AND its box is framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, true));
+
+      await test.step('THEN its box is drawn within 1 px of its ELK frame', async (): Promise<void> =>
+        graphBoxTitles.expectOnFrame(UMBRELLA_BOX));
     }
   );
 });
