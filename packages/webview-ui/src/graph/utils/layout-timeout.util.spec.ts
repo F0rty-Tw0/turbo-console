@@ -13,6 +13,7 @@ describe('FEATURE: layoutTimeoutOf', () => {
     ['0', { __tcLayoutTimeoutMs: 0 }],
     ['a negative number', { __tcLayoutTimeoutMs: -1 }],
     ['NaN', { __tcLayoutTimeoutMs: Number.NaN }],
+    ['a delay setTimeout clamps (2^31 ms)', { __tcLayoutTimeoutMs: 2_147_483_648 }],
     ['Infinity', { __tcLayoutTimeoutMs: Number.POSITIVE_INFINITY }]
   ])('GIVEN %s on the host WHEN the timeout is read THEN it is the production fallback timeout', (_name, host: ProbeHost) => {
     expect(layoutTimeoutOf(host)).toBe(FALLBACK_TIMEOUT_MS);
