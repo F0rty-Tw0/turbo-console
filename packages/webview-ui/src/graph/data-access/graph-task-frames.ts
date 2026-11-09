@@ -75,6 +75,45 @@ const hasFrame = (box: NodeSingular): boolean => {
   return isBoxFrame(value);
 };
 
+/** Whether `box` already carries each value of `data`; its frame is the same object, since it was read from the box. */
+const isDataKept = (box: NodeSingular, data: Record<string, unknown>): boolean => {
+  const isKept = ([key, value]: [string, unknown]): boolean => box.data(key) === value;
+  const entries = Object.entries(data);
+
+  return entries.every(isKept);
+};
+
+/**
+ * Writes the frame data of `box` again from where its children are drawn now; a box without a frame or task is left,
+ * and so is one whose data is unchanged, since a write dirties its style and bounds even then.
+ */
+const refitBox = (box: NodeSingular): void => {
+  const frame: unknown = box.data('boxFrame');
+  const isFramed = isBoxFrame(frame);
+
+  if (!isFramed) return;
+
+  const leaf = box.cy().getElementById(frame.leafId);
+  const isLeafGone = leaf.empty();
+
+  if (isLeafGone) return;
+
+  const data = frameDataOf(box, leaf, frame);
+  const isKept = isDataKept(box, data);
+
+  if (!isKept) box.data(data);
+};
+
+/**
+ * Writes the frame data of each framed box again after its task's classes changed: in a browser Cytoscape counts a
+ * task's outline in its bounds, so a run outline of 2 px would otherwise move the box 2 px off its frame.
+ */
+export const refitBoxFrames = (cy: Core): void => {
+  const framed = cy.nodes(`.${BOX_FRAMED_CLASS}`);
+
+  cy.batch((): void => void framed.forEach(refitBox));
+};
+
 /** Drops `box-framed` from a framed box, so it draws from its children until `reframeBox`; its frame data stays. */
 export const unframeBox = (box: NodeSingular): void => {
   const isFramed = hasFrame(box);
@@ -82,9 +121,15 @@ export const unframeBox = (box: NodeSingular): void => {
   if (isFramed) box.removeClass(BOX_FRAMED_CLASS);
 };
 
-/** Puts `box-framed` back on a box that carries a frame; a box without one stays unframed. */
+/**
+ * Puts `box-framed` back on a box that carries a frame, its frame data written again since its task's outline may have
+ * changed while it was unframed; a box without one stays unframed.
+ */
 export const reframeBox = (box: NodeSingular): void => {
   const isFramed = hasFrame(box);
 
-  if (isFramed) box.addClass(BOX_FRAMED_CLASS);
+  if (!isFramed) return;
+
+  refitBox(box);
+  box.addClass(BOX_FRAMED_CLASS);
 };

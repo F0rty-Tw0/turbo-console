@@ -1,9 +1,9 @@
 import cytoscape from 'cytoscape';
-import type { BoundingBox12, Core, ElementDefinition, NodeSingular } from 'cytoscape';
+import type { BoundingBox12, Core, ElementDefinition, EventObject, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
-import { applyBoxFrames, reframeBox, unframeBox } from './graph-task-frames.ts';
+import { applyBoxFrames, refitBoxFrames, reframeBox, unframeBox } from './graph-task-frames.ts';
 import { BOX_FRAMED_CLASS, TASK_BOX_CLASS } from '../common/graph-task.const.ts';
 import { EXPORTING_CLASS } from '../common/graph.const.ts';
 import type { BoxFrame, BoxFrames } from '../common/layout.type.ts';
@@ -19,6 +19,13 @@ const FRAMES: BoxFrames = { 'pkg:api': FRAME };
 
 /** The frame's sides around the task centre (100, 100). */
 const FRAMED_SIDES: BoundingBox12 = { x1: 25, x2: 175, y1: 43, y2: 163 };
+
+/** A frame one 32 px padding around the 80 x 32 task on every side, so no side has an extra. */
+const TIGHT_FRAME: BoxFrame = { ...FRAME, left: -72, right: 72, top: -48, bottom: 48 };
+
+const TIGHT_FRAMES: BoxFrames = { 'pkg:api': TIGHT_FRAME };
+
+const TIGHT_SIDES: BoundingBox12 = { x1: 28, x2: 172, y1: 52, y2: 148 };
 
 /** The box `pkg:api` holds the 80 x 32 task `api#build` at (100, 100); fresh per core, since Cytoscape keeps the data objects. */
 const elementsOf = (): ElementDefinition[] => {
@@ -141,15 +148,68 @@ describe('FEATURE: applyBoxFrames, unframeBox and reframeBox', () => {
   });
 
   describe('GIVEN a frame one padding around the task on every side', () => {
-    const tight: BoxFrame = { ...FRAME, left: -72, right: 72, top: -48, bottom: 48 };
-    const frames: BoxFrames = { 'pkg:api': tight };
+    const frames = TIGHT_FRAMES;
 
     // The task's bounds reach 1.5 px past its body (half its border and Cytoscape's 1 px antialiasing margin), so a box
     // with the full 32 px padding would draw 1.5 px outside the frame on each side.
     it('WHEN applied THEN the box is drawn on its frame, within 1 px of each side', () => {
       applyBoxFrames(cy, frames);
 
-      expect(boxErrorOf(cy, { x1: 28, x2: 172, y1: 52, y2: 148 })).toBeLessThanOrEqual(1);
+      expect(boxErrorOf(cy, TIGHT_SIDES)).toBeLessThanOrEqual(1);
+    });
+  });
+
+  // Cytoscape counts a task's border in the box's size, and in a browser its outline too (headless it skips outlines):
+  // a 5 px border reaches 2 px further than the 1 px one, as a 2 px run outline does.
+  describe('GIVEN a box framed one padding around its task, whose task then draws a 5 px border', () => {
+    beforeEach(() => {
+      applyBoxFrames(cy, TIGHT_FRAMES);
+      cy.getElementById('api#build').style('border-width', 5);
+    });
+
+    it('WHEN refitted THEN the box is drawn on its frame, within 1 px of each side', () => {
+      refitBoxFrames(cy);
+
+      expect(boxErrorOf(cy, TIGHT_SIDES)).toBeLessThanOrEqual(1);
+    });
+
+    it('WHEN unframed and reframed THEN the box is drawn on its frame, within 1 px of each side', () => {
+      unframeBox(boxOf(cy));
+      reframeBox(boxOf(cy));
+
+      expect(boxErrorOf(cy, TIGHT_SIDES)).toBeLessThanOrEqual(1);
+    });
+  });
+
+  // A data write dirties the box's style and bounds even when no value changed, which a refit after every paint pays per box.
+  describe('GIVEN a framed box, its own data writes counted from then on', () => {
+    let writes: number;
+
+    beforeEach(() => {
+      const box = boxOf(cy);
+      const countWrite = (event: EventObject): void => {
+        const isOwn = event.target === box;
+
+        if (isOwn) writes += 1;
+      };
+
+      applyBoxFrames(cy, FRAMES);
+      writes = 0;
+      box.on('data', countWrite);
+    });
+
+    it('WHEN refitted with its task unchanged THEN its data is not written', () => {
+      refitBoxFrames(cy);
+
+      expect(writes).toBe(0);
+    });
+
+    it('WHEN its task grows 20 px wider and it is refitted THEN its data is written once', () => {
+      cy.getElementById('api#build').data('width', 100);
+
+      refitBoxFrames(cy);
+
+      expect(writes).toBe(1);
     });
   });
 

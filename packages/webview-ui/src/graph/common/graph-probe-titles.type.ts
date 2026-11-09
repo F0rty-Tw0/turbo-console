@@ -8,7 +8,10 @@ export type ProbeRect = {
 
 /**
  * A task mode package box (`pkg:` id) and its title: `label` is the drawn title's box and `box` the box's rendered
- * bounds without labels or overlays, both in page CSS pixels; `modelBox` is the box in model pixels.
+ * bounds without labels or overlays, both in page CSS pixels; `modelBox` is the box in model pixels. `isFramed` is
+ * whether it is drawn on its ELK frame (`box-framed`); then `frameError` is the largest gap in model pixels between a
+ * side of its frame line and the same side of the frame, and `titleError` between the title's top-left corner and the
+ * placeholder's; both `null` when not framed.
  */
 export type ProbeTitle = {
   readonly id: string;
@@ -16,4 +19,7 @@ export type ProbeTitle = {
   readonly label: ProbeRect;
   readonly box: ProbeRect;
   readonly modelBox: ProbeRect;
+  readonly isFramed: boolean;
+  readonly frameError: number | null;
+  readonly titleError: number | null;
 };

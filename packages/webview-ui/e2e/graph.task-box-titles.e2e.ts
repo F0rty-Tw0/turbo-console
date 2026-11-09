@@ -1,44 +1,38 @@
+import type { RunOutline } from './common/graph.type.ts';
 import { test } from './graph-task.fixture.ts';
 import { GraphBoxTitles } from './pages/graph-box-titles.po.ts';
 import { buildOnlyStretchState, repoGenLikeTasksState } from './test/utils/graph-box-titles.spec.util.ts';
-import { targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
+import { TARGET_LIKE_UMBRELLA, targetLikeFileIds, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 import type { GraphReady, GraphTask } from '../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
 
+const SPEC_3_4 = { description: 'M5-2 spec 3.4', type: 'requirement' };
+
+/** The box of the target-like umbrella `app-1#e2e-ci`, its one task: a titled-row box. */
+const UMBRELLA_BOX = 'pkg:app-1';
+
+const FILE_IDS = targetLikeFileIds();
+
+/** A running task's 2 px outline in the default theme stub, as Cytoscape reports it. */
+const RUNNING_OUTLINE: RunOutline = { width: 2, colour: 'rgb(191,136,3)' };
+
 /**
  * A task state the titles are checked on: `isLarge` for the 280 and 300 task states, whose layout runs 3-5x slower on
- * the Windows and macOS runners; `CROSSED` while master draws lines through its titles. Slice B
- * (feat/g24a-title-slot, ELK title slots) moves these rows to `CLEAR`.
+ * the Windows and macOS runners; `mustFrame` where it holds one-task (titled-row) boxes, so at least one box must be
+ * drawn on its ELK frame.
  */
 type TitleRow = {
   readonly name: string;
   readonly state: () => GraphReady;
   readonly isLarge: boolean;
-  readonly titles: TitleCheck;
-};
-
-/** What a row expects of its titles once laid out, and the check that proves it given the title count. */
-type TitleCheck = {
-  readonly then: string;
-  readonly expect: (titles: GraphBoxTitles, count: number) => Promise<void>;
-};
-
-/** Master draws lines through these titles. */
-const CROSSED: TitleCheck = {
-  then: 'drawn lines still cross package box titles',
-  expect: async (titles, count): Promise<void> => titles.expectTitlesCrossed(count)
-};
-
-const CLEAR: TitleCheck = {
-  then: 'no drawn line crosses a package box title',
-  expect: async (titles, count): Promise<void> => titles.expectNoTitleCrossed(count)
+  readonly mustFrame: boolean;
 };
 
 const ROWS: TitleRow[] = [
-  { name: 'repo-gen-like', state: repoGenLikeTasksState, isLarge: true, titles: CROSSED },
-  { name: 'stretch build-only', state: buildOnlyStretchState, isLarge: true, titles: CROSSED },
-  { name: 'target-like', state: (): GraphReady => targetLikeTasksState(), isLarge: false, titles: CLEAR }
+  { name: 'repo-gen-like', state: repoGenLikeTasksState, isLarge: true, mustFrame: true },
+  { name: 'stretch build-only', state: buildOnlyStretchState, isLarge: true, mustFrame: true },
+  { name: 'target-like', state: (): GraphReady => targetLikeTasksState(), isLarge: false, mustFrame: false }
 ];
 
 const LAYOUTS = [
@@ -64,7 +58,7 @@ const everyTaskSaved = (state: GraphReady, isGrouped: boolean): GraphViewState =
 test.describe('FEATURE: task box titles clear of lines', () => {
   for (const row of ROWS)
     for (const layout of LAYOUTS)
-      test(`GIVEN the ${row.name} tasks ${layout.name} with every task chosen, ${row.titles.then}`, async ({
+      test(`GIVEN the ${row.name} tasks ${layout.name} with every task chosen, no drawn line crosses a package box title`, async ({
         graphHost,
         graphPage,
         graphProbe,
@@ -85,6 +79,82 @@ test.describe('FEATURE: task box titles clear of lines', () => {
 
         await test.step('AND every task is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(state.tasks.map(idOf)));
 
-        await test.step(`THEN ${row.titles.then}`, async (): Promise<void> => row.titles.expect(graphBoxTitles, titleCountOf(state)));
+        await test.step('THEN no drawn line crosses a package box title', async (): Promise<void> =>
+          graphBoxTitles.expectNoTitleCrossed(titleCountOf(state)));
+
+        await test.step('AND each framed box is drawn on its ELK frame, its title at the placeholder', async (): Promise<void> =>
+          graphBoxTitles.expectFramesTrue(row.mustFrame));
       });
+
+  test(
+    'GIVEN the target-like umbrella alone in its framed box, an expanded umbrella draws its box from the files under its title and a collapse frames it again',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, openUmbrella, page }): Promise<void> => {
+      const graphBoxTitles = new GraphBoxTitles(page);
+
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+
+      await test.step('AND the umbrella box is framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, true));
+
+      const { modelBox } = await test.step('AND the umbrella box is read', async () => graphBoxTitles.titleOf(UMBRELLA_BOX));
+
+      await test.step('AND the umbrella is double tapped', async (): Promise<void> => graphAtoms.toggle(TARGET_LIKE_UMBRELLA));
+
+      await test.step('AND its files are drawn', async (): Promise<void> => graphAtoms.expectFilesDrawn(FILE_IDS, true));
+
+      await test.step('THEN the umbrella box is not framed', async (): Promise<void> =>
+        graphBoxTitles.expectFramed(UMBRELLA_BOX, false));
+
+      await test.step('AND its title sits in its top padding band', async (): Promise<void> =>
+        graphBoxTitles.expectTitleInTopBand(UMBRELLA_BOX));
+
+      await test.step('AND its title meets no drawn node but its own box', async (): Promise<void> =>
+        graphBoxTitles.expectTitleClearOfNodes(UMBRELLA_BOX));
+
+      await test.step('WHEN the umbrella is double tapped again', async (): Promise<void> => graphAtoms.toggle(TARGET_LIKE_UMBRELLA));
+
+      await test.step('THEN the umbrella box is framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, true));
+
+      await test.step('AND it is drawn within 4 px of its box before the expand', async (): Promise<void> =>
+        graphBoxTitles.expectModelBoxNear(UMBRELLA_BOX, modelBox));
+
+      await test.step('AND it is drawn within 1 px of its ELK frame', async (): Promise<void> =>
+        graphBoxTitles.expectOnFrame(UMBRELLA_BOX));
+
+      await test.step('AND no drawn line crosses its title', async (): Promise<void> =>
+        graphBoxTitles.expectTitleUncrossed(UMBRELLA_BOX));
+    }
+  );
+
+  test(
+    'GIVEN the target-like umbrella alone in its framed box, its run outline does not move the box off its frame, nor after an expand and collapse',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, graphTaskHost, graphTaskProbe, openUmbrella, page }): Promise<void> => {
+      const graphBoxTitles = new GraphBoxTitles(page);
+
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+
+      await test.step('AND the umbrella box is framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, true));
+
+      await test.step('AND the umbrella runs', async (): Promise<void> =>
+        graphTaskHost.sendRuns({ [TARGET_LIKE_UMBRELLA]: 'running' }));
+
+      await test.step('AND its run outline is drawn', async (): Promise<void> =>
+        graphTaskProbe.expectRunOutline(TARGET_LIKE_UMBRELLA, RUNNING_OUTLINE));
+
+      await test.step('THEN its box is drawn within 1 px of its ELK frame', async (): Promise<void> =>
+        graphBoxTitles.expectOnFrame(UMBRELLA_BOX));
+
+      await test.step('WHEN the umbrella is expanded', async (): Promise<void> => graphAtoms.toggle(TARGET_LIKE_UMBRELLA));
+
+      await test.step('AND its box is not framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, false));
+
+      await test.step('AND it is collapsed', async (): Promise<void> => graphAtoms.toggle(TARGET_LIKE_UMBRELLA));
+
+      await test.step('AND its box is framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, true));
+
+      await test.step('THEN its box is drawn within 1 px of its ELK frame', async (): Promise<void> =>
+        graphBoxTitles.expectOnFrame(UMBRELLA_BOX));
+    }
+  );
 });

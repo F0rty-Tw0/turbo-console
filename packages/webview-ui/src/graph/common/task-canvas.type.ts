@@ -65,10 +65,13 @@ export type AtomCanvas = {
   /**
    * Opens `spec`'s box in package box `pkgBoxId`, moves the umbrella into it and adds a node for each of its drawn files whose
    * id is free, outlined by its outcome, and a count node when files are hidden. Whether it drew, since nothing is drawn if the
-   * umbrella is not drawn or the box's id is taken.
+   * umbrella is not drawn or the box's id is taken. A framed package box drops `box-framed` while open, keeping its frame data.
    */
   readonly expand: (spec: AtomDrawSpec, pkgBoxId: string, outcomes: Record<string, GraphAtomOutcome>) => boolean;
-  /** Moves the umbrella back into `pkgBoxId` and removes its files and box; a node of the box's id that is not a box stays. */
+  /**
+   * Moves the umbrella back into `pkgBoxId` and removes its files and box, putting `box-framed` back on a package box that
+   * carries a frame; a node of the box's id that is not a box stays.
+   */
   readonly collapse: (umbrellaId: string, pkgBoxId: string) => void;
   /** Moves each drawn node in `positions` to its centre; an id not drawn is skipped. */
   readonly setPositions: (positions: Positions) => void;

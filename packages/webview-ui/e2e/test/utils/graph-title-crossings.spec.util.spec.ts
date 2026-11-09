@@ -10,7 +10,16 @@ const LABEL: ProbeRect = { left: 100, top: 100, width: 60, height: 13 };
 
 const BOX: ProbeRect = { left: 90, top: 90, width: 120, height: 80 };
 
-const TITLE: ProbeTitle = { id: 'pkg:web', text: 'web', label: LABEL, box: BOX, modelBox: BOX };
+const TITLE: ProbeTitle = {
+  id: 'pkg:web',
+  text: 'web',
+  label: LABEL,
+  box: BOX,
+  modelBox: BOX,
+  isFramed: false,
+  frameError: null,
+  titleError: null
+};
 
 /** A vertical line at x 130 through the label, from y 90 to 130. */
 const THROUGH_LINE: ProbeEdgeLine = lineThrough('a', 'b', [

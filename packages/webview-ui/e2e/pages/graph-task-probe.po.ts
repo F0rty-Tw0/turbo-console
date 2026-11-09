@@ -4,14 +4,14 @@ import { expect } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
 import { ATOM_BOX_PREFIX } from '../../src/graph/common/graph-atom.const.ts';
+import type { ProbeTitle } from '../../src/graph/common/graph-probe-titles.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { SCRIPTS_BOX_PREFIX } from '../../src/graph/common/graph-task.const.ts';
-import { FOLDER_PADDING_PX } from '../../src/graph/common/graph.const.ts';
-import type { ColourInkInput, RunOutline } from '../common/graph.type.ts';
-import type { ScreenClip } from '../common/playwright.type.ts';
+import type { RunOutline } from '../common/graph.type.ts';
+import { readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
-import { colourInkOf } from '../test/utils/graph-png.spec.util.ts';
 import { withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
+import { readBoxTitles, titleCrossingsOf } from '../test/utils/graph-title-crossings.spec.util.ts';
 import { expectTitlesFit } from '../test/utils/graph-title-measure.spec.util.ts';
 
 const BOX_PREFIX = 'pkg:';
@@ -28,36 +28,20 @@ const isBox = (node: ProbeNode): boolean => isBoxId(node.id);
 
 const textOf = (node: ProbeNode): string => node.text;
 
-/** Model px kept off the frame line above the band and off the run outline that reaches into it from below. */
-const BAND_INSET = { top: 2, bottom: 6 } as const;
+/** Page px a title's label may reach past its box, for rounding. */
+const INSIDE_SLACK_PX = 1;
 
-/** Half the width, in model px, of the band's middle strip, where a link from above enters the box. */
-const CENTRE_HALF_PX = 8;
+/** Whether `title`'s label lies inside its box, within `INSIDE_SLACK_PX`. */
+const isLabelInside = (title: ProbeTitle): boolean => {
+  const { label, box } = title;
+  const isInsideAcross =
+    label.left >= box.left - INSIDE_SLACK_PX && label.left + label.width <= box.left + box.width + INSIDE_SLACK_PX;
+  const isInsideAlong = label.top >= box.top - INSIDE_SLACK_PX && label.top + label.height <= box.top + box.height + INSIDE_SLACK_PX;
 
-/** The band left of the middle strip, or the middle strip itself. */
-type BandPart = 'left' | 'centre';
-
-/**
- * Part of a box's top padding band at `zoom`, inside its content's sides; a box's width and height leave out its
- * padding.
- */
-const titleBandOf = (box: ProbeNode, zoom: number, part: BandPart): ScreenClip => {
-  const left = box.renderedX - (box.width / 2) * zoom;
-  const centreLeft = box.renderedX - CENTRE_HALF_PX * zoom;
-  const frameTop = box.renderedY - (box.height / 2 + FOLDER_PADDING_PX) * zoom;
-  const y = frameTop + BAND_INSET.top * zoom;
-  const height = (FOLDER_PADDING_PX - BAND_INSET.top - BAND_INSET.bottom) * zoom;
-
-  if (part === 'centre') {
-    const centre: ScreenClip = { x: centreLeft, y, width: 2 * CENTRE_HALF_PX * zoom, height };
-
-    return centre;
-  }
-
-  const leftPart: ScreenClip = { x: left, y, width: centreLeft - left, height };
-
-  return leftPart;
+  return isInsideAcross && isInsideAlong;
 };
+
+const titleIdOf = (title: ProbeTitle): string => title.id;
 
 /** `outline` with its colour as the probe reports it, without spaces. */
 const comparableOf = (outline: RunOutline | null): RunOutline | null => {
@@ -121,16 +105,15 @@ export class GraphTaskProbe {
   }
 
   /**
-   * The `pkg:` boxes are titled `names`, and on the page each title is inked in its label colour in the left part of its
-   * top padding band, none of it in the middle strip where a link from above enters.
+   * The `pkg:` boxes are titled `names`, no drawn line meets any title's label, and each label lies inside its box
+   * (spec §7: the label sits inside the frame).
    */
   public async expectBoxTitlesDrawn(names: string[]): Promise<void> {
     const sorted = sortedNames(names);
-    const noInk = names.map((): number => 0);
 
     await expect.poll(async (): Promise<string[]> => this.boxTitles()).toEqual(sorted);
-    await expect.poll(async (): Promise<number[]> => this.titleInks('centre')).toEqual(noInk);
-    await expect.poll(async (): Promise<number[]> => this.titleInks('left')).not.toContain(0);
+    await expect.poll(async (): Promise<string[]> => this.crossedTitleIds()).toEqual([]);
+    await expect.poll(async (): Promise<string[]> => this.outsideTitleIds()).toEqual([]);
   }
 
   /** A box is drawn for each of `titles`, and each is as wide as its title and draws it whole (`expectTitlesFit`). */
@@ -182,26 +165,18 @@ export class GraphTaskProbe {
     return titles.sort();
   }
 
-  /** Each box's title ink in `part` of its top band, one screenshot clip per box. */
-  private async titleInks(part: BandPart): Promise<number[]> {
-    const boxes = await this.boxes();
-    const zoom = await this.probe.zoom();
-    const inks: number[] = [];
+  private async crossedTitleIds(): Promise<string[]> {
+    const titles = await readBoxTitles(this.page);
+    const lines = await readEdgeLines(this.page);
 
-    for (const box of boxes) {
-      const clip = titleBandOf(box, zoom, part);
-
-      inks.push(await this.titleInkOf(box, clip));
-    }
-
-    return inks;
+    return titleCrossingsOf(titles, lines);
   }
 
-  private async titleInkOf(box: ProbeNode, clip: ScreenClip): Promise<number> {
-    const shot = await this.page.screenshot({ clip });
-    const input: ColourInkInput = { png: shot.toString('base64'), colour: box.label };
+  private async outsideTitleIds(): Promise<string[]> {
+    const titles = await readBoxTitles(this.page);
+    const outside = titles.filter((title): boolean => !isLabelInside(title));
 
-    return this.page.evaluate(colourInkOf, input);
+    return outside.map(titleIdOf);
   }
 
   private async boxIds(): Promise<string[]> {
