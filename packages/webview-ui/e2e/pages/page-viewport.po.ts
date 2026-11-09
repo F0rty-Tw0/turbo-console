@@ -1,7 +1,25 @@
-import type { Page } from '@playwright/test';
-import { expect } from '@playwright/test';
+import { setTimeout as sleep } from 'node:timers/promises';
 
-import type { ViewportPoint } from '../common/playwright.type.ts';
+import type { Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+
+import type { ViewportPoint, ViewportSize } from '../common/playwright.type.ts';
+
+/**
+ * How long a wait for the page's `resize` event polls before it nudges the page (F-U8-8): the event comes in the next
+ * frame, yet on a loaded macOS runner it twice never came and the test hung to its timeout. Node timers measure it,
+ * since the specs pause the page's own clock.
+ */
+const RESIZE_WAIT_MS = 5000;
+
+/** How often the wait asks the page whether the event came. */
+const RESIZE_POLL_MS = 100;
+
+/** How long the wait gives each nudge to release the event before it tries the next. */
+const NUDGE_WAIT_MS = 500;
+
+/** What the page reports of itself when the event is late, for the annotation or the error. */
+const PAGE_STATE = `({ innerWidth, innerHeight, visibilityState: document.visibilityState, hasFocus: document.hasFocus() })`;
 
 /** Reads the aria-label of the button under `point`, or `null` when no button is there. */
 const buttonLabelAt = ({ x, y }: ViewportPoint): string | null => {
@@ -53,7 +71,7 @@ export class PageViewport {
 
     await this.page.evaluate(ARM_RESIZE_WAIT);
     await this.page.setViewportSize(size);
-    await this.page.evaluate('window.__resized');
+    await this.waitForResize('window.__resized', 'resize', size);
   }
 
   /** Before the page loads: lets `resizeUnseenAndClickSpot` keep a `resize` event from the page's own listeners. */
@@ -72,7 +90,7 @@ export class PageViewport {
 
     await this.page.evaluate(ARM_RESIZE_CATCH);
     await this.page.setViewportSize(size);
-    await this.page.evaluate('window.__resizeCaught');
+    await this.waitForResize('window.__resizeCaught', 'resizeUnseenAndClickSpot', size);
     await this.page.mouse.click(x, y);
   }
 
@@ -97,6 +115,64 @@ export class PageViewport {
     const readLabelAt = async (): Promise<string | null> => this.page.evaluate(buttonLabelAt, spot);
 
     await expect.poll(readLabelAt).toBe(label);
+  }
+
+  /**
+   * Waits up to `RESIZE_WAIT_MS` for the page promise `promise` of a `resize` event. A late event (F-U8-8) gets nudges
+   * in turn: a forced layout, a pointer move, bringing the page to front, a screenshot. One that releases it is recorded
+   * as an `F-U8-8` annotation and the test goes on; when none does, the wait throws with the page's state.
+   */
+  private async waitForResize(promise: string, where: string, size: ViewportSize): Promise<void> {
+    const startedAt = Date.now();
+
+    await this.page.evaluate(`window.__resizeSettled = false; ${promise}.then(() => { window.__resizeSettled = true; }); undefined`);
+
+    const isOnTime = await this.isResizeSettledBy(startedAt + RESIZE_WAIT_MS);
+
+    if (isOnTime) return;
+
+    const state = await this.page.evaluate<unknown>(PAGE_STATE);
+    const releasedBy = await this.releasingNudge();
+    const report = `${where} wanted ${JSON.stringify(size)} after ${Date.now() - startedAt} ms, page ${JSON.stringify(state)}`;
+
+    if (releasedBy === null) throw new Error(`F-U8-8: no resize event, even after every nudge: ${report}`);
+
+    test.info().annotations.push({ type: 'F-U8-8', description: `released by ${releasedBy}: ${report}` });
+  }
+
+  /** Tries each nudge in turn and names the first after which the event came, or `null` when none released it. */
+  private async releasingNudge(): Promise<string | null> {
+    const screenshotOptions = { timeout: RESIZE_WAIT_MS };
+    const nudges: [string, () => Promise<unknown>][] = [
+      ['layout', async (): Promise<unknown> => this.page.evaluate('document.documentElement.getBoundingClientRect().height')],
+      ['mouse.move', async (): Promise<void> => this.page.mouse.move(1, 1)],
+      ['bringToFront', async (): Promise<void> => this.page.bringToFront()],
+      ['screenshot', async (): Promise<unknown> => this.page.screenshot(screenshotOptions)]
+    ];
+
+    for (const [name, nudge] of nudges) {
+      await nudge();
+
+      const deadline = Date.now() + NUDGE_WAIT_MS;
+      const isReleased = await this.isResizeSettledBy(deadline);
+
+      if (isReleased) return name;
+    }
+
+    return null;
+  }
+
+  /** Polls the page with Node timers until the awaited `resize` promise settled or `deadline` (epoch ms) passed. */
+  private async isResizeSettledBy(deadline: number): Promise<boolean> {
+    const readSettled = async (): Promise<boolean> => this.page.evaluate<boolean>('window.__resizeSettled === true');
+    let isSettled = await readSettled();
+
+    while (!isSettled && Date.now() < deadline) {
+      await sleep(RESIZE_POLL_MS);
+      isSettled = await readSettled();
+    }
+
+    return isSettled;
   }
 
   private rememberedSpot(): ViewportPoint {
