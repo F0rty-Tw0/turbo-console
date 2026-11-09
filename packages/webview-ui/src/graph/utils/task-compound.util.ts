@@ -104,11 +104,8 @@ export const isTitleSlotId = (id: string): boolean => id.startsWith(TITLE_SLOT_P
 export const isTitleTieId = (id: string): boolean => id.startsWith(TITLE_TIE_PREFIX);
 
 /** A titled-row box: a package box with a title width, exactly one turbo leaf (an umbrella counts) and no Scripts box. */
-export const isTitledRow = (
-  titleWidth: number | undefined,
-  turboLeaves: readonly unknown[],
-  scriptsBoxes: readonly unknown[]
-): boolean => titleWidth !== undefined && turboLeaves.length === 1 && scriptsBoxes.length === 0;
+export const isTitledRow = (titleWidth: number | undefined, turboLeaves: unknown[], scriptsBoxes: unknown[]): boolean =>
+  titleWidth !== undefined && turboLeaves.length === 1 && scriptsBoxes.length === 0;
 
 /**
  * A titled-row box: a title placeholder leaf above its one `leaf`, tied to it by an edge in the box's own `edges` (not the
