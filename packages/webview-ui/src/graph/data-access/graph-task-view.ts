@@ -5,7 +5,7 @@ import { setClassesAmong } from './graph-classes.ts';
 import { positionOf } from './graph-place.ts';
 import { applyRoutes } from './graph-routes.ts';
 import { boxesOf } from './graph-task-boxes.ts';
-import { applyBoxFrames } from './graph-task-frames.ts';
+import { applyBoxFrames, refitBoxFrames } from './graph-task-frames.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphEdge, GraphRunState, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
@@ -159,14 +159,17 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
     applyRoutes(cy, drawing.routes);
     paintTasks(cy, target);
     markRuns(cy, runs);
+    refitBoxFrames(cy);
   };
   const paint = (next: string | null): void => {
     target = next;
     paintTasks(cy, next);
+    refitBoxFrames(cy);
   };
   const runStates = (next: TaskRuns): void => {
     runs = next;
     markRuns(cy, next);
+    refitBoxFrames(cy);
   };
   const setPositions = (positions: Positions): void => {
     const placeNode = (node: NodeSingular): Position => positionOf(positions, node.id());
@@ -184,6 +187,7 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
   const remark = (): void => {
     paintTasks(cy, target);
     markRuns(cy, runs);
+    refitBoxFrames(cy);
   };
   const canvas: TaskCanvas = { show, clear, setPositions, setRoutes, positions, paint, runStates, setCounts, remark };
 

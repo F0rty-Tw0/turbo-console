@@ -8,7 +8,7 @@ import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import type { TaskDrawing } from '../common/task-canvas.type.ts';
+import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { frameLineOf, sideErrorOf } from '../test/utils/box-frame.spec.util.ts';
@@ -40,6 +40,18 @@ const TITLE_WIDTHS: ReadonlyMap<string, number> = new Map([
 ]);
 
 const NO_BOX: BoundingBox12 = { x1: 0, x2: 0, y1: 0, y2: 0 };
+
+/** A canvas call that changes task classes, so Cytoscape may count a task's bounds differently after it. */
+type ReclassRow = {
+  readonly name: string;
+  readonly act: (canvas: TaskCanvas) => void;
+};
+
+const RECLASS_ROWS: ReclassRow[] = [
+  { name: 'runs are marked', act: (canvas: TaskCanvas): void => canvas.runStates({ 'a#build': 'running' }) },
+  { name: 'a task is painted', act: (canvas: TaskCanvas): void => canvas.paint('hub#build') },
+  { name: 'classes are marked again', act: (canvas: TaskCanvas): void => canvas.remark() }
+];
 
 type RectEntry = [string, BoundingBox12];
 
@@ -94,6 +106,7 @@ const drawingOf = (laidOut: ElkNode): TaskDrawing => {
 describe('FEATURE: createTaskCanvas box frames on a real ELK layout', () => {
   describe('GIVEN the one-task box pkg:a, its title 220 px over an 80 px task, beside the two-task box pkg:b', () => {
     let cy: Core;
+    let canvas: TaskCanvas;
     let laidOut: ElkNode;
 
     beforeEach(async () => {
@@ -103,7 +116,8 @@ describe('FEATURE: createTaskCanvas box frames on a real ELK layout', () => {
 
       laidOut = await new elkConstructor().layout(graph);
       cy = cytoscape({ headless: true, styleEnabled: true, layout: PRESET, style });
-      createTaskCanvas(cy).show(drawingOf(laidOut));
+      canvas = createTaskCanvas(cy);
+      canvas.show(drawingOf(laidOut));
     }, REAL_ELK_TIMEOUT_MS);
 
     afterEach(() => {
@@ -121,6 +135,22 @@ describe('FEATURE: createTaskCanvas box frames on a real ELK layout', () => {
       const drawnB = frameLineOf(cy.getElementById('pkg:b'));
 
       expect(isOverlapping(drawnA, drawnB)).toBe(false);
+    });
+
+    // A 5 px border on a#build reaches 2 px past its 1 px one, as a run outline does in a browser, where Cytoscape counts
+    // outlines in a box's size; each canvas call that changes task classes writes the frame data again.
+    describe('WHEN a#build draws a 5 px border', () => {
+      beforeEach(() => {
+        cy.getElementById('a#build').style('border-width', 5);
+      });
+
+      it.each(RECLASS_ROWS)('AND $name THEN pkg:a is drawn on its ELK box, within 1 px of each side', ({ act }) => {
+        act(canvas);
+
+        const drawn = frameLineOf(cy.getElementById('pkg:a'));
+
+        expect(sideErrorOf(drawn, elkRectOf(laidOut, 'pkg:a'))).toBeLessThanOrEqual(1);
+      });
     });
   });
 });
