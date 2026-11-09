@@ -1,10 +1,17 @@
 import { test } from './graph-task.fixture.ts';
 import { GraphBoxTitles } from './pages/graph-box-titles.po.ts';
 import { buildOnlyStretchState, repoGenLikeTasksState } from './test/utils/graph-box-titles.spec.util.ts';
-import { targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
+import { TARGET_LIKE_UMBRELLA, targetLikeFileIds, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
 import type { GraphReady, GraphTask } from '../src/bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.ts';
+
+const SPEC_3_4 = { description: 'M5-2 spec 3.4', type: 'requirement' };
+
+/** The box of the target-like umbrella `app-1#e2e-ci`, its one task: a titled-row box. */
+const UMBRELLA_BOX = 'pkg:app-1';
+
+const FILE_IDS = targetLikeFileIds();
 
 /**
  * A task state the titles are checked on: `isLarge` for the 280 and 300 task states, whose layout runs 3-5x slower on
@@ -74,4 +81,41 @@ test.describe('FEATURE: task box titles clear of lines', () => {
         await test.step('AND each framed box is drawn on its ELK frame, its title at the placeholder', async (): Promise<void> =>
           graphBoxTitles.expectFramesTrue(row.mustFrame));
       });
+
+  test(
+    'GIVEN the target-like umbrella alone in its framed box, an expanded umbrella draws its box from the files under its title and a collapse frames it again',
+    { annotation: SPEC_3_4 },
+    async ({ graphAtoms, openUmbrella, page }): Promise<void> => {
+      const graphBoxTitles = new GraphBoxTitles(page);
+
+      await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
+
+      await test.step('AND the umbrella box is framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, true));
+
+      const { modelBox } = await test.step('AND the umbrella box is read', async () => graphBoxTitles.titleOf(UMBRELLA_BOX));
+
+      await test.step('AND the umbrella is double tapped', async (): Promise<void> => graphAtoms.toggle(TARGET_LIKE_UMBRELLA));
+
+      await test.step('AND its files are drawn', async (): Promise<void> => graphAtoms.expectFilesDrawn(FILE_IDS, true));
+
+      await test.step('THEN the umbrella box is not framed', async (): Promise<void> =>
+        graphBoxTitles.expectFramed(UMBRELLA_BOX, false));
+
+      await test.step('AND its title sits in its top padding band', async (): Promise<void> =>
+        graphBoxTitles.expectTitleInTopBand(UMBRELLA_BOX));
+
+      await test.step('AND its title meets no drawn node but its own box', async (): Promise<void> =>
+        graphBoxTitles.expectTitleClearOfNodes(UMBRELLA_BOX));
+
+      await test.step('WHEN the umbrella is double tapped again', async (): Promise<void> => graphAtoms.toggle(TARGET_LIKE_UMBRELLA));
+
+      await test.step('THEN the umbrella box is framed', async (): Promise<void> => graphBoxTitles.expectFramed(UMBRELLA_BOX, true));
+
+      await test.step('AND it is drawn within 4 px of its box before the expand', async (): Promise<void> =>
+        graphBoxTitles.expectModelBoxNear(UMBRELLA_BOX, modelBox));
+
+      await test.step('AND no drawn line crosses its title', async (): Promise<void> =>
+        graphBoxTitles.expectTitleUncrossed(UMBRELLA_BOX));
+    }
+  );
 });
