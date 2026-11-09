@@ -66,6 +66,19 @@ const compoundAt = (graph: ElkNode, ids: string[]): ElkNode => {
   return found;
 };
 
+/** The node with `id` anywhere under `node`, packing wrappers included; `MISSING` where there is none. */
+const descendantOf = (node: ElkNode, id: string): ElkNode => {
+  const matchOf = (child: ElkNode): ElkNode => {
+    if (child.id === id) return child;
+
+    return descendantOf(child, id);
+  };
+  const children = node.children ?? [];
+  const matches = children.map(matchOf);
+
+  return matches.find((match) => match !== MISSING) ?? MISSING;
+};
+
 /** The child of `box` with `id`; `MISSING` where it has none. */
 const leafAt = (box: ElkNode, id: string): ElkNode => box.children?.find((child) => child.id === id) ?? MISSING;
 
@@ -240,6 +253,13 @@ describe('FEATURE: elkTaskGraphOf', () => {
       const graph = singleTaskGraphOf(51);
 
       expect(graph.layoutOptions?.['elk.layered.thoroughness']).toBe('1');
+    });
+
+    it('WHEN the tasks are 51 with their title slots totalling 102 THEN a package box drops to thoroughness 1 too', () => {
+      const graph = singleTaskGraphOf(51);
+      const box = descendantOf(graph, 'pkg:p0');
+
+      expect(box.layoutOptions?.['elk.layered.thoroughness']).toBe('1');
     });
 
     it('WHEN the same 51 tasks have no title widths THEN the root keeps thoroughness 7', () => {
