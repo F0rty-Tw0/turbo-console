@@ -170,8 +170,8 @@ const BOX_TITLE = {
  * background; `taskRulesOf` adds the task mode rules and `selectionRulesOf` the selected border and fill and the bold focus target.
  * The folder pass draws `folder-node` (a collapsed folder, its label wrapped only while exporting or `row-less`) and
  * `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it. Every colour
- * comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font before their name;
- * the base node rule keeps `fontFamily`.
+ * comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font before their name, and a package
+ * task box draws the package glyph before its title; the base node rule keeps `fontFamily`.
  */
 export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: boolean): StylesheetJson => {
   const node = {

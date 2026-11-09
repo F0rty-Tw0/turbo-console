@@ -88,8 +88,8 @@ describe('FEATURE: taskLayoutKeyOf naming bits', () => {
       expect(packageKey).not.toBe(key);
     });
 
-    it('WHEN the task layout version is read THEN it is 4, above every package layout version a saved key ended with', () => {
-      expect(TASK_LAYOUT_VERSION).toBe(4);
+    it('WHEN the task layout version is read THEN it is 5, above every value a saved task key ended with', () => {
+      expect(TASK_LAYOUT_VERSION).toBe(5);
     });
   });
 

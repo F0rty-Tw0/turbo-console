@@ -56,6 +56,7 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
     runner,
     sizeOf: deps.taskSizeOf,
     textSizeOf: deps.sizeOf,
+    boxTitleSizeOf: deps.boxTitleSizeOf,
     bridge,
     screen,
     now: deps.now,

@@ -90,7 +90,6 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const runs = layoutRunsMock();
   const screen = layoutScreenMock();
   const parts = taskPartsMockOf();
-  const { panelOf, controlsOf, detailsOf } = parts;
   const onExit = vi.fn<() => void>();
   const onFailure = vi.fn<(error: unknown) => void>();
   const flow = flowControlMock();
@@ -101,6 +100,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     runner: runs.runner,
     sizeOf,
     textSizeOf: sizeOf,
+    boxTitleSizeOf: sizeOf,
     bridge,
     screen,
     modes,
@@ -108,9 +108,9 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     onExit,
     onLocation: doubles.onLocation,
     onFailure,
-    panelOf,
-    controlsOf,
-    detailsOf,
+    panelOf: parts.panelOf,
+    controlsOf: parts.controlsOf,
+    detailsOf: parts.detailsOf,
     widgetsOf: taskWidgetsMock,
     flow,
     now: (): number => 0,

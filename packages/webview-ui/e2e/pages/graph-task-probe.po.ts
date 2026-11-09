@@ -4,6 +4,7 @@ import { expect } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position, Positions } from '../../src/bridge/common/graph-state.type.ts';
 import { ATOM_BOX_PREFIX } from '../../src/graph/common/graph-atom.const.ts';
+import { PACKAGE_GLYPH } from '../../src/graph/common/graph-glyph.const.ts';
 import type { ProbeTitle } from '../../src/graph/common/graph-probe-titles.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { SCRIPTS_BOX_PREFIX } from '../../src/graph/common/graph-task.const.ts';
@@ -26,7 +27,18 @@ const isTaskId = (id: string): boolean => !isBoxId(id) && !isAtomBoxId(id) && !i
 
 const isBox = (node: ProbeNode): boolean => isBoxId(node.id);
 
-const textOf = (node: ProbeNode): string => node.text;
+const GLYPH_PREFIX = `${PACKAGE_GLYPH} `;
+
+/** A package box's title without the package glyph its label starts with when the page draws glyphs. */
+const titleOf = (node: ProbeNode): string => {
+  const isGlyphed = node.text.startsWith(GLYPH_PREFIX);
+
+  if (!isGlyphed) return node.text;
+
+  const title = node.text.slice(GLYPH_PREFIX.length);
+
+  return title;
+};
 
 /** Page px a title's label may reach past its box, for rounding. */
 const INSIDE_SLACK_PX = 1;
@@ -119,8 +131,8 @@ export class GraphTaskProbe {
   /** A box is drawn for each of `titles`, and each is as wide as its title and draws it whole (`expectTitlesFit`). */
   public async expectBoxTitlesUncut(titles: string[]): Promise<void> {
     const boxes = await this.boxes();
-    const titled = boxes.filter((node) => titles.includes(node.text));
-    const foundTitles = sortedNames(titled.map(textOf));
+    const titled = boxes.filter((node) => titles.includes(titleOf(node)));
+    const foundTitles = sortedNames(titled.map(titleOf));
     const wantedTitles = sortedNames(titles);
 
     expect(foundTitles).toEqual(wantedTitles);
@@ -160,7 +172,7 @@ export class GraphTaskProbe {
 
   private async boxTitles(): Promise<string[]> {
     const boxes = await this.boxes();
-    const titles = boxes.map(textOf);
+    const titles = boxes.map(titleOf);
 
     return titles.sort();
   }

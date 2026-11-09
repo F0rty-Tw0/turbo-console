@@ -179,6 +179,8 @@ export type GraphControllerDeps = {
   readonly sizeOf: NodeSizer;
   /** Sizes task names; the package graph keeps `sizeOf`. */
   readonly taskSizeOf: NodeSizer;
+  /** Sizes package task box titles, glyph included when the page draws glyphs. */
+  readonly boxTitleSizeOf: NodeSizer;
   /** What a collapsed folder's title is cut to fit with. */
   readonly measure: TextMeasure;
   readonly now: () => number;

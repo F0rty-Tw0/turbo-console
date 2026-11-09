@@ -1,15 +1,7 @@
 import { REDUCED_MOTION_QUERY } from './common/flow.const.ts';
 import type { FlowControl, FlowEdgeGeometry } from './common/flow.type.ts';
 import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from './common/graph-glyph.const.ts';
-import type {
-  FlowFactory,
-  GraphController,
-  GraphView,
-  GraphViewFactory,
-  NodeSizer,
-  TextMeasure,
-  Viewport
-} from './common/graph-page.type.ts';
+import type { FlowFactory, GraphController, GraphView, GraphViewFactory, Viewport } from './common/graph-page.type.ts';
 import type { GraphProbe } from './common/graph-probe.type.ts';
 import { FALLBACK_TIMEOUT_MS, NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
 import type { ThemeColors } from './common/theme-colors.type.ts';
@@ -18,7 +10,7 @@ import { createElk } from './data-access/elk-client.ts';
 import { breadthfirstPositions } from './data-access/fallback-layout.ts';
 import { createGraphProbe, exposeProbe } from './data-access/graph-probe.ts';
 import { createGraphView } from './data-access/graph-view.ts';
-import { labelSizer, slotSizer, textMeasure } from './data-access/label-measure.ts';
+import { boxTitleSizerOf, labelSizer, taskSizerOf, textMeasure } from './data-access/label-measure.ts';
 import { createLayoutRunner } from './data-access/layout-runner.ts';
 import { createViewStateSaver } from './data-access/view-state-saver.ts';
 import { createGraphController } from './domain-logic/graph-controller.ts';
@@ -73,18 +65,9 @@ const createFlow: FlowFactory = (view: GraphView): FlowControl => {
   return flow;
 };
 
-/** The task nodes' sizer: the glyph slot when the page draws glyphs, else the bare label. */
-const taskSizerOf = (glyphs: boolean, measure: TextMeasure): NodeSizer => {
-  const glyphMeasure = textMeasure(`${NODE_FONT_SIZE}px codicon, ${fontFamily}`);
-  const slot = slotSizer(glyphMeasure);
-  const plain = labelSizer(measure);
-  const sizer = glyphs ? slot : plain;
-
-  return sizer;
-};
-
 const controllerOf = (glyphs: boolean): GraphController => {
   const measure = textMeasure(`${NODE_FONT_SIZE}px ${fontFamily}`);
+  const glyphMeasure = textMeasure(`${NODE_FONT_SIZE}px codicon, ${fontFamily}`);
   const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fontFamily, glyphs);
   const controller = createGraphController({
     bridge,
@@ -94,7 +77,8 @@ const controllerOf = (glyphs: boolean): GraphController => {
     runner,
     saver,
     sizeOf: labelSizer(measure),
-    taskSizeOf: taskSizerOf(glyphs, measure),
+    taskSizeOf: taskSizerOf(glyphs, measure, glyphMeasure),
+    boxTitleSizeOf: boxTitleSizerOf(glyphs, measure, glyphMeasure),
     measure,
     now,
     build: buildControls,

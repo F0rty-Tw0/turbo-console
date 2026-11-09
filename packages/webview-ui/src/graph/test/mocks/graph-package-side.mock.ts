@@ -115,6 +115,7 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
     saver,
     sizeOf: (): NodeSize => NODE_SIZE,
     taskSizeOf: (): NodeSize => NODE_SIZE,
+    boxTitleSizeOf: (): NodeSize => NODE_SIZE,
     measure: (text: string): number => text.length,
     now: (): number => 0,
     build: buildControls,
