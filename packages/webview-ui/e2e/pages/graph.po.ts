@@ -51,8 +51,7 @@ export class GraphPage {
 
     if (options.host !== false) await this.page.addInitScript({ content: HOST_API_STUB });
 
-    if (options.layoutTimeoutMs !== undefined)
-      await this.page.addInitScript({ content: layoutTimeoutScript(options.layoutTimeoutMs) });
+    await this.page.addInitScript({ content: layoutTimeoutScript(options.layoutTimeoutMs) });
 
     const saved = options.savedState === undefined ? FLAT_SAVED_STUB : options.savedState;
 
