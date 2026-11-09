@@ -30,22 +30,26 @@ export class GraphAtomLinks {
     this.probe = new GraphProbePage(page);
   }
 
-  /** The drawn points of each line out of `umbrellaId`, by target, once `count` of them are drawn. */
-  public async pointsFrom(umbrellaId: string, count: number): Promise<Record<string, ViewportPoint[]>> {
+  /**
+   * The bend count (`points.length - 2`) of each drawn, routed line out of `umbrellaId`, by target, once `count` of them
+   * are drawn and routed. Read from the line state, not page points, so it holds whatever the camera and however late
+   * Cytoscape recomputes the drawn ends.
+   */
+  public async routedBendsFrom(umbrellaId: string, count: number): Promise<Record<string, number>> {
     const countOf = async (): Promise<number> => {
-      const points = await this.drawnPointsFrom(umbrellaId);
+      const bends = await this.drawnBendsFrom(umbrellaId);
 
-      return Object.keys(points).length;
+      return Object.keys(bends).length;
     };
 
     await expect.poll(countOf).toBe(count);
 
-    return this.drawnPointsFrom(umbrellaId);
+    return this.drawnBendsFrom(umbrellaId);
   }
 
-  /** The lines out of `umbrellaId` are drawn through `points`, by target. */
-  public async expectPointsFrom(umbrellaId: string, points: Record<string, ViewportPoint[]>): Promise<void> {
-    await expect.poll(async (): Promise<Record<string, ViewportPoint[]>> => this.drawnPointsFrom(umbrellaId)).toEqual(points);
+  /** The routed lines out of `umbrellaId` bend `bends` times, by target. */
+  public async expectRoutedBendsFrom(umbrellaId: string, bends: Record<string, number>): Promise<void> {
+    await expect.poll(async (): Promise<Record<string, number>> => this.drawnBendsFrom(umbrellaId)).toEqual(bends);
   }
 
   /**
@@ -84,11 +88,11 @@ export class GraphAtomLinks {
     await expect.poll(async (): Promise<number> => this.throughFilesOf(fileIds)).toBe(count);
   }
 
-  private async drawnPointsFrom(umbrellaId: string): Promise<Record<string, ViewportPoint[]>> {
+  private async drawnBendsFrom(umbrellaId: string): Promise<Record<string, number>> {
     const lines = await readEdgeLines(this.page);
-    const isFrom = (line: ProbeEdgeLine): boolean => line.source === umbrellaId && line.isDrawn;
-    const entryOf = (line: ProbeEdgeLine): [string, ViewportPoint[]] => [line.target, line.points.map(roundedPointOf)];
-    const fromLines = lines.filter(isFrom);
+    const isRoutedFrom = (line: ProbeEdgeLine): boolean => line.source === umbrellaId && line.isDrawn && line.isRouted;
+    const entryOf = (line: ProbeEdgeLine): [string, number] => [line.target, line.points.length - 2];
+    const fromLines = lines.filter(isRoutedFrom);
     const entries = fromLines.map(entryOf);
 
     return Object.fromEntries(entries);

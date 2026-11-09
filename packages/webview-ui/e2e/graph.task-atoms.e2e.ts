@@ -175,8 +175,10 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
     async ({ graphAtoms, openUmbrella }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
 
-      const before = await test.step('AND its two links are read', async () =>
-        graphAtoms.links.pointsFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT));
+      const before = await test.step('AND its two routed links are read', async () =>
+        graphAtoms.links.routedBendsFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT));
+
+      const centre = await test.step('AND its centre is read', async () => graphAtoms.links.centreOf(TARGET_LIKE_UMBRELLA));
 
       await test.step('AND the umbrella is double tapped', async (): Promise<void> => {
         await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
@@ -190,8 +192,11 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
         await graphAtoms.expectFilesDrawn(FILE_IDS, false);
       });
 
-      await test.step('THEN its links are drawn where they were', async (): Promise<void> =>
-        graphAtoms.links.expectPointsFrom(TARGET_LIKE_UMBRELLA, before));
+      await test.step('THEN its links are on the routes they had', async (): Promise<void> =>
+        graphAtoms.links.expectRoutedBendsFrom(TARGET_LIKE_UMBRELLA, before));
+
+      await test.step('AND the umbrella has not moved', async (): Promise<void> =>
+        graphAtoms.links.expectCentreOf(TARGET_LIKE_UMBRELLA, centre));
     }
   );
 
