@@ -8,37 +8,20 @@ import type { GraphViewState } from '../src/bridge/common/graph-view-state.type.
 
 /**
  * A task state the titles are checked on: `isLarge` for the 280 and 300 task states, whose layout runs 3-5x slower on
- * the Windows and macOS runners; `CROSSED` while master draws lines through its titles. Slice B
- * (feat/g24a-title-slot, ELK title slots) moves these rows to `CLEAR`.
+ * the Windows and macOS runners; `mustFrame` where it holds one-task (titled-row) boxes, so at least one box must be
+ * drawn on its ELK frame.
  */
 type TitleRow = {
   readonly name: string;
   readonly state: () => GraphReady;
   readonly isLarge: boolean;
-  readonly titles: TitleCheck;
-};
-
-/** What a row expects of its titles once laid out, and the check that proves it given the title count. */
-type TitleCheck = {
-  readonly then: string;
-  readonly expect: (titles: GraphBoxTitles, count: number) => Promise<void>;
-};
-
-/** Master draws lines through these titles. */
-const CROSSED: TitleCheck = {
-  then: 'drawn lines still cross package box titles',
-  expect: async (titles, count): Promise<void> => titles.expectTitlesCrossed(count)
-};
-
-const CLEAR: TitleCheck = {
-  then: 'no drawn line crosses a package box title',
-  expect: async (titles, count): Promise<void> => titles.expectNoTitleCrossed(count)
+  readonly mustFrame: boolean;
 };
 
 const ROWS: TitleRow[] = [
-  { name: 'repo-gen-like', state: repoGenLikeTasksState, isLarge: true, titles: CROSSED },
-  { name: 'stretch build-only', state: buildOnlyStretchState, isLarge: true, titles: CROSSED },
-  { name: 'target-like', state: (): GraphReady => targetLikeTasksState(), isLarge: false, titles: CLEAR }
+  { name: 'repo-gen-like', state: repoGenLikeTasksState, isLarge: true, mustFrame: true },
+  { name: 'stretch build-only', state: buildOnlyStretchState, isLarge: true, mustFrame: true },
+  { name: 'target-like', state: (): GraphReady => targetLikeTasksState(), isLarge: false, mustFrame: false }
 ];
 
 const LAYOUTS = [
@@ -64,7 +47,7 @@ const everyTaskSaved = (state: GraphReady, isGrouped: boolean): GraphViewState =
 test.describe('FEATURE: task box titles clear of lines', () => {
   for (const row of ROWS)
     for (const layout of LAYOUTS)
-      test(`GIVEN the ${row.name} tasks ${layout.name} with every task chosen, ${row.titles.then}`, async ({
+      test(`GIVEN the ${row.name} tasks ${layout.name} with every task chosen, no drawn line crosses a package box title`, async ({
         graphHost,
         graphPage,
         graphProbe,
@@ -85,6 +68,10 @@ test.describe('FEATURE: task box titles clear of lines', () => {
 
         await test.step('AND every task is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(state.tasks.map(idOf)));
 
-        await test.step(`THEN ${row.titles.then}`, async (): Promise<void> => row.titles.expect(graphBoxTitles, titleCountOf(state)));
+        await test.step('THEN no drawn line crosses a package box title', async (): Promise<void> =>
+          graphBoxTitles.expectNoTitleCrossed(titleCountOf(state)));
+
+        await test.step('AND each framed box is drawn on its ELK frame, its title at the placeholder', async (): Promise<void> =>
+          graphBoxTitles.expectFramesTrue(row.mustFrame));
       });
 });
