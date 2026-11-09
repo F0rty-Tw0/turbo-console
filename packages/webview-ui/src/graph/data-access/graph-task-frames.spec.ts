@@ -122,10 +122,21 @@ describe('FEATURE: applyBoxFrames, unframeBox and reframeBox', () => {
     const narrow: BoxFrame = { ...FRAME, left: -30 };
     const frames: BoxFrames = { 'pkg:api': narrow };
 
-    it('WHEN applied THEN the left extra is only the epsilon, never negative', () => {
+    it('WHEN applied THEN the left extra is 0, never negative', () => {
       applyBoxFrames(cy, frames);
 
-      expect(boxOf(cy).data('frameLeft')).toBeCloseTo(0, 2);
+      expect(boxOf(cy).data('frameLeft')).toBe(0);
+    });
+  });
+
+  describe('GIVEN a frame reaching further past the task on the left than the right and on the top than the bottom', () => {
+    const uneven: BoxFrame = { ...FRAME, left: -90, top: -70 };
+    const frames: BoxFrames = { 'pkg:api': uneven };
+
+    it('WHEN applied THEN the box is drawn on its frame, within 1 px of each side', () => {
+      applyBoxFrames(cy, frames);
+
+      expect(boxErrorOf(cy, { x1: 10, x2: 175, y1: 30, y2: 163 })).toBeLessThanOrEqual(1);
     });
   });
 

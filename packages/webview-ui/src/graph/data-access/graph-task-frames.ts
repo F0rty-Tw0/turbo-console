@@ -7,9 +7,6 @@ import { isBoxFrame } from '../utils/box-frame.util.ts';
 
 const CHILD_OPTIONS = { includeLabels: true, includeOverlays: false };
 
-/** Added to every bias, so Cytoscape's bias normalisation never divides 0 by 0 when a box needs no extra on a side. */
-const BIAS_EPSILON_PX = 0.001;
-
 /**
  * The data that draws `box` on `frame`, whose sides ELK measured from its task's body:
  * - the padding, 32 px less how far the children's bounds reach past the task's body (half its border and Cytoscape's
@@ -36,10 +33,10 @@ const frameDataOf = (box: NodeSingular, leaf: NodeSingular, frame: BoxFrame): Re
     framePadding: pad,
     frameMinWidth: bounds.x2 - bounds.x1 + extraLeft + extraRight,
     frameMinHeight: bounds.y2 - bounds.y1 + extraTop + extraBottom,
-    frameLeft: extraLeft + BIAS_EPSILON_PX,
-    frameRight: extraRight + BIAS_EPSILON_PX,
-    frameTop: extraTop + BIAS_EPSILON_PX,
-    frameBottom: extraBottom + BIAS_EPSILON_PX,
+    frameLeft: extraLeft,
+    frameRight: extraRight,
+    frameTop: extraTop,
+    frameBottom: extraBottom,
     frameTitleX: titleLeft - 2 * pad,
     frameTitleY: titleTop + NODE_FONT_SIZE
   };
