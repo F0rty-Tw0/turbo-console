@@ -12,16 +12,28 @@ const RESIZE_SWALLOWER = `addEventListener('resize', (event) => {
 /** A pointer move fires a synthetic `resize` event, which the swallower lets through. */
 const RESIZE_ON_POINTER_MOVE = `addEventListener('mousemove', () => dispatchEvent(new Event('resize')));`;
 
+/** Every layout read throws, so the forced-layout nudge rejects. */
+const THROWING_LAYOUT = `Element.prototype.getBoundingClientRect = () => {
+  throw new Error('layout read blocked');
+};`;
+
+/** The first `resize` event spins the page forever, as a wedged renderer that answers nothing does. */
+const WEDGE_ON_RESIZE = `addEventListener('resize', () => {
+  for (;;);
+}, true);`;
+
 /** A blank page whose `resize` events can be held back, to check how `PageViewport` waits for them (F-U8-8). */
 export class ResizeStall {
   private readonly page: Page;
   private readonly testInfo: TestInfo;
   private readonly viewport: PageViewport;
+  private resizeMs: number | null;
 
   public constructor(page: Page, testInfo: TestInfo) {
     this.page = page;
     this.testInfo = testInfo;
     this.viewport = new PageViewport(page);
+    this.resizeMs = null;
   }
 
   /** Before the page loads: no real `resize` event reaches the page. */
@@ -34,18 +46,36 @@ export class ResizeStall {
     await this.page.addInitScript({ content: RESIZE_ON_POINTER_MOVE });
   }
 
+  /** Before the page loads: a forced layout throws. */
+  public async throwOnLayout(): Promise<void> {
+    await this.page.addInitScript({ content: THROWING_LAYOUT });
+  }
+
+  /** Before the page loads: its first `resize` event leaves it answering nothing. */
+  public async wedgeOnResize(): Promise<void> {
+    await this.page.addInitScript({ content: WEDGE_ON_RESIZE });
+  }
+
   public async open(): Promise<void> {
     await this.page.goto(BLANK_PAGE);
   }
 
+  /** Resizes the page and remembers how long that took, by Node's clock. */
   public async resize(width: number, height: number): Promise<void> {
+    const startedAt = Date.now();
+
     await this.viewport.resize(width, height);
+    this.resizeMs = Date.now() - startedAt;
   }
 
-  public async expectResizeToFail(width: number, height: number): Promise<void> {
+  public expectResizeUnder(ms: number): void {
+    expect(this.resizeMs).toBeLessThan(ms);
+  }
+
+  public async expectResizeToFail(width: number, height: number, message: RegExp): Promise<void> {
     const resizing = this.viewport.resize(width, height);
 
-    await expect(resizing).rejects.toThrow(/^F-U8-8: no resize event, even after every nudge: resize wanted/u);
+    await expect(resizing).rejects.toThrow(message);
   }
 
   /** The running test's `F-U8-8` annotations match `descriptions`, one each, in order. */
