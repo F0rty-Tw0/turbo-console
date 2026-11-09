@@ -131,8 +131,9 @@ export class GraphProbePage {
     await expect.poll(isSettled, { timeout: LAYOUT_SETTLE_MS }).toBe(true);
   }
 
-  public async expectLayoutEngine(engine: LayoutEngine): Promise<void> {
-    await expect.poll(async (): Promise<LayoutEngine | null> => this.layoutEngine(), { timeout: LAYOUT_SETTLE_MS }).toBe(engine);
+  /** `timeout` outlasts the page's ELK timeout: a page opened with `layoutTimeoutMs` passes one longer than it. */
+  public async expectLayoutEngine(engine: LayoutEngine, timeout = LAYOUT_SETTLE_MS): Promise<void> {
+    await expect.poll(async (): Promise<LayoutEngine | null> => this.layoutEngine(), { timeout }).toBe(engine);
   }
 
   /** `ordered` lists names from the top row down: each sits strictly below the one before. */

@@ -20,6 +20,8 @@ export type GraphOptions = {
   readonly host?: boolean;
   /** `false` skips the probe flag, so the page exposes no probe. */
   readonly probe?: boolean;
+  /** The page's ELK timeout in ms, set before the page loads; the default is the production `FALLBACK_TIMEOUT_MS`. */
+  readonly layoutTimeoutMs?: number;
   /** The page size, set before the page loads; the default is the project's. */
   readonly viewport?: ViewportSize;
 };
