@@ -152,11 +152,22 @@ describe('FEATURE: probeTitlesOf', () => {
       expect(frameError).toBeCloseTo(10, 2);
     });
 
-    // Headless Cytoscape measures no font, so only the e2e rows can bound the title error; here it is only reported.
-    it('WHEN the titles are probed THEN a title error is reported', () => {
+    // Headless Cytoscape measures no font, so the label's bounds collapse to the model origin (0, 0) and the title error
+    // is the larger gap from there to the placeholder corner, (65, 51) here. Only the e2e rows bound the real title error.
+    it('WHEN the titles are probed THEN the title error is the 65 px gap across to the placeholder corner', () => {
       const { titleError } = firstTitleOf(cy, ORIGIN);
 
-      expect(typeof titleError).toBe('number');
+      expect(titleError).toBeCloseTo(65, 2);
+    });
+
+    it('WHEN its frame data puts the placeholder corner at (0, -80) THEN the title error is the 80 px gap down to it', () => {
+      const lifted: BoxFrame = { ...WEB_FRAME, titleX: -100, titleY: -180 };
+
+      cy.getElementById('pkg:web').data('boxFrame', lifted);
+
+      const { titleError } = firstTitleOf(cy, ORIGIN);
+
+      expect(titleError).toBeCloseTo(80, 2);
     });
 
     it('WHEN the frame class is dropped THEN pkg:web is not framed and has no frame errors', () => {
