@@ -36,3 +36,21 @@ export const packageTitleSizer = (measure: TextMeasure): NodeSizer => {
 
   return sizeOf;
 };
+
+/** The task nodes' sizer: the glyph slot, measured in `glyphMeasure`, when the page draws glyphs, else the bare label in `measure`. */
+export const taskSizerOf = (glyphs: boolean, measure: TextMeasure, glyphMeasure: TextMeasure): NodeSizer => {
+  const slot = slotSizer(glyphMeasure);
+  const plain = labelSizer(measure);
+  const sizer = glyphs ? slot : plain;
+
+  return sizer;
+};
+
+/** The package task box titles' sizer: the package glyph and the name, measured in `glyphMeasure`, when the page draws glyphs, else the bare name in `measure`. */
+export const boxTitleSizerOf = (glyphs: boolean, measure: TextMeasure, glyphMeasure: TextMeasure): NodeSizer => {
+  const withGlyph = packageTitleSizer(glyphMeasure);
+  const plain = labelSizer(measure);
+  const sizer = glyphs ? withGlyph : plain;
+
+  return sizer;
+};
