@@ -1,4 +1,6 @@
-import type { RunOutline } from './common/graph.type.ts';
+import { LAYOUT_SETTLE_MS } from './common/graph.const.ts';
+import type { GraphOptions, RunOutline } from './common/graph.type.ts';
+import { LARGE_LAYOUT_SETTLE_MS, LARGE_LAYOUT_TIMEOUT_MS } from './common/large-layout.const.ts';
 import { test } from './graph-task.fixture.ts';
 import { GraphBoxTitles } from './pages/graph-box-titles.po.ts';
 import { buildOnlyStretchState, repoGenLikeTasksState } from './test/utils/graph-box-titles.spec.util.ts';
@@ -27,12 +29,26 @@ type TitleRow = {
   readonly state: () => GraphReady;
   readonly isLarge: boolean;
   readonly mustFrame: boolean;
+  /** The page's ELK timeout: longer on the large rows, so a loaded Windows runner does not draw the fallback (F-G24-1). */
+  readonly timeout: GraphOptions;
+  /** How long to wait for ELK's layout, past `timeout`. */
+  readonly settleMs: number;
 };
 
+type RowSize = Pick<TitleRow, 'isLarge' | 'timeout' | 'settleMs'>;
+
+const LARGE_TIMEOUT: GraphOptions = { layoutTimeoutMs: LARGE_LAYOUT_TIMEOUT_MS };
+
+const PRODUCTION_TIMEOUT: GraphOptions = {};
+
+const LARGE: RowSize = { isLarge: true, timeout: LARGE_TIMEOUT, settleMs: LARGE_LAYOUT_SETTLE_MS };
+
+const SMALL: RowSize = { isLarge: false, timeout: PRODUCTION_TIMEOUT, settleMs: LAYOUT_SETTLE_MS };
+
 const ROWS: TitleRow[] = [
-  { name: 'repo-gen-like', state: repoGenLikeTasksState, isLarge: true, mustFrame: true },
-  { name: 'stretch build-only', state: buildOnlyStretchState, isLarge: true, mustFrame: true },
-  { name: 'target-like', state: (): GraphReady => targetLikeTasksState(), isLarge: false, mustFrame: false }
+  { name: 'repo-gen-like', state: repoGenLikeTasksState, ...LARGE, mustFrame: true },
+  { name: 'stretch build-only', state: buildOnlyStretchState, ...LARGE, mustFrame: true },
+  { name: 'target-like', state: (): GraphReady => targetLikeTasksState(), ...SMALL, mustFrame: false }
 ];
 
 const LAYOUTS = [
@@ -69,13 +85,14 @@ test.describe('FEATURE: task box titles clear of lines', () => {
 
         const state = row.state();
         const graphBoxTitles = new GraphBoxTitles(page);
+        const savedState = everyTaskSaved(state, layout.isGrouped);
 
         await test.step(`WHEN the page opens ${layout.name} with every task chosen and the cap lifted`, async (): Promise<void> =>
-          graphPage.open({ savedState: everyTaskSaved(state, layout.isGrouped) }));
+          graphPage.open({ ...row.timeout, savedState }));
 
         await test.step('AND the task state is sent', async (): Promise<void> => graphHost.sendState(state));
 
-        await test.step('AND ELK has laid it out', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
+        await test.step('AND ELK has laid it out', async (): Promise<void> => graphProbe.expectLayoutEngine('elk', row.settleMs));
 
         await test.step('AND every task is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(state.tasks.map(idOf)));
 
