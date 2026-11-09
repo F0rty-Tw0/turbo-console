@@ -79,6 +79,17 @@ const layoutOf = async (leafWidth: number, titleWidth: number): Promise<ElkNode>
   return new elkConstructor().layout(graph);
 };
 
+/** `count` packages `p0`…, each with one turbo task and, by default, a title width, as a flat view. */
+const singleTaskGraphOf = (count: number, titleWidths?: ReadonlyMap<string, number>): ElkNode => {
+  const slots = Array.from({ length: count }, (_unused, index) => index);
+  const tasks = slots.map((index) => taskOf(`p${index}#build`, []));
+  const shown = new Set(tasks.map((task) => task.id));
+  const titleEntries = slots.map((index): [string, number] => [`p${index}`, 60]);
+  const titles = titleWidths ?? new Map(titleEntries);
+
+  return graphOf(tasks, shown, NO_SIZES, titles);
+};
+
 describe('FEATURE: elkTaskGraphOf', () => {
   describe('GIVEN web#build and the api#build it depends on, both shown', () => {
     it('WHEN built THEN one compound per package and one root edge', () => {
@@ -215,6 +226,26 @@ describe('FEATURE: elkTaskGraphOf', () => {
       const root = compoundAt(graph, ['pkg://']);
 
       expect(childIdsOf(root)).toStrictEqual(['scripts://']);
+    });
+  });
+
+  describe('GIVEN a flat view of single-task packages that all have a title width', () => {
+    it('WHEN the tasks and their title slots total 100 THEN the root keeps thoroughness 7', () => {
+      const graph = singleTaskGraphOf(50);
+
+      expect(graph.layoutOptions?.['elk.layered.thoroughness']).toBe('7');
+    });
+
+    it('WHEN the tasks are 51, under 100, but with their title slots total 102 THEN the root drops to thoroughness 1', () => {
+      const graph = singleTaskGraphOf(51);
+
+      expect(graph.layoutOptions?.['elk.layered.thoroughness']).toBe('1');
+    });
+
+    it('WHEN the same 51 tasks have no title widths THEN the root keeps thoroughness 7', () => {
+      const graph = singleTaskGraphOf(51, NO_TITLES);
+
+      expect(graph.layoutOptions?.['elk.layered.thoroughness']).toBe('7');
     });
   });
 

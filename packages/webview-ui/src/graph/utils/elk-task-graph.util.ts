@@ -107,6 +107,20 @@ const rootChildrenOf = (
   return [...atRoot, ...folderBoxes];
 };
 
+/** How many titled-row boxes `drawn` makes: each adds a title-slot leaf; a package has a Scripts box exactly when it has a script. */
+const titleSlotCountOf = (drawn: GraphTask[], titleWidths: ReadonlyMap<string, number>): number => {
+  const hasTitleSlot = (packageName: string): boolean => {
+    const own = drawn.filter((task) => task.packageName === packageName);
+    const turboTasks = own.filter((task) => task.isTurboTask);
+    const scripts = own.filter((task) => !task.isTurboTask);
+
+    return isTitledRow(titleWidths.get(packageName), turboTasks, scripts);
+  };
+  const titled = sortedPackagesOf(drawn).filter(hasTitleSlot);
+
+  return titled.length;
+};
+
 /**
  * The task ELK input, as `groupedElkGraphOf`: one padded compound per package with a shown task, at least as wide as its
  * title in `titleWidths`, holding the shown turbo tasks and, when a script is shown, a Scripts compound around the shown
@@ -120,7 +134,8 @@ export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkN
   const { tasks, shown, sizes, titleWidths, naming } = request;
   const drawn = tasks.filter((task) => shown.has(task.id));
   const layering = taskLayeringOf(naming);
-  const base = paddedOptionsOf(drawn.length, layering);
+  const leafCount = drawn.length + titleSlotCountOf(drawn, titleWidths);
+  const base = paddedOptionsOf(leafCount, layering);
   const leafOf = (task: GraphTask): ElkNode => {
     const { width, height } = sizes.get(task.id) ?? sizeOf(task.name);
     const leaf: ElkNode = { id: task.id, width, height };
@@ -149,7 +164,7 @@ export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkN
   const packageBoxes = new Map(sortedPackagesOf(drawn).map(boxEntryOf));
   const children = rootChildrenOf(packageBoxes, naming, titleWidths, base);
   const edges = taskEdgesOf(drawn, shown).map(elkEdgeOf);
-  const layoutOptions = groupedRootOptionsOf(drawn.length, layering);
+  const layoutOptions = groupedRootOptionsOf(leafCount, layering);
   const graph: ElkNode = { id: 'root', layoutOptions, children, edges };
 
   return packComponentsOf(graph);
