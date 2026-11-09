@@ -31,6 +31,7 @@ const DRAWING: TaskDrawing = {
   tasks: [taskOf(UMBRELLA, [TARGET]), taskOf(TARGET, [])],
   positions: DRAWN_AT,
   routes: {},
+  boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),
   labels: new Map(),

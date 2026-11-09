@@ -26,6 +26,7 @@ const DRAWING: TaskDrawing = {
   tasks: [taskOf('web#e2e-ci', []), taskOf('api#build', [])],
   positions: POSITIONS,
   routes: {},
+  boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map([['web#e2e-ci', UMBRELLA_SIZE]]),
   labels: new Map(),

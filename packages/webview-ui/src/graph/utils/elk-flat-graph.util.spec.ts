@@ -1,7 +1,9 @@
+import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 import { describe, expect, it } from 'vitest';
 
 import { flatElkGraphOf } from './elk-flat-graph.util.ts';
 import { elkGraphOf } from './elk-graph.util.ts';
+import { titledRowOf } from './task-compound.util.ts';
 import { BOARDS_SIZE_STUB } from '../test/stubs/folder-boards.stub.ts';
 import { PACKED_EDGES_STUB, PACKED_GRAPH_STUB } from '../test/stubs/packed-graph.stub.ts';
 import { boardsGraphOf, boardsSizeOf, childrenOf, idsOf } from '../test/utils/folder-boards.spec.util.ts';
@@ -62,6 +64,20 @@ describe('FEATURE: flatElkGraphOf', () => {
       const flat = flatElkGraphOf(PACKED_GRAPH_STUB);
 
       expect(idsOf(childrenOf(flat))).toStrictEqual(['a', 'b', 'c', 'd']);
+    });
+  });
+
+  describe('GIVEN a root holding a titled-row box and a link', () => {
+    const leaf: ElkNode = { id: 'api#build', width: 80, height: 32 };
+    const link: ElkEdge = { id: 'api>web', sources: ['api#build'], targets: ['web#build'] };
+    const web: ElkNode = { id: 'web#build', width: 80, height: 32 };
+    const graph: ElkNode = { id: 'root', children: [titledRowOf('api', leaf, 60, {}), web], edges: [link] };
+
+    it('WHEN flattened THEN it holds no title slot leaf and no title tie edge', () => {
+      const flat = flatElkGraphOf(graph);
+
+      expect(idsOf(childrenOf(flat))).toStrictEqual(['api#build', 'web#build']);
+      expect(flat.edges).toStrictEqual([link]);
     });
   });
 });

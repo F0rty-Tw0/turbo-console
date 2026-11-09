@@ -39,6 +39,7 @@ const DRAWING: TaskDrawing = {
   tasks: [taskOf('web#e2e-ci', []), taskOf(CLASH_ID, [])],
   positions: POSITIONS,
   routes: {},
+  boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: SIZES,
   labels: new Map([['web#e2e-ci', '2 files']]),

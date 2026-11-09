@@ -1,9 +1,10 @@
 import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
-import type { ElkLike, LayoutResult, LayoutRunner, LayoutRunnerDeps } from '../common/layout.type.ts';
+import type { BoxFrames, ElkLike, LayoutResult, LayoutRunner, LayoutRunnerDeps } from '../common/layout.type.ts';
 import { nestedCentresOf } from '../utils/elk-centres.util.ts';
 import { flatElkGraphOf } from '../utils/elk-flat-graph.util.ts';
+import { boxFramesOf } from '../utils/elk-frames.util.ts';
 import { routesOf } from '../utils/elk-routes.util.ts';
 import { gridPositions } from '../utils/grid-layout.util.ts';
 
@@ -65,16 +66,16 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
 
     const ticket = latest;
     const start = performance.now();
-    const resultOf = (positions: Positions, routes: Routes, engine: LayoutResult['engine']): LayoutResult => {
+    const resultOf = (positions: Positions, routes: Routes, engine: LayoutResult['engine'], boxFrames: BoxFrames): LayoutResult => {
       const ms = Math.round(performance.now() - start);
-      const result: LayoutResult = { hash, positions, routes, engine, ms };
+      const result: LayoutResult = { hash, positions, routes, boxFrames, engine, ms };
 
       return result;
     };
     const fallbackResult = (): LayoutResult => {
       const positions = fallbackPositions(deps.fallback, graph);
 
-      return resultOf(positions, {}, 'fallback');
+      return resultOf(positions, {}, 'fallback', {});
     };
 
     dropBusyElk();
@@ -108,7 +109,7 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
     const positions = nestedCentresOf(laidOut);
     const routes = routesOf(laidOut);
 
-    return resultOf(positions, routes, 'elk');
+    return resultOf(positions, routes, 'elk', boxFramesOf(laidOut));
   };
   const runner: LayoutRunner = { run };
 

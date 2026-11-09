@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createLayoutRunner } from './layout-runner.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { FALLBACK_TIMEOUT_MS } from '../common/graph.const.ts';
-import type { ElkLike, LayoutResult, LayoutRunner } from '../common/layout.type.ts';
+import type { BoxFrame, ElkLike, LayoutResult, LayoutRunner } from '../common/layout.type.ts';
 import type { ElkMock } from '../test/common/elk-mock.type.ts';
 import { elkMock, failingFallbackMock, fallbackMock } from '../test/mocks/elk.mock.ts';
 import {
@@ -20,9 +20,12 @@ import { PACKED_EDGES_STUB, PACKED_GRAPH_STUB } from '../test/stubs/packed-graph
 import { boardsGraphOf } from '../test/utils/folder-boards.spec.util.ts';
 import { runnerDepsOf } from '../test/utils/layout-runner.spec.util.ts';
 import { flatElkGraphOf } from '../utils/elk-flat-graph.util.ts';
+import { isTitleSlotId, titledRowOf } from '../utils/task-compound.util.ts';
 
 const GRID_APP: Position = { x: 0, y: 0 };
 const GRID_POSITIONS: Positions = { app: GRID_APP };
+
+const positionKeysOf = (result: LayoutResult | null): string[] => Object.keys(result?.positions ?? {});
 
 describe('FEATURE: createLayoutRunner', () => {
   let mock: ElkMock;
@@ -49,6 +52,7 @@ describe('FEATURE: createLayoutRunner', () => {
         hash: 'h1',
         positions: CENTRES_STUB,
         routes: {},
+        boxFrames: {},
         engine: 'elk',
         ms: 40
       });
@@ -270,6 +274,53 @@ describe('FEATURE: createLayoutRunner', () => {
       const result = await runner.run('h1', grouped);
 
       expect(Object.keys(result?.positions ?? {})).toStrictEqual(['docs', 'web', '@acme/config', '@acme/ui', '@acme/utils']);
+    });
+  });
+
+  describe('GIVEN a task graph with a titled-row box', () => {
+    const leaf: ElkNode = { id: 'api#build', width: 80, height: 32 };
+    const graph: ElkNode = { id: 'root', children: [titledRowOf('api', leaf, 60, {})], edges: [] };
+
+    it('WHEN ELK rejects and the fallback throws THEN the grid has no title slot and the result has no box frames', async () => {
+      const runner = createLayoutRunner(runnerDepsOf(() => mock.elk, failingFallbackMock()));
+
+      const pending = runner.run('h1', graph);
+
+      mock.rejectLayout(new Error('bad graph'));
+
+      const result = await pending;
+
+      expect(positionKeysOf(result).some(isTitleSlotId)).toBe(false);
+      expect(result).toHaveProperty('boxFrames', {});
+    });
+
+    it('WHEN the fallback lays it out THEN it gets no title slot and no title tie', async () => {
+      const fallback = fallbackMock(FALLBACK_POSITIONS_STUB);
+      const runner = createLayoutRunner(runnerDepsOf(() => mock.elk, fallback));
+
+      const pending = runner.run('h1', graph);
+
+      mock.rejectLayout(new Error('bad graph'));
+      await pending;
+
+      expect(fallback.mock.calls[0]?.[0]).toStrictEqual({ ...graph, children: [leaf], edges: [] });
+    });
+
+    it('WHEN ELK lays it out THEN the result holds the frame of the box', async () => {
+      const runner = createLayoutRunner(runnerDepsOf(() => mock.elk));
+      const slot: ElkNode = { id: 'title-slot:api', x: 20, y: 8, width: 60, height: 13 };
+      const placed: ElkNode = { ...leaf, x: 10, y: 41 };
+      const box: ElkNode = { id: 'pkg:api', x: 0, y: 0, width: 100, height: 100, children: [slot, placed] };
+
+      const pending = runner.run('h1', graph);
+
+      mock.resolveLayout({ id: 'root', children: [box] });
+
+      const result = await pending;
+
+      const frame: BoxFrame = { leafId: 'api#build', left: -50, right: 50, top: -57, bottom: 43, titleX: -30, titleY: -49 };
+
+      expect(result?.boxFrames).toStrictEqual({ 'pkg:api': frame });
     });
   });
 

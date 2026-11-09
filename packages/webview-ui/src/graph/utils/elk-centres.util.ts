@@ -1,6 +1,7 @@
 import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import { isElkLeaf } from './elk-flat-graph.util.ts';
+import { isTitleSlotId } from './task-compound.util.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 
 type CentreEntry = [string, Position];
@@ -12,13 +13,16 @@ const leafEntryOf = (leaf: ElkNode, originX: number, originY: number): CentreEnt
   return [leaf.id, centre];
 };
 
-/** The entries of every leaf under `node`, whose parent's corner sits at `(originX, originY)`. */
+/** The entries of every leaf under `node` but its title slots, whose parent's corner sits at `(originX, originY)`. */
 const entriesUnder = (node: ElkNode, originX: number, originY: number): CentreEntry[] => {
   const x = originX + (node.x ?? 0);
   const y = originY + (node.y ?? 0);
   const children = node.children ?? [];
   const entriesOf = (child: ElkNode): CentreEntry[] => {
     const isLeaf = isElkLeaf(child);
+    const isSlot = isTitleSlotId(child.id);
+
+    if (isSlot) return [];
 
     if (isLeaf) return [leafEntryOf(child, x, y)];
 

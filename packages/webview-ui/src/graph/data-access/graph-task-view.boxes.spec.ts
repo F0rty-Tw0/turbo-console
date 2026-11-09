@@ -34,6 +34,7 @@ const DRAWING: TaskDrawing = {
   tasks: TASKS,
   positions: {},
   routes: {},
+  boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),
   labels: new Map(),

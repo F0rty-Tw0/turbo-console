@@ -59,7 +59,7 @@ export const layoutsRigOf = (): LayoutsRig => {
 };
 
 export const resultOf = (hash: string, positions: Positions, engine: LayoutResult['engine'] = 'elk'): LayoutResult => {
-  const result: LayoutResult = { hash, positions, routes: {}, engine, ms: 5 };
+  const result: LayoutResult = { hash, positions, routes: {}, boxFrames: {}, engine, ms: 5 };
 
   return result;
 };

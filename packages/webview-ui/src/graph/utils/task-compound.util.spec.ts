@@ -1,16 +1,23 @@
+import type { ElkNode } from 'elkjs/lib/elk-api.js';
 import { describe, expect, it } from 'vitest';
 
 import { folderIdOf } from './folder-id.util.ts';
 import {
   compoundOptionsOf,
   folderBoxIdOf,
+  isTitleSlotId,
+  isTitleTieId,
+  isTitledRow,
   parentIdOf,
   scriptPackagesOf,
   scriptsBoxIdOf,
   taskBoxIdOf,
   taskFolderOf,
   taskFoldersOf,
-  taskPackagesOf
+  taskPackagesOf,
+  titleSlotIdOf,
+  titleTieIdOf,
+  titledRowOf
 } from './task-compound.util.ts';
 import type { TaskNaming } from '../common/graph-task.type.ts';
 import type { ElkOptions } from '../common/layout.type.ts';
@@ -128,6 +135,43 @@ describe('FEATURE: task compound ids', () => {
       const options = compoundOptionsOf(90, BASE);
 
       expect(options).toStrictEqual({ ...BASE, 'elk.nodeSize.constraints': 'MINIMUM_SIZE', 'elk.nodeSize.minimum': '(0, 154)' });
+    });
+  });
+
+  describe('GIVEN a package with a title width', () => {
+    const leaf: ElkNode = { id: 'api#build', width: 80, height: 32 };
+    const scripts: ElkNode = { id: 'scripts:api' };
+    const one = [leaf];
+    const two = [leaf, { id: 'api#test' }];
+
+    const rows = [
+      { name: 'one turbo leaf and no Scripts box', width: 60, leaves: one, boxes: [], expected: true },
+      { name: 'two turbo leaves', width: 60, leaves: two, boxes: [], expected: false },
+      { name: 'one turbo leaf and a Scripts box', width: 60, leaves: one, boxes: [scripts], expected: false },
+      { name: 'no title width', width: undefined, leaves: one, boxes: [], expected: false }
+    ];
+
+    it.each(rows)('WHEN it has $name THEN it is a titled row: $expected', ({ width, leaves, boxes, expected }) => {
+      expect(isTitledRow(width, leaves, boxes)).toBe(expected);
+    });
+
+    it('WHEN its titled row is built THEN it holds a slot above the leaf and a tie in its own edges, with a thin top padding', () => {
+      const box = titledRowOf('api', leaf, 60, BASE);
+
+      const layoutOptions = { ...BASE, 'elk.padding': '[top=8,left=32,bottom=32,right=32]' };
+      const children = [{ id: 'title-slot:api', width: 60, height: 13 }, leaf];
+      const edges = [{ id: 'title-tie:api', sources: ['title-slot:api'], targets: ['api#build'] }];
+
+      expect(box).toStrictEqual({ id: 'pkg:api', layoutOptions, children, edges });
+    });
+  });
+
+  describe('GIVEN the title ids of the root //', () => {
+    it('WHEN the slot and tie ids are read THEN each is told apart from the other and from a package id', () => {
+      expect(isTitleSlotId(titleSlotIdOf('//'))).toBe(true);
+      expect(isTitleTieId(titleTieIdOf('//'))).toBe(true);
+      expect(isTitleSlotId(titleTieIdOf('//'))).toBe(false);
+      expect(isTitleSlotId('pkg:title-slot:x')).toBe(false);
     });
   });
 });

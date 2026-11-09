@@ -169,6 +169,7 @@ export class GraphTaskLayout {
       tasks: request.tasks,
       positions: result.positions,
       routes: result.routes,
+      boxFrames: result.boxFrames,
       sizeOf,
       sizes: request.sizes,
       labels: this.atoms.labels(),
