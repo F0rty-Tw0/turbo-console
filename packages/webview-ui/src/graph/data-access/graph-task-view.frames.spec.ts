@@ -152,5 +152,18 @@ describe('FEATURE: createTaskCanvas box frames on a real ELK layout', () => {
         expect(sideErrorOf(drawn, elkRectOf(laidOut, 'pkg:a'))).toBeLessThanOrEqual(1);
       });
     });
+
+    // A running task draws a 5 px border here; `show` frames the boxes before it marks the kept runs, so it writes the
+    // frame data again after them.
+    it('WHEN shown again with a run kept THEN pkg:a is drawn on its ELK box, within 1 px of each side', () => {
+      cy.style().selector('node.run-running').style('border-width', 5).update();
+      canvas.runStates({ 'a#build': 'running' });
+
+      canvas.show(drawingOf(laidOut));
+
+      const drawn = frameLineOf(cy.getElementById('pkg:a'));
+
+      expect(sideErrorOf(drawn, elkRectOf(laidOut, 'pkg:a'))).toBeLessThanOrEqual(1);
+    });
   });
 });
