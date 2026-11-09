@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
 import { PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
-import { SCRIPTS_BOX_CLASS, SCRIPTS_BOX_TITLE, TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
+import { SCRIPTS_BOX_CLASS, SCRIPTS_BOX_TITLE, TASK_BOX_CLASS, TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { folderIdOf } from '../utils/folder-id.util.ts';
 import { scriptsBoxIdOf } from '../utils/task-compound.util.ts';
@@ -28,7 +28,7 @@ const childOf = (id: string, parent: string): ElementDefinition => {
 const styledCyOf = (glyphs: boolean): Core => {
   const elements = [
     boxOf(folderIdOf('apps'), 'apps', TASK_FOLDER_CLASS),
-    boxOf('pkg:web', 'web', 'task-box', folderIdOf('apps')),
+    boxOf('pkg:web', 'web', TASK_BOX_CLASS, folderIdOf('apps')),
     childOf('web#build', 'pkg:web'),
     boxOf(scriptsBoxIdOf('web'), SCRIPTS_BOX_TITLE, SCRIPTS_BOX_CLASS, 'pkg:web'),
     childOf('web#script', scriptsBoxIdOf('web'))
