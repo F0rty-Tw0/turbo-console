@@ -1,0 +1,93 @@
+import type { BoundingBox12, Core, NodeSingular } from 'cytoscape';
+
+import { BOX_FRAMED_CLASS } from '../common/graph-task.const.ts';
+import { FOLDER_PADDING_PX, NODE_FONT_SIZE } from '../common/graph.const.ts';
+import type { BoxFrame, BoxFrames } from '../common/layout.type.ts';
+import { isBoxFrame } from '../utils/box-frame.util.ts';
+
+const CHILD_OPTIONS = { includeLabels: true, includeOverlays: false };
+
+/** Added to every bias, so Cytoscape's bias normalisation never divides 0 by 0 when a box needs no extra on a side. */
+const BIAS_EPSILON_PX = 0.001;
+
+/**
+ * The data that draws `box` on `frame`, whose sides ELK measured from its task's body:
+ * - the padding, 32 px less how far the children's bounds reach past the task's body (half its border and Cytoscape's
+ *   1 px antialiasing margin), so a side with no extra lands on the frame and not 1.5 px outside it
+ * - per side, the extra past the children's bounds and that padding that reaches the frame, 0 when the children already
+ *   reach past it
+ * - the title margins: Cytoscape starts a `left-inside` label two paddings in from the frame and ends a `top` label at
+ *   the frame's top, so these put the label's top-left corner on the placeholder's
+ */
+const frameDataOf = (box: NodeSingular, leaf: NodeSingular, frame: BoxFrame): Record<string, unknown> => {
+  const bounds: BoundingBox12 = box.children().boundingBox(CHILD_OPTIONS);
+  const { x, y } = leaf.position();
+  const bodyLeft = x - leaf.width() / 2;
+  const overhang = Math.max(0, bodyLeft - bounds.x1);
+  const pad = FOLDER_PADDING_PX - overhang;
+  const extraLeft = Math.max(0, bounds.x1 - pad - (x + frame.left));
+  const extraRight = Math.max(0, x + frame.right - pad - bounds.x2);
+  const extraTop = Math.max(0, bounds.y1 - pad - (y + frame.top));
+  const extraBottom = Math.max(0, y + frame.bottom - pad - bounds.y2);
+  const titleLeft = frame.titleX - frame.left;
+  const titleTop = frame.titleY - frame.top;
+  const data = {
+    boxFrame: frame,
+    framePadding: pad,
+    frameMinWidth: bounds.x2 - bounds.x1 + extraLeft + extraRight,
+    frameMinHeight: bounds.y2 - bounds.y1 + extraTop + extraBottom,
+    frameLeft: extraLeft + BIAS_EPSILON_PX,
+    frameRight: extraRight + BIAS_EPSILON_PX,
+    frameTop: extraTop + BIAS_EPSILON_PX,
+    frameBottom: extraBottom + BIAS_EPSILON_PX,
+    frameTitleX: titleLeft - 2 * pad,
+    frameTitleY: titleTop + NODE_FONT_SIZE
+  };
+
+  return data;
+};
+
+/**
+ * Draws each titled-row box of `boxFrames` on its ELK frame: writes the frame data on the box and adds `box-framed`. A
+ * frame whose box or task is not drawn is skipped.
+ */
+export const applyBoxFrames = (cy: Core, boxFrames: BoxFrames): void => {
+  const frameBox = ([boxId, frame]: [string, BoxFrame]): void => {
+    const box = cy.getElementById(boxId);
+    const leaf = cy.getElementById(frame.leafId);
+    const isBoxGone = box.empty();
+    const isLeafGone = leaf.empty();
+    const isUndrawn = isBoxGone || isLeafGone;
+
+    if (isUndrawn) return;
+
+    const data = frameDataOf(box, leaf, frame);
+
+    box.data(data);
+    box.addClass(BOX_FRAMED_CLASS);
+  };
+  const entries = Object.entries(boxFrames);
+
+  cy.batch((): void => void entries.forEach(frameBox));
+};
+
+/** Whether `box` carries a frame, so its class may come and go while the data stays. */
+const hasFrame = (box: NodeSingular): boolean => {
+  const value: unknown = box.data('boxFrame');
+
+  return isBoxFrame(value);
+};
+
+/** Drops `box-framed` from a framed box, so it draws from its children until `reframeBox`; its frame data stays. */
+export const unframeBox = (box: NodeSingular): void => {
+  const isFramed = hasFrame(box);
+
+  if (isFramed) box.removeClass(BOX_FRAMED_CLASS);
+};
+
+/** Puts `box-framed` back on a box that carries a frame; a box without one stays unframed. */
+export const reframeBox = (box: NodeSingular): void => {
+  const isFramed = hasFrame(box);
+
+  if (isFramed) box.addClass(BOX_FRAMED_CLASS);
+};
