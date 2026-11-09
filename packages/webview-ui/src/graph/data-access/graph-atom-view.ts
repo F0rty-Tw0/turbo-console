@@ -1,5 +1,6 @@
 import type { Core, ElementDefinition, EventObjectNode, NodeSingular } from 'cytoscape';
 
+import { reframeBox, unframeBox } from './graph-task-frames.ts';
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
@@ -157,6 +158,7 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
     cy.batch((): void => {
       cy.add(boxDefinitionOf(boxId, pkgBoxId));
       umbrella.move({ parent: boxId });
+      unframeBox(cy.getElementById(pkgBoxId));
       cy.add(fileNodes);
       cy.add(moreNodes);
     });
@@ -173,6 +175,7 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
     cy.batch((): void => {
       umbrella.move({ parent: pkgBoxId });
       box.remove();
+      reframeBox(cy.getElementById(pkgBoxId));
     });
   };
   const setPositions = (positions: Positions): void => {
