@@ -75,7 +75,18 @@ const hasFrame = (box: NodeSingular): boolean => {
   return isBoxFrame(value);
 };
 
-/** Writes the frame data of `box` again from where its children are drawn now; a box without a frame or task is left. */
+/** Whether `box` already carries each value of `data`; its frame is the same object, since it was read from the box. */
+const isDataKept = (box: NodeSingular, data: Record<string, unknown>): boolean => {
+  const isKept = ([key, value]: [string, unknown]): boolean => box.data(key) === value;
+  const entries = Object.entries(data);
+
+  return entries.every(isKept);
+};
+
+/**
+ * Writes the frame data of `box` again from where its children are drawn now; a box without a frame or task is left,
+ * and so is one whose data is unchanged, since a write dirties its style and bounds even then.
+ */
 const refitBox = (box: NodeSingular): void => {
   const frame: unknown = box.data('boxFrame');
   const isFramed = isBoxFrame(frame);
@@ -88,8 +99,9 @@ const refitBox = (box: NodeSingular): void => {
   if (isLeafGone) return;
 
   const data = frameDataOf(box, leaf, frame);
+  const isKept = isDataKept(box, data);
 
-  box.data(data);
+  if (!isKept) box.data(data);
 };
 
 /**

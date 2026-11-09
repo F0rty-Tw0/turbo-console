@@ -1,5 +1,5 @@
 import cytoscape from 'cytoscape';
-import type { BoundingBox12, Core, ElementDefinition, NodeSingular } from 'cytoscape';
+import type { BoundingBox12, Core, ElementDefinition, EventObject, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
@@ -178,6 +178,38 @@ describe('FEATURE: applyBoxFrames, unframeBox and reframeBox', () => {
       reframeBox(boxOf(cy));
 
       expect(boxErrorOf(cy, TIGHT_SIDES)).toBeLessThanOrEqual(1);
+    });
+  });
+
+  // A data write dirties the box's style and bounds even when no value changed, which a refit after every paint pays per box.
+  describe('GIVEN a framed box, its own data writes counted from then on', () => {
+    let writes: number;
+
+    beforeEach(() => {
+      const box = boxOf(cy);
+      const countWrite = (event: EventObject): void => {
+        const isOwn = event.target === box;
+
+        if (isOwn) writes += 1;
+      };
+
+      applyBoxFrames(cy, FRAMES);
+      writes = 0;
+      box.on('data', countWrite);
+    });
+
+    it('WHEN refitted with its task unchanged THEN its data is not written', () => {
+      refitBoxFrames(cy);
+
+      expect(writes).toBe(0);
+    });
+
+    it('WHEN its task grows 20 px wider and it is refitted THEN its data is written once', () => {
+      cy.getElementById('api#build').data('width', 100);
+
+      refitBoxFrames(cy);
+
+      expect(writes).toBe(1);
     });
   });
 
