@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { ResizeWait } from './resize-wait.po.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 
 /** Reads the aria-label of the button under `point`, or `null` when no button is there. */
@@ -32,10 +33,12 @@ const ARM_RESIZE_CATCH = `window.__resizeCaught = new Promise((resolve) => {
 /** The page's viewport, and a spot in it that a later click lands on whatever moved there. */
 export class PageViewport {
   private readonly page: Page;
+  private readonly resizeWait: ResizeWait;
   private spot: ViewportPoint | null;
 
   public constructor(page: Page) {
     this.page = page;
+    this.resizeWait = new ResizeWait(page);
     this.spot = null;
   }
 
@@ -53,7 +56,7 @@ export class PageViewport {
 
     await this.page.evaluate(ARM_RESIZE_WAIT);
     await this.page.setViewportSize(size);
-    await this.page.evaluate('window.__resized');
+    await this.resizeWait.waitFor('window.__resized', 'resize', size);
   }
 
   /** Before the page loads: lets `resizeUnseenAndClickSpot` keep a `resize` event from the page's own listeners. */
@@ -72,7 +75,7 @@ export class PageViewport {
 
     await this.page.evaluate(ARM_RESIZE_CATCH);
     await this.page.setViewportSize(size);
-    await this.page.evaluate('window.__resizeCaught');
+    await this.resizeWait.waitFor('window.__resizeCaught', 'resizeUnseenAndClickSpot', size);
     await this.page.mouse.click(x, y);
   }
 
