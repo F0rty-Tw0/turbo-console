@@ -4,9 +4,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { probeTitlesOf } from './graph-probe-titles.ts';
 import { graphStyleOf } from './graph-style.ts';
+import { applyBoxFrames } from './graph-task-frames.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeRect, ProbeTitle } from '../common/graph-probe-titles.type.ts';
-import { TASK_BOX_CLASS, TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
+import { BOX_FRAMED_CLASS, TASK_BOX_CLASS, TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
+import type { BoxFrame, BoxFrames } from '../common/layout.type.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
@@ -25,6 +27,11 @@ const TASK_BOXES: ElementDefinition[] = [
   { data: WEB_DATA, classes: TASK_BOX_CLASS },
   { data: BUILD_DATA }
 ];
+
+/** `pkg:web` as ELK framed it: 150 x 120 around `web#build`. */
+const WEB_FRAME: BoxFrame = { leafId: 'web#build', left: -75, right: 75, top: -57, bottom: 63, titleX: -35, titleY: -49 };
+
+const WEB_FRAMES: BoxFrames = { 'pkg:web': WEB_FRAME };
 
 type TitleName = Pick<ProbeTitle, 'id' | 'text'>;
 
@@ -100,6 +107,64 @@ describe('FEATURE: probeTitlesOf', () => {
       const atTwo = firstTitleOf(cy, ORIGIN);
 
       expect([atTwo.box.width, atTwo.modelBox.width]).toStrictEqual([atOne.box.width * 2, atOne.modelBox.width]);
+    });
+
+    it('WHEN the titles are probed THEN pkg:web is not framed and has no frame errors', () => {
+      const { isFramed, frameError, titleError } = firstTitleOf(cy, ORIGIN);
+
+      expect([isFramed, frameError, titleError]).toStrictEqual([false, null, null]);
+    });
+  });
+
+  describe('GIVEN pkg:web drawn on a frame around web#build at (100, 100)', () => {
+    let cy: Core;
+
+    beforeEach(() => {
+      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+      const boxData = { id: 'pkg:web', title: 'web' };
+      const buildData = { ...BUILD_DATA };
+      const position = { x: 100, y: 100 };
+      const layout = { name: 'preset', fit: false };
+      const box: ElementDefinition = { data: boxData, classes: TASK_BOX_CLASS };
+      const build: ElementDefinition = { data: buildData, position };
+
+      cy = cytoscape({ headless: true, styleEnabled: true, layout, elements: [box, build], style });
+      applyBoxFrames(cy, WEB_FRAMES);
+    });
+
+    afterEach(() => {
+      cy.destroy();
+    });
+
+    it('WHEN the titles are probed THEN pkg:web is framed, within 1 px of its frame', () => {
+      const { isFramed, frameError } = firstTitleOf(cy, ORIGIN);
+
+      expect([isFramed, frameError !== null && frameError <= 1]).toStrictEqual([true, true]);
+    });
+
+    it('WHEN its frame data says 10 px further right THEN the frame error is 10 px', () => {
+      const shifted: BoxFrame = { ...WEB_FRAME, left: WEB_FRAME.left + 10, right: WEB_FRAME.right + 10 };
+
+      cy.getElementById('pkg:web').data('boxFrame', shifted);
+
+      const { frameError } = firstTitleOf(cy, ORIGIN);
+
+      expect(frameError).toBeCloseTo(10, 2);
+    });
+
+    // Headless Cytoscape measures no font, so only the e2e rows can bound the title error; here it is only reported.
+    it('WHEN the titles are probed THEN a title error is reported', () => {
+      const { titleError } = firstTitleOf(cy, ORIGIN);
+
+      expect(typeof titleError).toBe('number');
+    });
+
+    it('WHEN the frame class is dropped THEN pkg:web is not framed and has no frame errors', () => {
+      cy.getElementById('pkg:web').removeClass(BOX_FRAMED_CLASS);
+
+      const { isFramed, frameError, titleError } = firstTitleOf(cy, ORIGIN);
+
+      expect([isFramed, frameError, titleError]).toStrictEqual([false, null, null]);
     });
   });
 });
