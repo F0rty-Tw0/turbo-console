@@ -12,6 +12,7 @@ import {
   ATOM_OUTCOME_CLASSES,
   ATOM_UMBRELLA_CLASS
 } from '../common/graph-atom.const.ts';
+import { PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import {
   BOX_FRAMED_CLASS,
   RUN_CLASS_PREFIX,
@@ -73,11 +74,14 @@ const FRAMED_BOX = {
 /** A node's state glyph, a space and its name; an umbrella's counts line stays under it. */
 const glyphLabelOf = (node: NodeSingular): string => `${glyphOf(node.classes())} ${node.data('label')}`;
 
-/** With a glyph font family a task or file node draws its state glyph before its name; without one its style is unchanged. */
-const glyphedOf = (style: Css.Node, glyphFamily: string | null): Css.Node => {
+/** A package task box's glyph, a space and its title. */
+const boxGlyphLabelOf = (node: NodeSingular): string => `${PACKAGE_GLYPH} ${node.data('title')}`;
+
+/** With a glyph font family a node draws a glyph before its label (its state glyph, unless `labelOf` says otherwise); without one its style is unchanged. */
+const glyphedOf = (style: Css.Node, glyphFamily: string | null, labelOf = glyphLabelOf): Css.Node => {
   if (glyphFamily === null) return style;
 
-  const glyphed: Css.Node = { ...style, label: glyphLabelOf, 'font-family': glyphFamily };
+  const glyphed: Css.Node = { ...style, label: labelOf, 'font-family': glyphFamily };
 
   return glyphed;
 };
@@ -114,14 +118,16 @@ const selectedRunRuleOf = (state: GraphRunState): StylesheetJsonBlock => {
  * name, an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a
  * file (dashed border when `atom-live`), a `run-<state>` class outlines a task or file after them (a selected task
  * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned
- * one padding in from the frame so a link entering at the top centre misses it, at least `data(minWidth)` wide inside
- * its padding, the extra width on the right so its tasks keep their place, while a `box-framed` one (a titled-row box)
- * is drawn on its ELK frame with its title at the placeholder instead; a `task-scripts` box inside it does the same
- * with the `SCRIPTS_BOX_DASH_PX` dashes, so the two frames read apart, and a `task-folder` box around package boxes
- * keeps the solid package-mode folder frame with the same title, since task mode has no DOM header rows. `left-inside`
- * starts a compound's label two paddings in, so the margin takes one back. They come after the `exporting` rule, so an
- * exported task box keeps this alignment. With a `glyphFamily` the `task` and `atom-file` rules draw the state glyph
- * before the name in that font list; an `atom-more` node carries only its own class, so it keeps the plain file rule.
+ * one padding in from the frame, at least `data(minWidth)` wide inside its padding, the extra width on the right so its
+ * tasks keep their place, while a `box-framed` one (a titled-row box: one task, so ELK reserves a title row above it
+ * and a link entering that task's top centre passes below the title) is drawn on its ELK frame with its title at the
+ * placeholder instead; a `task-scripts` box inside it does the same with the `SCRIPTS_BOX_DASH_PX` dashes, so the two
+ * frames read apart, and a `task-folder` box around package boxes keeps the solid package-mode folder frame with the
+ * same title, since task mode has no DOM header rows. `left-inside` starts a compound's label two paddings in, so the
+ * margin takes one back. They come after the `exporting` rule, so an exported task box keeps this alignment. With a
+ * `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name, and a package `task-box` draws
+ * the package glyph before its title (Scripts and folder boxes stay plain), in that font list; an `atom-more` node
+ * carries only its own class, so it keeps the plain file rule.
  */
 export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily: string | null): StylesheetJsonBlock[] => {
   const titledBox = {
@@ -142,12 +148,13 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
     outcomeRuleOf(ATOM_OUTCOME_CLASSES.failed, colors.runs.failed),
     outcomeRuleOf(ATOM_OUTCOME_CLASSES.cached, colors.cached)
   ];
+  const packageBox = glyphedOf(taskBox, glyphFamily, boxGlyphLabelOf);
   const taskNode = glyphedOf(TASK_NODE, glyphFamily);
   const atomFile = glyphedOf(ATOM_FILE, glyphFamily);
   const rules: StylesheetJsonBlock[] = [
     { selector: `node.${TASK_NODE_CLASS}`, style: taskNode },
     { selector: `node.${ATOM_UMBRELLA_CLASS}`, style: UMBRELLA_NODE },
-    { selector: `node:parent.${TASK_BOX_CLASS}`, style: taskBox },
+    { selector: `node:parent.${TASK_BOX_CLASS}`, style: packageBox },
     { selector: `node:parent.${TASK_BOX_CLASS}.${BOX_FRAMED_CLASS}`, style: FRAMED_BOX },
     { selector: `node:parent.${SCRIPTS_BOX_CLASS}`, style: scriptsBox },
     { selector: `node:parent.${TASK_FOLDER_CLASS}`, style: taskFolder },

@@ -9,6 +9,9 @@ export const GLYPH_CODE_POINTS = {
   blank: '\uec03'
 } as const;
 
+/** The codicon `package` glyph, U+EB29, before a package task box title. */
+export const PACKAGE_GLYPH = '\ueb29';
+
 /** How long page start waits for the codicon font before it draws plain labels. */
 export const CODICON_WAIT_MS = 1000;
 
