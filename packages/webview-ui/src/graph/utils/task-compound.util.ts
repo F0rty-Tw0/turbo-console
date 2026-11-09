@@ -108,7 +108,7 @@ export const isTitledRow = (
   titleWidth: number | undefined,
   turboLeaves: readonly unknown[],
   scriptsBoxes: readonly unknown[]
-): titleWidth is number => titleWidth !== undefined && turboLeaves.length === 1 && scriptsBoxes.length === 0;
+): boolean => titleWidth !== undefined && turboLeaves.length === 1 && scriptsBoxes.length === 0;
 
 /**
  * A titled-row box: a title placeholder leaf above its one `leaf`, tied to it by an edge in the box's own `edges` (not the

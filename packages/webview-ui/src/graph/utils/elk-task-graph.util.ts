@@ -151,7 +151,7 @@ export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkN
     const titleWidth = titleWidths.get(packageName);
     const layoutOptions = compoundOptionsOf(titleWidth, base);
 
-    if (onlyLeaf !== undefined && isTitledRow(titleWidth, turboLeaves, scriptsBoxes)) {
+    if (onlyLeaf !== undefined && titleWidth !== undefined && isTitledRow(titleWidth, turboLeaves, scriptsBoxes)) {
       return titledRowOf(packageName, onlyLeaf, titleWidth, layoutOptions);
     }
 
