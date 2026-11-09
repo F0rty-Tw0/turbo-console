@@ -1,5 +1,5 @@
 import { test } from './graph-task.fixture.ts';
-import { GLYPH_CODE_POINTS } from '../src/graph/common/graph-glyph.const.ts';
+import { GLYPH_CODE_POINTS, PACKAGE_GLYPH } from '../src/graph/common/graph-glyph.const.ts';
 
 const D11 = { description: 'G2-1 spec D11, D5', type: 'requirement' };
 
@@ -23,6 +23,9 @@ test.describe('FEATURE: graph task state glyphs', () => {
         graphGlyphs.expectFirstChar('app#build', GLYPH_CODE_POINTS.sync));
 
       await test.step('AND its width is unchanged', async (): Promise<void> => graphGlyphs.expectWidthOf('app#build', width));
+
+      await test.step('AND the package box title starts with the package glyph', async (): Promise<void> =>
+        graphGlyphs.expectFirstChar('pkg:app', PACKAGE_GLYPH));
 
       await test.step('WHEN app#build passed', async (): Promise<void> => graphTaskHost.sendRuns({ 'app#build': 'passed' }));
 

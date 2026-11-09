@@ -7,6 +7,7 @@ import { scriptsTasksState } from './test/utils/graph-scripts.spec.util.ts';
 import { TASK_CANVAS_TASK_IDS, taskCanvasState } from './test/utils/graph-task-canvas.spec.util.ts';
 import { APP_TASK_NAME, ROOT_TASK_NAME, taskRootState } from './test/utils/graph-task-root.spec.util.ts';
 import type { GraphSetViewToggleMessage } from '../src/bridge/common/graph-message.type.ts';
+import { PACKAGE_GLYPH } from '../src/graph/common/graph-glyph.const.ts';
 import { folderTitleOf } from '../src/graph/utils/controls-text.util.ts';
 
 const TASK_VIEW = { description: 'U5 spec D13 (View), §5 row 19', type: 'requirement' };
@@ -86,7 +87,7 @@ test.describe('FEATURE: the task Controls View section', () => {
         await graphHost.sendState(taskRootState(true));
         await graphProbe.expectNodeIds(['@org/app']);
         await graphTaskHost.sendShowTasks(BOTH_TASKS);
-        await graphTaskProbe.expectText('pkg:@org/app', '@org/app');
+        await graphTaskProbe.expectText('pkg:@org/app', `${PACKAGE_GLYPH} @org/app`);
       });
 
       await test.step('AND Show package scopes is unticked', async (): Promise<void> => graphControls.scope.uncheck());
@@ -97,7 +98,7 @@ test.describe('FEATURE: the task Controls View section', () => {
         graphHost.sendState(taskRootState(false)));
 
       await test.step('THEN the box reads the bare name, the box is unticked and still only the one message went out', async (): Promise<void> => {
-        await graphTaskProbe.expectText('pkg:@org/app', 'app');
+        await graphTaskProbe.expectText('pkg:@org/app', `${PACKAGE_GLYPH} app`);
         await graphControls.expectViewToggles([SCOPE_UNTICKED]);
         await graphControls.expectScope(false);
       });

@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { PACKAGE_GLYPH } from '../../../src/graph/common/graph-glyph.const.ts';
 import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import { NODE_FONT_SIZE } from '../../../src/graph/common/graph.const.ts';
 
@@ -10,22 +11,31 @@ type TitleBox = Pick<ProbeNode, 'text' | 'textMaxWidth' | 'width'>;
 type MeasureInput = {
   readonly texts: string[];
   readonly fontSize: number;
+  readonly glyph: string;
 };
 
-/** Runs in the page: the width of each text in the page's body font at `fontSize` px, as a canvas measures it. */
-const textWidthsOf = ({ texts, fontSize }: MeasureInput): number[] => {
+/**
+ * Runs in the page: the width of each text at `fontSize` px as a canvas measures it, in the codicon font list when the
+ * text starts with `glyph` (a package box title, as `main.ts` measures it) and in the page's body font otherwise.
+ */
+const textWidthsOf = ({ texts, fontSize, glyph }: MeasureInput): number[] => {
   const context = document.createElement('canvas').getContext('2d');
 
   if (context === null) throw new Error('graph e2e: no 2d canvas context to measure text');
 
-  context.font = `${fontSize}px ${getComputedStyle(document.body).fontFamily}`;
+  const bodyFont = getComputedStyle(document.body).fontFamily;
+  const widthOf = (text: string): number => {
+    context.font = text.startsWith(glyph) ? `${fontSize}px codicon, ${bodyFont}` : `${fontSize}px ${bodyFont}`;
 
-  return texts.map((text): number => context.measureText(text).width);
+    return context.measureText(text).width;
+  };
+
+  return texts.map(widthOf);
 };
 
-/** The width of each text as the graph draws a node label (the page's body font at the node font size), by text. */
+/** The width of each text as the graph draws a node label (the node font size; the codicon list for a package box title), by text. */
 export const measuredWidthsOf = async (page: Page, texts: string[]): Promise<Map<string, number>> => {
-  const input: MeasureInput = { texts, fontSize: NODE_FONT_SIZE };
+  const input: MeasureInput = { texts, fontSize: NODE_FONT_SIZE, glyph: PACKAGE_GLYPH };
   const widths = await page.evaluate(textWidthsOf, input);
   const entries = texts.map((text, index): [string, number] => [text, widths[index] ?? Number.NaN]);
 

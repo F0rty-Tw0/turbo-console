@@ -1,5 +1,6 @@
 import { expect, test } from './graph-task.fixture.ts';
 import { APP_TASK_NAME, ROOT_TASK_NAME, taskRootState } from './test/utils/graph-task-root.spec.util.ts';
+import { PACKAGE_GLYPH } from '../src/graph/common/graph-glyph.const.ts';
 import { ROOT_TASKS_TITLE } from '../src/graph/common/graph-task.const.ts';
 
 const ROOT_TITLE = { description: 'U5 spec D7, D12, §5 row 15', type: 'requirement' };
@@ -47,8 +48,8 @@ test.describe('FEATURE: task mode titles the workspace root', () => {
       });
 
       await test.step('THEN the boxes read Workspace root (//) and app', async (): Promise<void> => {
-        await graphTaskProbe.expectText('pkg://', ROOT_TASKS_TITLE);
-        await graphTaskProbe.expectText('pkg:@org/app', 'app');
+        await graphTaskProbe.expectText('pkg://', `${PACKAGE_GLYPH} ${ROOT_TASKS_TITLE}`);
+        await graphTaskProbe.expectText('pkg:@org/app', `${PACKAGE_GLYPH} app`);
       });
 
       await test.step('AND the app box is wide enough for its new title', async (): Promise<void> =>
