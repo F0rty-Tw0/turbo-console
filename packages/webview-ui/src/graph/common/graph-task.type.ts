@@ -125,6 +125,8 @@ export type TaskModeDeps = {
   readonly sizeOf: NodeSizer;
   /** Sizes plain text, the umbrella counts line. */
   readonly textSizeOf: NodeSizer;
+  /** Sizes package box titles, glyph included when the page draws glyphs. */
+  readonly boxTitleSizeOf: NodeSizer;
   readonly bridge: Bridge;
   readonly screen: LayoutScreen;
   readonly modes: TaskModes;

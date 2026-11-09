@@ -18,7 +18,7 @@ import { createElk } from './data-access/elk-client.ts';
 import { breadthfirstPositions } from './data-access/fallback-layout.ts';
 import { createGraphProbe, exposeProbe } from './data-access/graph-probe.ts';
 import { createGraphView } from './data-access/graph-view.ts';
-import { labelSizer, slotSizer, textMeasure } from './data-access/label-measure.ts';
+import { labelSizer, packageTitleSizer, slotSizer, textMeasure } from './data-access/label-measure.ts';
 import { createLayoutRunner } from './data-access/layout-runner.ts';
 import { createViewStateSaver } from './data-access/view-state-saver.ts';
 import { createGraphController } from './domain-logic/graph-controller.ts';
@@ -74,8 +74,7 @@ const createFlow: FlowFactory = (view: GraphView): FlowControl => {
 };
 
 /** The task nodes' sizer: the glyph slot when the page draws glyphs, else the bare label. */
-const taskSizerOf = (glyphs: boolean, measure: TextMeasure): NodeSizer => {
-  const glyphMeasure = textMeasure(`${NODE_FONT_SIZE}px codicon, ${fontFamily}`);
+const taskSizerOf = (glyphs: boolean, measure: TextMeasure, glyphMeasure: TextMeasure): NodeSizer => {
   const slot = slotSizer(glyphMeasure);
   const plain = labelSizer(measure);
   const sizer = glyphs ? slot : plain;
@@ -83,8 +82,18 @@ const taskSizerOf = (glyphs: boolean, measure: TextMeasure): NodeSizer => {
   return sizer;
 };
 
+/** The package task box titles' sizer: the package glyph and the name when the page draws glyphs, else the bare name. */
+const boxTitleSizerOf = (glyphs: boolean, measure: TextMeasure, glyphMeasure: TextMeasure): NodeSizer => {
+  const withGlyph = packageTitleSizer(glyphMeasure);
+  const plain = labelSizer(measure);
+  const sizer = glyphs ? withGlyph : plain;
+
+  return sizer;
+};
+
 const controllerOf = (glyphs: boolean): GraphController => {
   const measure = textMeasure(`${NODE_FONT_SIZE}px ${fontFamily}`);
+  const glyphMeasure = textMeasure(`${NODE_FONT_SIZE}px codicon, ${fontFamily}`);
   const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fontFamily, glyphs);
   const controller = createGraphController({
     bridge,
@@ -94,7 +103,8 @@ const controllerOf = (glyphs: boolean): GraphController => {
     runner,
     saver,
     sizeOf: labelSizer(measure),
-    taskSizeOf: taskSizerOf(glyphs, measure),
+    taskSizeOf: taskSizerOf(glyphs, measure, glyphMeasure),
+    boxTitleSizeOf: boxTitleSizerOf(glyphs, measure, glyphMeasure),
     measure,
     now,
     build: buildControls,

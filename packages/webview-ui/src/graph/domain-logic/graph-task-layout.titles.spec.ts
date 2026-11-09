@@ -42,10 +42,11 @@ const throwMeasure = (): never => {
 describe('FEATURE: GraphTaskLayout box titles', () => {
   let rig: TaskModeRig;
 
-  const layoutWith = (textSizeOf: NodeSizer, rootLabel: string | null = null): GraphTaskLayout => {
+  const layoutWith = (textSizeOf: NodeSizer, boxTitleSizeOf: NodeSizer, rootLabel: string | null = null): GraphTaskLayout => {
     const deps = {
       ...rig.deps,
       textSizeOf,
+      boxTitleSizeOf,
       saved: (): null => null,
       rootLabel: (): string | null => rootLabel,
       onPlaced: vi.fn(),
@@ -69,13 +70,13 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
     rig = taskModeRigOf(new ViewStateModes(saver, taskSavedOf({})));
   });
 
-  describe('GIVEN a 150 px text sizer', () => {
-    let textSizeOf: Mock<NodeSizer>;
+  describe('GIVEN a 150 px box title sizer', () => {
+    let boxTitleSizeOf: Mock<NodeSizer>;
     let layout: GraphTaskLayout;
 
     beforeEach(() => {
-      textSizeOf = vi.fn<NodeSizer>(titleSizeOf);
-      layout = layoutWith(textSizeOf);
+      boxTitleSizeOf = vi.fn<NodeSizer>(titleSizeOf);
+      layout = layoutWith(titleSizeOf, boxTitleSizeOf);
     });
 
     describe('WHEN a layout lands', () => {
@@ -94,7 +95,7 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
       });
 
       it('THEN only the package with a shown task is measured', () => {
-        expect(textSizeOf.mock.calls).toStrictEqual([['api']]);
+        expect(boxTitleSizeOf.mock.calls).toStrictEqual([['api']]);
       });
     });
 
@@ -110,12 +111,12 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
 
   describe('GIVEN a root task shown under the label single-app', () => {
     const rootRequest: TaskLayoutRequest = { ...REQUEST, tasks: [ROOT_BUILD_STUB], shown: new Set(['//#build']) };
-    let textSizeOf: Mock<NodeSizer>;
+    let boxTitleSizeOf: Mock<NodeSizer>;
     let layout: GraphTaskLayout;
 
     beforeEach(async () => {
-      textSizeOf = vi.fn<NodeSizer>(titleSizeOf);
-      layout = layoutWith(textSizeOf, 'single-app');
+      boxTitleSizeOf = vi.fn<NodeSizer>(titleSizeOf);
+      layout = layoutWith(titleSizeOf, boxTitleSizeOf, 'single-app');
 
       const shown = layout.show(rootRequest);
 
@@ -124,13 +125,13 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
     });
 
     it('WHEN a layout lands THEN each title is measured as single-app', () => {
-      expect(textSizeOf.mock.calls).toStrictEqual([['single-app']]);
+      expect(boxTitleSizeOf.mock.calls).toStrictEqual([['single-app']]);
     });
 
     it('WHEN the layout is shown again from memory THEN each title is measured as single-app again', async () => {
       await layout.show(rootRequest);
 
-      expect(textSizeOf.mock.calls).toStrictEqual([['single-app'], ['single-app']]);
+      expect(boxTitleSizeOf.mock.calls).toStrictEqual([['single-app'], ['single-app']]);
     });
 
     it('WHEN the layout is shown again from memory THEN the canvas draws with the // title width and the label', async () => {
@@ -146,11 +147,13 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
     const grouped: TaskNaming = { ...NAMING_STUB, grouped: true, folders: new Map([['api', 'libs']]) };
     const groupedRequest: TaskLayoutRequest = { ...REQUEST, naming: grouped };
     let textSizeOf: Mock<NodeSizer>;
+    let boxTitleSizeOf: Mock<NodeSizer>;
 
     beforeEach(async () => {
       textSizeOf = vi.fn<NodeSizer>(titleSizeOf);
+      boxTitleSizeOf = vi.fn<NodeSizer>(titleSizeOf);
 
-      const shown = layoutWith(textSizeOf).show(groupedRequest);
+      const shown = layoutWith(textSizeOf, boxTitleSizeOf).show(groupedRequest);
 
       await rig.runs.settle(rig.runs.count() - 1, resultOf(groupedRequest.key, POSITIONS));
       await shown;
@@ -160,8 +163,9 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
       expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ naming: grouped }));
     });
 
-    it('WHEN a layout lands THEN the package title and its folder title are measured', () => {
-      expect(textSizeOf.mock.calls).toStrictEqual([['api'], ['libs']]);
+    it('WHEN a layout lands THEN the package title goes to the box title sizer and its folder title to the text sizer', () => {
+      expect(boxTitleSizeOf.mock.calls).toStrictEqual([['api']]);
+      expect(textSizeOf.mock.calls).toStrictEqual([['libs']]);
     });
 
     it('WHEN a layout lands THEN ELK lays pkg:api out in the libs folder compound', () => {
@@ -171,10 +175,10 @@ describe('FEATURE: GraphTaskLayout box titles', () => {
     });
   });
 
-  describe('GIVEN a text sizer that throws', () => {
+  describe('GIVEN a box title sizer that throws', () => {
     describe('WHEN a layout is shown', () => {
       beforeEach(async () => {
-        await layoutWith(throwMeasure).show(REQUEST);
+        await layoutWith(titleSizeOf, throwMeasure).show(REQUEST);
       });
 
       it('THEN it fails through onFailure', () => {

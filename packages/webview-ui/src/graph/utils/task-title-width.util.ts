@@ -30,13 +30,15 @@ const setFolderWidths = (
 
 /**
  * The width each box title of the shown tasks needs to draw whole, each text measured once: the printed owner text of
- * each package with a shown task, keyed by package name; while grouped, `folderTitleOf` of each folder of those
+ * each package with a shown task, measured by `boxTitleSizeOf` (glyph-wide when the page draws the package glyph),
+ * keyed by package name; while grouped, `folderTitleOf` of each folder of those
  * packages, keyed by its folder box id; then `SCRIPTS_BOX_TITLE` for each package with a shown script, keyed by its
- * Scripts box id. Box ids keep a folder `apps` and a package `apps` apart.
+ * Scripts box id; those two are plain text, measured by `textSizeOf`. Box ids keep a folder `apps` and a package `apps` apart.
  */
 export const titleWidthsOf = (
   request: Pick<TaskLayoutRequest, 'tasks' | 'shown' | 'naming'>,
-  sizeOf: NodeSizer,
+  textSizeOf: NodeSizer,
+  boxTitleSizeOf: NodeSizer,
   rootLabel: string | null
 ): Map<string, number> => {
   const { tasks, shown, naming } = request;
@@ -47,13 +49,13 @@ export const titleWidthsOf = (
   const widths = new Map<string, number>();
 
   for (const packageName of packageNames)
-    widths.set(packageName, titleWidthOf(ownerTextOf(packageName, rootLabel, naming.labels), sizeOf));
+    widths.set(packageName, titleWidthOf(ownerTextOf(packageName, rootLabel, naming.labels), boxTitleSizeOf));
 
-  setFolderWidths(widths, packageNames, naming, sizeOf);
+  setFolderWidths(widths, packageNames, naming, textSizeOf);
 
   if (scriptPackages.size === 0) return widths;
 
-  const scriptsWidth = titleWidthOf(SCRIPTS_BOX_TITLE, sizeOf);
+  const scriptsWidth = titleWidthOf(SCRIPTS_BOX_TITLE, textSizeOf);
 
   for (const packageName of scriptPackages) widths.set(scriptsBoxIdOf(packageName), scriptsWidth);
 

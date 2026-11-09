@@ -1,4 +1,4 @@
-import { GLYPH_CODE_POINTS } from '../common/graph-glyph.const.ts';
+import { GLYPH_CODE_POINTS, PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import type { NodeSizer, TextMeasure } from '../common/graph-page.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import { nodeSizeOf } from '../utils/node-size.util.ts';
@@ -26,6 +26,13 @@ export const labelSizer = (measure: TextMeasure): NodeSizer => {
 /** The node sizer of a label drawn after a state glyph: always the blank glyph's slot, so a node's width never depends on its state. */
 export const slotSizer = (measure: TextMeasure): NodeSizer => {
   const sizeOf = (name: string): NodeSize => nodeSizeOf(measure(`${GLYPH_CODE_POINTS.blank} ${name}`));
+
+  return sizeOf;
+};
+
+/** The node sizer of a package task box title: the package glyph, a space and the name, as the box draws it. */
+export const packageTitleSizer = (measure: TextMeasure): NodeSizer => {
+  const sizeOf = (name: string): NodeSize => nodeSizeOf(measure(`${PACKAGE_GLYPH} ${name}`));
 
   return sizeOf;
 };

@@ -118,7 +118,7 @@ export class GraphTaskLayout {
       return;
     }
 
-    const titleWidths = titleWidthsOf(request, this.deps.textSizeOf, this.deps.rootLabel());
+    const titleWidths = titleWidthsOf(request, this.deps.textSizeOf, this.deps.boxTitleSizeOf, this.deps.rootLabel());
 
     this.remember(kept);
     this.place(request, kept, titleWidths, true);
@@ -136,7 +136,7 @@ export class GraphTaskLayout {
   }
 
   private async layOut(request: TaskLayoutRequest, canRestore: boolean): Promise<void> {
-    const titleWidths = titleWidthsOf(request, this.deps.textSizeOf, this.deps.rootLabel());
+    const titleWidths = titleWidthsOf(request, this.deps.textSizeOf, this.deps.boxTitleSizeOf, this.deps.rootLabel());
     const input = { ...request, titleWidths };
     const graph = elkTaskGraphOf(input, this.deps.sizeOf);
     const result = await this.deps.runner.run(request.key, graph);

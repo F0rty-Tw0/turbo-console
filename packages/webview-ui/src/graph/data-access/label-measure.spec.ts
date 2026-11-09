@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { labelSizer, slotSizer } from './label-measure.ts';
+import { labelSizer, packageTitleSizer, slotSizer } from './label-measure.ts';
+import { PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import type { TextMeasure } from '../common/graph-page.type.ts';
 import { nodeSizeOf } from '../utils/node-size.util.ts';
 
@@ -20,6 +21,20 @@ describe('FEATURE: label-measure', () => {
 
     it('WHEN the slot sizer sizes build THEN it returns the node size of the measured width', () => {
       const size = slotSizer(measureOf())('build');
+
+      expect(size).toStrictEqual(nodeSizeOf(MEASURED_WIDTH));
+    });
+
+    it('WHEN the package title sizer sizes web THEN it measures the package glyph, a space and the name', () => {
+      const measure = measureOf();
+
+      packageTitleSizer(measure)('web');
+
+      expect(measure).toHaveBeenCalledExactlyOnceWith(`${PACKAGE_GLYPH} web`);
+    });
+
+    it('WHEN the package title sizer sizes web THEN it returns the node size of the measured width', () => {
+      const size = packageTitleSizer(measureOf())('web');
 
       expect(size).toStrictEqual(nodeSizeOf(MEASURED_WIDTH));
     });
