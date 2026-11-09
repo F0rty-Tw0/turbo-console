@@ -225,6 +225,7 @@ export type FilteringTimes = Pick<FilteringFacts, 'controlsBuiltMs' | 'filterApp
 export type ProbeHost = {
   __tcGraphProbe?: GraphProbe;
   readonly __tcGraphProbeWanted?: unknown;
+  readonly __tcLayoutTimeoutMs?: unknown;
 };
 
 declare global {
@@ -232,6 +233,7 @@ declare global {
   interface Window {
     __tcGraphProbe?: GraphProbe;
     readonly __tcGraphProbeWanted?: unknown;
+    readonly __tcLayoutTimeoutMs?: unknown;
   }
 }
 
