@@ -4,6 +4,9 @@ import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 
 const AC4 = { description: 'M4-1 AC4', type: 'requirement' };
 
+/** A page timeout well under the production 5 s, so a page that ignores it never falls back on the fake clock. */
+const SHORT_LAYOUT_TIMEOUT_MS = 1000;
+
 test.describe('FEATURE: graph layout fallback', () => {
   test(
     'GIVEN a worker constructor that throws once, the page falls back and Retry gives an ELK layout',
@@ -95,6 +98,26 @@ test.describe('FEATURE: graph layout fallback', () => {
         graphHost.expectFallbackPosted());
     }
   );
+
+  test('GIVEN a worker that never answers on a page opened with a 1 s layout timeout, the page falls back after 1 s', async ({
+    graphHost,
+    graphPage,
+    graphProbe,
+    pageClock
+  }): Promise<void> => {
+    await test.step('WHEN the fake clock is installed', async (): Promise<void> => pageClock.install());
+
+    await test.step('AND the page is opened with a silent worker and a 1 s layout timeout', async (): Promise<void> =>
+      graphPage.open({ workers: 'silent', layoutTimeoutMs: SHORT_LAYOUT_TIMEOUT_MS }));
+
+    await test.step('AND a graph state is sent', async (): Promise<void> => graphHost.sendState(DIAMOND_CHAIN_STUB));
+
+    await test.step('AND one worker was created', async (): Promise<void> => graphHost.expectWorkers(1));
+
+    await test.step('WHEN one second passes', async (): Promise<void> => pageClock.tick(SHORT_LAYOUT_TIMEOUT_MS));
+
+    await test.step('THEN the layout is the fallback', async (): Promise<void> => graphProbe.expectLayoutEngine('fallback'));
+  });
 
   test('GIVEN label sizing that throws, the page says the graph could not be drawn instead of loading forever', async ({
     graphHost,

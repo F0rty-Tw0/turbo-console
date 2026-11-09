@@ -3,7 +3,7 @@ import type { FlowControl, FlowEdgeGeometry } from './common/flow.type.ts';
 import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from './common/graph-glyph.const.ts';
 import type { FlowFactory, GraphController, GraphView, GraphViewFactory, Viewport } from './common/graph-page.type.ts';
 import type { GraphProbe } from './common/graph-probe.type.ts';
-import { FALLBACK_TIMEOUT_MS, NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
+import { NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
 import type { ThemeColors } from './common/theme-colors.type.ts';
 // Imported before any module that loads Cytoscape: elk-client creates the one `tc-elk` policy as it loads.
 import { createElk } from './data-access/elk-client.ts';
@@ -21,6 +21,7 @@ import { detailsViews, taskDetailsViews, taskViews, widgetViews } from './ui/gra
 import { renderLegend } from './ui/legend-elements.ts';
 import { buildPage } from './ui/page-elements.ts';
 import { codiconReadyOf } from './utils/codicon-ready.util.ts';
+import { layoutTimeoutOf } from './utils/layout-timeout.util.ts';
 import { themeColorsOf } from './utils/theme-colors.util.ts';
 import { createBridge } from '../bridge/data-access/create-bridge.ts';
 
@@ -43,7 +44,7 @@ const background = (): string => {
 const bridge = createBridge();
 const page = buildPage();
 const saver = createViewStateSaver(bridge.saveState, VIEW_STATE_DEBOUNCE_MS);
-const runner = createLayoutRunner({ createElk, timeoutMs: FALLBACK_TIMEOUT_MS, fallback: breadthfirstPositions });
+const runner = createLayoutRunner({ createElk, timeoutMs: layoutTimeoutOf(window), fallback: breadthfirstPositions });
 const now = (): number => performance.now();
 const after = (run: () => void, ms: number): number => window.setTimeout(run, ms);
 const overlay = window.matchMedia(OVERLAY_MEDIA_QUERY);

@@ -15,6 +15,7 @@ import type { GraphOptions } from '../common/graph.type.ts';
 import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
 import { graphDistMock } from '../test/mocks/graph-dist.mock.ts';
 import { FLAT_SAVED_STUB } from '../test/stubs/graph-saved.stub.ts';
+import { layoutTimeoutScript } from '../test/utils/graph-layout-timeout.spec.util.ts';
 import { savedStateScript } from '../test/utils/graph-saved-state.spec.util.ts';
 import { pollutedBuiltins, trustedTypesEscapes } from '../test/utils/graph-trusted-types.spec.util.ts';
 
@@ -49,6 +50,9 @@ export class GraphPage {
     if (options.probe !== false) await this.page.addInitScript({ content: PROBE_WANTED });
 
     if (options.host !== false) await this.page.addInitScript({ content: HOST_API_STUB });
+
+    if (options.layoutTimeoutMs !== undefined)
+      await this.page.addInitScript({ content: layoutTimeoutScript(options.layoutTimeoutMs) });
 
     const saved = options.savedState === undefined ? FLAT_SAVED_STUB : options.savedState;
 
