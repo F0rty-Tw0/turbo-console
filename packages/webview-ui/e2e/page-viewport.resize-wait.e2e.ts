@@ -12,6 +12,8 @@ const ON_TIME_RESIZE_MS = 2000;
 const POINTER_MOVE_NOTE =
   /^released by mouse\.move \(leaves the pointer at \(1,1\)\): resize wanted \{"width":400,"height":300\} after \d+ ms, page \{.*\}; nudges: layout, mouse\.move/u;
 
+const POINTER_MOVE_WARNING = /^F-U8-8 released by mouse\.move /u;
+
 const THROWN_NUDGE_NOTE = /^released by mouse\.move .*; nudges: layout threw: .*layout read blocked.*, mouse\.move/u;
 
 const NO_EVENT_ERROR = /^F-U8-8: no resize event, even after every nudge: resize wanted/u;
@@ -32,6 +34,8 @@ test.describe('FEATURE: a resize waits for the page’s resize event, bounded an
     await test.step('THEN the resize returned well inside the wait', (): void => resizeStall.expectResizeUnder(ON_TIME_RESIZE_MS));
 
     await test.step('AND no F-U8-8 note is recorded', (): void => resizeStall.expectNotes([]));
+
+    await test.step('AND no F-U8-8 line is warned', (): void => resizeStall.expectWarnings([]));
   });
 
   test('GIVEN a stalled resize event that a pointer move releases, the resize notes that nudge', async ({
@@ -50,6 +54,9 @@ test.describe('FEATURE: a resize waits for the page’s resize event, bounded an
 
     await test.step('THEN one F-U8-8 note names the pointer move and where it left the pointer', (): void =>
       resizeStall.expectNotes([POINTER_MOVE_NOTE]));
+
+    await test.step('AND one F-U8-8 line warned for the CI log names the pointer move', (): void =>
+      resizeStall.expectWarnings([POINTER_MOVE_WARNING]));
   });
 
   test('GIVEN a stalled resize event and a nudge that throws, the wait records the throw and tries the next nudge', async ({

@@ -27,12 +27,15 @@ export class ResizeStall {
   private readonly page: Page;
   private readonly testInfo: TestInfo;
   private readonly viewport: PageViewport;
+  private readonly warnings: string[];
   private resizeMs: number | null;
 
-  public constructor(page: Page, testInfo: TestInfo) {
+  /** `warnings` is the test process's `console.warn` lines, which its fixture records. */
+  public constructor(page: Page, testInfo: TestInfo, warnings: string[]) {
     this.page = page;
     this.testInfo = testInfo;
     this.viewport = new PageViewport(page);
+    this.warnings = warnings;
     this.resizeMs = null;
   }
 
@@ -85,5 +88,13 @@ export class ResizeStall {
     const matchers = descriptions.map((description) => expect.stringMatching(description));
 
     expect(noteTexts).toEqual(matchers);
+  }
+
+  /** The test process's `F-U8-8` warn lines, which the list reporter carries to the CI log, match `lines`, one each, in order. */
+  public expectWarnings(lines: RegExp[]): void {
+    const warnings = this.warnings.filter((warning) => warning.startsWith('F-U8-8'));
+    const matchers = lines.map((line) => expect.stringMatching(line));
+
+    expect(warnings).toEqual(matchers);
   }
 }
