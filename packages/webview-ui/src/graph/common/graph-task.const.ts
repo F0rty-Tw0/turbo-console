@@ -26,6 +26,9 @@ export const TITLE_TIE_PREFIX = 'title-tie:';
 /** A titled-row box's ELK padding: a thin top, since its title sits in the placeholder row, 32 px on the other sides. */
 export const TITLED_ROW_PADDING = '[top=8,left=32,bottom=32,right=32]';
 
+/** The class of a titled-row box drawn to its ELK frame; an expanded umbrella drops it while its box keeps the frame data. */
+export const BOX_FRAMED_CLASS = 'box-framed';
+
 /** The class of every package compound of the task graph, which draws its package name on the page; folder boxes have DOM header rows instead. */
 export const TASK_BOX_CLASS = 'task-box';
 

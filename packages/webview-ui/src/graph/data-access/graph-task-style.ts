@@ -13,6 +13,7 @@ import {
   ATOM_UMBRELLA_CLASS
 } from '../common/graph-atom.const.ts';
 import {
+  BOX_FRAMED_CLASS,
   RUN_CLASS_PREFIX,
   SCRIPTS_BOX_CLASS,
   SCRIPTS_BOX_DASH_PX,
@@ -47,6 +48,27 @@ const ATOM_BOX = { padding: `${ATOM_BOX_PADDING_PX}px`, 'compound-sizing-wrt-lab
 
 /** A live file's border and outline are dashed; a solid outcome outline would hide a dashed border alone. */
 const ATOM_LIVE = { 'border-style': 'dashed', 'border-dash-pattern': DASHED_BORDER_PX, 'outline-style': 'dashed' } as const;
+
+const frameTitleXOf = (node: NodeSingular): number => Number(node.data('frameTitleX'));
+
+const frameTitleYOf = (node: NodeSingular): number => Number(node.data('frameTitleY'));
+
+/**
+ * A `box-framed` titled-row box is drawn on its ELK frame: its padding, minimum size and the px bias of each side come
+ * from the frame data `applyBoxFrames` writes, and its title margins put the title at the placeholder. Not annotated
+ * `Css.Node`: Cytoscape's typings lack `min-height-bias-bottom` (cytoscape 3.34.4 `index.d.ts`), which it does read.
+ */
+const FRAMED_BOX = {
+  padding: 'data(framePadding)',
+  'min-width': 'data(frameMinWidth)',
+  'min-height': 'data(frameMinHeight)',
+  'min-width-bias-left': 'data(frameLeft)',
+  'min-width-bias-right': 'data(frameRight)',
+  'min-height-bias-top': 'data(frameTop)',
+  'min-height-bias-bottom': 'data(frameBottom)',
+  'text-margin-x': frameTitleXOf,
+  'text-margin-y': frameTitleYOf
+} as const;
 
 /** A node's state glyph, a space and its name; an umbrella's counts line stays under it. */
 const glyphLabelOf = (node: NodeSingular): string => `${glyphOf(node.classes())} ${node.data('label')}`;
@@ -93,7 +115,8 @@ const selectedRunRuleOf = (state: GraphRunState): StylesheetJsonBlock => {
  * file (dashed border when `atom-live`), a `run-<state>` class outlines a task or file after them (a selected task
  * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned
  * one padding in from the frame so a link entering at the top centre misses it, at least `data(minWidth)` wide inside
- * its padding, the extra width on the right so its tasks keep their place; a `task-scripts` box inside it does the same
+ * its padding, the extra width on the right so its tasks keep their place, while a `box-framed` one (a titled-row box)
+ * is drawn on its ELK frame with its title at the placeholder instead; a `task-scripts` box inside it does the same
  * with the `SCRIPTS_BOX_DASH_PX` dashes, so the two frames read apart, and a `task-folder` box around package boxes
  * keeps the solid package-mode folder frame with the same title, since task mode has no DOM header rows. `left-inside`
  * starts a compound's label two paddings in, so the margin takes one back. They come after the `exporting` rule, so an
@@ -125,6 +148,7 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
     { selector: `node.${TASK_NODE_CLASS}`, style: taskNode },
     { selector: `node.${ATOM_UMBRELLA_CLASS}`, style: UMBRELLA_NODE },
     { selector: `node:parent.${TASK_BOX_CLASS}`, style: taskBox },
+    { selector: `node:parent.${TASK_BOX_CLASS}.${BOX_FRAMED_CLASS}`, style: FRAMED_BOX },
     { selector: `node:parent.${SCRIPTS_BOX_CLASS}`, style: scriptsBox },
     { selector: `node:parent.${TASK_FOLDER_CLASS}`, style: taskFolder },
     { selector: `node.${ATOM_FILE_CLASS}`, style: atomFile },
