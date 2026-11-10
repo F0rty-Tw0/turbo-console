@@ -149,26 +149,29 @@ export const graphStateOfRoot = (state: RootState | undefined, caches: GraphLayo
   return failed;
 };
 
-/** The ids `graphStateOfRoot(state, ...)` lists as tasks and group files, without building the rest of the state: none unless the root shows a model. */
-export const runIdsOfRoot = (state: RootState | undefined): string[] => {
+/**
+ * The ids `graphStateOfRoot(state, ...)` lists as tasks and group files, without building the rest of the state: none unless
+ * the root shows a model. `listingOf` builds the listing; a caller that asks per runs post passes a memo of it.
+ */
+export const runIdsOfRoot = (state: RootState | undefined, listingOf = graphListingOf): string[] => {
   if (state === undefined) return NO_IDS;
 
   const model = shownModelOf(state);
 
   if (model === null) return NO_IDS;
 
-  return runIdsOfListing(graphListingOf(model));
+  return runIdsOfListing(listingOf(model));
 };
 
 /** The tasks `graphStateOfRoot(state, ...)` lists, without building the rest of the state: none unless the root shows a model. */
-export const tasksOfRoot = (state: RootState | undefined): GraphTask[] => {
+export const tasksOfRoot = (state: RootState | undefined, listingOf = graphListingOf): GraphTask[] => {
   if (state === undefined) return [];
 
   const model = shownModelOf(state);
 
   if (model === null) return [];
 
-  return graphListingOf(model).tasks;
+  return listingOf(model).tasks;
 };
 
 /**
