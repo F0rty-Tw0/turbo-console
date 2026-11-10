@@ -39,6 +39,7 @@ export const STATE_STUB: GraphReady = {
   rootLabel: null,
   scopeShown: true,
   scriptsShown: true,
+  predictionShown: false,
   hash: 'h1',
   packages: PACKAGES,
   edges: EDGES,

@@ -13,7 +13,7 @@ import type { GraphPorts } from '../common/graph.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
 import { graphHostMock } from '../test/mocks/graph-host.mock.ts';
 import { GRAPH_HASH_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
-import { progressFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
+import { predictionFake, progressFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 
 const STATE_POSTED: GraphHostMessage = { type: 'state', state: GRAPH_STATE_STUB };
 const ENTRY = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} };
@@ -45,6 +45,7 @@ describe('FEATURE: the ports of one graph panel', () => {
       runs: new RunStore(),
       progress: progressFake().progress,
       atoms: SHARED_ATOMS_STUB,
+      prediction: predictionFake(() => null).prediction,
       toggles: togglesOf()
     };
 

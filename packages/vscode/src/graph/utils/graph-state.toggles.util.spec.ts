@@ -21,8 +21,8 @@ const MIXED_MODEL: WorkspaceModel = { ...SCRIPT_ONLY_MODEL_STUB, packages: [MIXE
 const FILE_TASK: TaskNode = { ...TASK_NODE_STUB, id: 'build:f', name: 'build:f', kind: 'atom-file' };
 const FILE_NODE: PackageNode = { ...SCRIPT_PACKAGE_STUB, tasks: [TASK_NODE_STUB, FILE_TASK] };
 const FILE_MODEL: WorkspaceModel = { ...SCRIPT_ONLY_MODEL_STUB, packages: [FILE_NODE] };
-const BOTH: GraphShown = { scopeShown: true, scriptsShown: true };
-const SCRIPTS_SHOWN: GraphShown = { scopeShown: false, scriptsShown: true };
+const BOTH: GraphShown = { scopeShown: true, scriptsShown: true, predictionShown: false };
+const SCRIPTS_SHOWN: GraphShown = { scopeShown: false, scriptsShown: true, predictionShown: false };
 
 const taskCountsOf = (state: GraphState): number[] => {
   if (state.kind !== 'graph') return [];
@@ -37,14 +37,21 @@ describe('FEATURE: graph state toggles', () => {
     [false, true],
     [true, true]
   ])('GIVEN scopeShown %s and scriptsShown %s WHEN the state is built THEN it carries both as given', (scopeShown, scriptsShown) => {
-    const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, { scopeShown, scriptsShown });
+    const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, { scopeShown, scriptsShown, predictionShown: false });
 
     expect(state).toMatchObject({ kind: 'graph', scopeShown, scriptsShown });
   });
 
+  it.each([[false], [true]])('GIVEN predictionShown %s WHEN the state is built THEN it carries it', (predictionShown) => {
+    const shown = { ...GRAPH_SHOWN_STUB, predictionShown };
+    const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, shown);
+
+    expect(state).toMatchObject({ kind: 'graph', predictionShown });
+  });
+
   it('GIVEN a loaded root WHEN built through graphStateOfRoot THEN the toggles pass through', () => {
     const root = { ...ROOT_STATE_STUB, model: GRAPH_MODEL_STUB };
-    const shown: GraphShown = { scopeShown: true, scriptsShown: false };
+    const shown: GraphShown = { scopeShown: true, scriptsShown: false, predictionShown: false };
 
     const state = graphStateOfRoot(root, NO_LAYOUT_CACHES_STUB, shown);
 
@@ -104,7 +111,7 @@ describe('FEATURE: graph state toggles', () => {
     it('WHEN shownOf reads them THEN it returns exactly that', () => {
       const toggles = togglesOf(true);
 
-      expect(shownOf(toggles)).toStrictEqual({ scopeShown: true, scriptsShown: false });
+      expect(shownOf(toggles)).toStrictEqual({ scopeShown: true, scriptsShown: false, predictionShown: false });
     });
   });
 });

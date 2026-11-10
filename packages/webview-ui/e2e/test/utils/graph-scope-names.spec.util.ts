@@ -30,6 +30,7 @@ export const scopedNamesState = (scopeShown: boolean): GraphReady => {
     rootLabel: null,
     scopeShown,
     scriptsShown: true,
+    predictionShown: false,
     hash: '7a5c0501',
     packages,
     edges,

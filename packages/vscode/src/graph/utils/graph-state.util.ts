@@ -88,9 +88,13 @@ export const rootLabelOf = (model: WorkspaceModel): string | null => {
   return root?.label ?? null;
 };
 
-/** The tree's two toggles as they are now, read at every state build. */
+/** The tree's three toggles as they are now, read at every state build. */
 export const shownOf = (toggles: GraphToggles): GraphShown => {
-  const shown: GraphShown = { scopeShown: toggles.scope.isShown(), scriptsShown: toggles.scripts.isShown() };
+  const shown: GraphShown = {
+    scopeShown: toggles.scope.isShown(),
+    scriptsShown: toggles.scripts.isShown(),
+    predictionShown: toggles.prediction.isShown()
+  };
 
   return shown;
 };
@@ -120,7 +124,8 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, s
     singlePackage,
     rootLabel,
     scopeShown: shown.scopeShown,
-    scriptsShown: shown.scriptsShown
+    scriptsShown: shown.scriptsShown,
+    predictionShown: shown.predictionShown
   };
 
   return state;

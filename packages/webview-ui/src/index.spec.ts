@@ -87,7 +87,11 @@ type ExpectedAtomGroup = { readonly umbrellaId: string; readonly files: GraphAto
 type ExpectedAtomGroupState = { readonly counts: string; readonly files: Record<string, 'passed' | 'failed' | 'cached' | 'none'> };
 type ExpectedAtomsMessage = { readonly type: 'atoms'; readonly groups: Record<string, GraphAtomGroupState> };
 type ExpectedShownUmbrellasMessage = { readonly type: 'shownUmbrellas'; readonly ids: string[] };
-type ExpectedSetViewToggleMessage = { readonly type: 'setViewToggle'; readonly toggle: 'scope' | 'scripts'; readonly shown: boolean };
+type ExpectedSetViewToggleMessage = {
+  readonly type: 'setViewToggle';
+  readonly toggle: 'scope' | 'scripts' | 'prediction';
+  readonly shown: boolean;
+};
 type ExpectedPosition = { readonly x: number; readonly y: number };
 type ExpectedEdgeRoute = { readonly start: ExpectedPosition; readonly bends: ExpectedPosition[]; readonly end: ExpectedPosition };
 type ExpectedTaskView = {
@@ -209,6 +213,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphReady['rootLabel']>().toEqualTypeOf<string | null>();
       expectTypeOf<GraphReady['scopeShown']>().toEqualTypeOf<boolean>();
       expectTypeOf<GraphReady['scriptsShown']>().toEqualTypeOf<boolean>();
+      expectTypeOf<GraphReady['predictionShown']>().toEqualTypeOf<boolean>();
       expectTypeOf<ManifestField>().toEqualTypeOf<ExpectedEntry['field']>();
       expectTypeOf<ManifestEntry>().toEqualTypeOf<ExpectedEntry>();
       expectTypeOf<ManifestContext>().toEqualTypeOf<ExpectedEntry['context']>();

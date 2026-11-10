@@ -38,7 +38,8 @@ const READY: GraphReady = {
   singlePackage: false,
   rootLabel: null,
   scopeShown: false,
-  scriptsShown: false
+  scriptsShown: false,
+  predictionShown: false
 };
 
 const LOADING: GraphState = { kind: 'loading' };

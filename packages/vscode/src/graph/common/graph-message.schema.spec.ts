@@ -46,6 +46,14 @@ describe('FEATURE: graph message schema', () => {
     });
   });
 
+  describe('GIVEN a setViewToggle for prediction', () => {
+    it('WHEN parsed THEN it parses and keeps its three fields', () => {
+      const parsed = graphMessageSchema.safeParse({ type: 'setViewToggle', toggle: 'prediction', shown: true, extra: 1 });
+
+      expect(parsed.data).toStrictEqual({ type: 'setViewToggle', toggle: 'prediction', shown: true });
+    });
+  });
+
   describe('GIVEN a setViewToggle with a bad field', () => {
     it.each([
       ['an unknown toggle', { toggle: 'theme', shown: true }],

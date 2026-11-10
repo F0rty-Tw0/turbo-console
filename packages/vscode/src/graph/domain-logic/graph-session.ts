@@ -68,12 +68,12 @@ export class GraphSession {
       this.rootChanged(change);
     });
 
-    const { scope, scripts } = this.feeds.toggles;
+    const { scope, scripts, prediction } = this.feeds.toggles;
     const onToggle = (): void => {
       this.publish();
     };
 
-    this.unsubscribes.push(offRoots, scope.onDidChange(onToggle), scripts.onDidChange(onToggle));
+    this.unsubscribes.push(offRoots, scope.onDidChange(onToggle), scripts.onDidChange(onToggle), prediction.onDidChange(onToggle));
     this.feed.start();
   }
 

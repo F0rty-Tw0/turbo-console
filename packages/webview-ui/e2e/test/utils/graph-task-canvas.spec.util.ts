@@ -44,6 +44,7 @@ export const taskCanvasState = (): GraphReady => {
     rootLabel: null,
     scopeShown: true,
     scriptsShown: true,
+    predictionShown: false,
     hash: '7a5c0062',
     packages: PACKAGES,
     edges: EDGES,

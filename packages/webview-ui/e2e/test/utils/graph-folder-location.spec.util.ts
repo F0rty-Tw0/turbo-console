@@ -8,11 +8,7 @@ const linkOf = (source: string, target: string): GraphEdge => {
   return edge;
 };
 
-/**
- * Folder `core` (three packages) linked with `a` three times, `b` three times (one of them `b -> core`), `c` twice, `d`
- * and `e` once each, plus one link inside `core`: the location bar of a `core` focus names `a`, `b`, `c` and counts 2 more.
- */
-export const folderLocationState = (): GraphReady => {
+const folderLocationEdges = (): GraphEdge[] => {
   const edges: GraphEdge[] = [
     linkOf('a-pkg', 'core-1'),
     linkOf('a-pkg', 'core-2'),
@@ -26,12 +22,23 @@ export const folderLocationState = (): GraphReady => {
     linkOf('core-2', 'e-pkg'),
     linkOf('core-1', 'core-2')
   ];
+
+  return edges;
+};
+
+/**
+ * Folder `core` (three packages) linked with `a` three times, `b` three times (one of them `b -> core`), `c` twice, `d`
+ * and `e` once each, plus one link inside `core`: the location bar of a `core` focus names `a`, `b`, `c` and counts 2 more.
+ */
+export const folderLocationState = (): GraphReady => {
+  const edges = folderLocationEdges();
   const state: GraphReady = {
     kind: 'graph',
     singlePackage: false,
     rootLabel: null,
     scopeShown: true,
     scriptsShown: true,
+    predictionShown: false,
     tasks: [],
     hash: 'f01d0004',
     packages: [
