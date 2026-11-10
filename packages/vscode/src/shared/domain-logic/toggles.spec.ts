@@ -43,10 +43,15 @@ describe('FEATURE: toggles', () => {
         expect(toggles.scripts.isShown()).toBe(false);
       });
 
+      it('THEN prediction reads false', () => {
+        expect(toggles.prediction.isShown()).toBe(false);
+      });
+
       it('THEN each sends its own key', () => {
         expect(executeCommand.mock.calls).toStrictEqual([
           ['setContext', 'turboConsole.scriptsShown', false],
-          ['setContext', 'turboConsole.scopeShown', true]
+          ['setContext', 'turboConsole.scopeShown', true],
+          ['setContext', 'turboConsole.predictionShown', false]
         ]);
       });
     });

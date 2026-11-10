@@ -28,8 +28,9 @@ type Disposing = {
 /** A toggle the extension also owns: `dispose` drops its listeners. */
 type OwnedToggle = ScriptsToggleApi & Disposing;
 
-/** The two choices the Packages view stores per window: whether it lists package scopes and whether it lists scripts. */
+/** The choices stored per window: whether the Packages view lists scripts, whether it lists package scopes, whether cache predictions show. */
 export type Toggles = {
   readonly scripts: OwnedToggle;
   readonly scope: OwnedToggle;
+  readonly prediction: OwnedToggle;
 };

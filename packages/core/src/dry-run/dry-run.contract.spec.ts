@@ -11,6 +11,8 @@ import { array, object, string } from 'zod/mini';
 import { TurboException, readDryRun, resolveTurbo } from '../index.ts';
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { DryRunState, TurboBinary } from '../index.ts';
+import type { FilterPair } from './test/common/filter-pair.type.ts';
+import { filterPairOf } from './test/utils/filter-pair.spec.util.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
 import { manifestTaskNames, packageWithRole } from '../shared/turbo/test/utils/manifest.spec.util.ts';
@@ -146,6 +148,42 @@ describe('FEATURE: dry-run states from a real turbo', () => {
 
       it('THEN the definitions package that also holds the task name is filtered out', () => {
         expect(ids.filter((id) => id.startsWith(`${DEFINITIONS_PACKAGE}#`))).toStrictEqual([]);
+      });
+    });
+
+    /**
+     * Observed 2026-11-09 with dev turbo 2.11.7: `run a b --filter=x --filter=y --dry=json` exits 0 when a filtered package
+     * lacks a requested task; turbo lists that pair with command `<NONEXISTENT>`, which core drops, so no error and no row.
+     */
+    describe('WHEN two packages run dry in one request and only one defines one of the tasks', () => {
+      let pair: FilterPair;
+      let ids: string[] = [];
+      let spawnCount = 0;
+
+      beforeAll(async () => {
+        pair = filterPairOf(fixture().manifest);
+        spawns.files.length = 0;
+        const request = { tasks: [pair.exclusive, pair.shared], packages: [pair.owner, pair.other] };
+        const states = await readDryRun(binary, request);
+
+        ids = states.map((state) => state.id);
+        spawnCount = turboSpawns(binary);
+      });
+
+      it('THEN the call resolves and lists the owner task', () => {
+        expect(ids).toContain(`${pair.owner}#${pair.exclusive}`);
+      });
+
+      it('THEN it lists the shared task of both packages', () => {
+        expect(ids).toStrictEqual(expect.arrayContaining([`${pair.owner}#${pair.shared}`, `${pair.other}#${pair.shared}`]));
+      });
+
+      it('THEN the package that lacks the task has no row for it (turbo lists it with no command, core drops it)', () => {
+        expect(ids).not.toContain(`${pair.other}#${pair.exclusive}`);
+      });
+
+      it('THEN turbo was spawned exactly once', () => {
+        expect(spawnCount).toBe(1);
       });
     });
 

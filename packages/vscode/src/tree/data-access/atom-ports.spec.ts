@@ -1,9 +1,10 @@
 import type { DryRunRequest } from '@turbo-console/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { editorAtomPorts } from './atom-ports.ts';
 import type { RootEntry, RootState, Roots } from '../../roots/common/coordinator.type.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { rootsMock } from '../../roots/test/mocks/roots.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import { outputMock } from '../../shared/test/mocks/output.mock.ts';
@@ -22,7 +23,7 @@ describe('FEATURE: editor Atomizer ports', () => {
       const entry: RootEntry = { state: LOADED_STATE, coordinator: coordinatorMock() };
       const entries = new Map([['/ws', entry]]);
 
-      roots = { get: (root: string): RootEntry | undefined => entries.get(root), all: vi.fn(), onDidChange: vi.fn() };
+      roots = rootsMock(entries);
       output = outputMock();
     });
 
