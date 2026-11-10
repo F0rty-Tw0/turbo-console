@@ -8,3 +8,9 @@ export type PredictionBatch = {
   readonly request: DryRunRequest;
   readonly requested: ReadonlyMap<string, string>;
 };
+
+/** The cache words of one package's requested tasks, keyed by task id, and when the dry run that said them settled. */
+export type PredictionView = {
+  readonly settledAt: number;
+  readonly tasks: ReadonlyMap<string, PredictionCache>;
+};
