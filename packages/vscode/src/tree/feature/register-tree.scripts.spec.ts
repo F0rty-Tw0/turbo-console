@@ -86,7 +86,13 @@ describe('FEATURE: registerTree scripts toggle', () => {
     const deps = providerDepsOf(undefined, toggle);
 
     provider = new PackagesTreeProvider(session.store, 'list', ICONS_STATE_STUB, deps);
-    context = { subscriptions: [], scope: scriptsToggleMock(), scripts: toggle, iconTheme: iconThemeProbeMock() };
+    context = {
+      subscriptions: [],
+      scope: scriptsToggleMock(),
+      scripts: toggle,
+      prediction: scriptsToggleMock(),
+      iconTheme: iconThemeProbeMock()
+    };
   };
 
   beforeEach(() => {

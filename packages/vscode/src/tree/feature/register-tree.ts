@@ -101,6 +101,7 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
   const following = followScope(context.scope, tree);
   const scope = registerToggle(context.scope, 'turboConsole.showScope', 'turboConsole.hideScope');
   const scripts = registerToggle(context.scripts, 'turboConsole.showScripts', 'turboConsole.hideScripts');
+  const prediction = registerToggle(context.prediction, 'turboConsole.showPrediction', 'turboConsole.hidePrediction');
   const view = vscode.window.createTreeView('turboConsole.tree', { treeDataProvider: tree, showCollapseAll: true });
   const unsubscribe = session.store.onDidChange((change) => {
     tree.refreshFor(change);
@@ -134,6 +135,7 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
     following,
     scope,
     scripts,
+    prediction,
     settings
   );
 

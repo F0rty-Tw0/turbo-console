@@ -84,13 +84,15 @@ describe('FEATURE: tree provider deps', () => {
       const subscriptions: vscode.Disposable[] = [];
       const scope = scriptsToggleMock();
       const scripts = scriptsToggleMock();
+      const prediction = scriptsToggleMock();
       const iconTheme = iconThemeProbeMock();
 
-      const treeContext = contextOf({ subscriptions }, { scope, scripts }, iconTheme);
+      const treeContext = contextOf({ subscriptions }, { scope, scripts, prediction }, iconTheme);
 
       expect(treeContext.subscriptions).toBe(subscriptions);
       expect(treeContext.scope).toBe(scope);
       expect(treeContext.scripts).toBe(scripts);
+      expect(treeContext.prediction).toBe(prediction);
       expect(treeContext.iconTheme).toBe(iconTheme);
     });
   });
