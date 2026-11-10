@@ -42,7 +42,8 @@ export const rowContextOf = (
     now: ROW_NOW,
     countsMemo: new WeakMap(),
     tools: resolveLookupMock(),
-    atoms: NO_ATOMS_LOOKUP
+    atoms: NO_ATOMS_LOOKUP,
+    prediction: () => null
   };
 
   return context;

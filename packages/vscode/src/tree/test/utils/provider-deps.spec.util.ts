@@ -3,6 +3,7 @@ import type { ScriptsToggleApi } from '../../../shared/common/scripts-toggle.typ
 import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { TreeProviderDeps } from '../../common/tree-node.type.ts';
 import { SHARED_ATOMS_STUB } from '../stubs/shared-atoms.stub.ts';
+import { SHARED_PREDICTION_STUB } from '../stubs/shared-prediction.stub.ts';
 
 const NEVER_RAN: RunLookup = () => undefined;
 
@@ -10,7 +11,7 @@ const NOTHING_LIVE: LiveIds = () => new Set();
 
 /**
  * The provider's deps with every run lookup answering `get`, the running ids `runningIds` answers (none unless given), an
- * empty span map, the scripts toggle (hidden unless given), idle shared Atomizer loads and has-scripts and
+ * empty span map, the scripts toggle (hidden unless given), idle shared Atomizer loads and cache prediction, and has-scripts and
  * single-package sends that always resolve.
  */
 export const providerDepsOf = (
@@ -26,6 +27,7 @@ export const providerDepsOf = (
     treeVisible: new Map(),
     scripts,
     atom: SHARED_ATOMS_STUB,
+    prediction: SHARED_PREDICTION_STUB,
     setHasScripts,
     setSinglePackage,
     log: () => undefined

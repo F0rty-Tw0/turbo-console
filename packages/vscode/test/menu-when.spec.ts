@@ -106,6 +106,7 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
         'turboConsole.hasScripts': true,
         'turboConsole.scopeShown': scopeShown,
         'turboConsole.scriptsShown': scriptsShown,
+        'turboConsole.predictionShown': false,
         'config.turboConsole.treeMode': 'list'
       };
 
@@ -113,6 +114,7 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
       const expected = [
         scopeToggle,
         scriptsToggle,
+        'turboConsole.showPrediction navigation@6',
         'turboConsole.refresh navigation@3',
         'turboConsole.showFolders navigation@2',
         'turboConsole.openPackageGraph navigation@4',
@@ -131,6 +133,26 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     const shown = paletteScriptsOf(keys);
 
     expect(shown).toStrictEqual([command]);
+  });
+
+  it.each([
+    [false, 'turboConsole.showPrediction navigation@6'],
+    [true, 'turboConsole.hidePrediction navigation@6']
+  ])('GIVEN prediction shown is %s WHEN the view title is read THEN only %s is there of the pair', (predictionShown, placement) => {
+    const keys = { view: TREE_VIEW, 'turboConsole.predictionShown': predictionShown };
+    const title = shownIn(MENUS['view/title'], keys).filter((entry) => entry.includes('Prediction'));
+
+    expect(title).toStrictEqual([placement]);
+  });
+
+  it.each([
+    [false, 'turboConsole.showPrediction'],
+    [true, 'turboConsole.hidePrediction']
+  ])('GIVEN prediction shown is %s WHEN the command palette is read THEN only %s is there of the pair', (predictionShown, command) => {
+    const keys = { 'turboConsole.active': true, 'turboConsole.predictionShown': predictionShown };
+    const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('Prediction') && whenMatches(entry.when, keys));
+
+    expect(shown.map((entry) => entry.command)).toStrictEqual([command]);
   });
 
   it.each([[false], [true]])(

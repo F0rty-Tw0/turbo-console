@@ -5,11 +5,12 @@ import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.t
 
 /**
  * The part of `vscode.ExtensionContext` that `registerTree` uses, so a spec builds it without a cast, with the scope and
- * scripts toggles and the icon theme's folder probe beside it.
+ * scripts and prediction toggles and the icon theme's folder probe beside it.
  */
 export type TreeContext = {
   readonly subscriptions: Disposable[];
   readonly scope: ScriptsToggleApi;
   readonly scripts: ScriptsToggleApi;
+  readonly prediction: ScriptsToggleApi;
   readonly iconTheme: IconThemeProbe;
 };

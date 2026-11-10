@@ -25,10 +25,6 @@ import { rowScopeOf } from '../utils/row-scope.util.ts';
 import { staticAtomLookup } from '../utils/static-atoms.util.ts';
 import { isListedTurboTask, taskRowOf } from '../utils/task-rows.util.ts';
 
-const NEVER_RAN: RunLookup = () => undefined;
-
-const NOTHING_LIVE: LiveIds = () => new Set();
-
 const TICKED_TASKS = 20;
 
 const TICK_NOW = 1_000_000_000;
@@ -64,15 +60,16 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsS
     const tools: ToolLookup = (pkg, singlePackage, command) => views.toolOf(pkg, singlePackage, command);
     const context: RowContext = {
       mode,
-      runs: NEVER_RAN,
+      runs: () => undefined,
       views: viewOf,
       scopeShown: false,
       scriptsShown,
-      live: NOTHING_LIVE,
+      live: () => new Set(),
       now: 0,
       countsMemo: new WeakMap(),
       tools,
-      atoms: staticAtomLookup(() => model)
+      atoms: staticAtomLookup(() => model),
+      prediction: () => null
     };
 
     return allRows(state, context);
@@ -179,7 +176,8 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
     now: TICK_NOW,
     countsMemo: new WeakMap(),
     tools,
-    atoms: staticAtomLookup(() => model)
+    atoms: staticAtomLookup(() => model),
+    prediction: () => null
   };
   const cache = new Map<string, TreeNode>();
   const nodes = entries.map((entry) => nodeFor(cache, entryRowOf(model, entry, context)));

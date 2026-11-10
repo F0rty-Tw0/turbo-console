@@ -32,7 +32,7 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
     const fire = (refresh: TreeRefresh): void => {
       this.emitter.fire(refresh);
     };
-    const { runs, treeVisible, scripts, atom, setHasScripts, setSinglePackage, log } = deps;
+    const { runs, treeVisible, scripts, atom, prediction, setHasScripts, setSinglePackage, log } = deps;
     const scriptsShown = (): boolean => scripts.isShown();
     const ports: TreePorts = {
       runs: runs.get,
@@ -42,7 +42,8 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
       treeVisible,
       now: () => performance.now(),
       wallNow: () => Date.now(),
-      atom
+      atom,
+      prediction
     };
 
     this.onDidChangeTreeData = this.emitter.event;
@@ -105,6 +106,10 @@ export class PackagesTreeProvider implements vscode.TreeDataProvider<TreeNode>, 
 
   public refreshAtoms(): void {
     this.tree.refreshAtoms();
+  }
+
+  public predictionChanged(): void {
+    this.tree.predictionChanged();
   }
 
   public dispose(): void {

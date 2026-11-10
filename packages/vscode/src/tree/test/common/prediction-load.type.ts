@@ -3,7 +3,15 @@ import type { Mock } from 'vitest';
 
 import type { DeferredDryRun } from './atom-load.type.ts';
 import type { FakeClock } from './prediction-clock.type.ts';
-import type { PredictionLoadPorts } from '../../common/prediction.type.ts';
+import type { PredictionListener, PredictionLoadPorts, SharedPrediction } from '../../common/prediction.type.ts';
+
+/** What a fake adds to `SharedPrediction`: `emit` tells every subscribed listener that the view of `root` changed. */
+type PredictionEmitter = {
+  readonly emit: PredictionListener;
+};
+
+/** A `SharedPrediction` whose members are spies, plus its emitter. */
+export type SharedPredictionFake = SharedPrediction & PredictionEmitter;
 
 /** The options of core's `readDryRun` a spec reads; core does not export its own type. */
 type ReadDryRunOptions = { readonly signal?: AbortSignal };

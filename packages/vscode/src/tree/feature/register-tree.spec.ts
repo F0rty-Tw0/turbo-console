@@ -62,6 +62,7 @@ describe('FEATURE: registerTree scope toggle', () => {
   let commands: Map<string, CommandCallback>;
   let tree: PackagesTreeApi;
   let scope: ScriptsToggleFake;
+  let prediction: ScriptsToggleFake;
   let context: TreeContext;
   let session: Session;
   let output: Output;
@@ -79,6 +80,7 @@ describe('FEATURE: registerTree scope toggle', () => {
       subscriptions: [],
       scope: toggle,
       scripts: scriptsToggleMock(),
+      prediction,
       iconTheme: iconThemeProbeMock()
     };
 
@@ -95,6 +97,7 @@ describe('FEATURE: registerTree scope toggle', () => {
     });
 
     scope = scriptsToggleMock();
+    prediction = scriptsToggleMock();
     context = contextWith(scope);
     session = {
       store: new RootStore(),
@@ -143,6 +146,53 @@ describe('FEATURE: registerTree scope toggle', () => {
       registerWith();
 
       expect(calls.slice(0, 2)).toStrictEqual([`setScopeShown:${String(shown)}`, 'createTreeView']);
+    });
+  });
+
+  describe('GIVEN a registered tree with the prediction toggle off', () => {
+    beforeEach(() => {
+      registerWith();
+    });
+
+    it('WHEN showPrediction runs THEN prediction.set(true) is called once', async () => {
+      await invoke('turboConsole.showPrediction');
+
+      expect(prediction.set).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
+    it('WHEN hidePrediction runs THEN prediction.set(false) is called once', async () => {
+      await invoke('turboConsole.hidePrediction');
+
+      expect(prediction.set).toHaveBeenCalledExactlyOnceWith(false);
+    });
+
+    it('WHEN showPrediction runs THEN the scope toggle is not touched', async () => {
+      await invoke('turboConsole.showPrediction');
+
+      expect(scope.set).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the subscriptions are disposed THEN both prediction commands are unregistered', () => {
+      for (const subscription of context.subscriptions) subscription.dispose();
+
+      expect(disposed).toStrictEqual(expect.arrayContaining(['turboConsole.showPrediction', 'turboConsole.hidePrediction']));
+    });
+
+    it('WHEN the tree registers THEN it does not redraw yet (the store was built with the stored value)', () => {
+      expect(tree.predictionChanged).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the prediction toggle changes THEN the tree redraws once', async () => {
+      await prediction.set(true);
+
+      expect(tree.predictionChanged).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the subscriptions are disposed THEN a toggle change no longer redraws the tree', async () => {
+      for (const subscription of context.subscriptions) subscription.dispose();
+      await prediction.set(true);
+
+      expect(tree.predictionChanged).not.toHaveBeenCalled();
     });
   });
 

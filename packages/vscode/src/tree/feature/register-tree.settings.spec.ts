@@ -78,7 +78,13 @@ describe('FEATURE: registerTree settings', () => {
   beforeEach(() => {
     subscriptions = [];
     iconTheme = iconThemeProbeMock();
-    const context: TreeContext = { subscriptions, scope: scriptsToggleMock(), scripts: scriptsToggleMock(), iconTheme };
+    const context: TreeContext = {
+      subscriptions,
+      scope: scriptsToggleMock(),
+      scripts: scriptsToggleMock(),
+      prediction: scriptsToggleMock(),
+      iconTheme
+    };
     const session: Session = {
       store: new RootStore(),
       setWorkspaceFolders: vi.fn(async () => Promise.resolve([])),

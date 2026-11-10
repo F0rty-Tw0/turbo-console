@@ -2,6 +2,7 @@ import type { PackageManagerName, PackageNode, RunMatch, TaskNode } from '@turbo
 import { durationText } from '@turbo-console/webview-ui';
 
 import { rowIdOf } from './row-id.util.ts';
+import { rowPredictionOf } from './row-prediction.util.ts';
 import { taskDisplay } from './task-display.util.ts';
 import { themeFilesOf, toolIcon } from './tool-icon.util.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
@@ -120,7 +121,10 @@ const runLines = (entry: RunEntry | undefined): string[] => {
   return lines.flatMap(lineOf);
 };
 
-/** Tooltip lines are raw text: `tooltipMarkdownOf` cleans them. The description is built from numbers and fixed words, but is cleaned like every label. */
+/**
+ * Tooltip lines are raw text: `tooltipMarkdownOf` cleans them. The description is built from numbers and fixed words, but is cleaned like every label.
+ * A cache prediction replaces the description and ends the tooltip; icon and context value stay those of `taskDisplay`.
+ */
 export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, context: RowContext): TreeRow => {
   const { root, packageManager, singlePackage } = scope;
   const entry = context.runs(root, task.id);
@@ -129,7 +133,9 @@ export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, conte
   const kind = kindLines(task);
   const facts = taskFactLines(task, packageManager.name, match);
   const ran = runLines(entry);
-  const tooltip = [...kind, ...facts, ...ran];
+  const prediction = rowPredictionOf(task, entry, context.prediction(root, pkg.name));
+  const predicted = lineOf(prediction?.line ?? null);
+  const tooltip = [...kind, ...facts, ...ran, ...predicted];
   const themed = themeFilesOf(display, entry, match);
   const row: TreeRow = {
     id: rowIdOf('task', root, task.id),
@@ -138,7 +144,7 @@ export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, conte
     key: task.id,
     packageName: pkg.name,
     label: cleanText(task.name, LABEL_MAX),
-    description: cleanText(display.description, DESCRIPTION_MAX),
+    description: cleanText(prediction?.description ?? display.description, DESCRIPTION_MAX),
     icon: toolIcon(display, entry, match),
     contextValue: display.contextValue,
     collapsible: 'none',
