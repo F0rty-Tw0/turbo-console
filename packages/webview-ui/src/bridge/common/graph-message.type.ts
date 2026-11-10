@@ -62,8 +62,9 @@ export type GraphRunsMessage = {
    */
   readonly owners?: Readonly<Record<string, string>>;
   /**
-   * Task id to prediction, only for the tasks the store answered. Present: replaces every mark, and `{}` (sent once when the
-   * prediction toggle turns off) clears them all. Absent: the predictions did not change since the last message that carried them,
+   * Task id to prediction, only for the tasks the store answered. Present: replaces every mark, and `{}` clears them all. `{}` is
+   * sent on the first post after the prediction toggle turns off and on every forced post while it is off, and also while it is on
+   * with no answers. Absent: the predictions did not change since the last message that carried them and the post is not forced,
    * so the page keeps its marks. A reloaded or new page always gets the key.
    */
   readonly predictions?: Readonly<Record<string, GraphPrediction>>;
