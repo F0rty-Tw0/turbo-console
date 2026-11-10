@@ -106,12 +106,16 @@ export class GraphTaskHost {
   }
 
   /**
-   * Waits a frame, so a message posted just before has been handled, then polls until the package names of the page's
-   * `shownTaskPackages` posts, in order, are `expected`; a post the last message wrongly caused is counted.
+   * Polls until the package names of the page's `shownTaskPackages` posts, in order, are `expected`, then waits a frame and
+   * reads them once more, so a duplicate post that lands after the first match fails the check instead of passing it.
    */
   public async expectShownTaskPackages(expected: string[][]): Promise<void> {
-    await this.page.evaluate(NEXT_FRAME);
     await expect.poll(async (): Promise<string[][]> => this.shownTaskPackages()).toEqual(expected);
+    await this.page.evaluate(NEXT_FRAME);
+
+    const settled = await this.shownTaskPackages();
+
+    expect(settled).toEqual(expected);
   }
 
   /** A frame on, the page has posted no `explainEdge`. */
