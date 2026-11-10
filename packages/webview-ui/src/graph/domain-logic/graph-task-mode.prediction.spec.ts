@@ -127,5 +127,20 @@ describe('FEATURE: GraphTaskMode cache prediction posts', () => {
 
       expect(packagePosts()).toStrictEqual([NAMES]);
     });
+
+    it('WHEN the same state arrives again THEN nothing more is posted', async () => {
+      await shownWith(true);
+      mode.received(SHOWN_STATE, 8);
+
+      expect(packagePosts()).toStrictEqual([NAMES]);
+    });
+
+    it('WHEN a message replaces the page and the same state arrives again THEN it is posted once more', async () => {
+      await shownWith(true);
+      mode.suspend();
+      mode.received(SHOWN_STATE, 8);
+
+      expect(packagePosts()).toStrictEqual([NAMES, NAMES]);
+    });
   });
 });
