@@ -189,7 +189,7 @@ export const expandTogether = async (scene: PredictionScene, names: string[]): P
   }
 };
 
-const descriptionIfAny = (api: TurboConsoleApi, node: TreeNode): string => {
+export const descriptionIfAny = (api: TurboConsoleApi, node: TreeNode): string => {
   const { description } = api.tree.getTreeItem(node);
 
   return typeof description === 'string' ? description : '';

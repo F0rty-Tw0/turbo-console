@@ -22,7 +22,7 @@ const isIndependent = (task: ShownTask): boolean => {
   return isShownTask && dependsOnNothing;
 };
 
-const independentIdsOf = (scene: PredictionScene, packageName: string): string[] => {
+export const independentIdsOf = (scene: PredictionScene, packageName: string): string[] => {
   const isOwn = (task: ShownTask): boolean => task.packageName === packageName && isIndependent(task);
   const own = scene.manifest.tasks.filter(isOwn);
 

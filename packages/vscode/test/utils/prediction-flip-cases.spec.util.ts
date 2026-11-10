@@ -4,6 +4,8 @@ import { join } from 'node:path';
 
 import * as vscode from 'vscode';
 
+import { independentIdsOf } from './prediction-burst-cases.spec.util.ts';
+import { cachedIdsOf, taintedIdsOf } from './prediction-edit.spec.util.ts';
 import { buildIdOf, filtersOf, packageOfTask, predictionRunsOf, taskWordOf, waitForWord } from './prediction-scene.spec.util.ts';
 import { endedRun, startRun, taskNodeNamed } from './run-wait.spec.util.ts';
 import { log, sleep, step } from './suite-env.spec.util.ts';
@@ -69,12 +71,31 @@ const pathOf = (scene: PredictionScene, packageName: string): string => {
   return join(scene.root, pkg.path, EDITED_FILE);
 };
 
+const isNotCached = (word: string): boolean => word !== CACHED_WORD;
+
+/** The ids among `ids` whose rows read something other than cached now. */
+const notCachedAmong = async (api: PredictionScene['api'], ids: string[]): Promise<string[]> => {
+  const notCached: string[] = [];
+
+  for (const id of ids) {
+    const word = await taskWordOf(api, id);
+
+    const isChanged = isNotCached(word);
+
+    if (isChanged) notCached.push(id);
+  }
+
+  return notCached;
+};
+
 /**
  * P5: a run of `c` leaves its `build` cached; one input of `b` changes and Refresh asks again, so `b#build` and `a#build`,
- * which depends on it, read not cached while `c#build` stays cached. The edit is undone in `finally`.
+ * which depends on it, read not cached. Every other shown row that read cached before still does, unless it belongs to `b`
+ * or depends on a task of `b`. Refresh queues the shown packages once, and the model reload it causes must not add a
+ * second dry run, so the dry runs counted from the Refresh command on are exactly one. The edit is undone in `finally`.
  */
 export const editCase = async (scene: PredictionScene): Promise<void> => {
-  const { api, packages } = scene;
+  const { api, counter, packages, manifest } = scene;
   const file = pathOf(scene, packages.b);
   const [a, b, c] = [buildIdOf(packages.a), buildIdOf(packages.b), buildIdOf(packages.c)];
 
@@ -82,19 +103,41 @@ export const editCase = async (scene: PredictionScene): Promise<void> => {
     const original = await readFile(file, 'utf8');
 
     try {
-      await runTaskId(scene, c);
+      const isOtherTask = (id: string): boolean => id !== c;
+      const other = independentIdsOf(scene, packages.c).find(isOtherTask);
 
-      for (const task of [a, b, c]) await waitForWord(api, task, CACHED_WORD);
+      if (other === undefined) throw new Error(`${packages.c} has no independent task besides ${c}`);
+
+      await runTaskId(scene, c);
+      await runTaskId(scene, other);
+
+      for (const task of [a, b, c, other]) await waitForWord(api, task, CACHED_WORD);
+
+      const cachedBefore = await cachedIdsOf(scene, [packages.a, packages.b, packages.c]);
 
       await writeFile(file, `${original}${EDIT_LINE}`);
+      counter.reset();
       await vscode.commands.executeCommand(REFRESH_COMMAND);
       await waitForWord(api, b, NOT_CACHED_WORD);
       await waitForWord(api, a, NOT_CACHED_WORD);
       await sleep(QUIET_WINDOW_MS);
 
-      assert.equal(await taskWordOf(api, c), CACHED_WORD, 'the untouched package changed');
-      assert.equal(await taskWordOf(api, b), NOT_CACHED_WORD);
-      assert.equal(await taskWordOf(api, a), NOT_CACHED_WORD);
+      const spawned = predictionRunsOf(scene);
+      const flipped = await notCachedAmong(api, cachedBefore);
+      const tainted = taintedIdsOf(manifest, packages.b);
+      const isUntouched = (id: string): boolean => !tainted.has(id);
+      const untouched = cachedBefore.filter(isUntouched);
+      const changed = await notCachedAmong(api, untouched);
+
+      log(
+        `P5: ${spawned.length} dry runs after Refresh; read cached before [${cachedBefore.join(', ')}]; flipped [${flipped.join(', ')}]`
+      );
+      assert.equal(spawned.length, 1, `dry runs after Refresh: ${JSON.stringify(spawned)}`);
+      assert.ok(untouched.includes(c), `${c} is not among the untouched cached rows: ${untouched.join(', ')}`);
+      assert.ok(untouched.includes(other), `${other} is not among the untouched cached rows: ${untouched.join(', ')}`);
+      assert.deepEqual(changed, [], 'a cached row outside the edited package and its dependents changed');
+      assert.ok(flipped.includes(a), `${a} did not flip: ${flipped.join(', ')}`);
+      assert.ok(flipped.includes(b), `${b} did not flip: ${flipped.join(', ')}`);
     } finally {
       await writeFile(file, original);
     }
