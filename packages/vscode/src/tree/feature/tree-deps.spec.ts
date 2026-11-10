@@ -4,9 +4,11 @@ import type * as vscode from 'vscode';
 import { contextOf, treeDepsOf } from './tree-deps.ts';
 import type { Timings } from '../../shared/common/api.type.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
+import type { SharedLoads } from '../common/shared-loads.type.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
 import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
+import { SHARED_PREDICTION_STUB } from '../test/stubs/shared-prediction.stub.ts';
 import { TIMINGS_STUB } from '../test/stubs/timings.stub.ts';
 
 /** The `executeCommand` the hoisted `vscode` mock hands out, so a case reads what the context-key sends asked for. */
@@ -19,6 +21,8 @@ vi.mock('vscode', () => {
   return module;
 });
 
+const LOADS: SharedLoads = { atoms: SHARED_ATOMS_STUB, prediction: SHARED_PREDICTION_STUB };
+
 const RUNS: TreeProviderDeps['runs'] = { get: () => undefined, runningIds: () => new Set() };
 
 describe('FEATURE: tree provider deps', () => {
@@ -29,13 +33,14 @@ describe('FEATURE: tree provider deps', () => {
       const timings: Timings = { ...TIMINGS_STUB, treeVisible };
       const log = vi.fn();
 
-      const deps = treeDepsOf(RUNS, timings, scripts, SHARED_ATOMS_STUB, log);
+      const deps = treeDepsOf(RUNS, timings, scripts, LOADS, log);
 
       expect(deps).toStrictEqual({
         runs: RUNS,
         treeVisible,
         scripts,
         atom: SHARED_ATOMS_STUB,
+        prediction: SHARED_PREDICTION_STUB,
         setHasScripts: deps.setHasScripts,
         setSinglePackage: deps.setSinglePackage,
         log
@@ -43,7 +48,7 @@ describe('FEATURE: tree provider deps', () => {
     });
 
     it('WHEN setHasScripts sends true THEN the turboConsole.hasScripts context key is set to true', async () => {
-      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
+      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), LOADS, vi.fn());
 
       await deps.setHasScripts(true);
 
@@ -51,7 +56,7 @@ describe('FEATURE: tree provider deps', () => {
     });
 
     it('WHEN setSinglePackage sends true THEN the turboConsole.singlePackage context key is set to true', async () => {
-      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
+      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), LOADS, vi.fn());
 
       await deps.setSinglePackage(true);
 
@@ -64,7 +69,7 @@ describe('FEATURE: tree provider deps', () => {
       const error = new Error('setContext failed');
 
       executeCommand.mockRejectedValueOnce(error);
-      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
+      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), LOADS, vi.fn());
 
       await expect(deps.setHasScripts(true)).rejects.toBe(error);
     });
@@ -73,7 +78,7 @@ describe('FEATURE: tree provider deps', () => {
       const error = new Error('setContext failed');
 
       executeCommand.mockRejectedValueOnce(error);
-      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), SHARED_ATOMS_STUB, vi.fn());
+      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), LOADS, vi.fn());
 
       await expect(deps.setSinglePackage(true)).rejects.toBe(error);
     });

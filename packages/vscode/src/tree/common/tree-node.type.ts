@@ -3,6 +3,7 @@ import type { Event, TreeItem } from 'vscode';
 import type { SharedAtoms } from './atom-load.type.ts';
 import type { AtomLookup } from './atom-view.type.ts';
 import type { ModelViewsOf } from './model-view.type.ts';
+import type { PredictionLookup, SharedPrediction } from './prediction.type.ts';
 import type { IconsState, RunningCountsMemo, TreeMode, TreeRow } from './tree-row.type.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import type { LiveIds, RunEntry, RunLookup, Runs } from '../../run/common/run.type.ts';
@@ -27,8 +28,8 @@ export type TreeNode = {
  * What a node's rows are read with: the view mode, the runs, the model's view (built once per model), whether
  * package rows read their full names (`scopeShown`) or their bare labels, whether scripts are listed (`scriptsShown`),
  * the running task ids per folder root (`live`), the wall-clock time (`now`, the base of `RunEntry.launchedAt`) a
- * running task's elapsed time is counted to, the running counts kept per view (`countsMemo`), the tool a task's command runs (`tools`), and the Atomizer groups, dry-run
- * states and results of a package (`atoms`).
+ * running task's elapsed time is counted to, the running counts kept per view (`countsMemo`), the tool a task's command runs (`tools`), the Atomizer groups, dry-run
+ * states and results of a package (`atoms`), and the cache prediction of a package (`prediction`).
  */
 export type RowContext = {
   readonly mode: TreeMode;
@@ -41,6 +42,7 @@ export type RowContext = {
   readonly countsMemo: RunningCountsMemo;
   readonly tools: ToolLookup;
   readonly atoms: AtomLookup;
+  readonly prediction: PredictionLookup;
 };
 
 /** `'root'` redraws the root (the whole tree in a single-root window); a list names the packages to redraw. */
@@ -59,6 +61,7 @@ export type RunningTasks = ReadonlyMap<string, ReadonlySet<string>>;
  * `treeVisible` gets one span per root: its first `getChildren`, ended when it first returns package or folder rows.
  * `now` is the span clock (`performance.now()`); `wallNow` is the wall clock (`Date.now()`) the rows count elapsed time on.
  * `atom` is the window's shared Atomizer loads: the dry-run states and results of a package's Atomizer groups.
+ * `prediction` is the window's shared cache prediction.
  */
 export type TreePorts = {
   readonly runs: RunLookup;
@@ -69,6 +72,7 @@ export type TreePorts = {
   readonly now: () => number;
   readonly wallNow: () => number;
   readonly atom: SharedAtoms;
+  readonly prediction: SharedPrediction;
 };
 
 /** The public face of `PackagesTreeProvider`, so `common/` can name it without importing the feature. */
@@ -85,6 +89,7 @@ export type PackagesTreeApi = {
   readonly isScopeShown: () => boolean;
   readonly isScriptsShown: () => boolean;
   readonly refreshAtoms: () => void;
+  readonly predictionChanged: () => void;
 };
 
 /** The part of `Runs` the tree reads: the one run lookup every row uses and the running ids of a root. */
@@ -92,7 +97,7 @@ type TreeRuns = Pick<Runs, 'get' | 'runningIds'>;
 
 /**
  * What `PackagesTreeProvider` is built from beside the roots and the mode: the runs, the first-children spans, the scripts
- * toggle, the window's shared Atomizer loads, the sends of the `turboConsole.hasScripts` and `turboConsole.singlePackage` keys
+ * toggle, the window's shared Atomizer loads and cache prediction, the sends of the `turboConsole.hasScripts` and `turboConsole.singlePackage` keys
  * and where a failed send is logged.
  */
 export type TreeProviderDeps = {
@@ -100,6 +105,7 @@ export type TreeProviderDeps = {
   readonly treeVisible: Map<string, Span>;
   readonly scripts: ScriptsToggleApi;
   readonly atom: SharedAtoms;
+  readonly prediction: SharedPrediction;
   readonly setHasScripts: (value: boolean) => Thenable<void>;
   readonly setSinglePackage: (value: boolean) => Thenable<void>;
   readonly log: (line: string) => void;

@@ -1,4 +1,4 @@
-import { AtomTree } from './atom-tree.ts';
+import { LoadTrees } from './load-trees.ts';
 import { ModelViews } from './model-views.ts';
 import { TreeRefresher } from './tree-refresh.ts';
 import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
@@ -27,7 +27,7 @@ export class PackagesTree {
   private readonly viewOf: ModelViewsOf = (model, scriptsShown, live) => this.views.of(model, scriptsShown, live);
   private readonly toolOfCommand: ToolLookup = (pkg, singlePackage, command) => this.views.toolOf(pkg, singlePackage, command);
   private readonly refresher: TreeRefresher;
-  private readonly atoms: AtomTree;
+  private readonly loads: LoadTrees;
   private mode: TreeMode;
   private icons: IconsState;
   private scopeShown = false;
@@ -41,7 +41,7 @@ export class PackagesTree {
     const rowContext = (): RowContext => this.rowContext();
 
     this.refresher = new TreeRefresher({ store, cache: this.cache, fire: ports.fire, rowContext });
-    this.atoms = new AtomTree(store, this.cache, ports);
+    this.loads = new LoadTrees(store, this.cache, ports);
   }
 
   /** No node: the single root's rows, or one node per root. A root's rows wait for its first answer (spec §4.3). */
@@ -54,7 +54,7 @@ export class PackagesTree {
 
     if (entry === undefined) return [];
 
-    this.atoms.childrenRequested(node);
+    this.loads.childrenRequested(node);
 
     const context = this.rowContext();
     const rows = childRowsOf(entry.state, node, context);
@@ -73,7 +73,7 @@ export class PackagesTree {
   }
 
   public refreshFor(change: RootChange): void {
-    this.atoms.modelChanged(change);
+    this.loads.modelChanged(change);
     this.refresher.refreshFor(change);
   }
 
@@ -113,29 +113,34 @@ export class PackagesTree {
     this.redraw();
   }
 
-  /** After roots were added or removed: a removed root loses its Atomizer loads and its nodes, then the whole tree redraws. */
+  /** After roots were added or removed: a removed root loses its shared loads and its nodes, then the whole tree redraws. */
   public rootsChanged(): void {
-    this.atoms.rootsChanged();
+    this.loads.rootsChanged();
     this.redraw();
   }
 
   public runChanged(entry: RunEntry): void {
     this.refresher.runChanged(entry);
-    this.atoms.runChanged(entry);
+    this.loads.runChanged(entry);
   }
 
   public refreshTasks(running: RunningTasks): void {
     this.refresher.refreshTasks(running);
   }
 
-  /** The Refresh command: every Atomizer package loaded so far loads again; one never opened stays unloaded. */
+  /** The Refresh command: every shared load (Atomizer and prediction) loads again; a package never opened stays unloaded. */
   public refreshAtoms(): void {
-    this.atoms.refreshAll();
+    this.loads.refreshAll();
   }
 
-  /** Aborts the pending Atomizer loads; none of them redraws anything afterwards. */
+  /** Aborts the pending shared loads; none of them redraws anything afterwards. */
   public dispose(): void {
-    this.atoms.dispose();
+    this.loads.dispose();
+  }
+
+  /** The cache prediction toggle changed: one redraw, and the rows read the shared prediction as it is now. */
+  public predictionChanged(): void {
+    this.redraw();
   }
 
   private rowContext(): RowContext {
@@ -150,7 +155,8 @@ export class PackagesTree {
       now: wallNow(),
       countsMemo: this.countsMemo,
       tools: this.toolOfCommand,
-      atoms: this.atoms.view
+      atoms: this.loads.atoms.view,
+      prediction: this.loads.prediction.view
     };
 
     return context;
