@@ -123,8 +123,8 @@ export class GraphTaskFeed {
   }
 
   /**
-   * Runs on the call stack of a run change or a progress `begin`, `event` or `prune`, which do not catch: it reads no run and no
-   * record, it only arms the timer, so `fire` does the reads on its own stack.
+   * Runs on the call stack of a run change, a progress `begin`, `event` or `prune`, or a cache prediction change, which do not
+   * catch: it reads no run, no record and no prediction, it only arms the timer, so `fire` does the reads on its own stack.
    */
   private changed(root: string): void {
     if (root !== this.deps.root) return;
@@ -159,7 +159,7 @@ export class GraphTaskFeed {
   }
 
   /** The predictions of the listed tasks, or `null` while the prediction toggle is off, so the message has no key. */
-  private predictionsNow(): GraphRunsMessage['predictions'] | null {
+  private predictionsNow(): NonNullable<GraphRunsMessage['predictions']> | null {
     const { root, feeds, gate } = this.deps;
 
     const isShown = feeds.toggles.prediction.isShown();

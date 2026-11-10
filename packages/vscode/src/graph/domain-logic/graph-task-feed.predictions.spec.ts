@@ -79,10 +79,11 @@ describe('FEATURE: cache prediction in the graph feed', () => {
 
   it('GIVEN the toggle off and an answer WHEN the state is flushed THEN the runs message has no predictions key', () => {
     const { feed, ports } = feedWith(false, HIT_A);
+    const expected: GraphRunsMessage = { type: 'runs', runs: {} };
 
     feed.flush(GRAPH_STATE_STUB);
 
-    expect('predictions' in (lastRunsOf(ports) ?? {})).toBe(false);
+    expect(lastRunsOf(ports)).toStrictEqual(expected);
   });
 
   it('WHEN the store reports a change of this root THEN one runs message with the new predictions follows the coalesce window', () => {
