@@ -9,6 +9,7 @@ import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { OPEN_SPEC_COMMAND } from '../common/atom.const.ts';
 import { FAILED_ICON, PASSED_ICON, SPEC_FILE_ICON } from '../common/icon.const.ts';
+import type { PredictionLookup } from '../common/prediction.type.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
 import type {
   AtomFileContextValue,
@@ -22,6 +23,8 @@ import type {
 } from '../common/tree-row.type.ts';
 
 const PLAIN_FILE_CONTEXT: AtomFileContextValue = 'turboTask.atomFile';
+
+const NO_PREDICTION: PredictionLookup = () => null;
 
 /** A file task is a turbo task, so only the turbo values occur; a script value, which cannot, reads as the plain file value. */
 const ATOM_FILE_CONTEXTS: Readonly<Partial<Record<TaskContextValue, AtomFileContextValue>>> = {
@@ -48,9 +51,13 @@ const umbrellaDescription = (running: string, counts: string, entry: RunEntry | 
   return `${running} · ${counts}`;
 };
 
-/** The umbrella keeps `taskRow`'s icon and context; its description counts the files, behind the running clock while it runs. */
+/**
+ * The umbrella keeps `taskRow`'s icon and context; its description counts the files, behind the running clock while it runs.
+ * Atomizer rows show no cache prediction, so `taskRow` reads none.
+ */
 export const umbrellaRow = (scope: RowScope, pkg: PackageNode, group: AtomGroup, context: RowContext): TreeRow => {
-  const base = taskRow(scope, pkg, group.umbrella, context);
+  const unpredicted: RowContext = { ...context, prediction: NO_PREDICTION };
+  const base = taskRow(scope, pkg, group.umbrella, unpredicted);
   const view = context.atoms(scope.root, pkg.name);
   const entry = context.runs(scope.root, group.umbrella.id);
   const counts = umbrellaCounts(group, view);

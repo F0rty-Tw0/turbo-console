@@ -5,6 +5,8 @@ import { fileRowsOf, packageFileRows, umbrellaRow } from './atom-rows.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { AtomCache, AtomView } from '../common/atom-view.type.ts';
+import type { PredictionView } from '../common/prediction.type.ts';
+import type { RowContext } from '../common/tree-node.type.ts';
 import {
   ATOM_GROUP_STUB,
   ATOM_VIEW_STUB,
@@ -54,6 +56,8 @@ const descriptionOf = (overrides: Partial<AtomView>, runs?: RunLookup): string =
 
   return row.description;
 };
+
+const isPrediction = (line: string): boolean => line.startsWith('Prediction');
 
 const umbrellaRunOf = (overrides: Partial<RunEntry>): RunLookup => {
   const entry: RunEntry = { ...RUN_ENTRY_STUB, taskId: ATOM_GROUP_STUB.umbrella.id, ...overrides };
@@ -140,6 +144,24 @@ describe('FEATURE: atom umbrella row', () => {
       const row = umbrellaRow(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, ATOM_GROUP_STUB, atomContextOf(view, passed));
 
       expect([row.description, row.icon.id]).toStrictEqual(['3 files · 2 cached · 1 failed', 'pass']);
+    });
+  });
+
+  describe('GIVEN a cache prediction that says HIT for the umbrella', () => {
+    const view: PredictionView = { settledAt: ROW_NOW, tasks: new Map([[ATOM_GROUP_STUB.umbrella.id, 'HIT']]) };
+    const base = atomContextOf(ATOM_VIEW_STUB);
+    const context: RowContext = { ...base, prediction: () => view };
+
+    it('WHEN the row is built THEN the description is the file count', () => {
+      const row = umbrellaRow(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, ATOM_GROUP_STUB, context);
+
+      expect(row.description).toBe('3 files');
+    });
+
+    it('WHEN the row is built THEN no tooltip line is a prediction', () => {
+      const row = umbrellaRow(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, ATOM_GROUP_STUB, context);
+
+      expect(row.tooltip.some(isPrediction)).toBe(false);
     });
   });
 });
