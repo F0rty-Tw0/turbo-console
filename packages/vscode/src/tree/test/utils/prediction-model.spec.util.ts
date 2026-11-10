@@ -40,3 +40,6 @@ export const uncachedStateOf = (id: string): DryRunState => {
 
   return state;
 };
+
+/** `count` package names, `@fx/p0` up to `@fx/p<count - 1>`. */
+export const packageNamesOf = (count: number): string[] => Array.from({ length: count }, (_, index) => `@fx/p${index}`);
