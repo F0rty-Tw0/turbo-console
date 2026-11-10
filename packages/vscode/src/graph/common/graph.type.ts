@@ -107,14 +107,15 @@ export type LookupGate = {
 export type ScanGate = Omit<LookupGate, 'drop'>;
 
 /**
- * `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now, `runIds` the ids a run can report
- * and `persistentIds` the ids whose running word is `continuous`, without the rest of the state.
+ * `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now, `runIds` the ids a run can report,
+ * `persistentIds` the ids whose running word is `continuous` and `tasks` the tasks the state lists, without the rest of the state.
  */
 export type TaskFeedGate = {
   readonly canPost: () => boolean;
   readonly state: () => GraphState;
   readonly runIds: () => string[];
   readonly persistentIds: () => ReadonlySet<string>;
+  readonly tasks: () => GraphTask[];
 };
 
 /** The tree command a graph run request maps to, with the tree-row argument it takes. */

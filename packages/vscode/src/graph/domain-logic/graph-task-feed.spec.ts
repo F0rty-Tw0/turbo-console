@@ -3,12 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphTaskFeed } from './graph-task-feed.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
-import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
-import type { GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
+import type { GraphFeeds, GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import { GRAPH_STATE_STUB, GRAPH_TASKS_STUB } from '../test/stubs/graph-model.stub.ts';
 import { RUN_A_BUILD_STUB } from '../test/stubs/graph-run.stub.ts';
-import { progressFake } from '../test/utils/graph-feeds.spec.util.ts';
+import { feedsOf, progressFake } from '../test/utils/graph-feeds.spec.util.ts';
 import { postedRunsOf, postedShowTasksOf, postedShowsOf, postedTypesOf } from '../test/utils/graph-session-runs.spec.util.ts';
 
 type FeedFixture = {
@@ -31,8 +30,10 @@ const feedAt = (state: GraphState): FeedFixture => {
   const canPost = vi.fn<TaskFeedGate['canPost']>().mockReturnValue(true);
   const stateOf = vi.fn<TaskFeedGate['state']>().mockReturnValue(state);
   const runIds = vi.fn<TaskFeedGate['runIds']>().mockReturnValue(GRAPH_TASKS_STUB.map((task) => task.id));
-  const gate: TaskFeedGate = { canPost, state: stateOf, runIds, persistentIds: () => new Set() };
-  const feed = new GraphTaskFeed({ root: '/ws', runs, ports, gate, atoms: SHARED_ATOMS_STUB, progress: progressFake().progress });
+  const gate: TaskFeedGate = { canPost, state: stateOf, runIds, persistentIds: () => new Set(), tasks: () => [] };
+  const base = feedsOf(runs);
+  const feeds: GraphFeeds = { ...base, progress: progressFake().progress };
+  const feed = new GraphTaskFeed({ root: '/ws', ports, gate, feeds });
   const fixture: FeedFixture = { feed, runs, ports, gate };
 
   return fixture;
