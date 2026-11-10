@@ -25,14 +25,13 @@ import { createOutput } from './shared/data-access/output.ts';
 import { togglesOf } from './shared/domain-logic/toggles.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
 import type { VisibleView } from './tree/common/visible-view.type.ts';
-import { editorAtomPorts } from './tree/data-access/atom-ports.ts';
 import { editorIconThemePorts } from './tree/data-access/icon-theme-ports.ts';
 import { editorOpenSpecPorts } from './tree/data-access/open-spec-ports.ts';
 import { editorPackageActionPorts } from './tree/data-access/package-action-ports.ts';
 import { tickerPortsOf } from './tree/data-access/ticker-ports.ts';
 import { ElapsedTicker } from './tree/domain-logic/elapsed-ticker.ts';
 import { IconThemeFolders } from './tree/domain-logic/icon-theme-folders.ts';
-import { sharedAtomsOf } from './tree/domain-logic/shared-atoms.ts';
+import { sharedLoadsOf } from './tree/domain-logic/shared-loads.ts';
 import { TreeVisibility } from './tree/domain-logic/tree-visibility.ts';
 import { FixedViewProvider, registerFixedViews } from './tree/feature/fixed-views.ts';
 import { registerOpenSpec } from './tree/feature/open-spec.ts';
@@ -134,13 +133,13 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output, runDependenciesOf(session.store)), timings.runs);
   const toggles = togglesOf(context.workspaceState, output);
-  const atoms = sharedAtomsOf(session.store, editorAtomPorts(session.store, output));
-  const treeDeps = treeDepsOf(runSession.runs, timings, toggles.scripts, atoms, output.error);
+  const loads = sharedLoadsOf(session.store, output, toggles.prediction);
+  const treeDeps = treeDepsOf(runSession.runs, timings, toggles.scripts, loads.atoms, output.error);
   const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDeps);
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
   const panels = createPanels(context, session, { runs: runSession.runs, scripts: toggles.scripts }, output);
-  const graph = createGraph(context, session, panels, output, graphFeedsOf(runSession, atoms, toggles));
+  const graph = createGraph(context, session, panels, output, graphFeedsOf(runSession, loads.atoms, toggles));
   const treeVisibility = new TreeVisibility();
   const ticker = new ElapsedTicker(runSession.runs, tickerPortsOf(tree));
   const api: TurboConsoleApi = {
@@ -158,7 +157,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     ticker: ticker.api()
   };
 
-  context.subscriptions.push(output, tree, session, ticker, toggles.scripts, toggles.scope);
+  context.subscriptions.push(output, tree, session, ticker, toggles.scripts, toggles.scope, toggles.prediction, loads.prediction);
 
   if (vscode.workspace.isTrusted) {
     const treeContext = contextOf(context, toggles, new IconThemeFolders(editorIconThemePorts()));
