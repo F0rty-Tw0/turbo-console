@@ -122,9 +122,10 @@ const assertSomeNotCached = (before: string[], taskIds: string[]): void => {
 };
 
 /**
- * P6: `requeue` leaves the live ticket, so a run end aborts a dry run that is under way. Five short runs that end close
- * together must still end with every task that ran reading cached soon after the last end. Rows keep their old word until
- * a dry run settles, so the settle is the word flipping; some of these tasks never ran before, so none reads cached first.
+ * P6: five short runs that end close together must still end with every task that ran reading cached soon after the last
+ * end. Each run end re-queues the shown packages, which may abort a dry run that is under way; whether one does depends on
+ * the timing, and real runs mostly abort none, so the aborted count is logged and never asserted. Rows keep their old
+ * word until a dry run settles, so the settle is the word flipping; some of these tasks never ran before.
  */
 export const burstCase = async (scene: PredictionScene): Promise<void> => {
   const { api, counter, env } = scene;
