@@ -4,6 +4,8 @@ export const SHOW_PREDICTION_COMMAND = 'turboConsole.showPrediction';
 
 export const HIDE_PREDICTION_COMMAND = 'turboConsole.hidePrediction';
 
+export const REFRESH_COMMAND = 'turboConsole.refresh';
+
 export const CLOSE_EDITOR_COMMAND = 'workbench.action.closeActiveEditor';
 
 export const FILTER_PREFIX = '--filter=';
@@ -12,6 +14,8 @@ export const FILTER_PREFIX = '--filter=';
 export const PREDICTION_WORD_SET: ReadonlySet<string> = new Set(Object.values(PREDICTION_WORDS));
 
 export const CACHED_WORD = PREDICTION_WORDS.HIT;
+
+export const NOT_CACHED_WORD = PREDICTION_WORDS.MISS;
 
 /** Two batch windows and a second: a dry run that was due has been sent by now. */
 export const QUIET_WINDOW_MS = 2 * PREDICTION_BATCH_MS + 1000;
@@ -24,3 +28,8 @@ export const BURST_RUNS = 5;
 
 /** The gap between run starts in case P6b: one batch window and a typical dry run, so each end can find the last dry run live. */
 export const BURST_STAGGER_MS = PREDICTION_BATCH_MS + 50;
+
+/** The line the edit of case P5 appends to a source file of the package it changes. */
+export const EDIT_LINE = '\n// edited by the prediction suite\n';
+
+export const EDITED_FILE = 'src/index.ts';
