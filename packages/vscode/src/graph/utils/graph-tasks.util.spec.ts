@@ -321,4 +321,18 @@ describe('FEATURE: graph runs words (own runs only)', () => {
       expect(runs).toStrictEqual({});
     });
   });
+
+  describe('GIVEN the three-argument call', () => {
+    const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set() };
+
+    it('WHEN the message is built THEN it has no predictions key', () => {
+      expect('predictions' in runsMessageOf(ROOT, LISTED, sources)).toBe(false);
+    });
+
+    it('WHEN a fourth argument is given THEN the message carries it as predictions', () => {
+      const message = runsMessageOf(ROOT, LISTED, sources, { 'a#build': 'cached' });
+
+      expect(message.predictions).toStrictEqual({ 'a#build': 'cached' });
+    });
+  });
 });
