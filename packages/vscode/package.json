@@ -120,6 +120,18 @@
         "icon": "$(filter-filled)"
       },
       {
+        "command": "turboConsole.showPrediction",
+        "title": "Show Cache Prediction",
+        "category": "Turbo Console",
+        "icon": "$(history)"
+      },
+      {
+        "command": "turboConsole.hidePrediction",
+        "title": "Hide Cache Prediction",
+        "category": "Turbo Console",
+        "icon": "$(circle-slash)"
+      },
+      {
         "command": "turboConsole.showOutput",
         "title": "Show Output",
         "category": "Turbo Console"
@@ -278,6 +290,16 @@
           "command": "turboConsole.showAllTaskGraphs",
           "when": "view == turboConsole.tree",
           "group": "navigation@5"
+        },
+        {
+          "command": "turboConsole.showPrediction",
+          "when": "view == turboConsole.tree && !turboConsole.predictionShown",
+          "group": "navigation@6"
+        },
+        {
+          "command": "turboConsole.hidePrediction",
+          "when": "view == turboConsole.tree && turboConsole.predictionShown",
+          "group": "navigation@6"
         }
       ],
       "view/item/context": [
@@ -412,6 +434,14 @@
         {
           "command": "turboConsole.hideScripts",
           "when": "turboConsole.active && turboConsole.hasScripts && turboConsole.scriptsShown"
+        },
+        {
+          "command": "turboConsole.showPrediction",
+          "when": "turboConsole.active && !turboConsole.predictionShown"
+        },
+        {
+          "command": "turboConsole.hidePrediction",
+          "when": "turboConsole.active && turboConsole.predictionShown"
         },
         {
           "command": "turboConsole.showOutput",

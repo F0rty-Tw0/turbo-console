@@ -75,6 +75,17 @@ export const openSpecRegisteredCase = async (): Promise<void> => {
   });
 };
 
+/** Spec §5.3 case 8: the Show and Hide Cache Prediction title commands are registered by the extension. */
+export const predictionRegisteredCase = async (): Promise<void> => {
+  await step('8: the Show and Hide Cache Prediction commands are registered', async () => {
+    const registered = await vscode.commands.getCommands(true);
+
+    for (const command of ['turboConsole.showPrediction', 'turboConsole.hidePrediction']) {
+      assert.ok(registered.includes(command), `${command} is not registered`);
+    }
+  });
+};
+
 /** Spec §5.3 case 8: the default tree mode shows the folders `apps` and `packages`, holding the manifest's visible packages. */
 export const foldersCase = async (scene: ParityScene): Promise<void> => {
   const { api, manifest } = scene;
