@@ -1,17 +1,55 @@
 import assert from 'node:assert/strict';
 
-import type { GraphReady, GraphTask } from '@turbo-console/webview-ui';
+import type { GraphReady, GraphRunsMessage, GraphTask } from '@turbo-console/webview-ui';
 import * as vscode from 'vscode';
 
-import { lastGraphState } from './graph-posted.spec.util.ts';
-import { filtersOf, predictionRunsOf } from './prediction-scene.spec.util.ts';
+import { lastGraphState, lastPostedRuns, postedRunsAfter } from './graph-posted.spec.util.ts';
+import { filtersOf, packageOfTask, predictionRunsOf } from './prediction-scene.spec.util.ts';
 import { closeGraph } from './prediction-spawn-cases.spec.util.ts';
 import { log, sleep, step, waitFor } from './suite-env.spec.util.ts';
+import { PREDICTION_WORDS_BY_CACHE } from '../../src/graph/common/graph-prediction.const.ts';
 import { ALL_TASKS_COMMAND, GRAPH_COMMAND } from '../common/graph.const.ts';
 import { HIDE_PREDICTION_COMMAND, QUIET_WINDOW_MS, SHOW_PREDICTION_COMMAND } from '../common/prediction.const.ts';
 import type { PredictionScene } from '../common/prediction.type.ts';
 
+const GRAPH_WORDS: ReadonlySet<string> = new Set(Object.values(PREDICTION_WORDS_BY_CACHE));
+
 const isTurboTask = (task: GraphTask): boolean => task.isTurboTask;
+
+const predictionsOf = (message: GraphRunsMessage): Readonly<Record<string, string>> => message.predictions ?? {};
+
+const idsOf = (message: GraphRunsMessage): string[] => Object.keys(predictionsOf(message));
+
+const wordsOf = (message: GraphRunsMessage): string[] => Object.values(predictionsOf(message));
+
+/** The task ids of `runs` messages posted after `mark` whose `predictions` name a task of one of `packageNames`. */
+const predictedIdsAfter = (scene: PredictionScene, mark: GraphRunsMessage | undefined, packageNames: string[]): string[] => {
+  const posted = postedRunsAfter(scene.api, scene.root, mark);
+  const ids = posted.flatMap(idsOf);
+  const isOfPackage = (id: string): boolean => packageNames.includes(packageOfTask(id));
+
+  return ids.filter(isOfPackage);
+};
+
+/**
+ * The real host carries the settled dry run to the real page: a `runs` message after `mark` has `predictions` for a task
+ * of the packages the page asked for, and every word on the wire is one the page reads.
+ */
+const assertPredictionsPosted = async (
+  scene: PredictionScene,
+  mark: GraphRunsMessage | undefined,
+  packageNames: string[]
+): Promise<void> => {
+  const hasPredicted = (): boolean => predictedIdsAfter(scene, mark, packageNames).length > 0;
+
+  await waitFor('a runs message carries predictions for the shown packages', hasPredicted);
+
+  const posted = postedRunsAfter(scene.api, scene.root, mark);
+  const words = posted.flatMap(wordsOf);
+  const isGraphWord = (word: string): boolean => GRAPH_WORDS.has(word);
+
+  assert.ok(words.every(isGraphWord), `words on the wire: ${words.join(', ')}`);
+};
 
 const packageOf = (task: GraphTask): string => task.packageName;
 
@@ -52,6 +90,7 @@ export const graphPageCase = async (scene: PredictionScene): Promise<void> => {
       await sleep(QUIET_WINDOW_MS);
 
       const inPackagesMode = predictionRunsOf(scene);
+      const mark = lastPostedRuns(api, root);
 
       await vscode.commands.executeCommand(ALL_TASKS_COMMAND);
       await waitFor('the page posted its packages', () => predictionRunsOf(scene).length > 0);
@@ -72,6 +111,7 @@ export const graphPageCase = async (scene: PredictionScene): Promise<void> => {
       assert.equal(spawned.length, 1, `dry runs in task mode: ${JSON.stringify(spawned)}`);
       assert.ok(expected.length > 0, 'every pooled package was known, so the page had nothing to post');
       assert.deepEqual(new Set(filters), new Set(expected));
+      await assertPredictionsPosted(scene, mark, expected);
     } finally {
       await closeGraph(scene);
     }
