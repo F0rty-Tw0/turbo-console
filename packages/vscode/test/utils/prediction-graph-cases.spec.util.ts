@@ -4,15 +4,17 @@ import type { GraphReady, GraphRunsMessage, GraphTask } from '@turbo-console/web
 import * as vscode from 'vscode';
 
 import { lastGraphState, lastPostedRuns, postedRunsAfter } from './graph-posted.spec.util.ts';
-import { filtersOf, packageOfTask, predictionRunsOf } from './prediction-scene.spec.util.ts';
+import { filtersOf, packageOfTask, predictionRunsOf, taskWordOf } from './prediction-scene.spec.util.ts';
 import { closeGraph } from './prediction-spawn-cases.spec.util.ts';
 import { log, sleep, step, waitFor } from './suite-env.spec.util.ts';
-import { PREDICTION_WORDS_BY_CACHE } from '../../src/graph/common/graph-prediction.const.ts';
 import { ALL_TASKS_COMMAND, GRAPH_COMMAND } from '../common/graph.const.ts';
 import { HIDE_PREDICTION_COMMAND, QUIET_WINDOW_MS, SHOW_PREDICTION_COMMAND } from '../common/prediction.const.ts';
 import type { PredictionScene } from '../common/prediction.type.ts';
 
-const GRAPH_WORDS: ReadonlySet<string> = new Set(Object.values(PREDICTION_WORDS_BY_CACHE));
+/** The graph word on the wire for each tree row word, written out here so a swapped host mapping fails. */
+const GRAPH_WORD_BY_TREE_WORD: Readonly<Record<string, string>> = { cached: 'cached', 'not cached': 'notCached', unknown: 'unknown' };
+
+const GRAPH_WORDS: ReadonlySet<string> = new Set(Object.values(GRAPH_WORD_BY_TREE_WORD));
 
 const isTurboTask = (task: GraphTask): boolean => task.isTurboTask;
 
@@ -21,6 +23,16 @@ const predictionsOf = (message: GraphRunsMessage): Readonly<Record<string, strin
 const idsOf = (message: GraphRunsMessage): string[] => Object.keys(predictionsOf(message));
 
 const wordsOf = (message: GraphRunsMessage): string[] => Object.values(predictionsOf(message));
+
+/** The word the newest of `posted` that names `id` carries for it; `undefined` when none does. */
+const wireWordOf = (posted: GraphRunsMessage[], id: string): string | undefined => {
+  const carriesId = (message: GraphRunsMessage): boolean => id in predictionsOf(message);
+  const newest = posted.filter(carriesId).at(-1);
+
+  if (newest === undefined) return undefined;
+
+  return predictionsOf(newest)[id];
+};
 
 /** The task ids of `runs` messages posted after `mark` whose `predictions` name a task of one of `packageNames`. */
 const predictedIdsAfter = (scene: PredictionScene, mark: GraphRunsMessage | undefined, packageNames: string[]): string[] => {
@@ -47,8 +59,12 @@ const assertPredictionsPosted = async (
   const posted = postedRunsAfter(scene.api, scene.root, mark);
   const words = posted.flatMap(wordsOf);
   const isGraphWord = (word: string): boolean => GRAPH_WORDS.has(word);
+  const [id = ''] = predictedIdsAfter(scene, mark, packageNames);
+  const treeWord = await taskWordOf(scene.api, id);
+  const wireWord = wireWordOf(posted, id);
 
   assert.ok(words.every(isGraphWord), `words on the wire: ${words.join(', ')}`);
+  assert.equal(wireWord, GRAPH_WORD_BY_TREE_WORD[treeWord], `${id}: tree reads "${treeWord}", the wire says "${wireWord}"`);
 };
 
 const packageOf = (task: GraphTask): string => task.packageName;
