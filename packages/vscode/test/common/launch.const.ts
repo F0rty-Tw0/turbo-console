@@ -91,8 +91,11 @@ const STREAM_LOG_ORDER: Readonly<Record<string, string>> = { [LOG_ORDER_KEY]: 's
 
 const L13: Launch = { ...L9, name: 'L13', suite: 'graph.suite', workspace: 'fixture-root-task', env: STREAM_LOG_ORDER };
 
+/** L14: cache prediction (M3-1) on a `target-like` copy of its own, toggle at its default (off). */
+const L14: Launch = { ...L9, name: 'L14', suite: 'prediction.suite' };
+
 /**
- * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L13 each get a user-data dir
+ * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L14 each get a user-data dir
  * of their own.
  */
-export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13];
+export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14];
