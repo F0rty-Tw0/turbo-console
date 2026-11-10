@@ -177,6 +177,23 @@ describe('FEATURE: registerTree scope toggle', () => {
 
       expect(disposed).toStrictEqual(expect.arrayContaining(['turboConsole.showPrediction', 'turboConsole.hidePrediction']));
     });
+
+    it('WHEN the tree registers THEN it does not redraw yet (the store was built with the stored value)', () => {
+      expect(tree.predictionChanged).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the prediction toggle changes THEN the tree redraws once', async () => {
+      await prediction.set(true);
+
+      expect(tree.predictionChanged).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the subscriptions are disposed THEN a toggle change no longer redraws the tree', async () => {
+      for (const subscription of context.subscriptions) subscription.dispose();
+      await prediction.set(true);
+
+      expect(tree.predictionChanged).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN a registered tree with scopes shown', () => {
