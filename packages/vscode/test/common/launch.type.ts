@@ -1,6 +1,6 @@
 import type { PackageRole, TaskKind } from '@turbo-console/repo-gen';
 
-export type LaunchName = 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12' | 'L13';
+export type LaunchName = 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12' | 'L13' | 'L14';
 
 /**
  * `fixture-l1` is the `target-like` copy L1 opens and L2 reopens, so L2 finds the cache L1 stored. `fixture` is a
@@ -86,12 +86,25 @@ export type TurboRun = {
 };
 
 /**
+ * One dry-run spawn's close: its `performance.now()` time, its `spawnargs`, and whether a signal ended it. `aborted` is
+ * POSIX-only: on Windows an abort runs `taskkill /T /F`, so the close has exit code 1 and no signal. A proof must not rest on it.
+ */
+export type DryRunClose = {
+  readonly at: number;
+  readonly args: string[];
+  readonly aborted: boolean;
+};
+
+/**
  * `count` is the turbo spawns since the last `reset`, `--version` calls left out. `turboMs` is how long this thread sat
  * idle while turbo processes ran inside `window` (see `idleMs`), `--version` calls included; a process still running is
- * left out.
+ * left out. `dryRuns` is the `spawnargs` of each counted spawn that carries `--dry=json` since the last `reset`, and
+ * `dryRunCloses` when each of them closed since then, and whether a signal ended it (an aborted prediction).
  */
 export type SpawnCounter = {
   readonly count: () => number;
+  readonly dryRuns: () => string[][];
+  readonly dryRunCloses: () => DryRunClose[];
   readonly turboMs: (window: TimeRange) => number;
   readonly reset: () => void;
   readonly dispose: () => void;

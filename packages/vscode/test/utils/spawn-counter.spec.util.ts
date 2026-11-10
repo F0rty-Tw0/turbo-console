@@ -3,11 +3,13 @@ import { subscribe, unsubscribe } from 'node:diagnostics_channel';
 import { basename } from 'node:path';
 
 import { idleMs } from './timing.spec.util.ts';
-import type { SpawnCounter, TurboRun } from '../common/launch.type.ts';
+import type { DryRunClose, SpawnCounter, TurboRun } from '../common/launch.type.ts';
 
 const CHANNEL = 'child_process';
 
 const VERSION_ARG = '--version';
+
+const DRY_RUN_ARG = '--dry=json';
 
 const MICROSECONDS_PER_MS = 1000;
 
@@ -24,6 +26,25 @@ const isSpawnMessage = (message: unknown): message is SpawnMessage => {
   return isObject && 'process' in message && message.process instanceof ChildProcess;
 };
 
+const isTurboFile = (turboPath: string | null, file: string): boolean => {
+  if (turboPath === null) return TURBO_FILE_NAMES.has(basename(file));
+
+  return file === turboPath;
+};
+
+/** Keeps the args of a dry-run spawn, and when it closes, with those args and whether a signal ended it. */
+const recordDryRun = (child: ChildProcess, dryRuns: string[][], closes: DryRunClose[]): void => {
+  const args = [...child.spawnargs];
+  const onClose = (_code: number | null, signal: NodeJS.Signals | null): void => {
+    const close: DryRunClose = { at: performance.now(), aborted: signal !== null, args };
+
+    closes.push(close);
+  };
+
+  dryRuns.push(args);
+  child.once('close', onClose);
+};
+
 /**
  * Spec §5.1 V1: counts the turbo spawns of this extension host through the `child_process` diagnostics channel. Only
  * spawns of `turboPath` count (VS Code's own git spawns arrive too), and never a `--version` call (the override's
@@ -37,16 +58,12 @@ const isSpawnMessage = (message: unknown): message is SpawnMessage => {
  */
 export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
   let count = 0;
+  const dryRuns: string[][] = [];
+  const closes: DryRunClose[] = [];
   const runs: TurboRun[] = [];
 
-  const isTurboFile = (file: string): boolean => {
-    if (turboPath === null) return TURBO_FILE_NAMES.has(basename(file));
-
-    return file === turboPath;
-  };
-
   const read = (child: ChildProcess, start: number, startCpu: NodeJS.CpuUsage): void => {
-    const isTurbo = isTurboFile(child.spawnfile);
+    const isTurbo = isTurboFile(turboPath, child.spawnfile);
     const isVersion = child.spawnargs.includes(VERSION_ARG);
     const onClose = (): void => {
       const end = performance.now();
@@ -62,7 +79,15 @@ export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
 
     child.once('close', onClose);
 
-    if (!isVersion) count += 1;
+    if (isVersion) return;
+
+    count += 1;
+
+    const isDryRun = child.spawnargs.includes(DRY_RUN_ARG);
+
+    if (!isDryRun) return;
+
+    recordDryRun(child, dryRuns, closes);
   };
 
   const onMessage = (message: unknown): void => {
@@ -79,8 +104,12 @@ export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
   const counter: SpawnCounter = {
     count: () => count,
     turboMs: (window) => idleMs(runs, window),
+    dryRuns: () => dryRuns.map((args) => [...args]),
+    dryRunCloses: () => [...closes],
     reset: () => {
       count = 0;
+      dryRuns.length = 0;
+      closes.length = 0;
     },
     dispose: () => {
       unsubscribe(CHANNEL, onMessage);

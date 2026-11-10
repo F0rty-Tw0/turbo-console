@@ -30,3 +30,6 @@ export const FOCUS_COMMAND = 'turboConsole.focusPackageInGraph';
 
 /** The command that shows every task of a root in its graph panel. */
 export const ALL_TASKS_COMMAND = 'turboConsole.showAllTaskGraphs';
+
+/** The command that closes the active editor, such as a graph panel or a file the case opened. */
+export const CLOSE_EDITOR_COMMAND = 'workbench.action.closeActiveEditor';
