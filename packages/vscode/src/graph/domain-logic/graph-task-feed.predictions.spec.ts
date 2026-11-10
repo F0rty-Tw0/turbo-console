@@ -6,9 +6,10 @@ import { RunStore } from '../../run/domain-logic/run-store.ts';
 import type { PredictionLookup } from '../../tree/common/prediction.type.ts';
 import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphFeeds, GraphPorts, TaskFeedGate } from '../common/graph.type.ts';
-import type { PredictionFake } from '../test/common/graph.type.ts';
+import type { PredictionFake, ToggleFakes } from '../test/common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import { GRAPH_STATE_STUB, GRAPH_TASKS_STUB } from '../test/stubs/graph-model.stub.ts';
+import { A_BUILD_DEFINITION_STUB, RUN_A_BUILD_STUB } from '../test/stubs/graph-run.stub.ts';
 import { feedsOf, predictionFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { postedRunsMessagesOf } from '../test/utils/graph-session-runs.spec.util.ts';
 import { predictionViewOf } from '../test/utils/prediction-view.spec.util.ts';
@@ -20,11 +21,14 @@ type PredictionFeedFixture = {
   readonly ports: GraphPorts;
   readonly fake: PredictionFake;
   readonly answers: AnswersBox;
+  readonly runs: RunStore;
+  readonly toggles: ToggleFakes;
 };
 
 const HIT_A = predictionViewOf({ a: [['a#build', 'HIT']] });
 const MISS_A = predictionViewOf({ a: [['a#build', 'MISS']] });
 const LISTED_IDS = GRAPH_TASKS_STUB.map((task) => task.id);
+const A_RUNNING: GraphRunsMessage['runs'] = { 'a#build': 'running' };
 
 /** A feed on `/ws` over an open gate listing `GRAPH_TASKS_STUB`, whose prediction view reads `answers.current`. */
 const feedWith = (isShown: boolean, view: PredictionLookup): PredictionFeedFixture => {
@@ -42,15 +46,18 @@ const feedWith = (isShown: boolean, view: PredictionLookup): PredictionFeedFixtu
 
   toggles.prediction.isShown.mockReturnValue(isShown);
 
-  const base = feedsOf(new RunStore(), undefined, toggles);
+  const runs = new RunStore();
+  const base = feedsOf(runs, undefined, toggles);
   const feeds: GraphFeeds = { ...base, prediction: fake.prediction };
   const feed = new GraphTaskFeed({ root: '/ws', ports, gate, feeds });
-  const fixture: PredictionFeedFixture = { feed, ports, fake, answers };
+  const fixture: PredictionFeedFixture = { feed, ports, fake, answers, runs, toggles };
 
   return fixture;
 };
 
 const lastRunsOf = (ports: GraphPorts): GraphRunsMessage | undefined => postedRunsMessagesOf(ports).at(-1);
+
+const hasPredictions = (message: GraphRunsMessage | undefined): boolean => message !== undefined && 'predictions' in message;
 
 describe('FEATURE: cache prediction in the graph feed', () => {
   beforeEach(() => {
@@ -97,6 +104,58 @@ describe('FEATURE: cache prediction in the graph feed', () => {
 
     expect(lastRunsOf(ports)?.predictions).toStrictEqual({ 'a#build': 'notCached' });
     expect(postedRunsMessagesOf(ports)).toHaveLength(2);
+  });
+
+  describe('GIVEN the toggle on and predictions already posted', () => {
+    it('WHEN a run starts and the predictions are unchanged THEN its runs message has no predictions key', () => {
+      const { feed, ports, runs } = feedWith(true, HIT_A);
+
+      feed.start();
+      feed.flush(GRAPH_STATE_STUB);
+      runs.tryStart(RUN_A_BUILD_STUB, 1000);
+      vi.advanceTimersByTime(RUNS_COALESCE_MS);
+
+      const expected: GraphRunsMessage = { type: 'runs', runs: A_RUNNING };
+
+      expect(lastRunsOf(ports)).toStrictEqual(expected);
+    });
+
+    it('WHEN a run starts and a prediction changed THEN its runs message carries the new predictions', () => {
+      const { feed, ports, runs, answers } = feedWith(true, HIT_A);
+
+      feed.start();
+      feed.flush(GRAPH_STATE_STUB);
+      answers.current = MISS_A;
+      runs.tryStart(RUN_A_BUILD_STUB, 1000);
+      vi.advanceTimersByTime(RUNS_COALESCE_MS);
+
+      expect(lastRunsOf(ports)?.predictions).toStrictEqual({ 'a#build': 'notCached' });
+    });
+
+    it('WHEN the toggle turns off THEN the next runs message carries {} and the one after has no key', () => {
+      const { feed, ports, runs, toggles } = feedWith(true, HIT_A);
+
+      feed.start();
+      feed.flush(GRAPH_STATE_STUB);
+      toggles.prediction.isShown.mockReturnValue(false);
+      runs.tryStart(RUN_A_BUILD_STUB, 1000);
+      vi.advanceTimersByTime(RUNS_COALESCE_MS);
+      runs.processEnded(A_BUILD_DEFINITION_STUB, 0, 2000);
+      vi.advanceTimersByTime(RUNS_COALESCE_MS);
+
+      const [, off, after] = postedRunsMessagesOf(ports);
+
+      expect([off?.predictions, hasPredictions(after)]).toStrictEqual([{}, false]);
+    });
+
+    it('WHEN the state is flushed again with unchanged predictions THEN the forced message carries them', () => {
+      const { feed, ports } = feedWith(true, HIT_A);
+
+      feed.flush(GRAPH_STATE_STUB);
+      feed.flush(GRAPH_STATE_STUB);
+
+      expect(lastRunsOf(ports)?.predictions).toStrictEqual({ 'a#build': 'cached' });
+    });
   });
 
   it('WHEN the store reports a change of another root THEN nothing more is posted', () => {

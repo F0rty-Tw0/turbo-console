@@ -30,7 +30,8 @@ type TaskFeedDeps = {
  * the task progress (spec D11) and coalesced so a burst of task events, progress or prediction changes is one post, the cache
  * prediction of its tasks while the prediction toggle is on, the Atomizer counts of its
  * groups (a `GraphAtomFeed`) and the one `showTasks` or `showPackage` request held until the page can take it. A coalesced post that
- * equals the last one sent is skipped. A request is never posted before a `graph` state: `flush` is the one point that posts the
+ * equals the last one sent is skipped, and a post carries `predictions` only when they changed since the last one sent: an absent
+ * key leaves the page's marks as they are. A request is never posted before a `graph` state: `flush` is the one point that posts the
  * full runs message, always, the atoms and the held request, in that order, right after a state is posted.
  */
 export class GraphTaskFeed {
@@ -38,6 +39,7 @@ export class GraphTaskFeed {
   private unsubscribes: (() => void)[] = [];
   private readonly coalescer: Coalescer;
   private lastRuns: string | null = null;
+  private lastPredictions: string | null = null;
   private held: GraphShowRequest | null = null;
   private readonly atomFeed: GraphAtomFeed;
 
@@ -142,20 +144,39 @@ export class GraphTaskFeed {
     this.postRuns(this.deps.gate.runIds(), false);
   }
 
-  /** Skips a message whose JSON equals the last one sent unless `isForced`, as a reloaded page needs the message again. */
+  /**
+   * Skips a message whose runs and owners equal the last ones sent and whose predictions did not change, unless `isForced`, as a
+   * reloaded page needs the message again.
+   */
   private postRuns(ids: string[], isForced: boolean): void {
     const { root, feeds, gate, ports } = this.deps;
     const { runs, progress } = feeds;
     const recordsOf = (recordsRoot: string, taskId: string): ProgressRecord[] => progress.recordsOf(recordsRoot, taskId);
     const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds() };
-    const predictions = this.predictionsNow();
+    const predictions = this.predictionsToPost(isForced);
     const message = runsMessageOf(root, ids, sources, predictions);
-    const text = JSON.stringify(message);
+    const runsText = JSON.stringify([message.runs, message.owners]);
+    const isRepeat = !isForced && predictions === null && runsText === this.lastRuns;
 
-    if (!isForced && text === this.lastRuns) return;
+    if (isRepeat) return;
 
-    this.lastRuns = text;
+    this.lastRuns = runsText;
     ports.post(message);
+  }
+
+  /**
+   * The predictions to post, or `null` so the message has no key and the page keeps its marks: `null` when their JSON equals the
+   * one last posted to this page and the post is not forced. A forced post always carries them and resets that memory.
+   */
+  private predictionsToPost(isForced: boolean): NonNullable<GraphRunsMessage['predictions']> | null {
+    const predictions = this.predictionsNow();
+    const text = JSON.stringify(predictions);
+
+    if (!isForced && text === this.lastPredictions) return null;
+
+    this.lastPredictions = text;
+
+    return predictions;
   }
 
   /** The predictions of the listed tasks, or `{}` while the prediction toggle is off, which clears every mark on the page. */
