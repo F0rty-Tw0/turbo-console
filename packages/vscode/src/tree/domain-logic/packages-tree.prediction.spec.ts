@@ -5,7 +5,7 @@ import { PackagesTree } from './packages-tree.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
-import type { TreePorts } from '../common/tree-node.type.ts';
+import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { SharedPredictionFake } from '../test/common/shared-prediction-fake.type.ts';
 import { sharedPredictionMock } from '../test/mocks/shared-prediction.mock.ts';
 import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
@@ -91,5 +91,17 @@ describe('FEATURE: packages tree cache prediction feed', () => {
     tree.dispose();
 
     expect(shared.dispose).toHaveBeenCalledOnce();
+  });
+
+  it('WHEN the shared view holds a HIT for a task THEN its row says cached', async () => {
+    const settledAt = new Date(2026, 10, 9, 14, 5).getTime();
+
+    vi.mocked(shared.view).mockReturnValue({ settledAt, tasks: new Map([['a#build', 'HIT']]) });
+    await tree.children();
+    await tree.children(TREE_NODE_STUB);
+
+    const taskNode: TreeNode = { kind: 'task', id: 'task:/ws\0a#build', root: '/ws', key: 'a#build', packageName: 'a' };
+
+    expect(tree.rowOf(taskNode).description).toBe('cached');
   });
 });
