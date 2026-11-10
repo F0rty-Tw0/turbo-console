@@ -61,7 +61,11 @@ export type GraphRunsMessage = {
    * absent when none.
    */
   readonly owners?: Readonly<Record<string, string>>;
-  /** Task id to prediction, only for the tasks the store answered; absent while the prediction toggle is off. */
+  /**
+   * Task id to prediction, only for the tasks the store answered. Present: replaces every mark, and `{}` (sent once when the
+   * prediction toggle turns off) clears them all. Absent: the predictions did not change since the last message that carried them,
+   * so the page keeps its marks. A reloaded or new page always gets the key.
+   */
   readonly predictions?: Readonly<Record<string, GraphPrediction>>;
 };
 

@@ -12,9 +12,9 @@ const TICKED = { type: 'setViewToggle', toggle: 'prediction', shown: true } as c
 
 test.describe('FEATURE: graph cache prediction', () => {
   test(
-    'GIVEN task mode over app, lib and ui with the toggle on, cached draws history, unknown draws question, not cached draws the blank, and a runs message without predictions clears all three',
+    'GIVEN task mode over app, lib and ui with the toggle on, cached draws history, unknown draws question, not cached draws the blank, a runs message without predictions keeps them through a new layout, and {} clears all three',
     { annotation: SPEC_7 },
-    async ({ graphPrediction, graphTaskHost, graphGlyphs }): Promise<void> => {
+    async ({ graphPrediction, graphTaskHost, graphGlyphs, graphTask }): Promise<void> => {
       await test.step('WHEN the page is opened with predictionShown true', async () => graphPrediction.open(true));
 
       await test.step('THEN the three tasks start blank', async () => {
@@ -29,7 +29,26 @@ test.describe('FEATURE: graph cache prediction', () => {
         await graphGlyphs.expectFirstChar('ui#build', BLANK);
       });
 
-      await test.step('WHEN the host sends one runs message without predictions', async () => graphTaskHost.sendRuns({}));
+      await test.step('WHEN the host sends a runs message without predictions in which ui#build passed', async () =>
+        graphTaskHost.sendRuns({ 'ui#build': 'passed' }));
+
+      await test.step('THEN ui#build draws the pass glyph and app#build and lib#build keep their predictions', async () => {
+        await graphGlyphs.expectFirstChar('ui#build', GLYPH_CODE_POINTS.pass);
+        await graphGlyphs.expectFirstChar('app#build', HISTORY);
+        await graphGlyphs.expectFirstChar('lib#build', QUESTION);
+      });
+
+      await test.step('WHEN packages mode and then task mode are entered, so the tasks are laid out again', async () => {
+        await graphTask.leave();
+        await graphTask.enter();
+      });
+
+      await test.step('THEN app#build and lib#build are marked from the kept predictions', async () => {
+        await graphGlyphs.expectFirstChar('app#build', HISTORY);
+        await graphGlyphs.expectFirstChar('lib#build', QUESTION);
+      });
+
+      await test.step('WHEN the host sends runs with no run and predictions {}', async () => graphTaskHost.sendRuns({}, {}));
 
       await test.step('THEN all three are blank again', async () => {
         for (const id of TASK_IDS) await graphGlyphs.expectFirstChar(id, BLANK);

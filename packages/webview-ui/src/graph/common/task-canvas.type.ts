@@ -55,9 +55,10 @@ export type TaskCanvas = {
   readonly runStates: (runs: TaskRuns) => void;
   /**
    * Replaces every task's `predict-<word>` class with the one the record names; kept, so a task graph drawn again carries it.
-   * The record it already holds is skipped, and box frames are refit only when a class changed.
+   * The record it already holds is skipped, and so is `null` (a runs message without `predictions`: they did not change), so
+   * the marks stay. Box frames are refit only when a class changed.
    */
-  readonly predictions: (next: TaskPredictions) => void;
+  readonly predictions: (next: TaskPredictions | null) => void;
   /** Sets the label of each umbrella in `labels` to its name and counts line; a task not drawn is skipped, no node moves. */
   readonly setCounts: (labels: ReadonlyMap<string, string>) => void;
   /** Marks the tasks and the Atomizer file nodes again with the kept runs map and paints the kept target again; an expand adds nodes the last mark and paint never saw. */

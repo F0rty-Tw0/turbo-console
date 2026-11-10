@@ -164,7 +164,7 @@ export const NO_COMMAND_TEXT = 'No command';
 /** The `owners` of a `runs` message that has none: every task runs on its own. */
 export const NO_OWNERS: TaskOwners = {};
 
-/** The predictions of a `runs` message that has none or an untrusted record; one shared object, so the canvas skips a repeat. */
+/** No predictions: the canvas before any record, or an untrusted record; one shared object, so the canvas skips a repeat. */
 export const NO_PREDICTIONS: TaskPredictions = {};
 
 /** The wanted classes of an element that should carry none of a class set. */
