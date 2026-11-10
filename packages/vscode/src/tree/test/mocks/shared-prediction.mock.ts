@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 import type { PredictionListener, SharedPrediction } from '../../common/prediction.type.ts';
-import type { SharedPredictionFake } from '../common/shared-prediction-fake.type.ts';
+import type { SharedPredictionFake } from '../common/prediction-load.type.ts';
 
 /** The one `SharedPrediction` fake: every member a spy, and `emit(root)` calls the listeners `onDidChange` collected. */
 export const sharedPredictionMock = (): SharedPredictionFake => {

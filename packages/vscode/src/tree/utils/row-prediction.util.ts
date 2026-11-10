@@ -2,8 +2,7 @@ import type { TaskNode } from '@turbo-console/core';
 
 import { predictionLineOf, predictionWordOf } from './prediction-text.util.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
-import type { PredictionView } from '../common/prediction.type.ts';
-import type { RowPrediction } from '../common/row-prediction.type.ts';
+import type { PredictionView, RowPrediction } from '../common/prediction.type.ts';
 
 /**
  * A turbo task that is not continuous and not running shows its predicted cache word; an ended run keeps its icon and

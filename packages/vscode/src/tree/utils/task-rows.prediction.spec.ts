@@ -4,14 +4,14 @@ import { describe, expect, it } from 'vitest';
 import { taskRowOf } from './task-rows.util.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
+import { PASSED_ICON } from '../common/icon.const.ts';
 import type { PredictionCache, PredictionView } from '../common/prediction.type.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
-import type { IconSpec, TreeRow } from '../common/tree-row.type.ts';
+import type { TreeRow } from '../common/tree-row.type.ts';
 import { PACKAGE_NODE_STUB, ROW_SCOPE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { rowContextOf } from '../test/utils/row-context.spec.util.ts';
 
 const SETTLED = new Date(2026, 10, 9, 14, 5).getTime();
-const PASSED_ICON: IconSpec = { id: 'pass', color: 'testing.iconPassed' };
 const HIT_MATCH: RunMatch = { cache: 'HIT', durationMs: 3200, interrupted: false };
 const TASK: TaskNode = { ...TASK_NODE_STUB, id: 'a#build', command: null };
 
@@ -48,22 +48,35 @@ const hasPrediction = (row: TreeRow): boolean => row.tooltip.some(isPrediction);
 
 describe('FEATURE: task row cache prediction', () => {
   describe('GIVEN an idle task', () => {
-    it('WHEN the view says HIT THEN the row says cached, with the line last and the idle icon kept', () => {
+    it('WHEN the view says HIT THEN the row says cached', () => {
+      const row = rowOf(TASK, undefined, viewOf('HIT'));
+
+      expect(row.description).toBe('cached');
+    });
+
+    it('WHEN the view says HIT THEN the prediction line is the last tooltip line', () => {
+      const row = rowOf(TASK, undefined, viewOf('HIT'));
+
+      expect(row.tooltip.at(-1)).toBe('Prediction: cached, will replay (as of 14:05)');
+    });
+
+    it('WHEN the view says HIT THEN the idle icon and context stay', () => {
       const row = rowOf(TASK, undefined, viewOf('HIT'));
       const plain = rowOf(TASK, undefined, null);
 
-      expect(row.description).toBe('cached');
-      expect(row.tooltip.at(-1)).toBe('Prediction: cached, will replay (as of 14:05)');
-      expect(row.icon).toStrictEqual(plain.icon);
-      expect(row.contextValue).toBe('turboTask');
+      expect([row.icon, row.contextValue]).toStrictEqual([plain.icon, 'turboTask']);
     });
 
     it('WHEN the view says MISS THEN the row says not cached', () => {
-      expect(rowOf(TASK, undefined, viewOf('MISS')).description).toBe('not cached');
+      const row = rowOf(TASK, undefined, viewOf('MISS'));
+
+      expect(row.description).toBe('not cached');
     });
 
     it('WHEN the view says deferred THEN the row says unknown', () => {
-      expect(rowOf(TASK, undefined, viewOf('deferred')).description).toBe('unknown');
+      const row = rowOf(TASK, undefined, viewOf('deferred'));
+
+      expect(row.description).toBe('unknown');
     });
 
     it('WHEN there is no view THEN the description is empty and no tooltip line is a prediction', () => {
@@ -109,6 +122,7 @@ describe('FEATURE: task row cache prediction', () => {
       expect(tooltip.some(isStarted)).toBe(true);
       expect(tooltip.some(isEnded)).toBe(true);
       expect(tooltip.at(-1)).toBe('Prediction: not cached, will run (as of 14:05)');
+      expect(tooltip).toContain('Kind: task');
       expect(tooltip.indexOf('Kind: task')).toBeLessThan(tooltip.length - 1);
     });
   });

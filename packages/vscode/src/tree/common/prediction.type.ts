@@ -20,6 +20,12 @@ export type PredictionView = {
 /** The prediction of a package of `root`, or `null` when it has none. */
 export type PredictionLookup = (root: string, packageName: string) => PredictionView | null;
 
+/** What a task row shows in place of its description, and the tooltip line that goes with it. */
+export type RowPrediction = {
+  readonly description: string;
+  readonly line: string;
+};
+
 /** What `PredictionLoadPorts.after` returns; only `cancel` reads it. */
 export type PredictionTimer = { readonly id: unknown };
 

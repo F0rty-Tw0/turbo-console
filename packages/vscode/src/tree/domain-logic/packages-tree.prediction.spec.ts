@@ -6,7 +6,7 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
-import type { SharedPredictionFake } from '../test/common/shared-prediction-fake.type.ts';
+import type { SharedPredictionFake } from '../test/common/prediction-load.type.ts';
 import { sharedPredictionMock } from '../test/mocks/shared-prediction.mock.ts';
 import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
@@ -43,65 +43,67 @@ describe('FEATURE: packages tree cache prediction feed', () => {
     });
   });
 
-  it('WHEN the top children load THEN packageShown is not called', async () => {
-    await tree.children();
+  describe('GIVEN a loaded /ws root with package a', () => {
+    it('WHEN the top children load THEN packageShown is not called', async () => {
+      await tree.children();
 
-    expect(shared.packageShown).not.toHaveBeenCalled();
-  });
+      expect(shared.packageShown).not.toHaveBeenCalled();
+    });
 
-  it('WHEN a package node is opened THEN packageShown gets its root and package name once', async () => {
-    await tree.children();
-    await tree.children(TREE_NODE_STUB);
+    it('WHEN a package node is opened THEN packageShown gets its root and package name once', async () => {
+      await tree.children();
+      await tree.children(TREE_NODE_STUB);
 
-    expect(shared.packageShown).toHaveBeenCalledExactlyOnceWith('/ws', 'a');
-  });
+      expect(shared.packageShown).toHaveBeenCalledExactlyOnceWith('/ws', 'a');
+    });
 
-  it('WHEN predictionChanged runs THEN the whole tree redraws once', () => {
-    tree.predictionChanged();
+    it('WHEN predictionChanged runs THEN the whole tree redraws once', () => {
+      tree.predictionChanged();
 
-    expect(fire).toHaveBeenCalledExactlyOnceWith(undefined);
-  });
+      expect(fire).toHaveBeenCalledExactlyOnceWith(undefined);
+    });
 
-  it('WHEN a run settles THEN runEnded gets its root', () => {
-    tree.runChanged({ ...RUN_ENTRY_STUB, state: 'passed', matching: false });
+    it('WHEN a run settles THEN runEnded gets its root', () => {
+      tree.runChanged({ ...RUN_ENTRY_STUB, state: 'passed', matching: false });
 
-    expect(shared.runEnded).toHaveBeenCalledExactlyOnceWith('/ws');
-  });
+      expect(shared.runEnded).toHaveBeenCalledExactlyOnceWith('/ws');
+    });
 
-  it('WHEN the model of a root changes THEN modelChanged gets that change once', () => {
-    store.apply('/ws', loadedWith([packageNamed('a'), packageNamed('b')]));
+    it('WHEN the model of a root changes THEN modelChanged gets that change once', () => {
+      store.apply('/ws', loadedWith([packageNamed('a'), packageNamed('b')]));
 
-    expect(shared.modelChanged).toHaveBeenCalledOnce();
-    expect(vi.mocked(shared.modelChanged).mock.calls[0]?.[0].root).toBe('/ws');
-  });
+      expect(shared.modelChanged).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ root: '/ws' }));
+    });
 
-  it('WHEN refreshAtoms runs THEN the shared prediction refreshes all once', () => {
-    tree.refreshAtoms();
+    it('WHEN refreshAtoms runs THEN the shared prediction refreshes all once', () => {
+      tree.refreshAtoms();
 
-    expect(shared.refreshAll).toHaveBeenCalledOnce();
-  });
+      expect(shared.refreshAll).toHaveBeenCalledOnce();
+    });
 
-  it('WHEN rootsChanged runs THEN rootsKept gets the set of the store roots', () => {
-    tree.rootsChanged();
+    it('WHEN rootsChanged runs THEN rootsKept gets the set of the store roots', () => {
+      tree.rootsChanged();
 
-    expect(shared.rootsKept).toHaveBeenCalledExactlyOnceWith(new Set(['/ws']));
-  });
+      expect(shared.rootsKept).toHaveBeenCalledExactlyOnceWith(new Set(['/ws']));
+    });
 
-  it('WHEN dispose runs THEN the shared prediction is disposed once', () => {
-    tree.dispose();
+    it('WHEN dispose runs THEN the shared prediction is disposed once', () => {
+      tree.dispose();
 
-    expect(shared.dispose).toHaveBeenCalledOnce();
-  });
+      expect(shared.dispose).toHaveBeenCalledOnce();
+    });
 
-  it('WHEN the shared view holds a HIT for a task THEN its row says cached', async () => {
-    const settledAt = new Date(2026, 10, 9, 14, 5).getTime();
+    it('WHEN the shared view holds a HIT for a task THEN its row says cached', async () => {
+      const settledAt = new Date(2026, 10, 9, 14, 5).getTime();
+      const taskNode: TreeNode = { kind: 'task', id: 'task:/ws\0a#build', root: '/ws', key: 'a#build', packageName: 'a' };
 
-    vi.mocked(shared.view).mockReturnValue({ settledAt, tasks: new Map([['a#build', 'HIT']]) });
-    await tree.children();
-    await tree.children(TREE_NODE_STUB);
+      vi.mocked(shared.view).mockReturnValue({ settledAt, tasks: new Map([['a#build', 'HIT']]) });
+      await tree.children();
+      await tree.children(TREE_NODE_STUB);
 
-    const taskNode: TreeNode = { kind: 'task', id: 'task:/ws\0a#build', root: '/ws', key: 'a#build', packageName: 'a' };
+      const row = tree.rowOf(taskNode);
 
-    expect(tree.rowOf(taskNode).description).toBe('cached');
+      expect(row.description).toBe('cached');
+    });
   });
 });

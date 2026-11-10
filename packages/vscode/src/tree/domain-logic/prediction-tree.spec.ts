@@ -8,7 +8,7 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
-import type { SharedPredictionFake } from '../test/common/shared-prediction-fake.type.ts';
+import type { SharedPredictionFake } from '../test/common/prediction-load.type.ts';
 import { sharedPredictionMock } from '../test/mocks/shared-prediction.mock.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { TASK_TREE_NODE_STUB, TREE_NODE_STUB, UMBRELLA_TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
@@ -84,35 +84,39 @@ describe('FEATURE: prediction tree', () => {
     });
   });
 
-  it('WHEN a RootChange arrives THEN modelChanged gets that same object', () => {
-    const model = loadedWith([packageNamed('a')]).model;
-    const change: RootChange = { root: '/ws', before: model, after: model, errorBefore: null, errorAfter: null };
+  describe('GIVEN a tree over a store with root /ws', () => {
+    it('WHEN a RootChange arrives THEN modelChanged gets that same object', () => {
+      const model = loadedWith([packageNamed('a')]).model;
+      const change: RootChange = { root: '/ws', before: model, after: model, errorBefore: null, errorAfter: null };
 
-    tree.modelChanged(change);
+      tree.modelChanged(change);
 
-    expect(shared.modelChanged).toHaveBeenCalledExactlyOnceWith(change);
-  });
+      expect(shared.modelChanged).toHaveBeenCalledExactlyOnceWith(change);
+    });
 
-  it('WHEN rootsChanged runs THEN rootsKept gets the set of the store roots', () => {
-    tree.rootsChanged();
+    it('WHEN rootsChanged runs THEN rootsKept gets the set of the store roots', () => {
+      tree.rootsChanged();
 
-    expect(shared.rootsKept).toHaveBeenCalledExactlyOnceWith(new Set(['/ws']));
-  });
+      expect(shared.rootsKept).toHaveBeenCalledExactlyOnceWith(new Set(['/ws']));
+    });
 
-  it('WHEN refreshAll runs THEN it is forwarded once', () => {
-    tree.refreshAll();
+    it('WHEN refreshAll runs THEN it is forwarded once', () => {
+      tree.refreshAll();
 
-    expect(shared.refreshAll).toHaveBeenCalledOnce();
-  });
+      expect(shared.refreshAll).toHaveBeenCalledOnce();
+    });
 
-  it('WHEN dispose runs THEN it is forwarded once', () => {
-    tree.dispose();
+    it('WHEN dispose runs THEN it is forwarded once', () => {
+      tree.dispose();
 
-    expect(shared.dispose).toHaveBeenCalledOnce();
-  });
+      expect(shared.dispose).toHaveBeenCalledOnce();
+    });
 
-  it('THEN view is the shared view', () => {
-    expect(tree.view).toBe(shared.view);
+    it('WHEN view is read THEN it is the shared view', () => {
+      const { view } = tree;
+
+      expect(view).toBe(shared.view);
+    });
   });
 
   describe('GIVEN cached nodes: pkg a of /ws, pkg b of /ws, pkg c of /other, a task node of /ws', () => {
