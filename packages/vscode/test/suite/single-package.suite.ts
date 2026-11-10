@@ -1,6 +1,7 @@
 import { detailsCase, lensCase } from '../utils/single-package-details.spec.util.ts';
 import { flagCase } from '../utils/single-package-flag.spec.util.ts';
 import { runFromGraphCase, taskGraphCase } from '../utils/single-package-graph.spec.util.ts';
+import { predictionCase } from '../utils/single-package-prediction.spec.util.ts';
 import { runCase } from '../utils/single-package-run.spec.util.ts';
 import { rowAndTasksCase, scriptsCase, themeIconCase } from '../utils/single-package-tree.spec.util.ts';
 import { markDone, revealTree, rootAt, step, turboApi } from '../utils/suite-env.spec.util.ts';
@@ -8,7 +9,8 @@ import { readSuiteEnv } from '../utils/suite-input.spec.util.ts';
 
 /**
  * L11: spec §2 on `single-app`, a single-package repo (root `turbo.json`, no workspaces). The cases run in order and
- * share the window: the run (case 2) ends quiet before the panel and the lens read the root.
+ * share the window: the run (case 2) ends quiet before the panel and the lens read the root; the prediction case turns
+ * the toggle on and off again before the graph panel opens.
  */
 export const run = async (): Promise<void> => {
   const env = readSuiteEnv();
@@ -21,6 +23,7 @@ export const run = async (): Promise<void> => {
   await runCase(api, root);
   await detailsCase(api, root);
   await lensCase(root);
+  await predictionCase(api, env.turboPath);
   await taskGraphCase(api, root);
   await runFromGraphCase(api, root);
   await flagCase(api, root, env.budgetFactor);
