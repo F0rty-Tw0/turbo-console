@@ -1,9 +1,8 @@
 import { PREDICTION_WORDS, TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
 import type { GraphPrediction } from '../../bridge/common/graph-message.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
+import { NO_PREDICTIONS } from '../common/graph-task.const.ts';
 import type { TaskPredictions } from '../common/task-canvas.type.ts';
-
-const NO_PREDICTIONS: TaskPredictions = {};
 
 const isPredictionEntry = (entry: [string, unknown]): entry is [string, GraphPrediction] => {
   const [, word] = entry;
