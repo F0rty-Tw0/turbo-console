@@ -1,5 +1,6 @@
 import type { DryRunRequest } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 import { editorPredictionPorts } from './prediction-ports.ts';
 import type { RootEntry, RootState, Roots } from '../../roots/common/coordinator.type.ts';
@@ -65,17 +66,25 @@ describe('FEATURE: editor cache prediction ports', () => {
       expect(ports.now()).toBe(5_000);
     });
 
-    it('WHEN a run is scheduled THEN it runs once after the delay', () => {
-      const run = vi.fn();
+    describe('GIVEN a run scheduled after 300 ms', () => {
+      let run: Mock<() => void>;
 
-      ports.after(run, 300);
-      vi.advanceTimersByTime(299);
+      beforeEach(() => {
+        run = vi.fn<() => void>();
+        ports.after(run, 300);
+      });
 
-      expect(run).not.toHaveBeenCalled();
+      it('WHEN 299 ms pass THEN it has not run', () => {
+        vi.advanceTimersByTime(299);
 
-      vi.advanceTimersByTime(1);
+        expect(run).not.toHaveBeenCalled();
+      });
 
-      expect(run).toHaveBeenCalledOnce();
+      it('WHEN 300 ms pass THEN it runs once', () => {
+        vi.advanceTimersByTime(300);
+
+        expect(run).toHaveBeenCalledOnce();
+      });
     });
 
     it('WHEN the timer is cancelled THEN the run never happens', () => {

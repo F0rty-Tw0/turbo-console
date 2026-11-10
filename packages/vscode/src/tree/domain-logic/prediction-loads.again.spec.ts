@@ -91,13 +91,17 @@ describe('FEATURE: prediction loads asked again', () => {
     });
   });
 
-  describe('GIVEN a failed package', () => {
-    it('WHEN a run ends THEN a new timer starts and a new spawn follows', async () => {
+  describe('GIVEN a failed package and a run that ended', () => {
+    beforeEach(async () => {
       await toState(h, store, 'failed');
       store.runEnded(ROOT);
+    });
 
+    it('WHEN nothing else happens THEN a new timer starts', () => {
       expect(h.pendingTimers()).toHaveLength(1);
+    });
 
+    it('WHEN the window passes THEN a new spawn follows', () => {
       h.fire();
 
       expect(h.dryRun).toHaveBeenCalledTimes(2);
@@ -130,10 +134,10 @@ describe('FEATURE: prediction loads asked again', () => {
     });
   });
 
-  describe('GIVEN ten loaded packages', () => {
-    it('WHEN everything refreshes THEN one timer and one spawn ask for all ten', async () => {
-      const names = packageNamesOf(10);
+  describe('GIVEN ten loaded packages and a refresh of everything', () => {
+    const names = packageNamesOf(10);
 
+    beforeEach(async () => {
       h.model(ROOT, buildModelOf(names));
       store.toggled(true);
       names.forEach((name) => store.packageShown(ROOT, name));
@@ -141,9 +145,13 @@ describe('FEATURE: prediction loads asked again', () => {
       dryRunAt(h, 0).resolve([]);
       await flush();
       store.refreshAll();
+    });
 
+    it('WHEN nothing else happens THEN one timer starts', () => {
       expect(h.pendingTimers()).toHaveLength(1);
+    });
 
+    it('WHEN the window passes THEN one spawn asks for all ten', () => {
       h.fire();
 
       expect(h.dryRun).toHaveBeenCalledTimes(2);

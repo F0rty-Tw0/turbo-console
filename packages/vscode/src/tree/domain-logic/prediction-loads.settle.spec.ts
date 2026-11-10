@@ -81,31 +81,43 @@ describe('FEATURE: prediction loads settling', () => {
       expect(h.changed).not.toHaveBeenCalled();
     });
 
-    it('WHEN the run is superseded and the old one rejects with "aborted" THEN nothing is logged, nothing fails, the entry still queues', async () => {
-      store.runEnded(ROOT);
-      dryRunAt(h, 0).reject(new Error('aborted'));
-      await flush();
+    describe('GIVEN the run is superseded and the old one rejects with "aborted"', () => {
+      beforeEach(async () => {
+        store.runEnded(ROOT);
+        dryRunAt(h, 0).reject(new Error('aborted'));
+        await flush();
+      });
 
-      expect(h.log).not.toHaveBeenCalled();
-      expect(h.changed).not.toHaveBeenCalled();
+      it('WHEN it settles THEN nothing is logged and nothing fails', () => {
+        expect(h.log).not.toHaveBeenCalled();
+        expect(h.changed).not.toHaveBeenCalled();
+      });
 
-      h.fire();
+      it('WHEN the window ends THEN the entry still asks again', () => {
+        h.fire();
 
-      expect(h.dryRun).toHaveBeenCalledTimes(2);
+        expect(h.dryRun).toHaveBeenCalledTimes(2);
+      });
     });
 
-    it('WHEN a second run replaced it THEN only the live run stores', async () => {
-      store.runEnded(ROOT);
-      h.fire();
-      dryRunAt(h, 0).resolve([dryStateOf(ID_A, 'HIT')]);
-      await flush();
+    describe('GIVEN a second run replaced it and the old one resolved', () => {
+      beforeEach(async () => {
+        store.runEnded(ROOT);
+        h.fire();
+        dryRunAt(h, 0).resolve([dryStateOf(ID_A, 'HIT')]);
+        await flush();
+      });
 
-      expect(store.view(ROOT, PKG_A)).toBeNull();
+      it('WHEN the old one settles THEN it stores nothing', () => {
+        expect(store.view(ROOT, PKG_A)).toBeNull();
+      });
 
-      dryRunAt(h, 1).resolve([dryStateOf(ID_A, 'MISS')]);
-      await flush();
+      it('WHEN the live run settles THEN it stores', async () => {
+        dryRunAt(h, 1).resolve([dryStateOf(ID_A, 'MISS')]);
+        await flush();
 
-      expect(store.view(ROOT, PKG_A)?.tasks.get(ID_A)).toBe('MISS');
+        expect(store.view(ROOT, PKG_A)?.tasks.get(ID_A)).toBe('MISS');
+      });
     });
   });
 

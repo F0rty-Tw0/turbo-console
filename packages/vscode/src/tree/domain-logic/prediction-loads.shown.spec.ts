@@ -119,17 +119,23 @@ describe('FEATURE: prediction loads when a package is shown', () => {
       expect(store.view(ROOT, PKG_A)).toBeNull();
     });
 
-    it('WHEN the binary arrives with a republished model of the same object THEN the package queues and then spawns', () => {
-      const same = buildModelOf([PKG_A]);
+    describe('GIVEN the binary arrives with a republished model of the same object', () => {
+      beforeEach(() => {
+        const same = buildModelOf([PKG_A]);
 
-      h.binary();
-      store.modelChanged(changeOf(same, same));
+        h.binary();
+        store.modelChanged(changeOf(same, same));
+      });
 
-      expect(h.pendingTimers()).toHaveLength(1);
+      it('WHEN the model is taken THEN the package queues', () => {
+        expect(h.pendingTimers()).toHaveLength(1);
+      });
 
-      h.fire();
+      it('WHEN the window ends THEN it spawns', () => {
+        h.fire();
 
-      expect(h.dryRun).toHaveBeenCalledOnce();
+        expect(h.dryRun).toHaveBeenCalledOnce();
+      });
     });
 
     it('WHEN a model without the package arrives THEN it is forgotten, also by the next reload', () => {

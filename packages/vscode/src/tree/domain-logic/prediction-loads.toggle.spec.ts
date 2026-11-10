@@ -76,15 +76,21 @@ describe('FEATURE: prediction loads toggle', () => {
     });
   });
 
-  describe('GIVEN the toggle is on and nothing is shown', () => {
-    it('WHEN it goes off THEN nothing happens and a later packageShown queues nothing until it goes on', () => {
+  describe('GIVEN the toggle went on and off with nothing shown', () => {
+    beforeEach(() => {
       h.model(ROOT, buildModelOf([PKG_A]));
       store.toggled(true);
       store.toggled(false);
+    });
+
+    it('WHEN a package is shown THEN nothing queues', () => {
       store.packageShown(ROOT, PKG_A);
 
       expect(h.timers).toStrictEqual([]);
+    });
 
+    it('WHEN the toggle goes on again and a package is shown THEN it queues', () => {
+      store.packageShown(ROOT, PKG_A);
       store.toggled(true);
       store.packageShown(ROOT, PKG_A);
 
@@ -143,23 +149,27 @@ describe('FEATURE: prediction loads toggle', () => {
       expect(h.changed).not.toHaveBeenCalled();
     });
 
-    it('WHEN the toggle goes off and on within the window THEN the old result never stores, the old run is aborted, exactly one new spawn', async () => {
-      const old = dryRunAt(h, 0);
+    describe('GIVEN the toggle went off and on within the window and the old run resolved', () => {
+      beforeEach(async () => {
+        store.toggled(false);
+        store.toggled(true);
+        store.packageShown(ROOT, PKG_A);
+        dryRunAt(h, 0).resolve([dryStateOf('@fx/a#build', 'HIT')]);
+        await flush();
+      });
 
-      store.toggled(false);
-      store.toggled(true);
-      store.packageShown(ROOT, PKG_A);
-      old.resolve([dryStateOf('@fx/a#build', 'HIT')]);
-      await flush();
+      it('WHEN the old run settles THEN it was aborted and nothing is stored or announced', () => {
+        expect(dryRunAt(h, 0).signal.aborted).toBe(true);
+        expect(store.view(ROOT, PKG_A)).toBeNull();
+        expect(h.changed).not.toHaveBeenCalled();
+      });
 
-      expect(old.signal.aborted).toBe(true);
-      expect(store.view(ROOT, PKG_A)).toBeNull();
-      expect(h.changed).not.toHaveBeenCalled();
+      it('WHEN the window ends THEN exactly one new spawn runs', () => {
+        h.fire();
 
-      h.fire();
-
-      expect(h.dryRun).toHaveBeenCalledTimes(2);
-      expect(dryRunAt(h, 1).signal.aborted).toBe(false);
+        expect(h.dryRun).toHaveBeenCalledTimes(2);
+        expect(dryRunAt(h, 1).signal.aborted).toBe(false);
+      });
     });
   });
 

@@ -43,14 +43,18 @@ describe('FEATURE: prediction loads when the model changes', () => {
     });
   });
 
-  describe.each(RESTARTABLE)('GIVEN a %s package', (state) => {
-    it('WHEN a new model still holds it THEN it queues again and the old run is aborted', async () => {
+  describe.each(RESTARTABLE)('GIVEN a %s package and a new model that still holds it', (state) => {
+    beforeEach(async () => {
       await toState(h, store, state);
       store.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_A, PKG_B])));
+    });
 
+    it('WHEN the model arrives THEN it queues again and the old run is aborted', () => {
       expect(h.pendingTimers()).toHaveLength(1);
       expect(h.dryRuns.some((run) => run.signal.aborted)).toBe(state === 'loading');
+    });
 
+    it('WHEN the window ends THEN a new spawn starts', () => {
       h.fire();
 
       expect(h.dryRun).toHaveBeenCalledTimes(2);
@@ -165,18 +169,24 @@ describe('FEATURE: prediction loads when the model changes', () => {
       expect(h.pendingTimers()).toHaveLength(1);
     });
 
-    it('WHEN the old run then resolves THEN nothing is stored and the next spawn asks only for the other', async () => {
-      dryRunAt(h, 0).resolve([dryStateOf(ID_A, 'HIT')]);
-      await flush();
+    describe('GIVEN the old run then resolves', () => {
+      beforeEach(async () => {
+        dryRunAt(h, 0).resolve([dryStateOf(ID_A, 'HIT')]);
+        await flush();
+      });
 
-      expect(store.view(ROOT, PKG_A)).toBeNull();
-      expect(h.changed).not.toHaveBeenCalled();
+      it('WHEN it settles THEN nothing is stored or announced', () => {
+        expect(store.view(ROOT, PKG_A)).toBeNull();
+        expect(h.changed).not.toHaveBeenCalled();
+      });
 
-      h.model(ROOT, buildModelOf([PKG_B]));
-      h.fire();
+      it('WHEN the window ends THEN the next spawn asks only for the other', () => {
+        h.model(ROOT, buildModelOf([PKG_B]));
+        h.fire();
 
-      expect(h.dryRun).toHaveBeenCalledTimes(2);
-      expect(dryRunAt(h, 1).request.packages).toStrictEqual([PKG_B]);
+        expect(h.dryRun).toHaveBeenCalledTimes(2);
+        expect(dryRunAt(h, 1).request.packages).toStrictEqual([PKG_B]);
+      });
     });
   });
 });

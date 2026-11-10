@@ -113,16 +113,23 @@ describe('FEATURE: prediction batches', () => {
       clock.fire();
     });
 
-    it('WHEN the window of a second ticket ends THEN it waits until the live one is finished', () => {
-      const waiting = batches.join(ROOT, PKG_B);
+    describe('GIVEN the window of a second ticket ended', () => {
+      let waiting: PredictionTicket;
 
-      clock.fire();
+      beforeEach(() => {
+        waiting = batches.join(ROOT, PKG_B);
+        clock.fire();
+      });
 
-      expect(sent).toStrictEqual([live]);
+      it('WHEN the live one is not finished THEN the second waits', () => {
+        expect(sent).toStrictEqual([live]);
+      });
 
-      batches.finished(live);
+      it('WHEN the live one finishes THEN the second is sent', () => {
+        batches.finished(live);
 
-      expect(sent).toStrictEqual([live, waiting]);
+        expect(sent).toStrictEqual([live, waiting]);
+      });
     });
 
     it('WHEN it finishes with no waiting ticket THEN nothing is sent and it is no longer live', () => {
@@ -132,16 +139,23 @@ describe('FEATURE: prediction batches', () => {
       expect(batches.isLive(live)).toBe(false);
     });
 
-    it('WHEN it finishes and a second ticket is still inside its window THEN that window sends it later', () => {
-      const waiting = batches.join(ROOT, PKG_B);
+    describe('GIVEN a second ticket still inside its window when the live one finishes', () => {
+      let waiting: PredictionTicket;
 
-      batches.finished(live);
+      beforeEach(() => {
+        waiting = batches.join(ROOT, PKG_B);
+        batches.finished(live);
+      });
 
-      expect(sent).toStrictEqual([live]);
+      it('WHEN the window is not over THEN nothing more is sent', () => {
+        expect(sent).toStrictEqual([live]);
+      });
 
-      clock.fire();
+      it('WHEN the window ends THEN that window sends it', () => {
+        clock.fire();
 
-      expect(sent).toStrictEqual([live, waiting]);
+        expect(sent).toStrictEqual([live, waiting]);
+      });
     });
 
     it('WHEN it finishes twice THEN the next ticket is sent once', () => {

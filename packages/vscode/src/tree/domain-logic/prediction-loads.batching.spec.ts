@@ -24,7 +24,7 @@ describe('FEATURE: prediction loads batching', () => {
   });
 
   describe('GIVEN three packages shown inside the window', () => {
-    it('WHEN the window ends THEN one timer and one dry run carry the three and the union of their tasks', () => {
+    beforeEach(() => {
       const packages = {
         [PKG_A]: [turboTaskOf(PKG_A, 'build'), turboTaskOf(PKG_A, 'lint')],
         [PKG_B]: [turboTaskOf(PKG_B, 'build')],
@@ -36,9 +36,13 @@ describe('FEATURE: prediction loads batching', () => {
       store.packageShown(ROOT, PKG_A);
       store.packageShown(ROOT, PKG_B);
       store.packageShown(ROOT, PKG_C);
+    });
 
+    it('WHEN the window is open THEN one timer runs', () => {
       expect(h.timers).toHaveLength(1);
+    });
 
+    it('WHEN the window ends THEN one dry run carries the three and the union of their tasks', () => {
       h.fire();
 
       expect(h.dryRun).toHaveBeenCalledOnce();
@@ -48,7 +52,9 @@ describe('FEATURE: prediction loads batching', () => {
         singlePackage: false
       });
     });
+  });
 
+  describe('GIVEN one package shown inside the window', () => {
     it('WHEN a second package is shown THEN the window does not restart', () => {
       showAll([PKG_A]);
       store.packageShown(ROOT, PKG_B);
@@ -63,17 +69,23 @@ describe('FEATURE: prediction loads batching', () => {
       h.model(ROOT, buildModelOf([PKG_A, PKG_B, PKG_C]));
     });
 
-    it('WHEN the window of a second package ends THEN no second run starts until the first settles', async () => {
-      store.packageShown(ROOT, PKG_B);
-      h.fire();
+    describe('GIVEN the window of a second package ended', () => {
+      beforeEach(() => {
+        store.packageShown(ROOT, PKG_B);
+        h.fire();
+      });
 
-      expect(h.dryRun).toHaveBeenCalledOnce();
+      it('WHEN the first run has not settled THEN no second run starts', () => {
+        expect(h.dryRun).toHaveBeenCalledOnce();
+      });
 
-      dryRunAt(h, 0).resolve([]);
-      await flush();
+      it('WHEN the first run settles THEN a second run asks for the second package', async () => {
+        dryRunAt(h, 0).resolve([]);
+        await flush();
 
-      expect(h.dryRun).toHaveBeenCalledTimes(2);
-      expect(dryRunAt(h, 1).request.packages).toStrictEqual([PKG_B]);
+        expect(h.dryRun).toHaveBeenCalledTimes(2);
+        expect(dryRunAt(h, 1).request.packages).toStrictEqual([PKG_B]);
+      });
     });
 
     it('WHEN more packages keep joining the waiting batch THEN the next run carries them all', async () => {
@@ -135,10 +147,12 @@ describe('FEATURE: prediction loads batching', () => {
       h.fire();
     });
 
-    it('WHEN the window ends THEN a run of 50 starts, the 51st waits, and its run starts only after the first settles', async () => {
+    it('WHEN the window ends THEN a run of 50 starts and the 51st waits', () => {
       expect(h.dryRun).toHaveBeenCalledOnce();
       expect(dryRunAt(h, 0).request.packages).toHaveLength(50);
+    });
 
+    it('WHEN the first run settles THEN the run of the 51st starts', async () => {
       dryRunAt(h, 0).resolve([]);
       await flush();
 
@@ -146,16 +160,22 @@ describe('FEATURE: prediction loads batching', () => {
       expect(dryRunAt(h, 1).request.packages).toStrictEqual([names[50]]);
     });
 
-    it('WHEN a 52nd is shown after the first run started THEN it opens no window and joins the second run', async () => {
-      h.model(ROOT, buildModelOf([...names, 'late']));
-      store.packageShown(ROOT, 'late');
+    describe('GIVEN a 52nd shown after the first run started', () => {
+      beforeEach(() => {
+        h.model(ROOT, buildModelOf([...names, 'late']));
+        store.packageShown(ROOT, 'late');
+      });
 
-      expect(h.pendingTimers()).toStrictEqual([]);
+      it('WHEN nothing else happens THEN it opens no window', () => {
+        expect(h.pendingTimers()).toStrictEqual([]);
+      });
 
-      dryRunAt(h, 0).resolve([]);
-      await flush();
+      it('WHEN the first run settles THEN it joins the second run', async () => {
+        dryRunAt(h, 0).resolve([]);
+        await flush();
 
-      expect(dryRunAt(h, 1).request.packages).toStrictEqual([names[50], 'late']);
+        expect(dryRunAt(h, 1).request.packages).toStrictEqual([names[50], 'late']);
+      });
     });
 
     it('WHEN the first chunk rejects THEN its packages fail and the second chunk is still sent', async () => {
