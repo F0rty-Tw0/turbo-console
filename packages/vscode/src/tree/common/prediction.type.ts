@@ -15,6 +15,9 @@ export type PredictionView = {
   readonly tasks: ReadonlyMap<string, PredictionCache>;
 };
 
+/** The prediction of a package of `root`, or `null` when it has none. */
+export type PredictionLookup = (root: string, packageName: string) => PredictionView | null;
+
 /** What `PredictionLoadPorts.after` returns; only `cancel` reads it. */
 export type PredictionTimer = { readonly id: unknown };
 

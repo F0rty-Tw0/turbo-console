@@ -1,0 +1,143 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { PredictionLoads } from './prediction-loads.ts';
+import { ROOT } from '../test/common/atom-load.const.ts';
+import { ID_A, PKG_A, PKG_B, PKG_C } from '../test/common/prediction-load.const.ts';
+import type { PredictionHarness, PredictionState } from '../test/common/prediction-load.type.ts';
+import { dryRunAt, dryStateOf, flush } from '../test/utils/atom-load.spec.util.ts';
+import { changeOf, predictionHarness, toState } from '../test/utils/prediction-load.spec.util.ts';
+import { buildModelOf, predictionModelOf, turboTaskOf } from '../test/utils/prediction-model.spec.util.ts';
+
+const ALL: PredictionState[] = ['queued', 'loading', 'loaded', 'failed'];
+
+const RESTARTABLE: PredictionState[] = ['loading', 'loaded', 'failed'];
+
+const GONE: [PredictionState, number][] = [
+  ['loading', 0],
+  ['loaded', 1],
+  ['failed', 0]
+];
+
+describe('FEATURE: prediction loads when the model changes', () => {
+  let h: PredictionHarness;
+  let store: PredictionLoads;
+
+  beforeEach(() => {
+    h = predictionHarness();
+    store = new PredictionLoads(h.ports);
+  });
+
+  describe.each(ALL)('GIVEN a %s package', (state) => {
+    it('WHEN the model is republished as the same object THEN nothing restarts and the view stays', async () => {
+      const same = buildModelOf([PKG_A]);
+
+      await toState(h, store, state);
+      const view = store.view(ROOT, PKG_A);
+      const timers = h.timers.length;
+
+      store.modelChanged(changeOf(same, same));
+
+      expect(store.view(ROOT, PKG_A)).toStrictEqual(view);
+      expect(h.timers).toHaveLength(timers);
+      expect(h.dryRuns.some((run) => run.signal.aborted)).toBe(false);
+    });
+  });
+
+  describe.each(RESTARTABLE)('GIVEN a %s package', (state) => {
+    it('WHEN a new model still holds it THEN it queues again and the old run is aborted', async () => {
+      await toState(h, store, state);
+      store.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_A, PKG_B])));
+
+      expect(h.pendingTimers()).toHaveLength(1);
+      expect(h.dryRuns.some((run) => run.signal.aborted)).toBe(state === 'loading');
+
+      h.fire();
+
+      expect(h.dryRun).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe.each(GONE)('GIVEN a %s package', (state, announced) => {
+    beforeEach(async () => {
+      await toState(h, store, state);
+      h.changed.mockClear();
+      store.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_B])));
+    });
+
+    it('WHEN a new model lacks it THEN it is absent and announced only if it had an answer', () => {
+      expect(store.view(ROOT, PKG_A)).toBeNull();
+      expect(h.changed).toHaveBeenCalledTimes(announced);
+    });
+
+    it('WHEN a new model lacks it THEN a later packageShown queues it again', () => {
+      store.packageShown(ROOT, PKG_A);
+
+      expect(h.pendingTimers()).toHaveLength(1);
+    });
+  });
+
+  describe('GIVEN a queued package', () => {
+    it('WHEN a new model arrives THEN it is kept and the request is built from the current model at the send', async () => {
+      await toState(h, store, 'queued');
+      const next = predictionModelOf({ [PKG_A]: [turboTaskOf(PKG_A, 'build'), turboTaskOf(PKG_A, 'lint')] });
+
+      h.model(ROOT, next);
+      store.modelChanged(changeOf(buildModelOf([PKG_A]), next));
+      h.fire();
+
+      expect(h.dryRun).toHaveBeenCalledOnce();
+      expect(dryRunAt(h, 0).request.tasks).toStrictEqual(['build', 'lint']);
+    });
+  });
+
+  describe('GIVEN an absent package', () => {
+    it('WHEN a new model arrives THEN no timer starts', () => {
+      store.toggled(true);
+      store.modelChanged(changeOf(null, buildModelOf([PKG_A])));
+
+      expect(h.timers).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN a loaded package that was renamed', () => {
+    it('WHEN the new model holds the new name THEN the old name is absent and the new one is not asked', async () => {
+      await toState(h, store, 'loaded');
+      store.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_C])));
+
+      expect(store.view(ROOT, PKG_A)).toBeNull();
+      expect(store.view(ROOT, PKG_C)).toBeNull();
+      expect(h.pendingTimers()).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN two packages in one live dry run', () => {
+    beforeEach(() => {
+      h.model(ROOT, buildModelOf([PKG_A, PKG_B]));
+      store.toggled(true);
+      store.packageShown(ROOT, PKG_A);
+      store.packageShown(ROOT, PKG_B);
+      h.fire();
+      store.modelChanged(changeOf(buildModelOf([PKG_A, PKG_B]), buildModelOf([PKG_B])));
+    });
+
+    it('WHEN a reload drops one THEN it is absent, the other queues and the old run is aborted', () => {
+      expect(store.view(ROOT, PKG_A)).toBeNull();
+      expect(dryRunAt(h, 0).signal.aborted).toBe(true);
+      expect(h.pendingTimers()).toHaveLength(1);
+    });
+
+    it('WHEN the old run then resolves THEN nothing is stored and the next spawn asks only for the other', async () => {
+      dryRunAt(h, 0).resolve([dryStateOf(ID_A, 'HIT')]);
+      await flush();
+
+      expect(store.view(ROOT, PKG_A)).toBeNull();
+      expect(h.changed).not.toHaveBeenCalled();
+
+      h.model(ROOT, buildModelOf([PKG_B]));
+      h.fire();
+
+      expect(h.dryRun).toHaveBeenCalledTimes(2);
+      expect(dryRunAt(h, 1).request.packages).toStrictEqual([PKG_B]);
+    });
+  });
+});

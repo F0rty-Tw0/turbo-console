@@ -69,7 +69,7 @@ export const loadsHarness = (): LoadsHarness => {
 };
 
 /** The `index`th `dryRun` call; a spec that settles a call that never started fails here, by name. */
-export const dryRunAt = (h: LoadsHarness, index: number): DeferredDryRun => {
+export const dryRunAt = (h: Pick<LoadsHarness, 'dryRuns'>, index: number): DeferredDryRun => {
   const call = h.dryRuns[index];
 
   if (call === undefined) throw new Error(`no dry-run #${index}; ${h.dryRuns.length} started`);
