@@ -105,10 +105,12 @@ export class GraphTaskHost {
     await expect.poll(async (): Promise<string[][]> => this.shownUmbrellas()).toEqual(expected);
   }
 
-  /** Polls until the package names of the page's `shownTaskPackages` posts, in order, are `expected`; an empty expectation waits a frame first. */
+  /**
+   * Waits a frame, so a message posted just before has been handled, then polls until the package names of the page's
+   * `shownTaskPackages` posts, in order, are `expected`; a post the last message wrongly caused is counted.
+   */
   public async expectShownTaskPackages(expected: string[][]): Promise<void> {
-    if (expected.length === 0) await this.page.evaluate(NEXT_FRAME);
-
+    await this.page.evaluate(NEXT_FRAME);
     await expect.poll(async (): Promise<string[][]> => this.shownTaskPackages()).toEqual(expected);
   }
 
