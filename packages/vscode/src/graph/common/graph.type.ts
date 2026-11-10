@@ -49,9 +49,11 @@ type UncheckedPositionsMessage = {
 /** A message that passed `graphMessageSchema`: its `positions` and `routes` records are still unread. */
 export type SchemaGraphMessage = Exclude<GraphWebviewMessage, PositionsTag> | UncheckedPositionsMessage;
 
-type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' | 'shownUmbrellas' | 'setViewToggle' };
+type RequestTag = {
+  readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' | 'shownUmbrellas' | 'shownTaskPackages' | 'setViewToggle';
+};
 
-/** A page request the session answers from the state it builds now: a reload, a package's details, a task run or stop, the umbrellas now shown or a flip of a tree toggle. */
+/** A page request the session answers from the state it builds now: a reload, a package's details, a task run or stop, the umbrellas or task packages now shown or a flip of a tree toggle. */
 export type GraphRequestMessage = Extract<GraphWebviewMessage, RequestTag>;
 
 type RunTag = { readonly type: 'runTask' | 'stopTask' };

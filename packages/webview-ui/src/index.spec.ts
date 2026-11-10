@@ -34,6 +34,7 @@ import type {
   GraphShowPackageMessage,
   GraphShowRequest,
   GraphShowTasksMessage,
+  GraphShownTaskPackagesMessage,
   GraphShownUmbrellasMessage,
   GraphState,
   GraphStateMessage,
@@ -86,6 +87,7 @@ type ExpectedAtomFile = { readonly id: string; readonly specPath: string; readon
 type ExpectedAtomGroup = { readonly umbrellaId: string; readonly files: GraphAtomFile[] };
 type ExpectedAtomGroupState = { readonly counts: string; readonly files: Record<string, 'passed' | 'failed' | 'cached' | 'none'> };
 type ExpectedAtomsMessage = { readonly type: 'atoms'; readonly groups: Record<string, GraphAtomGroupState> };
+type ExpectedShownTaskPackagesMessage = { readonly type: 'shownTaskPackages'; readonly packageNames: string[] };
 type ExpectedShownUmbrellasMessage = { readonly type: 'shownUmbrellas'; readonly ids: string[] };
 type ExpectedSetViewToggleMessage = {
   readonly type: 'setViewToggle';
@@ -240,6 +242,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphAtomOutcome>().toEqualTypeOf<'passed' | 'failed' | 'cached' | 'none'>();
       expectTypeOf<GraphAtomGroupState>().toEqualTypeOf<ExpectedAtomGroupState>();
       expectTypeOf<GraphAtomsMessage>().toEqualTypeOf<ExpectedAtomsMessage>();
+      expectTypeOf<GraphShownTaskPackagesMessage>().toEqualTypeOf<ExpectedShownTaskPackagesMessage>();
       expectTypeOf<GraphShownUmbrellasMessage>().toEqualTypeOf<ExpectedShownUmbrellasMessage>();
       expectTypeOf<GraphSetViewToggleMessage>().toEqualTypeOf<ExpectedSetViewToggleMessage>();
       expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<
@@ -256,6 +259,7 @@ describe('FEATURE: webview-ui package entry', () => {
         | 'runTask'
         | 'stopTask'
         | 'shownUmbrellas'
+        | 'shownTaskPackages'
         | 'setViewToggle'
       >();
       expectTypeOf<Extract<GraphWebviewMessage, RunTaskKey>['noCache']>().toEqualTypeOf<boolean>();

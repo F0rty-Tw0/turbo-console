@@ -34,6 +34,7 @@ export type {
   GraphShowPackageMessage,
   GraphShowRequest,
   GraphShowTasksMessage,
+  GraphShownTaskPackagesMessage,
   GraphShownUmbrellasMessage,
   GraphStateMessage,
   GraphWebviewMessage,

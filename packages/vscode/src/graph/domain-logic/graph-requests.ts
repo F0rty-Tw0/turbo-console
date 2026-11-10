@@ -14,6 +14,7 @@ const REQUEST_TYPES: Readonly<Record<GraphRequestMessage['type'], true>> = {
   runTask: true,
   stopTask: true,
   shownUmbrellas: true,
+  shownTaskPackages: true,
   setViewToggle: true
 };
 
@@ -67,6 +68,18 @@ function shownUmbrellasOf(ids: string[], state: GraphState, root: string, atoms:
   return true;
 }
 
+/** `false` unless the state is a graph; each listed package among `names` is asked to load once, in the order of `names`, and other names are ignored. */
+function shownTaskPackagesOf(names: string[], state: GraphState, root: string, prediction: GraphFeeds['prediction']): boolean {
+  if (state.kind !== 'graph') return false;
+
+  const listed = new Set(state.tasks.map((task) => task.packageName));
+  const shown = new Set(names.filter((name) => listed.has(name)));
+
+  for (const packageName of shown) prediction.packageShown(root, packageName);
+
+  return true;
+}
+
 /** Always handled: the toggle is global, not a property of the state, and a rejected `set` was already logged by the toggle. */
 async function setViewToggleOf(message: GraphSetViewToggleMessage, toggles: GraphToggles): Promise<boolean> {
   await toggles[message.toggle].set(message.shown).catch((): undefined => undefined);
@@ -88,6 +101,8 @@ export async function requestHandledOf(message: GraphRequestMessage, context: Re
       return routeRun(message, context);
     case 'shownUmbrellas':
       return shownUmbrellasOf(message.ids, state, root, feeds.atoms);
+    case 'shownTaskPackages':
+      return shownTaskPackagesOf(message.packageNames, state, root, feeds.prediction);
     case 'setViewToggle':
       return setViewToggleOf(message, feeds.toggles);
   }

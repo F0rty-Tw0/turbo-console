@@ -162,6 +162,12 @@ export type GraphShownUmbrellasMessage = {
   readonly ids: string[];
 };
 
+/** The packages whose tasks task mode draws; the host loads their cache predictions. Posted only in task mode with the prediction toggle on. */
+export type GraphShownTaskPackagesMessage = {
+  readonly type: 'shownTaskPackages';
+  readonly packageNames: string[];
+};
+
 /** The tree's three View toggles: scope prefixes on package labels, `package.json` scripts beside turbo tasks, and the cache prediction. */
 export type GraphViewToggle = 'scope' | 'scripts' | 'prediction';
 
@@ -187,4 +193,5 @@ export type GraphWebviewMessage =
   | GraphRunTaskMessage
   | GraphStopTaskMessage
   | GraphShownUmbrellasMessage
+  | GraphShownTaskPackagesMessage
   | GraphSetViewToggleMessage;
