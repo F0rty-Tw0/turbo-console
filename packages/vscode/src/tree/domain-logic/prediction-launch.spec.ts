@@ -65,6 +65,23 @@ describe('FEATURE: prediction launch', () => {
     });
   });
 
+  describe.each([
+    ['no answer', null, 0],
+    ['an answer', HIT_VIEW, 1]
+  ])('GIVEN an entry with %s on a live ticket', (_given, view, announced) => {
+    beforeEach(() => {
+      h.noBinary();
+      seedEntry(entries, PKG_A, view);
+      launcher.launch(predictionTicketOf([PKG_A]));
+    });
+
+    it('WHEN the root has no binary at launch THEN it is parked and changed is called only if it had an answer', () => {
+      expect(entryAt(entries, PKG_A)).toBeUndefined();
+      expect(add).toHaveBeenCalledExactlyOnceWith(ROOT, PKG_A);
+      expect(h.changed).toHaveBeenCalledTimes(announced);
+    });
+  });
+
   describe('GIVEN a package with no requested task', () => {
     let ticket: PredictionTicket;
 

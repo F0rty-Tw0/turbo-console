@@ -83,12 +83,13 @@ export class PredictionLaunch {
 
   /** No binary or no model at the send: the packages wait for the root's next model, like a package shown too early. */
   private park(ticket: PredictionTicket, packages: string[]): void {
-    for (const packageName of packages) {
-      this.entries.delete(predictionKeyOf(ticket.root, packageName));
-      this.waits.add(ticket.root, packageName);
-    }
+    const hadView = this.forget(ticket.root, packages);
+
+    for (const packageName of packages) this.waits.add(ticket.root, packageName);
 
     this.batches.finished(ticket);
+
+    if (hadView) this.ports.changed(ticket.root);
   }
 
   /**
@@ -110,17 +111,25 @@ export class PredictionLaunch {
     if (hadView || empty.length > 0) this.ports.changed(ticket.root);
   }
 
-  /** Deletes the entries of `gone` and says whether any of them had an answer to take back. */
+  /** Forgets `gone`, which leave the ticket, and says whether any of them had an answer to take back. */
   private drop(ticket: PredictionTicket, gone: string[]): boolean {
+    const hadView = this.forget(ticket.root, gone);
+
+    for (const packageName of gone) this.batches.leave(ticket, packageName);
+
+    return hadView;
+  }
+
+  /** Deletes the entries of `packages` and says whether any of them had an answer to take back. */
+  private forget(root: string, packages: string[]): boolean {
     let hadView = false;
 
-    for (const packageName of gone) {
-      const key = predictionKeyOf(ticket.root, packageName);
+    for (const packageName of packages) {
+      const key = predictionKeyOf(root, packageName);
       const view = this.entries.get(key)?.view ?? null;
 
       hadView ||= view !== null;
       this.entries.delete(key);
-      this.batches.leave(ticket, packageName);
     }
 
     return hadView;
