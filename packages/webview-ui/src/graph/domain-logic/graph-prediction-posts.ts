@@ -4,7 +4,8 @@ import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 /**
  * Tells the host which packages task mode draws, so it loads their cache predictions: the distinct sorted package names
  * of the placed tasks, posted only while the toggle is on and a task layout is placed, never twice in a row for the same
- * set. Turning the toggle off or clearing the layout forgets the last post, so the next on or the next layout posts again.
+ * set. Turning the toggle off, clearing the layout or `forget()` forgets the last post, so the next on, layout or state
+ * posts again.
  */
 export class GraphPredictionPosts {
   private readonly bridge: Bridge;
@@ -34,6 +35,11 @@ export class GraphPredictionPosts {
 
   public clear(): void {
     this.packageNames = null;
+    this.forget();
+  }
+
+  /** The host may have dropped the last post (a message replaced the graph view), so the next `shown(true)` sends it again. */
+  public forget(): void {
     this.lastPosted = null;
   }
 

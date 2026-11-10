@@ -81,6 +81,14 @@ describe('FEATURE: GraphPredictionPosts', () => {
 
       expect(bridge.post).toHaveBeenCalledOnce();
     });
+
+    it('WHEN forget() follows a post and then shown(true) repeats THEN it posts again', () => {
+      posts.placed(TASK_CHAIN_STUB);
+      posts.forget();
+      posts.shown(true);
+
+      expect(bridge.post.mock.calls).toStrictEqual([[NAMES], [NAMES]]);
+    });
   });
 
   describe('GIVEN the toggle off', () => {
