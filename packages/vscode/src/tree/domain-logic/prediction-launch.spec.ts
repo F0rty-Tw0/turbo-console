@@ -5,6 +5,7 @@ import { PredictionLaunch } from './prediction-launch.ts';
 import type {
   PredictionBatchPort,
   PredictionEntry,
+  PredictionListener,
   PredictionTicket,
   PredictionView,
   PredictionWaitPort
@@ -65,9 +66,9 @@ describe('FEATURE: prediction launch', () => {
     });
   });
 
-  describe.each([
-    ['no answer', null, 0],
-    ['an answer', HIT_VIEW, 1]
+  describe.each<[string, PredictionView | null, Parameters<PredictionListener>[]]>([
+    ['no answer', null, []],
+    ['an answer', HIT_VIEW, [[ROOT, new Set([PKG_A])]]]
   ])('GIVEN an entry with %s on a live ticket', (_given, view, announced) => {
     beforeEach(() => {
       h.noBinary();
@@ -75,10 +76,10 @@ describe('FEATURE: prediction launch', () => {
       launcher.launch(predictionTicketOf([PKG_A]));
     });
 
-    it('WHEN the root has no binary at launch THEN it is parked and changed is called only if it had an answer', () => {
+    it('WHEN the root has no binary at launch THEN it is parked and announced by name only if it had an answer', () => {
       expect(entryAt(entries, PKG_A)).toBeUndefined();
       expect(add).toHaveBeenCalledExactlyOnceWith(ROOT, PKG_A);
-      expect(h.changed).toHaveBeenCalledTimes(announced);
+      expect(h.changed.mock.calls).toStrictEqual(announced);
     });
   });
 
@@ -104,9 +105,9 @@ describe('FEATURE: prediction launch', () => {
     });
   });
 
-  describe.each([
-    ['no answer', null, 0],
-    ['an answer', HIT_VIEW, 1]
+  describe.each<[string, PredictionView | null, Parameters<PredictionListener>[]]>([
+    ['no answer', null, []],
+    ['an answer', HIT_VIEW, [[ROOT, new Set([PKG_A])]]]
   ])('GIVEN a package with %s that the model no longer holds', (_given, view, announced) => {
     let ticket: PredictionTicket;
 
@@ -122,9 +123,9 @@ describe('FEATURE: prediction launch', () => {
       expect(leave).toHaveBeenCalledExactlyOnceWith(ticket, PKG_A);
     });
 
-    it('WHEN the ticket launches THEN it does not wait and is announced only if it had an answer', () => {
+    it('WHEN the ticket launches THEN it does not wait and is announced by name only if it had an answer', () => {
       expect(add).not.toHaveBeenCalled();
-      expect(h.changed).toHaveBeenCalledTimes(announced);
+      expect(h.changed.mock.calls).toStrictEqual(announced);
     });
   });
 
