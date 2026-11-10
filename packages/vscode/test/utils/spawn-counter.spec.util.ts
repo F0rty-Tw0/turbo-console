@@ -32,6 +32,19 @@ const isTurboFile = (turboPath: string | null, file: string): boolean => {
   return file === turboPath;
 };
 
+/** Keeps the args of a dry-run spawn, and when it closes, with those args and whether a signal ended it. */
+const recordDryRun = (child: ChildProcess, dryRuns: string[][], closes: DryRunClose[]): void => {
+  const args = [...child.spawnargs];
+  const onClose = (_code: number | null, signal: NodeJS.Signals | null): void => {
+    const close: DryRunClose = { at: performance.now(), aborted: signal !== null, args };
+
+    closes.push(close);
+  };
+
+  dryRuns.push(args);
+  child.once('close', onClose);
+};
+
 /**
  * Spec §5.1 V1: counts the turbo spawns of this extension host through the `child_process` diagnostics channel. Only
  * spawns of `turboPath` count (VS Code's own git spawns arrive too), and never a `--version` call (the override's
@@ -45,23 +58,19 @@ const isTurboFile = (turboPath: string | null, file: string): boolean => {
  */
 export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
   let count = 0;
-  let dryRuns: string[][] = [];
-  let closes: DryRunClose[] = [];
+  const dryRuns: string[][] = [];
+  const closes: DryRunClose[] = [];
   const runs: TurboRun[] = [];
-
-  const onDryRunClose = (_code: number | null, signal: NodeJS.Signals | null): void => {
-    const close: DryRunClose = { at: performance.now(), aborted: signal !== null };
-
-    closes.push(close);
-  };
 
   const read = (child: ChildProcess, start: number, startCpu: NodeJS.CpuUsage): void => {
     const isTurbo = isTurboFile(turboPath, child.spawnfile);
     const isVersion = child.spawnargs.includes(VERSION_ARG);
     const onClose = (): void => {
+      const end = performance.now();
       const cpu = process.threadCpuUsage(startCpu);
-      const busyMs = (cpu.user + cpu.system) / MICROSECONDS_PER_MS;
-      const run: TurboRun = { start, end: performance.now(), busyMs };
+      const cpuMicroseconds = cpu.user + cpu.system;
+      const busyMs = cpuMicroseconds / MICROSECONDS_PER_MS;
+      const run: TurboRun = { start, end, busyMs };
 
       runs.push(run);
     };
@@ -78,8 +87,7 @@ export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
 
     if (!isDryRun) return;
 
-    dryRuns.push([...child.spawnargs]);
-    child.once('close', onDryRunClose);
+    recordDryRun(child, dryRuns, closes);
   };
 
   const onMessage = (message: unknown): void => {
@@ -100,8 +108,8 @@ export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
     dryRunCloses: () => [...closes],
     reset: () => {
       count = 0;
-      dryRuns = [];
-      closes = [];
+      dryRuns.length = 0;
+      closes.length = 0;
     },
     dispose: () => {
       unsubscribe(CHANNEL, onMessage);

@@ -85,9 +85,13 @@ export type TurboRun = {
   readonly busyMs: number;
 };
 
-/** One dry-run spawn's close: its `performance.now()` time, and whether a signal ended it. */
+/**
+ * One dry-run spawn's close: its `performance.now()` time, its `spawnargs`, and whether a signal ended it. `aborted` is
+ * POSIX-only: on Windows an abort runs `taskkill /T /F`, so the close has exit code 1 and no signal. A proof must not rest on it.
+ */
 export type DryRunClose = {
   readonly at: number;
+  readonly args: string[];
   readonly aborted: boolean;
 };
 
