@@ -7,22 +7,17 @@ import type { PredictionHostPorts, SharedPrediction } from '../common/prediction
 
 /**
  * One `PredictionLoads` over `ports` and the models of `roots`, as `sharedAtomsOf` is for the Atomizer loads: every
- * change reaches each subscribed listener, and a throwing listener is logged so the ones after it still hear. After
- * `dispose` a shown package or a toggle on starts nothing: the tree and the graph share one `dispose`.
+ * change reaches each subscribed listener, and a throwing listener is logged so the ones after it still hear. The tree
+ * and the graph share one `dispose`; after it the store starts nothing for a shown package or a toggle on.
  */
 export const sharedPredictionOf = (roots: Roots, ports: PredictionHostPorts): SharedPrediction => {
-  let isDisposed = false;
   const subscribers = predictionListenersOf(ports.log);
   const modelOf = (root: string): WorkspaceModel | null => roots.get(root)?.state.model ?? null;
   const loads = new PredictionLoads({ ...ports, modelOf, changed: subscribers.changed });
   const packageShown = (root: string, packageName: string): void => {
-    if (isDisposed) return;
-
     loads.packageShown(root, packageName);
   };
   const toggled = (shown: boolean): void => {
-    if (isDisposed && shown) return;
-
     loads.toggled(shown);
   };
   const runEnded = (root: string): void => {
@@ -38,7 +33,6 @@ export const sharedPredictionOf = (roots: Roots, ports: PredictionHostPorts): Sh
     loads.rootsKept(kept);
   };
   const dispose = (): void => {
-    isDisposed = true;
     subscribers.clear();
     loads.dispose();
   };
