@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { predictionRecordOf } from './prediction-record.util.ts';
 import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
+import { NO_PREDICTIONS } from '../common/graph-task.const.ts';
 
 const MIXED = { 'a#x': 'cached', 'b#y': 'bogus', 'c#z': 7 };
 
@@ -23,6 +24,13 @@ describe('FEATURE: predictionRecordOf', () => {
       ['an object of known words', VALID, VALID]
     ])('WHEN it is %s THEN the record keeps only its known words', (_name, value, record) => {
       expect(predictionRecordOf(value)).toStrictEqual(record);
+    });
+
+    it.each([
+      ['empty', {}],
+      ['only bad words', { 'b#y': 'bogus' }]
+    ])('WHEN it is %s THEN it is the shared empty record, so the view skips it', (_name, value) => {
+      expect(predictionRecordOf(value)).toBe(NO_PREDICTIONS);
     });
 
     it('WHEN it has more than TASK_COUNT_MAX entries THEN it is the empty record', () => {
