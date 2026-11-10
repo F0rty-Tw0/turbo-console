@@ -241,6 +241,12 @@ describe('FEATURE: isGraphHostMessage', () => {
 
       expect(isMessage).toBe(true);
     });
+
+    it('WHEN its predictions is not an object THEN it is still accepted', () => {
+      const isMessage = isGraphHostMessage({ type: 'runs', runs: {}, predictions: 5 });
+
+      expect(isMessage).toBe(true);
+    });
   });
 
   describe('GIVEN a runs message with or without owners', () => {
