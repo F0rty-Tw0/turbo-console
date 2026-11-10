@@ -3,3 +3,6 @@ export const SCRIPTS_KEY = 'turboConsole.scriptsShown';
 
 /** The `workspaceState` key and the context key of the scope toggle. */
 export const SCOPE_KEY = 'turboConsole.scopeShown';
+
+/** The `workspaceState` key and the context key of the cache prediction toggle. */
+export const PREDICTION_KEY = 'turboConsole.predictionShown';
