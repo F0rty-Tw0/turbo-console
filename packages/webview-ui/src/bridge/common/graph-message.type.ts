@@ -50,6 +50,9 @@ export type GraphEdgeExplainedMessage = {
   readonly result: EdgeExplainResult;
 };
 
+/** The wire words for the dry-run answers `HIT` (`cached`), `MISS` (`notCached`) and `deferred` (`unknown`). */
+export type GraphPrediction = 'cached' | 'notCached' | 'unknown';
+
 export type GraphRunsMessage = {
   readonly type: 'runs';
   readonly runs: Readonly<Record<string, GraphRunState>>;
@@ -58,6 +61,8 @@ export type GraphRunsMessage = {
    * absent when none.
    */
   readonly owners?: Readonly<Record<string, string>>;
+  /** Task id to prediction, only for the tasks the store answered; absent while the prediction toggle is off. */
+  readonly predictions?: Readonly<Record<string, GraphPrediction>>;
 };
 
 /** Asks the page to show these tasks in task mode. */

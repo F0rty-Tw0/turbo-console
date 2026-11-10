@@ -29,6 +29,7 @@ export type {
   GraphAtomsMessage,
   GraphEdgeExplainedMessage,
   GraphHostMessage,
+  GraphPrediction,
   GraphRunsMessage,
   GraphSetViewToggleMessage,
   GraphShowPackageMessage,
