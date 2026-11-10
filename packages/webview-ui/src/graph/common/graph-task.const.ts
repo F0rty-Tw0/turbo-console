@@ -1,4 +1,5 @@
 import type { RunStateIconId } from './graph-icon.type.ts';
+import type { TaskPredictions } from './task-canvas.type.ts';
 import type { TaskOwners } from './task-details.type.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 
@@ -99,6 +100,14 @@ export const SHOW_TASKS_LABEL = 'Show tasks';
 
 export const SHOW_SCRIPTS_LABEL = 'Show scripts';
 
+export const SHOW_PREDICTION_LABEL = 'Show cache prediction';
+
+/** Starts each prediction class on a task node: `predict-cached`, `predict-notCached`, `predict-unknown`. */
+export const PREDICTION_CLASS_PREFIX = 'predict-';
+
+/** The run states whose glyph wins over a cache prediction; an ended run's glyph yields to it. */
+export const LIVE_RUN_STATES: GraphRunState[] = ['running', 'continuous'];
+
 /** The notice when every requested task id matches no task. */
 export const UNKNOWN_TASKS_TEXT = 'Those tasks are not in this workspace';
 
@@ -154,6 +163,12 @@ export const NO_COMMAND_TEXT = 'No command';
 
 /** The `owners` of a `runs` message that has none: every task runs on its own. */
 export const NO_OWNERS: TaskOwners = {};
+
+/** The predictions of a `runs` message that has none or an untrusted record; one shared object, so the canvas skips a repeat. */
+export const NO_PREDICTIONS: TaskPredictions = {};
+
+/** The wanted classes of an element that should carry none of a class set. */
+export const NO_CLASSES: string[] = [];
 
 /** The word the task panel shows beside each run state's icon. */
 export const RUN_STATE_TEXT: Readonly<Record<GraphRunState, string>> = {

@@ -8,7 +8,7 @@ import { RunStore } from '../../run/domain-logic/run-store.ts';
 import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
 import type { GraphRequestMessage, RequestContext } from '../common/graph.type.ts';
-import type { ToggleFakes } from '../test/common/graph.type.ts';
+import type { PredictionFake, ToggleFakes } from '../test/common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import {
   APP_BUILD_TASK_STUB,
@@ -19,7 +19,7 @@ import {
   GRAPH_ATOM_UNLOADED_VIEW_STUB
 } from '../test/stubs/graph-atom-model.stub.ts';
 import { GRAPH_SHOWN_STUB, GRAPH_STATE_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
-import { atomsFake, feedsOf, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
+import { atomsFake, feedsOf, predictionFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 import { smokeGroupTasksOf } from '../test/utils/graph-model.spec.util.ts';
 import { graphStateOf } from '../utils/graph-state.util.ts';
 
@@ -32,7 +32,9 @@ const OPEN_GONE: GraphRequestMessage = { type: 'openDetails', packageName: 'gone
 const RUN_A_BUILD: GraphRequestMessage = { type: 'runTask', taskId: 'a#build', noCache: false };
 const STOP_A_BUILD: GraphRequestMessage = { type: 'stopTask', taskId: 'a#build' };
 const SET_SCOPE: GraphRequestMessage = { type: 'setViewToggle', toggle: 'scope', shown: true };
+const SET_PREDICTION: GraphRequestMessage = { type: 'setViewToggle', toggle: 'prediction', shown: true };
 const SET_SCRIPTS: GraphRequestMessage = { type: 'setViewToggle', toggle: 'scripts', shown: true };
+const SHOWN_PACKAGES: GraphRequestMessage = { type: 'shownTaskPackages', packageNames: ['a', 'web', 'gone', 'a'] };
 const SMOKE_TASKS = smokeGroupTasksOf(ATOM_E2E_PACKAGE_STUB.name);
 const [SMOKE_UMBRELLA] = SMOKE_TASKS;
 const TWO_GROUP_PACKAGE: PackageNode = {
@@ -55,9 +57,18 @@ const contextOf = (state: GraphState, atoms: SharedAtoms = SHARED_ATOMS_STUB, to
   return context;
 };
 
+/** `contextOf` with the prediction feed swapped for `prediction`. */
+const withPrediction = (state: GraphState, prediction: PredictionFake): RequestContext => {
+  const context = contextOf(state);
+  const feeds = { ...context.feeds, prediction: prediction.prediction };
+  const withFake: RequestContext = { ...context, feeds };
+
+  return withFake;
+};
+
 describe('FEATURE: graph request messages', () => {
   describe('GIVEN a message type', () => {
-    it.each([[RELOAD], [OPEN_WEB], [RUN_A_BUILD], [STOP_A_BUILD], [SHOWN_UMBRELLAS], [SET_SCOPE]])(
+    it.each([[RELOAD], [OPEN_WEB], [RUN_A_BUILD], [STOP_A_BUILD], [SHOWN_UMBRELLAS], [SHOWN_PACKAGES], [SET_SCOPE]])(
       'WHEN it is %j THEN it is a request',
       (message) => {
         expect(isRequestMessage(message)).toBe(true);
@@ -217,6 +228,18 @@ describe('FEATURE: graph setViewToggle request', () => {
     });
   });
 
+  describe('GIVEN a setViewToggle for prediction', () => {
+    it('WHEN it is handled THEN only the prediction toggle is set', async () => {
+      const context = contextOf(GRAPH_STATE_STUB);
+
+      await requestHandledOf(SET_PREDICTION, context);
+
+      expect(context.feeds.toggles.prediction.set).toHaveBeenCalledExactlyOnceWith(true);
+      expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
+      expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a setViewToggle for scripts', () => {
     it('WHEN it is handled THEN the scripts toggle is set to the given value', async () => {
       const context = contextOf(GRAPH_STATE_STUB);
@@ -261,6 +284,40 @@ describe('FEATURE: graph setViewToggle request', () => {
       const isHandled = await requestHandledOf(SET_SCOPE, context);
 
       expect(isHandled).toBe(true);
+    });
+  });
+});
+
+describe('FEATURE: graph shownTaskPackages request', () => {
+  describe('GIVEN a graph state', () => {
+    it('WHEN it names listed, unknown and repeated packages THEN packageShown(root, name) runs once per listed package', async () => {
+      const fake = predictionFake(() => null);
+
+      await requestHandledOf(SHOWN_PACKAGES, withPrediction(GRAPH_STATE_STUB, fake));
+
+      expect(fake.packageShown.mock.calls).toStrictEqual([
+        ['/ws', 'a'],
+        ['/ws', 'web']
+      ]);
+    });
+
+    it('WHEN it names only unknown packages THEN nothing is requested and the message is handled', async () => {
+      const fake = predictionFake(() => null);
+      const unknown: GraphRequestMessage = { type: 'shownTaskPackages', packageNames: ['gone'] };
+      const isHandled = await requestHandledOf(unknown, withPrediction(GRAPH_STATE_STUB, fake));
+
+      expect(fake.packageShown).not.toHaveBeenCalled();
+      expect(isHandled).toBe(true);
+    });
+  });
+
+  describe.each([[LOADING_STATE], [ERROR_STATE]])('GIVEN a state that is not a graph (%j)', (state) => {
+    it('WHEN it names a package THEN it is not handled and nothing is requested', async () => {
+      const fake = predictionFake(() => null);
+      const isHandled = await requestHandledOf(SHOWN_PACKAGES, withPrediction(state, fake));
+
+      expect(isHandled).toBe(false);
+      expect(fake.packageShown).not.toHaveBeenCalled();
     });
   });
 });

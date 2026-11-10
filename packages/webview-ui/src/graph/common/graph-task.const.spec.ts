@@ -5,11 +5,13 @@ import {
   DEPENDENTS_DEPTH_LABEL,
   DEPENDENTS_LABEL,
   EMPTY_TASKS_TEXT,
+  LIVE_RUN_STATES,
   MAX_TASK_DEPTH,
   MIN_TASK_DEPTH,
   NONE_SHOWN_TEXT,
   PACKAGES_MODE_LABEL,
   PACKAGES_MODE_TITLE,
+  PREDICTION_CLASS_PREFIX,
   ROOT_TASKS_TITLE,
   ROOT_TASK_PACKAGE,
   SCRIPTS_BOX_DASH_PX,
@@ -17,6 +19,7 @@ import {
   SEARCH_TASKS_LABEL,
   SHOW_ALL_TASKS_LABEL,
   SHOW_EVERY_TASK_LABEL,
+  SHOW_PREDICTION_LABEL,
   SHOW_SCRIPTS_LABEL,
   SHOW_TASKS_LABEL,
   SLOW_TASKS_TEXT,
@@ -36,6 +39,14 @@ describe('FEATURE: graph task constants', () => {
     expect(value).toBe(expected);
   });
 
+  it('GIVEN the live run states WHEN they are read THEN they are running and continuous', () => {
+    expect(LIVE_RUN_STATES).toStrictEqual(['running', 'continuous']);
+  });
+
+  it('GIVEN the prediction class prefix WHEN it is read THEN it is predict-', () => {
+    expect(PREDICTION_CLASS_PREFIX).toBe('predict-');
+  });
+
   it('GIVEN the Scripts box WHEN its frame dashes are read THEN they are 2 px on, 3 px off', () => {
     expect(SCRIPTS_BOX_DASH_PX).toStrictEqual([2, 3]);
   });
@@ -50,6 +61,7 @@ describe('FEATURE: graph task constants', () => {
     ['the depth field', DEPENDENTS_DEPTH_LABEL, 'Dependents depth'],
     ['the package action', SHOW_TASKS_LABEL, 'Show tasks'],
     ['the Show scripts checkbox', SHOW_SCRIPTS_LABEL, 'Show scripts'],
+    ['the Show cache prediction checkbox', SHOW_PREDICTION_LABEL, 'Show cache prediction'],
     ['the invalid request notice', UNKNOWN_TASKS_TEXT, 'Those tasks are not in this workspace'],
     ['the prompt button', SHOW_EVERY_TASK_LABEL, 'Show every task'],
     ['the over-cap warning', SLOW_TASKS_TEXT, 'Drawing more than 300 tasks can be slow.'],

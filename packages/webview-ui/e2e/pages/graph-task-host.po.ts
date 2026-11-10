@@ -6,6 +6,7 @@ import { expect } from '@playwright/test';
 import type {
   GraphAtomGroupState,
   GraphAtomsMessage,
+  GraphPrediction,
   GraphRunsMessage,
   GraphShowPackageMessage,
   GraphShowTasksMessage,
@@ -17,7 +18,7 @@ import { VIEW_STATE_DEBOUNCE_MS } from '../../src/graph/common/graph.const.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { NEXT_FRAME } from '../common/graph.const.ts';
 import { postReply } from '../test/utils/graph-host-state.spec.util.ts';
-import { explainEdgePosted, readPosted, shownUmbrellasPosted } from '../test/utils/graph-posted.spec.util.ts';
+import { explainEdgePosted, readPosted, shownTaskPackagesPosted, shownUmbrellasPosted } from '../test/utils/graph-posted.spec.util.ts';
 import { waitInPage } from '../test/utils/page-wait.spec.util.ts';
 
 const isRunPost = (message: GraphWebviewMessage): boolean => message.type === 'runTask' || message.type === 'stopTask';
@@ -30,10 +31,18 @@ export class GraphTaskHost {
     this.page = page;
   }
 
-  public async sendRuns(runs: Readonly<Record<string, GraphRunState>>): Promise<void> {
-    const message: GraphRunsMessage = { type: 'runs', runs };
+  /** The `predictions` field is on the message only when given, as the host leaves it off a runs message without them. */
+  public async sendRuns(
+    runs: Readonly<Record<string, GraphRunState>>,
+    predictions?: Readonly<Record<string, GraphPrediction>>
+  ): Promise<void> {
+    const plain: GraphRunsMessage = { type: 'runs', runs };
 
-    await this.sendRaw(message);
+    if (predictions === undefined) return this.sendRaw(plain);
+
+    const predicted: GraphRunsMessage = { type: 'runs', runs, predictions };
+
+    await this.sendRaw(predicted);
   }
 
   /** A `runs` message whose `owners` name the task run that runs a dependency: `owners[id]` is the owner's task id. */
@@ -96,6 +105,19 @@ export class GraphTaskHost {
     await expect.poll(async (): Promise<string[][]> => this.shownUmbrellas()).toEqual(expected);
   }
 
+  /**
+   * Polls until the package names of the page's `shownTaskPackages` posts, in order, are `expected`, then waits a frame and
+   * reads them once more, so a duplicate post that lands after the first match fails the check instead of passing it.
+   */
+  public async expectShownTaskPackages(expected: string[][]): Promise<void> {
+    await expect.poll(async (): Promise<string[][]> => this.shownTaskPackages()).toEqual(expected);
+    await this.page.evaluate(NEXT_FRAME);
+
+    const settled = await this.shownTaskPackages();
+
+    expect(settled).toEqual(expected);
+  }
+
   /** A frame on, the page has posted no `explainEdge`. */
   public async expectNoExplainPosted(): Promise<void> {
     await this.page.evaluate(NEXT_FRAME);
@@ -118,6 +140,13 @@ export class GraphTaskHost {
     const messages = shownUmbrellasPosted(posted);
 
     return messages.map((message) => message.ids);
+  }
+
+  private async shownTaskPackages(): Promise<string[][]> {
+    const posted = await readPosted(this.page);
+    const messages = shownTaskPackagesPosted(posted);
+
+    return messages.map((message) => message.packageNames);
   }
 
   private async taskPosts(): Promise<GraphWebviewMessage[]> {

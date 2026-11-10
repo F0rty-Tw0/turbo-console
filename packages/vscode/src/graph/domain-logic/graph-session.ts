@@ -1,4 +1,4 @@
-import type { GraphShowRequest, GraphState, GraphWebviewMessage } from '@turbo-console/webview-ui';
+import type { GraphShowRequest, GraphState, GraphTask, GraphWebviewMessage } from '@turbo-console/webview-ui';
 
 import { GraphImageSaver } from './graph-image-saver.ts';
 import { layoutCachesOf, storePositions } from './graph-layout-store.ts';
@@ -9,7 +9,7 @@ import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { GraphFeeds, GraphPorts, LookupGate, RequestContext, TaskFeedGate } from '../common/graph.type.ts';
 import { droppedGraphText, parseGraphMessage } from '../utils/graph-message.util.ts';
-import { graphStateOfRoot, persistentIdsOfRoot, runIdsOfRoot, shownOf } from '../utils/graph-state.util.ts';
+import { graphStateOfRoot, persistentIdsOfRoot, runIdsOfRoot, shownOf, tasksOfRoot } from '../utils/graph-state.util.ts';
 
 /**
  * The host side of one Package Graph panel. Each state is built from the store and the layout cache when it is posted
@@ -55,10 +55,11 @@ export class GraphSession {
       canPost: (): boolean => this.canPost(),
       state: (): GraphState => this.stateNow(),
       runIds: (): string[] => runIdsOfRoot(this.roots.get(this.root)?.state),
-      persistentIds: (): ReadonlySet<string> => persistentIdsOfRoot(this.roots.get(this.root)?.state)
+      persistentIds: (): ReadonlySet<string> => persistentIdsOfRoot(this.roots.get(this.root)?.state),
+      tasks: (): GraphTask[] => tasksOfRoot(this.roots.get(this.root)?.state)
     };
 
-    this.feed = new GraphTaskFeed({ root, runs: feeds.runs, ports, gate, atoms: feeds.atoms, progress: feeds.progress });
+    this.feed = new GraphTaskFeed({ root, ports, gate, feeds });
   }
 
   public start(): void {
@@ -68,12 +69,12 @@ export class GraphSession {
       this.rootChanged(change);
     });
 
-    const { scope, scripts } = this.feeds.toggles;
+    const { scope, scripts, prediction } = this.feeds.toggles;
     const onToggle = (): void => {
       this.publish();
     };
 
-    this.unsubscribes.push(offRoots, scope.onDidChange(onToggle), scripts.onDidChange(onToggle));
+    this.unsubscribes.push(offRoots, scope.onDidChange(onToggle), scripts.onDidChange(onToggle), prediction.onDidChange(onToggle));
     this.feed.start();
   }
 

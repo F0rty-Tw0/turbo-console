@@ -1,13 +1,12 @@
-import type { GraphShowRequest, GraphState } from '@turbo-console/webview-ui';
+import type { GraphRunsMessage, GraphShowRequest, GraphState } from '@turbo-console/webview-ui';
 
 import { Coalescer } from './coalescer.ts';
 import { GraphAtomFeed } from './graph-atom-feed.ts';
 import type { ProgressRecord } from '../../run/common/run-progress.type.ts';
-import type { Runs } from '../../run/common/run.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
-import type { GraphPorts, GraphProgress, RunSources, TaskFeedGate } from '../common/graph.type.ts';
+import type { GraphFeeds, GraphPorts, RunSources, TaskFeedGate } from '../common/graph.type.ts';
+import { predictionsOf } from '../utils/graph-predictions.util.ts';
 import { runIdsOf, runsMessageOf } from '../utils/graph-tasks.util.ts';
 
 const isSinglePackageState = (state: GraphState): boolean => state.kind === 'graph' && state.singlePackage;
@@ -21,16 +20,15 @@ const isRefused = (request: GraphShowRequest, state: GraphState): boolean => {
 
 type TaskFeedDeps = {
   readonly root: string;
-  readonly runs: Pick<Runs, 'get' | 'onDidChange'>;
   readonly ports: Pick<GraphPorts, 'post' | 'log'>;
   readonly gate: TaskFeedGate;
-  readonly atoms: Pick<SharedAtoms, 'onDidChange' | 'view'>;
-  readonly progress: GraphProgress;
+  readonly feeds: GraphFeeds;
 };
 
 /**
  * What a graph panel is told about tasks besides its state: the run words and owners of its root, merged from its own runs and
- * the task progress (spec D11) and coalesced so a burst of task events or progress changes is one post, the Atomizer counts of its
+ * the task progress (spec D11) and coalesced so a burst of task events, progress or prediction changes is one post, the cache
+ * prediction of its tasks while the prediction toggle is on, the Atomizer counts of its
  * groups (a `GraphAtomFeed`) and the one `showTasks` or `showPackage` request held until the page can take it. A coalesced post that
  * equals the last one sent is skipped. A request is never posted before a `graph` state: `flush` is the one point that posts the
  * full runs message, always, the atoms and the held request, in that order, right after a state is posted.
@@ -48,7 +46,7 @@ export class GraphTaskFeed {
     this.coalescer = new Coalescer(RUNS_COALESCE_MS, () => {
       this.fire();
     });
-    this.atomFeed = new GraphAtomFeed({ root: deps.root, atoms: deps.atoms, ports: deps.ports, gate: deps.gate });
+    this.atomFeed = new GraphAtomFeed({ root: deps.root, atoms: deps.feeds.atoms, ports: deps.ports, gate: deps.gate });
   }
 
   public start(): void {
@@ -56,14 +54,18 @@ export class GraphTaskFeed {
 
     if (this.unsubscribes.length > 0) return;
 
-    const offRuns = this.deps.runs.onDidChange((entry) => {
+    const { runs, progress, prediction } = this.deps.feeds;
+    const offRuns = runs.onDidChange((entry) => {
       this.changed(entry.root);
     });
-    const offProgress = this.deps.progress.onDidChange((root) => {
+    const offProgress = progress.onDidChange((root) => {
+      this.changed(root);
+    });
+    const offPrediction = prediction.onDidChange((root) => {
       this.changed(root);
     });
 
-    this.unsubscribes = [offRuns, offProgress];
+    this.unsubscribes = [offRuns, offProgress, offPrediction];
   }
 
   public stop(): void {
@@ -121,8 +123,8 @@ export class GraphTaskFeed {
   }
 
   /**
-   * Runs on the call stack of a run change or a progress `begin`, `event` or `prune`, which do not catch: it reads no run and no
-   * record, it only arms the timer, so `fire` does the reads on its own stack.
+   * Runs on the call stack of a run change, a progress `begin`, `event` or `prune`, or a cache prediction change, which do not
+   * catch: it reads no run, no record and no prediction, it only arms the timer, so `fire` does the reads on its own stack.
    */
   private changed(root: string): void {
     if (root !== this.deps.root) return;
@@ -142,16 +144,29 @@ export class GraphTaskFeed {
 
   /** Skips a message whose JSON equals the last one sent unless `isForced`, as a reloaded page needs the message again. */
   private postRuns(ids: string[], isForced: boolean): void {
-    const { root, runs, progress, gate, ports } = this.deps;
+    const { root, feeds, gate, ports } = this.deps;
+    const { runs, progress } = feeds;
     const recordsOf = (recordsRoot: string, taskId: string): ProgressRecord[] => progress.recordsOf(recordsRoot, taskId);
     const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds() };
-    const message = runsMessageOf(root, ids, sources);
+    const predictions = this.predictionsNow();
+    const message = runsMessageOf(root, ids, sources, predictions);
     const text = JSON.stringify(message);
 
     if (!isForced && text === this.lastRuns) return;
 
     this.lastRuns = text;
     ports.post(message);
+  }
+
+  /** The predictions of the listed tasks, or `null` while the prediction toggle is off, so the message has no key. */
+  private predictionsNow(): NonNullable<GraphRunsMessage['predictions']> | null {
+    const { root, feeds, gate } = this.deps;
+
+    const isShown = feeds.toggles.prediction.isShown();
+
+    if (!isShown) return null;
+
+    return predictionsOf(root, gate.tasks(), feeds.prediction.view);
   }
 
   private ignoreSinglePackage(): void {

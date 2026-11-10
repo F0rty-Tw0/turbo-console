@@ -5,13 +5,19 @@ import type { Runs } from '../../../run/common/run.type.ts';
 import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
 import type { AtomLookup } from '../../../tree/common/atom-view.type.ts';
+import type { PredictionListener, PredictionLookup, SharedPrediction } from '../../../tree/common/prediction.type.ts';
 import { SHARED_ATOMS_STUB } from '../../../tree/test/stubs/shared-atoms.stub.ts';
+import { SHARED_PREDICTION_STUB } from '../../../tree/test/stubs/shared-prediction.stub.ts';
 import type { GraphFeeds, GraphProgress, GraphToggles } from '../../common/graph.type.ts';
-import type { AtomsFake, ProgressFake, ToggleFakes } from '../common/graph.type.ts';
+import type { AtomsFake, PredictionFake, ProgressFake, ToggleFakes } from '../common/graph.type.ts';
 
-/** Two fresh toggles: scripts hidden, scope hidden unless `isScopeShown`. */
+/** Three fresh toggles: scripts and prediction hidden, scope hidden unless `isScopeShown`. */
 export const togglesOf = (isScopeShown = false): ToggleFakes => {
-  const toggles: ToggleFakes = { scope: scriptsToggleMock(isScopeShown), scripts: scriptsToggleMock() };
+  const toggles: ToggleFakes = {
+    scope: scriptsToggleMock(isScopeShown),
+    scripts: scriptsToggleMock(),
+    prediction: scriptsToggleMock()
+  };
 
   return toggles;
 };
@@ -36,6 +42,26 @@ export const progressFake = (): ProgressFake => {
   return fake;
 };
 
+/** Shared prediction that reads `view`, records `packageShown` and tells its listeners when the spec says so. */
+export const predictionFake = (view: PredictionLookup): PredictionFake => {
+  const listeners = new Set<PredictionListener>();
+  const packageShown = vi.fn<SharedPrediction['packageShown']>();
+  const onDidChange = (listener: PredictionListener): (() => void) => {
+    listeners.add(listener);
+
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+  const changed: PredictionListener = (root) => {
+    for (const listener of listeners) listener(root);
+  };
+  const prediction: SharedPrediction = { ...SHARED_PREDICTION_STUB, view, packageShown, onDidChange };
+  const fake: PredictionFake = { prediction, packageShown, changed, listenerCount: () => listeners.size };
+
+  return fake;
+};
+
 /** Feeds over `runs`, a progress with no records, atoms that never load and hidden toggles, unless a spec passes its own. */
 export const feedsOf = (
   runs: Runs,
@@ -43,7 +69,8 @@ export const feedsOf = (
   toggles: GraphToggles = togglesOf(),
   progress: GraphProgress = progressFake().progress
 ): GraphFeeds => {
-  const feeds: GraphFeeds = { runs, progress, atoms, toggles };
+  const prediction = predictionFake(() => null).prediction;
+  const feeds: GraphFeeds = { runs, progress, atoms, prediction, toggles };
 
   return feeds;
 };

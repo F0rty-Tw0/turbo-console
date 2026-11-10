@@ -56,6 +56,7 @@ export const boardsState = (): GraphReady => {
     rootLabel: null,
     scopeShown: true,
     scriptsShown: true,
+    predictionShown: false,
     hash: 'b0a2d500',
     packages,
     edges: BOARDS_EDGES,

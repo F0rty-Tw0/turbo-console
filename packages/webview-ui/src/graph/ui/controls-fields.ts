@@ -1,5 +1,5 @@
 import { textElement } from '../../shared/ui/text-element.ts';
-import { SHOW_SCRIPTS_LABEL } from '../common/graph-task.const.ts';
+import { SHOW_PREDICTION_LABEL, SHOW_SCRIPTS_LABEL } from '../common/graph-task.const.ts';
 import { DEFAULT_DEPTH, GROUP_BY_FOLDER_LABEL, MAX_DEPTH, MIN_DEPTH, SCOPE_TOGGLE_LABEL } from '../common/graph.const.ts';
 
 export const checkbox = (className: string): HTMLInputElement => {
@@ -75,6 +75,9 @@ export const scopeField = (input: HTMLInputElement): HTMLElement => checkField(S
 
 /** The Show scripts checkbox before its text; the wrapping `<label>` names the input. */
 export const scriptsField = (input: HTMLInputElement): HTMLElement => checkField(SHOW_SCRIPTS_LABEL, input);
+
+/** The Show cache prediction checkbox before its text; the wrapping `<label>` names the input. */
+export const predictionField = (input: HTMLInputElement): HTMLElement => checkField(SHOW_PREDICTION_LABEL, input);
 
 /** One titled part of the panel: `section.controls-section` headed by an `h3`, then `children`. */
 export const controlsSection = (title: string, ...children: HTMLElement[]): HTMLElement => {

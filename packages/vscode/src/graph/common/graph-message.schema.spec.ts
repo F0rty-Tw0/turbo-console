@@ -38,11 +38,38 @@ describe('FEATURE: graph message schema', () => {
     });
   });
 
+  describe('GIVEN a shownTaskPackages message', () => {
+    it('WHEN packageNames holds names THEN it parses to those names and the unknown key is stripped', () => {
+      const parsed = graphMessageSchema.safeParse({ type: 'shownTaskPackages', packageNames: ['app', 'lib'], extra: 1 });
+
+      expect(parsed.data).toStrictEqual({ type: 'shownTaskPackages', packageNames: ['app', 'lib'] });
+    });
+
+    it.each([
+      ['a non-array', 'app'],
+      ['a non-string name', [1]],
+      ['a name over PACKAGE_NAME_MAX', ['x'.repeat(PACKAGE_NAME_MAX + 1)]],
+      ['more than TASK_COUNT_MAX names', Array.from({ length: TASK_COUNT_MAX + 1 }, () => 'a')]
+    ])('WHEN packageNames holds %s THEN parse fails', (_label, packageNames) => {
+      const parsed = graphMessageSchema.safeParse({ type: 'shownTaskPackages', packageNames });
+
+      expect(parsed.success).toBe(false);
+    });
+  });
+
   describe('GIVEN a setViewToggle with a known toggle and a boolean', () => {
     it('WHEN parsed THEN it parses to those fields and the unknown key is stripped', () => {
       const parsed = graphMessageSchema.safeParse({ type: 'setViewToggle', toggle: 'scope', shown: true, extra: 1 });
 
       expect(parsed.data).toStrictEqual({ type: 'setViewToggle', toggle: 'scope', shown: true });
+    });
+  });
+
+  describe('GIVEN a setViewToggle for prediction', () => {
+    it('WHEN parsed THEN it parses and keeps its three fields', () => {
+      const parsed = graphMessageSchema.safeParse({ type: 'setViewToggle', toggle: 'prediction', shown: true, extra: 1 });
+
+      expect(parsed.data).toStrictEqual({ type: 'setViewToggle', toggle: 'prediction', shown: true });
     });
   });
 

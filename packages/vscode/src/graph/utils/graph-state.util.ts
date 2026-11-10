@@ -1,6 +1,6 @@
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
 import { LAYOUT_VERSION, ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
-import type { GraphEdge, GraphPackage, GraphState } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphState, GraphTask } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
 import { packageNamesOf } from './graph-package.util.ts';
@@ -88,9 +88,13 @@ export const rootLabelOf = (model: WorkspaceModel): string | null => {
   return root?.label ?? null;
 };
 
-/** The tree's two toggles as they are now, read at every state build. */
+/** The tree's three toggles as they are now, read at every state build. */
 export const shownOf = (toggles: GraphToggles): GraphShown => {
-  const shown: GraphShown = { scopeShown: toggles.scope.isShown(), scriptsShown: toggles.scripts.isShown() };
+  const shown: GraphShown = {
+    scopeShown: toggles.scope.isShown(),
+    scriptsShown: toggles.scripts.isShown(),
+    predictionShown: toggles.prediction.isShown()
+  };
 
   return shown;
 };
@@ -120,7 +124,8 @@ export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, s
     singlePackage,
     rootLabel,
     scopeShown: shown.scopeShown,
-    scriptsShown: shown.scriptsShown
+    scriptsShown: shown.scriptsShown,
+    predictionShown: shown.predictionShown
   };
 
   return state;
@@ -153,6 +158,17 @@ export const runIdsOfRoot = (state: RootState | undefined): string[] => {
   if (model === null) return NO_IDS;
 
   return runIdsOfListing(graphListingOf(model));
+};
+
+/** The tasks `graphStateOfRoot(state, ...)` lists, without building the rest of the state: none unless the root shows a model. */
+export const tasksOfRoot = (state: RootState | undefined): GraphTask[] => {
+  if (state === undefined) return [];
+
+  const model = shownModelOf(state);
+
+  if (model === null) return [];
+
+  return graphListingOf(model).tasks;
 };
 
 /**

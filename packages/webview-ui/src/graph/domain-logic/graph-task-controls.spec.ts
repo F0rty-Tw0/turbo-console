@@ -48,7 +48,14 @@ const typeInto = (input: HTMLInputElement, text: string): void => {
   input.dispatchEvent(new Event('input'));
 };
 
-const CHECKS: TaskViewChecks = { grouped: true, canGroup: true, scopeShown: false, scriptsShown: true, hasScripts: true };
+const CHECKS: TaskViewChecks = {
+  grouped: true,
+  canGroup: true,
+  scopeShown: false,
+  scriptsShown: true,
+  hasScripts: true,
+  predictionShown: true
+};
 
 describe('FEATURE: GraphTaskControls', () => {
   let rig: ControlsRig;
@@ -177,6 +184,25 @@ describe('FEATURE: GraphTaskControls', () => {
       tick(rig.elements.scripts, true);
 
       expect(rig.actions.onViewToggle).toHaveBeenCalledExactlyOnceWith('scripts', true);
+    });
+
+    it('WHEN the user ticks Show cache prediction THEN onViewToggle is called once with prediction and true', () => {
+      tick(rig.elements.prediction, true);
+
+      expect(rig.actions.onViewToggle).toHaveBeenCalledExactlyOnceWith('prediction', true);
+    });
+
+    it('WHEN setView runs with predictionShown true THEN Show cache prediction is ticked', () => {
+      controls.setView(CHECKS);
+
+      expect(rig.elements.prediction.checked).toBe(true);
+    });
+
+    it('WHEN setView runs with predictionShown false THEN Show cache prediction is unticked', () => {
+      rig.elements.prediction.checked = true;
+      controls.setView({ ...CHECKS, predictionShown: false });
+
+      expect(rig.elements.prediction.checked).toBe(false);
     });
 
     it('WHEN setView runs THEN the boxes read the checks', () => {

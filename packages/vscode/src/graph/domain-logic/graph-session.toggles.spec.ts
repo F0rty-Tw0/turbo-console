@@ -90,6 +90,21 @@ describe('FEATURE: graph session toggles', () => {
     });
   });
 
+  describe('GIVEN a shown session whose page is ready', () => {
+    it('WHEN the prediction toggle turns on THEN one more state is posted with predictionShown true', async () => {
+      const { session, ports, toggles } = shownSession(false);
+
+      await session.receive({ type: 'ready' });
+
+      const before = postedStatesOf(ports).length;
+
+      await toggles.prediction.set(true);
+
+      expect(postedStatesOf(ports)).toHaveLength(before + 1);
+      expect(postedStatesOf(ports).at(-1)).toMatchObject({ predictionShown: true });
+    });
+  });
+
   describe('GIVEN a shown session before the page is ready', () => {
     it('WHEN a toggle changes THEN nothing is posted', async () => {
       const { ports, toggles } = shownSession();

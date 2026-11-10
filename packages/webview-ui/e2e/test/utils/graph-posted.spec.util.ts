@@ -5,6 +5,7 @@ import type { Page } from '@playwright/test';
 import type { GraphOpenImportMessage } from '../../../src/bridge/common/graph-imports.type.ts';
 import type {
   GraphSetViewToggleMessage,
+  GraphShownTaskPackagesMessage,
   GraphShownUmbrellasMessage,
   GraphWebviewMessage
 } from '../../../src/bridge/common/graph-message.type.ts';
@@ -37,6 +38,9 @@ const isExportImage = (message: GraphWebviewMessage): message is ExportImageMess
 
 const isShownUmbrellas = (message: GraphWebviewMessage): message is GraphShownUmbrellasMessage => message.type === 'shownUmbrellas';
 
+const isShownTaskPackages = (message: GraphWebviewMessage): message is GraphShownTaskPackagesMessage =>
+  message.type === 'shownTaskPackages';
+
 const isViewToggle = (message: GraphWebviewMessage): message is GraphSetViewToggleMessage => message.type === 'setViewToggle';
 
 export const positionsPosted = (posted: GraphWebviewMessage[]): PositionsMessage[] => posted.filter(isPositions);
@@ -57,6 +61,10 @@ export const exportImagePosted = (posted: GraphWebviewMessage[]): ExportImageMes
 
 /** The `shownUmbrellas` messages, oldest first. */
 export const shownUmbrellasPosted = (posted: GraphWebviewMessage[]): GraphShownUmbrellasMessage[] => posted.filter(isShownUmbrellas);
+
+/** The `shownTaskPackages` messages, oldest first. */
+export const shownTaskPackagesPosted = (posted: GraphWebviewMessage[]): GraphShownTaskPackagesMessage[] =>
+  posted.filter(isShownTaskPackages);
 
 /** The `setViewToggle` messages, oldest first. */
 export const viewTogglesPosted = (posted: GraphWebviewMessage[]): GraphSetViewToggleMessage[] => posted.filter(isViewToggle);

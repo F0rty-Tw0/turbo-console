@@ -52,7 +52,7 @@ export class GraphTaskMode {
   }
 
   /**
-   * Keeps the state's tasks and Atomizer groups; while active, shows the graph view once and draws the shown tasks when
+   * Keeps the state's tasks, Atomizer groups and cache prediction toggle; while active, shows the graph view once and draws the shown tasks when
    * their key changed or the root label did, since the key holds no label. A same key and label, never an empty set's,
    * still refreshes the selected task's panel and the banner, since commands and hidden tasks are not in the key, and
    * reports the shown umbrellas again, since a changed file list may have dropped a load the host must request anew.
@@ -62,7 +62,7 @@ export class GraphTaskMode {
     const isRelabelled = shownLabel !== state.rootLabel;
 
     this.memory.keep(state);
-    this.layout.atoms.received(state.atomGroups);
+    this.layout.received(state);
 
     if (!this.isActive()) return;
 
@@ -86,9 +86,13 @@ export class GraphTaskMode {
     this.render(at, null);
   }
 
-  /** A message replaced the graph view: the next graph state shows the toolbar, the body and the task parts again. */
+  /**
+   * A message replaced the graph view: the next graph state shows the toolbar, the body and the task parts again, and posts
+   * the shown task packages again, since the host may have dropped the last one while its graph view was replaced.
+   */
   public suspend(): void {
     this.hasEntered = false;
+    this.layout.predictions.forget();
   }
 
   /**
@@ -113,9 +117,7 @@ export class GraphTaskMode {
 
   /** Task mode → package mode with the task camera saved; in package mode it does nothing. */
   public leave(): void {
-    const isActive = this.isActive();
-
-    if (isActive) this.hidePage();
+    if (this.isActive()) this.hidePage();
   }
 
   /** Chooses the known ones of `taskIds` from either mode; with none known the page stays as it is and says so. */

@@ -49,6 +49,7 @@ type ReclassRow = {
 
 const RECLASS_ROWS: ReclassRow[] = [
   { name: 'runs are marked', act: (canvas: TaskCanvas): void => canvas.runStates({ 'a#build': 'running' }) },
+  { name: 'predictions are marked', act: (canvas: TaskCanvas): void => canvas.predictions({ 'a#build': 'unknown' }) },
   { name: 'a task is painted', act: (canvas: TaskCanvas): void => canvas.paint('hub#build') },
   { name: 'classes are marked again', act: (canvas: TaskCanvas): void => canvas.remark() }
 ];

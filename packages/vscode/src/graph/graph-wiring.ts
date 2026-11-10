@@ -10,14 +10,15 @@ import type { PanelKey } from '../details/common/details.type.ts';
 import type { PanelRoots } from '../roots/common/panel-roots.type.ts';
 import { manifestFile, rootOf } from '../run/feature/register-pickers.ts';
 import type { Output } from '../shared/common/output.type.ts';
+import type { SharedLoads } from '../tree/common/shared-loads.type.ts';
 
-/** The feeds every graph panel reads: the run states and the task progress of the run session, the shared Atomizer loads and the tree's toggles. */
+/** The feeds every graph panel reads: the run states and the task progress of the run session, the shared Atomizer and prediction loads and the tree's toggles. */
 export const graphFeedsOf = (
   run: Pick<GraphFeeds, 'runs' | 'progress'>,
-  atoms: GraphFeeds['atoms'],
+  loads: SharedLoads,
   toggles: GraphFeeds['toggles']
 ): GraphFeeds => {
-  const feeds: GraphFeeds = { runs: run.runs, progress: run.progress, atoms, toggles };
+  const feeds: GraphFeeds = { runs: run.runs, progress: run.progress, atoms: loads.atoms, prediction: loads.prediction, toggles };
 
   return feeds;
 };
@@ -50,6 +51,7 @@ export const createGraph = (
     runs: feeds.runs,
     progress: feeds.progress,
     atoms: feeds.atoms,
+    prediction: feeds.prediction,
     toggles: feeds.toggles
   });
   const ports = editorGraphCommandPorts(manifestFile, rootOf, output.error, (): boolean => feeds.toggles.scripts.isShown());

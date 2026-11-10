@@ -6,13 +6,12 @@ import { GraphTaskFeed } from './graph-task-feed.ts';
 import type { ProgressOwner, ProgressRecord } from '../../run/common/run-progress.type.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
 import { recordOf } from '../../run/test/utils/run-progress.spec.util.ts';
-import { SHARED_ATOMS_STUB } from '../../tree/test/stubs/shared-atoms.stub.ts';
-import type { GraphPorts, GraphProgress, TaskFeedGate } from '../common/graph.type.ts';
+import type { GraphFeeds, GraphPorts, GraphProgress, TaskFeedGate } from '../common/graph.type.ts';
 import type { ProgressFake } from '../test/common/graph.type.ts';
 import { graphPortsMock } from '../test/mocks/graph-ports.mock.ts';
 import { GRAPH_STATE_STUB, GRAPH_TASKS_STUB } from '../test/stubs/graph-model.stub.ts';
 import { RUN_A_BUILD_STUB } from '../test/stubs/graph-run.stub.ts';
-import { progressFake } from '../test/utils/graph-feeds.spec.util.ts';
+import { feedsOf, progressFake } from '../test/utils/graph-feeds.spec.util.ts';
 import { postedRunsMessagesOf } from '../test/utils/graph-session-runs.spec.util.ts';
 
 type ProgressFeedFixture = {
@@ -52,8 +51,10 @@ const startedFeed = (persistentIds: ReadonlySet<string> = new Set()): ProgressFe
   const fake = progressFake();
   const canPost = vi.fn<TaskFeedGate['canPost']>().mockReturnValue(true);
   const runIds = vi.fn<TaskFeedGate['runIds']>().mockReturnValue(LISTED_IDS);
-  const gate: TaskFeedGate = { canPost, state: () => GRAPH_STATE_STUB, runIds, persistentIds: () => persistentIds };
-  const feed = new GraphTaskFeed({ root: '/ws', runs, ports, gate, atoms: SHARED_ATOMS_STUB, progress: fake.progress });
+  const gate: TaskFeedGate = { canPost, state: () => GRAPH_STATE_STUB, runIds, persistentIds: () => persistentIds, tasks: () => [] };
+  const base = feedsOf(runs);
+  const feeds: GraphFeeds = { ...base, progress: fake.progress };
+  const feed = new GraphTaskFeed({ root: '/ws', ports, gate, feeds });
 
   fake.recordsOf.mockImplementation(recordsOfA(A_UNDER_WEB_BUILD));
   feed.start();

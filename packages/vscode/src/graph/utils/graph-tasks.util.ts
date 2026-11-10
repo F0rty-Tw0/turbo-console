@@ -138,9 +138,15 @@ const graphWordOf = (displayed: DisplayedRun, own: RunEntry | undefined, isPersi
 /**
  * The runs message of the listed `ids` under `root` (spec D9, D11): each id's word from its own run and the progress records
  * (`continuous` for a running persistent task, own or owned), and `owners` for the ids that run under another task's run,
- * left out when there is none. Ids no run names never appear, and an id that is not in `ids` never does.
+ * left out when there is none. Ids no run names never appear, and an id that is not in `ids` never does. `predictions` is carried
+ * as given, and the key is absent while it is `null`.
  */
-export const runsMessageOf = (root: string, ids: string[], sources: RunSources): GraphRunsMessage => {
+export const runsMessageOf = (
+  root: string,
+  ids: string[],
+  sources: RunSources,
+  predictions: NonNullable<GraphRunsMessage['predictions']> | null = null
+): GraphRunsMessage => {
   const { get, recordsOf, persistentIds } = sources;
   const runs = new Map<string, GraphRunState>();
   const owners = new Map<string, string>();
@@ -157,15 +163,14 @@ export const runsMessageOf = (root: string, ids: string[], sources: RunSources):
   }
 
   const runsRecord = Object.fromEntries(runs);
-
-  if (owners.size === 0) {
-    const plain: GraphRunsMessage = { type: 'runs', runs: runsRecord };
-
-    return plain;
-  }
-
+  const plain: GraphRunsMessage = { type: 'runs', runs: runsRecord };
   const ownersRecord = Object.fromEntries(owners);
-  const owned: GraphRunsMessage = { type: 'runs', runs: runsRecord, owners: ownersRecord };
+  const withOwners: GraphRunsMessage = { ...plain, owners: ownersRecord };
+  const owned = owners.size === 0 ? plain : withOwners;
 
-  return owned;
+  if (predictions === null) return owned;
+
+  const predicted: GraphRunsMessage = { ...owned, predictions };
+
+  return predicted;
 };

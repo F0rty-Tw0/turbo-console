@@ -41,6 +41,14 @@ describe('FEATURE: setClassesAmong', () => {
       expect(classEvents).toBe(0);
     });
 
+    it('WHEN it is set to normal among the states THEN it answers that it did not write', () => {
+      expect(setClassesAmong(node, STATES, ['normal'])).toBe(false);
+    });
+
+    it('WHEN it is set to dimmed among the states THEN it answers that it wrote', () => {
+      expect(setClassesAmong(node, STATES, ['dimmed'])).toBe(true);
+    });
+
     it('WHEN it is set to none of the states THEN only ghost stays', () => {
       setClassesAmong(node, STATES, []);
 

@@ -94,7 +94,8 @@ const WITHOUT_FOLDER_POSITIONS = {
   singlePackage: false,
   rootLabel: null,
   scopeShown: true,
-  scriptsShown: true
+  scriptsShown: true,
+  predictionShown: false
 };
 
 const WITHOUT_TASKS = {
@@ -110,7 +111,8 @@ const WITHOUT_TASKS = {
   singlePackage: false,
   rootLabel: null,
   scopeShown: true,
-  scriptsShown: true
+  scriptsShown: true,
+  predictionShown: false
 };
 
 const WITHOUT_ATOM_GROUPS = {
@@ -126,7 +128,8 @@ const WITHOUT_ATOM_GROUPS = {
   singlePackage: false,
   rootLabel: null,
   scopeShown: true,
-  scriptsShown: true
+  scriptsShown: true,
+  predictionShown: false
 };
 
 const ATOM_FILE = { id: 'app#e2e-ci--a.spec.ts', specPath: 'a.spec.ts', isLive: true };
@@ -235,6 +238,12 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a running and a failed-to-start task', { 'app#build': 'running', 'core#build': 'failed-to-start' }]
     ])('WHEN it has %s THEN it is accepted', (_name, runs) => {
       const isMessage = isGraphHostMessage({ type: 'runs', runs });
+
+      expect(isMessage).toBe(true);
+    });
+
+    it('WHEN its predictions is not an object THEN it is still accepted', () => {
+      const isMessage = isGraphHostMessage({ type: 'runs', runs: {}, predictions: 5 });
 
       expect(isMessage).toBe(true);
     });

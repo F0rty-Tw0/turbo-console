@@ -4,8 +4,11 @@ import type { BoxFrames } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { RouteSegments } from './route-segments.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
-import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomOutcome, GraphPrediction } from '../../bridge/common/graph-message.type.ts';
 import type { GraphTask, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+
+/** The cache prediction word of each predicted task, by task id; a task not named has none. */
+export type TaskPredictions = Readonly<Record<string, GraphPrediction>>;
 
 /**
  * What task mode draws: the shown tasks, their centres, the route of each link that has one, the frame of each titled-row
@@ -50,6 +53,11 @@ export type TaskCanvas = {
   readonly paint: (target: string | null) => void;
   /** Replaces every task's `run-<state>` class with the one `runs` names. */
   readonly runStates: (runs: TaskRuns) => void;
+  /**
+   * Replaces every task's `predict-<word>` class with the one the record names; kept, so a task graph drawn again carries it.
+   * The record it already holds is skipped, and box frames are refit only when a class changed.
+   */
+  readonly predictions: (next: TaskPredictions) => void;
   /** Sets the label of each umbrella in `labels` to its name and counts line; a task not drawn is skipped, no node moves. */
   readonly setCounts: (labels: ReadonlyMap<string, string>) => void;
   /** Marks the tasks and the Atomizer file nodes again with the kept runs map and paints the kept target again; an expand adds nodes the last mark and paint never saw. */

@@ -15,7 +15,7 @@ import type { GraphToggles } from '../common/graph.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
 import { graphHostMock } from '../test/mocks/graph-host.mock.ts';
 import { GRAPH_HASH_STUB, GRAPH_LOADED_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
-import { progressFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
+import { predictionFake, progressFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const READY = { type: 'ready' };
@@ -46,6 +46,7 @@ describe('FEATURE: graph panel registry', () => {
       runs: new RunStore(),
       progress: progressFake().progress,
       atoms: SHARED_ATOMS_STUB,
+      prediction: predictionFake(() => null).prediction,
       toggles
     };
 

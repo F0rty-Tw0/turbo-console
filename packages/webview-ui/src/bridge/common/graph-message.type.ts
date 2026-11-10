@@ -50,6 +50,9 @@ export type GraphEdgeExplainedMessage = {
   readonly result: EdgeExplainResult;
 };
 
+/** The wire words for the dry-run answers `HIT` (`cached`), `MISS` (`notCached`) and `deferred` (`unknown`). */
+export type GraphPrediction = 'cached' | 'notCached' | 'unknown';
+
 export type GraphRunsMessage = {
   readonly type: 'runs';
   readonly runs: Readonly<Record<string, GraphRunState>>;
@@ -58,6 +61,8 @@ export type GraphRunsMessage = {
    * absent when none.
    */
   readonly owners?: Readonly<Record<string, string>>;
+  /** Task id to prediction, only for the tasks the store answered; absent while the prediction toggle is off. */
+  readonly predictions?: Readonly<Record<string, GraphPrediction>>;
 };
 
 /** Asks the page to show these tasks in task mode. */
@@ -162,10 +167,16 @@ export type GraphShownUmbrellasMessage = {
   readonly ids: string[];
 };
 
-/** The tree's two View toggles: scope prefixes on package labels, and `package.json` scripts beside turbo tasks. */
-export type GraphViewToggle = 'scope' | 'scripts';
+/** The packages whose tasks task mode draws; the host loads their cache predictions. Posted only in task mode with the prediction toggle on. */
+export type GraphShownTaskPackagesMessage = {
+  readonly type: 'shownTaskPackages';
+  readonly packageNames: string[];
+};
 
-/** The page flipping one of the tree's two toggles. */
+/** The tree's three View toggles: scope prefixes on package labels, `package.json` scripts beside turbo tasks, and the cache prediction. */
+export type GraphViewToggle = 'scope' | 'scripts' | 'prediction';
+
+/** The page flipping one of the tree's three toggles. */
 export type GraphSetViewToggleMessage = {
   readonly type: 'setViewToggle';
   readonly toggle: GraphViewToggle;
@@ -187,4 +198,5 @@ export type GraphWebviewMessage =
   | GraphRunTaskMessage
   | GraphStopTaskMessage
   | GraphShownUmbrellasMessage
+  | GraphShownTaskPackagesMessage
   | GraphSetViewToggleMessage;

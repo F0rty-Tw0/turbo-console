@@ -6,6 +6,7 @@ export const GLYPH_CODE_POINTS = {
   error: '\uea87',
   'debug-stop': '\uead7',
   history: '\uea82',
+  question: '\ueb32',
   blank: '\uec03'
 } as const;
 

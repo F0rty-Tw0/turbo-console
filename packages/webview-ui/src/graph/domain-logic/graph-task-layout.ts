@@ -1,4 +1,6 @@
 import { GraphAtomGroups } from './graph-atom-groups.ts';
+import { GraphPredictionPosts } from './graph-prediction-posts.ts';
+import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
@@ -24,12 +26,14 @@ const isOpenFor = (saved: TaskViewState | null, key: string): boolean => {
 /**
  * The task graph's layout: the key asked for, the layout on screen, and the last `TASK_LAYOUT_MEMORY` layouts shown by
  * key in page memory, a drag included. Runs share the package runner, latest wins; a task layout never posts `positions`
- * or `layoutDone`, only `shownUmbrellas` through `atoms`. A layout that throws while still asked for empties the canvas and goes to `onFailure`;
+ * or `layoutDone`, only `shownUmbrellas` through `atoms` and `shownTaskPackages` through `predictions`. A layout that throws while still asked for empties the canvas and goes to `onFailure`;
  * package titles are measured inside that guard, so a text sizer that throws fails the layout too.
  */
 export class GraphTaskLayout {
   /** The Atomizer groups drawn as umbrellas: their counts, and the shown ones the host loads. */
   public readonly atoms: GraphAtomGroups;
+  /** The packages drawn, posted while the cache prediction toggle is on. */
+  public readonly predictions: GraphPredictionPosts;
 
   private readonly deps: TaskLayoutDeps;
   private readonly memory = new Map<string, LayoutResult>();
@@ -39,6 +43,7 @@ export class GraphTaskLayout {
   public constructor(deps: TaskLayoutDeps) {
     this.deps = deps;
     this.atoms = new GraphAtomGroups(deps);
+    this.predictions = new GraphPredictionPosts(deps.bridge);
   }
 
   /** The key of the layout asked for last, on screen or in flight. */
@@ -72,11 +77,18 @@ export class GraphTaskLayout {
     if (request !== null) await this.guard(request, async (): Promise<void> => this.layOut(request, false));
   }
 
+  /** The state's Atomizer groups and cache prediction toggle. */
+  public received(state: GraphReady): void {
+    this.atoms.received(state.atomGroups);
+    this.predictions.shown(state.predictionShown);
+  }
+
   /** Stops the flow, empties the task canvas and forgets the key asked for, so a run still in flight lands on nothing. */
   public clear(): void {
     this.wanted = null;
     this.placed = null;
     this.atoms.clear();
+    this.predictions.clear();
     this.deps.flow.stop();
     this.deps.view.tasks.clear();
   }
@@ -179,6 +191,7 @@ export class GraphTaskLayout {
     });
     this.placed = result;
     this.atoms.placed(request.shown, result, request.sizes, request.tasks);
+    this.predictions.placed(request.tasks);
     screen.showNotice(engineNoticeOf(result.engine));
 
     if (isSavedCamera) view.setViewport(saved.zoom, saved.pan);

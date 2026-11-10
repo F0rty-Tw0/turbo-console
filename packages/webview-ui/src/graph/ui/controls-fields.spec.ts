@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { checkbox, depthInput, hintedField, scriptsField } from './controls-fields.ts';
-import { SHOW_SCRIPTS_LABEL } from '../common/graph-task.const.ts';
+import { checkbox, depthInput, hintedField, predictionField, scriptsField } from './controls-fields.ts';
+import { SHOW_PREDICTION_LABEL, SHOW_SCRIPTS_LABEL } from '../common/graph-task.const.ts';
 import { DEPTH_HINT, DEPTH_HINT_ID, DEPTH_LABEL } from '../common/graph.const.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { childAt } from '../test/utils/html-child.spec.util.ts';
@@ -47,6 +47,15 @@ describe('FEATURE: controls fields', () => {
       const label = scriptsField(input);
 
       expect([label.tagName, label.textContent, label.children[0]]).toStrictEqual(['LABEL', SHOW_SCRIPTS_LABEL, input]);
+    });
+  });
+
+  describe('GIVEN a Show cache prediction checkbox', () => {
+    it('WHEN its field is built THEN it is a label reading Show cache prediction with the input first', () => {
+      const input = checkbox('controls-check');
+      const label = predictionField(input);
+
+      expect([label.tagName, label.textContent, label.children[0]]).toStrictEqual(['LABEL', SHOW_PREDICTION_LABEL, input]);
     });
   });
 });

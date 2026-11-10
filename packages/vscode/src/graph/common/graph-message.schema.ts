@@ -76,7 +76,16 @@ const stopTaskSchema = object({ type: literal('stopTask'), taskId: taskIdSchema 
 
 const shownUmbrellasSchema = object({ type: literal('shownUmbrellas'), ids: array(taskIdSchema).check(maxLength(TASK_COUNT_MAX)) });
 
-const setViewToggleSchema = object({ type: literal('setViewToggle'), toggle: zodEnum(['scope', 'scripts']), shown: boolean() });
+const shownTaskPackagesSchema = object({
+  type: literal('shownTaskPackages'),
+  packageNames: array(packageNameSchema).check(maxLength(TASK_COUNT_MAX))
+});
+
+const setViewToggleSchema = object({
+  type: literal('setViewToggle'),
+  toggle: zodEnum(['scope', 'scripts', 'prediction']),
+  shown: boolean()
+});
 
 /**
  * A message from the graph webview, which is a trust boundary. Unknown keys are stripped; whether a package name or a
@@ -96,5 +105,6 @@ export const graphMessageSchema = discriminatedUnion('type', [
   runTaskSchema,
   stopTaskSchema,
   shownUmbrellasSchema,
+  shownTaskPackagesSchema,
   setViewToggleSchema
 ]);

@@ -7,6 +7,7 @@ import type { ProgressChanges, ProgressRecords } from '../../run/common/run-prog
 import type { RunLookup, Runs } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
+import type { SharedPrediction } from '../../tree/common/prediction.type.ts';
 
 /**
  * Editor effects of one graph panel. `openDetails` and `openAt` may reject; `readText` rejects on a file it cannot open and gives
@@ -48,9 +49,11 @@ type UncheckedPositionsMessage = {
 /** A message that passed `graphMessageSchema`: its `positions` and `routes` records are still unread. */
 export type SchemaGraphMessage = Exclude<GraphWebviewMessage, PositionsTag> | UncheckedPositionsMessage;
 
-type RequestTag = { readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' | 'shownUmbrellas' | 'setViewToggle' };
+type RequestTag = {
+  readonly type: 'reload' | 'openDetails' | 'runTask' | 'stopTask' | 'shownUmbrellas' | 'shownTaskPackages' | 'setViewToggle';
+};
 
-/** A page request the session answers from the state it builds now: a reload, a package's details, a task run or stop, the umbrellas now shown or a flip of a tree toggle. */
+/** A page request the session answers from the state it builds now: a reload, a package's details, a task run or stop, the umbrellas or task packages now shown or a flip of a tree toggle. */
 export type GraphRequestMessage = Extract<GraphWebviewMessage, RequestTag>;
 
 type RunTag = { readonly type: 'runTask' | 'stopTask' };
@@ -104,14 +107,15 @@ export type LookupGate = {
 export type ScanGate = Omit<LookupGate, 'drop'>;
 
 /**
- * `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now, `runIds` the ids a run can report
- * and `persistentIds` the ids whose running word is `continuous`, without the rest of the state.
+ * `canPost` is the session's check that the panel is shown, ready and alive; `state` is the state as it is now, `runIds` the ids a run can report,
+ * `persistentIds` the ids whose running word is `continuous` and `tasks` the tasks the state lists, without the rest of the state.
  */
 export type TaskFeedGate = {
   readonly canPost: () => boolean;
   readonly state: () => GraphState;
   readonly runIds: () => string[];
   readonly persistentIds: () => ReadonlySet<string>;
+  readonly tasks: () => GraphTask[];
 };
 
 /** The tree command a graph run request maps to, with the tree-row argument it takes. */
@@ -120,26 +124,29 @@ export type GraphRunCommand = {
   readonly arg: unknown;
 };
 
-/** The two tree toggles a state carries: scope prefixes on package labels, and `package.json` scripts beside turbo tasks. */
+/** The three tree toggles a state carries: scope prefixes on package labels, `package.json` scripts beside turbo tasks, and the cache prediction. */
 export type GraphShown = {
   readonly scopeShown: boolean;
   readonly scriptsShown: boolean;
+  readonly predictionShown: boolean;
 };
 
-/** The tree's two toggles, which the graph reads, and sets for a `setViewToggle`. */
+/** The tree's three toggles, which the graph reads, and sets for a `setViewToggle`. */
 export type GraphToggles = {
   readonly scope: ScriptsToggleApi;
   readonly scripts: ScriptsToggleApi;
+  readonly prediction: ScriptsToggleApi;
 };
 
 /** The task progress a graph reads: the records of an id and the change feed that says which root they changed under. */
 export type GraphProgress = ProgressRecords & ProgressChanges;
 
-/** What a panel's feeds read: the run states of its root, the task progress of every run, the Atomizer loads shared with the tree and the tree's two toggles. */
+/** What a panel's feeds read: the run states of its root, the task progress of every run, the Atomizer loads and the cache prediction shared with the tree, and the tree's three toggles. */
 export type GraphFeeds = {
   readonly runs: Runs;
   readonly progress: GraphProgress;
   readonly atoms: SharedAtoms;
+  readonly prediction: SharedPrediction;
   readonly toggles: GraphToggles;
 };
 

@@ -20,6 +20,7 @@ const STATE: GraphReady = {
   rootLabel: null,
   scopeShown: true,
   scriptsShown: true,
+  predictionShown: false,
   hash: 'h',
   packages: PACKAGES,
   edges: [KEPT_EDGE, DANGLING_EDGE],
