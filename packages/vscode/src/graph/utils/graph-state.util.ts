@@ -1,6 +1,6 @@
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
 import { LAYOUT_VERSION, ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
-import type { GraphEdge, GraphPackage, GraphState } from '@turbo-console/webview-ui';
+import type { GraphEdge, GraphPackage, GraphState, GraphTask } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
 import { packageNamesOf } from './graph-package.util.ts';
@@ -158,6 +158,17 @@ export const runIdsOfRoot = (state: RootState | undefined): string[] => {
   if (model === null) return NO_IDS;
 
   return runIdsOfListing(graphListingOf(model));
+};
+
+/** The tasks `graphStateOfRoot(state, ...)` lists, without building the rest of the state: none unless the root shows a model. */
+export const tasksOfRoot = (state: RootState | undefined): GraphTask[] => {
+  if (state === undefined) return [];
+
+  const model = shownModelOf(state);
+
+  if (model === null) return [];
+
+  return graphListingOf(model).tasks;
 };
 
 /**
