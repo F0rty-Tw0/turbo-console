@@ -53,8 +53,8 @@ export const predictionFake = (view: PredictionLookup): PredictionFake => {
       listeners.delete(listener);
     };
   };
-  const changed: PredictionListener = (root) => {
-    for (const listener of listeners) listener(root);
+  const changed = (root: string): void => {
+    for (const listener of listeners) listener(root, new Set());
   };
   const prediction: SharedPrediction = { ...SHARED_PREDICTION_STUB, view, packageShown, onDidChange };
   const fake: PredictionFake = { prediction, packageShown, changed, listenerCount: () => listeners.size };

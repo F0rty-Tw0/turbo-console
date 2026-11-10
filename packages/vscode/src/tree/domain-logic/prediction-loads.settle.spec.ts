@@ -39,7 +39,7 @@ describe('FEATURE: prediction loads settling', () => {
       await flush();
 
       expect(store.view(ROOT, PKG_A)).toStrictEqual({ settledAt: NOW_1, tasks: new Map([[ID_A, 'HIT']]) });
-      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it.each([['HIT'], ['MISS'], ['deferred']] as const)('WHEN the row says %s THEN it is stored as given', async (cache) => {
@@ -69,7 +69,7 @@ describe('FEATURE: prediction loads settling', () => {
 
       expect(h.log).toHaveBeenCalledExactlyOnceWith('prediction /ws @fx/a: boom');
       expect(store.view(ROOT, PKG_A)).toBeNull();
-      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it('WHEN the run is superseded and the old one resolves THEN nothing is stored or announced', async () => {
@@ -174,7 +174,7 @@ describe('FEATURE: prediction loads settling', () => {
     it('WHEN the window ends THEN the request lists only the first, the other has an empty answer and the root is announced', () => {
       expect(dryRunAt(h, 0).request.packages).toStrictEqual([PKG_A]);
       expect(store.view(ROOT, PKG_B)).toStrictEqual({ settledAt: NOW_0, tasks: new Map() });
-      expect(h.changed).toHaveBeenCalledWith(ROOT);
+      expect(h.changed).toHaveBeenCalledWith(ROOT, new Set([PKG_B]));
     });
 
     it('WHEN the run settles THEN the one without tasks keeps its empty answer', async () => {

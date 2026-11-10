@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PredictionLoads } from './prediction-loads.ts';
+import type { PredictionListener } from '../common/prediction.type.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
 import { ID_A, PKG_A, PKG_B, PKG_C, PREDICTION_STATES, RESTARTABLE_STATES } from '../test/common/prediction-load.const.ts';
 import type { PredictionHarness, PredictionState } from '../test/common/prediction-load.type.ts';
@@ -8,10 +9,10 @@ import { dryRunAt, dryStateOf, flush } from '../test/utils/atom-load.spec.util.t
 import { changeOf, predictionHarness, toState } from '../test/utils/prediction-load.spec.util.ts';
 import { buildModelOf, predictionModelOf, turboTaskOf } from '../test/utils/prediction-model.spec.util.ts';
 
-const GONE: [PredictionState, number][] = [
-  ['loading', 0],
-  ['loaded', 1],
-  ['failed', 0]
+const GONE: [PredictionState, Parameters<PredictionListener>[]][] = [
+  ['loading', []],
+  ['loaded', [[ROOT, new Set([PKG_A])]]],
+  ['failed', []]
 ];
 
 describe('FEATURE: prediction loads when the model changes', () => {
@@ -64,9 +65,9 @@ describe('FEATURE: prediction loads when the model changes', () => {
       store.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_B])));
     });
 
-    it('WHEN a new model lacks it THEN it is absent and announced only if it had an answer', () => {
+    it('WHEN a new model lacks it THEN it is absent and announced by name only if it had an answer', () => {
       expect(store.view(ROOT, PKG_A)).toBeNull();
-      expect(h.changed).toHaveBeenCalledTimes(announced);
+      expect(h.changed.mock.calls).toStrictEqual(announced);
     });
 
     it('WHEN a new model lacks it THEN a later packageShown queues it again', () => {
@@ -125,7 +126,7 @@ describe('FEATURE: prediction loads when the model changes', () => {
     });
 
     it('THEN the answer it took back is announced once', () => {
-      expect(h.changed).toHaveBeenCalledOnce();
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
   });
 

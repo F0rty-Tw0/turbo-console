@@ -148,8 +148,8 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
     markRuns(cy, next);
     refitBoxFrames(cy);
   };
-  const predictions = (next: TaskPredictions): void => {
-    if (next === predicted) return;
+  const predictions = (next: TaskPredictions | null): void => {
+    if (next === null || next === predicted) return;
 
     predicted = next;
 

@@ -7,7 +7,8 @@ const rootOf = (entry: RootEntry): string => entry.state.folder.root;
 
 /**
  * The tree's side of the window's shared cache prediction: which node and run events reach `PredictionLoads`, and which
- * nodes redraw when a root's predictions changed. It only reads `cache`, which `PackagesTree` writes, so a fired node is
+ * nodes redraw: the store names the root and the packages whose prediction changed, and only those package nodes fire. It
+ * only reads `cache`, which `PackagesTree` writes, so a fired node is
  * the object VS Code holds; VS Code then asks for that package's children again, and the store ignores a request for a
  * package it already has.
  */
@@ -24,8 +25,8 @@ export class PredictionTree {
     this.fire = ports.fire;
     this.shared = ports.prediction;
     this.view = this.shared.view;
-    this.shared.onDidChange((root) => {
-      this.changed(root);
+    this.shared.onDidChange((root, packageNames) => {
+      this.changed(root, packageNames);
     });
   }
 
@@ -66,10 +67,17 @@ export class PredictionTree {
     this.shared.dispose();
   }
 
-  /** Fires the cached package nodes of `root` in one event; none cached (root never opened) fires nothing. */
-  private changed(root: string): void {
-    const isPackageOfRoot = (node: TreeNode): boolean => node.kind === 'pkg' && node.root === root;
-    const nodes = Array.from(this.cache.values()).filter(isPackageOfRoot);
+  /**
+   * Fires the cached nodes of `packageNames` of `root` in one event, so VS Code asks again only for the packages whose
+   * prediction changed; none cached (root never opened) fires nothing.
+   */
+  private changed(root: string, packageNames: ReadonlySet<string>): void {
+    const isChangedPackage = (node: TreeNode): boolean => {
+      const isNamed = node.packageName !== null && packageNames.has(node.packageName);
+
+      return node.kind === 'pkg' && node.root === root && isNamed;
+    };
+    const nodes = Array.from(this.cache.values()).filter(isChangedPackage);
 
     if (nodes.length > 0) this.fire(nodes);
   }

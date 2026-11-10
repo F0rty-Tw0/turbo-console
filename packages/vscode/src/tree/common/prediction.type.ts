@@ -31,7 +31,7 @@ export type PredictionTimer = { readonly id: unknown };
 
 /**
  * What `PredictionLoads` reads and calls. `binaryOf` is `null` for a folder whose turbo is not resolved. `after` runs
- * `run` once after `ms` unless `cancel` stops it. `changed` fires when the view of some package of `root` changed.
+ * `run` once after `ms` unless `cancel` stops it. `changed` fires when the views of `packageNames` of `root` changed.
  */
 export type PredictionLoadPorts = {
   readonly binaryOf: (root: string) => TurboBinary | null;
@@ -41,7 +41,7 @@ export type PredictionLoadPorts = {
   readonly cancel: (timer: PredictionTimer) => void;
   readonly now: () => number;
   readonly log: (line: string) => void;
-  readonly changed: (root: string) => void;
+  readonly changed: PredictionListener;
 };
 
 /** The timer half of `PredictionLoadPorts`, all that `PredictionBatches` reads. */
@@ -76,8 +76,8 @@ export type PredictionWaitPort = {
 /** The host half of `PredictionLoadPorts`: the store supplies `modelOf` and `changed` itself. */
 export type PredictionHostPorts = Omit<PredictionLoadPorts, 'changed' | 'modelOf'>;
 
-/** Hears that the view of some package of `root` changed. */
-export type PredictionListener = (root: string) => void;
+/** Hears that the views of `packageNames` of `root` changed; a listener that redraws the whole root may ignore the names. */
+export type PredictionListener = (root: string, packageNames: ReadonlySet<string>) => void;
 
 /**
  * The one `PredictionLoads` of a window, shared by the tree and the graph: its public methods plus `onDidChange`, which

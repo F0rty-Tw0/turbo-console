@@ -2,6 +2,7 @@ import type { GraphShowRequest, GraphState, GraphTask, GraphWebviewMessage } fro
 
 import { GraphImageSaver } from './graph-image-saver.ts';
 import { layoutCachesOf, storePositions } from './graph-layout-store.ts';
+import { GraphListingMemo } from './graph-listing-memo.ts';
 import { GraphLookups, isLookupMessage } from './graph-lookups.ts';
 import { isRequestMessage, requestHandledOf } from './graph-requests.ts';
 import { GraphTaskFeed } from './graph-task-feed.ts';
@@ -31,6 +32,7 @@ export class GraphSession {
   private readonly lookups: GraphLookups;
   private readonly feed: GraphTaskFeed;
   private readonly feeds: GraphFeeds;
+  private readonly listings = new GraphListingMemo();
 
   public constructor(root: string, roots: Roots, ports: GraphPorts, feeds: GraphFeeds) {
     this.root = root;
@@ -54,9 +56,9 @@ export class GraphSession {
     const gate: TaskFeedGate = {
       canPost: (): boolean => this.canPost(),
       state: (): GraphState => this.stateNow(),
-      runIds: (): string[] => runIdsOfRoot(this.roots.get(this.root)?.state),
+      runIds: (): string[] => runIdsOfRoot(this.roots.get(this.root)?.state, this.listings.of),
       persistentIds: (): ReadonlySet<string> => persistentIdsOfRoot(this.roots.get(this.root)?.state),
-      tasks: (): GraphTask[] => tasksOfRoot(this.roots.get(this.root)?.state)
+      tasks: (): GraphTask[] => tasksOfRoot(this.roots.get(this.root)?.state, this.listings.of)
     };
 
     this.feed = new GraphTaskFeed({ root, ports, gate, feeds });

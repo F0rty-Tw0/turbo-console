@@ -5,6 +5,7 @@ import { PredictionLaunch } from './prediction-launch.ts';
 import type {
   PredictionBatchPort,
   PredictionEntry,
+  PredictionListener,
   PredictionTicket,
   PredictionView,
   PredictionWaitPort
@@ -65,9 +66,9 @@ describe('FEATURE: prediction launch', () => {
     });
   });
 
-  describe.each([
-    ['no answer', null, 0],
-    ['an answer', HIT_VIEW, 1]
+  describe.each<[string, PredictionView | null, Parameters<PredictionListener>[]]>([
+    ['no answer', null, []],
+    ['an answer', HIT_VIEW, [[ROOT, new Set([PKG_A])]]]
   ])('GIVEN an entry with %s on a live ticket', (_given, view, announced) => {
     beforeEach(() => {
       h.noBinary();
@@ -75,10 +76,10 @@ describe('FEATURE: prediction launch', () => {
       launcher.launch(predictionTicketOf([PKG_A]));
     });
 
-    it('WHEN the root has no binary at launch THEN it is parked and changed is called only if it had an answer', () => {
+    it('WHEN the root has no binary at launch THEN it is parked and announced by name only if it had an answer', () => {
       expect(entryAt(entries, PKG_A)).toBeUndefined();
       expect(add).toHaveBeenCalledExactlyOnceWith(ROOT, PKG_A);
-      expect(h.changed).toHaveBeenCalledTimes(announced);
+      expect(h.changed.mock.calls).toStrictEqual(announced);
     });
   });
 
@@ -94,7 +95,7 @@ describe('FEATURE: prediction launch', () => {
 
     it('WHEN the ticket launches THEN the package is Loaded with an empty answer and announced', () => {
       expect(entryAt(entries, PKG_A)).toStrictEqual({ root: ROOT, packageName: PKG_A, view: EMPTY_VIEW, ticket: null });
-      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it('WHEN the ticket launches THEN the package leaves, the empty batch finishes and nothing spawns', () => {
@@ -104,9 +105,9 @@ describe('FEATURE: prediction launch', () => {
     });
   });
 
-  describe.each([
-    ['no answer', null, 0],
-    ['an answer', HIT_VIEW, 1]
+  describe.each<[string, PredictionView | null, Parameters<PredictionListener>[]]>([
+    ['no answer', null, []],
+    ['an answer', HIT_VIEW, [[ROOT, new Set([PKG_A])]]]
   ])('GIVEN a package with %s that the model no longer holds', (_given, view, announced) => {
     let ticket: PredictionTicket;
 
@@ -122,9 +123,9 @@ describe('FEATURE: prediction launch', () => {
       expect(leave).toHaveBeenCalledExactlyOnceWith(ticket, PKG_A);
     });
 
-    it('WHEN the ticket launches THEN it does not wait and is announced only if it had an answer', () => {
+    it('WHEN the ticket launches THEN it does not wait and is announced by name only if it had an answer', () => {
       expect(add).not.toHaveBeenCalled();
-      expect(h.changed).toHaveBeenCalledTimes(announced);
+      expect(h.changed.mock.calls).toStrictEqual(announced);
     });
   });
 
@@ -151,7 +152,7 @@ describe('FEATURE: prediction launch', () => {
 
       expect(entryAt(entries, PKG_A)).toStrictEqual({ root: ROOT, packageName: PKG_A, view: HIT_VIEW, ticket: null });
       expect(entryAt(entries, PKG_B)).toStrictEqual({ root: ROOT, packageName: PKG_B, view: null, ticket: null });
-      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it('WHEN the run settles OK THEN the ticket is finished', async () => {
@@ -167,7 +168,7 @@ describe('FEATURE: prediction launch', () => {
 
       expect(entryAt(entries, PKG_A)).toStrictEqual({ root: ROOT, packageName: PKG_A, view: null, ticket: null });
       expect(h.log).toHaveBeenCalledExactlyOnceWith(`prediction ${ROOT} ${PKG_A}: boom`);
-      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it('WHEN the run rejects THEN the ticket is finished', async () => {

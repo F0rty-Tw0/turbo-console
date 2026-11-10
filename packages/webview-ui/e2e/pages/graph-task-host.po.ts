@@ -31,7 +31,10 @@ export class GraphTaskHost {
     this.page = page;
   }
 
-  /** The `predictions` field is on the message only when given, as the host leaves it off a runs message without them. */
+  /**
+   * The `predictions` field is on the message only when given, as the host leaves it off while the predictions did not change;
+   * `{}` clears every mark.
+   */
   public async sendRuns(
     runs: Readonly<Record<string, GraphRunState>>,
     predictions?: Readonly<Record<string, GraphPrediction>>

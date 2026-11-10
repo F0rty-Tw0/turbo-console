@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { predictionRecordOf } from './prediction-record.util.ts';
 import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
+import { NO_PREDICTIONS } from '../common/graph-task.const.ts';
 
 const MIXED = { 'a#x': 'cached', 'b#y': 'bogus', 'c#z': 7 };
 
@@ -11,8 +12,11 @@ const entryOf = (_: unknown, index: number): [string, string] => [`p#t${index}`,
 
 describe('FEATURE: predictionRecordOf', () => {
   describe('GIVEN the predictions field of a runs message', () => {
+    it('WHEN it is absent THEN it is null, so the marks stay', () => {
+      expect(predictionRecordOf(undefined)).toBeNull();
+    });
+
     it.each([
-      ['absent', undefined, {}],
       ['a number', 5, {}],
       ['null', null, {}],
       ['an array', ['cached'], {}],
@@ -22,7 +26,14 @@ describe('FEATURE: predictionRecordOf', () => {
       expect(predictionRecordOf(value)).toStrictEqual(record);
     });
 
-    it('WHEN it has more than TASK_COUNT_MAX entries THEN it is treated as absent', () => {
+    it.each([
+      ['empty', {}],
+      ['only bad words', { 'b#y': 'bogus' }]
+    ])('WHEN it is %s THEN it is the shared empty record, so the view skips it', (_name, value) => {
+      expect(predictionRecordOf(value)).toBe(NO_PREDICTIONS);
+    });
+
+    it('WHEN it has more than TASK_COUNT_MAX entries THEN it is the empty record', () => {
       const entries = Array.from({ length: TASK_COUNT_MAX + 1 }, entryOf);
       const huge = Object.fromEntries(entries);
 
@@ -33,12 +44,12 @@ describe('FEATURE: predictionRecordOf', () => {
       const entries = Array.from({ length: TASK_COUNT_MAX }, entryOf);
       const full = Object.fromEntries(entries);
 
-      expect(Object.keys(predictionRecordOf(full))).toHaveLength(TASK_COUNT_MAX);
+      expect(Object.keys(predictionRecordOf(full) ?? {})).toHaveLength(TASK_COUNT_MAX);
     });
 
     it('WHEN it parses a __proto__ key THEN the key stays plain data', () => {
       const parsed: unknown = JSON.parse('{"__proto__":"cached"}');
-      const record = predictionRecordOf(parsed);
+      const record = predictionRecordOf(parsed) ?? {};
 
       expect(Object.hasOwn(record, '__proto__')).toBe(true);
     });

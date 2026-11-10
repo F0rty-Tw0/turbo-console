@@ -7,17 +7,17 @@ import type { PredictionListener, PredictionListeners } from '../common/predicti
  */
 export const predictionListenersOf = (log: (line: string) => void): PredictionListeners => {
   const listeners = new Set<PredictionListener>();
-  const tell = (listener: PredictionListener, root: string): void => {
+  const tell = (listener: PredictionListener, root: string, packageNames: ReadonlySet<string>): void => {
     try {
-      listener(root);
+      listener(root, packageNames);
     } catch (error) {
       const line = `prediction ${root}: listener failed: ${logTextOf(error)}`;
 
       log(logTextOf(line));
     }
   };
-  const changed: PredictionListener = (root) => {
-    for (const listener of listeners) tell(listener, root);
+  const changed: PredictionListener = (root, packageNames) => {
+    for (const listener of listeners) tell(listener, root, packageNames);
   };
   const onDidChange = (listener: PredictionListener): (() => void) => {
     listeners.add(listener);

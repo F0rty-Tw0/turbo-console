@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import type { PredictionListener, SharedPrediction } from '../../common/prediction.type.ts';
 import type { SharedPredictionFake } from '../common/prediction-load.type.ts';
 
-/** The one `SharedPrediction` fake: every member a spy, and `emit(root)` calls the listeners `onDidChange` collected. */
+/** The one `SharedPrediction` fake: every member a spy, and `emit(root, packageNames)` calls the listeners `onDidChange` collected. */
 export const sharedPredictionMock = (): SharedPredictionFake => {
   const listeners = new Set<PredictionListener>();
   const onDidChange = vi.fn((listener: PredictionListener): (() => void) => {
@@ -13,8 +13,8 @@ export const sharedPredictionMock = (): SharedPredictionFake => {
       listeners.delete(listener);
     };
   });
-  const emit: PredictionListener = (root) => {
-    for (const listener of listeners) listener(root);
+  const emit: PredictionListener = (root, packageNames) => {
+    for (const listener of listeners) listener(root, packageNames);
   };
   const shared: SharedPrediction = {
     view: vi.fn(() => null),

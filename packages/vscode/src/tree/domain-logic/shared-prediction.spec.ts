@@ -51,16 +51,16 @@ describe('FEATURE: shared cache prediction', () => {
       startRun();
     });
 
-    it('WHEN a load settles THEN the first listener hears (root) once', async () => {
+    it('WHEN a load settles THEN the first listener hears (root, the settled package) once', async () => {
       await settleRun();
 
-      expect(first).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(first).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
-    it('WHEN a load settles THEN the second listener hears (root) once', async () => {
+    it('WHEN a load settles THEN the second listener hears (root, the settled package) once', async () => {
       await settleRun();
 
-      expect(second).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(second).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it('WHEN disposed THEN a settling run reaches no listener', async () => {
@@ -86,10 +86,10 @@ describe('FEATURE: shared cache prediction', () => {
       startRun();
     });
 
-    it('WHEN a load settles THEN the second listener still hears (root) once', async () => {
+    it('WHEN a load settles THEN the second listener still hears (root, the settled package) once', async () => {
       await settleRun();
 
-      expect(second).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(second).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it('WHEN a load settles THEN the log names the root and the error', async () => {

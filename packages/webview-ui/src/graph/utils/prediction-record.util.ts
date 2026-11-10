@@ -11,11 +11,15 @@ const isPredictionEntry = (entry: [string, unknown]): entry is [string, GraphPre
 };
 
 /**
- * The `predictions` of a `runs` message as the page trusts it: a value that is not a plain object, or one with more than
- * `TASK_COUNT_MAX` entries, is treated as absent; an entry whose word is unknown is dropped. Built from own entries, so a
- * `__proto__` key stays plain data.
+ * The `predictions` of a `runs` message as the page trusts it: `null` while the key is absent, as the host leaves it off while
+ * they did not change, so the marks stay; a value that is not a plain object, or one with more than `TASK_COUNT_MAX` entries, is
+ * the empty record, which clears every mark; an entry whose word is unknown is dropped. Any empty result is the shared
+ * `NO_PREDICTIONS`, so the view's identity check skips a repeated `{}`. Built from own entries, so a `__proto__` key stays
+ * plain data.
  */
-export const predictionRecordOf = (value: unknown): TaskPredictions => {
+export const predictionRecordOf = (value: unknown): TaskPredictions | null => {
+  if (value === undefined) return null;
+
   const isObject = isRecord(value);
   const isList = Array.isArray(value);
 
@@ -27,6 +31,8 @@ export const predictionRecordOf = (value: unknown): TaskPredictions => {
   if (isTooMany) return NO_PREDICTIONS;
 
   const known = entries.filter(isPredictionEntry);
+
+  if (known.length === 0) return NO_PREDICTIONS;
 
   return Object.fromEntries(known);
 };

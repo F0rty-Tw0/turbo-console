@@ -117,6 +117,21 @@ describe('FEATURE: task canvas predictions', () => {
       expect(cy.elements('.predict-cached, .predict-unknown, .predict-notCached')).toHaveLength(0);
     });
 
+    it('WHEN null follows a record THEN the marks stay', () => {
+      canvas.predictions({ 'api#build': 'cached', 'web#build': 'unknown' });
+      canvas.predictions(null);
+
+      expect(predictionClassesOf(cy, 'web#build')).toStrictEqual(['predict-unknown']);
+    });
+
+    it('WHEN null follows a record and the tasks are shown again THEN the record is marked again', () => {
+      canvas.predictions({ 'api#build': 'cached' });
+      canvas.predictions(null);
+      canvas.show(DRAWING);
+
+      expect(predictionClassesOf(cy, 'api#build')).toStrictEqual(['predict-cached']);
+    });
+
     it('WHEN the tasks are shown again THEN the kept predictions are marked again', () => {
       canvas.predictions({ 'api#build': 'cached' });
       canvas.show(DRAWING);

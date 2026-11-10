@@ -16,6 +16,8 @@ import { predictionKeyOf } from '../utils/prediction-key.util.ts';
 
 const hasView = (entry: PredictionEntry): boolean => entry.view !== null;
 
+const nameOf = (entry: PredictionEntry): string => entry.packageName;
+
 /**
  * The cache prediction of each package, one entry per `(root, packageName)`. No entry is Absent; a ticket that is not
  * live is Queued, a live one Loading; no ticket and a view is Loaded, none and no view Failed. Queued and Loading keep
@@ -156,6 +158,7 @@ export class PredictionLoads {
     const isGone = (entry: PredictionEntry): boolean => !isKept(entry);
     const gone = own.filter(isGone);
     const hadView = gone.some(hasView);
+    const goneNames = gone.map(nameOf);
 
     this.requeue(own.filter(isKept));
 
@@ -164,6 +167,6 @@ export class PredictionLoads {
       this.entries.delete(predictionKeyOf(root, entry.packageName));
     }
 
-    if (hadView) this.ports.changed(root);
+    if (hadView) this.ports.changed(root, new Set(goneNames));
   }
 }

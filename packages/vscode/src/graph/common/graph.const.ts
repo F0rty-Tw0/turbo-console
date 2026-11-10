@@ -57,3 +57,6 @@ export const EXPORT_PNG_MAX = 33_554_432;
 
 /** Run changes of a task graph are posted at most once per this many milliseconds, so a burst of task events is one post. */
 export const RUNS_COALESCE_MS = 50;
+
+/** The `predictions` of a runs message while the prediction toggle is off: an empty record clears every mark on the page. */
+export const NO_GRAPH_PREDICTIONS: Readonly<Record<string, never>> = {};
