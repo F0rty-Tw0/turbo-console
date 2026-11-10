@@ -99,6 +99,14 @@ export const SHOW_TASKS_LABEL = 'Show tasks';
 
 export const SHOW_SCRIPTS_LABEL = 'Show scripts';
 
+export const SHOW_PREDICTION_LABEL = 'Show cache prediction';
+
+/** Starts each prediction class on a task node: `predict-cached`, `predict-notCached`, `predict-unknown`. */
+export const PREDICTION_CLASS_PREFIX = 'predict-';
+
+/** The run states whose glyph wins over a cache prediction; an ended run's glyph yields to it. */
+export const LIVE_RUN_STATES: GraphRunState[] = ['running', 'continuous'];
+
 /** The notice when every requested task id matches no task. */
 export const UNKNOWN_TASKS_TEXT = 'Those tasks are not in this workspace';
 
