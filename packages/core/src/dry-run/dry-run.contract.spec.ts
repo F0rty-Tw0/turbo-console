@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { PRESETS } from '@turbo-console/repo-gen';
-import type { FixtureHandle, FixtureSpec } from '@turbo-console/repo-gen';
+import type { FixtureHandle, FixtureSpec, Manifest } from '@turbo-console/repo-gen';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { array, object, string } from 'zod/mini';
 
@@ -59,6 +59,44 @@ const binaryFor = async (fixture: FixtureHandle): Promise<TurboBinary> => {
   spawns.files.length = 0;
 
   return binary;
+};
+
+/** Two packages where `owner` defines a task `other` lacks, and a task both define; read from the manifest, so a generator change fails loudly. */
+type FilterPair = { readonly owner: string; readonly other: string; readonly exclusive: string; readonly shared: string };
+
+const bareTasksOf = (manifest: Manifest, packageName: string): string[] => {
+  const isBareTask = (task: Manifest['tasks'][number]): boolean => task.packageName === packageName && task.kind === 'task';
+
+  return manifest.tasks.filter(isBareTask).map((task) => task.taskName);
+};
+
+const filterPairFor = (manifest: Manifest, owner: string, other: string): FilterPair | null => {
+  const ownerTasks = bareTasksOf(manifest, owner);
+  const otherTasks = bareTasksOf(manifest, other);
+  const exclusive = ownerTasks.find((task) => !otherTasks.includes(task));
+  const shared = ownerTasks.find((task) => otherTasks.includes(task));
+
+  if (exclusive === undefined || shared === undefined) return null;
+
+  const pair: FilterPair = { owner, other, exclusive, shared };
+
+  return pair;
+};
+
+const isPair = (pair: FilterPair | null): pair is FilterPair => pair !== null;
+
+const filterPairOf = (manifest: Manifest): FilterPair => {
+  const names = manifest.packages.map((pkg) => pkg.name);
+  const pairsOf = (owner: string): (FilterPair | null)[] => {
+    const others = names.filter((other) => other !== owner);
+
+    return others.map((other) => filterPairFor(manifest, owner, other));
+  };
+  const found = names.flatMap(pairsOf).find(isPair);
+
+  if (found === undefined) throw new Error('no package pair with an exclusive and a shared task');
+
+  return found;
 };
 
 describe('FEATURE: dry-run states from a real turbo', () => {
@@ -146,6 +184,42 @@ describe('FEATURE: dry-run states from a real turbo', () => {
 
       it('THEN the definitions package that also holds the task name is filtered out', () => {
         expect(ids.filter((id) => id.startsWith(`${DEFINITIONS_PACKAGE}#`))).toStrictEqual([]);
+      });
+    });
+
+    /**
+     * Observed 2026-11-09 with dev turbo 2.11.7: `run a b --filter=x --filter=y --dry=json` exits 0 when a filtered package
+     * lacks a requested task; turbo lists that pair with command `<NONEXISTENT>`, which core drops, so no error and no row.
+     */
+    describe('WHEN two packages run dry in one request and only one defines one of the tasks', () => {
+      let pair: FilterPair;
+      let ids: string[] = [];
+      let spawnCount = 0;
+
+      beforeAll(async () => {
+        pair = filterPairOf(fixture().manifest);
+        spawns.files.length = 0;
+        const request = { tasks: [pair.exclusive, pair.shared], packages: [pair.owner, pair.other] };
+        const states = await readDryRun(binary, request);
+
+        ids = states.map((state) => state.id);
+        spawnCount = turboSpawns(binary);
+      });
+
+      it('THEN the call resolves and lists the owner task', () => {
+        expect(ids).toContain(`${pair.owner}#${pair.exclusive}`);
+      });
+
+      it('THEN it lists the shared task of both packages', () => {
+        expect(ids).toStrictEqual(expect.arrayContaining([`${pair.owner}#${pair.shared}`, `${pair.other}#${pair.shared}`]));
+      });
+
+      it('THEN the package that lacks the task has no row for it (turbo lists it with no command, core drops it)', () => {
+        expect(ids).not.toContain(`${pair.other}#${pair.exclusive}`);
+      });
+
+      it('THEN turbo was spawned exactly once', () => {
+        expect(spawnCount).toBe(1);
       });
     });
 
