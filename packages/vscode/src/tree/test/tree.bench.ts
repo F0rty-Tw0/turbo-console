@@ -7,17 +7,45 @@ import { withScripts } from './utils/scripts-model.spec.util.ts';
 import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
+import type { PredictionCache, PredictionLookup, PredictionView } from '../common/prediction.type.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
-import type { TreeMode } from '../common/tree-row.type.ts';
+import type { TreeMode, TreeRow } from '../common/tree-row.type.ts';
 import { ModelViews } from '../domain-logic/model-views.ts';
 import { allRows } from '../utils/all-rows.util.ts';
 import { diffModels } from '../utils/model-diff.util.ts';
 import { staticAtomLookup } from '../utils/static-atoms.util.ts';
 
+const SETTLED_AT = 1_000_000_000;
+
+const NO_PREDICTION: PredictionLookup = () => null;
+
+type RowsShown = Pick<RowContext, 'scriptsShown' | 'prediction'>;
+
+const PLAIN: RowsShown = { scriptsShown: false, prediction: NO_PREDICTION };
+
+const WITH_SCRIPTS: RowsShown = { scriptsShown: true, prediction: NO_PREDICTION };
+
+/** A settled prediction that says `HIT` for every task of every package of `model`, built once outside the timed call. */
+const allHitOf = (model: WorkspaceModel): PredictionLookup => {
+  const viewOf = (pkg: PackageNode): [string, PredictionView] => {
+    const pairs = pkg.tasks.map((task): [string, PredictionCache] => [task.id, 'HIT']);
+    const view: PredictionView = { settledAt: SETTLED_AT, tasks: new Map(pairs) };
+
+    return [pkg.name, view];
+  };
+  const byPackage = new Map(model.packages.map(viewOf));
+  const lookup: PredictionLookup = (_root, packageName) => byPackage.get(packageName) ?? null;
+
+  return lookup;
+};
+
+const isPredictedRow = (row: TreeRow): boolean => row.tooltip.some((line) => line.startsWith('Prediction:'));
+
 /** A fresh `ModelViews` per call, so the shown filter, folder tree and labels are measured, not a warm cache hit. */
-const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsShown = false): BenchDescriptor => {
+const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, inputs = PLAIN): BenchDescriptor => {
+  const { scriptsShown, prediction } = inputs;
   const state = benchStateOf(model);
-  const build = (): unknown => {
+  const build = (): TreeRow[] => {
     const views = new ModelViews(resolveTool);
     const viewOf: ModelViewsOf = (loaded, shown, live) => views.of(loaded, shown, live);
     const tools: ToolLookup = (pkg, singlePackage, command) => views.toolOf(pkg, singlePackage, command);
@@ -32,11 +60,15 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, scriptsS
       countsMemo: new WeakMap(),
       tools,
       atoms: staticAtomLookup(() => model),
-      prediction: () => null
+      prediction
     };
 
     return allRows(state, context);
   };
+  const isPredicting = prediction !== NO_PREDICTION;
+  const hasPredictedRow = build().some(isPredictedRow);
+
+  if (isPredicting && !hasPredictedRow) throw new Error(`bench ${name} shows no predicted row`);
 
   return bench(name, build, { gate: true });
 };
@@ -67,13 +99,15 @@ const diffBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
 
 const targetLike = await captureModel('target-like');
 const stretch300 = await captureModel('stretch-300');
+const allHit: RowsShown = { scriptsShown: false, prediction: allHitOf(stretch300) };
 
 const benches: BenchDescriptor[] = [
   rowsBench('tree-rows-folders-target-like', targetLike, 'folders'),
   rowsBench('tree-rows-list-target-like', targetLike, 'list'),
   rowsBench('tree-rows-folders-stretch-300', stretch300, 'folders'),
   rowsBench('tree-rows-list-stretch-300', stretch300, 'list'),
-  rowsBench('tree-rows-scripts-stretch-300', withScripts(stretch300), 'folders', true),
+  rowsBench('tree-rows-scripts-stretch-300', withScripts(stretch300), 'folders', WITH_SCRIPTS),
+  rowsBench('tree-rows-predicted-stretch-300', stretch300, 'folders', allHit),
   diffBench('model-diff-stretch-300', stretch300)
 ];
 
