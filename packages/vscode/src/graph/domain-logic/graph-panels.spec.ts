@@ -19,7 +19,7 @@ import { predictionFake, progressFake, togglesOf } from '../test/utils/graph-fee
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const READY = { type: 'ready' };
-const RUNS_POSTED: GraphHostMessage = { type: 'runs', runs: {} };
+const RUNS_POSTED: GraphHostMessage = { type: 'runs', runs: {}, predictions: {} };
 const STATE_POSTED: GraphHostMessage = { type: 'state', state: GRAPH_STATE_STUB };
 
 const viewAt = (fakes: GraphHostFakes, index: number): ViewFake<GraphHostMessage> => {

@@ -67,7 +67,7 @@ describe('FEATURE: graph session', () => {
 
       expect(postedOf(ports)).toStrictEqual([
         { type: 'state', state: GRAPH_STATE_STUB },
-        { type: 'runs', runs: {} }
+        { type: 'runs', runs: {}, predictions: {} }
       ]);
     });
 

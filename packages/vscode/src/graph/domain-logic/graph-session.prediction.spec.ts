@@ -87,15 +87,15 @@ describe('FEATURE: graph session prediction', () => {
     expect(postedRunsMessagesOf(ports).at(0)?.predictions).toStrictEqual({ 'a#build': 'cached' });
   });
 
-  it('GIVEN predictions on the page WHEN the toggle turns off THEN the next posted runs message has no predictions, in one message', async () => {
+  it('GIVEN predictions on the page WHEN the toggle turns off THEN one more runs message follows, carrying {}', async () => {
     const { session, ports, toggles } = predictionSession();
 
     await session.receive({ type: 'ready' });
     await toggles.prediction.set(false);
 
     const runs = postedRunsMessagesOf(ports);
+    const predictions = runs.map((message) => message.predictions);
 
-    expect('predictions' in (runs.at(-1) ?? {})).toBe(false);
-    expect(runs.filter((message) => 'predictions' in message)).toHaveLength(1);
+    expect(predictions).toStrictEqual([{ 'a#build': 'cached' }, {}]);
   });
 });

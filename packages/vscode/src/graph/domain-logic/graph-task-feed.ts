@@ -4,7 +4,7 @@ import { Coalescer } from './coalescer.ts';
 import { GraphAtomFeed } from './graph-atom-feed.ts';
 import type { ProgressRecord } from '../../run/common/run-progress.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import { RUNS_COALESCE_MS } from '../common/graph.const.ts';
+import { NO_GRAPH_PREDICTIONS, RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphFeeds, GraphPorts, RunSources, TaskFeedGate } from '../common/graph.type.ts';
 import { predictionsOf } from '../utils/graph-predictions.util.ts';
 import { runIdsOf, runsMessageOf } from '../utils/graph-tasks.util.ts';
@@ -158,13 +158,13 @@ export class GraphTaskFeed {
     ports.post(message);
   }
 
-  /** The predictions of the listed tasks, or `null` while the prediction toggle is off, so the message has no key. */
-  private predictionsNow(): NonNullable<GraphRunsMessage['predictions']> | null {
+  /** The predictions of the listed tasks, or `{}` while the prediction toggle is off, which clears every mark on the page. */
+  private predictionsNow(): NonNullable<GraphRunsMessage['predictions']> {
     const { root, feeds, gate } = this.deps;
 
     const isShown = feeds.toggles.prediction.isShown();
 
-    if (!isShown) return null;
+    if (!isShown) return NO_GRAPH_PREDICTIONS;
 
     return predictionsOf(root, gate.tasks(), feeds.prediction.view);
   }
