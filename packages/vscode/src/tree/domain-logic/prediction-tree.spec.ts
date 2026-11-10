@@ -124,14 +124,26 @@ describe('FEATURE: prediction tree', () => {
       for (const node of [NODE_A, NODE_B, NODE_OTHER, TASK_NODE_OF_WS]) cache.set(node.id, node);
     });
 
-    it('WHEN the store changes /ws THEN fire gets exactly the two /ws package nodes in one call', () => {
-      shared.emit('/ws');
+    it('WHEN the store changes a and b of /ws THEN fire gets exactly the two /ws package nodes in one call', () => {
+      shared.emit('/ws', new Set(['a', 'b']));
 
       expect(fire).toHaveBeenCalledExactlyOnceWith([NODE_A, NODE_B]);
     });
 
+    it('WHEN the store changes only b of /ws THEN fire gets only the node of b', () => {
+      shared.emit('/ws', new Set(['b']));
+
+      expect(fire).toHaveBeenCalledExactlyOnceWith([NODE_B]);
+    });
+
+    it('WHEN the store changes c of /ws, a name only /other has cached THEN fire is not called', () => {
+      shared.emit('/ws', new Set(['c']));
+
+      expect(fire).not.toHaveBeenCalled();
+    });
+
     it('WHEN the store changes a root with no cached package nodes THEN fire is not called', () => {
-      shared.emit('/none');
+      shared.emit('/none', new Set(['a']));
 
       expect(fire).not.toHaveBeenCalled();
     });

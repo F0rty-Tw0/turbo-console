@@ -125,7 +125,7 @@ describe('FEATURE: prediction loads when the model changes', () => {
     });
 
     it('THEN the answer it took back is announced once', () => {
-      expect(h.changed).toHaveBeenCalledOnce();
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
   });
 

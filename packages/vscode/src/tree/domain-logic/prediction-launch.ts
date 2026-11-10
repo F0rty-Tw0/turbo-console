@@ -89,7 +89,7 @@ export class PredictionLaunch {
 
     this.batches.finished(ticket);
 
-    if (hadView) this.ports.changed(ticket.root);
+    if (hadView) this.ports.changed(ticket.root, new Set(packages));
   }
 
   /**
@@ -108,7 +108,9 @@ export class PredictionLaunch {
 
     this.storeEmpty(ticket, empty);
 
-    if (hadView || empty.length > 0) this.ports.changed(ticket.root);
+    const announced = new Set([...gone, ...empty]);
+
+    if (hadView || empty.length > 0) this.ports.changed(ticket.root, announced);
   }
 
   /** Forgets `gone`, which leave the ticket, and says whether any of them had an answer to take back. */
@@ -155,7 +157,9 @@ export class PredictionLaunch {
       this.entries.set(predictionKeyOf(root, packageName), { root, packageName, view, ticket: null });
     }
 
-    if (mine.length > 0) this.ports.changed(ticket.root);
+    const names = mine.map(nameOf);
+
+    if (mine.length > 0) this.ports.changed(ticket.root, new Set(names));
 
     this.batches.finished(ticket);
   }
@@ -171,16 +175,16 @@ export class PredictionLaunch {
   }
 
   private fail(ticket: PredictionTicket, mine: PredictionEntry[], error: unknown): void {
-    const names = mine.map(nameOf).join(', ');
+    const names = mine.map(nameOf);
 
     for (const { root, packageName } of mine) {
       this.entries.set(predictionKeyOf(root, packageName), { root, packageName, view: null, ticket: null });
     }
 
-    const line = `prediction ${ticket.root} ${names}: ${logTextOf(error)}`;
+    const line = `prediction ${ticket.root} ${names.join(', ')}: ${logTextOf(error)}`;
 
     this.ports.log(logTextOf(line));
-    this.ports.changed(ticket.root);
+    this.ports.changed(ticket.root, new Set(names));
   }
 
   /** The entries still waiting on `ticket`: a result of a ticket no entry points at changes nothing. */

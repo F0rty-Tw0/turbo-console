@@ -5,7 +5,7 @@ import type { ProgressListener } from '../../../run/common/run-progress.type.ts'
 import type { ViewFake } from '../../../shared/test/common/panel-fakes.type.ts';
 import type { ScriptsToggleFake } from '../../../shared/test/common/scripts-toggle-fake.type.ts';
 import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
-import type { PredictionListener, SharedPrediction } from '../../../tree/common/prediction.type.ts';
+import type { SharedPrediction } from '../../../tree/common/prediction.type.ts';
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphHost } from '../../common/graph-panel.type.ts';
 import type { GraphProgress } from '../../common/graph.type.ts';
@@ -58,8 +58,8 @@ export type ProgressFake = {
 export type PredictionFake = {
   readonly prediction: SharedPrediction;
   readonly packageShown: Mock<SharedPrediction['packageShown']>;
-  /** Tells every subscribed listener that the prediction of one root changed. */
-  readonly changed: PredictionListener;
+  /** Tells every subscribed listener that the prediction of one root changed; the graph reads no package names. */
+  readonly changed: (root: string) => void;
   readonly listenerCount: () => number;
 };
 

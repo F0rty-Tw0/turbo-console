@@ -94,7 +94,7 @@ describe('FEATURE: prediction launch', () => {
 
     it('WHEN the ticket launches THEN the package is Loaded with an empty answer and announced', () => {
       expect(entryAt(entries, PKG_A)).toStrictEqual({ root: ROOT, packageName: PKG_A, view: EMPTY_VIEW, ticket: null });
-      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it('WHEN the ticket launches THEN the package leaves, the empty batch finishes and nothing spawns', () => {
@@ -151,7 +151,7 @@ describe('FEATURE: prediction launch', () => {
 
       expect(entryAt(entries, PKG_A)).toStrictEqual({ root: ROOT, packageName: PKG_A, view: HIT_VIEW, ticket: null });
       expect(entryAt(entries, PKG_B)).toStrictEqual({ root: ROOT, packageName: PKG_B, view: null, ticket: null });
-      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it('WHEN the run settles OK THEN the ticket is finished', async () => {
@@ -167,7 +167,7 @@ describe('FEATURE: prediction launch', () => {
 
       expect(entryAt(entries, PKG_A)).toStrictEqual({ root: ROOT, packageName: PKG_A, view: null, ticket: null });
       expect(h.log).toHaveBeenCalledExactlyOnceWith(`prediction ${ROOT} ${PKG_A}: boom`);
-      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT, new Set([PKG_A]));
     });
 
     it('WHEN the run rejects THEN the ticket is finished', async () => {

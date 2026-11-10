@@ -4,6 +4,8 @@ import { predictionListenersOf } from './prediction-listeners.ts';
 import type { PredictionListener } from '../common/prediction.type.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
 
+const NAMES: ReadonlySet<string> = new Set(['a']);
+
 describe('FEATURE: prediction listeners', () => {
   describe('GIVEN a listener that threw first and a second one', () => {
     it('WHEN a root changes THEN the second hears it and the log names the error', () => {
@@ -15,9 +17,9 @@ describe('FEATURE: prediction listeners', () => {
         throw new Error('boom');
       });
       subscribers.onDidChange(second);
-      subscribers.changed(ROOT);
+      subscribers.changed(ROOT, NAMES);
 
-      expect(second).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(second).toHaveBeenCalledExactlyOnceWith(ROOT, NAMES);
       expect(log).toHaveBeenCalledExactlyOnceWith(`prediction ${ROOT}: listener failed: boom`);
     });
   });
@@ -31,10 +33,10 @@ describe('FEATURE: prediction listeners', () => {
 
       subscribers.onDidChange(kept);
       off();
-      subscribers.changed(ROOT);
+      subscribers.changed(ROOT, NAMES);
 
       expect(removed).not.toHaveBeenCalled();
-      expect(kept).toHaveBeenCalledExactlyOnceWith(ROOT);
+      expect(kept).toHaveBeenCalledExactlyOnceWith(ROOT, NAMES);
     });
   });
 
@@ -45,7 +47,7 @@ describe('FEATURE: prediction listeners', () => {
 
       subscribers.onDidChange(cleared);
       subscribers.clear();
-      subscribers.changed(ROOT);
+      subscribers.changed(ROOT, NAMES);
 
       expect(cleared).not.toHaveBeenCalled();
     });
