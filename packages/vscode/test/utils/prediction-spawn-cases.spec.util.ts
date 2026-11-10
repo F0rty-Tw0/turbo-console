@@ -1,18 +1,12 @@
 import assert from 'node:assert/strict';
-import { setTimeout as delay } from 'node:timers/promises';
 
 import * as vscode from 'vscode';
 
 import { lastGraphState } from './graph-posted.spec.util.ts';
 import { expandAndSettle, expandTogether, filtersOf, predictionRunsOf } from './prediction-scene.spec.util.ts';
-import { step, waitFor } from './suite-env.spec.util.ts';
-import { ALL_TASKS_COMMAND, GRAPH_COMMAND } from '../common/graph.const.ts';
-import {
-  CLOSE_EDITOR_COMMAND,
-  HIDE_PREDICTION_COMMAND,
-  QUIET_WINDOW_MS,
-  SHOW_PREDICTION_COMMAND
-} from '../common/prediction.const.ts';
+import { sleep, step, waitFor } from './suite-env.spec.util.ts';
+import { ALL_TASKS_COMMAND, CLOSE_EDITOR_COMMAND, GRAPH_COMMAND } from '../common/graph.const.ts';
+import { HIDE_PREDICTION_COMMAND, QUIET_WINDOW_MS, SHOW_PREDICTION_COMMAND } from '../common/prediction.const.ts';
 import type { PredictionScene } from '../common/prediction.type.ts';
 
 /** Opens the graph, switches it to task mode and has the page report the shown packages, as it does when the toggle is on. */
@@ -33,13 +27,13 @@ const closeGraph = async (scene: PredictionScene): Promise<void> => {
 
 /** P1: the toggle defaults off, so a tree expand and a graph in task mode ask turbo for no dry run, even when the page reports shown packages. */
 export const toggleOffCase = async (scene: PredictionScene): Promise<void> => {
-  const { api, counter, packages } = scene;
+  const { counter, packages } = scene;
 
   await step('P1: toggle off, tree expand and graph task mode spawn no dry run', async () => {
     counter.reset();
-    await expandTogether(api, [packages.a, packages.b, packages.c]);
+    await expandTogether(scene, [packages.a, packages.b, packages.c]);
     await showTasksInGraph(scene);
-    await delay(QUIET_WINDOW_MS);
+    await sleep(QUIET_WINDOW_MS);
 
     const spawned = predictionRunsOf(scene);
 
@@ -56,6 +50,7 @@ export const oneDryRunCase = async (scene: PredictionScene): Promise<void> => {
     await vscode.commands.executeCommand(SHOW_PREDICTION_COMMAND);
     counter.reset();
     await expandAndSettle(api, packages.a);
+    await sleep(QUIET_WINDOW_MS);
 
     const spawned = predictionRunsOf(scene);
 
@@ -73,11 +68,11 @@ export const batchedCase = async (scene: PredictionScene): Promise<void> => {
     await vscode.commands.executeCommand(HIDE_PREDICTION_COMMAND);
     await vscode.commands.executeCommand(SHOW_PREDICTION_COMMAND);
     counter.reset();
-    await expandTogether(api, names);
+    await expandTogether(scene, names);
 
     for (const name of names) await expandAndSettle(api, name);
 
-    await delay(QUIET_WINDOW_MS);
+    await sleep(QUIET_WINDOW_MS);
 
     const spawned = predictionRunsOf(scene);
 

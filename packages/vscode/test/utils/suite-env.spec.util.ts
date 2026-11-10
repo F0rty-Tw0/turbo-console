@@ -11,7 +11,8 @@ import type { SuiteEnv, TimeRange } from '../common/launch.type.ts';
 
 const POLL_MS = 10;
 
-const WAIT_LIMIT_MS = 30_000;
+/** How long `waitFor` and the other functional waits poll before they throw. */
+export const WAIT_LIMIT_MS = 30_000;
 
 export const sleep = async (ms: number): Promise<void> => {
   await new Promise<void>((resolve) => {

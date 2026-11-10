@@ -25,7 +25,7 @@ export const run = async (): Promise<void> => {
   const root = rootAt(0);
   const counter = countTurboSpawns(turboPath);
   const packages = predictionPackagesOf(manifest);
-  const scene: PredictionScene = { api, root, counter, packages, manifest };
+  const scene: PredictionScene = { api, env, root, counter, packages, manifest };
 
   try {
     await step('reveal the view', async () => revealTree(api, root));

@@ -8,10 +8,10 @@ import * as vscode from 'vscode';
 import { fixtureLinkOf } from './graph-explain-cases.spec.util.ts';
 import { isImports, newestReplyFor } from './graph-posted.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
+import { CLOSE_EDITOR_COMMAND } from '../common/graph.const.ts';
 import type { GraphFixtureLink, GraphScene } from '../common/graph.type.ts';
 
 const SOURCE_FILE = 'src/u8-imports.ts';
-const CLOSE_EDITOR = 'workbench.action.closeActiveEditor';
 
 /** Where the case writes: the dependent's source file, and a package `x` under its `node_modules`; `finally` removes only these. */
 type ImportsPaths = {
@@ -101,7 +101,7 @@ const sitesOf = (target: string): ImportSite[] => {
 const closeIfActive = async (path: string): Promise<void> => {
   const active = vscode.window.activeTextEditor?.document.uri.fsPath;
 
-  if (active === vscode.Uri.file(path).fsPath) await vscode.commands.executeCommand(CLOSE_EDITOR);
+  if (active === vscode.Uri.file(path).fsPath) await vscode.commands.executeCommand(CLOSE_EDITOR_COMMAND);
 };
 
 /** Removes what `writeImports` wrote; `node_modules/x` and `node_modules` go only when the case created them. */

@@ -1,18 +1,15 @@
 import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
 
 import * as vscode from 'vscode';
 
-import { filtersOf, packageOfTask, predictionRunsOf, taskWordOf, waitForWord } from './prediction-scene.spec.util.ts';
+import { buildIdOf, filtersOf, packageOfTask, predictionRunsOf, taskWordOf, waitForWord } from './prediction-scene.spec.util.ts';
 import { endedRun, startRun, taskNodeNamed } from './run-wait.spec.util.ts';
-import { log, step } from './suite-env.spec.util.ts';
+import { log, sleep, step } from './suite-env.spec.util.ts';
 import type { RunEntry } from '../../src/run/common/run.type.ts';
 import { CACHED_WORD, EDITED_FILE, EDIT_LINE, NOT_CACHED_WORD, QUIET_WINDOW_MS, REFRESH_COMMAND } from '../common/prediction.const.ts';
 import type { PredictionScene } from '../common/prediction.type.ts';
-
-const buildIdOf = (name: string): string => `${name}#build`;
 
 const idsOf = (entry: RunEntry): string[] => {
   const outcomes = entry.outcomes ?? [];
@@ -55,7 +52,7 @@ export const runEndCase = async (scene: PredictionScene): Promise<void> => {
 
     for (const task of ranTasks) await waitForWord(api, task, CACHED_WORD);
 
-    await delay(QUIET_WINDOW_MS);
+    await sleep(QUIET_WINDOW_MS);
 
     const spawned = predictionRunsOf(scene);
 
@@ -93,7 +90,7 @@ export const editCase = async (scene: PredictionScene): Promise<void> => {
       await vscode.commands.executeCommand(REFRESH_COMMAND);
       await waitForWord(api, b, NOT_CACHED_WORD);
       await waitForWord(api, a, NOT_CACHED_WORD);
-      await delay(QUIET_WINDOW_MS);
+      await sleep(QUIET_WINDOW_MS);
 
       assert.equal(await taskWordOf(api, c), CACHED_WORD, 'the untouched package changed');
       assert.equal(await taskWordOf(api, b), NOT_CACHED_WORD);

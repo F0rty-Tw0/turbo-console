@@ -10,6 +10,7 @@ import { endedRun, startGraphRun, taskNodeNamed } from './run-wait.spec.util.ts'
 import { step, waitFor } from './suite-env.spec.util.ts';
 import type { PanelInfo } from '../../src/shared/common/api.type.ts';
 import {
+  CLOSE_EDITOR_COMMAND,
   GRAPH_COMMAND,
   HASH_PATTERN,
   HUB_TAG,
@@ -20,8 +21,6 @@ import {
 } from '../common/graph.const.ts';
 import type { GraphScene } from '../common/graph.type.ts';
 import type { ShownManifest, ShownPackage, ShownTask } from '../common/launch.type.ts';
-
-const CLOSE_EDITOR_COMMAND = 'workbench.action.closeActiveEditor';
 
 /** The manifest task kinds turbo's model does not list: the host's `atom-file` filter drops the first, the model never holds the others. */
 const UNLISTED_TASK_KINDS = new Set<TaskKind>(['atom-file', 'carrier', 'phantom']);
