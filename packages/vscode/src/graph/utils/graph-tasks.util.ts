@@ -145,7 +145,7 @@ export const runsMessageOf = (
   root: string,
   ids: string[],
   sources: RunSources,
-  predictions: GraphRunsMessage['predictions'] | null = null
+  predictions: NonNullable<GraphRunsMessage['predictions']> | null = null
 ): GraphRunsMessage => {
   const { get, recordsOf, persistentIds } = sources;
   const runs = new Map<string, GraphRunState>();

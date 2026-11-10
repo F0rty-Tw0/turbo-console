@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { graphListingOf, graphTasksOf, runsMessageOf } from './graph-tasks.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
+import { recordOf } from '../../run/test/utils/run-progress.spec.util.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { RunSources } from '../common/graph.type.ts';
 import {
@@ -73,6 +74,9 @@ const FILE_A = ATOM_FILE_A_TASK_STUB.id;
 const FILE_B = ATOM_FILE_B_TASK_STUB.id;
 const SMOKE_TASKS = smokeGroupTasksOf('@fx/a');
 const [SMOKE_UMBRELLA] = SMOKE_TASKS;
+const PREDICTED: NonNullable<GraphRunsMessage['predictions']> = { 'a#build': 'cached' };
+const A_RUNNING: GraphRunsMessage['runs'] = { 'a#build': 'running' };
+const A_OWNED_BY_WEB: GraphRunsMessage['owners'] = { 'a#build': 'web#build' };
 
 const taskNamed = (tasks: GraphTask[], id: string): GraphTask | undefined => tasks.find((task) => task.id === id);
 
@@ -328,11 +332,25 @@ describe('FEATURE: graph runs words (own runs only)', () => {
     it('WHEN the message is built THEN it has no predictions key', () => {
       expect('predictions' in runsMessageOf(ROOT, LISTED, sources)).toBe(false);
     });
+  });
 
-    it('WHEN a fourth argument is given THEN the message carries it as predictions', () => {
-      const message = runsMessageOf(ROOT, LISTED, sources, { 'a#build': 'cached' });
+  describe('GIVEN a fourth predictions argument', () => {
+    it('WHEN the message is built THEN it carries the argument as predictions', () => {
+      const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set() };
 
-      expect(message.predictions).toStrictEqual({ 'a#build': 'cached' });
+      const message = runsMessageOf(ROOT, LISTED, sources, PREDICTED);
+
+      expect(message.predictions).toStrictEqual(PREDICTED);
+    });
+
+    it('WHEN a#build runs under web#build THEN the message carries its owner and the predictions together', () => {
+      const running = recordOf('a#build', 'running', 1000);
+      const sources: RunSources = { get: lookupOf(), recordsOf: () => [running], persistentIds: new Set() };
+      const expected: GraphRunsMessage = { type: 'runs', runs: A_RUNNING, owners: A_OWNED_BY_WEB, predictions: PREDICTED };
+
+      const message = runsMessageOf(ROOT, LISTED, sources, PREDICTED);
+
+      expect(message).toStrictEqual(expected);
     });
   });
 });
