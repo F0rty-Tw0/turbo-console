@@ -53,7 +53,10 @@ export type TaskCanvas = {
   readonly paint: (target: string | null) => void;
   /** Replaces every task's `run-<state>` class with the one `runs` names. */
   readonly runStates: (runs: TaskRuns) => void;
-  /** Replaces every task's `predict-<word>` class with the one the record names; kept, so a task graph drawn again carries it. */
+  /**
+   * Replaces every task's `predict-<word>` class with the one the record names; kept, so a task graph drawn again carries it.
+   * The record it already holds is skipped, and box frames are refit only when a class changed.
+   */
   readonly predictions: (next: TaskPredictions) => void;
   /** Sets the label of each umbrella in `labels` to its name and counts line; a task not drawn is skipped, no node moves. */
   readonly setCounts: (labels: ReadonlyMap<string, string>) => void;

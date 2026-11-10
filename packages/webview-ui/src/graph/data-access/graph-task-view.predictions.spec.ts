@@ -1,19 +1,23 @@
 import cytoscape from 'cytoscape';
 import type { Core } from 'cytoscape';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { MockInstance } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
 import { taskRulesOf } from './graph-task-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphPrediction } from '../../bridge/common/graph-message.type.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import { BOX_FRAMED_CLASS, NO_PREDICTIONS } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import type { TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const HISTORY = String.fromCodePoint(0xea82);
+
+const FRAMED_SELECTOR = `.${BOX_FRAMED_CLASS}`;
 
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 
@@ -136,6 +140,51 @@ describe('FEATURE: task canvas predictions', () => {
       const predictions = predictionClassesOf(cy, 'web#build');
 
       expect([...runs, ...predictions]).toStrictEqual(['run-passed', 'predict-cached']);
+    });
+  });
+
+  describe('GIVEN three drawn tasks with api#build predicted cached', () => {
+    const record: TaskPredictions = { 'api#build': 'cached' };
+    let nodesSpy: MockInstance<Core['nodes']>;
+
+    beforeEach(() => {
+      cy = cytoscape({ headless: true });
+      canvas = createTaskCanvas(cy);
+      canvas.show(DRAWING);
+      canvas.predictions(record);
+      nodesSpy = vi.spyOn(cy, 'nodes');
+    });
+
+    it('WHEN the same record comes again THEN no node is read', () => {
+      canvas.predictions(record);
+
+      expect(nodesSpy).not.toHaveBeenCalled();
+    });
+
+    it('WHEN an equal new record comes THEN the box frames are not refit', () => {
+      canvas.predictions({ 'api#build': 'cached' });
+
+      expect(nodesSpy).not.toHaveBeenCalledWith(FRAMED_SELECTOR);
+    });
+
+    it('WHEN a record changing a word comes THEN the box frames are refit', () => {
+      canvas.predictions({ 'api#build': 'unknown' });
+
+      expect(nodesSpy).toHaveBeenCalledWith(FRAMED_SELECTOR);
+    });
+  });
+
+  describe('GIVEN three drawn tasks never predicted', () => {
+    it('WHEN the shared empty record comes THEN no node is read', () => {
+      cy = cytoscape({ headless: true });
+      canvas = createTaskCanvas(cy);
+      canvas.show(DRAWING);
+
+      const nodesSpy = vi.spyOn(cy, 'nodes');
+
+      canvas.predictions(NO_PREDICTIONS);
+
+      expect(nodesSpy).not.toHaveBeenCalled();
     });
   });
 

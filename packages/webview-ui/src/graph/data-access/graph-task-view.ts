@@ -9,7 +9,7 @@ import { applyBoxFrames, refitBoxFrames } from './graph-task-frames.ts';
 import { markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
 import type { GraphEdge, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { Closure } from '../common/closure.type.ts';
-import { NO_CLASSES, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
+import { NO_CLASSES, NO_PREDICTIONS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
 import { BOX_STATE_CLASS_NAMES, DIMMED_BOX_CLASS, STATE_CLASS_NAMES } from '../common/graph.const.ts';
 import type { TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
@@ -124,7 +124,7 @@ const centresOf = (cy: Core): Positions => {
 export const createTaskCanvas = (cy: Core): TaskCanvas => {
   let target: string | null = null;
   let runs: TaskRuns = {};
-  let predicted: TaskPredictions = {};
+  let predicted: TaskPredictions = NO_PREDICTIONS;
   const show = (drawing: TaskDrawing): void => {
     const elements = elementsOf(drawing);
 
@@ -149,9 +149,13 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
     refitBoxFrames(cy);
   };
   const predictions = (next: TaskPredictions): void => {
+    if (next === predicted) return;
+
     predicted = next;
-    markPredictions(cy, next);
-    refitBoxFrames(cy);
+
+    const isChanged = markPredictions(cy, next);
+
+    if (isChanged) refitBoxFrames(cy);
   };
   const setPositions = (positions: Positions): void => {
     const placeNode = (node: NodeSingular): Position => positionOf(positions, node.id());
