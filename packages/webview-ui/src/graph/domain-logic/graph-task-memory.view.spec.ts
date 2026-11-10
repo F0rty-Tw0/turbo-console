@@ -32,6 +32,23 @@ const memoryOf = (state: GraphReady, current: GraphViewState | null = null): Gra
 };
 
 describe('FEATURE: GraphTaskMemory View checks', () => {
+  describe('GIVEN a state with the cache prediction shown', () => {
+    it('WHEN the checks are read THEN Show cache prediction is ticked', () => {
+      const state: GraphReady = { ...TASK_STATE_STUB, predictionShown: true };
+      const checks = memoryOf(state).viewChecks();
+
+      expect(checks.predictionShown).toBe(true);
+    });
+  });
+
+  describe('GIVEN a state with the cache prediction hidden', () => {
+    it('WHEN the checks are read THEN Show cache prediction is unticked', () => {
+      const checks = memoryOf(TASK_STATE_STUB).viewChecks();
+
+      expect(checks.predictionShown).toBe(false);
+    });
+  });
+
   describe('GIVEN a listing with a script while scripts are hidden', () => {
     it('WHEN the checks are read THEN Show scripts is unticked but still present', () => {
       const checks = memoryOf(scriptState(false)).viewChecks();

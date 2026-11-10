@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildTaskControls } from './task-controls-elements.ts';
-import { SEARCH_TASKS_LABEL, SHOW_SCRIPTS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
+import { SEARCH_TASKS_LABEL, SHOW_PREDICTION_LABEL, SHOW_SCRIPTS_LABEL, TASK_CONTROLS_ID } from '../common/graph-task.const.ts';
 import {
   GROUP_BY_FOLDER_LABEL,
   PROJECTS_SECTION_TITLE,
@@ -92,11 +92,17 @@ describe('FEATURE: task controls elements', () => {
         expect([depthGroup.children.length, depthLabel.children[1]]).toStrictEqual([2, elements.depth]);
       });
 
-      it('THEN Group by folder, Show package scopes and Show scripts follow it', () => {
+      it('THEN Group by folder, Show package scopes, Show scripts and Show cache prediction follow it', () => {
         const [, , ...checks] = viewSection.children;
         const labels = checks.map((check) => check.textContent);
 
-        expect(labels).toStrictEqual([GROUP_BY_FOLDER_LABEL, SCOPE_TOGGLE_LABEL, SHOW_SCRIPTS_LABEL]);
+        expect(labels).toStrictEqual([GROUP_BY_FOLDER_LABEL, SCOPE_TOGGLE_LABEL, SHOW_SCRIPTS_LABEL, SHOW_PREDICTION_LABEL]);
+      });
+
+      it('THEN Show cache prediction sits first in the last label, which is shown', () => {
+        const predictionLabel = childAt(viewSection, 5);
+
+        expect([predictionLabel.children[0], predictionLabel.hidden]).toStrictEqual([elements.prediction, false]);
       });
     });
 
@@ -106,13 +112,13 @@ describe('FEATURE: task controls elements', () => {
 
       beforeEach((): void => {
         elements = buildTaskControls();
-        boxes = [elements.grouping, elements.scope, elements.scripts];
+        boxes = [elements.grouping, elements.scope, elements.scripts, elements.prediction];
       });
 
-      it('THEN all three are checkboxes', () => {
+      it('THEN all four are checkboxes', () => {
         const types = boxes.map((box) => box.type);
 
-        expect(types).toStrictEqual(['checkbox', 'checkbox', 'checkbox']);
+        expect(types).toStrictEqual(['checkbox', 'checkbox', 'checkbox', 'checkbox']);
       });
 
       it('THEN none is ticked', () => {
