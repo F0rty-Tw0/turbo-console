@@ -5,6 +5,7 @@ import { PackagesTree } from './packages-tree.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
+import type { PredictionLookup, PredictionView } from '../common/prediction.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { SharedPredictionFake } from '../test/common/prediction-load.type.ts';
 import { sharedPredictionMock } from '../test/mocks/shared-prediction.mock.ts';
@@ -93,11 +94,17 @@ describe('FEATURE: packages tree cache prediction feed', () => {
       expect(shared.dispose).toHaveBeenCalledOnce();
     });
 
-    it('WHEN the shared view holds a HIT for a task THEN its row says cached', async () => {
+    it('WHEN the shared view holds a HIT only for root /ws and package a THEN the row of a#build says cached', async () => {
       const settledAt = new Date(2026, 10, 9, 14, 5).getTime();
       const taskNode: TreeNode = { kind: 'task', id: 'task:/ws\0a#build', root: '/ws', key: 'a#build', packageName: 'a' };
+      const view: PredictionView = { settledAt, tasks: new Map([['a#build', 'HIT']]) };
+      const viewOf: PredictionLookup = (root, packageName) => {
+        const isPackageA = root === '/ws' && packageName === 'a';
 
-      vi.mocked(shared.view).mockReturnValue({ settledAt, tasks: new Map([['a#build', 'HIT']]) });
+        return isPackageA ? view : null;
+      };
+
+      vi.mocked(shared.view).mockImplementation(viewOf);
       await tree.children();
       await tree.children(TREE_NODE_STUB);
 
