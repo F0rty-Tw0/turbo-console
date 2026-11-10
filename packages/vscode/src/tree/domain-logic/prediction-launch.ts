@@ -1,10 +1,16 @@
 import type { DryRunState, WorkspaceModel } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
-import type { PredictionBatchPort, PredictionEntry, PredictionTicket, PredictionWaitPort } from '../common/prediction-batch.type.ts';
-import type { PredictionBatch, PredictionLoadPorts, PredictionView } from '../common/prediction.type.ts';
+import type {
+  PredictionBatch,
+  PredictionBatchPort,
+  PredictionEntry,
+  PredictionLoadPorts,
+  PredictionTicket,
+  PredictionView,
+  PredictionWaitPort
+} from '../common/prediction.type.ts';
 import { hasPackageNamed } from '../utils/package-named.util.ts';
-import { entriesOfTicket } from '../utils/prediction-entries.util.ts';
 import { predictionKeyOf } from '../utils/prediction-key.util.ts';
 import { predictionBatchOf } from '../utils/prediction-request.util.ts';
 import { predictionTasksOf } from '../utils/prediction-tasks.util.ts';
@@ -131,8 +137,7 @@ export class PredictionLaunch {
 
   private settled(ticket: PredictionTicket, batch: PredictionBatch, states: DryRunState[]): void {
     const tasks = predictionTasksOf(states, batch.requested);
-    const entries = this.entries.values();
-    const mine = entriesOfTicket(entries, ticket);
+    const mine = this.entriesOf(ticket);
     const settledAt = this.ports.now();
 
     for (const { root, packageName } of mine) {
@@ -148,8 +153,7 @@ export class PredictionLaunch {
 
   /** An abort is not a failure: only entries that still wait on the ticket fail, with one line for the whole run. */
   private failed(ticket: PredictionTicket, error: unknown): void {
-    const entries = this.entries.values();
-    const mine = entriesOfTicket(entries, ticket);
+    const mine = this.entriesOf(ticket);
     const isStale = ticket.controller.signal.aborted || mine.length === 0;
 
     if (!isStale) this.fail(ticket, mine, error);
@@ -164,7 +168,18 @@ export class PredictionLaunch {
       this.entries.set(predictionKeyOf(root, packageName), { root, packageName, view: null, ticket: null });
     }
 
-    this.ports.log(logTextOf(`prediction ${ticket.root} ${names}: ${logTextOf(error)}`));
+    const line = `prediction ${ticket.root} ${names}: ${logTextOf(error)}`;
+
+    this.ports.log(logTextOf(line));
     this.ports.changed(ticket.root);
+  }
+
+  /** The entries still waiting on `ticket`: a result of a ticket no entry points at changes nothing. */
+  private entriesOf(ticket: PredictionTicket): PredictionEntry[] {
+    const isOfTicket = (entry: PredictionEntry): boolean => entry.ticket === ticket;
+    const values = this.entries.values();
+    const all = [...values];
+
+    return all.filter(isOfTicket);
   }
 }

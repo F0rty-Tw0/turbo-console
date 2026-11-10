@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PredictionBatches } from './prediction-batches.ts';
-import type { PredictionTicket } from '../common/prediction-batch.type.ts';
+import type { PredictionTicket } from '../common/prediction.type.ts';
 import { OTHER_ROOT, ROOT } from '../test/common/atom-load.const.ts';
 import type { FakeClock } from '../test/common/prediction-clock.type.ts';
 import { PKG_A, PKG_B } from '../test/common/prediction-load.const.ts';

@@ -2,13 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PredictionLoads } from './prediction-loads.ts';
 import { OTHER_ROOT, ROOT } from '../test/common/atom-load.const.ts';
-import { ID_A, PKG_A } from '../test/common/prediction-load.const.ts';
-import type { PredictionHarness, PredictionState } from '../test/common/prediction-load.type.ts';
+import { ID_A, PKG_A, PREDICTION_STATES } from '../test/common/prediction-load.const.ts';
+import type { PredictionHarness } from '../test/common/prediction-load.type.ts';
 import { dryRunAt, dryStateOf, flush } from '../test/utils/atom-load.spec.util.ts';
 import { changeOf, predictionHarness, toState } from '../test/utils/prediction-load.spec.util.ts';
 import { buildModelOf } from '../test/utils/prediction-model.spec.util.ts';
-
-const ALL: PredictionState[] = ['queued', 'loading', 'loaded', 'failed'];
 
 describe('FEATURE: prediction loads of roots that are gone', () => {
   let h: PredictionHarness;
@@ -19,7 +17,7 @@ describe('FEATURE: prediction loads of roots that are gone', () => {
     store = new PredictionLoads(h.ports);
   });
 
-  describe.each(ALL)('GIVEN a %s package in a root that is no longer kept', (state) => {
+  describe.each(PREDICTION_STATES)('GIVEN a %s package in a root that is no longer kept', (state) => {
     beforeEach(async () => {
       await toState(h, store, state);
       h.changed.mockClear();

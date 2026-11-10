@@ -22,19 +22,31 @@ describe('FEATURE: prediction listeners', () => {
     });
   });
 
-  describe('GIVEN a removed listener and a cleared one', () => {
-    it('WHEN a root changes THEN neither hears it', () => {
+  describe('GIVEN a listener removed by its remover and a second one still subscribed', () => {
+    it('WHEN a root changes THEN only the second hears it', () => {
       const removed = vi.fn<PredictionListener>();
-      const cleared = vi.fn<PredictionListener>();
+      const kept = vi.fn<PredictionListener>();
       const subscribers = predictionListenersOf(vi.fn());
       const off = subscribers.onDidChange(removed);
 
+      subscribers.onDidChange(kept);
       off();
+      subscribers.changed(ROOT);
+
+      expect(removed).not.toHaveBeenCalled();
+      expect(kept).toHaveBeenCalledExactlyOnceWith(ROOT);
+    });
+  });
+
+  describe('GIVEN a listener and a clear of every listener', () => {
+    it('WHEN a root changes THEN it hears nothing', () => {
+      const cleared = vi.fn<PredictionListener>();
+      const subscribers = predictionListenersOf(vi.fn());
+
       subscribers.onDidChange(cleared);
       subscribers.clear();
       subscribers.changed(ROOT);
 
-      expect(removed).not.toHaveBeenCalled();
       expect(cleared).not.toHaveBeenCalled();
     });
   });

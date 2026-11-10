@@ -4,7 +4,7 @@ import type { Roots } from '../../roots/common/coordinator.type.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import type { PredictionHostPorts, PredictionTimer } from '../common/prediction.type.ts';
 
-const timeouts = new WeakMap<PredictionTimer, ReturnType<typeof setTimeout>>();
+const timeouts = new WeakMap<PredictionTimer, NodeJS.Timeout>();
 
 const after: PredictionHostPorts['after'] = (run, ms) => {
   const timer: PredictionTimer = { id: null };

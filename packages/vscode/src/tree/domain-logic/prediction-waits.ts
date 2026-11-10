@@ -1,5 +1,7 @@
 import type { WorkspaceModel } from '@turbo-console/core';
 
+import { hasPackageNamed } from '../utils/package-named.util.ts';
+
 /**
  * The packages of each root whose cache prediction found no turbo binary. The root's next published model takes them
  * back and asks again, so a prediction wanted before the binary was known still arrives.
@@ -17,7 +19,7 @@ export class PredictionWaits {
   /** Forgets every waiting package of `root` and returns the ones that are still in `model`. */
   public takeOf(root: string, model: WorkspaceModel | null): string[] {
     const waiting = this.byRoot.get(root) ?? new Set<string>();
-    const inModel = (packageName: string): boolean => model?.packages.some((pkg) => pkg.name === packageName) ?? false;
+    const inModel = (packageName: string): boolean => hasPackageNamed(model, packageName);
     const packages = [...waiting];
     const retried = packages.filter(inModel);
 

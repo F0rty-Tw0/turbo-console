@@ -1,5 +1,4 @@
-import type { PredictionEntry, PredictionTicket } from '../../common/prediction-batch.type.ts';
-import type { PredictionView } from '../../common/prediction.type.ts';
+import type { PredictionEntry, PredictionTicket, PredictionView } from '../../common/prediction.type.ts';
 import { predictionKeyOf } from '../../utils/prediction-key.util.ts';
 import { ROOT } from '../common/atom-load.const.ts';
 

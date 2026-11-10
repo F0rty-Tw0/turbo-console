@@ -1,4 +1,4 @@
-import type { DryRunState, readDryRun } from '@turbo-console/core';
+import type { DryRunState } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { sharedLoadsOf } from './shared-loads.ts';
@@ -7,14 +7,16 @@ import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-fake.type.ts';
 import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
+import { PREDICTION_BATCH_MS } from '../common/prediction.const.ts';
 import type { SharedLoads } from '../common/shared-loads.type.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
 import { PKG_A } from '../test/common/prediction-load.const.ts';
+import type { ReadDryRun } from '../test/common/prediction-load.type.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { loadedOf } from '../test/utils/atom-tree.spec.util.ts';
 import { buildModelOf } from '../test/utils/prediction-model.spec.util.ts';
 
-const readDryRunMock = vi.hoisted(() => vi.fn<typeof readDryRun>());
+const readDryRunMock = vi.hoisted(() => vi.fn<ReadDryRun>());
 
 vi.mock('@turbo-console/core', async (original) => {
   const actual = await original<object>();
@@ -22,8 +24,6 @@ vi.mock('@turbo-console/core', async (original) => {
 
   return mocked;
 });
-
-const BATCH_MS = 300;
 
 describe('FEATURE: shared loads', () => {
   const signals: AbortSignal[] = [];
@@ -35,20 +35,22 @@ describe('FEATURE: shared loads', () => {
     return loads;
   };
 
+  const pendingDryRun: ReadDryRun = async (_binary, _request, options) => {
+    if (options?.signal) signals.push(options.signal);
+
+    return new Promise<DryRunState[]>(() => undefined);
+  };
+
   const showPackage = (loads: SharedLoads): void => {
     loads.prediction.packageShown(ROOT, PKG_A);
-    vi.advanceTimersByTime(BATCH_MS);
+    vi.advanceTimersByTime(PREDICTION_BATCH_MS);
   };
 
   beforeEach(() => {
     vi.useFakeTimers();
     readDryRunMock.mockReset();
     signals.length = 0;
-    readDryRunMock.mockImplementation(async (_binary, _request, options) => {
-      if (options?.signal) signals.push(options.signal);
-
-      return new Promise<DryRunState[]>(() => undefined);
-    });
+    readDryRunMock.mockImplementation(pendingDryRun);
     store = new RootStore();
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
     store.apply(ROOT, loadedOf(buildModelOf([PKG_A])));

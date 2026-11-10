@@ -1,6 +1,5 @@
-import type { PredictionTicket } from '../common/prediction-batch.type.ts';
 import { PREDICTION_BATCH_MAX, PREDICTION_BATCH_MS } from '../common/prediction.const.ts';
-import type { PredictionLoadPorts, PredictionTimer } from '../common/prediction.type.ts';
+import type { PredictionClockPorts, PredictionTicket, PredictionTimer } from '../common/prediction.type.ts';
 
 /** `pending` waits for its window; `due` says that window is over. `live` is the one run of the root that spawns turbo. */
 type Slot = {
@@ -30,7 +29,7 @@ const chunkOf = (pending: PredictionTicket): PredictionTicket => {
   return chunk;
 };
 
-/** The whole pending ticket when it fits, else a new ticket of its first 50 members; the rest stays pending and due. */
+/** The whole pending ticket when it fits, else a new ticket of its first `PREDICTION_BATCH_MAX` members; the rest stays pending and due. */
 const takeNext = (slot: Slot, pending: PredictionTicket): PredictionTicket => {
   const isWhole = pending.members.size <= PREDICTION_BATCH_MAX;
 
@@ -44,15 +43,15 @@ const takeNext = (slot: Slot, pending: PredictionTicket): PredictionTicket => {
 
 /**
  * Per root, the packages shown inside one fixed window become one ticket, and a ticket becomes live when the window is
- * over and no ticket of the root is live. A ticket of more than `PREDICTION_BATCH_MAX` packages sends 50 and keeps the
+ * over and no ticket of the root is live. A ticket of more than `PREDICTION_BATCH_MAX` packages sends that many and keeps the
  * rest waiting, due at once. A live ticket that loses its last member is aborted; one that keeps a member never is.
  */
 export class PredictionBatches {
-  private readonly ports: Pick<PredictionLoadPorts, 'after' | 'cancel'>;
+  private readonly ports: PredictionClockPorts;
   private readonly send: (ticket: PredictionTicket) => void;
   private readonly slots = new Map<string, Slot>();
 
-  public constructor(ports: Pick<PredictionLoadPorts, 'after' | 'cancel'>, send: (ticket: PredictionTicket) => void) {
+  public constructor(ports: PredictionClockPorts, send: (ticket: PredictionTicket) => void) {
     this.ports = ports;
     this.send = send;
   }

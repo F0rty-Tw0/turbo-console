@@ -2,15 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PredictionLoads } from './prediction-loads.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
-import { ID_A, PKG_A, PKG_B, PKG_C } from '../test/common/prediction-load.const.ts';
+import { ID_A, PKG_A, PKG_B, PKG_C, PREDICTION_STATES, RESTARTABLE_STATES } from '../test/common/prediction-load.const.ts';
 import type { PredictionHarness, PredictionState } from '../test/common/prediction-load.type.ts';
 import { dryRunAt, dryStateOf, flush } from '../test/utils/atom-load.spec.util.ts';
 import { changeOf, predictionHarness, toState } from '../test/utils/prediction-load.spec.util.ts';
 import { buildModelOf, predictionModelOf, turboTaskOf } from '../test/utils/prediction-model.spec.util.ts';
-
-const ALL: PredictionState[] = ['queued', 'loading', 'loaded', 'failed'];
-
-const RESTARTABLE: PredictionState[] = ['loading', 'loaded', 'failed'];
 
 const GONE: [PredictionState, number][] = [
   ['loading', 0],
@@ -27,7 +23,7 @@ describe('FEATURE: prediction loads when the model changes', () => {
     store = new PredictionLoads(h.ports);
   });
 
-  describe.each(ALL)('GIVEN a %s package', (state) => {
+  describe.each(PREDICTION_STATES)('GIVEN a %s package', (state) => {
     it('WHEN the model is republished as the same object THEN nothing restarts and the view stays', async () => {
       const same = buildModelOf([PKG_A]);
 
@@ -43,7 +39,7 @@ describe('FEATURE: prediction loads when the model changes', () => {
     });
   });
 
-  describe.each(RESTARTABLE)('GIVEN a %s package and a new model that still holds it', (state) => {
+  describe.each(RESTARTABLE_STATES)('GIVEN a %s package and a new model that still holds it', (state) => {
     beforeEach(async () => {
       await toState(h, store, state);
       store.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_A, PKG_B])));

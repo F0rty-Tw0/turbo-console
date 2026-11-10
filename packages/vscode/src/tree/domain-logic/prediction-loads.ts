@@ -4,15 +4,15 @@ import { PredictionBatches } from './prediction-batches.ts';
 import { PredictionLaunch } from './prediction-launch.ts';
 import { PredictionWaits } from './prediction-waits.ts';
 import type { RootChange } from '../../roots/common/coordinator.type.ts';
-import type { PredictionEntry, PredictionTicket } from '../common/prediction-batch.type.ts';
-import type { PredictionLoadPorts, PredictionLookup, PredictionView } from '../common/prediction.type.ts';
+import type {
+  PredictionEntry,
+  PredictionLoadPorts,
+  PredictionLookup,
+  PredictionTicket,
+  PredictionView
+} from '../common/prediction.type.ts';
+import { hasPackageNamed } from '../utils/package-named.util.ts';
 import { predictionKeyOf } from '../utils/prediction-key.util.ts';
-
-const hasPackage = (model: WorkspaceModel | null, packageName: string): boolean => {
-  const packages = model?.packages ?? [];
-
-  return packages.some((pkg) => pkg.name === packageName);
-};
 
 const hasView = (entry: PredictionEntry): boolean => entry.view !== null;
 
@@ -152,7 +152,7 @@ export class PredictionLoads {
 
   private reconcile(root: string, after: WorkspaceModel | null): void {
     const own = this.restartableOf(root);
-    const isKept = (entry: PredictionEntry): boolean => hasPackage(after, entry.packageName);
+    const isKept = (entry: PredictionEntry): boolean => hasPackageNamed(after, entry.packageName);
     const isGone = (entry: PredictionEntry): boolean => !isKept(entry);
     const gone = own.filter(isGone);
     const hadView = gone.some(hasView);

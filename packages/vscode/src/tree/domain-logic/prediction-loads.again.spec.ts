@@ -2,15 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PredictionLoads } from './prediction-loads.ts';
 import { OTHER_ROOT, ROOT } from '../test/common/atom-load.const.ts';
-import { ID_A, PKG_A, PKG_B } from '../test/common/prediction-load.const.ts';
+import { ID_A, PKG_A, PKG_B, RESTARTABLE_STATES } from '../test/common/prediction-load.const.ts';
 import type { PredictionHarness, PredictionState } from '../test/common/prediction-load.type.ts';
 import { dryRunAt, dryStateOf, flush } from '../test/utils/atom-load.spec.util.ts';
 import { predictionHarness, toState } from '../test/utils/prediction-load.spec.util.ts';
 import { buildModelOf, packageNamesOf } from '../test/utils/prediction-model.spec.util.ts';
 
 const IDLE: PredictionState[] = ['queued'];
-
-const RESTARTED: PredictionState[] = ['loading', 'loaded', 'failed'];
 
 describe('FEATURE: prediction loads asked again', () => {
   let h: PredictionHarness;
@@ -125,7 +123,7 @@ describe('FEATURE: prediction loads asked again', () => {
     });
   });
 
-  describe.each(RESTARTED)('GIVEN a %s package and a refresh of everything', (state) => {
+  describe.each(RESTARTABLE_STATES)('GIVEN a %s package and a refresh of everything', (state) => {
     it('WHEN everything refreshes THEN it queues again', async () => {
       await toState(h, store, state);
       store.refreshAll();

@@ -1,9 +1,15 @@
-import type { WorkspaceModel } from '@turbo-console/core';
+import type { DryRunRequest, DryRunState, TurboBinary, WorkspaceModel } from '@turbo-console/core';
 import type { Mock } from 'vitest';
 
 import type { DeferredDryRun } from './atom-load.type.ts';
 import type { FakeClock } from './prediction-clock.type.ts';
 import type { PredictionLoadPorts } from '../../common/prediction.type.ts';
+
+/** The options of core's `readDryRun` a spec reads; core does not export its own type. */
+type ReadDryRunOptions = { readonly signal?: AbortSignal };
+
+/** Core's `readDryRun`, as a spec that mocks the module spies on it. */
+export type ReadDryRun = (binary: TurboBinary, request: DryRunRequest, options?: ReadDryRunOptions) => Promise<DryRunState[]>;
 
 /** The states a spec drives one package into; `toState` builds each one from nothing. */
 export type PredictionState = 'queued' | 'loading' | 'loaded' | 'failed';

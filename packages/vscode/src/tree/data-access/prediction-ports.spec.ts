@@ -3,8 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { editorPredictionPorts } from './prediction-ports.ts';
-import type { RootEntry, RootState, Roots } from '../../roots/common/coordinator.type.ts';
+import type { RootEntry, RootState } from '../../roots/common/coordinator.type.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { rootsMock } from '../../roots/test/mocks/roots.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import { outputMock } from '../../shared/test/mocks/output.mock.ts';
@@ -22,34 +23,35 @@ describe('FEATURE: editor cache prediction ports', () => {
   beforeEach(() => {
     const entry: RootEntry = { state: LOADED_STATE, coordinator: coordinatorMock() };
     const entries = new Map([['/ws', entry]]);
-    const roots: Roots = { get: (root: string) => entries.get(root), all: vi.fn(), onDidChange: vi.fn() };
 
     output = outputMock();
-    ports = editorPredictionPorts(roots, output);
+    ports = editorPredictionPorts(rootsMock(entries), output);
   });
 
-  it('WHEN the binary of the loaded root is read THEN it is the turbo the root loaded with', () => {
-    expect(ports.binaryOf('/ws')).toBe(TURBO_BINARY_STUB);
-  });
+  describe('GIVEN a store holding one loaded root', () => {
+    it('WHEN the binary of the loaded root is read THEN it is the turbo the root loaded with', () => {
+      expect(ports.binaryOf('/ws')).toBe(TURBO_BINARY_STUB);
+    });
 
-  it('WHEN the binary of an unknown root is read THEN it is null', () => {
-    expect(ports.binaryOf('/gone')).toBeNull();
-  });
+    it('WHEN the binary of an unknown root is read THEN it is null', () => {
+      expect(ports.binaryOf('/gone')).toBeNull();
+    });
 
-  it('WHEN the dry run starts with an aborted signal THEN core aborts it before the binary is run', async () => {
-    const controller = new AbortController();
+    it('WHEN the dry run starts with an aborted signal THEN core aborts it before the binary is run', async () => {
+      const controller = new AbortController();
 
-    controller.abort();
+      controller.abort();
 
-    const dryRun = ports.dryRun(TURBO_BINARY_STUB, DRY_RUN_REQUEST, controller.signal);
+      const dryRun = ports.dryRun(TURBO_BINARY_STUB, DRY_RUN_REQUEST, controller.signal);
 
-    await expect(dryRun).rejects.toThrow('was aborted');
-  });
+      await expect(dryRun).rejects.toThrow('was aborted');
+    });
 
-  it('WHEN a line is logged THEN the output gets it as one warning', () => {
-    ports.log('prediction /ws: dry run failed: boom');
+    it('WHEN a line is logged THEN the output gets it as one warning', () => {
+      ports.log('prediction /ws: dry run failed: boom');
 
-    expect(output.warn).toHaveBeenCalledExactlyOnceWith('prediction /ws: dry run failed: boom');
+      expect(output.warn).toHaveBeenCalledExactlyOnceWith('prediction /ws: dry run failed: boom');
+    });
   });
 
   describe('GIVEN fake timers', () => {

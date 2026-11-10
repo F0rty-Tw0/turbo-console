@@ -2,8 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { PredictionLaunch } from './prediction-launch.ts';
-import type { PredictionBatchPort, PredictionEntry, PredictionTicket, PredictionWaitPort } from '../common/prediction-batch.type.ts';
-import type { PredictionView } from '../common/prediction.type.ts';
+import type {
+  PredictionBatchPort,
+  PredictionEntry,
+  PredictionTicket,
+  PredictionView,
+  PredictionWaitPort
+} from '../common/prediction.type.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
 import { ID_A, NOW_0, PKG_A, PKG_B } from '../test/common/prediction-load.const.ts';
 import type { PredictionHarness } from '../test/common/prediction-load.type.ts';

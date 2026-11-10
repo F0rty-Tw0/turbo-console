@@ -12,7 +12,8 @@ const isRequestedTask = (task: TaskNode): boolean => {
 };
 
 const packageTasksOf = (pkg: PackageNode): PackageTasks => {
-  const packageTasks: PackageTasks = { name: pkg.name, tasks: pkg.tasks.filter(isRequestedTask) };
+  const tasks = pkg.tasks.filter(isRequestedTask);
+  const packageTasks: PackageTasks = { name: pkg.name, tasks };
 
   return packageTasks;
 };
@@ -25,7 +26,12 @@ const taskNamesOf = (entry: PackageTasks): string[] => entry.tasks.map((task) =>
 
 /** The dry run to ask for `packageNames` and the task ids it covers; `null` when no named package has a task worth predicting. */
 export const predictionBatchOf = (model: WorkspaceModel, packageNames: string[]): PredictionBatch | null => {
-  const named = packageNames.flatMap((name) => model.packages.filter((pkg) => pkg.name === name));
+  const packagesNamed = (name: string): PackageNode[] => {
+    const isNamed = (pkg: PackageNode): boolean => pkg.name === name;
+
+    return model.packages.filter(isNamed);
+  };
+  const named = packageNames.flatMap(packagesNamed);
   const found = named.map(packageTasksOf).filter(hasTasks);
   const pairs = found.flatMap(idPairsOf);
 
