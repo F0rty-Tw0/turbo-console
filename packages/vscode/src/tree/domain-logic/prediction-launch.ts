@@ -1,8 +1,9 @@
-import type { DryRunState } from '@turbo-console/core';
+import type { DryRunState, WorkspaceModel } from '@turbo-console/core';
 
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { PredictionBatchPort, PredictionEntry, PredictionTicket, PredictionWaitPort } from '../common/prediction-batch.type.ts';
 import type { PredictionBatch, PredictionLoadPorts, PredictionView } from '../common/prediction.type.ts';
+import { hasPackageNamed } from '../utils/package-named.util.ts';
 import { entriesOfTicket } from '../utils/prediction-entries.util.ts';
 import { predictionKeyOf } from '../utils/prediction-key.util.ts';
 import { predictionBatchOf } from '../utils/prediction-request.util.ts';
@@ -48,7 +49,7 @@ export class PredictionLaunch {
 
     const batch = predictionBatchOf(model, packages);
 
-    this.settleEmpty(ticket, packages, batch);
+    this.settleUnasked(ticket, packages, model, batch);
 
     if (batch === null) {
       this.batches.finished(ticket);
@@ -84,19 +85,48 @@ export class PredictionLaunch {
     this.batches.finished(ticket);
   }
 
-  /** A package with no requested task has nothing to ask: it is Loaded with an empty answer at once. */
-  private settleEmpty(ticket: PredictionTicket, packages: string[], batch: PredictionBatch | null): void {
+  /**
+   * A package the batch does not ask for leaves the ticket. One the model no longer holds is Absent, so a later show
+   * asks again; one with no requested task is Loaded with an empty answer at once.
+   */
+  private settleUnasked(ticket: PredictionTicket, packages: string[], model: WorkspaceModel, batch: PredictionBatch | null): void {
     const asked = new Set(batch?.request.packages ?? []);
-    const isEmpty = (packageName: string): boolean => !asked.has(packageName);
-    const empty = packages.filter(isEmpty);
+    const isUnasked = (packageName: string): boolean => !asked.has(packageName);
+    const isGone = (packageName: string): boolean => !hasPackageNamed(model, packageName);
+    const isHeld = (packageName: string): boolean => !isGone(packageName);
+    const unasked = packages.filter(isUnasked);
+    const gone = unasked.filter(isGone);
+    const empty = unasked.filter(isHeld);
+    const hadView = this.drop(ticket, gone);
+
+    this.storeEmpty(ticket, empty);
+
+    if (hadView || empty.length > 0) this.ports.changed(ticket.root);
+  }
+
+  /** Deletes the entries of `gone` and says whether any of them had an answer to take back. */
+  private drop(ticket: PredictionTicket, gone: string[]): boolean {
+    let hadView = false;
+
+    for (const packageName of gone) {
+      const key = predictionKeyOf(ticket.root, packageName);
+      const view = this.entries.get(key)?.view ?? null;
+
+      hadView ||= view !== null;
+      this.entries.delete(key);
+      this.batches.leave(ticket, packageName);
+    }
+
+    return hadView;
+  }
+
+  private storeEmpty(ticket: PredictionTicket, empty: string[]): void {
     const view: PredictionView = { settledAt: this.ports.now(), tasks: new Map() };
 
     for (const packageName of empty) {
       this.entries.set(predictionKeyOf(ticket.root, packageName), { root: ticket.root, packageName, view, ticket: null });
       this.batches.leave(ticket, packageName);
     }
-
-    if (empty.length > 0) this.ports.changed(ticket.root);
   }
 
   private settled(ticket: PredictionTicket, batch: PredictionBatch, states: DryRunState[]): void {

@@ -90,6 +90,45 @@ describe('FEATURE: prediction loads when the model changes', () => {
     });
   });
 
+  describe('GIVEN Queued WHEN a new model drops the package and the window ends', () => {
+    beforeEach(async () => {
+      await toState(h, store, 'queued');
+      h.model(ROOT, buildModelOf([PKG_B]));
+      store.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_B])));
+      h.fire();
+    });
+
+    it('THEN it is Absent and nothing is announced', () => {
+      expect(store.view(ROOT, PKG_A)).toBeNull();
+      expect(h.changed).not.toHaveBeenCalled();
+    });
+
+    it('THEN a later packageShown queues it again', () => {
+      store.packageShown(ROOT, PKG_A);
+
+      expect(h.pendingTimers()).toHaveLength(1);
+    });
+  });
+
+  describe('GIVEN a loaded package queued again WHEN a new model drops it and the window ends', () => {
+    beforeEach(async () => {
+      await toState(h, store, 'loaded');
+      store.refreshAll();
+      h.changed.mockClear();
+      h.model(ROOT, buildModelOf([PKG_B]));
+      store.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_B])));
+      h.fire();
+    });
+
+    it('THEN it is Absent', () => {
+      expect(store.view(ROOT, PKG_A)).toBeNull();
+    });
+
+    it('THEN the answer it took back is announced once', () => {
+      expect(h.changed).toHaveBeenCalledOnce();
+    });
+  });
+
   describe('GIVEN an absent package', () => {
     it('WHEN a new model arrives THEN no timer starts', () => {
       store.toggled(true);
