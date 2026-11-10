@@ -7,7 +7,8 @@ const rootOf = (entry: RootEntry): string => entry.state.folder.root;
 
 /**
  * The tree's side of the window's shared cache prediction: which node and run events reach `PredictionLoads`, and which
- * nodes redraw when a root's predictions changed. It only reads `cache`, which `PackagesTree` writes, so a fired node is
+ * nodes redraw: the store names the root and the packages whose prediction changed, and only those package nodes fire. It
+ * only reads `cache`, which `PackagesTree` writes, so a fired node is
  * the object VS Code holds; VS Code then asks for that package's children again, and the store ignores a request for a
  * package it already has.
  */
