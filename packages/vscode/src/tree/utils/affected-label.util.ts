@@ -6,9 +6,27 @@ type Reads = Pick<SharedAffected, 'view' | 'status'>;
 
 /** The tree view description (spec §3 Mode label): the first matching row wins, absent roots are ignored, a loading root with an earlier result counts as having it. */
 export const affectedLabelOf = (shown: boolean, roots: string[], affected: Reads): string => {
-  const live = roots.filter((root) => affected.status(root) !== 'absent');
-  const isFailed = live.some((root) => affected.status(root) === 'failed');
-  const isChecking = live.some((root) => affected.status(root) === 'loading' && affected.view(root) === null);
+  if (!shown) return '';
+
+  const isLive = (root: string): boolean => affected.status(root) !== 'absent';
+  const isFailedRoot = (root: string): boolean => affected.status(root) === 'failed';
+  const isCheckingRoot = (root: string): boolean => {
+    const isLoading = affected.status(root) === 'loading';
+
+    return isLoading && affected.view(root) === null;
+  };
+  const live = roots.filter(isLive);
+
+  if (live.length === 0) return '';
+
+  const isFailed = live.some(isFailedRoot);
+
+  if (isFailed) return AFFECTED_LABELS.unavailable;
+
+  const isChecking = live.some(isCheckingRoot);
+
+  if (isChecking) return AFFECTED_LABELS.checking;
+
   const modes = new Set<AffectedMode>();
 
   for (const root of live) {
@@ -16,12 +34,6 @@ export const affectedLabelOf = (shown: boolean, roots: string[], affected: Reads
 
     if (view !== null) modes.add(view.mode);
   }
-
-  if (!shown || live.length === 0) return '';
-
-  if (isFailed) return AFFECTED_LABELS.unavailable;
-
-  if (isChecking) return AFFECTED_LABELS.checking;
 
   const [mode] = modes;
 

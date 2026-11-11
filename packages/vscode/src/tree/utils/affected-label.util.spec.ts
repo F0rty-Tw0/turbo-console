@@ -29,29 +29,29 @@ const labelOf = (shown: boolean, reads: ReadonlyMap<string, Read>): string => {
 };
 
 describe('FEATURE: affectedLabelOf', () => {
-  it.each<[string, boolean, Record<string, Read>, string]>([
-    ['the toggle is off and the root failed', false, { '/a': FAILED }, ''],
-    ['there are no roots', true, {}, ''],
-    ['every root is absent', true, { '/a': ABSENT }, ''],
-    ['one root failed', true, { '/a': FAILED }, UNAVAILABLE],
-    ['one failed and one loaded', true, { '/a': FAILED, '/b': LOADED_TASK }, UNAVAILABLE],
-    ['one failed and one loading without a result', true, { '/a': FAILED, '/b': LOADING_NEW }, UNAVAILABLE],
-    ['one failed and one absent', true, { '/a': FAILED, '/b': ABSENT }, UNAVAILABLE],
-    ['one loading without a result', true, { '/a': LOADING_NEW }, CHECKING],
-    ['one loading without a result and one loaded', true, { '/a': LOADING_NEW, '/b': LOADED_TASK }, CHECKING],
-    ['one loading with an earlier result', true, { '/a': LOADING_TASK }, 'affected: task level'],
-    ['one root loaded at task level', true, { '/ws': LOADED_TASK }, 'affected: task level'],
-    ['one root loaded at package level', true, { '/ws': LOADED_PACKAGE }, 'affected: package level'],
-    ['two roots loaded at the same level', true, { '/a': LOADED_TASK, '/b': LOADED_TASK }, 'affected: task level'],
-    ['two roots loaded at different levels', true, { '/a': LOADED_TASK, '/b': LOADED_PACKAGE }, 'affected: mixed levels'],
+  it.each<[string, string, boolean, Record<string, Read>]>([
+    ['the toggle is off and the root failed', '', false, { '/a': FAILED }],
+    ['there are no roots', '', true, {}],
+    ['every root is absent', '', true, { '/a': ABSENT }],
+    ['one root failed', UNAVAILABLE, true, { '/a': FAILED }],
+    ['one failed and one loaded', UNAVAILABLE, true, { '/a': FAILED, '/b': LOADED_TASK }],
+    ['one failed and one loading without a result', UNAVAILABLE, true, { '/a': FAILED, '/b': LOADING_NEW }],
+    ['one failed and one absent', UNAVAILABLE, true, { '/a': FAILED, '/b': ABSENT }],
+    ['one loading without a result', CHECKING, true, { '/a': LOADING_NEW }],
+    ['one loading without a result and one loaded', CHECKING, true, { '/a': LOADING_NEW, '/b': LOADED_TASK }],
+    ['one loading with an earlier result', 'affected: task level', true, { '/a': LOADING_TASK }],
+    ['one root loaded at task level', 'affected: task level', true, { '/ws': LOADED_TASK }],
+    ['one root loaded at package level', 'affected: package level', true, { '/ws': LOADED_PACKAGE }],
+    ['two roots loaded at the same level', 'affected: task level', true, { '/a': LOADED_TASK, '/b': LOADED_TASK }],
+    ['two roots loaded at different levels', 'affected: mixed levels', true, { '/a': LOADED_TASK, '/b': LOADED_PACKAGE }],
     [
       'a loading root with a package result and a loaded task root',
+      'affected: mixed levels',
       true,
-      { '/a': LOADING_PACKAGE, '/b': LOADED_TASK },
-      'affected: mixed levels'
+      { '/a': LOADING_PACKAGE, '/b': LOADED_TASK }
     ],
-    ['one loaded and one absent', true, { '/a': LOADED_TASK, '/b': ABSENT }, 'affected: task level']
-  ])('GIVEN %s WHEN the label is read THEN it is the table row', (_name, shown, reads, expected) => {
+    ['one loaded and one absent', 'affected: task level', true, { '/a': LOADED_TASK, '/b': ABSENT }]
+  ])('GIVEN %s WHEN the label is read THEN it reads "%s"', (_name, expected, shown, reads) => {
     expect(labelOf(shown, new Map(Object.entries(reads)))).toBe(expected);
   });
 });
