@@ -8,6 +8,7 @@ import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { ATOM_MODEL_STUB, A_FILE_STUB, LIVE_FILE_STUB, SPACED_FILE_STUB } from '../test/stubs/atom-view.stub.ts';
 import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
+import { SHARED_AFFECTED_STUB } from '../test/stubs/shared-affected.stub.ts';
 import { SHARED_PREDICTION_STUB } from '../test/stubs/shared-prediction.stub.ts';
 import { loadedWith } from '../test/utils/tree-model.spec.util.ts';
 import { ATOM_IDLE_PORTS } from '../test/utils/tree-ports.spec.util.ts';
@@ -40,7 +41,8 @@ describe('FEATURE: packages tree Atomizer rows', () => {
         now: () => 7,
         wallNow: () => 7,
         atom,
-        prediction: SHARED_PREDICTION_STUB
+        prediction: SHARED_PREDICTION_STUB,
+        affected: SHARED_AFFECTED_STUB
       };
       const base = loadedWith([]);
       const loaded = { ...base, model: ATOM_MODEL_STUB };

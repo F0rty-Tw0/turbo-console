@@ -5,6 +5,7 @@ import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeNode } from '../common/tree-node.type.ts';
+import { SHARED_AFFECTED_STUB } from '../test/stubs/shared-affected.stub.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { SHARED_PREDICTION_STUB } from '../test/stubs/shared-prediction.stub.ts';
 import { TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
@@ -28,12 +29,27 @@ const FORWARD_CASES: ForwardCase[] = [
   { method: 'dispose', call: (trees) => trees.dispose(), args: [] }
 ];
 
+type AffectedForwarded = 'modelChanged' | 'rootsChanged' | 'refreshAll' | 'dispose';
+
+type AffectedForwardCase = {
+  readonly method: AffectedForwarded;
+  readonly call: (trees: LoadTrees) => void;
+  readonly args: unknown[];
+};
+
+const AFFECTED_FORWARD_CASES: AffectedForwardCase[] = [
+  { method: 'modelChanged', call: (trees) => trees.modelChanged(CHANGE), args: [CHANGE] },
+  { method: 'rootsChanged', call: (trees) => trees.rootsChanged(), args: [] },
+  { method: 'refreshAll', call: (trees) => trees.refreshAll(), args: [] },
+  { method: 'dispose', call: (trees) => trees.dispose(), args: [] }
+];
+
 describe('FEATURE: load trees', () => {
   let trees: LoadTrees;
 
   beforeEach(() => {
     const cache = new Map<string, TreeNode>();
-    const ports = { atom: SHARED_ATOMS_STUB, prediction: SHARED_PREDICTION_STUB, fire: vi.fn() };
+    const ports = { atom: SHARED_ATOMS_STUB, prediction: SHARED_PREDICTION_STUB, affected: SHARED_AFFECTED_STUB, fire: vi.fn() };
 
     trees = new LoadTrees(new RootStore(), cache, ports);
   });
@@ -55,6 +71,17 @@ describe('FEATURE: load trees', () => {
         call(trees);
 
         expect(prediction).toHaveBeenCalledExactlyOnceWith(...args);
+      }
+    );
+
+    it.each(AFFECTED_FORWARD_CASES)(
+      'WHEN $method is called THEN the affected tree gets it with the same arguments',
+      ({ method, call, args }) => {
+        const affected = vi.spyOn(trees.affected, method).mockReturnValue(undefined);
+
+        call(trees);
+
+        expect(affected).toHaveBeenCalledExactlyOnceWith(...args);
       }
     );
   });

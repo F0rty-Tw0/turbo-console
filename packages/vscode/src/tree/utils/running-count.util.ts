@@ -75,7 +75,8 @@ export const runningCountsOf = (root: string, view: ModelView, context: RowConte
 
 export const rowInputsOf = (root: string, view: ModelView, context: RowContext): RowInputs => {
   const running = runningCountsOf(root, view, context);
-  const inputs: RowInputs = { scopeShown: context.scopeShown, running };
+  const affected = context.affected.view(root);
+  const inputs: RowInputs = { scopeShown: context.scopeShown, running, affected };
 
   return inputs;
 };

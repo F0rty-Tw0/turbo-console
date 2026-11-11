@@ -3,8 +3,10 @@ import type { PackageNode, TurboErrorKind, WorkspaceModel } from '@turbo-console
 import { dirRows, packageRow } from './dir-rows.util.ts';
 import { packageList } from './folder-tree.util.ts';
 import { liveOf } from './live-of.util.ts';
+import { rootAffectedLineOf } from './root-affected.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import { rowInputsOf, withRunningSuffix } from './running-count.util.ts';
+import { lineOf } from './task-row.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
@@ -113,11 +115,13 @@ const countLines = (view: ModelView | null): string[] => {
 /**
  * The folder node of a multi-root window: its key is the root path, so its id is `root:<root>`. Spec §4.9: the tooltip
  * holds the root path and its shown package count; a `null` view (no model yet) leaves the count out. UB5a §3.3: the
- * description counts the root's `running` runs.
+ * description counts the root's `running` runs. `affectedLine` (the level of the affected result, or `unavailable`) ends the
+ * tooltip when not `null`.
  */
-export const rootNodeRow = (folder: RootFolder, view: ModelView | null, running: number): TreeRow => {
+export const rootNodeRow = (folder: RootFolder, view: ModelView | null, running: number, affectedLine: string | null): TreeRow => {
   const counted = countLines(view);
   const description = withRunningSuffix('', running);
+  const marked = lineOf(affectedLine);
   const row: TreeRow = {
     id: rowIdOf('root', folder.root, folder.root),
     kind: 'root',
@@ -129,7 +133,7 @@ export const rootNodeRow = (folder: RootFolder, view: ModelView | null, running:
     icon: ROOT_FOLDER_ICON,
     contextValue: 'turboRoot',
     collapsible: 'expanded',
-    tooltip: [folder.root, ...counted],
+    tooltip: [folder.root, ...counted, ...marked],
     command: null
   };
 
@@ -151,10 +155,11 @@ export const rootRowOf = (state: RootState, context: RowContext): TreeRow => {
   const { root } = state.folder;
   const model = shownModelOf(state);
   const running = context.live(root).size;
+  const affectedLine = rootAffectedLineOf(context.affected, root);
 
-  if (model === null) return rootNodeRow(state.folder, null, running);
+  if (model === null) return rootNodeRow(state.folder, null, running, affectedLine);
 
   const view = context.views(model, context.scriptsShown, liveOf(context, root));
 
-  return rootNodeRow(state.folder, view, running);
+  return rootNodeRow(state.folder, view, running, affectedLine);
 };

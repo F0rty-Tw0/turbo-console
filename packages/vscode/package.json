@@ -132,6 +132,18 @@
         "icon": "$(circle-slash)"
       },
       {
+        "command": "turboConsole.showAffected",
+        "title": "Show Affected",
+        "category": "Turbo Console",
+        "icon": "$(git-compare)"
+      },
+      {
+        "command": "turboConsole.hideAffected",
+        "title": "Hide Affected",
+        "category": "Turbo Console",
+        "icon": "$(circle-slash)"
+      },
+      {
         "command": "turboConsole.showOutput",
         "title": "Show Output",
         "category": "Turbo Console"
@@ -300,6 +312,16 @@
           "command": "turboConsole.hidePrediction",
           "when": "view == turboConsole.tree && turboConsole.predictionShown",
           "group": "navigation@6"
+        },
+        {
+          "command": "turboConsole.showAffected",
+          "when": "view == turboConsole.tree && !turboConsole.affectedShown",
+          "group": "navigation@7"
+        },
+        {
+          "command": "turboConsole.hideAffected",
+          "when": "view == turboConsole.tree && turboConsole.affectedShown",
+          "group": "navigation@7"
         }
       ],
       "view/item/context": [
@@ -442,6 +464,14 @@
         {
           "command": "turboConsole.hidePrediction",
           "when": "turboConsole.active && turboConsole.predictionShown"
+        },
+        {
+          "command": "turboConsole.showAffected",
+          "when": "turboConsole.active && !turboConsole.affectedShown"
+        },
+        {
+          "command": "turboConsole.hideAffected",
+          "when": "turboConsole.active && turboConsole.affectedShown"
         },
         {
           "command": "turboConsole.showOutput",

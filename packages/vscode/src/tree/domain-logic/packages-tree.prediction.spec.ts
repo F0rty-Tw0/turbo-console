@@ -58,8 +58,8 @@ describe('FEATURE: packages tree cache prediction feed', () => {
       expect(shared.packageShown).toHaveBeenCalledExactlyOnceWith('/ws', 'a');
     });
 
-    it('WHEN predictionChanged runs THEN the whole tree redraws once', () => {
-      tree.predictionChanged();
+    it('WHEN loadsToggled runs THEN the whole tree redraws once', () => {
+      tree.loadsToggled();
 
       expect(fire).toHaveBeenCalledExactlyOnceWith(undefined);
     });

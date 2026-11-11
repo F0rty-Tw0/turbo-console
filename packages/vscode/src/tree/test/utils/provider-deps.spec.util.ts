@@ -2,6 +2,7 @@ import type { LiveIds, RunLookup } from '../../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../../shared/common/scripts-toggle.type.ts';
 import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.mock.ts';
 import type { TreeProviderDeps } from '../../common/tree-node.type.ts';
+import { SHARED_AFFECTED_STUB } from '../stubs/shared-affected.stub.ts';
 import { SHARED_ATOMS_STUB } from '../stubs/shared-atoms.stub.ts';
 import { SHARED_PREDICTION_STUB } from '../stubs/shared-prediction.stub.ts';
 
@@ -28,6 +29,7 @@ export const providerDepsOf = (
     scripts,
     atom: SHARED_ATOMS_STUB,
     prediction: SHARED_PREDICTION_STUB,
+    affected: SHARED_AFFECTED_STUB,
     setHasScripts,
     setSinglePackage,
     log: () => undefined

@@ -19,7 +19,7 @@ const setSinglePackage = async (value: boolean): Promise<void> => {
 
 /**
  * What the tree provider is built from: the run lookup, the first-children spans, the scripts toggle, the shared loads
- * (Atomizer and cache prediction), the `turboConsole.hasScripts` and `turboConsole.singlePackage` sends and `log` for a send that fails.
+ * (Atomizer, cache prediction and affected), the `turboConsole.hasScripts` and `turboConsole.singlePackage` sends and `log` for a send that fails.
  */
 export const treeDepsOf = (
   runs: TreeProviderDeps['runs'],
@@ -35,6 +35,7 @@ export const treeDepsOf = (
     scripts,
     atom: loads.atoms,
     prediction: loads.prediction,
+    affected: loads.affected,
     setHasScripts,
     setSinglePackage,
     log
@@ -43,15 +44,16 @@ export const treeDepsOf = (
   return deps;
 };
 
-/** What `registerTree` reads of the extension context, with the scope, scripts and prediction toggles and the icon theme's folder probe beside it. */
+/** What `registerTree` reads of the extension context, with the scope, scripts, prediction and affected toggles, the affected store's reads and the icon theme's folder probe beside it. */
 export const contextOf = (
   context: Pick<vscode.ExtensionContext, 'subscriptions'>,
-  toggles: Pick<TreeContext, 'scope' | 'scripts' | 'prediction'>,
-  iconTheme: IconThemeProbe
+  toggles: Pick<TreeContext, 'scope' | 'scripts' | 'prediction' | 'affected'>,
+  iconTheme: IconThemeProbe,
+  affectedLoads: TreeContext['affectedLoads']
 ): TreeContext => {
   const { subscriptions } = context;
-  const { scope, scripts, prediction } = toggles;
-  const treeContext: TreeContext = { subscriptions, scope, scripts, prediction, iconTheme };
+  const { scope, scripts, prediction, affected } = toggles;
+  const treeContext: TreeContext = { subscriptions, scope, scripts, prediction, affected, affectedLoads, iconTheme };
 
   return treeContext;
 };

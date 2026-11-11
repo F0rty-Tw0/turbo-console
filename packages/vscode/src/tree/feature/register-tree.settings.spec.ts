@@ -13,6 +13,7 @@ import type { TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
 import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
+import { SHARED_AFFECTED_STUB } from '../test/stubs/shared-affected.stub.ts';
 
 type SettingsListener = (event: ConfigurationChangeEvent) => void;
 
@@ -83,6 +84,8 @@ describe('FEATURE: registerTree settings', () => {
       scope: scriptsToggleMock(),
       scripts: scriptsToggleMock(),
       prediction: scriptsToggleMock(),
+      affected: scriptsToggleMock(),
+      affectedLoads: SHARED_AFFECTED_STUB,
       iconTheme
     };
     const session: Session = {

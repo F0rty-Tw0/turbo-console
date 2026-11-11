@@ -7,7 +7,13 @@ import { affectedCase, everywhereCase } from './parity-all.spec.util.ts';
 import { buildId, buildStepOf, packagesWith, runPicked, taskNamesOf } from './parity-pick.spec.util.ts';
 import { settledRunSince } from './parity-run.spec.util.ts';
 import { manifestFileOf, openScriptCase } from './parity-script.spec.util.ts';
-import { fixedViewsCase, foldersCase, openSpecRegisteredCase, predictionRegisteredCase } from './parity-views.spec.util.ts';
+import {
+  affectedRegisteredCase,
+  fixedViewsCase,
+  foldersCase,
+  openSpecRegisteredCase,
+  predictionRegisteredCase
+} from './parity-views.spec.util.ts';
 import { taskNodeNamed } from './run-wait.spec.util.ts';
 import { log, step, waitFor } from './suite-env.spec.util.ts';
 import { packageNodeNamed } from './tree-walk.spec.util.ts';
@@ -111,5 +117,6 @@ export const parityCase = async (api: TurboConsoleApi, root: string, manifest: S
   await fixedViewsCase(scene);
   await openSpecRegisteredCase();
   await predictionRegisteredCase();
+  await affectedRegisteredCase();
   await foldersCase(scene);
 };

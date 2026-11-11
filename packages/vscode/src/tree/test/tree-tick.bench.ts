@@ -2,6 +2,7 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import { bench } from '@turbo-console/tools';
 import type { BenchDescriptor } from '@turbo-console/tools';
 
+import { SHARED_AFFECTED_STUB } from './stubs/shared-affected.stub.ts';
 import { benchStateOf, captureModel } from './utils/bench-model.spec.util.ts';
 import type { LiveIds, RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
@@ -98,7 +99,8 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
     countsMemo: new WeakMap(),
     tools,
     atoms: staticAtomLookup(() => model),
-    prediction: () => null
+    prediction: () => null,
+    affected: SHARED_AFFECTED_STUB
   };
   const cache = new Map<string, TreeNode>();
   const nodes = entries.map((entry) => nodeFor(cache, entryRowOf(model, entry, context)));

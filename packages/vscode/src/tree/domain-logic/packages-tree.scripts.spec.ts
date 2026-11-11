@@ -8,6 +8,7 @@ import type { LiveIds, RunEntry } from '../../run/common/run.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
+import { SHARED_AFFECTED_STUB } from '../test/stubs/shared-affected.stub.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { SHARED_PREDICTION_STUB } from '../test/stubs/shared-prediction.stub.ts';
 import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts';
@@ -64,7 +65,8 @@ describe('FEATURE: the Scripts group in the packages tree', () => {
       now: () => 7,
       wallNow: () => 7,
       atom: SHARED_ATOMS_STUB,
-      prediction: SHARED_PREDICTION_STUB
+      prediction: SHARED_PREDICTION_STUB,
+      affected: SHARED_AFFECTED_STUB
     };
 
     tree = new PackagesTree(store, 'list', ICONS_STATE_STUB, ports);

@@ -15,6 +15,7 @@ import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.t
 import type { TreeContext } from '../common/tree-context.type.ts';
 import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
+import { SHARED_AFFECTED_STUB } from '../test/stubs/shared-affected.stub.ts';
 import { providerDepsOf } from '../test/utils/provider-deps.spec.util.ts';
 
 type CommandCallback = () => unknown;
@@ -42,7 +43,7 @@ const editor = vi.hoisted(() => {
 
 vi.mock('vscode', () => {
   class EventEmitter {
-    public readonly event = vi.fn();
+    public readonly event = vi.fn(disposableFake);
     public readonly fire = vi.fn((value: unknown): void => {
       fired.push(value);
     });
@@ -91,6 +92,8 @@ describe('FEATURE: registerTree scripts toggle', () => {
       scope: scriptsToggleMock(),
       scripts: toggle,
       prediction: scriptsToggleMock(),
+      affected: scriptsToggleMock(),
+      affectedLoads: SHARED_AFFECTED_STUB,
       iconTheme: iconThemeProbeMock()
     };
   };

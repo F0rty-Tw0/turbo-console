@@ -47,6 +47,7 @@ describe('FEATURE: tree provider deps', () => {
         scripts,
         atom: SHARED_ATOMS_STUB,
         prediction: SHARED_PREDICTION_STUB,
+        affected: SHARED_AFFECTED_STUB,
         setHasScripts: deps.setHasScripts,
         setSinglePackage: deps.setSinglePackage,
         log
@@ -96,14 +97,17 @@ describe('FEATURE: tree provider deps', () => {
       const scope = scriptsToggleMock();
       const scripts = scriptsToggleMock();
       const prediction = scriptsToggleMock();
+      const affected = scriptsToggleMock();
       const iconTheme = iconThemeProbeMock();
 
-      const treeContext = contextOf({ subscriptions }, { scope, scripts, prediction }, iconTheme);
+      const treeContext = contextOf({ subscriptions }, { scope, scripts, prediction, affected }, iconTheme, SHARED_AFFECTED_STUB);
 
       expect(treeContext.subscriptions).toBe(subscriptions);
       expect(treeContext.scope).toBe(scope);
       expect(treeContext.scripts).toBe(scripts);
       expect(treeContext.prediction).toBe(prediction);
+      expect(treeContext.affected).toBe(affected);
+      expect(treeContext.affectedLoads).toBe(SHARED_AFFECTED_STUB);
       expect(treeContext.iconTheme).toBe(iconTheme);
     });
   });

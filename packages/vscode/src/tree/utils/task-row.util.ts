@@ -1,6 +1,8 @@
 import type { PackageManagerName, PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
 import { durationText } from '@turbo-console/webview-ui';
 
+import { withAffectedWord } from './affected-word.util.ts';
+import { rowAffectedOf } from './row-affected.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import { rowPredictionOf } from './row-prediction.util.ts';
 import { taskDisplay } from './task-display.util.ts';
@@ -123,7 +125,8 @@ const runLines = (entry: RunEntry | undefined): string[] => {
 
 /**
  * Tooltip lines are raw text: `tooltipMarkdownOf` cleans them. The description is built from numbers and fixed words, but is cleaned like every label.
- * A cache prediction replaces the description and ends the tooltip; icon and context value stay those of `taskDisplay`.
+ * A cache prediction replaces the description; the affected word joins it after the cut (a live run owns the description, so it adds none).
+ * The prediction line, then the affected line, end the tooltip; icon and context value stay those of `taskDisplay`.
  */
 export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, context: RowContext): TreeRow => {
   const { root, packageManager, singlePackage } = scope;
@@ -135,7 +138,9 @@ export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, conte
   const ran = runLines(entry);
   const prediction = rowPredictionOf(task, entry, context.prediction(root, pkg.name));
   const predicted = lineOf(prediction?.line ?? null);
-  const tooltip = [...kind, ...facts, ...ran, ...predicted];
+  const affected = rowAffectedOf(task, entry, context.affected.view(root));
+  const marked = lineOf(affected?.line ?? null);
+  const tooltip = [...kind, ...facts, ...ran, ...predicted, ...marked];
   const themed = themeFilesOf(display, entry, match);
   const row: TreeRow = {
     id: rowIdOf('task', root, task.id),
@@ -144,7 +149,7 @@ export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, conte
     key: task.id,
     packageName: pkg.name,
     label: cleanText(task.name, LABEL_MAX),
-    description: cleanText(prediction?.description ?? display.description, DESCRIPTION_MAX),
+    description: withAffectedWord(cleanText(prediction?.description ?? display.description, DESCRIPTION_MAX), affected),
     icon: toolIcon(display, entry, match),
     contextValue: display.contextValue,
     collapsible: 'none',

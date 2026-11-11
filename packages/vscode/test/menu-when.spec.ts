@@ -50,6 +50,9 @@ const PACKAGE_ITEMS = [
   'turboConsole.copyPath 3_copy'
 ];
 
+/** A regex, not `endsWith`: `turboConsole.runAffected` also ends in `Affected`. */
+const AFFECTED_TOGGLE = /(show|hide)Affected/u;
+
 const placementOf = (entry: MenuEntry): string => `${entry.command} ${entry.group ?? ''}`;
 
 const shownIn = (entries: MenuEntry[], keys: ContextKeys): string[] => {
@@ -107,6 +110,7 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
         'turboConsole.scopeShown': scopeShown,
         'turboConsole.scriptsShown': scriptsShown,
         'turboConsole.predictionShown': false,
+        'turboConsole.affectedShown': false,
         'config.turboConsole.treeMode': 'list'
       };
 
@@ -115,6 +119,7 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
         scopeToggle,
         scriptsToggle,
         'turboConsole.showPrediction navigation@6',
+        'turboConsole.showAffected navigation@7',
         'turboConsole.refresh navigation@3',
         'turboConsole.showFolders navigation@2',
         'turboConsole.openPackageGraph navigation@4',
@@ -151,6 +156,26 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
   ])('GIVEN prediction shown is %s WHEN the command palette is read THEN only %s is there of the pair', (predictionShown, command) => {
     const keys = { 'turboConsole.active': true, 'turboConsole.predictionShown': predictionShown };
     const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('Prediction') && whenMatches(entry.when, keys));
+
+    expect(shown.map((entry) => entry.command)).toStrictEqual([command]);
+  });
+
+  it.each([
+    [false, 'turboConsole.showAffected navigation@7'],
+    [true, 'turboConsole.hideAffected navigation@7']
+  ])('GIVEN affected shown is %s WHEN the view title is read THEN only %s is there of the pair', (affectedShown, placement) => {
+    const keys = { view: TREE_VIEW, 'turboConsole.affectedShown': affectedShown };
+    const title = shownIn(MENUS['view/title'], keys).filter((entry) => AFFECTED_TOGGLE.test(entry));
+
+    expect(title).toStrictEqual([placement]);
+  });
+
+  it.each([
+    [false, 'turboConsole.showAffected'],
+    [true, 'turboConsole.hideAffected']
+  ])('GIVEN affected shown is %s WHEN the command palette is read THEN only %s is there of the pair', (affectedShown, command) => {
+    const keys = { 'turboConsole.active': true, 'turboConsole.affectedShown': affectedShown };
+    const shown = MENUS.commandPalette.filter((entry) => AFFECTED_TOGGLE.test(entry.command) && whenMatches(entry.when, keys));
 
     expect(shown.map((entry) => entry.command)).toStrictEqual([command]);
   });

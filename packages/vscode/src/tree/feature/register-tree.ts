@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import { followAffectedLabel } from './affected-label.ts';
 import { currentIconsSetting, watchIcons } from './icons-setting.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import type { Output } from '../../shared/common/output.type.ts';
@@ -78,6 +79,17 @@ const registerToggle = (toggle: ScriptsToggleApi, showId: string, hideId: string
   return registration;
 };
 
+/** A shared-load toggle redraws the tree once per change; the store followed the flip first (`sharedLoadsOf` subscribed earlier). */
+const redrawOn = (toggle: ScriptsToggleApi, tree: PackagesTreeApi): vscode.Disposable => {
+  const redraw: vscode.Disposable = {
+    dispose: toggle.onDidChange(() => {
+      tree.loadsToggled();
+    })
+  };
+
+  return redraw;
+};
+
 /** Gives the tree the scope choice now, so its first draw keeps the stored one, and again on every change of the toggle. */
 const followScope = (scope: ScriptsToggleApi, tree: PackagesTreeApi): vscode.Disposable => {
   const follow = (): void => {
@@ -102,9 +114,9 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
   const scope = registerToggle(context.scope, 'turboConsole.showScope', 'turboConsole.hideScope');
   const scripts = registerToggle(context.scripts, 'turboConsole.showScripts', 'turboConsole.hideScripts');
   const prediction = registerToggle(context.prediction, 'turboConsole.showPrediction', 'turboConsole.hidePrediction');
-  const predicting = context.prediction.onDidChange(() => {
-    tree.predictionChanged();
-  });
+  const affectingCommands = registerToggle(context.affected, 'turboConsole.showAffected', 'turboConsole.hideAffected');
+  const predicting = redrawOn(context.prediction, tree);
+  const affecting = redrawOn(context.affected, tree);
   const view = vscode.window.createTreeView('turboConsole.tree', { treeDataProvider: tree, showCollapseAll: true });
   const unsubscribe = session.store.onDidChange((change) => {
     tree.refreshFor(change);
@@ -139,7 +151,10 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
     scope,
     scripts,
     prediction,
-    { dispose: predicting },
+    affectingCommands,
+    predicting,
+    affecting,
+    followAffectedLabel(view, context, tree, session.store),
     settings
   );
 

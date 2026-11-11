@@ -160,7 +160,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   context.subscriptions.push(output, tree, session, ticker, togglesDisposableOf(toggles), loads);
 
   if (vscode.workspace.isTrusted) {
-    const treeContext = contextOf(context, toggles, new IconThemeFolders(editorIconThemePorts()));
+    const treeContext = contextOf(context, toggles, new IconThemeFolders(editorIconThemePorts()), loads.affected);
 
     context.subscriptions.push(bindViews(registerTree(treeContext, session, tree, output), treeVisibility, ticker));
 
