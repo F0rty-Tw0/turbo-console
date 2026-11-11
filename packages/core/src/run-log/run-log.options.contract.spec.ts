@@ -43,7 +43,7 @@ const runIn = async (repo: RunLogRepo, packageName: string, taskName: string, op
   return waitForExit(repo.launch(args, logEnvOf(LOG)));
 };
 
-describe('FEATURE: pass-through args and --only on the run-log fixture (M3-3 C4, C5)', () => {
+describe('FEATURE: pass-through args and --only on the run-log fixture', () => {
   const repos: RunLogRepo[] = [];
 
   const newRepo = async (): Promise<RunLogRepo> => {
@@ -58,7 +58,7 @@ describe('FEATURE: pass-through args and --only on the run-log fixture (M3-3 C4,
     await disposeRunLogRepos(repos);
   });
 
-  describe('GIVEN @acme/app#args run with pass-through args (C4)', () => {
+  describe('GIVEN @acme/app#args run with pass-through args', () => {
     let exitCode: number | null = null;
     let appArgv: string | null = null;
     let libArgv: string | null = null;
@@ -79,12 +79,12 @@ describe('FEATURE: pass-through args and --only on the run-log fixture (M3-3 C4,
       expect(appArgv).toBe(EXPECTED);
     });
 
-    it('THEN the same-named dependency script gets the same argv (P9)', () => {
+    it('THEN the same-named dependency script gets the same argv', () => {
       expect(libArgv).toBe(EXPECTED);
     });
   });
 
-  describe('GIVEN the same run with only (C4)', () => {
+  describe('GIVEN the same run with only', () => {
     let exitCode: number | null = null;
     let appArgv: string | null = null;
     let libArgv: string | null = null;
@@ -110,7 +110,7 @@ describe('FEATURE: pass-through args and --only on the run-log fixture (M3-3 C4,
     });
   });
 
-  describe('GIVEN @acme/app#build run with only (C5)', () => {
+  describe('GIVEN @acme/app#build run with only', () => {
     let exitCode: number | null = null;
     let appTaskIds: string[] = [];
     let libTaskIds: string[] = [];
