@@ -27,25 +27,47 @@ const ONLY: RunExtras = { only: true };
 
 const RUN_ONLY: RunToMatch = { ...RUN, extras: ONLY };
 
-/** Label, extras, the recorded command (P8). */
-const RECORDED: [string, RunExtras, string][] = [
-  ['no extras fields', {}, COMMAND],
-  ['only', ONLY, `${COMMAND} --only`],
-  ['continue', { continueMode: 'dependencies-successful' }, `${COMMAND} --continue=dependencies-successful`],
-  ['concurrency 2', { concurrency: '2' }, COMMAND],
-  ['concurrency 50%', { concurrency: '50%' }, COMMAND],
-  ['empty passThrough', { passThrough: [] }, COMMAND],
-  ['pass-through', { passThrough: ['--watch', '--port=3000'] }, `${COMMAND} -- --watch --port=3000`],
-  [
-    'separate value and positional',
-    { passThrough: ['--watch', '--port', '3000', './src/a.ts'] },
-    `${COMMAND} -- --watch --port 3000 ./src/a.ts`
-  ],
-  [
-    'all, in the other input order',
-    { passThrough: ['--watch', '--port=3000'], concurrency: '2', continueMode: 'dependencies-successful', only: true },
-    `${COMMAND} --continue=dependencies-successful --only -- --watch --port=3000`
-  ]
+type RecordedRow = {
+  readonly label: string;
+  readonly extras: RunExtras;
+  readonly command: string;
+};
+
+const CONTINUE: RunExtras = { continueMode: 'dependencies-successful' };
+
+const CONCURRENCY_2: RunExtras = { concurrency: '2' };
+
+const CONCURRENCY_50_PERCENT: RunExtras = { concurrency: '50%' };
+
+const NO_PASS_THROUGH: RunExtras = { passThrough: [] };
+
+const PASS_THROUGH_EQUALS: RunExtras = { passThrough: ['--watch', '--port=3000'] };
+
+const PASS_THROUGH_SEPARATE: RunExtras = { passThrough: ['--watch', '--port', '3000', './src/a.ts'] };
+
+/** Every extra, given in the reverse of the order turbo records them in. */
+const ALL_REVERSED: RunExtras = {
+  passThrough: ['--watch', '--port=3000'],
+  concurrency: '2',
+  continueMode: 'dependencies-successful',
+  only: true
+};
+
+/** Each set of extras and the command turbo 2.11.7 records for it. */
+const RECORDED: RecordedRow[] = [
+  { label: 'no extras fields', extras: {}, command: COMMAND },
+  { label: 'only', extras: ONLY, command: `${COMMAND} --only` },
+  { label: 'continue', extras: CONTINUE, command: `${COMMAND} --continue=dependencies-successful` },
+  { label: 'concurrency 2', extras: CONCURRENCY_2, command: COMMAND },
+  { label: 'concurrency 50%', extras: CONCURRENCY_50_PERCENT, command: COMMAND },
+  { label: 'empty passThrough', extras: NO_PASS_THROUGH, command: COMMAND },
+  { label: 'pass-through', extras: PASS_THROUGH_EQUALS, command: `${COMMAND} -- --watch --port=3000` },
+  { label: 'separate value and positional', extras: PASS_THROUGH_SEPARATE, command: `${COMMAND} -- --watch --port 3000 ./src/a.ts` },
+  {
+    label: 'all, in the other input order',
+    extras: ALL_REVERSED,
+    command: `${COMMAND} --continue=dependencies-successful --only -- --watch --port=3000`
+  }
 ];
 
 const OWN_ENTRY = taskEntry('web#build', TASK_SPAN, 'MISS');
@@ -83,8 +105,8 @@ describe('FEATURE: run match', () => {
   });
 
   describe('GIVEN a run launched with extras', () => {
-    it.each(RECORDED)('WHEN extras are %s THEN the command is what turbo records', (_label, extras, expected) => {
-      expect(runCommandOf({ ...RUN, extras })).toBe(expected);
+    it.each(RECORDED)('WHEN extras are $label THEN the command is what turbo records', ({ extras, command }) => {
+      expect(runCommandOf({ ...RUN, extras })).toBe(command);
     });
 
     it('WHEN the summary records the --only command THEN a run with only matches it', () => {

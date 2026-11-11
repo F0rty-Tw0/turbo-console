@@ -1,7 +1,10 @@
 import type { RunExtras } from '../../run-args/common/run-args.type.ts';
 import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
 
-/** One run of one task of one package, as the caller launched it: the process window and its exit code. */
+/**
+ * One run of one task of one package, as the caller launched it: the process window, its exit code, and the `extras`
+ * it was launched with, which change the command turbo records.
+ */
 export type RunToMatch = {
   readonly task: TaskNode;
   readonly packageName: string;
