@@ -1,5 +1,6 @@
 import type { LiveIds } from '../../../run/common/run.type.ts';
 import type { AtomHostPorts } from '../../common/atom-load.type.ts';
+import { SHARED_AFFECTED_STUB } from '../stubs/shared-affected.stub.ts';
 import { SHARED_ATOMS_STUB } from '../stubs/shared-atoms.stub.ts';
 import { SHARED_PREDICTION_STUB } from '../stubs/shared-prediction.stub.ts';
 
@@ -13,10 +14,11 @@ export const ATOM_IDLE_PORTS: AtomHostPorts = {
   log: () => undefined
 };
 
-/** The scripts half of `TreePorts` for a tree with the toggle off and no live script run, plus idle shared Atomizer loads and cache prediction. */
+/** The scripts half of `TreePorts` for a tree with the toggle off and no live script run, plus idle shared Atomizer loads, cache prediction and affected store. */
 export const SCRIPTS_HIDDEN_PORTS = {
   scriptsShown: (): boolean => false,
   runningIds: NOTHING_LIVE,
   atom: SHARED_ATOMS_STUB,
-  prediction: SHARED_PREDICTION_STUB
+  prediction: SHARED_PREDICTION_STUB,
+  affected: SHARED_AFFECTED_STUB
 };

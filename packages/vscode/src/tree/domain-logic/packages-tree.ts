@@ -128,7 +128,7 @@ export class PackagesTree {
     this.refresher.refreshTasks(running);
   }
 
-  /** The Refresh command: every shared load (Atomizer and prediction) loads again; a package never opened stays unloaded. */
+  /** The Refresh command: every shared load (Atomizer, prediction and affected) loads again; a package never opened stays unloaded. */
   public refreshAtoms(): void {
     this.loads.refreshAll();
   }
@@ -138,8 +138,8 @@ export class PackagesTree {
     this.loads.dispose();
   }
 
-  /** The cache prediction toggle changed: one redraw, and the rows read the shared prediction as it is now. */
-  public predictionChanged(): void {
+  /** A shared-load toggle (cache prediction, affected) changed: one redraw */
+  public loadsToggled(): void {
     this.redraw();
   }
 
@@ -156,7 +156,8 @@ export class PackagesTree {
       countsMemo: this.countsMemo,
       tools: this.toolOfCommand,
       atoms: this.loads.atoms.view,
-      prediction: this.loads.prediction.view
+      prediction: this.loads.prediction.view,
+      affected: this.loads.affected.reads
     };
 
     return context;
@@ -186,6 +187,8 @@ export class PackagesTree {
     const state = this.store.get(root)?.state;
 
     if (state === undefined) return [];
+
+    this.loads.affected.rootShown(root);
 
     const context = this.rowContext();
     const rows = rootRows(state, context);

@@ -2,6 +2,7 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import { bench } from '@turbo-console/tools';
 import type { BenchDescriptor } from '@turbo-console/tools';
 
+import { SHARED_AFFECTED_STUB } from './stubs/shared-affected.stub.ts';
 import { benchStateOf, captureModel } from './utils/bench-model.spec.util.ts';
 import { withScripts } from './utils/scripts-model.spec.util.ts';
 import type { ToolLookup } from '../../tool/common/tool.type.ts';
@@ -19,11 +20,11 @@ const SETTLED_AT = 1_000_000_000;
 
 const NO_PREDICTION: PredictionLookup = () => null;
 
-type RowsShown = Pick<RowContext, 'scriptsShown' | 'prediction'>;
+type RowsShown = Pick<RowContext, 'scriptsShown' | 'prediction' | 'affected'>;
 
-const PLAIN: RowsShown = { scriptsShown: false, prediction: NO_PREDICTION };
+const PLAIN: RowsShown = { scriptsShown: false, prediction: NO_PREDICTION, affected: SHARED_AFFECTED_STUB };
 
-const WITH_SCRIPTS: RowsShown = { scriptsShown: true, prediction: NO_PREDICTION };
+const WITH_SCRIPTS: RowsShown = { scriptsShown: true, prediction: NO_PREDICTION, affected: SHARED_AFFECTED_STUB };
 
 /** A settled prediction that says `HIT` for every task of every package of `model`, built once outside the timed call. */
 const allHitOf = (model: WorkspaceModel): PredictionLookup => {
@@ -43,7 +44,7 @@ const isPredictedRow = (row: TreeRow): boolean => row.tooltip.some((line) => lin
 
 /** A fresh `ModelViews` per call, so the shown filter, folder tree and labels are measured, not a warm cache hit. */
 const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, inputs = PLAIN): BenchDescriptor => {
-  const { scriptsShown, prediction } = inputs;
+  const { scriptsShown, prediction, affected } = inputs;
   const state = benchStateOf(model);
   const build = (): TreeRow[] => {
     const views = new ModelViews(resolveTool);
@@ -60,7 +61,8 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, inputs =
       countsMemo: new WeakMap(),
       tools,
       atoms: staticAtomLookup(() => model),
-      prediction
+      prediction,
+      affected
     };
 
     return allRows(state, context);
@@ -99,7 +101,7 @@ const diffBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
 
 const targetLike = await captureModel('target-like');
 const stretch300 = await captureModel('stretch-300');
-const allHit: RowsShown = { scriptsShown: false, prediction: allHitOf(stretch300) };
+const allHit: RowsShown = { scriptsShown: false, prediction: allHitOf(stretch300), affected: SHARED_AFFECTED_STUB };
 
 const benches: BenchDescriptor[] = [
   rowsBench('tree-rows-folders-target-like', targetLike, 'folders'),

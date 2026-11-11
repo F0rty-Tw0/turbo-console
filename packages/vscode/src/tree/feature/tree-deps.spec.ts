@@ -47,6 +47,7 @@ describe('FEATURE: tree provider deps', () => {
         scripts,
         atom: SHARED_ATOMS_STUB,
         prediction: SHARED_PREDICTION_STUB,
+        affected: SHARED_AFFECTED_STUB,
         setHasScripts: deps.setHasScripts,
         setSinglePackage: deps.setSinglePackage,
         log

@@ -24,7 +24,7 @@ export const packagesTreeApiMock = (): PackagesTreeApi => {
     isScopeShown: vi.fn(() => false),
     isScriptsShown: vi.fn(() => false),
     refreshAtoms: vi.fn(),
-    predictionChanged: vi.fn()
+    loadsToggled: vi.fn()
   };
 
   return tree;

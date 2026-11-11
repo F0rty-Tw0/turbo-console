@@ -19,7 +19,7 @@ const setSinglePackage = async (value: boolean): Promise<void> => {
 
 /**
  * What the tree provider is built from: the run lookup, the first-children spans, the scripts toggle, the shared loads
- * (Atomizer and cache prediction), the `turboConsole.hasScripts` and `turboConsole.singlePackage` sends and `log` for a send that fails.
+ * (Atomizer, cache prediction and affected), the `turboConsole.hasScripts` and `turboConsole.singlePackage` sends and `log` for a send that fails.
  */
 export const treeDepsOf = (
   runs: TreeProviderDeps['runs'],
@@ -35,6 +35,7 @@ export const treeDepsOf = (
     scripts,
     atom: loads.atoms,
     prediction: loads.prediction,
+    affected: loads.affected,
     setHasScripts,
     setSinglePackage,
     log

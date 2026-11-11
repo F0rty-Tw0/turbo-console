@@ -9,6 +9,7 @@ import type { TreeMode } from '../../common/tree-row.type.ts';
 import { modelViewOf } from '../../utils/model-view.util.ts';
 import type { ScriptsContext } from '../common/scripts-context.type.ts';
 import { resolveLookupMock } from '../mocks/tool-lookup.mock.ts';
+import { SHARED_AFFECTED_STUB } from '../stubs/shared-affected.stub.ts';
 import { WORKSPACE_MODEL_STUB } from '../stubs/workspace-model.stub.ts';
 
 const NO_ATOMS_LOOKUP: AtomLookup = () => NO_ATOMS;
@@ -43,7 +44,8 @@ export const rowContextOf = (
     countsMemo: new WeakMap(),
     tools: resolveLookupMock(),
     atoms: NO_ATOMS_LOOKUP,
-    prediction: () => null
+    prediction: () => null,
+    affected: SHARED_AFFECTED_STUB
   };
 
   return context;

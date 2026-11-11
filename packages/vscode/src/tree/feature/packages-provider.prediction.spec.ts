@@ -41,8 +41,8 @@ describe('FEATURE: packages provider cache prediction', () => {
       fired.length = 0;
     });
 
-    it('WHEN predictionChanged runs THEN the tree event fires once for the whole tree', () => {
-      provider.predictionChanged();
+    it('WHEN loadsToggled runs THEN the tree event fires once for the whole tree', () => {
+      provider.loadsToggled();
 
       expect(fired).toStrictEqual([undefined]);
     });

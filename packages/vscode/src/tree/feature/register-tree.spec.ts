@@ -180,6 +180,30 @@ describe('FEATURE: registerTree scope toggle', () => {
 
       expect(disposed).toStrictEqual(expect.arrayContaining(['turboConsole.showAffected', 'turboConsole.hideAffected']));
     });
+
+    it('WHEN the affected toggle changes THEN the tree redraws once', async () => {
+      await affected.set(true);
+
+      expect(tree.loadsToggled).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the prediction toggle changes THEN the tree redraws once and affected is untouched', async () => {
+      await prediction.set(true);
+
+      expect(tree.loadsToggled).toHaveBeenCalledOnce();
+      expect(affected.set).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the subscriptions are disposed THEN a toggle change no longer redraws the tree', async () => {
+      for (const subscription of context.subscriptions) subscription.dispose();
+      await affected.set(true);
+
+      expect(tree.loadsToggled).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the tree registers THEN it does not redraw yet', () => {
+      expect(tree.loadsToggled).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN a registered tree with the prediction toggle off', () => {
@@ -212,20 +236,20 @@ describe('FEATURE: registerTree scope toggle', () => {
     });
 
     it('WHEN the tree registers THEN it does not redraw yet (the store was built with the stored value)', () => {
-      expect(tree.predictionChanged).not.toHaveBeenCalled();
+      expect(tree.loadsToggled).not.toHaveBeenCalled();
     });
 
     it('WHEN the prediction toggle changes THEN the tree redraws once', async () => {
       await prediction.set(true);
 
-      expect(tree.predictionChanged).toHaveBeenCalledOnce();
+      expect(tree.loadsToggled).toHaveBeenCalledOnce();
     });
 
     it('WHEN the subscriptions are disposed THEN a toggle change no longer redraws the tree', async () => {
       for (const subscription of context.subscriptions) subscription.dispose();
       await prediction.set(true);
 
-      expect(tree.predictionChanged).not.toHaveBeenCalled();
+      expect(tree.loadsToggled).not.toHaveBeenCalled();
     });
   });
 

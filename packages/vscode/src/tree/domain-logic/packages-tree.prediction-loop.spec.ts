@@ -145,7 +145,7 @@ describe('FEATURE: packages tree cache prediction redraw loop', () => {
 
     it('WHEN prediction is toggled off and the tree redraws THEN the row of a#build loses the word', () => {
       fixture.shared.toggled(false);
-      fixture.tree.predictionChanged();
+      fixture.tree.loadsToggled();
 
       const row = fixture.tree.rowOf(TASK_A);
 
