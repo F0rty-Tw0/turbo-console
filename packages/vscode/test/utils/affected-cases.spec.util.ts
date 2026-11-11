@@ -38,11 +38,11 @@ export const affectedOffCase = async (scene: AffectedScene): Promise<void> => {
   });
 };
 
-/** A2: toggle on makes one query; expands, a redraw and a re-show of the view make no more. */
+/** A2: toggle on makes one query; expands and a redraw make no more. */
 export const affectedOnceCase = async (scene: AffectedScene): Promise<void> => {
   const { api, counter } = scene;
 
-  await step('A2: toggle on, one query; expands, a redraw and a re-show spawn no more', async () => {
+  await step('A2: toggle on, one query; expands and a redraw spawn no more', async () => {
     counter.reset();
     await vscode.commands.executeCommand(SHOW_AFFECTED_COMMAND);
     await waitForDescription(api, LABEL_TASK);
@@ -57,9 +57,12 @@ export const affectedOnceCase = async (scene: AffectedScene): Promise<void> => {
   });
 };
 
-/** A5: a new edit then Refresh makes exactly one new query, and the rows follow. */
+/**
+ * A5: a new edit then Refresh makes exactly one new query, and the rows follow. The count waits for the Refresh reload
+ * to apply: a second query would start only when the reloaded model lands, after rows the first query already settled.
+ */
 export const affectedRefreshCase = async (scene: AffectedScene): Promise<void> => {
-  const { counter, manifest, root, edits } = scene;
+  const { api, counter, manifest, root, edits } = scene;
 
   await step('A5: a new edit then Refresh: exactly one new query, and the rows follow', async () => {
     const file = join(root, edits.atomDependency.path, SOURCE_FILE);
@@ -67,6 +70,7 @@ export const affectedRefreshCase = async (scene: AffectedScene): Promise<void> =
     await appendFile(file, UNCOMMITTED_LINE);
     counter.reset();
     await vscode.commands.executeCommand(REFRESH_COMMAND);
+    await api.whenIdle(root);
 
     const expected = expectedAffected(manifest, allEditsOf(scene), 'task');
 
