@@ -31,6 +31,7 @@ export const GHOST_STUB: GraphReady = {
   scopeShown: true,
   scriptsShown: true,
   predictionShown: false,
+  affectedShown: false,
   hash: '9a05a001',
   packages: GHOST_PACKAGES,
   edges: GHOST_EDGES,

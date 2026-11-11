@@ -10,6 +10,7 @@ import type { PickItem } from '../../run/common/picker.type.ts';
 import type { Disposed, Runs } from '../../run/common/run.type.ts';
 import type { GraphApi } from '../../shared/common/api.type.ts';
 import type { EditorPanelView } from '../../shared/common/panel-view.type.ts';
+import type { SharedAffected } from '../../tree/common/affected.type.ts';
 import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 import type { SharedPrediction } from '../../tree/common/prediction.type.ts';
 
@@ -47,6 +48,7 @@ export type GraphPanelsDeps = {
   readonly progress: GraphProgress;
   readonly atoms: SharedAtoms;
   readonly prediction: SharedPrediction;
+  readonly affected: SharedAffected;
   readonly toggles: GraphToggles;
 };
 

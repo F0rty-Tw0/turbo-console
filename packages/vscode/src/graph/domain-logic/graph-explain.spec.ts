@@ -39,7 +39,8 @@ const READY: GraphReady = {
   rootLabel: null,
   scopeShown: false,
   scriptsShown: false,
-  predictionShown: false
+  predictionShown: false,
+  affectedShown: false
 };
 
 const LOADING: GraphState = { kind: 'loading' };

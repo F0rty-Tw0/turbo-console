@@ -33,6 +33,7 @@ const RUN_A_BUILD: GraphRequestMessage = { type: 'runTask', taskId: 'a#build', n
 const STOP_A_BUILD: GraphRequestMessage = { type: 'stopTask', taskId: 'a#build' };
 const SET_SCOPE: GraphRequestMessage = { type: 'setViewToggle', toggle: 'scope', shown: true };
 const SET_PREDICTION: GraphRequestMessage = { type: 'setViewToggle', toggle: 'prediction', shown: true };
+const SET_AFFECTED: GraphRequestMessage = { type: 'setViewToggle', toggle: 'affected', shown: true };
 const SET_SCRIPTS: GraphRequestMessage = { type: 'setViewToggle', toggle: 'scripts', shown: true };
 const SHOWN_PACKAGES: GraphRequestMessage = { type: 'shownTaskPackages', packageNames: ['a', 'web', 'gone', 'a'] };
 const SMOKE_TASKS = smokeGroupTasksOf(ATOM_E2E_PACKAGE_STUB.name);
@@ -237,6 +238,19 @@ describe('FEATURE: graph setViewToggle request', () => {
       expect(context.feeds.toggles.prediction.set).toHaveBeenCalledExactlyOnceWith(true);
       expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
       expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a setViewToggle for affected', () => {
+    it('WHEN it is handled THEN only the affected toggle is set', async () => {
+      const context = contextOf(GRAPH_STATE_STUB);
+
+      await requestHandledOf(SET_AFFECTED, context);
+
+      expect(context.feeds.toggles.affected.set).toHaveBeenCalledExactlyOnceWith(true);
+      expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
+      expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
+      expect(context.feeds.toggles.prediction.set).not.toHaveBeenCalled();
     });
   });
 

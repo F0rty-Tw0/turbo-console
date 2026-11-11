@@ -47,6 +47,7 @@ export const overCapTasksState = (): GraphReady => {
     scopeShown: true,
     scriptsShown: true,
     predictionShown: false,
+    affectedShown: false,
     hash: '7a5c0400',
     packages: packagesOf(['leaf', 'root']),
     edges: LEAF_NEEDS_ROOT,

@@ -95,7 +95,8 @@ const WITHOUT_FOLDER_POSITIONS = {
   rootLabel: null,
   scopeShown: true,
   scriptsShown: true,
-  predictionShown: false
+  predictionShown: false,
+  affectedShown: false
 };
 
 const WITHOUT_TASKS = {
@@ -112,7 +113,8 @@ const WITHOUT_TASKS = {
   rootLabel: null,
   scopeShown: true,
   scriptsShown: true,
-  predictionShown: false
+  predictionShown: false,
+  affectedShown: false
 };
 
 const WITHOUT_ATOM_GROUPS = {
@@ -129,7 +131,8 @@ const WITHOUT_ATOM_GROUPS = {
   rootLabel: null,
   scopeShown: true,
   scriptsShown: true,
-  predictionShown: false
+  predictionShown: false,
+  affectedShown: false
 };
 
 const ATOM_FILE = { id: 'app#e2e-ci--a.spec.ts', specPath: 'a.spec.ts', isLive: true };

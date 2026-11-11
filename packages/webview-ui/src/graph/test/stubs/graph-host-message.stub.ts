@@ -48,5 +48,6 @@ export const HOST_GRAPH_STUB: Record<string, unknown> = {
   rootLabel: null,
   scopeShown: true,
   scriptsShown: true,
-  predictionShown: false
+  predictionShown: false,
+  affectedShown: false
 };

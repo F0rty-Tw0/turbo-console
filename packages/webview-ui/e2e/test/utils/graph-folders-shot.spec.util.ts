@@ -22,6 +22,7 @@ export const foldersShotState = (): GraphReady => {
     scopeShown: true,
     scriptsShown: true,
     predictionShown: false,
+    affectedShown: false,
     hash: '5407d001',
     packages: [
       packageOf('web', 'apps/web'),

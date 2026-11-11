@@ -58,6 +58,7 @@ export const DETAILS_STUB: GraphReady = {
   scopeShown: true,
   scriptsShown: true,
   predictionShown: false,
+  affectedShown: false,
   hash: 'd3a11001',
   packages: DETAILS_PACKAGES,
   edges: DETAILS_EDGES,

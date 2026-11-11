@@ -39,6 +39,7 @@ export const folderLocationState = (): GraphReady => {
     scopeShown: true,
     scriptsShown: true,
     predictionShown: false,
+    affectedShown: false,
     tasks: [],
     hash: 'f01d0004',
     packages: [

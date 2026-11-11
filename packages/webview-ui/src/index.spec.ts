@@ -98,7 +98,7 @@ type ExpectedShownTaskPackagesMessage = { readonly type: 'shownTaskPackages'; re
 type ExpectedShownUmbrellasMessage = { readonly type: 'shownUmbrellas'; readonly ids: string[] };
 type ExpectedSetViewToggleMessage = {
   readonly type: 'setViewToggle';
-  readonly toggle: 'scope' | 'scripts' | 'prediction';
+  readonly toggle: 'scope' | 'scripts' | 'prediction' | 'affected';
   readonly shown: boolean;
 };
 type ExpectedPosition = { readonly x: number; readonly y: number };
@@ -223,6 +223,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphReady['scopeShown']>().toEqualTypeOf<boolean>();
       expectTypeOf<GraphReady['scriptsShown']>().toEqualTypeOf<boolean>();
       expectTypeOf<GraphReady['predictionShown']>().toEqualTypeOf<boolean>();
+      expectTypeOf<GraphReady['affectedShown']>().toEqualTypeOf<boolean>();
       expectTypeOf<ManifestField>().toEqualTypeOf<ExpectedEntry['field']>();
       expectTypeOf<ManifestEntry>().toEqualTypeOf<ExpectedEntry>();
       expectTypeOf<ManifestContext>().toEqualTypeOf<ExpectedEntry['context']>();

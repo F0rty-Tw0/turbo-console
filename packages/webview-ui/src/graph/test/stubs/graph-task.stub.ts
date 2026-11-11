@@ -36,6 +36,7 @@ export const TASK_STATE_STUB: GraphReady = {
   scopeShown: true,
   scriptsShown: true,
   predictionShown: false,
+  affectedShown: false,
   hash: 'h1',
   packages: [],
   edges: [],

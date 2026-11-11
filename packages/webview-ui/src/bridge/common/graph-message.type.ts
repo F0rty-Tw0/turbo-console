@@ -178,10 +178,10 @@ export type GraphShownTaskPackagesMessage = {
   readonly packageNames: string[];
 };
 
-/** The tree's three View toggles: scope prefixes on package labels, `package.json` scripts beside turbo tasks, and the cache prediction. */
-export type GraphViewToggle = 'scope' | 'scripts' | 'prediction';
+/** The tree's four View toggles: scope prefixes on package labels, `package.json` scripts beside turbo tasks, the cache prediction and the affected marks. */
+export type GraphViewToggle = 'scope' | 'scripts' | 'prediction' | 'affected';
 
-/** The page flipping one of the tree's three toggles. */
+/** The page flipping one of the tree's four toggles. */
 export type GraphSetViewToggleMessage = {
   readonly type: 'setViewToggle';
   readonly toggle: GraphViewToggle;

@@ -15,6 +15,7 @@ export const U0_STATE_STUB: GraphReady = {
   scopeShown: true,
   scriptsShown: true,
   predictionShown: false,
+  affectedShown: false,
   hash: 'c0a6b000',
   packages: U0_PACKAGES,
   edges: U0_EDGES_STUB,

@@ -54,20 +54,26 @@ describe('FEATURE: graph host message, shown toggles', () => {
     ['scopeShown a string', { ...HOST_GRAPH_STUB, scopeShown: 'yes' }],
     ['scriptsShown a number', { ...HOST_GRAPH_STUB, scriptsShown: 1 }],
     ['predictionShown missing', without(HOST_GRAPH_STUB, 'predictionShown')],
-    ['predictionShown a string', { ...HOST_GRAPH_STUB, predictionShown: 'yes' }]
+    ['predictionShown a string', { ...HOST_GRAPH_STUB, predictionShown: 'yes' }],
+    ['affectedShown missing', without(HOST_GRAPH_STUB, 'affectedShown')],
+    ['affectedShown a string', { ...HOST_GRAPH_STUB, affectedShown: 'yes' }]
   ])('GIVEN a state with %s WHEN checked THEN it is rejected', (_label, state) => {
     expect(isGraphHostMessage(stateMessageOf(state))).toBe(false);
   });
 
   it('GIVEN both flags false WHEN checked THEN it is accepted', () => {
     expect(
-      isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, scopeShown: false, scriptsShown: false, predictionShown: false }))
+      isGraphHostMessage(
+        stateMessageOf({ ...HOST_GRAPH_STUB, scopeShown: false, scriptsShown: false, predictionShown: false, affectedShown: false })
+      )
     ).toBe(true);
   });
 
   it('GIVEN both flags true WHEN checked THEN it is accepted', () => {
     expect(
-      isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, scopeShown: true, scriptsShown: true, predictionShown: true }))
+      isGraphHostMessage(
+        stateMessageOf({ ...HOST_GRAPH_STUB, scopeShown: true, scriptsShown: true, predictionShown: true, affectedShown: true })
+      )
     ).toBe(true);
   });
 });

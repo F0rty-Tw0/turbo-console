@@ -6,6 +6,7 @@ import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import type { ProgressChanges, ProgressRecords } from '../../run/common/run-progress.type.ts';
 import type { RunLookup, Runs } from '../../run/common/run.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
+import type { SharedAffected } from '../../tree/common/affected.type.ts';
 import type { SharedAtoms } from '../../tree/common/atom-load.type.ts';
 import type { SharedPrediction } from '../../tree/common/prediction.type.ts';
 
@@ -124,29 +125,32 @@ export type GraphRunCommand = {
   readonly arg: unknown;
 };
 
-/** The three tree toggles a state carries: scope prefixes on package labels, `package.json` scripts beside turbo tasks, and the cache prediction. */
+/** The four tree toggles a state carries: scope prefixes on package labels, `package.json` scripts beside turbo tasks, the cache prediction and the affected marks. */
 export type GraphShown = {
   readonly scopeShown: boolean;
   readonly scriptsShown: boolean;
   readonly predictionShown: boolean;
+  readonly affectedShown: boolean;
 };
 
-/** The tree's three toggles, which the graph reads, and sets for a `setViewToggle`. */
+/** The tree's four toggles, which the graph reads, and sets for a `setViewToggle`. */
 export type GraphToggles = {
   readonly scope: ScriptsToggleApi;
   readonly scripts: ScriptsToggleApi;
   readonly prediction: ScriptsToggleApi;
+  readonly affected: ScriptsToggleApi;
 };
 
 /** The task progress a graph reads: the records of an id and the change feed that says which root they changed under. */
 export type GraphProgress = ProgressRecords & ProgressChanges;
 
-/** What a panel's feeds read: the run states of its root, the task progress of every run, the Atomizer loads and the cache prediction shared with the tree, and the tree's three toggles. */
+/** What a panel's feeds read: the run states of its root, the task progress of every run, the Atomizer loads and the cache prediction and the affected marks shared with the tree, and the tree's four toggles. */
 export type GraphFeeds = {
   readonly runs: Runs;
   readonly progress: GraphProgress;
   readonly atoms: SharedAtoms;
   readonly prediction: SharedPrediction;
+  readonly affected: SharedAffected;
   readonly toggles: GraphToggles;
 };
 

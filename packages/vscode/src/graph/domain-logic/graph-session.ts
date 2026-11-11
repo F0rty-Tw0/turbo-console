@@ -71,12 +71,13 @@ export class GraphSession {
       this.rootChanged(change);
     });
 
-    const { scope, scripts, prediction } = this.feeds.toggles;
     const onToggle = (): void => {
       this.publish();
     };
 
-    this.unsubscribes.push(offRoots, scope.onDidChange(onToggle), scripts.onDidChange(onToggle), prediction.onDidChange(onToggle));
+    const offToggles = Object.values(this.feeds.toggles).map((toggle) => toggle.onDidChange(onToggle));
+
+    this.unsubscribes.push(offRoots, ...offToggles);
     this.feed.start();
   }
 

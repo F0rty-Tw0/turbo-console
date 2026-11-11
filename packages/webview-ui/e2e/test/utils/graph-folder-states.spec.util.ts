@@ -6,7 +6,7 @@ import type { GraphEdge, GraphReady } from '../../../src/bridge/common/graph-sta
 import type { GraphViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
 import { freshViewStateOf } from '../../../src/graph/utils/fresh-view-state.util.ts';
 
-const SHOWN = { scopeShown: true, scriptsShown: true, predictionShown: false };
+const SHOWN = { scopeShown: true, scriptsShown: true, predictionShown: false, affectedShown: false };
 
 /** `boardsState()` with a grouped layout cached at fixed centres, so geometry never depends on ELK. */
 export const placedBoardsState = (): GraphReady => {

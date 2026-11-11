@@ -12,13 +12,20 @@ import { manifestFile, rootOf } from '../run/feature/register-pickers.ts';
 import type { Output } from '../shared/common/output.type.ts';
 import type { SharedLoads } from '../tree/common/shared-loads.type.ts';
 
-/** The feeds every graph panel reads: the run states and the task progress of the run session, the shared Atomizer and prediction loads and the tree's toggles. */
+/** The feeds every graph panel reads: the run states and the task progress of the run session, the shared Atomizer, prediction and affected loads and the tree's toggles. */
 export const graphFeedsOf = (
   run: Pick<GraphFeeds, 'runs' | 'progress'>,
   loads: SharedLoads,
   toggles: GraphFeeds['toggles']
 ): GraphFeeds => {
-  const feeds: GraphFeeds = { runs: run.runs, progress: run.progress, atoms: loads.atoms, prediction: loads.prediction, toggles };
+  const feeds: GraphFeeds = {
+    runs: run.runs,
+    progress: run.progress,
+    atoms: loads.atoms,
+    prediction: loads.prediction,
+    affected: loads.affected,
+    toggles
+  };
 
   return feeds;
 };
@@ -52,6 +59,7 @@ export const createGraph = (
     progress: feeds.progress,
     atoms: feeds.atoms,
     prediction: feeds.prediction,
+    affected: feeds.affected,
     toggles: feeds.toggles
   });
   const ports = editorGraphCommandPorts(manifestFile, rootOf, output.error, (): boolean => feeds.toggles.scripts.isShown());
