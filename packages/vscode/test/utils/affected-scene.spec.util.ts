@@ -73,7 +73,7 @@ export const packageWordsOf = async (scene: AffectedScene): Promise<Map<string, 
 const isExactly = (read: string, wanted: string): boolean => read === wanted;
 
 /** Whether `read` is the word alone or ends with it after the ` · ` join. */
-const endsWithWord = (read: string, wanted: string): boolean => {
+export const endsWithWord = (read: string, wanted: string): boolean => {
   const isAlone = read === wanted;
 
   return isAlone || read.endsWith(`${SEPARATOR}${wanted}`);

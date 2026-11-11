@@ -4,20 +4,17 @@ import { join } from 'node:path';
 
 import * as vscode from 'vscode';
 
+import { allEditsOf } from './affected-edit-set.spec.util.ts';
 import { expectedAffected } from './affected-oracle.spec.util.ts';
 import { expandEdited, flipTreeMode } from './affected-redraw.spec.util.ts';
 import { queriesOf, settleRows, taskWordsOf, waitForDescription } from './affected-scene.spec.util.ts';
 import { lastGraphState } from './graph-posted.spec.util.ts';
 import { closeGraph } from './prediction-spawn-cases.spec.util.ts';
 import { sleep, step, waitFor } from './suite-env.spec.util.ts';
-import { LABEL_TASK, SHOW_AFFECTED_COMMAND, UNCOMMITTED_LINE, WORD_CHANGED } from '../common/affected.const.ts';
-import type { AffectedEdit, AffectedScene } from '../common/affected.type.ts';
+import { LABEL_TASK, SHOW_AFFECTED_COMMAND, SOURCE_FILE, UNCOMMITTED_LINE, WORD_CHANGED } from '../common/affected.const.ts';
+import type { AffectedScene } from '../common/affected.type.ts';
 import { ALL_TASKS_COMMAND, GRAPH_COMMAND } from '../common/graph.const.ts';
 import { QUIET_WINDOW_MS, REFRESH_COMMAND } from '../common/prediction.const.ts';
-
-const README_FILE = 'README.md';
-
-const SOURCE_FILE = 'src/index.ts';
 
 /**
  * A1: the toggle defaults off, so the reveal, a tree expand and a graph in task mode spawn no affected query, and the view
@@ -60,16 +57,6 @@ export const affectedOnceCase = async (scene: AffectedScene): Promise<void> => {
   });
 };
 
-/** The three edits of the scene in task mode: the README commit, the uncommitted leaf edit, and the one A5 adds. */
-const editSetOf = (scene: AffectedScene): AffectedEdit[] => {
-  const { readme, leaf, atomDependency } = scene.edits;
-  const readmeEdit: AffectedEdit = { packageName: readme.name, file: README_FILE };
-  const leafEdit: AffectedEdit = { packageName: leaf.name, file: SOURCE_FILE };
-  const atomEdit: AffectedEdit = { packageName: atomDependency.name, file: SOURCE_FILE };
-
-  return [readmeEdit, leafEdit, atomEdit];
-};
-
 /** A5: a new edit then Refresh makes exactly one new query, and the rows follow. */
 export const affectedRefreshCase = async (scene: AffectedScene): Promise<void> => {
   const { counter, manifest, root, edits } = scene;
@@ -81,7 +68,7 @@ export const affectedRefreshCase = async (scene: AffectedScene): Promise<void> =
     counter.reset();
     await vscode.commands.executeCommand(REFRESH_COMMAND);
 
-    const expected = expectedAffected(manifest, editSetOf(scene), 'task');
+    const expected = expectedAffected(manifest, allEditsOf(scene), 'task');
 
     await settleRows(scene, expected);
     await sleep(QUIET_WINDOW_MS);

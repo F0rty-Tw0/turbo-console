@@ -119,8 +119,22 @@ const L15: Launch = { ...L9, name: 'L15', suite: 'affected.suite', workspace: 'f
 /** L16: the same toggle on a `target-like` copy without its `.git`, where turbo cannot compute the affected list. */
 const L16: Launch = { ...L9, name: 'L16', suite: 'affected-failed.suite', workspace: 'fixture-no-git' };
 
+/** L17: the same toggle with turbo's package level (`affectedUsingTaskInputs` off); turbo's default base again, so the same CI strip. */
+const L17: Launch = { ...L9, name: 'L17', suite: 'affected-package.suite', workspace: 'fixture-feat-package', unsetEnv: CI_ENV_KEYS };
+
+const HEAD_BASE: Readonly<Record<string, string>> = { [SCM_BASE_KEY]: 'HEAD' };
+
+/** L18: only committed changes, and `TURBO_SCM_BASE=HEAD` in the host env: the editor port must pass it as the base (F10). */
+const L18: Launch = {
+  ...L9,
+  name: 'L18',
+  suite: 'affected-committed.suite',
+  workspace: 'fixture-feat-committed',
+  env: HEAD_BASE
+};
+
 /**
- * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L16 each get a user-data dir
+ * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L18 each get a user-data dir
  * of their own.
  */
-export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14, L15, L16];
+export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14, L15, L16, L17, L18];

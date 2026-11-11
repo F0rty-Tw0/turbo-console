@@ -1,7 +1,7 @@
 import type { PackageRole, TaskKind } from '@turbo-console/repo-gen';
 
 export type LaunchName =
-  'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12' | 'L13' | 'L14' | 'L15' | 'L16';
+  'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12' | 'L13' | 'L14' | 'L15' | 'L16' | 'L17' | 'L18';
 
 /**
  * `fixture-l1` is the `target-like` copy L1 opens and L2 reopens, so L2 finds the cache L1 stored. `fixture` is a
@@ -11,7 +11,8 @@ export type LaunchName =
  * (`single-app`), `empty-workspace` one whose `pnpm-workspace.yaml` declares `packages/*` and finds none. `fixture-root-task` is
  * a `fixture` copy whose root also has the task `//#rootgen` (L13 only). `fixture-feat` is a `fixture` copy on branch `feat`
  * with a README commit in one package and an uncommitted source edit in a leaf (L15); `fixture-no-git` a `fixture` copy
- * without its `.git` (L16).
+ * without its `.git` (L16); `fixture-feat-package` is `fixture-feat` with `futureFlags.affectedUsingTaskInputs` off (L17),
+ * `fixture-feat-committed` the same without the uncommitted edit (L18).
  */
 export type LaunchWorkspace =
   | 'fixture-l1'
@@ -19,6 +20,8 @@ export type LaunchWorkspace =
   | 'fixture-root-task'
   | 'fixture-feat'
   | 'fixture-no-git'
+  | 'fixture-feat-package'
+  | 'fixture-feat-committed'
   | 'empty-folder'
   | 'error-roots'
   | 'two-roots'

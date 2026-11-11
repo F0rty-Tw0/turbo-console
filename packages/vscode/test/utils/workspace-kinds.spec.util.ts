@@ -67,6 +67,12 @@ const rootTaskFixture = fixtureCopyOf({ ...PRESETS['target-like'], rootTask: ROO
 /** `fixture-feat`: a `target-like` copy on branch `feat` with a README commit and an uncommitted leaf source edit. */
 const featFixture = featRepoOf(PRESETS['target-like'], { uncommitted: true });
 
+/** `fixture-feat-package`: `fixture-feat` with `futureFlags.affectedUsingTaskInputs` off, so turbo lists affected tasks per package. */
+const featPackageFixture = featRepoOf({ ...PRESETS['target-like'], affectedUsingTaskInputs: false }, { uncommitted: true });
+
+/** `fixture-feat-committed`: `fixture-feat` without the uncommitted edit, so every change is on the `feat` branch. */
+const featCommittedFixture = featRepoOf(PRESETS['target-like'], { uncommitted: false });
+
 /** `fixture-no-git`: a `target-like` copy without its `.git`; turbo lists and dry-runs it, but cannot compute the affected list. */
 const noGitFixture = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
   const dir = workspaceDirOf(scratch, name);
@@ -169,6 +175,8 @@ export const WORKSPACES: Record<LaunchWorkspace, WorkspacePrep> = {
   fixture: fixtureCopy,
   'fixture-root-task': rootTaskFixture,
   'fixture-feat': featFixture,
+  'fixture-feat-package': featPackageFixture,
+  'fixture-feat-committed': featCommittedFixture,
   'fixture-no-git': noGitFixture,
   'empty-folder': emptyFolder,
   'error-roots': errorRoots,
