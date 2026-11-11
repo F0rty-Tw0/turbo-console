@@ -1,7 +1,3 @@
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
 import type { DryRunRequest } from './common/dry-run-state.type.ts';
@@ -12,21 +8,22 @@ import type { TurboBinary } from '../binary/common/index.ts';
 import { resolveTurbo } from '../binary/domain-logic/resolve-turbo.ts';
 import { dryRunSchema } from '../shared/turbo/common/dry-run.schema.ts';
 import { runTurbo } from '../shared/turbo/data-access/run-turbo.ts';
-import { SINGLE_PACKAGE_FILES_STUB } from '../shared/turbo/test/stubs/single-package-files.stub.ts';
+import type { SinglePackageRepo } from '../shared/turbo/test/common/turbo.type.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
-import { writeUncommittedRepo } from '../shared/turbo/test/utils/uncommitted-repo.spec.util.ts';
+import { singlePackageRepo } from '../shared/turbo/test/utils/single-package-repo.spec.util.ts';
 
 const TURBO = devTurboPath();
+let repo: SinglePackageRepo | undefined;
 let dir = '';
 let binary: TurboBinary;
 
 beforeAll(async () => {
-  dir = await mkdtemp(join(tmpdir(), 'dry-run-single-'));
-  await writeUncommittedRepo(dir, SINGLE_PACKAGE_FILES_STUB);
+  repo = await singlePackageRepo('dry-run-single-');
+  dir = repo.dir;
   binary = await resolveTurbo(dir, { trusted: true, overridePath: TURBO });
 });
 afterAll(async () => {
-  await rm(dir, { recursive: true, force: true, maxRetries: 5 });
+  await repo?.dispose();
 });
 
 it('WHEN build runs dry with --single-package THEN turbo says monorepo false and lists a bare id with no package key', async () => {

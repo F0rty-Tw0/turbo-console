@@ -1,4 +1,3 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { PRESETS } from '@turbo-console/repo-gen';
@@ -8,6 +7,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from './common/run-match.type.ts';
 import { matchRunTasks } from './domain-logic/match-run-tasks.ts';
 import { readNewestRunSummary } from './domain-logic/read-newest-run-summary.ts';
+import { DEPENDENT_NAME, FAILING_NAME, SCRIPTS_ANCHOR, TASKS_ANCHOR } from './test/common/fail-fixture.const.ts';
+import { addFailTasks, insertMember } from './test/utils/fail-fixture.spec.util.ts';
 import { runMatchOf } from './test/utils/run-match.spec.util.ts';
 import { runCommandOf } from './utils/run-match.util.ts';
 import { turboRunArgs } from '../run-args/utils/run-args.util.ts';
@@ -27,16 +28,6 @@ const TARGET_LIKE = PRESETS['target-like'];
 
 const SPACED_NAME = 'my task';
 
-/** A task whose script exits 3. */
-const FAILING_NAME = 'fail-3';
-
-/** A task that depends on `FAILING_NAME`, so it never runs. */
-const DEPENDENT_NAME = 'after-fail';
-
-const SCRIPTS_ANCHOR = '"scripts": {';
-
-const TASKS_ANCHOR = '"tasks": {';
-
 const TASK_BASE: TaskNode = {
   id: '',
   name: '',
@@ -48,16 +39,6 @@ const TASK_BASE: TaskNode = {
   atom: null,
   isTurboTask: true,
   persistent: false
-};
-
-/** Inserts `entry` as the first member of the object that opens with `anchor` in `file`; throws when `anchor` is absent. */
-const insertMember = async (file: string, anchor: string, entry: string): Promise<void> => {
-  const text = await readFile(file, 'utf8');
-  const hasAnchor = text.includes(anchor);
-
-  if (!hasAnchor) throw new Error(`no ${anchor} in ${file}`);
-
-  await writeFile(file, text.replace(anchor, `${anchor}\n${entry},`));
 };
 
 /** Runs `task` of `packageName` in `dir` between two clock reads. */
@@ -113,11 +94,8 @@ describe('FEATURE: run summary match contract on one generated target-like fixtu
     const packageJson = join(dir, leaf.path, 'package.json');
 
     await insertMember(turboJson, TASKS_ANCHOR, `    "${SPACED_NAME}": {}`);
-    await insertMember(turboJson, TASKS_ANCHOR, `    "${FAILING_NAME}": {}`);
-    await insertMember(turboJson, TASKS_ANCHOR, `    "${DEPENDENT_NAME}": { "dependsOn": ["${FAILING_NAME}"] }`);
     await insertMember(packageJson, SCRIPTS_ANCHOR, `    "${SPACED_NAME}": "node -e 0"`);
-    await insertMember(packageJson, SCRIPTS_ANCHOR, `    "${FAILING_NAME}": "node -e \\"process.exit(3)\\""`);
-    await insertMember(packageJson, SCRIPTS_ANCHOR, `    "${DEPENDENT_NAME}": "node -e 0"`);
+    await addFailTasks(dir, leaf.path);
   });
 
   describe('GIVEN the leaf package builds twice with turboRunArgs', () => {

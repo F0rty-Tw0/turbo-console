@@ -16,8 +16,21 @@ const ENTRYLESS_KINDS: TaskNodeKind[] = ['atom-aggregate', 'atom-umbrella'];
 /**
  * The command turbo records for `run`. Names are written verbatim, never quoted, so two different (task, package) pairs
  * can give the same string: `taskId` tells them apart for a task with its own entry, the time window for the rest.
+ * Extras are recorded in turbo's order, whatever the order they were given in: `--continue=<mode>`, `--only`, then
+ * `-- <args>`, as turbo 2.11.7 records them. `--force`, `--concurrency` and `--single-package` are never recorded.
  */
-export const runCommandOf = (run: RunToMatch): string => `turbo run ${run.task.name} --filter=${run.packageName}`;
+export const runCommandOf = (run: RunToMatch): string => {
+  const { continueMode, only, passThrough = [] } = run.extras ?? {};
+  const parts = [`turbo run ${run.task.name} --filter=${run.packageName}`];
+
+  if (continueMode !== undefined) parts.push(`--continue=${continueMode}`);
+
+  if (only === true) parts.push('--only');
+
+  if (passThrough.length > 0) parts.push('--', ...passThrough);
+
+  return parts.join(' ');
+};
 
 const spanOf = (span: Span): number => span.endTime - span.startTime;
 
@@ -48,7 +61,7 @@ const isCandidate = (summary: RunSummary, run: RunToMatch): boolean => {
   return isInWindow && isSameCommand && isSameExit;
 };
 
-/** B2-1: turbo attempted a task it never saw end, as after Ctrl+C in its terminal (exit 0, the task left out). */
+/** Turbo attempted a task it never saw end, as after Ctrl+C in its terminal (exit 0, the task left out). */
 const hasUnendedTasks = (summary: RunSummary): boolean => {
   const { attempted, success, failed, cached } = summary.execution;
   const ended = success + failed + cached;
@@ -105,11 +118,11 @@ const taskOutcomeOf = (entry: RunSummaryTask): TaskOutcome => {
 export const taskOutcomesOf = (summary: RunSummary): TaskOutcome[] => summary.tasks.map(taskOutcomeOf);
 
 /**
- * Spec §4.1.2 and D7: what `summary` says when it is a candidate for `run` (it started within `[launchedAt, endedAt]`,
+ * What `summary` says when it is a candidate for `run` (it started within `[launchedAt, endedAt]`,
  * ran the same command and ended with the same exit code), `null` when it is not. `match` is the data a fitting
- * summary gives: for a task with its own entry it must list that entry unless interrupted (B2-1, below), and the
- * duration and cache status come from it, or from the whole summary (`cache: null`) for an umbrella or aggregate. B2-1:
- * a run that exited 0 is `interrupted` when turbo attempted more tasks than it saw end, or, for a task with its own
+ * summary gives: for a task with its own entry it must list that entry unless interrupted (below), and the
+ * duration and cache status come from it, or from the whole summary (`cache: null`) for an umbrella or aggregate.
+ * A run that exited 0 is `interrupted` when turbo attempted more tasks than it saw end, or, for a task with its own
  * entry, the summary lists no task at all (Ctrl+C before turbo attempted one); the data is then the whole summary's. A
  * failed run is never `interrupted`: turbo cuts siblings off after a failure itself. `match` is `null` for a candidate
  * that does not fit (no entry of the launched task, as after a failed dependency, or a duration that is not finite or

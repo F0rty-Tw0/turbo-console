@@ -10,3 +10,9 @@ export type KillOutcome = {
   readonly settled: string;
   readonly killCount: number;
 };
+
+/** A fresh uncommitted single-package repo in a temp dir, and the call that removes it. */
+export type SinglePackageRepo = {
+  readonly dir: string;
+  readonly dispose: () => Promise<void>;
+};

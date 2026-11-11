@@ -1,7 +1,3 @@
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { RunToMatch } from './common/run-match.type.ts';
@@ -12,9 +8,9 @@ import { runMatchOf } from './test/utils/run-match.spec.util.ts';
 import { turboRunAllArgs, turboRunArgs } from '../run-args/utils/run-args.util.ts';
 import type { RunSummary, TurboResult } from '../shared/turbo/common/turbo.type.ts';
 import { runTurbo } from '../shared/turbo/data-access/run-turbo.ts';
-import { SINGLE_PACKAGE_FILES_STUB } from '../shared/turbo/test/stubs/single-package-files.stub.ts';
+import type { SinglePackageRepo } from '../shared/turbo/test/common/turbo.type.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
-import { writeUncommittedRepo } from '../shared/turbo/test/utils/uncommitted-repo.spec.util.ts';
+import { singlePackageRepo } from '../shared/turbo/test/utils/single-package-repo.spec.util.ts';
 import type { TaskNode } from '../workspace/common/workspace-model.type.ts';
 
 const TURBO = devTurboPath();
@@ -22,6 +18,7 @@ const TURBO = devTurboPath();
 const BUILD: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build', command: null };
 
 describe('FEATURE: a run in a single-package repo against turbo 2.11.7', () => {
+  let repo: SinglePackageRepo | undefined;
   let dir = '';
   let launchedAt = 0;
   let endedAt = 0;
@@ -29,8 +26,8 @@ describe('FEATURE: a run in a single-package repo against turbo 2.11.7', () => {
   let summary: RunSummary | null = null;
 
   beforeAll(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'run-summary-single-'));
-    await writeUncommittedRepo(dir, SINGLE_PACKAGE_FILES_STUB);
+    repo = await singlePackageRepo('run-summary-single-');
+    dir = repo.dir;
     const args = turboRunArgs(BUILD, '//', { force: false }, true).slice(1);
 
     launchedAt = Date.now();
@@ -40,7 +37,7 @@ describe('FEATURE: a run in a single-package repo against turbo 2.11.7', () => {
   });
 
   afterAll(async () => {
-    await rm(dir, { recursive: true, force: true, maxRetries: 5 });
+    await repo?.dispose();
   });
 
   describe('GIVEN an uncommitted single-package repo built once', () => {
@@ -65,13 +62,14 @@ describe('FEATURE: a run in a single-package repo against turbo 2.11.7', () => {
 });
 
 describe('FEATURE: a run-all in a single-package repo against turbo 2.11.7', () => {
+  let repo: SinglePackageRepo | undefined;
   let dir = '';
   let result: TurboResult;
   let summary: RunSummary | null = null;
 
   beforeAll(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'run-all-single-'));
-    await writeUncommittedRepo(dir, SINGLE_PACKAGE_FILES_STUB);
+    repo = await singlePackageRepo('run-all-single-');
+    dir = repo.dir;
     const runAllArgs = turboRunAllArgs('build', { affected: false }, true).slice(1);
     const args = [...runAllArgs, '--summarize'];
 
@@ -80,7 +78,7 @@ describe('FEATURE: a run-all in a single-package repo against turbo 2.11.7', () 
   });
 
   afterAll(async () => {
-    await rm(dir, { recursive: true, force: true, maxRetries: 5 });
+    await repo?.dispose();
   });
 
   describe('GIVEN an uncommitted single-package repo built once with turboRunAllArgs and --single-package', () => {

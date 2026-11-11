@@ -1,7 +1,4 @@
-/** A word every shell passes through unquoted; the allowlist of a script name and the bare words of Copy Command. */
-export const BARE = /^[A-Za-z0-9@/._:=+-]+$/u;
-
-export const BARE_FIRST_BLOCKED = /^[=@]/u;
+export { BARE, BARE_FIRST_BLOCKED } from '@turbo-console/core';
 
 /**
  * A script name's blocked first characters: pnpm reads `/…/` as a regex selector when no script of that exact name has a
