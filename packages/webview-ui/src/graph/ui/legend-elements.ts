@@ -97,7 +97,7 @@ const affectedRowsOf = (affected: GraphAffected['mode'] | null): LegendRow[] => 
 export const renderLegend = (
   elements: Pick<LegendElements, 'legendLists'>,
   colors: ThemeColors,
-  affected: GraphAffected['mode'] | null = null
+  affected: GraphAffected['mode'] | null
 ): void => {
   const { packages, tasks } = elements.legendLists;
   const rowOf = (row: LegendRow): HTMLElement => legendRowOf(row, colors);

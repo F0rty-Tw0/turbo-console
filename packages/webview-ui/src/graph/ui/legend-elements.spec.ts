@@ -124,7 +124,7 @@ describe('FEATURE: renderLegend', () => {
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
     elements = buildLegend();
-    renderLegend(elements, FALLBACK_COLORS);
+    renderLegend(elements, FALLBACK_COLORS, null);
   });
 
   afterEach(() => {
@@ -165,7 +165,7 @@ describe('FEATURE: renderLegend', () => {
   });
 
   it('WHEN it renders again THEN the rows are replaced, not added', () => {
-    renderLegend(elements, FALLBACK_COLORS);
+    renderLegend(elements, FALLBACK_COLORS, null);
 
     expect(elements.legendLists.packages.children).toHaveLength(LEGEND_ROWS.packages.length);
   });
