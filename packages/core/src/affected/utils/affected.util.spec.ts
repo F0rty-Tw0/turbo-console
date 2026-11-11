@@ -29,9 +29,9 @@ const affectedJson = (items: ChangedTask[]): AffectedTasks => {
 };
 
 const SORTED_TASKS: AffectedTask[] = [
-  { id: 'ui#build', reason: 'TaskAllChanged' },
-  { id: 'web#build', reason: 'TaskFileChanged' },
-  { id: 'web#test', reason: 'TaskFileChanged' }
+  { id: 'ui#build', reason: 'TaskAllChanged', detail: null },
+  { id: 'web#build', reason: 'TaskFileChanged', detail: null },
+  { id: 'web#test', reason: 'TaskFileChanged', detail: null }
 ];
 
 describe('FEATURE: affected tasks result', () => {
@@ -48,6 +48,17 @@ describe('FEATURE: affected tasks result', () => {
       const result = toAffectedResult(json, 'package');
 
       expect(result.mode).toBe('package');
+    });
+  });
+
+  describe('GIVEN turbo lists a task whose reason carries a filePath', () => {
+    it('WHEN converted THEN the task carries it as detail and reason stays the bare typename', () => {
+      const reason = { ...FILE_CHANGED, filePath: 'apps/web/src/a.ts' };
+      const item: ChangedTask = { fullName: 'web#build', reason };
+
+      const result = toAffectedResult(affectedJson([item]), 'task');
+
+      expect(result.tasks).toStrictEqual([{ id: 'web#build', reason: 'TaskFileChanged', detail: 'apps/web/src/a.ts' }]);
     });
   });
 

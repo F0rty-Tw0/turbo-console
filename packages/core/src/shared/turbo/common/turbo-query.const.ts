@@ -34,7 +34,18 @@ export const PACKAGE_GRAPH_QUERY = `query PackageGraph {
 /** Tasks affected between two git refs; pass `base` and `head` as variables through `-V <file>`. */
 export const AFFECTED_TASKS_QUERY = `query AffectedTasks($base: String, $head: String) {
   affectedTasks(base: $base, head: $head) {
-    items { fullName reason { __typename } }
+    items {
+      fullName
+      reason {
+        __typename
+        ... on TaskFileChanged { filePath }
+        ... on TaskGlobalFileChanged { filePath }
+        ... on TaskGlobalDepsChanged { filePath }
+        ... on TaskDependencyTaskChanged { taskName packageName }
+        ... on TaskPackageDependencyChanged { packageName }
+        ... on TaskAllChanged { description }
+      }
+    }
   }
 }
 `;

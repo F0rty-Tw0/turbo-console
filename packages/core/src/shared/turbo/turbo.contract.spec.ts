@@ -35,6 +35,9 @@ const NONEXISTENT_COMMAND = '<NONEXISTENT>';
 
 const AFFECTED_RANGE = { base: 'HEAD~1', head: 'HEAD' };
 
+/** The reason keys that only some change kinds carry, so they are optional in `affectedTasksSchema`. */
+const DETAIL_KEYS = ['filePath', 'taskName', 'packageName', 'description'];
+
 const REAL_REPO = process.env['TURBO_CONSOLE_REAL_REPO'] ?? '';
 
 const COUNT_RULE_PRESETS: [string, FixtureSpec][] = [
@@ -218,10 +221,11 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
         expect(affected).not.toContain(`${leaf.name}#test`);
       });
 
-      it('THEN deleting any key affectedTasksSchema lists makes it reject the output', () => {
+      it('THEN deleting any key affectedTasksSchema lists, except the reason detail keys, makes it reject the output', () => {
         const optional = optionalKeyPaths(affectedTasksSchema, json);
+        const required = optional.filter((path) => !DETAIL_KEYS.includes(path.split('.').at(-1) ?? ''));
 
-        expect(optional).toStrictEqual([]);
+        expect(required).toStrictEqual([]);
       });
     });
 

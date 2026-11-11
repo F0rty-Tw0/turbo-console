@@ -1,3 +1,4 @@
+import { affectedDetailOf } from './affected-detail.util.ts';
 import { compareText } from '../../shared/text/utils/compare-text.util.ts';
 import type { AffectedTasks } from '../../shared/turbo/common/turbo.type.ts';
 import { assertTurboName } from '../../shared/turbo/utils/turbo-name.util.ts';
@@ -11,12 +12,13 @@ const compareIds = (left: AffectedTask, right: AffectedTask): number => compareT
 const toAffectedTask = (item: ChangedTask): AffectedTask => {
   // eslint-disable-next-line no-underscore-dangle -- GraphQL's own __typename key, copied from turbo's output.
   const reason = item.reason.__typename;
-  const task: AffectedTask = { id: item.fullName, reason };
+  const detail = affectedDetailOf(item.reason);
+  const task: AffectedTask = { id: item.fullName, reason, detail };
 
   return task;
 };
 
-/** turbo's affected tasks as `{ id, reason }`, sorted by id, with the `mode` read from the root config. */
+/** turbo's affected tasks as `{ id, reason, detail }`, sorted by id, with the `mode` read from the root config. */
 export const toAffectedResult = (json: AffectedTasks, mode: AffectedMode): AffectedResult => {
   const changed = json.data.affectedTasks.items;
   const tasks = changed.map(toAffectedTask);

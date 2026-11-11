@@ -33,8 +33,19 @@ const DRY_TASK_TAIL = `"resolvedTaskDefinition":${DEFINITION},"dependencies":[],
 /** turbo's `--dry=json` stdout, with the `dependencies` and `dependents` keys the schema leaves out. */
 const DRY_RUN = `{"monorepo":true,"id":"run","tasks":[{${DRY_TASK_HEAD},"hash":null,"cache":{"status":"MISS","local":false},${DRY_TASK_TAIL}}]}`;
 
-/** turbo's `affectedTasks` stdout, with keys the schema does not list. */
-const AFFECTED = '{"data":{"affectedTasks":{"items":[{"fullName":"web#build","reason":{"__typename":"TaskFileChanged","extra":1}}]}}}';
+const AFFECTED_ALL_ITEM = '{"fullName":"web#lint","reason":{"__typename":"TaskAllChanged","description":null}}';
+
+/** `filePath` is JSON text: a quoted string, or a bare number to break the schema. */
+const affectedOf = (filePath: string): string => {
+  const fileItem = `{"fullName":"web#build","reason":{"__typename":"TaskFileChanged","filePath":${filePath},"extra":1}}`;
+
+  return `{"data":{"affectedTasks":{"items":[${fileItem},${AFFECTED_ALL_ITEM}]}}}`;
+};
+
+/** turbo's `affectedTasks` stdout, with the reason detail keys and a key the schema does not list. */
+const AFFECTED = affectedOf('"apps/web/src/a.ts"');
+
+const AFFECTED_WITH_NUMBER_FILE_PATH = affectedOf('1');
 
 const GRAPH_WITHOUT_EDGES = `{"data":{"packageGraph":{"nodes":{"items":[${WEB_PACKAGE}]}},"root":null}}`;
 
@@ -76,7 +87,8 @@ const INVALID: Case[] = [
   ['a dry-run task with an unknown cache status', dryRunSchema, DRY_RUN_WITH_BAD_STATUS],
   ['a dry run that is null', dryRunSchema, 'null'],
   ['a dry run with no monorepo key', dryRunSchema, DRY_RUN_WITHOUT_MONOREPO],
-  ['an affected task with no reason', affectedTasksSchema, AFFECTED_WITHOUT_REASON]
+  ['an affected task with no reason', affectedTasksSchema, AFFECTED_WITHOUT_REASON],
+  ['an affected task whose reason filePath is a number', affectedTasksSchema, AFFECTED_WITH_NUMBER_FILE_PATH]
 ];
 
 const thrownBy = (parse: () => unknown): unknown => {
@@ -123,6 +135,15 @@ describe('FEATURE: lazily compiled schemas', () => {
       const text = JSON.stringify(compiledSchema.parse(input));
 
       expect(text).not.toMatch(UNLISTED_KEY);
+    });
+  });
+
+  describe('GIVEN affected tasks with reason detail keys', () => {
+    it('WHEN parsed compiled THEN the detail fields survive', () => {
+      const parsed = lazyCompiled(affectedTasksSchema)().parse(JSON.parse(AFFECTED));
+
+      expect(parsed.data.affectedTasks.items[0]?.reason.filePath).toBe('apps/web/src/a.ts');
+      expect(parsed.data.affectedTasks.items[1]?.reason.description).toBeNull();
     });
   });
 

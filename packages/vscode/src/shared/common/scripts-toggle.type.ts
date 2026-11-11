@@ -21,16 +21,18 @@ export type ScriptsToggleApi = {
   readonly onDidChange: (listener: () => void) => () => void;
 };
 
-type Disposing = {
+/** What `context.subscriptions` takes: `dispose` releases what it holds. */
+export type Disposing = {
   readonly dispose: () => void;
 };
 
 /** A toggle the extension also owns: `dispose` drops its listeners. */
 type OwnedToggle = ScriptsToggleApi & Disposing;
 
-/** The choices stored per window: whether the Packages view lists scripts, whether it lists package scopes, whether cache predictions show. */
+/** The choices stored per window: whether the Packages view lists scripts, whether it lists package scopes, whether cache predictions show, whether affected tasks are marked. */
 export type Toggles = {
   readonly scripts: OwnedToggle;
   readonly scope: OwnedToggle;
   readonly prediction: OwnedToggle;
+  readonly affected: OwnedToggle;
 };

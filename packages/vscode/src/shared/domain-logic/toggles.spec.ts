@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as vscode from 'vscode';
 
-import { togglesOf } from './toggles.ts';
+import { togglesDisposableOf, togglesOf } from './toggles.ts';
 import type { Toggles } from '../common/scripts-toggle.type.ts';
 import { outputMock } from '../test/mocks/output.mock.ts';
 
@@ -47,12 +47,26 @@ describe('FEATURE: toggles', () => {
         expect(toggles.prediction.isShown()).toBe(false);
       });
 
+      it('THEN affected reads false', () => {
+        expect(toggles.affected.isShown()).toBe(false);
+      });
+
       it('THEN each sends its own key', () => {
         expect(executeCommand.mock.calls).toStrictEqual([
           ['setContext', 'turboConsole.scriptsShown', false],
           ['setContext', 'turboConsole.scopeShown', true],
-          ['setContext', 'turboConsole.predictionShown', false]
+          ['setContext', 'turboConsole.predictionShown', false],
+          ['setContext', 'turboConsole.affectedShown', false]
         ]);
+      });
+
+      it('THEN their one disposable disposes each toggle once', () => {
+        const spies = Object.values(toggles).map((toggle) => vi.spyOn(toggle, 'dispose'));
+
+        togglesDisposableOf(toggles).dispose();
+
+        for (const spy of spies) expect(spy).toHaveBeenCalledOnce();
+        expect(spies).toHaveLength(4);
       });
     });
   });
