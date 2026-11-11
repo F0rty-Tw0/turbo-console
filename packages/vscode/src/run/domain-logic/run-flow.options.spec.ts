@@ -120,11 +120,9 @@ describe('FEATURE: run flow, Run with Options', () => {
 
   describe('GIVEN a script request with extras', () => {
     it('WHEN it is run THEN executeScript gets the request unchanged and turbo is never executed', async () => {
-      const request: RunRequest = {
-        ...RUN_REQUEST_STUB,
-        task: { ...TASK_NODE_STUB, isTurboTask: false },
-        extras: { passThrough: ['--watch'] }
-      };
+      const task = { ...TASK_NODE_STUB, isTurboTask: false };
+      const extras = { passThrough: ['--watch'] };
+      const request: RunRequest = { ...RUN_REQUEST_STUB, task, extras };
 
       await runTask(store, ports, request);
 
@@ -134,7 +132,8 @@ describe('FEATURE: run flow, Run with Options', () => {
 
     it('WHEN its name is unsafe THEN the refusal shows before any launch, extras or not', async () => {
       const task = { ...TASK_NODE_STUB, name: 'a b', isTurboTask: false };
-      const request: RunRequest = { ...RUN_REQUEST_STUB, task, extras: { passThrough: ['--watch'] } };
+      const extras = { passThrough: ['--watch'] };
+      const request: RunRequest = { ...RUN_REQUEST_STUB, task, extras };
 
       await runTask(store, ports, request);
 
