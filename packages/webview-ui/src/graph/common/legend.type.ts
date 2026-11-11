@@ -1,3 +1,5 @@
+import type { ThemeColors } from './theme-colors.type.ts';
+import type { GraphAffected } from '../../bridge/common/graph-affected.type.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewMode } from '../../bridge/common/graph-view-state.type.ts';
 
@@ -35,6 +37,9 @@ export type LegendSwatch = {
   readonly hasPlate: boolean;
   readonly halo: LegendHalo | null;
 };
+
+/** Draws the legend in `colors`, with the affected rows of `affected`'s level, or none for `null`. */
+export type LegendRender = (colors: ThemeColors, affected: GraphAffected['mode'] | null) => void;
 
 export type LegendRow = {
   readonly id: string;
