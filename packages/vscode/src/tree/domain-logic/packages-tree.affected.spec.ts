@@ -146,6 +146,57 @@ describe('FEATURE: packages tree affected feed', () => {
     });
   });
 
+  describe('GIVEN a root whose first children are still pending', () => {
+    let release: () => void;
+
+    beforeEach(() => {
+      const pending = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const pendingCoordinator = (): ReturnType<typeof coordinatorMock> => {
+        const coordinator = coordinatorMock();
+
+        vi.mocked(coordinator.firstChildren).mockReturnValue(pending);
+
+        return coordinator;
+      };
+
+      store.set([], coordinatorMock);
+      store.set([ROOT_FOLDER_STUB], pendingCoordinator);
+      store.apply('/ws', loadedWith([packageNamed('a')]));
+    });
+
+    it('WHEN the children are asked but not listed THEN rootShown is not called yet', async () => {
+      const children = tree.children();
+
+      await Promise.resolve();
+
+      expect(shared.rootShown).not.toHaveBeenCalled();
+
+      release();
+      await children;
+    });
+
+    it('WHEN the children then list THEN rootShown gets /ws once', async () => {
+      const children = tree.children();
+
+      release();
+      await children;
+
+      expect(shared.rootShown).toHaveBeenCalledExactlyOnceWith('/ws');
+    });
+
+    it('WHEN the root is removed while the children are pending THEN rootShown is not called', async () => {
+      const children = tree.children();
+
+      store.set([], coordinatorMock);
+      release();
+      await children;
+
+      expect(shared.rootShown).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN the shared store holds a view for /ws', () => {
     const viewOf = (root: string): AffectedView | null => (root === '/ws' ? AFFECTED_VIEW_STUB : null);
     const statusOf = (root: string): AffectedStatus => (root === '/ws' ? 'loaded' : 'failed');
