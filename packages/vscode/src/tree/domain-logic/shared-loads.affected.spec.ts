@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { sharedLoadsOf } from './shared-loads.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-fake.type.ts';
 import { outputMock } from '../../shared/test/mocks/output.mock.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
@@ -39,6 +40,11 @@ vi.mock('@turbo-console/core', async (original) => {
 
 describe('FEATURE: shared loads follow the affected toggle', () => {
   const signals: AbortSignal[] = [];
+  const pendingRead: ReadAffected = async (_binary, options) => {
+    if (options?.signal) signals.push(options.signal);
+
+    return new Promise<AffectedResult>(() => undefined);
+  };
   let store: RootStore;
 
   const build = (prediction: boolean, affected: boolean): Built => {
@@ -55,11 +61,7 @@ describe('FEATURE: shared loads follow the affected toggle', () => {
     mocks.readAffected.mockReset();
     mocks.readDryRun.mockReset();
     signals.length = 0;
-    mocks.readAffected.mockImplementation(async (_binary, options) => {
-      if (options?.signal) signals.push(options.signal);
-
-      return new Promise<AffectedResult>(() => undefined);
-    });
+    mocks.readAffected.mockImplementation(pendingRead);
     mocks.readDryRun.mockImplementation(async () => new Promise(() => undefined));
     store = new RootStore();
     store.set([ROOT_FOLDER_STUB], coordinatorMock);
@@ -98,10 +100,13 @@ describe('FEATURE: shared loads follow the affected toggle', () => {
   });
 
   describe('GIVEN the affected toggle stored on at build', () => {
-    it('WHEN a root is shown THEN readAffected is called once with the root binary', () => {
+    it('WHEN a root is shown THEN readAffected is called once with the root binary and an abort signal', () => {
+      const anySignal: unknown = expect.any(AbortSignal);
+      const options: unknown = expect.objectContaining({ signal: anySignal });
+
       build(false, true).loads.affected.rootShown(ROOT);
 
-      expect(mocks.readAffected).toHaveBeenCalledOnce();
+      expect(mocks.readAffected).toHaveBeenCalledExactlyOnceWith(TURBO_BINARY_STUB, options);
     });
 
     it('WHEN toggle.set(false) with a live query THEN the query signal is aborted', async () => {
