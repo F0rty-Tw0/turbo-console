@@ -147,9 +147,9 @@ test.describe('FEATURE: graph affected overlay', () => {
 
       await test.step('THEN the page posts setViewToggle affected shown once', async () => graphAffected.expectTogglePosts([TICKED]));
 
-      await test.step('WHEN the host turns affectedShown on', async () => graphAffected.sendState(true));
+      await test.step('WHEN the host turns affectedShown off', async () => graphAffected.sendState(false));
 
-      await test.step('THEN the box is ticked', async () => graphAffected.expectTicked(true));
+      await test.step('THEN the box is unticked', async () => graphAffected.expectTicked(false));
     }
   );
 });
