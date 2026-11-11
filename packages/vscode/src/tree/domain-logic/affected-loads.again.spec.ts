@@ -39,13 +39,6 @@ describe('FEATURE: affected loads asking again', () => {
       expect(h.readAffected).not.toHaveBeenCalled();
       expect(h.changed).not.toHaveBeenCalled();
     });
-
-    it('WHEN everything refreshes THEN it is ignored', () => {
-      store.refreshAll();
-
-      expect(h.readAffected).not.toHaveBeenCalled();
-      expect(h.changed).not.toHaveBeenCalled();
-    });
   });
 
   describe('GIVEN an absent root on the wait list', () => {
@@ -75,21 +68,13 @@ describe('FEATURE: affected loads asking again', () => {
       expect(h.readAffected).toHaveBeenCalledTimes(2);
       expect(h.changed).toHaveBeenCalledOnce();
     });
-
-    it('WHEN everything refreshes THEN the old query is aborted, a second spawns and changed is not called again', () => {
-      store.refreshAll();
-
-      expect(readAt(h, 0).signal.aborted).toBe(true);
-      expect(h.readAffected).toHaveBeenCalledTimes(2);
-      expect(h.changed).toHaveBeenCalledOnce();
-    });
   });
 
-  describe('GIVEN a loading root that refreshed twice', () => {
+  describe('GIVEN a loading root that got two new models', () => {
     beforeEach(async () => {
       await toState(h, store, 'loading');
-      store.refreshAll();
-      store.refreshAll();
+      store.modelChanged(NEW_MODEL());
+      store.modelChanged(NEW_MODEL());
     });
 
     it('WHEN the earlier queries are checked THEN each one is aborted', () => {
@@ -127,15 +112,6 @@ describe('FEATURE: affected loads asking again', () => {
       expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
       expect(h.readAffected).toHaveBeenCalledTimes(2);
     });
-
-    it('WHEN everything refreshes THEN it is loading, the view is kept only if loaded, changed fires once and a second spawn runs', () => {
-      store.refreshAll();
-
-      expect(store.status(ROOT)).toBe('loading');
-      expect(store.view(ROOT)?.tasks.has(ID_A) ?? false).toBe(keepsView);
-      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
-      expect(h.readAffected).toHaveBeenCalledTimes(2);
-    });
   });
 
   describe.each(STATES)('GIVEN a %s root', (state) => {
@@ -162,49 +138,15 @@ describe('FEATURE: affected loads asking again', () => {
     });
   });
 
-  describe('GIVEN two settled roots', () => {
-    beforeEach(async () => {
-      h.model(OTHER_ROOT, buildModelOf([PKG_A]));
-      await toState(h, store, 'loading');
-      store.rootShown(OTHER_ROOT);
-      readAt(h, 0).resolve(affectedResultOf([]));
-      readAt(h, 1).resolve(affectedResultOf([]));
-      await flush();
-    });
-
-    it('WHEN everything refreshes THEN each root gets exactly one new query, still live', () => {
-      store.refreshAll();
-
-      const aborted = h.reads.map((read) => read.signal.aborted);
-
-      expect(aborted).toStrictEqual([false, false, false, false]);
-      expect([store.status(ROOT), store.status(OTHER_ROOT)]).toStrictEqual(['loading', 'loading']);
-    });
-  });
-
-  describe('GIVEN a root whose change announcement shows another root', () => {
-    it('WHEN everything refreshes THEN the root shown meanwhile spawns once and is not restarted', async () => {
-      h.model(OTHER_ROOT, buildModelOf([PKG_A]));
-      await toState(h, store, 'loaded');
-      h.changed.mockImplementationOnce(() => {
-        store.rootShown(OTHER_ROOT);
-      });
-
-      store.refreshAll();
-
-      expect(h.readAffected).toHaveBeenCalledTimes(3);
-    });
-  });
-
   describe('GIVEN a loaded root whose binary vanished', () => {
     beforeEach(async () => {
       await toState(h, store, 'loaded');
       h.changed.mockClear();
       h.noBinary();
-      store.refreshAll();
+      store.modelChanged(NEW_MODEL());
     });
 
-    it('WHEN everything refreshes THEN nothing spawns, it is absent and changed fires once', () => {
+    it('WHEN a new model arrives THEN nothing spawns, it is absent and changed fires once', () => {
       expect(h.readAffected).toHaveBeenCalledOnce();
       expect(store.status(ROOT)).toBe('absent');
       expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
@@ -226,14 +168,14 @@ describe('FEATURE: affected loads asking again', () => {
       await toState(h, store, 'loading');
       h.changed.mockClear();
       h.noBinary();
-      store.refreshAll();
+      store.modelChanged(NEW_MODEL());
     });
 
-    it('WHEN everything refreshes THEN it is absent', () => {
+    it('WHEN a new model arrives THEN it is absent', () => {
       expect(store.status(ROOT)).toBe('absent');
     });
 
-    it('WHEN everything refreshes THEN changed fires once', () => {
+    it('WHEN a new model arrives THEN changed fires once', () => {
       expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
     });
   });

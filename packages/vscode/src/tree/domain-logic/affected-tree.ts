@@ -6,7 +6,7 @@ import { rowIdOf } from '../utils/row-id.util.ts';
 const rootOf = (entry: RootEntry): string => entry.state.folder.root;
 
 /**
- * The tree's side of the window's shared affected store: which root, model and refresh events reach `AffectedLoads`, and
+ * The tree's side of the window's shared affected store: which root and model events reach `AffectedLoads`, and
  * which node redraws when the store changes a root. A run end never reaches it (spec §5). It only reads `cache`, which
  * `PackagesTree` writes, so a fired node is the object VS Code holds.
  */
@@ -42,10 +42,6 @@ export class AffectedTree {
     const folders = this.store.all().map(rootOf);
 
     this.shared.rootsKept(new Set(folders));
-  }
-
-  public refreshAll(): void {
-    this.shared.refreshAll();
   }
 
   /** The tree keeps forwarding `dispose` to the shared affected store, which drops every listener and aborts every query. */

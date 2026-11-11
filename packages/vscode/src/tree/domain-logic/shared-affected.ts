@@ -23,9 +23,6 @@ export const sharedAffectedOf = (roots: Roots, ports: AffectedHostPorts): Shared
   const modelChanged = (change: RootChange): void => {
     loads.modelChanged(change);
   };
-  const refreshAll = (): void => {
-    loads.refreshAll();
-  };
   const rootsKept = (kept: ReadonlySet<string>): void => {
     loads.rootsKept(kept);
   };
@@ -39,7 +36,6 @@ export const sharedAffectedOf = (roots: Roots, ports: AffectedHostPorts): Shared
     rootShown,
     toggled,
     modelChanged,
-    refreshAll,
     rootsKept,
     dispose,
     onDidChange: subscribers.onDidChange

@@ -139,8 +139,8 @@ describe('FEATURE: shared affected', () => {
       await settleRead();
     });
 
-    it('WHEN refreshAll is called THEN the root queries again', () => {
-      affected.refreshAll();
+    it('WHEN a new model arrives THEN the root queries again', () => {
+      affected.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_A])));
 
       expect(h.reads).toHaveLength(2);
     });
@@ -152,7 +152,7 @@ describe('FEATURE: shared affected', () => {
     });
 
     it('WHEN rootsKept drops a root with a live query THEN the query is aborted', () => {
-      affected.refreshAll();
+      affected.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_A])));
       affected.rootsKept(new Set());
 
       expect(readAt(h, 1).signal.aborted).toBe(true);

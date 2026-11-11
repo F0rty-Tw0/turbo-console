@@ -7,7 +7,6 @@ export const SHARED_AFFECTED_STUB: SharedAffected = {
   rootShown: () => undefined,
   toggled: () => undefined,
   modelChanged: () => undefined,
-  refreshAll: () => undefined,
   rootsKept: () => undefined,
   dispose: () => undefined,
   onDidChange: () => () => undefined

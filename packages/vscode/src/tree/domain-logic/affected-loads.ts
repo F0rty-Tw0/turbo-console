@@ -89,13 +89,6 @@ export class AffectedLoads {
     this.rootShown(root);
   }
 
-  public refreshAll(): void {
-    const keys = this.slots.keys();
-    const roots = Array.from(keys);
-
-    for (const root of roots) this.restart(root);
-  }
-
   /** A removed root keeps nothing: its query aborts and nothing is announced. */
   public rootsKept(kept: ReadonlySet<string>): void {
     for (const [root, slot] of this.slots) {

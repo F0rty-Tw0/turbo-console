@@ -54,12 +54,6 @@ describe('FEATURE: affected tree', () => {
       expect(shared.rootsKept).toHaveBeenCalledExactlyOnceWith(new Set(['/ws']));
     });
 
-    it('WHEN refreshAll runs THEN the store refreshes once', () => {
-      tree.refreshAll();
-
-      expect(shared.refreshAll).toHaveBeenCalledOnce();
-    });
-
     it('WHEN dispose runs THEN the store is disposed once', () => {
       tree.dispose();
 

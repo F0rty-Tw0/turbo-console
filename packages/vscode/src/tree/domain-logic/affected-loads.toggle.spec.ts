@@ -16,10 +16,6 @@ const SHOW: StoreAction = (store): void => {
   store.rootShown(ROOT);
 };
 
-const REFRESH: StoreAction = (store): void => {
-  store.refreshAll();
-};
-
 const CHANGE_MODEL: StoreAction = (store): void => {
   store.modelChanged(changeOf(null, buildModelOf([PKG_A])));
 };
@@ -35,7 +31,6 @@ const TOGGLE_OFF: StoreAction = (store): void => {
 const IGNORED: [string, StoreAction][] = [
   ['rootShown arrives', SHOW],
   ['the model changes', CHANGE_MODEL],
-  ['everything refreshes', REFRESH],
   ['the kept roots are set', KEEP_NONE],
   ['the toggle goes off again', TOGGLE_OFF]
 ];

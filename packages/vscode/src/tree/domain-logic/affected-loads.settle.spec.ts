@@ -8,7 +8,10 @@ import { ID_A, ID_B, NOW_1, PKG_B } from '../test/common/prediction-load.const.t
 import { affectedHarness, readAt, toState } from '../test/utils/affected-load.spec.util.ts';
 import { affectedResultOf } from '../test/utils/affected-result.spec.util.ts';
 import { flush } from '../test/utils/atom-load.spec.util.ts';
+import { changeOf } from '../test/utils/prediction-load.spec.util.ts';
 import { buildModelOf } from '../test/utils/prediction-model.spec.util.ts';
+
+const NEW_MODEL = (): ReturnType<typeof changeOf> => changeOf(buildModelOf([PKG_B]), buildModelOf([PKG_B]));
 
 const loadedViewOf = (store: AffectedLoads): AffectedView => {
   const view = store.view(ROOT);
@@ -111,10 +114,10 @@ describe('FEATURE: affected loads settling', () => {
     });
   });
 
-  describe('GIVEN a refresh that superseded the query', () => {
+  describe('GIVEN a new model that superseded the query', () => {
     beforeEach(async () => {
       await toState(h, store, 'loading');
-      store.refreshAll();
+      store.modelChanged(NEW_MODEL());
     });
 
     it('WHEN the old query resolves THEN nothing is stored and it stays loading', async () => {
@@ -156,10 +159,10 @@ describe('FEATURE: affected loads settling', () => {
     });
   });
 
-  describe('GIVEN a loaded root that refreshes', () => {
+  describe('GIVEN a loaded root that gets a new model', () => {
     it('WHEN the new query rejects THEN the old result is dropped', async () => {
       await toState(h, store, 'loaded');
-      store.refreshAll();
+      store.modelChanged(NEW_MODEL());
       readAt(h, 1).reject(new Error('boom'));
       await flush();
 

@@ -22,7 +22,6 @@ export const sharedAffectedMock = (): SharedAffectedFake => {
     rootShown: vi.fn(),
     toggled: vi.fn(),
     modelChanged: vi.fn(),
-    refreshAll: vi.fn(),
     rootsKept: vi.fn(),
     dispose: vi.fn(),
     onDidChange

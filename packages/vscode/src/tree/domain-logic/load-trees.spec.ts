@@ -5,6 +5,7 @@ import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeNode } from '../common/tree-node.type.ts';
+import { sharedAffectedMock } from '../test/mocks/shared-affected.mock.ts';
 import { SHARED_AFFECTED_STUB } from '../test/stubs/shared-affected.stub.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { SHARED_PREDICTION_STUB } from '../test/stubs/shared-prediction.stub.ts';
@@ -83,13 +84,20 @@ describe('FEATURE: load trees', () => {
         expect(affected).toHaveBeenCalledExactlyOnceWith(...args);
       }
     );
+  });
 
-    it('WHEN refreshAll is called THEN the affected tree is left alone: the reloaded model asks again, one query per Refresh', () => {
-      const affected = vi.spyOn(trees.affected, 'refreshAll').mockReturnValue(undefined);
+  describe('GIVEN load trees over a spied shared affected store', () => {
+    it('WHEN refreshAll is called THEN no store entry that starts a query is reached: the reloaded model asks again, one query per Refresh', () => {
+      const shared = sharedAffectedMock();
+      const ports = { atom: SHARED_ATOMS_STUB, prediction: SHARED_PREDICTION_STUB, affected: shared, fire: vi.fn() };
+      const spied = new LoadTrees(new RootStore(), new Map(), ports);
+      const starters = [shared.rootShown, shared.toggled, shared.modelChanged];
 
-      trees.refreshAll();
+      spied.refreshAll();
 
-      expect(affected).not.toHaveBeenCalled();
+      const reached = starters.filter((starter) => vi.mocked(starter).mock.calls.length > 0);
+
+      expect(reached).toStrictEqual([]);
     });
   });
 });

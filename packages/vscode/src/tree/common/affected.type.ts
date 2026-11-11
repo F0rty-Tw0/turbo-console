@@ -57,7 +57,6 @@ export type SharedAffected = {
   readonly rootShown: (root: string) => void;
   readonly toggled: (shown: boolean) => void;
   readonly modelChanged: (change: RootChange) => void;
-  readonly refreshAll: () => void;
   readonly rootsKept: (kept: ReadonlySet<string>) => void;
   readonly dispose: () => void;
   readonly onDidChange: (listener: AffectedListener) => () => void;
