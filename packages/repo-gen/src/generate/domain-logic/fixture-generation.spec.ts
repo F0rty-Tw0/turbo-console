@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { applyEdit, generateFixture, writeFixture } from './fixture-generation.ts';
+import { applyEdit, checkoutBranch, generateFixture, writeFixture } from './fixture-generation.ts';
 import { PRESETS } from '../common/fixture.const.ts';
 import { git } from '../data-access/git.ts';
 import { fileTree } from '../test/utils/file-tree.spec.util.ts';
@@ -108,6 +108,26 @@ describe('FEATURE: fixture generation', () => {
         const content = await readFile(join(dir, 'packages/hub/README.md'), 'utf8');
 
         expect(content).toBe('# @fx/hub\n\n// edit\n');
+      });
+    });
+
+    describe('WHEN generated and then switched to a new branch', () => {
+      beforeEach(async () => {
+        await generateFixture(TARGET_LIKE, dir);
+        await checkoutBranch(dir, 'feat');
+      });
+
+      it('THEN HEAD is that branch', async () => {
+        const branch = await git(dir, ['symbolic-ref', '--short', 'HEAD']);
+
+        expect(branch).toBe('feat\n');
+      });
+
+      it('THEN the branch starts at the base commit of main', async () => {
+        const head = await git(dir, ['rev-parse', 'HEAD']);
+        const main = await git(dir, ['rev-parse', 'main']);
+
+        expect(head).toBe(main);
       });
     });
   });

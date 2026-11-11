@@ -1,19 +1,15 @@
-import { execFile } from 'node:child_process';
 import { appendFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
 
-import { applyEdit } from '@turbo-console/repo-gen';
+import { applyEdit, checkoutBranch } from '@turbo-console/repo-gen';
 import type { FixtureSpec } from '@turbo-console/repo-gen';
 
 import { affectedEditsOf } from './affected-edits.spec.util.ts';
 import { copyFixture } from './fixture-copy.spec.util.ts';
 import { readManifestFile } from './suite-input.spec.util.ts';
 import { folderWorkspace, workspaceDirOf } from './workspace.spec.util.ts';
-import { FEAT_BRANCH, UNCOMMITTED_LINE } from '../common/affected.const.ts';
+import { FEAT_BRANCH, README_FILE, SOURCE_FILE, UNCOMMITTED_LINE } from '../common/affected.const.ts';
 import type { LaunchName, PreparedWorkspace, RunScratch, WorkspacePrep } from '../common/launch.type.ts';
-
-const run = promisify(execFile);
 
 /** The options of `featRepoOf`: whether the leaf package also gets an edit left uncommitted. */
 type FeatRepoOptions = {
@@ -32,10 +28,10 @@ export const featRepoOf = (spec: FixtureSpec, options: FeatRepoOptions): Workspa
     const { readme, leaf } = affectedEditsOf(manifest);
 
     await copyFixture(dir, spec);
-    await run('git', ['checkout', '-q', '-b', FEAT_BRANCH], { cwd: dir });
-    await applyEdit(dir, [`${readme.path}/README.md`]);
+    await checkoutBranch(dir, FEAT_BRANCH);
+    await applyEdit(dir, [`${readme.path}/${README_FILE}`]);
 
-    if (options.uncommitted) await appendFile(join(dir, leaf.path, 'src/index.ts'), UNCOMMITTED_LINE);
+    if (options.uncommitted) await appendFile(join(dir, leaf.path, SOURCE_FILE), UNCOMMITTED_LINE);
 
     return folderWorkspace(dir);
   };

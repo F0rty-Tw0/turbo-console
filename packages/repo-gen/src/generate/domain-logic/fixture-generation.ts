@@ -56,3 +56,8 @@ export const applyEdit = async (dir: string, paths: string[]): Promise<void> => 
   await appendToFiles(dir, paths, EDIT_LINE);
   await commitAll(dir, 'head');
 };
+
+/** Creates branch `name` at HEAD and switches to it, through the same scrubbed `git` as the fixture's commits. */
+export const checkoutBranch = async (dir: string, name: string): Promise<void> => {
+  await git(dir, ['checkout', '--quiet', '-b', name]);
+};
