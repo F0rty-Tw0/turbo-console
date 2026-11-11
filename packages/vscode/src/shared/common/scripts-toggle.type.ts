@@ -21,7 +21,8 @@ export type ScriptsToggleApi = {
   readonly onDidChange: (listener: () => void) => () => void;
 };
 
-type Disposing = {
+/** What `context.subscriptions` takes: `dispose` releases what it holds. */
+export type Disposing = {
   readonly dispose: () => void;
 };
 

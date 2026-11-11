@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as vscode from 'vscode';
 
-import { togglesOf } from './toggles.ts';
+import { togglesDisposableOf, togglesOf } from './toggles.ts';
 import type { Toggles } from '../common/scripts-toggle.type.ts';
 import { outputMock } from '../test/mocks/output.mock.ts';
 
@@ -58,6 +58,15 @@ describe('FEATURE: toggles', () => {
           ['setContext', 'turboConsole.predictionShown', false],
           ['setContext', 'turboConsole.affectedShown', false]
         ]);
+      });
+
+      it('THEN their one disposable disposes each toggle once', () => {
+        const spies = Object.values(toggles).map((toggle) => vi.spyOn(toggle, 'dispose'));
+
+        togglesDisposableOf(toggles).dispose();
+
+        for (const spy of spies) expect(spy).toHaveBeenCalledOnce();
+        expect(spies).toHaveLength(4);
       });
     });
   });
