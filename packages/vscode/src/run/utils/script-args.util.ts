@@ -2,7 +2,7 @@ import { assertRunExtras } from '@turbo-console/core';
 import type { PackageManagerName } from '@turbo-console/core';
 
 /**
- * Spec §5: the argv of `<manager> run <script> [-- ] <args>`. Only npm needs the `--` to stop at its own flags; pnpm,
+ * Spec §5: the argv of `<manager> run <script> [--] <args>`. Only npm needs the `--` to stop at its own flags; pnpm,
  * yarn and bun forward the args after the script name. bun and yarn berry are verified by docs only, untested. The args
  * reach a real shell, so core's `assertRunExtras` runs first and throws `invalid-argument` on an unsafe one.
  */
