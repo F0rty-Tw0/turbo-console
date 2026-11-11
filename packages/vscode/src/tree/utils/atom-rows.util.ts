@@ -1,6 +1,8 @@
 import type { AtomFile, AtomGroup, AtomResult, PackageNode } from '@turbo-console/core';
 
+import { withAffectedWord } from './affected-word.util.ts';
 import { fileDescription, fileTooltip, umbrellaCounts } from './atom-text.util.ts';
+import { rowAffectedOf } from './row-affected.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import { taskDisplay } from './task-display.util.ts';
 import { taskRow } from './task-row.util.ts';
@@ -45,14 +47,15 @@ const resultIconOf = (result: AtomResult | undefined): IconSpec => {
   return RESULT_ICONS[result.outcome];
 };
 
-const umbrellaDescription = (running: string, counts: string, entry: RunEntry | undefined): string => {
-  if (entry?.state !== 'running') return counts;
+const umbrellaDescription = (running: string, counts: string, entry: RunEntry | undefined, word: string | null): string => {
+  if (entry?.state !== 'running') return withAffectedWord(cleanText(counts, DESCRIPTION_MAX), word);
 
-  return `${running} · ${counts}`;
+  return cleanText(`${running} · ${counts}`, DESCRIPTION_MAX);
 };
 
 /**
- * The umbrella keeps `taskRow`'s icon and context; its description counts the files, behind the running clock while it runs.
+ * The umbrella keeps `taskRow`'s icon, context and tooltip; its description counts the files, behind the running clock while it
+ * runs, and the affected word ends it when the run is not live (`taskRow` adds the affected line, and no word while live).
  * Atomizer rows show no cache prediction, so `taskRow` reads none.
  */
 export const umbrellaRow = (scope: RowScope, pkg: PackageNode, group: AtomGroup, context: RowContext): TreeRow => {
@@ -61,8 +64,9 @@ export const umbrellaRow = (scope: RowScope, pkg: PackageNode, group: AtomGroup,
   const view = context.atoms(scope.root, pkg.name);
   const entry = context.runs(scope.root, group.umbrella.id);
   const counts = umbrellaCounts(group, view);
-  const description = umbrellaDescription(base.description, counts, entry);
-  const row: TreeRow = { ...base, description: cleanText(description, DESCRIPTION_MAX), collapsible: 'collapsed' };
+  const affected = rowAffectedOf(group.umbrella, entry, context.affected.view(scope.root));
+  const description = umbrellaDescription(base.description, counts, entry, affected?.word ?? null);
+  const row: TreeRow = { ...base, description, collapsible: 'collapsed' };
 
   return row;
 };
