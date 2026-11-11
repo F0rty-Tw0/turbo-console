@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { isNearRun, runCommandOf, summaryCandidateOf, taskOutcomesOf } from './run-match.util.ts';
+import type { RunExtras } from '../../run-args/common/run-args.type.ts';
 import type { RunSummary } from '../../shared/turbo/common/turbo.type.ts';
 import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
 import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from '../common/run-match.type.ts';
@@ -21,6 +22,31 @@ const WINDOW = { startTime: LAUNCHED_AT + 1000, endTime: LAUNCHED_AT + 5000 };
 const TASK_SPAN = { startTime: LAUNCHED_AT + 1500, endTime: LAUNCHED_AT + 2000 };
 
 const RUN: RunToMatch = { task: TASK_NODE_STUB, packageName: 'web', launchedAt: LAUNCHED_AT, endedAt: ENDED_AT, exitCode: 0 };
+
+const ONLY: RunExtras = { only: true };
+
+const RUN_ONLY: RunToMatch = { ...RUN, extras: ONLY };
+
+/** Label, extras, the recorded command (P8). */
+const RECORDED: [string, RunExtras, string][] = [
+  ['no extras fields', {}, COMMAND],
+  ['only', ONLY, `${COMMAND} --only`],
+  ['continue', { continueMode: 'dependencies-successful' }, `${COMMAND} --continue=dependencies-successful`],
+  ['concurrency 2', { concurrency: '2' }, COMMAND],
+  ['concurrency 50%', { concurrency: '50%' }, COMMAND],
+  ['empty passThrough', { passThrough: [] }, COMMAND],
+  ['pass-through', { passThrough: ['--watch', '--port=3000'] }, `${COMMAND} -- --watch --port=3000`],
+  [
+    'separate value and positional',
+    { passThrough: ['--watch', '--port', '3000', './src/a.ts'] },
+    `${COMMAND} -- --watch --port 3000 ./src/a.ts`
+  ],
+  [
+    'all, in the other input order',
+    { passThrough: ['--watch', '--port=3000'], concurrency: '2', continueMode: 'dependencies-successful', only: true },
+    `${COMMAND} --continue=dependencies-successful --only -- --watch --port=3000`
+  ]
+];
 
 const OWN_ENTRY = taskEntry('web#build', TASK_SPAN, 'MISS');
 
@@ -53,6 +79,30 @@ describe('FEATURE: run match', () => {
   describe('GIVEN a run of web#build', () => {
     it('WHEN its command is built THEN it is the turbo run line without --skip-infer and --summarize', () => {
       expect(runCommandOf(RUN)).toBe(COMMAND);
+    });
+  });
+
+  describe('GIVEN a run launched with extras', () => {
+    it.each(RECORDED)('WHEN extras are %s THEN the command is what turbo records', (_label, extras, expected) => {
+      expect(runCommandOf({ ...RUN, extras })).toBe(expected);
+    });
+
+    it('WHEN the summary records the --only command THEN a run with only matches it', () => {
+      const summary = summaryOf(`${COMMAND} --only`, WINDOW, 0, [OWN_ENTRY]);
+
+      expect(matchOf(summary, RUN_ONLY)).toStrictEqual(OWN_MATCH);
+    });
+
+    it('WHEN the summary holds the plain command THEN a run with only has no match', () => {
+      const summary = summaryOf(COMMAND, WINDOW, 0, [OWN_ENTRY]);
+
+      expect(matchOf(summary, RUN_ONLY)).toBeNull();
+    });
+
+    it('WHEN the summary holds the --only command THEN a plain run has no match', () => {
+      const summary = summaryOf(`${COMMAND} --only`, WINDOW, 0, [OWN_ENTRY]);
+
+      expect(matchOf(summary, RUN)).toBeNull();
     });
   });
 

@@ -16,8 +16,21 @@ const ENTRYLESS_KINDS: TaskNodeKind[] = ['atom-aggregate', 'atom-umbrella'];
 /**
  * The command turbo records for `run`. Names are written verbatim, never quoted, so two different (task, package) pairs
  * can give the same string: `taskId` tells them apart for a task with its own entry, the time window for the rest.
+ * Extras are recorded in turbo's order, whatever the order they were given in: `--continue=<mode>`, `--only`, then
+ * `-- <args>` (P8). `--force`, `--concurrency` and `--single-package` are never recorded.
  */
-export const runCommandOf = (run: RunToMatch): string => `turbo run ${run.task.name} --filter=${run.packageName}`;
+export const runCommandOf = (run: RunToMatch): string => {
+  const { continueMode, only, passThrough = [] } = run.extras ?? {};
+  const parts = [`turbo run ${run.task.name} --filter=${run.packageName}`];
+
+  if (continueMode !== undefined) parts.push(`--continue=${continueMode}`);
+
+  if (only === true) parts.push('--only');
+
+  if (passThrough.length > 0) parts.push('--', ...passThrough);
+
+  return parts.join(' ');
+};
 
 const spanOf = (span: Span): number => span.endTime - span.startTime;
 

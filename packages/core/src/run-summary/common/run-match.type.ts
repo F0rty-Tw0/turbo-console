@@ -1,3 +1,4 @@
+import type { RunExtras } from '../../run-args/common/run-args.type.ts';
 import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
 
 /** One run of one task of one package, as the caller launched it: the process window and its exit code. */
@@ -7,6 +8,7 @@ export type RunToMatch = {
   readonly launchedAt: number;
   readonly endedAt: number;
   readonly exitCode: number;
+  readonly extras?: RunExtras;
 };
 
 /**
