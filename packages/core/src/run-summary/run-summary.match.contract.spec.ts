@@ -7,14 +7,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from './common/run-match.type.ts';
 import { matchRunTasks } from './domain-logic/match-run-tasks.ts';
 import { readNewestRunSummary } from './domain-logic/read-newest-run-summary.ts';
-import {
-  DEPENDENT_NAME,
-  FAILING_NAME,
-  SCRIPTS_ANCHOR,
-  TASKS_ANCHOR,
-  addFailTasks,
-  insertMember
-} from './test/utils/fail-fixture.spec.util.ts';
+import { DEPENDENT_NAME, FAILING_NAME, SCRIPTS_ANCHOR, TASKS_ANCHOR } from './test/common/fail-fixture.const.ts';
+import { addFailTasks, insertMember } from './test/utils/fail-fixture.spec.util.ts';
 import { runMatchOf } from './test/utils/run-match.spec.util.ts';
 import { runCommandOf } from './utils/run-match.util.ts';
 import { turboRunArgs } from '../run-args/utils/run-args.util.ts';

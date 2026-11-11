@@ -1,15 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-/** A task whose script exits 3. */
-export const FAILING_NAME = 'fail-3';
-
-/** A task that depends on `FAILING_NAME`, so it never runs. */
-export const DEPENDENT_NAME = 'after-fail';
-
-export const SCRIPTS_ANCHOR = '"scripts": {';
-
-export const TASKS_ANCHOR = '"tasks": {';
+import { DEPENDENT_NAME, FAILING_NAME, SCRIPTS_ANCHOR, TASKS_ANCHOR } from '../common/fail-fixture.const.ts';
 
 /** Inserts `entry` as the first member of the object that opens with `anchor` in `file`; throws when `anchor` is absent. */
 export const insertMember = async (file: string, anchor: string, entry: string): Promise<void> => {

@@ -1,5 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { PRESETS } from '@turbo-console/repo-gen';
@@ -8,26 +7,20 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { RunMatch, RunTasksMatch, RunToMatch, TaskOutcome } from './common/run-match.type.ts';
 import { matchRunTasks } from './domain-logic/match-run-tasks.ts';
 import { readNewestRunSummary } from './domain-logic/read-newest-run-summary.ts';
+import { DEPENDENT_NAME, FAILING_NAME, SCRIPTS_ANCHOR, TASKS_ANCHOR } from './test/common/fail-fixture.const.ts';
 import { TASK_NODE_STUB } from './test/stubs/task-node.stub.ts';
-import {
-  DEPENDENT_NAME,
-  FAILING_NAME,
-  SCRIPTS_ANCHOR,
-  TASKS_ANCHOR,
-  addFailTasks,
-  insertMember
-} from './test/utils/fail-fixture.spec.util.ts';
+import { addFailTasks, insertMember } from './test/utils/fail-fixture.spec.util.ts';
 import { runMatchOf } from './test/utils/run-match.spec.util.ts';
 import { runCommandOf } from './utils/run-match.util.ts';
 import type { RunExtras } from '../run-args/common/run-args.type.ts';
 import { turboRunArgs } from '../run-args/utils/run-args.util.ts';
 import type { RunSummary } from '../shared/turbo/common/turbo.type.ts';
 import { runTurbo } from '../shared/turbo/data-access/run-turbo.ts';
-import { SINGLE_PACKAGE_FILES_STUB } from '../shared/turbo/test/stubs/single-package-files.stub.ts';
+import type { SinglePackageRepo } from '../shared/turbo/test/common/turbo.type.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
 import { leafPackage } from '../shared/turbo/test/utils/manifest.spec.util.ts';
-import { writeUncommittedRepo } from '../shared/turbo/test/utils/uncommitted-repo.spec.util.ts';
+import { singlePackageRepo } from '../shared/turbo/test/utils/single-package-repo.spec.util.ts';
 import type { TaskNode } from '../workspace/common/workspace-model.type.ts';
 
 const TURBO = devTurboPath();
@@ -78,7 +71,7 @@ type RecordedRow = {
   readonly suffix: string;
 };
 
-/** What turbo records after `turbo run echo-args --filter=<leaf>` for each way of asking (P8). */
+/** What turbo records after `turbo run echo-args --filter=<leaf>` for each way of asking. */
 const RECORDED: RecordedRow[] = [
   { label: 'none', force: false, extras: {}, suffix: '' },
   { label: 'force alone', force: true, extras: {}, suffix: '' },
@@ -136,7 +129,7 @@ const recordedCommandOf = (launched: Launched | null): string => {
   return runCommandOf(launched.run);
 };
 
-describe('FEATURE: run options against turbo 2.11.7 (target-like fixture)', () => {
+describe('FEATURE: run options against turbo 2.11.7', () => {
   const fixture = fixtureHook(TARGET_LIKE);
 
   beforeAll(async () => {
@@ -158,17 +151,20 @@ describe('FEATURE: run options against turbo 2.11.7 (target-like fixture)', () =
     return launched;
   };
 
-  describe(`GIVEN ${DEPENDENT_NAME} runs with only`, () => {
+  describe(`GIVEN ${DEPENDENT_NAME} of the target-like fixture runs with only`, () => {
     let launched: Launched | null = null;
 
     beforeAll(async () => {
       launched = await launchLeaf(DEPENDENT_NAME, false, ONLY);
     });
 
-    it(`THEN turbo exits 0 and runs ${DEPENDENT_NAME} alone, without ${FAILING_NAME}`, () => {
+    it('THEN turbo exits 0', () => {
+      expect(launched?.run.exitCode).toBe(0);
+    });
+
+    it(`THEN the summary lists ${DEPENDENT_NAME} alone, without ${FAILING_NAME}`, () => {
       const leafName = leafPackage(fixture().manifest).name;
 
-      expect(launched?.run.exitCode).toBe(0);
       expect(taskIdsOf(launched)).toStrictEqual([`${leafName}#${DEPENDENT_NAME}`]);
     });
 
@@ -180,18 +176,26 @@ describe('FEATURE: run options against turbo 2.11.7 (target-like fixture)', () =
     });
   });
 
-  describe(`GIVEN ${DEPENDENT_NAME} runs with continueMode dependencies-successful`, () => {
+  describe(`GIVEN ${DEPENDENT_NAME} of the target-like fixture runs with continueMode dependencies-successful`, () => {
     let launched: Launched | null = null;
 
     beforeAll(async () => {
       launched = await launchLeaf(DEPENDENT_NAME, false, CONTINUE);
     });
 
-    it(`THEN turbo exits 3 and the summary lists ${FAILING_NAME} but not ${DEPENDENT_NAME}`, () => {
+    it('THEN turbo exits 3', () => {
+      expect(launched?.run.exitCode).toBe(3);
+    });
+
+    it(`THEN the summary lists ${FAILING_NAME}`, () => {
       const leafName = leafPackage(fixture().manifest).name;
 
-      expect(launched?.run.exitCode).toBe(3);
       expect(taskIdsOf(launched)).toContain(`${leafName}#${FAILING_NAME}`);
+    });
+
+    it(`THEN the summary does not list ${DEPENDENT_NAME}`, () => {
+      const leafName = leafPackage(fixture().manifest).name;
+
       expect(taskIdsOf(launched)).not.toContain(`${leafName}#${DEPENDENT_NAME}`);
     });
 
@@ -203,7 +207,7 @@ describe('FEATURE: run options against turbo 2.11.7 (target-like fixture)', () =
     });
   });
 
-  describe.each(RECORDED)('GIVEN $label', ({ force, extras, suffix }) => {
+  describe.each(RECORDED)('GIVEN echo-args of the target-like fixture runs with $label', ({ force, extras, suffix }) => {
     let launched: Launched | null = null;
 
     beforeAll(async () => {
@@ -224,34 +228,33 @@ describe('FEATURE: run options against turbo 2.11.7 (target-like fixture)', () =
       expect(matchOf(launched)).not.toBeNull();
     });
   });
-});
 
-describe('FEATURE: run options in a single-package repo against turbo 2.11.7', () => {
-  let dir = '';
-  let launched: Launched | null = null;
+  describe('GIVEN a single-package repo', () => {
+    let repo: SinglePackageRepo | undefined;
+    let launched: Launched | null = null;
 
-  beforeAll(async () => {
-    dir = await mkdtemp(join(tmpdir(), 'run-options-single-'));
-    await writeUncommittedRepo(dir, SINGLE_PACKAGE_FILES_STUB);
-    const extras: RunExtras = { only: true, continueMode: 'dependencies-successful', passThrough: ['--watch'] };
-    const task = taskOf('//', 'build');
+    beforeAll(async () => {
+      repo = await singlePackageRepo('run-options-single-');
+      const extras: RunExtras = { only: true, continueMode: 'dependencies-successful', passThrough: ['--watch'] };
+      const task = taskOf('//', 'build');
 
-    launched = await launchOf({ dir, task, packageName: '//', force: false, extras, singlePackage: true });
-  });
-
-  afterAll(async () => {
-    await rm(dir, { recursive: true, force: true, maxRetries: 5 });
-  });
-
-  describe('GIVEN //#build runs with only, continueMode and a pass-through arg', () => {
-    it('THEN the summary records them in turbo order', () => {
-      const command = 'turbo run build --filter=// --continue=dependencies-successful --only -- --watch';
-
-      expect(launched?.summary?.execution.command).toBe(command);
+      launched = await launchOf({ dir: repo.dir, task, packageName: '//', force: false, extras, singlePackage: true });
     });
 
-    it('THEN runCommandOf gives that same command', () => {
-      expect(launched?.summary?.execution.command).toBe(recordedCommandOf(launched));
+    afterAll(async () => {
+      await repo?.dispose();
+    });
+
+    describe('WHEN //#build runs with only, continueMode and a pass-through arg', () => {
+      it('THEN the summary records them in turbo order', () => {
+        const command = 'turbo run build --filter=// --continue=dependencies-successful --only -- --watch';
+
+        expect(launched?.summary?.execution.command).toBe(command);
+      });
+
+      it('THEN runCommandOf gives that same command', () => {
+        expect(launched?.summary?.execution.command).toBe(recordedCommandOf(launched));
+      });
     });
   });
 });
