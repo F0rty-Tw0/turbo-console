@@ -6,6 +6,9 @@ import { FALLBACK_COLORS } from '../common/graph.const.ts';
 import type { SelectionColors, ThemeColors } from '../common/theme-colors.type.ts';
 import { cssVariableReaderMock } from '../test/mocks/css-variable-reader.mock.ts';
 
+/** The git modified colour the affected halo takes. */
+const GIT_VARIABLE = '--vscode-gitDecoration-modifiedResourceForeground';
+
 const DARK: Record<string, string> = {
   '--vscode-editor-background': '#1f1f1f',
   '--vscode-foreground': '#cccccc',
@@ -21,7 +24,8 @@ const DARK: Record<string, string> = {
   '--vscode-errorForeground': '#f85149',
   '--vscode-charts-purple': '#b180d7',
   '--vscode-list-activeSelectionBackground': '#04395e',
-  '--vscode-list-activeSelectionForeground': '#ffffff'
+  '--vscode-list-activeSelectionForeground': '#ffffff',
+  [GIT_VARIABLE]: '#e2c08d'
 };
 
 /** `THEME_HC_STUB`'s colours over the dark rows: white label and edges, the `#6fc3df` contrast border, a black editor. */
@@ -61,7 +65,8 @@ const DARK_COLORS: ThemeColors = {
   cached: '#b180d7',
   runs: DARK_RUNS,
   selection: DARK_SELECTION,
-  dimmedOpacity: 0.25
+  dimmedOpacity: 0.25,
+  affected: '#e2c08d'
 };
 
 describe('FEATURE: themeColorsOf', () => {
@@ -72,13 +77,21 @@ describe('FEATURE: themeColorsOf', () => {
       expect(colors).toStrictEqual(DARK_COLORS);
     });
 
-    it('WHEN the colours are read THEN only the fifteen theme variables are read', () => {
+    it('WHEN the colours are read THEN only the sixteen theme variables are read', () => {
       const read: string[] = [];
 
       themeColorsOf(cssVariableReaderMock(DARK, read));
 
       expect(new Set(read)).toStrictEqual(new Set(Object.keys(DARK)));
     });
+  });
+
+  it('GIVEN no git modified colour WHEN the colours are read THEN affected is the fallback', () => {
+    const noGit = { ...DARK, [GIT_VARIABLE]: '' };
+
+    const colors = themeColorsOf(cssVariableReaderMock(noGit));
+
+    expect(colors.affected).toBe(FALLBACK_COLORS.affected);
   });
 
   it('GIVEN a high contrast theme WHEN the colours are read THEN the contrast border is the frame', () => {
