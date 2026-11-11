@@ -6,9 +6,9 @@ import type { PackagesTreeApi, TreeNode } from '../common/tree-node.type.ts';
 import { affectedLabelOf } from '../utils/affected-label.util.ts';
 
 /**
- * Writes the view description (spec §3 Mode label) once now and again on the affected toggle, on every store change and on
+ * Sets the view description (spec §3 Mode label) once now and again on the affected toggle, on every store change and on
  * every tree redraw: a root added or removed redraws the tree and fires no store change, so a Failed root that left the
- * window would otherwise keep the label.
+ * window would otherwise keep the label. Only a changed label is written, as each write is a call to the editor host.
  */
 export const followAffectedLabel = (
   view: Pick<TreeView<TreeNode>, 'description'>,
@@ -20,7 +20,9 @@ export const followAffectedLabel = (
   const write = (): void => {
     const roots = store.all().map((entry) => entry.state.folder.root);
 
-    view.description = affectedLabelOf(affected.isShown(), roots, affectedLoads);
+    const next = affectedLabelOf(affected.isShown(), roots, affectedLoads);
+
+    if (view.description !== next) view.description = next;
   };
 
   write();

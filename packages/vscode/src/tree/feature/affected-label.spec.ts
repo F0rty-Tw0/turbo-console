@@ -7,7 +7,7 @@ import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-fake.type.ts';
 import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.ts';
-import type { TreeNode } from '../common/tree-node.type.ts';
+import type { PackagesTreeApi, TreeNode } from '../common/tree-node.type.ts';
 import type { SharedAffectedFake } from '../test/common/shared-affected-fake.type.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
 import { sharedAffectedMock } from '../test/mocks/shared-affected.mock.ts';
@@ -23,7 +23,9 @@ describe('FEATURE: followAffectedLabel', () => {
   let toggle: ScriptsToggleFake;
   let loads: SharedAffectedFake;
   let store: RootStore;
-  let tree: ReturnType<typeof packagesTreeApiMock>;
+  let tree: PackagesTreeApi;
+  let described: string | undefined;
+  let descriptionWrites: Mock<(value: string | undefined) => void>;
   let treeSubscription: SubscriptionFake;
   let subscription: Disposable;
 
@@ -42,7 +44,16 @@ describe('FEATURE: followAffectedLabel', () => {
   };
 
   beforeEach(() => {
+    descriptionWrites = vi.fn();
+    described = undefined;
     view = {};
+    Object.defineProperty(view, 'description', {
+      get: (): string | undefined => described,
+      set: (value: string | undefined): void => {
+        described = value;
+        descriptionWrites(value);
+      }
+    });
     toggle = scriptsToggleMock();
     loads = sharedAffectedMock();
     store = new RootStore();
@@ -52,10 +63,21 @@ describe('FEATURE: followAffectedLabel', () => {
     vi.mocked(tree.onDidChangeTreeData).mockReturnValue(treeSubscription);
   });
 
-  it('WHEN it starts with the toggle off THEN the description is empty', () => {
-    follow();
+  describe('GIVEN the toggle off and the root Absent', () => {
+    beforeEach(() => {
+      follow();
+    });
 
-    expect(view.description).toBe('');
+    it('WHEN it starts THEN the description is empty', () => {
+      expect(view.description).toBe('');
+    });
+
+    it('WHEN the tree redraws twice with the label unchanged THEN only the creation write reaches the view', () => {
+      treeListener()();
+      treeListener()();
+
+      expect(descriptionWrites).toHaveBeenCalledExactlyOnceWith('');
+    });
   });
 
   describe('GIVEN the toggle on and the root Loading without a result', () => {
