@@ -106,10 +106,10 @@ describe('FEATURE: packages tree affected feed', () => {
       expect(shared.modelChanged).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ root: '/ws' }));
     });
 
-    it('WHEN refreshAtoms runs THEN the shared affected store refreshes all once', () => {
+    it('WHEN refreshAtoms runs THEN the shared affected store is not refreshed: the reloaded model asks again', () => {
       tree.refreshAtoms();
 
-      expect(shared.refreshAll).toHaveBeenCalledOnce();
+      expect(shared.refreshAll).not.toHaveBeenCalled();
     });
 
     it('WHEN rootsChanged runs THEN rootsKept gets the set of the store roots', () => {

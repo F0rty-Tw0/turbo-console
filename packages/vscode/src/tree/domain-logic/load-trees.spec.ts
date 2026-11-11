@@ -29,7 +29,7 @@ const FORWARD_CASES: ForwardCase[] = [
   { method: 'dispose', call: (trees) => trees.dispose(), args: [] }
 ];
 
-type AffectedForwarded = 'modelChanged' | 'rootsChanged' | 'refreshAll' | 'dispose';
+type AffectedForwarded = 'modelChanged' | 'rootsChanged' | 'dispose';
 
 type AffectedForwardCase = {
   readonly method: AffectedForwarded;
@@ -40,7 +40,6 @@ type AffectedForwardCase = {
 const AFFECTED_FORWARD_CASES: AffectedForwardCase[] = [
   { method: 'modelChanged', call: (trees) => trees.modelChanged(CHANGE), args: [CHANGE] },
   { method: 'rootsChanged', call: (trees) => trees.rootsChanged(), args: [] },
-  { method: 'refreshAll', call: (trees) => trees.refreshAll(), args: [] },
   { method: 'dispose', call: (trees) => trees.dispose(), args: [] }
 ];
 
@@ -84,5 +83,13 @@ describe('FEATURE: load trees', () => {
         expect(affected).toHaveBeenCalledExactlyOnceWith(...args);
       }
     );
+
+    it('WHEN refreshAll is called THEN the affected tree is left alone: the reloaded model asks again, one query per Refresh', () => {
+      const affected = vi.spyOn(trees.affected, 'refreshAll').mockReturnValue(undefined);
+
+      trees.refreshAll();
+
+      expect(affected).not.toHaveBeenCalled();
+    });
   });
 });
