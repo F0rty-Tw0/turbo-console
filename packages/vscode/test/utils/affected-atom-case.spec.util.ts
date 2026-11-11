@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 
+import type { TaskKind } from '@turbo-console/repo-gen';
+
 import { allEditsOf } from './affected-edit-set.spec.util.ts';
 import { isAtomTest } from './affected-edits.spec.util.ts';
 import { expectedAffected } from './affected-oracle.spec.util.ts';
@@ -19,6 +21,9 @@ type AtomTestScene = {
   readonly atomTest: ShownPackage;
   readonly umbrella: ShownTask;
 };
+
+/** What a package row counts: every task of the model but the hidden file tasks, so an aggregate too. */
+const COUNTED_KINDS: ReadonlySet<TaskKind> = new Set<TaskKind>(['task', 'umbrella', 'aggregate']);
 
 /** The package row's tooltip line `Affected (<level>): N of M tasks (as of <clock>)`; group 1 is N. */
 const PACKAGE_COUNT_LINE = /^Affected \([^)]+\): (\d+) of \d+ tasks /;
@@ -69,13 +74,15 @@ export const affectedAtomCase = async (scene: AffectedScene): Promise<void> => {
   const { atomTest, umbrella } = atomTestOf(scene);
 
   await step('A4: an atom test package reads via dependency on its umbrella, counts the oracle tasks, no file mark', async () => {
-    const oracle = expectedAffected(manifest, allEditsOf(scene), 'task');
+    const edits = allEditsOf(scene);
+    const oracle = expectedAffected(manifest, edits, 'task');
+    const counted = expectedAffected(manifest, edits, 'task', COUNTED_KINDS);
     const node = await packageNodeNamed(api, atomTest.name);
     const rows = await api.tree.getChildren(node);
     const umbrellaRow = rows.find((row) => row.key === umbrella.fullName);
     const buildRow = rows.find((row) => row.key === `${atomTest.name}#build`);
 
-    assert.equal(markedCountOf(api, node), oracleCountOf(oracle, atomTest.name));
+    assert.equal(markedCountOf(api, node), oracleCountOf(counted, atomTest.name));
     assert.ok(umbrellaRow !== undefined && buildRow !== undefined, `${atomTest.name} shows no umbrella or build row`);
 
     const umbrellaRead = descriptionIfAny(api, umbrellaRow);

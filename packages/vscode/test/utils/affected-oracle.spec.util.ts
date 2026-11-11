@@ -14,6 +14,7 @@ type Roles = {
 /** The task whose inputs are `src/**`, so a README edit does not touch it in task mode. */
 const NARROW_TASK = PRESETS['target-like'].narrowInputsTask;
 
+/** The kinds the tree draws as task rows. */
 const KEPT_KINDS: ReadonlySet<TaskKind> = new Set<TaskKind>(['task', 'umbrella']);
 
 const DEPENDENCY_ONLY_KINDS: ReadonlySet<TaskKind> = new Set<TaskKind>(['umbrella', 'aggregate']);
@@ -104,10 +105,16 @@ const markOf = (task: ShownTask, roles: Roles, seedPackages: Set<string>): Affec
 /**
  * What turbo should report for `edits`, modelled from the manifest alone. Seeds are the tasks of an edited package (mode
  * `task`: all but the narrow-inputs task for a README edit); dependents are the reverse transitive closure of the seeds
- * over `ShownTask.dependencies`; required tasks are the forward closure of both. Only visible `task` and `umbrella` tasks
- * are kept. Throws `ambiguous edit set` when a seed of one edited package depends on a seed of another.
+ * over `ShownTask.dependencies`; required tasks are the forward closure of both. Only visible tasks of `kinds` are kept,
+ * by default the `task` and `umbrella` rows. Throws `ambiguous edit set` when a seed of one edited package depends on a
+ * seed of another.
  */
-export const expectedAffected = (manifest: ShownManifest, edits: AffectedEdit[], mode: OracleMode): Map<string, AffectedMarkKind> => {
+export const expectedAffected = (
+  manifest: ShownManifest,
+  edits: AffectedEdit[],
+  mode: OracleMode,
+  kinds: ReadonlySet<TaskKind> = KEPT_KINDS
+): Map<string, AffectedMarkKind> => {
   const isSeed = (task: ShownTask): boolean => edits.some((edit) => isTouchedBy(edit, task, mode));
   const seeds = manifest.tasks.filter(isSeed);
   const forward = new Map(manifest.tasks.map((task) => [task.fullName, task.dependencies]));
@@ -124,8 +131,9 @@ export const expectedAffected = (manifest: ShownManifest, edits: AffectedEdit[],
   const seedPackages = new Set(keptSeeds.map((seed) => seed.packageName));
   const roles: Roles = { seeds: seedIds, dependents, required };
   const marks = new Map<string, AffectedMarkKind>();
+  const isListed = (task: ShownTask): boolean => task.visible && kinds.has(task.kind);
 
-  for (const task of manifest.tasks.filter(isKept)) {
+  for (const task of manifest.tasks.filter(isListed)) {
     const mark = markOf(task, roles, seedPackages);
 
     if (mark !== null) marks.set(task.fullName, mark);

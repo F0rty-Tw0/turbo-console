@@ -1,3 +1,4 @@
+import type { TaskKind } from '@turbo-console/repo-gen';
 import { describe, expect, it } from 'vitest';
 
 import { expectedAffected } from './affected-oracle.spec.util.ts';
@@ -127,6 +128,24 @@ describe('FEATURE: expectedAffected', () => {
       const marks = expectedAffected(extended, [SRC_X], 'task');
 
       expect(marks.get('x#e2e-ci')).toBe('dependency');
+    });
+  });
+
+  describe('GIVEN a package with an aggregate over its atom file task', () => {
+    const aggregate = taskOf('x#e2e-ci--all', ['x#e2e-ci--a'], { kind: 'aggregate' });
+    const withAggregate = manifestOf([...BASE_TASKS, ...EXTRA_TASKS, aggregate]);
+
+    it('WHEN x is edited with the default kinds THEN the aggregate is absent', () => {
+      const marks = expectedAffected(withAggregate, [SRC_X], 'task');
+
+      expect(marks.has('x#e2e-ci--all')).toBe(false);
+    });
+
+    it('WHEN x is edited with aggregate among the kinds THEN the aggregate reads dependency', () => {
+      const kinds = new Set<TaskKind>(['task', 'umbrella', 'aggregate']);
+      const marks = expectedAffected(withAggregate, [SRC_X], 'task', kinds);
+
+      expect(marks.get('x#e2e-ci--all')).toBe('dependency');
     });
   });
 
