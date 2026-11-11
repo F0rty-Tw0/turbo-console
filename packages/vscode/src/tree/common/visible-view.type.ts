@@ -7,5 +7,6 @@ import type { Event, TreeViewVisibilityChangeEvent, ViewBadge } from 'vscode';
 export type VisibleView = {
   readonly visible: boolean;
   readonly onDidChangeVisibility: Event<TreeViewVisibilityChangeEvent>;
+  readonly description?: string | undefined;
   badge?: ViewBadge | undefined;
 };

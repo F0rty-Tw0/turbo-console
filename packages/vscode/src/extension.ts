@@ -154,10 +154,14 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     details: panels.api(),
     graph: graph.api,
     treeVisible: treeVisibility.read,
+    treeDescription: treeVisibility.description,
     ticker: ticker.api()
   };
 
   context.subscriptions.push(output, tree, session, ticker, togglesDisposableOf(toggles), loads);
+
+  // An untrusted workspace stops here; the trusted branch ends the span again after its registrations.
+  timings.activation = { start, end: performance.now() };
 
   if (vscode.workspace.isTrusted) {
     const treeContext = contextOf(context, toggles, new IconThemeFolders(editorIconThemePorts()), loads.affected);
@@ -180,8 +184,6 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     // CI runners logged 10–470 ms for identical code, so the wait is left out of the budget.
     timings.activation = { start, end: performance.now() };
     await rootsFound;
-  } else {
-    timings.activation = { start, end: performance.now() };
   }
 
   timings.activationResume = resumeSpanOf(session.rootsFoundAt);
