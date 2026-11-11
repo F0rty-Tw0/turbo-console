@@ -146,7 +146,7 @@ const affectedRulesOf = (colors: ThemeColors): StylesheetJsonBlock[] => {
 };
 
 /**
- * The task mode rules:a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the
+ * The task mode rules: a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the
  * name, an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a
  * file (dashed border when `atom-live`), a `run-<state>` class outlines a task or file after them (a selected task
  * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned
@@ -159,7 +159,8 @@ const affectedRulesOf = (colors: ThemeColors): StylesheetJsonBlock[] => {
  * margin takes one back. They come after the `exporting` rule, so an exported task box keeps this alignment. With a
  * `glyphFamily` the `task` and `atom-file` rules draw the state glyph before the name, and a package `task-box` draws
  * the package glyph before its title (Scripts and folder boxes stay plain), in that font list; an `atom-more` node
- * carries only its own class, so it keeps the plain file rule.
+ * carries only its own class, so it keeps the plain file rule. Last, an `affected-<mark>` class draws a halo under the
+ * node, faded by `dimmedOpacity` while the node is `dimmed`.
  */
 export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily: string | null): StylesheetJsonBlock[] => {
   const titledBox = {
