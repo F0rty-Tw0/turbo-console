@@ -4,7 +4,7 @@ import type { RunEntry, RunListener } from '../../../run/common/run.type.ts';
 import type { RunChanges } from '../../common/ticker.type.ts';
 import type { RunningTasks } from '../../common/tree-node.type.ts';
 import type { VisibleView } from '../../common/visible-view.type.ts';
-import type { RunChangesFake, VisibleViewFake } from '../common/ticker-fakes.type.ts';
+import type { DescribedView, RunChangesFake, VisibleViewFake } from '../common/ticker-fakes.type.ts';
 
 type VisibilityListener = (event: TreeViewVisibilityChangeEvent) => unknown;
 
@@ -39,6 +39,25 @@ export const visibleViewFake = (initial: boolean): VisibleViewFake => {
   const fake: VisibleViewFake = { view, setVisible };
 
   return fake;
+};
+
+/** A shown view whose description reads the latest value given to `setDescription`, as a `vscode.TreeView`'s does. */
+export const describedViewOf = (initial: string | undefined): DescribedView => {
+  let current = initial;
+  const fake = visibleViewFake(true);
+  const view: VisibleView = {
+    visible: true,
+    onDidChangeVisibility: fake.view.onDidChangeVisibility,
+    get description(): string | undefined {
+      return current;
+    }
+  };
+  const setDescription = (description: string | undefined): void => {
+    current = description;
+  };
+  const described: DescribedView = { view, setDescription };
+
+  return described;
 };
 
 /** `running` as `<root> <task id>` strings in iteration order: a snapshot, since the ticker's set changes after the call. */
