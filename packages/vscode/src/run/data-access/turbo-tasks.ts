@@ -4,6 +4,7 @@ import type { RunAllEvents, RunAllLaunch } from '../common/run-all.type.ts';
 import type { RunDefinition, RunEnv, RunRequest, TaskEvents, Terminable } from '../common/run.type.ts';
 import { runAllDefinitionOf, runAllKeyOf, runAllTaskDefinitionOf } from '../utils/run-all-task.util.ts';
 import { isTaskOf, runEventOf, taskDefinitionOf } from '../utils/run-event.util.ts';
+import { scriptArgsOf } from '../utils/script-args.util.ts';
 
 type ProcessLaunch = {
   readonly root: string;
@@ -84,7 +85,9 @@ export const executeTurboTask = async (request: RunRequest, args: string[], laun
 export const executeScriptTask = async (request: RunRequest, launchedAt: number): Promise<Terminable> => {
   const definition = taskDefinitionOf(request, launchedAt);
   const options: vscode.ShellExecutionOptions = { cwd: request.packageDir };
-  const execution = new vscode.ShellExecution(request.packageManager.name, ['run', request.task.name], options);
+  const passThrough = request.extras?.passThrough ?? [];
+  const args = scriptArgsOf(request.packageManager.name, request.task.name, passThrough);
+  const execution = new vscode.ShellExecution(request.packageManager.name, args, options);
 
   return executeIn(definition, request.task.id, request.root, execution);
 };
