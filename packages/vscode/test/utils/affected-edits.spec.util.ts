@@ -6,7 +6,7 @@ const missingRole = (role: keyof AffectedEdits): Error =>
 
 const isRegular = (pkg: ShownPackage): boolean => pkg.role === 'regular';
 
-const isAtomTest = (pkg: ShownPackage): boolean => pkg.role === 'atom-test';
+export const isAtomTest = (pkg: ShownPackage): boolean => pkg.role === 'atom-test';
 
 /** Whether the manifest shows a plain `build` task for `pkg`. */
 const showsBuild = (manifest: ShownManifest, pkg: ShownPackage): boolean => {
@@ -25,7 +25,8 @@ const showsBuild = (manifest: ShownManifest, pkg: ShownPackage): boolean => {
  * Picks the three packages of the affected edit set from the manifest alone: `leaf` is the first regular package that no
  * package depends on (core's `leafPackage` rule), `readme` the first regular package with no dependency and no dependent
  * that shows a `build`, `atomDependency` the first dependency of the first atom test package. Throws naming the role
- * when a rule finds none, so a fixture that changes shape fails here and not as a wrong row later.
+ * when a rule finds none, or naming both when `leaf` and `readme` are one package (an isolated package also passes the
+ * leaf rule), so a fixture that changes shape fails here and not as a wrong row later.
  */
 export const affectedEditsOf = (manifest: ShownManifest): AffectedEdits => {
   const dependedOn = new Set(manifest.packages.flatMap((pkg) => pkg.dependencies));
@@ -45,6 +46,8 @@ export const affectedEditsOf = (manifest: ShownManifest): AffectedEdits => {
   if (leaf === undefined) throw missingRole('leaf');
 
   if (readme === undefined) throw missingRole('readme');
+
+  if (leaf === readme) throw new Error(`affectedEditsOf: leaf and readme are both ${leaf.name}; the edit set needs two packages`);
 
   if (atomDependency === undefined) throw missingRole('atomDependency');
 

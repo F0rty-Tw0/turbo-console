@@ -42,22 +42,38 @@ describe('FEATURE: affectedEditsOf', () => {
   describe('GIVEN a manifest with a leaf, an isolated package and an atom test package', () => {
     const manifest = manifestOf(PACKAGES, BUILDS);
 
-    it('WHEN the roles are picked THEN leaf is the first regular package nobody depends on', () => {
-      const edits = affectedEditsOf(manifest);
+    describe('WHEN the roles are picked', () => {
+      it('THEN leaf is the first regular package nobody depends on', () => {
+        const edits = affectedEditsOf(manifest);
 
-      expect(edits.leaf.name).toBe('app');
+        expect(edits.leaf.name).toBe('app');
+      });
+
+      it('THEN readme is the first package with no dependency, no dependent and a build', () => {
+        const edits = affectedEditsOf(manifest);
+
+        expect(edits.readme.name).toBe('solo');
+      });
+
+      it('THEN atomDependency is the first dependency of the atom test package', () => {
+        const edits = affectedEditsOf(manifest);
+
+        expect(edits.atomDependency.name).toBe('lib');
+      });
     });
+  });
 
-    it('WHEN the roles are picked THEN readme is the first package with no dependency, no dependent and a build', () => {
-      const edits = affectedEditsOf(manifest);
+  describe('GIVEN an isolated package that is also the first leaf', () => {
+    it('WHEN the roles are picked THEN the throw names both roles and the package', () => {
+      const packages = [
+        packageOf('solo', []),
+        packageOf('lib', []),
+        packageOf('app', ['lib']),
+        packageOf('e2e', ['lib'], { role: 'atom-test' })
+      ];
+      const manifest = manifestOf(packages, BUILDS);
 
-      expect(edits.readme.name).toBe('solo');
-    });
-
-    it('WHEN the roles are picked THEN atomDependency is the first dependency of the atom test package', () => {
-      const edits = affectedEditsOf(manifest);
-
-      expect(edits.atomDependency.name).toBe('lib');
+      expect(() => affectedEditsOf(manifest)).toThrow('leaf and readme are both solo');
     });
   });
 
