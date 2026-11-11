@@ -107,7 +107,7 @@ describe('FEATURE: affected marks in the graph feed', () => {
       expect(postedRunsMessagesOf(ports)).toHaveLength(1);
     });
 
-    it('WHEN an unforced post that did not carry affected is followed by a forced flush THEN the key is back', () => {
+    it('WHEN an unchanged report sits between two forced flushes THEN its repeat post is skipped and both forced posts carry affected', () => {
       const { feed, ports, fake } = fixtureOf();
 
       feed.start();
