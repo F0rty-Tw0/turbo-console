@@ -138,6 +138,8 @@ export class AffectedLoads {
       return false;
     }
 
+    this.waiting.delete(root);
+
     const controller = new AbortController();
     const onOk = (result: AffectedResult): void => {
       this.settle(root, controller, result);
