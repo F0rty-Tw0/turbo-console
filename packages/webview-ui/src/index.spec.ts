@@ -17,6 +17,8 @@ import type {
   DryRunPhase,
   EdgeExplainResult,
   FocusInGraphMessage,
+  GraphAffected,
+  GraphAffectedMark,
   GraphAtomFile,
   GraphAtomGroup,
   GraphAtomGroupState,
@@ -88,11 +90,13 @@ type ExpectedAtomFile = { readonly id: string; readonly specPath: string; readon
 type ExpectedAtomGroup = { readonly umbrellaId: string; readonly files: GraphAtomFile[] };
 type ExpectedAtomGroupState = { readonly counts: string; readonly files: Record<string, 'passed' | 'failed' | 'cached' | 'none'> };
 type ExpectedAtomsMessage = { readonly type: 'atoms'; readonly groups: Record<string, GraphAtomGroupState> };
+type ExpectedAffected = { readonly mode: 'task' | 'package'; readonly tasks: Readonly<Record<string, GraphAffectedMark>> };
 type ExpectedRunsMessage = {
   readonly type: 'runs';
   readonly runs: Readonly<Record<string, GraphRunState>>;
   readonly owners?: Readonly<Record<string, string>>;
   readonly predictions?: Readonly<Record<string, GraphPrediction>>;
+  readonly affected?: GraphAffected | null;
 };
 type ExpectedShownTaskPackagesMessage = { readonly type: 'shownTaskPackages'; readonly packageNames: string[] };
 type ExpectedShownUmbrellasMessage = { readonly type: 'shownUmbrellas'; readonly ids: string[] };
@@ -251,6 +255,9 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphAtomGroupState>().toEqualTypeOf<ExpectedAtomGroupState>();
       expectTypeOf<GraphAtomsMessage>().toEqualTypeOf<ExpectedAtomsMessage>();
       expectTypeOf<GraphPrediction>().toEqualTypeOf<'cached' | 'notCached' | 'unknown'>();
+      expectTypeOf<GraphAffectedMark>().toEqualTypeOf<'changed' | 'dependency'>();
+      expectTypeOf<GraphAffected>().toEqualTypeOf<ExpectedAffected>();
+      expectTypeOf<GraphRunsMessage['affected']>().toEqualTypeOf<GraphAffected | null | undefined>();
       expectTypeOf<GraphRunsMessage>().toEqualTypeOf<ExpectedRunsMessage>();
       expectTypeOf<GraphShownTaskPackagesMessage>().toEqualTypeOf<ExpectedShownTaskPackagesMessage>();
       expectTypeOf<GraphShownUmbrellasMessage>().toEqualTypeOf<ExpectedShownUmbrellasMessage>();
