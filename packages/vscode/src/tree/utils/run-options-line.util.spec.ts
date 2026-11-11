@@ -28,7 +28,7 @@ const SCRIPT_ARGS: RunExtras = { passThrough: ['--watch', '--port=3000'] };
 const ONLY_WITH_FORCE = { only: true, force: true };
 /** Wider at runtime than its type: the run launched without `--force`, so the line must not claim it. */
 const WIDE: RunExtras = ONLY_WITH_FORCE;
-const FORCE_ONLY_AT_RUNTIME = { force: true };
+const FORCE_ONLY_AT_RUNTIME = { passThrough: [], force: true };
 const WIDE_FORCE: RunExtras = FORCE_ONLY_AT_RUNTIME;
 
 describe('FEATURE: run options tooltip line', () => {
