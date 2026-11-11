@@ -46,7 +46,7 @@ describe('FEATURE: run options tooltip line', () => {
       ['a script with args', { task: SCRIPT_TASK, extras: SCRIPT_ARGS }, 'Arguments: --watch --port=3000'],
       ['a script with no args', { task: SCRIPT_TASK }, null],
       ['a script whose extras hold only another field', { task: SCRIPT_TASK, extras: ONLY }, null]
-    ])('WHEN it has %s THEN the line is %s', (_name, overrides, expected) => {
+    ])('WHEN it has $0 THEN the line is $2', (_name, overrides, expected) => {
       expect(runOptionsLineOf(entryOf(overrides))).toBe(expected);
     });
   });
