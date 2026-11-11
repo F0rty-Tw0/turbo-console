@@ -1,6 +1,7 @@
 import { PRESETS } from '@turbo-console/repo-gen';
 import type { TaskKind } from '@turbo-console/repo-gen';
 
+import { README_FILE } from '../common/affected.const.ts';
 import type { AffectedEdit, AffectedMarkKind, OracleMode } from '../common/affected.type.ts';
 import type { ShownManifest, ShownTask } from '../common/launch.type.ts';
 
@@ -9,8 +10,6 @@ type Roles = {
   readonly dependents: Set<string>;
   readonly required: Set<string>;
 };
-
-const README_FILE = 'README.md';
 
 /** The task whose inputs are `src/**`, so a README edit does not touch it in task mode. */
 const NARROW_TASK = PRESETS['target-like'].narrowInputsTask;

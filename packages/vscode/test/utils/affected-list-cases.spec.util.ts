@@ -4,7 +4,16 @@ import * as vscode from 'vscode';
 
 import { baseEditsOf } from './affected-edit-set.spec.util.ts';
 import { expectedAffected } from './affected-oracle.spec.util.ts';
-import { endsWithWord, packageWordsOf, queriesOf, settleRows, taskWordsOf, waitForDescription } from './affected-scene.spec.util.ts';
+import {
+  endsWithWord,
+  hasAffectedWord,
+  markedReadsOf,
+  packageWordsOf,
+  queriesOf,
+  settleRows,
+  taskWordsOf,
+  waitForDescription
+} from './affected-scene.spec.util.ts';
 import { sleep, step } from './suite-env.spec.util.ts';
 import { LABEL_PACKAGE, LABEL_TASK, SHOW_AFFECTED_COMMAND, WORD_CHANGED, WORD_DEPENDENCY } from '../common/affected.const.ts';
 import type { AffectedScene, OracleMode } from '../common/affected.type.ts';
@@ -21,10 +30,6 @@ type ListLevel = {
 const TASK_LEVEL: ListLevel = { mode: 'task', label: LABEL_TASK, size: 23 };
 
 const PACKAGE_LEVEL: ListLevel = { mode: 'package', label: LABEL_PACKAGE, size: 24 };
-
-const WORD_PART = 'affected';
-
-const hasWord = (description: string): boolean => description.includes(WORD_PART);
 
 /**
  * Turns the toggle on, waits for the level's description, and checks the rows against the oracle for the README commit
@@ -43,7 +48,7 @@ const listCase = async (scene: AffectedScene, level: ListLevel): Promise<Map<str
 
   const words = await taskWordsOf(scene);
   const entries = Array.from(words);
-  const markedEntries = entries.filter(([, read]) => hasWord(read));
+  const markedEntries = entries.filter(([, read]) => hasAffectedWord(read));
   const marked = markedEntries.map(([id]) => id).sort();
   const wanted = Array.from(expected.keys()).sort();
 
@@ -106,7 +111,7 @@ export const affectedTaskListCase = async (scene: AffectedScene): Promise<void> 
 
     assert.equal(words.get(`${leaf.name}#build`), WORD_CHANGED);
     assert.equal(words.get(`${readme.name}#build`), WORD_CHANGED);
-    assert.equal(hasWord(words.get(`${readme.name}#test`) ?? ''), false);
+    assert.equal(hasAffectedWord(words.get(`${readme.name}#test`) ?? ''), false);
   });
 };
 
@@ -138,12 +143,7 @@ export const affectedCommittedCase = async (scene: AffectedScene): Promise<void>
     await sleep(QUIET_WINDOW_MS);
 
     const queries = queriesOf(scene);
-    const taskWords = await taskWordsOf(scene);
-    const packageWords = await packageWordsOf(scene);
-    const taskReads = Array.from(taskWords.values());
-    const packageReads = Array.from(packageWords.values());
-    const reads = [...taskReads, ...packageReads];
-    const marked = reads.filter(hasWord);
+    const marked = await markedReadsOf(scene);
 
     assert.equal(queries.length, 1, JSON.stringify(queries));
     assert.deepEqual(marked, []);

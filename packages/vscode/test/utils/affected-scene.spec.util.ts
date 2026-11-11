@@ -21,6 +21,9 @@ const LISTED_MISMATCHES = 10;
 
 const WORDS: Readonly<Record<AffectedMarkKind, string>> = { changed: WORD_CHANGED, dependency: WORD_DEPENDENCY };
 
+/** Whether a row description carries any affected word; both words hold this part. */
+export const hasAffectedWord = (description: string): boolean => description.includes(WORD_PART);
+
 /** Polls the Packages view's description until it reads `text`; throws with the last read after `WAIT_LIMIT_MS`. */
 export const waitForDescription = async (api: TurboConsoleApi, text: string): Promise<void> => {
   const deadline = performance.now() + WAIT_LIMIT_MS;
@@ -70,6 +73,17 @@ export const packageWordsOf = async (scene: AffectedScene): Promise<Map<string, 
   return words;
 };
 
+/** Every task and package row description that carries an affected word; `[]` when no row is marked. */
+export const markedReadsOf = async (scene: AffectedScene): Promise<string[]> => {
+  const taskWords = await taskWordsOf(scene);
+  const packageWords = await packageWordsOf(scene);
+  const taskReads = Array.from(taskWords.values());
+  const packageReads = Array.from(packageWords.values());
+  const reads = [...taskReads, ...packageReads];
+
+  return reads.filter(hasAffectedWord);
+};
+
 const isExactly = (read: string, wanted: string): boolean => read === wanted;
 
 /** Whether `read` is the word alone or ends with it after the ` · ` join. */
@@ -89,7 +103,7 @@ const mismatchOf = (
   isRight: (read: string, wanted: string) => boolean
 ): string | null => {
   if (wanted === undefined) {
-    const hasWord = read.includes(WORD_PART);
+    const hasWord = hasAffectedWord(read);
 
     if (!hasWord) return null;
 
