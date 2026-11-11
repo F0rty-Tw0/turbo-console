@@ -22,6 +22,8 @@ export type {
   ToolView
 } from './bridge/common/details-state.type.ts';
 
+export type { GraphAffected, GraphAffectedMark } from './bridge/common/graph-affected.type.ts';
+
 export type {
   EdgeExplainResult,
   GraphAtomGroupState,

@@ -97,6 +97,8 @@ export type GraphReady = {
   readonly scriptsShown: boolean;
   /** The tree's prediction toggle at the time the state was built. */
   readonly predictionShown: boolean;
+  /** The tree's affected toggle at the time the state was built. */
+  readonly affectedShown: boolean;
 };
 
 export type GraphState = GraphLoading | GraphError | GraphReady;

@@ -83,7 +83,10 @@ const FALLBACK_RUN_COLORS: ThemeColors['runs'] = {
   'failed-to-start': '#f85149'
 };
 
-/** Light Modern values (`--vscode-charts-purple` for `cached`), for a page with no `--vscode-*` variables (a plain browser). */
+/**
+ * Light Modern values (`--vscode-charts-purple` for `cached`, `--vscode-gitDecoration-modifiedResourceForeground` for
+ * `affected`), for a page with no `--vscode-*` variables (a plain browser).
+ */
 export const FALLBACK_COLORS: ThemeColors = {
   background: '#ffffff',
   label: '#3b3b3b',
@@ -94,7 +97,8 @@ export const FALLBACK_COLORS: ThemeColors = {
   cached: '#652d90',
   runs: FALLBACK_RUN_COLORS,
   selection: null,
-  dimmedOpacity: 0.25
+  dimmedOpacity: 0.25,
+  affected: '#895503'
 };
 
 /** The one Trusted Types policy the graph CSP allows (`trusted-types tc-elk`). */

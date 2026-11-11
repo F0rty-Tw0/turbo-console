@@ -82,6 +82,7 @@ export const targetLikeState = (): GraphReady => {
     scopeShown: true,
     scriptsShown: true,
     predictionShown: false,
+    affectedShown: false,
     hash: '7a7a7a7a',
     packages,
     edges,

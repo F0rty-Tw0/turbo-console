@@ -24,6 +24,8 @@ const NO_ATTRS: Attrs = {};
 
 const LINE: Attrs = { x1: '2', y1: '10', x2: '34', y2: '10' };
 
+const HALO_GROWTH = 2;
+
 const ARROW_HEAD = 'M38 10 L32 7 L32 13 Z';
 
 const NESTED: Attrs = { x: '9', y: '7', width: '22', height: '6', rx: '3', 'stroke-width': String(NODE_BORDER_PX) };
@@ -51,6 +53,7 @@ const paletteOf = (colors: ThemeColors): Palette => {
     selected: colors.selected,
     highlighted: colors.highlighted,
     cached: colors.cached,
+    affected: colors.affected,
     label: colors.label,
     selectionFill,
     selectionLabel,
@@ -112,6 +115,17 @@ const outlinePartsOf = (swatch: LegendSwatch, box: FrameBox, palette: Palette): 
   return [partOf('rect', attrs)];
 };
 
+/** The affected halo, 2 units out from the frame on every side, as the stylesheet's `underlay` sits under a node. */
+const haloPartsOf = (swatch: LegendSwatch, box: FrameBox, palette: Palette): SvgPart[] => {
+  if (swatch.halo === null) return [];
+
+  const grown = grownOf(box, HALO_GROWTH);
+  const place = placeOf(grown);
+  const attrs: Attrs = { ...place, stroke: 'none', fill: palette[swatch.halo.colour], 'fill-opacity': String(swatch.halo.opacity) };
+
+  return [partOf('rect', attrs)];
+};
+
 /** The nested folder box, or the sample text in its weight. */
 const innerPartOf = (swatch: LegendSwatch, palette: Palette): SvgPart => {
   if (swatch.isNested) return partOf('rect', { ...NESTED, stroke: palette.frame, fill: palette.background });
@@ -125,6 +139,7 @@ const innerPartOf = (swatch: LegendSwatch, palette: Palette): SvgPart => {
 
 const boxPartsOf = (swatch: LegendSwatch, palette: Palette): SvgPart[] => {
   const box = boxOf(swatch);
+  const halo = haloPartsOf(swatch, box, palette);
   const outline = outlinePartsOf(swatch, box, palette);
   const place = placeOf(box);
   const dash = dashOf(swatch.dashPx);
@@ -133,7 +148,7 @@ const boxPartsOf = (swatch: LegendSwatch, palette: Palette): SvgPart[] => {
   const frame = partOf('rect', attrs);
   const inner = innerPartOf(swatch, palette);
 
-  return [...outline, frame, inner];
+  return [...halo, ...outline, frame, inner];
 };
 
 const lineOf = (stroke: string, widthPx: number, dash: Attrs): SvgPart => {

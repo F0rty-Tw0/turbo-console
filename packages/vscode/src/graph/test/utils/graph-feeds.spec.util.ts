@@ -3,20 +3,23 @@ import { vi } from 'vitest';
 import type { ProgressListener } from '../../../run/common/run-progress.type.ts';
 import type { Runs } from '../../../run/common/run.type.ts';
 import { scriptsToggleMock } from '../../../shared/test/mocks/scripts-toggle.mock.ts';
+import type { AffectedListener, AffectedView, SharedAffected } from '../../../tree/common/affected.type.ts';
 import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
 import type { AtomLookup } from '../../../tree/common/atom-view.type.ts';
 import type { PredictionListener, PredictionLookup, SharedPrediction } from '../../../tree/common/prediction.type.ts';
+import { SHARED_AFFECTED_STUB } from '../../../tree/test/stubs/shared-affected.stub.ts';
 import { SHARED_ATOMS_STUB } from '../../../tree/test/stubs/shared-atoms.stub.ts';
 import { SHARED_PREDICTION_STUB } from '../../../tree/test/stubs/shared-prediction.stub.ts';
 import type { GraphFeeds, GraphProgress, GraphToggles } from '../../common/graph.type.ts';
-import type { AtomsFake, PredictionFake, ProgressFake, ToggleFakes } from '../common/graph.type.ts';
+import type { AffectedFake, AtomsFake, PredictionFake, ProgressFake, ToggleFakes } from '../common/graph.type.ts';
 
-/** Three fresh toggles: scripts and prediction hidden, scope hidden unless `isScopeShown`. */
+/** Four fresh toggles: scripts, prediction and affected hidden, scope hidden unless `isScopeShown`. */
 export const togglesOf = (isScopeShown = false): ToggleFakes => {
   const toggles: ToggleFakes = {
     scope: scriptsToggleMock(isScopeShown),
     scripts: scriptsToggleMock(),
-    prediction: scriptsToggleMock()
+    prediction: scriptsToggleMock(),
+    affected: scriptsToggleMock()
   };
 
   return toggles;
@@ -62,6 +65,30 @@ export const predictionFake = (view: PredictionLookup): PredictionFake => {
   return fake;
 };
 
+/** Shared affected store that reads the view `setView` set (none at first), records `rootShown` and tells its listeners when the spec calls `changed`. */
+export const affectedFake = (view: AffectedView | null = null): AffectedFake => {
+  const listeners = new Set<AffectedListener>();
+  const current = { view };
+  const rootShown = vi.fn<SharedAffected['rootShown']>();
+  const onDidChange = (listener: AffectedListener): (() => void) => {
+    listeners.add(listener);
+
+    return () => {
+      listeners.delete(listener);
+    };
+  };
+  const changed: AffectedListener = (root) => {
+    for (const listener of listeners) listener(root);
+  };
+  const setView = (next: AffectedView | null): void => {
+    current.view = next;
+  };
+  const affected: SharedAffected = { ...SHARED_AFFECTED_STUB, view: () => current.view, rootShown, onDidChange };
+  const fake: AffectedFake = { affected, rootShown, changed, listenerCount: () => listeners.size, setView };
+
+  return fake;
+};
+
 /** Feeds over `runs`, a progress with no records, atoms that never load and hidden toggles, unless a spec passes its own. */
 export const feedsOf = (
   runs: Runs,
@@ -70,7 +97,8 @@ export const feedsOf = (
   progress: GraphProgress = progressFake().progress
 ): GraphFeeds => {
   const prediction = predictionFake(() => null).prediction;
-  const feeds: GraphFeeds = { runs, progress, atoms, prediction, toggles };
+  const affected = affectedFake().affected;
+  const feeds: GraphFeeds = { runs, progress, atoms, prediction, affected, toggles };
 
   return feeds;
 };

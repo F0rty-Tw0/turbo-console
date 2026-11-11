@@ -37,7 +37,7 @@ const selectionOf = (fill: string, label: string, background: string): Selection
  * The graph colours from the theme variables, each trimmed (`getPropertyValue` keeps the leading space), a blank one
  * replaced by its `FALLBACK_COLORS` entry. VS Code sets `--vscode-contrastBorder` only in high contrast themes, so the
  * node frame takes it there and `--vscode-panel-border` everywhere else, and dimmed elements rise from 0.25 until they keep
- * 3:1 against the background there. Run outlines take the Tasks tree's status colours; a cached Atomizer file takes the chart purple.
+ * 3:1 against the background there. Run outlines take the Tasks tree's status colours; a cached Atomizer file takes the chart purple; the affected halo takes the git modified colour.
  * A selected node takes the list's active selection colours when the theme sets both, as high contrast themes do not;
  * the fill is read unrounded, so its alpha blends over the editor background at full precision.
  */
@@ -79,7 +79,8 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
     cached: valueOf('--vscode-charts-purple', FALLBACK_COLORS.cached),
     runs,
     selection,
-    dimmedOpacity
+    dimmedOpacity,
+    affected: valueOf('--vscode-gitDecoration-modifiedResourceForeground', FALLBACK_COLORS.affected)
   };
 
   return colors;

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { swatchPartsOf } from './legend-swatch.util.ts';
 import { BOX_SWATCH, LINE_SWATCH, PILL_SWATCH } from '../common/legend-swatch.const.ts';
-import type { LegendOutline, LegendSwatch, SvgPart } from '../common/legend.type.ts';
+import type { LegendHalo, LegendOutline, LegendSwatch, SvgPart } from '../common/legend.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 import { SELECTION_COLORS_STUB, THEME_COLORS_STUB } from '../test/stubs/theme-colors.stub.ts';
 
@@ -15,6 +15,8 @@ const FAILED_OUTLINE: LegendOutline = { colour: 'run-failed', px: 2 };
 const CACHED_OUTLINE: LegendOutline = { colour: 'cached', px: 2 };
 
 const FLOW_PEN: LegendOutline = { colour: 'background', px: 2 };
+
+const HALO: LegendHalo = { colour: 'affected', opacity: 0.4 };
 
 const FLOW: LegendSwatch = {
   ...LINE_SWATCH,
@@ -106,6 +108,19 @@ describe('FEATURE: swatchPartsOf', () => {
       const outline = partAt(partsOf(boxOf({ outline: CACHED_OUTLINE })), 0);
 
       expect(outline.attrs).toMatchObject({ x: '1.5', y: '1.5', width: '37', height: '17', stroke: COLORS.cached });
+    });
+
+    it('WHEN it has a halo THEN an unstroked rect in the affected colour at the halo opacity comes first, then the frame', () => {
+      const parts = partsOf(boxOf({ halo: HALO }));
+
+      expect(partAt(parts, 0).attrs).toMatchObject({ stroke: 'none', fill: COLORS.affected, 'fill-opacity': '0.4' });
+      expect(partAt(parts, 1).attrs['stroke']).toBe(COLORS.frame);
+    });
+
+    it('WHEN it has a halo THEN the halo rect is grown by 2 on each side of the frame, corners included', () => {
+      const halo = partAt(partsOf(boxOf({ halo: HALO })), 0);
+
+      expect(halo.attrs).toMatchObject({ x: '1', y: '1', width: '38', height: '18', rx: '4.625' });
     });
 
     it('WHEN it is nested THEN there are two rects and no sample text', () => {

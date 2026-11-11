@@ -1,3 +1,4 @@
+import type { GraphAffected } from './graph-affected.type.ts';
 import type { GraphEdgeImportsMessage, GraphOpenImportMessage, GraphScanImportsMessage } from './graph-imports.type.ts';
 import type { GraphRunState, GraphState, Positions, Routes } from './graph-state.type.ts';
 
@@ -68,6 +69,12 @@ export type GraphRunsMessage = {
    * so the page keeps its marks. A reloaded or new page always gets the key.
    */
   readonly predictions?: Readonly<Record<string, GraphPrediction>>;
+  /**
+   * The affected marks of the listed tasks. An object replaces every mark (an empty `tasks` clears them all); `null` clears every
+   * mark, sent while the affected toggle is off and while it is on with no result; absent: unchanged since the last message that
+   * carried it and the post is not forced, so the page keeps its marks. A reloaded or new page always gets the key.
+   */
+  readonly affected?: GraphAffected | null;
 };
 
 /** Asks the page to show these tasks in task mode. */
@@ -178,10 +185,10 @@ export type GraphShownTaskPackagesMessage = {
   readonly packageNames: string[];
 };
 
-/** The tree's three View toggles: scope prefixes on package labels, `package.json` scripts beside turbo tasks, and the cache prediction. */
-export type GraphViewToggle = 'scope' | 'scripts' | 'prediction';
+/** The tree's four View toggles: scope prefixes on package labels, `package.json` scripts beside turbo tasks, the cache prediction and the affected marks. */
+export type GraphViewToggle = 'scope' | 'scripts' | 'prediction' | 'affected';
 
-/** The page flipping one of the tree's three toggles. */
+/** The page flipping one of the tree's four toggles. */
 export type GraphSetViewToggleMessage = {
   readonly type: 'setViewToggle';
   readonly toggle: GraphViewToggle;

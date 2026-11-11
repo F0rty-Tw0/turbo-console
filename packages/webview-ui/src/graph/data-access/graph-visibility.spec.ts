@@ -27,7 +27,8 @@ const COLORS: ThemeColors = {
   cached: '#a0f',
   runs: CANVAS_RUN_COLORS,
   selection: null,
-  dimmedOpacity: 0.25
+  dimmedOpacity: 0.25,
+  affected: '#fa0'
 };
 
 const PADDING_PX = 24;

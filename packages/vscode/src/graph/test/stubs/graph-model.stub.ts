@@ -89,7 +89,8 @@ export const GRAPH_STATE_STUB: GraphReady = {
   rootLabel: null,
   scopeShown: false,
   scriptsShown: false,
-  predictionShown: false
+  predictionShown: false,
+  affectedShown: false
 };
 
 const X_POINT: Position = { x: 0, y: 0 };
@@ -123,8 +124,8 @@ export const PROTO_LOADED_STUB: LoadedModel = { ...GRAPH_LOADED_STUB, model: PRO
 /** Both layout caches missed: for a state built with no stored layout. */
 export const NO_LAYOUT_CACHES_STUB: GraphLayoutCaches = { flat: null, folders: null };
 
-/** The toggles at their stored default: the `scopeShown`, `scriptsShown` and `predictionShown` of `GRAPH_STATE_STUB`. */
-export const GRAPH_SHOWN_STUB: GraphShown = { scopeShown: false, scriptsShown: false, predictionShown: false };
+/** The toggles at their stored default: the `scopeShown`, `scriptsShown`, `predictionShown` and `affectedShown` of `GRAPH_STATE_STUB`. */
+export const GRAPH_SHOWN_STUB: GraphShown = { scopeShown: false, scriptsShown: false, predictionShown: false, affectedShown: false };
 
 /** A `package.json` script of package `tool`: listed in the tree and the pickers only while scripts are shown. */
 export const SCRIPT_TASK_STUB: TaskNode = { ...TASK_NODE_STUB, id: 'tool#dev', name: 'dev', isTurboTask: false };

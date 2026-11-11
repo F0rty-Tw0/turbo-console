@@ -13,6 +13,7 @@ export const WIDE_TITLE_STUB: GraphReady = {
   scopeShown: true,
   scriptsShown: true,
   predictionShown: false,
+  affectedShown: false,
   hash: 'e1d2c3b4',
   packages: WIDE_PACKAGES,
   edges: [],

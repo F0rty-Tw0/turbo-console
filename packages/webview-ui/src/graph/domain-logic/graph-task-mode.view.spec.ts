@@ -29,14 +29,15 @@ const SHOWN = new Set(['api#build', 'web#build']);
 
 const GROUPED_KEY = taskLayoutKeyOf(TASK_CHAIN_STUB, SHOWN, new Map(), GROUPED_NAMING_STUB);
 
-/** What `TASK_STATE_STUB` shows: scopes and scripts on, no script listed, prediction off, a monorepo under a grouped saved view. */
+/** What `TASK_STATE_STUB` shows: scopes and scripts on, no script listed, prediction and affected off, a monorepo under a grouped saved view. */
 const STUB_CHECKS: TaskViewChecks = {
   grouped: true,
   canGroup: true,
   scopeShown: true,
   scriptsShown: true,
   hasScripts: false,
-  predictionShown: false
+  predictionShown: false,
+  affectedShown: false
 };
 
 /** `web#dev`, a package script. */

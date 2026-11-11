@@ -22,6 +22,7 @@ export const deepFolderState = (): GraphReady => {
     scopeShown: true,
     scriptsShown: true,
     predictionShown: false,
+    affectedShown: false,
     tasks: [],
     hash: 'f01d0006',
     packages,

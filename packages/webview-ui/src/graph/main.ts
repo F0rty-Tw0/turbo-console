@@ -15,6 +15,7 @@ import { createLayoutRunner } from './data-access/layout-runner.ts';
 import { createViewStateSaver } from './data-access/view-state-saver.ts';
 import { createGraphController } from './domain-logic/graph-controller.ts';
 import { GraphFlow } from './domain-logic/graph-flow.ts';
+import { GraphLegend } from './domain-logic/graph-legend.ts';
 import { buildControls } from './ui/controls-elements.ts';
 import { fitFlowCanvas } from './ui/flow-canvas.ts';
 import { detailsViews, taskDetailsViews, taskViews, widgetViews } from './ui/graph-views.ts';
@@ -94,20 +95,20 @@ const controllerOf = (glyphs: boolean): GraphController => {
   return controller;
 };
 
-const applyThemeTo = (controller: GraphController): void => {
+const applyThemeTo = (controller: GraphController, legend: GraphLegend): void => {
   const colors = themeColors();
 
   controller.view.applyTheme(colors);
   controller.flow.setColor(colors.background);
-  renderLegend(page, colors);
+  legend.themed(colors);
 };
 
 const flushWhenHidden = (): void => {
   if (document.visibilityState === 'hidden') saver.flush();
 };
 
-const observePage = (controller: GraphController): void => {
-  const applyTheme = (): void => applyThemeTo(controller);
+const observePage = (controller: GraphController, legend: GraphLegend): void => {
+  const applyTheme = (): void => applyThemeTo(controller, legend);
   /** Reduced motion turned on mid-flow ends the dashes now, not at the idle stop. */
   const stopFlowWhenReduced = (): void => {
     if (reducedMotion.matches) controller.flow.stop();
@@ -131,9 +132,14 @@ const start = (glyphs: boolean): void => {
   document.body.append(page.root);
 
   const controller = controllerOf(glyphs);
+  const legend = new GraphLegend((colors, affected): void => renderLegend(page, colors, affected));
+  const receive = (message: unknown): void => {
+    controller.receive(message);
+    legend.received(message);
+  };
 
-  observePage(controller);
-  bridge.onMessage(controller.receive);
+  observePage(controller, legend);
+  bridge.onMessage(receive);
   bridge.ready();
   exposeProbe(window, (): GraphProbe => createGraphProbe(controller.view, controller.facts));
 };

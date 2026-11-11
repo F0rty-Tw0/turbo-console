@@ -27,6 +27,7 @@ export const taskRootState = (scopeShown: boolean): GraphReady => {
     scopeShown,
     scriptsShown: true,
     predictionShown: false,
+    affectedShown: false,
     hash: '7a5c0063',
     packages: [APP],
     edges: [],

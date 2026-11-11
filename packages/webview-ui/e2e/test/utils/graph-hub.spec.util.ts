@@ -34,6 +34,7 @@ export const hubGraphState = (count = LARGE_PACKAGE_COUNT): GraphReady => {
     scopeShown: true,
     scriptsShown: true,
     predictionShown: false,
+    affectedShown: false,
     hash: hashOf(count),
     packages,
     edges,

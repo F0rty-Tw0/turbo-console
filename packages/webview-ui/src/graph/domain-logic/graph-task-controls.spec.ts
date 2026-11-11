@@ -54,7 +54,8 @@ const CHECKS: TaskViewChecks = {
   scopeShown: false,
   scriptsShown: true,
   hasScripts: true,
-  predictionShown: true
+  predictionShown: true,
+  affectedShown: true
 };
 
 describe('FEATURE: GraphTaskControls', () => {
@@ -203,6 +204,25 @@ describe('FEATURE: GraphTaskControls', () => {
       controls.setView({ ...CHECKS, predictionShown: false });
 
       expect(rig.elements.prediction.checked).toBe(false);
+    });
+
+    it('WHEN the user ticks Show affected THEN onViewToggle is called once with affected and true', () => {
+      tick(rig.elements.affected, true);
+
+      expect(rig.actions.onViewToggle).toHaveBeenCalledExactlyOnceWith('affected', true);
+    });
+
+    it('WHEN setView runs with affectedShown true THEN Show affected is ticked', () => {
+      controls.setView(CHECKS);
+
+      expect(rig.elements.affected.checked).toBe(true);
+    });
+
+    it('WHEN setView runs with affectedShown false THEN Show affected is unticked', () => {
+      rig.elements.affected.checked = true;
+      controls.setView({ ...CHECKS, affectedShown: false });
+
+      expect(rig.elements.affected.checked).toBe(false);
     });
 
     it('WHEN setView runs THEN the boxes read the checks', () => {

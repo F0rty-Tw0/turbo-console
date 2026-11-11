@@ -3,6 +3,7 @@ import { RUN_STATE_TEXT, SCRIPTS_BOX_DASH_PX, TASK_BOX_DASH_PX } from './graph-t
 import { DASHED_BORDER_PX, HIGHLIGHTED_EDGE_WIDTH } from './graph.const.ts';
 import { BOX_SWATCH, LINE_SWATCH, PILL_SWATCH } from './legend-swatch.const.ts';
 import type { LegendOutline, LegendRow, LegendSwatch } from './legend.type.ts';
+import type { GraphAffected } from '../../bridge/common/graph-affected.type.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 
@@ -10,7 +11,13 @@ import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 const OUTLINE_PX = 2;
 
 /** Every task-mode box swatch: a box with the task frame's 8 px corners. */
-const TASK_SWATCH: LegendSwatch = { ...BOX_SWATCH, radiusPx: 8 };
+export const TASK_SWATCH: LegendSwatch = { ...BOX_SWATCH, radiusPx: 8 };
+
+/** The words of the affected legend rows per level; the host's `AFFECTED_LEVELS` says the same, which the page cannot import. */
+export const AFFECTED_LEVEL_WORDS: Readonly<Record<GraphAffected['mode'], string>> = {
+  task: 'task level',
+  package: 'package level'
+};
 
 const TASK_BOX_SWATCH: LegendSwatch = { ...TASK_SWATCH, dashPx: TASK_BOX_DASH_PX };
 

@@ -25,6 +25,7 @@ const COLOUR_OF: Record<LegendColour, string> = {
   highlighted: COLORS.highlighted,
   cached: COLORS.cached,
   selectionFill: SELECTION_COLORS_STUB.fill,
+  affected: COLORS.affected,
   'run-running': COLORS.runs.running,
   'run-continuous': COLORS.runs.continuous,
   'run-passed': COLORS.runs.passed,

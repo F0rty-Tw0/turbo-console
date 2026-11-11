@@ -4,6 +4,7 @@ import type { Mock } from 'vitest';
 import type { ProgressListener } from '../../../run/common/run-progress.type.ts';
 import type { ViewFake } from '../../../shared/test/common/panel-fakes.type.ts';
 import type { ScriptsToggleFake } from '../../../shared/test/common/scripts-toggle-fake.type.ts';
+import type { AffectedListener, AffectedView, SharedAffected } from '../../../tree/common/affected.type.ts';
 import type { AtomListener, SharedAtoms } from '../../../tree/common/atom-load.type.ts';
 import type { SharedPrediction } from '../../../tree/common/prediction.type.ts';
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
@@ -63,9 +64,20 @@ export type PredictionFake = {
   readonly listenerCount: () => number;
 };
 
-/** The scope, scripts and prediction toggles as fakes, so a spec reads their `set` spy and fires their listeners. */
+/** Shared affected store that reads the current view, records `rootShown` and tells its listeners when the spec calls `changed`. */
+export type AffectedFake = {
+  readonly affected: SharedAffected;
+  readonly rootShown: Mock<SharedAffected['rootShown']>;
+  readonly changed: AffectedListener;
+  readonly listenerCount: () => number;
+  /** Replaces the view `affected.view` reads; it does not tell the listeners. */
+  readonly setView: (view: AffectedView | null) => void;
+};
+
+/** The scope, scripts, prediction and affected toggles as fakes, so a spec reads their `set` spy and fires their listeners. */
 export type ToggleFakes = {
   readonly scope: ScriptsToggleFake;
   readonly scripts: ScriptsToggleFake;
   readonly prediction: ScriptsToggleFake;
+  readonly affected: ScriptsToggleFake;
 };

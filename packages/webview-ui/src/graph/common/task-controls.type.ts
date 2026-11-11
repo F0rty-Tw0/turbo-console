@@ -5,7 +5,7 @@ import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts
 
 /**
  * The task mode Controls panel `aside#graph-task-controls`, unwired: the Search section, the View section (Dependents depth
- * and the four checkboxes) and the Projects grid.
+ * and the five checkboxes) and the Projects grid.
  */
 export type TaskControlsElements = {
   readonly panel: HTMLElement;
@@ -16,6 +16,8 @@ export type TaskControlsElements = {
   readonly scripts: HTMLInputElement;
   /** Show cache prediction, after Show scripts; always shown in the panel. */
   readonly prediction: HTMLInputElement;
+  /** Show affected, after Show cache prediction; always shown in the panel. */
+  readonly affected: HTMLInputElement;
   /** The labels around Group by folder and Show scripts, which `hidden` removes from the panel and the page's roles. */
   readonly groupingField: HTMLElement;
   readonly scriptsField: HTMLElement;
@@ -31,7 +33,7 @@ export type TaskControlsViews = {
 
 /**
  * What the task Controls report: a new search text, a valid Dependents depth, a picked row, a project, folder or task check, a panel opened or closed, Group
- * by folder ticked or unticked and Show package scopes, Show scripts or Show cache prediction ticked or unticked.
+ * by folder ticked or unticked and Show package scopes, Show scripts, Show cache prediction or Show affected ticked or unticked.
  */
 export type TaskControlsActions = {
   readonly onSearch: (search: string) => void;
@@ -52,7 +54,7 @@ export type ControlsEdits = {
 /**
  * What the View boxes read: Group by folder ticked and whether it applies (a single package is never grouped), Show
  * package scopes and Show scripts ticked, whether the listing holds a script, which Show scripts needs to be shown, and Show
- * cache prediction ticked.
+ * cache prediction and Show affected ticked.
  */
 export type TaskViewChecks = {
   readonly grouped: boolean;
@@ -61,6 +63,7 @@ export type TaskViewChecks = {
   readonly scriptsShown: boolean;
   readonly hasScripts: boolean;
   readonly predictionShown: boolean;
+  readonly affectedShown: boolean;
 };
 
 /** The task Controls panel while task mode is on: it replaces the package Controls panel and follows the Controls button. */

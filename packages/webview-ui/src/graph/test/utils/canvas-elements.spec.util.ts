@@ -26,8 +26,12 @@ export const CANVAS_COLORS: ThemeColors = {
   cached: '#a0f',
   runs: CANVAS_RUN_COLORS,
   selection: CANVAS_SELECTION,
-  dimmedOpacity: 0.25
+  dimmedOpacity: 0.25,
+  affected: '#fa0'
 };
+
+/** `CANVAS_COLORS.affected` (`#fa0`) as the `rgb(...)` text Cytoscape resolves it to. */
+export const CANVAS_AFFECTED_RGB = 'rgb(255,170,0)';
 
 /** `CANVAS_COLORS.frame` (`#444`) as the `rgb(...)` text Cytoscape resolves it to. */
 export const CANVAS_FRAME_RGB = 'rgb(68,68,68)';

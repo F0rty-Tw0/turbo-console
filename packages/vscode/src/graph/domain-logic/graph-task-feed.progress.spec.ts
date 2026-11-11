@@ -30,8 +30,8 @@ const A_UNDER_WEB_LINT = recordOf('a#build', 'running', 1200, LINT_OWNER);
 const A_RUNNING: GraphRunsMessage['runs'] = { 'a#build': 'running' };
 const A_UNDER_WEB_BUILD_OWNERS: GraphRunsMessage['owners'] = { 'a#build': 'web#build' };
 const A_OWNED_BY_WEB_BUILD: GraphRunsMessage = { type: 'runs', runs: A_RUNNING, owners: A_UNDER_WEB_BUILD_OWNERS };
-/** The first or a forced post with the prediction toggle off carries `{}`, which clears every mark. */
-const A_OWNED_NOT_PREDICTED: GraphRunsMessage = { ...A_OWNED_BY_WEB_BUILD, predictions: {} };
+/** The first or a forced post with the prediction toggle off carries `predictions: {}` and `affected: null`, which clear every mark. */
+const A_OWNED_NOT_PREDICTED: GraphRunsMessage = { ...A_OWNED_BY_WEB_BUILD, predictions: {}, affected: null };
 
 /** A `recordsOf` that gives `records` for `a#build` under `/ws` and nothing for any other id or root. */
 const recordsOfA = (...records: ProgressRecord[]): GraphProgress['recordsOf'] => {

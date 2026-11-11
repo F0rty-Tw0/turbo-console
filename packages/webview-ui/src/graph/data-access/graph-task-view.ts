@@ -1,77 +1,19 @@
-import type { Core, EdgeCollection, EdgeSingular, ElementDefinition, NodeSingular } from 'cytoscape';
+import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 
 import { labelOf, setCountLabels, taskClassesOf } from './graph-atom-view.ts';
-import { setClassesAmong } from './graph-classes.ts';
 import { positionOf } from './graph-place.ts';
 import { applyRoutes } from './graph-routes.ts';
 import { boxesOf } from './graph-task-boxes.ts';
 import { applyBoxFrames, refitBoxFrames } from './graph-task-frames.ts';
-import { markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
+import { markAffected, markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
+import { paintTasks } from './graph-task-paint.ts';
 import type { GraphEdge, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
-import type { Closure } from '../common/closure.type.ts';
-import { NO_CLASSES, NO_PREDICTIONS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
-import { BOX_STATE_CLASS_NAMES, DIMMED_BOX_CLASS, STATE_CLASS_NAMES } from '../common/graph.const.ts';
-import type { TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
+import { NO_AFFECTED, NO_PREDICTIONS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
+import type { TaskAffectedMarks, TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
-import { closureOf } from '../utils/closure.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
-import { edgeStateOf, nodeStateOf } from '../utils/highlight.util.ts';
 import { parentIdOf } from '../utils/task-compound.util.ts';
-
-const DIMMED_BOX_CLASSES: string[] = [DIMMED_BOX_CLASS];
-
-const endsOf = (edge: EdgeSingular): GraphEdge => {
-  const source = edge.source().id();
-  const target = edge.target().id();
-  const ends: GraphEdge = { source, target };
-
-  return ends;
-};
-
-const closureOfLinks = (target: string | null, links: EdgeCollection): Closure | null => {
-  if (target === null) return null;
-
-  const edges = links.map(endsOf);
-
-  return closureOf(target, edges);
-};
-
-/**
- * Gives each task and link one state class for `target`, the selected task, and its closure; a folder, package or
- * Scripts compound with no selected or highlighted task gets `dimmed-box`. `null` paints every task and link `normal`.
- * An element already right is not touched.
- */
-const paintTasks = (cy: Core, target: string | null): void => {
-  const tasks = taskNodes(cy);
-  const links: EdgeCollection = tasks.connectedEdges();
-  const closure = closureOfLinks(target, links);
-  const classTask = (node: NodeSingular): void => {
-    const state = nodeStateOf(node.id(), target, closure);
-
-    setClassesAmong(node, STATE_CLASS_NAMES, [state]);
-  };
-  const classLink = (edge: EdgeSingular): void => {
-    const ends = endsOf(edge);
-    const state = edgeStateOf(ends, target, closure);
-
-    setClassesAmong(edge, STATE_CLASS_NAMES, [state]);
-  };
-  const classBox = (box: NodeSingular): void => {
-    const lit = box.descendants('.selected, .highlighted');
-    const isUnlit = lit.empty();
-    const isDimmed = target !== null && isUnlit;
-    const wanted = isDimmed ? DIMMED_BOX_CLASSES : NO_CLASSES;
-
-    setClassesAmong(box, BOX_STATE_CLASS_NAMES, wanted);
-  };
-
-  cy.batch((): void => {
-    tasks.forEach(classTask);
-    links.forEach(classLink);
-    tasks.ancestors().forEach(classBox);
-  });
-};
 
 const taskDefinitionOf = (task: GraphTask, drawing: TaskDrawing): ElementDefinition => {
   const { width, height } = drawing.sizes.get(task.id) ?? drawing.sizeOf(task.name);
@@ -117,26 +59,42 @@ const centresOf = (cy: Core): Positions => {
   return Object.fromEntries(entries);
 };
 
+/** Replaces every element with the drawn tasks, their box frames and link routes; marks and paint come after. */
+const drawTasks = (cy: Core, drawing: TaskDrawing): void => {
+  const elements = elementsOf(drawing);
+
+  cy.resize();
+  cy.elements().remove();
+  cy.add(elements);
+  applyBoxFrames(cy, drawing.boxFrames);
+  applyRoutes(cy, drawing.routes);
+};
+
+const moveTasks = (cy: Core, positions: Positions): void => {
+  const placeNode = (node: NodeSingular): Position => positionOf(positions, node.id());
+
+  taskNodes(cy).positions(placeNode);
+};
+
 /**
  * The task graph on `cy`, the core the package graph shares; showing it removes the package graph. The last paint
- * target, runs map and predictions are kept, so a task graph drawn again carries them.
+ * target, runs map, predictions and affected marks are kept, so a task graph drawn again carries them.
  */
 export const createTaskCanvas = (cy: Core): TaskCanvas => {
   let target: string | null = null;
   let runs: TaskRuns = {};
   let predicted: TaskPredictions = NO_PREDICTIONS;
-  const show = (drawing: TaskDrawing): void => {
-    const elements = elementsOf(drawing);
-
-    cy.resize();
-    cy.elements().remove();
-    cy.add(elements);
-    applyBoxFrames(cy, drawing.boxFrames);
-    applyRoutes(cy, drawing.routes);
+  let marked: TaskAffectedMarks = NO_AFFECTED;
+  const remark = (): void => {
     paintTasks(cy, target);
     markRuns(cy, runs);
     markPredictions(cy, predicted);
+    markAffected(cy, marked);
     refitBoxFrames(cy);
+  };
+  const show = (drawing: TaskDrawing): void => {
+    drawTasks(cy, drawing);
+    remark();
   };
   const paint = (next: string | null): void => {
     target = next;
@@ -157,22 +115,19 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
 
     if (isChanged) refitBoxFrames(cy);
   };
-  const setPositions = (positions: Positions): void => {
-    const placeNode = (node: NodeSingular): Position => positionOf(positions, node.id());
+  const affected = (next: TaskAffectedMarks): void => {
+    if (next === marked) return;
 
-    taskNodes(cy).positions(placeNode);
+    marked = next;
+    markAffected(cy, next);
   };
+  const setPositions = (positions: Positions): void => moveTasks(cy, positions);
   const setRoutes = (routes: Routes): void => applyRoutes(cy, routes);
   const positions = (): Positions => centresOf(cy);
   const clear = (): void => void cy.elements().remove();
   const setCounts = (labels: ReadonlyMap<string, string>): void => setCountLabels(cy, labels);
-  const remark = (): void => {
-    paintTasks(cy, target);
-    markRuns(cy, runs);
-    markPredictions(cy, predicted);
-    refitBoxFrames(cy);
-  };
-  const canvas: TaskCanvas = { show, clear, setPositions, setRoutes, positions, paint, runStates, predictions, setCounts, remark };
+  const marks = { paint, runStates, predictions, affected, remark };
+  const canvas: TaskCanvas = { show, clear, setPositions, setRoutes, positions, setCounts, ...marks };
 
   return canvas;
 };

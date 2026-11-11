@@ -1,6 +1,7 @@
 import type { RunStateIconId } from './graph-icon.type.ts';
-import type { TaskPredictions } from './task-canvas.type.ts';
+import type { TaskAffectedMarks, TaskPredictions } from './task-canvas.type.ts';
 import type { TaskOwners } from './task-details.type.ts';
+import type { GraphAffectedMark } from '../../bridge/common/graph-affected.type.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 
 /** The most tasks task mode draws before it cuts dependent and dependency hops. */
@@ -102,8 +103,19 @@ export const SHOW_SCRIPTS_LABEL = 'Show scripts';
 
 export const SHOW_PREDICTION_LABEL = 'Show cache prediction';
 
+export const SHOW_AFFECTED_LABEL = 'Show affected';
+
 /** Starts each prediction class on a task node: `predict-cached`, `predict-notCached`, `predict-unknown`. */
 export const PREDICTION_CLASS_PREFIX = 'predict-';
+
+/** Starts each affected class on a task node: `affected-changed`, `affected-dependency`. */
+export const AFFECTED_CLASS_PREFIX = 'affected-';
+
+/** The halo's opacity per mark: a task whose own package changed reads stronger than one affected through a dependency. */
+export const AFFECTED_UNDERLAY_OPACITY: Readonly<Record<GraphAffectedMark, number>> = { changed: 0.4, dependency: 0.18 };
+
+/** How far the halo reaches past a task node's frame. */
+export const AFFECTED_UNDERLAY_PADDING_PX = 6;
 
 /** The run states whose glyph wins over a cache prediction; an ended run's glyph yields to it. */
 export const LIVE_RUN_STATES: GraphRunState[] = ['running', 'continuous'];
@@ -166,6 +178,9 @@ export const NO_OWNERS: TaskOwners = {};
 
 /** No predictions: the canvas before any record, or an untrusted record; one shared object, so the canvas skips a repeat. */
 export const NO_PREDICTIONS: TaskPredictions = {};
+
+/** No affected marks: the canvas before any record, or a cleared one; one shared object, so the canvas skips a repeat. */
+export const NO_AFFECTED: TaskAffectedMarks = {};
 
 /** The wanted classes of an element that should carry none of a class set. */
 export const NO_CLASSES: string[] = [];

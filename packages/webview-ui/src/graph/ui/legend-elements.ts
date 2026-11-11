@@ -1,9 +1,11 @@
 import { iconButton } from './icon-button.ts';
 import { legendSvgOf } from './legend-svg.ts';
+import type { GraphAffected } from '../../bridge/common/graph-affected.type.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import { LEGEND_HEADING_ID, LEGEND_ID, LEGEND_LABEL, LEGEND_ROWS, LEGEND_TITLE } from '../common/legend.const.ts';
 import type { LegendElements, LegendRow } from '../common/legend.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+import { affectedLegendRowsOf } from '../utils/legend-affected-rows.util.ts';
 import { swatchPartsOf } from '../utils/legend-swatch.util.ts';
 
 const legendButton = (): HTMLButtonElement => {
@@ -82,12 +84,27 @@ const legendRowOf = (row: LegendRow, colors: ThemeColors): HTMLElement => {
   return element;
 };
 
-/** Rebuilds both lists in `colors`; the theme changed or the page started. */
-export const renderLegend = (elements: Pick<LegendElements, 'legendLists'>, colors: ThemeColors): void => {
+const affectedRowsOf = (affected: GraphAffected['mode'] | null): LegendRow[] => {
+  if (affected === null) return [];
+
+  return affectedLegendRowsOf(affected);
+};
+
+/**
+ * Rebuilds both lists in `colors`; the theme changed, the page started, or the affected rows came or went. With an `affected`
+ * level the tasks list ends with the two affected rows worded for it.
+ */
+export const renderLegend = (
+  elements: Pick<LegendElements, 'legendLists'>,
+  colors: ThemeColors,
+  affected: GraphAffected['mode'] | null
+): void => {
   const { packages, tasks } = elements.legendLists;
   const rowOf = (row: LegendRow): HTMLElement => legendRowOf(row, colors);
+  const affectedRows = affectedRowsOf(affected);
+  const taskLegendRows = [...LEGEND_ROWS.tasks, ...affectedRows];
   const packageRows = LEGEND_ROWS.packages.map(rowOf);
-  const taskRows = LEGEND_ROWS.tasks.map(rowOf);
+  const taskRows = taskLegendRows.map(rowOf);
 
   packages.replaceChildren(...packageRows);
   tasks.replaceChildren(...taskRows);

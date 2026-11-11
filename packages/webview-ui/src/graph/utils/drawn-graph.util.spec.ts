@@ -21,6 +21,7 @@ const STATE: GraphReady = {
   scopeShown: true,
   scriptsShown: true,
   predictionShown: false,
+  affectedShown: false,
   hash: 'h',
   packages: PACKAGES,
   edges: [KEPT_EDGE, DANGLING_EDGE],

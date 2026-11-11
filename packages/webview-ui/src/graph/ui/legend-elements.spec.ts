@@ -1,12 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildLegend, renderLegend } from './legend-elements.ts';
+import type { GraphViewMode } from '../../bridge/common/graph-view-state.type.ts';
 import { FALLBACK_COLORS } from '../common/graph.const.ts';
 import { LEGEND_HEADING_ID, LEGEND_ID, LEGEND_LABEL, LEGEND_ROWS, LEGEND_TITLE } from '../common/legend.const.ts';
 import type { LegendElements } from '../common/legend.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
 type ToggleState = 'open' | 'closed';
+
+const AFFECTED_CHANGED_TEXT = 'Affected (task level)';
+
+const AFFECTED_DEPENDENCY_TEXT = 'Affected via dependency (task level)';
 
 const toggleOf = (newState: ToggleState): Event => {
   const event = new Event('toggle');
@@ -119,19 +124,23 @@ describe('FEATURE: renderLegend', () => {
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
     elements = buildLegend();
-    renderLegend(elements, FALLBACK_COLORS);
+    renderLegend(elements, FALLBACK_COLORS, null);
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
   });
 
-  it.each(['packages', 'tasks'] as const)('WHEN the %s list is read THEN it holds one row per legend row', (mode) => {
+  const termsOf = (mode: GraphViewMode): (string | undefined)[] => {
     const rows = Array.from(elements.legendLists[mode].children);
-    const terms = rows.map((row): string | undefined => row.children[0]?.textContent);
+
+    return rows.map((row): string | undefined => row.children[0]?.textContent);
+  };
+
+  it.each(['packages', 'tasks'] as const)('WHEN the %s list is read THEN it holds one row per legend row', (mode) => {
     const texts = LEGEND_ROWS[mode].map((row): string => row.text);
 
-    expect(terms).toStrictEqual(texts);
+    expect(termsOf(mode)).toStrictEqual(texts);
   });
 
   it('WHEN a row is read THEN it is a legend-row of the term, then the swatch hidden from assistive tech', () => {
@@ -156,8 +165,32 @@ describe('FEATURE: renderLegend', () => {
   });
 
   it('WHEN it renders again THEN the rows are replaced, not added', () => {
-    renderLegend(elements, FALLBACK_COLORS);
+    renderLegend(elements, FALLBACK_COLORS, null);
 
     expect(elements.legendLists.packages.children).toHaveLength(LEGEND_ROWS.packages.length);
+  });
+
+  describe('GIVEN the task affected level', () => {
+    beforeEach(() => {
+      renderLegend(elements, FALLBACK_COLORS, 'task');
+    });
+
+    it('THEN the tasks list is the static rows, then the two affected rows', () => {
+      const texts = LEGEND_ROWS.tasks.map((row): string => row.text);
+
+      expect(termsOf('tasks')).toStrictEqual([...texts, AFFECTED_CHANGED_TEXT, AFFECTED_DEPENDENCY_TEXT]);
+    });
+
+    it('THEN the packages list is the static rows', () => {
+      const texts = LEGEND_ROWS.packages.map((row): string => row.text);
+
+      expect(termsOf('packages')).toStrictEqual(texts);
+    });
+
+    it('WHEN it renders again with no level THEN the tasks list is the static rows only', () => {
+      renderLegend(elements, FALLBACK_COLORS, null);
+
+      expect(elements.legendLists.tasks.children).toHaveLength(LEGEND_ROWS.tasks.length);
+    });
   });
 });

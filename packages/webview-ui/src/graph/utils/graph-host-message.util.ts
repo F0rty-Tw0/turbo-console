@@ -53,10 +53,11 @@ const hasSinglePackageOf = (state: UnknownRecord): boolean => {
 };
 
 const hasShownOf = (state: UnknownRecord): boolean => {
-  const { scopeShown, scriptsShown, predictionShown } = state;
+  const { scopeShown, scriptsShown, predictionShown, affectedShown } = state;
   const hasToggles = typeof scopeShown === 'boolean' && typeof scriptsShown === 'boolean';
+  const hasMarks = typeof predictionShown === 'boolean' && typeof affectedShown === 'boolean';
 
-  return hasToggles && typeof predictionShown === 'boolean';
+  return hasToggles && hasMarks;
 };
 
 const isGraphShape = (state: UnknownRecord): boolean => {

@@ -32,6 +32,7 @@ export class GraphTaskMemory {
   private isScriptsShown = true;
   private hasScripts = false;
   private isPredictionShown = false;
+  private isAffectedShown = false;
   private labels: ReadonlyMap<string, string> = NO_NAMES;
   private folders: ReadonlyMap<string, string> = NO_NAMES;
 
@@ -50,6 +51,7 @@ export class GraphTaskMemory {
     this.isScriptsShown = state.scriptsShown;
     this.hasScripts = state.tasks.some((task) => !task.isTurboTask);
     this.isPredictionShown = state.predictionShown;
+    this.isAffectedShown = state.affectedShown;
     this.labels = labelsOf(state.packages, state.scopeShown);
     this.folders = new Map(state.packages.map(folderEntryOf));
   }
@@ -68,7 +70,7 @@ export class GraphTaskMemory {
   /**
    * What the View boxes read: grouped as the saved view says, whether grouping applies (never to a single package), the
    * scope and scripts bits of the state, and whether the full listing, not the pool, holds a script: hidden scripts leave
-   * the pool, and the box that turns them back on must stay; and the cache prediction bit of the state.
+   * the pool, and the box that turns them back on must stay; and the cache prediction and affected bits of the state.
    */
   public viewChecks(): TaskViewChecks {
     const checks: TaskViewChecks = {
@@ -77,7 +79,8 @@ export class GraphTaskMemory {
       scopeShown: this.isScopeShown,
       scriptsShown: this.isScriptsShown,
       hasScripts: this.hasScripts,
-      predictionShown: this.isPredictionShown
+      predictionShown: this.isPredictionShown,
+      affectedShown: this.isAffectedShown
     };
 
     return checks;

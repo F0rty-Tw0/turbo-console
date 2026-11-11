@@ -35,6 +35,9 @@ export type ProbeNode = {
   /** A task's run outline: 0 wide with no run state. */
   readonly outlineWidth: number;
   readonly outlineColor: string;
+  /** The affected halo under a task: 0 opaque with no `affected-<mark>` class. */
+  readonly underlayColor: string;
+  readonly underlayOpacity: number;
 };
 
 export type ProbeEdge = {

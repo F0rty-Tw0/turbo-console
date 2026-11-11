@@ -43,6 +43,7 @@ const TASK_STOPS: FocusStep[] = tabStopsOf([
   'Group by folder',
   'Show package scopes',
   'Show cache prediction',
+  'Show affected',
   'Choose tasks of app',
   'Resize Controls',
   'Package graph'

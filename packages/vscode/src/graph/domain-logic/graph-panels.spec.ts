@@ -15,11 +15,11 @@ import type { GraphToggles } from '../common/graph.type.ts';
 import type { GraphHostFakes } from '../test/common/graph.type.ts';
 import { graphHostMock } from '../test/mocks/graph-host.mock.ts';
 import { GRAPH_HASH_STUB, GRAPH_LOADED_STUB, GRAPH_STATE_STUB, POSITIONS_STUB } from '../test/stubs/graph-model.stub.ts';
-import { predictionFake, progressFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
+import { affectedFake, predictionFake, progressFake, togglesOf } from '../test/utils/graph-feeds.spec.util.ts';
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const READY = { type: 'ready' };
-const RUNS_POSTED: GraphHostMessage = { type: 'runs', runs: {}, predictions: {} };
+const RUNS_POSTED: GraphHostMessage = { type: 'runs', runs: {}, predictions: {}, affected: null };
 const STATE_POSTED: GraphHostMessage = { type: 'state', state: GRAPH_STATE_STUB };
 
 const viewAt = (fakes: GraphHostFakes, index: number): ViewFake<GraphHostMessage> => {
@@ -47,6 +47,7 @@ describe('FEATURE: graph panel registry', () => {
       progress: progressFake().progress,
       atoms: SHARED_ATOMS_STUB,
       prediction: predictionFake(() => null).prediction,
+      affected: affectedFake().affected,
       toggles
     };
 

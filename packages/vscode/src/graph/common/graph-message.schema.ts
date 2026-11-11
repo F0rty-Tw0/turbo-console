@@ -83,7 +83,7 @@ const shownTaskPackagesSchema = object({
 
 const setViewToggleSchema = object({
   type: literal('setViewToggle'),
-  toggle: zodEnum(['scope', 'scripts', 'prediction']),
+  toggle: zodEnum(['scope', 'scripts', 'prediction', 'affected']),
   shown: boolean()
 });
 

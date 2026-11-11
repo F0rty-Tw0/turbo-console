@@ -22,6 +22,8 @@ export type ThemeColors = {
   readonly selection: SelectionColors | null;
   /** The opacity of a dimmed node, edge or box: 0.25, raised in a high contrast theme so it keeps 3:1. */
   readonly dimmedOpacity: number;
+  /** The halo under an affected task: the git modified colour. */
+  readonly affected: string;
 };
 
 /** Returns a CSS custom property's computed value, `''` when it is unset. */
