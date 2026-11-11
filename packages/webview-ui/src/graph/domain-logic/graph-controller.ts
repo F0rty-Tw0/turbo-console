@@ -3,6 +3,7 @@ import { graphLocationOf } from './graph-location.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { wirePanelSashes } from './graph-panel-sashes.ts';
 import { PackageReveal } from './graph-reveal.ts';
+import { applyRunMarks } from './graph-run-marks.ts';
 import { GraphStateRouting } from './graph-state-routing.ts';
 import { packageTasksOf, taskModeOf } from './graph-task-wiring.ts';
 import { wireToolbar } from './graph-toolbar-actions.ts';
@@ -15,7 +16,6 @@ import { NO_OWNERS } from '../common/graph-task.const.ts';
 import type { GraphLocation } from '../common/location.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { hasSavedGrouping, readGraphViewState } from '../utils/graph-view-state.util.ts';
-import { predictionRecordOf } from '../utils/prediction-record.util.ts';
 
 /**
  * Routes the host's messages and the view's events by mode: the package side shows the states and draws the package
@@ -104,7 +104,7 @@ class GraphPageController {
       case 'runs':
         this.tasks.selection.runs(message.runs, message.owners ?? NO_OWNERS);
         this.packages.runs(message.runs);
-        this.view.tasks.predictions(predictionRecordOf(message.predictions));
+        applyRunMarks(this.view.tasks, message);
         break;
       case 'atoms':
         this.tasks.layout.atoms.states(message.groups);

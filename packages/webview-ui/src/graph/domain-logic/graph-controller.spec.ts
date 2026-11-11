@@ -35,6 +35,10 @@ const IMPORTS_FAILED = importsReplyOf('web', 'ui', FAILED_RESULT);
 
 const IMPORTS_UNKNOWN_KIND = { ...IMPORTS_FAILED, result: UNKNOWN_RESULT };
 
+const AFFECTED_TASKS = { 'web#build': 'changed' };
+
+const AFFECTED = { mode: 'task', tasks: AFFECTED_TASKS };
+
 describe('FEATURE: createGraphController', () => {
   let mock: PackageSideDepsMock;
 
@@ -82,6 +86,14 @@ describe('FEATURE: createGraphController', () => {
 
     expect(controller.facts.grouped()).toBe(true);
     expect(scene?.collapsed).toStrictEqual(new Set(['apps']));
+  });
+
+  it('GIVEN no state WHEN a runs message carries affected marks THEN the task canvas gets its tasks', () => {
+    const controller = createGraphController(mock.deps);
+
+    controller.receive({ type: 'runs', runs: {}, affected: AFFECTED });
+
+    expect(mock.view.tasks.affected).toHaveBeenCalledExactlyOnceWith(AFFECTED_TASKS);
   });
 
   describe('GIVEN a restored panel whose saved view says packages', () => {
