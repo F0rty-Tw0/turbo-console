@@ -15,7 +15,7 @@ import { boardsCyMock, groupedCyMock } from '../test/mocks/folder-boards.mock.ts
 import { boxedCyMock, containerAtMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { GRAPH_PROBE_STUB } from '../test/stubs/graph-probe.stub.ts';
-import { CANVAS_COLORS, canvasEdgeOf, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
+import { CANVAS_AFFECTED_RGB, CANVAS_COLORS, canvasEdgeOf, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 import { BOARDS_NAMES, boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { collapsedIdOf, folderLinkIdOf } from '../utils/folder-id.util.ts';
 
@@ -131,6 +131,13 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
 
       expect(nodeOf(probe, 'c')).toMatchObject({ outlineWidth: 2, outlineColor: 'rgb(255,0,17)' });
       expect(nodeOf(probe, 'a')).toMatchObject({ outlineWidth: 0 });
+    });
+
+    it('WHEN c carries affected-changed THEN its underlay reads the affected colour at 0.4 and a has none', () => {
+      cy.getElementById('c').addClass('affected-changed');
+
+      expect(nodeOf(probe, 'c')).toMatchObject({ underlayColor: CANVAS_AFFECTED_RGB, underlayOpacity: 0.4 });
+      expect(nodeOf(probe, 'a')).toMatchObject({ underlayOpacity: 0 });
     });
 
     it('WHEN the visible ids are read THEN the ghost is left out', () => {

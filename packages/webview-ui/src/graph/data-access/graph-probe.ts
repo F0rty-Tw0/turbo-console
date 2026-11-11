@@ -76,7 +76,9 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
     isVisible: isFilterVisible(node),
     isCollapsed,
     outlineWidth: styleNumber(node, 'outline-width'),
-    outlineColor: styleText(node, 'outline-color')
+    outlineColor: styleText(node, 'outline-color'),
+    underlayColor: styleText(node, 'underlay-color'),
+    underlayOpacity: styleNumber(node, 'underlay-opacity')
   };
 
   return probeNode;
