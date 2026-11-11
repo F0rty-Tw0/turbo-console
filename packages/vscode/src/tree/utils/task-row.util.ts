@@ -149,7 +149,7 @@ export const taskRow = (scope: RowScope, pkg: PackageNode, task: TaskNode, conte
     key: task.id,
     packageName: pkg.name,
     label: cleanText(task.name, LABEL_MAX),
-    description: withAffectedWord(cleanText(prediction?.description ?? display.description, DESCRIPTION_MAX), affected?.word ?? null),
+    description: withAffectedWord(cleanText(prediction?.description ?? display.description, DESCRIPTION_MAX), affected),
     icon: toolIcon(display, entry, match),
     contextValue: display.contextValue,
     collapsible: 'none',

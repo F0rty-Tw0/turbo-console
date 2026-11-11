@@ -12,6 +12,7 @@ import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { OPEN_SPEC_COMMAND } from '../common/atom.const.ts';
 import { FAILED_ICON, PASSED_ICON, SPEC_FILE_ICON } from '../common/icon.const.ts';
 import type { PredictionLookup } from '../common/prediction.type.ts';
+import type { RowAffected } from '../common/row-affected.type.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
 import type {
   AtomFileContextValue,
@@ -47,8 +48,8 @@ const resultIconOf = (result: AtomResult | undefined): IconSpec => {
   return RESULT_ICONS[result.outcome];
 };
 
-const umbrellaDescription = (running: string, counts: string, entry: RunEntry | undefined, word: string | null): string => {
-  if (entry?.state !== 'running') return withAffectedWord(cleanText(counts, DESCRIPTION_MAX), word);
+const umbrellaDescription = (running: string, counts: string, entry: RunEntry | undefined, affected: RowAffected | null): string => {
+  if (entry?.state !== 'running') return withAffectedWord(cleanText(counts, DESCRIPTION_MAX), affected);
 
   return cleanText(`${running} · ${counts}`, DESCRIPTION_MAX);
 };
@@ -65,7 +66,7 @@ export const umbrellaRow = (scope: RowScope, pkg: PackageNode, group: AtomGroup,
   const entry = context.runs(scope.root, group.umbrella.id);
   const counts = umbrellaCounts(group, view);
   const affected = rowAffectedOf(group.umbrella, entry, context.affected.view(scope.root));
-  const description = umbrellaDescription(base.description, counts, entry, affected?.word ?? null);
+  const description = umbrellaDescription(base.description, counts, entry, affected);
   const row: TreeRow = { ...base, description, collapsible: 'collapsed' };
 
   return row;
