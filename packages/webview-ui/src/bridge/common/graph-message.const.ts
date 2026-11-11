@@ -1,3 +1,4 @@
+import type { GraphAffectedMark } from './graph-affected.type.ts';
 import type { ImportKind, ImportLimit, ImportVia } from './graph-imports.type.ts';
 import type { GraphAtomOutcome, GraphPrediction, ManifestField } from './graph-message.type.ts';
 import type { GraphRunState } from './graph-state.type.ts';
@@ -37,6 +38,9 @@ export const RUN_STATES: GraphRunState[] = ['running', 'continuous', 'passed', '
 
 /** The words of `GraphPrediction` the page accepts in the `predictions` of a `runs` message. */
 export const PREDICTION_WORDS: GraphPrediction[] = ['cached', 'notCached', 'unknown'];
+
+/** The words of `GraphAffectedMark` the page accepts in the `affected` of a `runs` message. */
+export const AFFECTED_MARKS: GraphAffectedMark[] = ['changed', 'dependency'];
 
 /** The words of `GraphAtomOutcome` the page accepts in an `atoms` message. */
 export const ATOM_OUTCOMES: GraphAtomOutcome[] = ['passed', 'failed', 'cached', 'none'];
