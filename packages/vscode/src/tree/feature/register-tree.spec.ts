@@ -5,6 +5,7 @@ import type { Disposable } from 'vscode';
 import { registerTree } from './register-tree.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
+import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { Output } from '../../shared/common/output.type.ts';
 import type { ScriptsToggleFake } from '../../shared/test/common/scripts-toggle-fake.type.ts';
 import { outputMock } from '../../shared/test/mocks/output.mock.ts';
@@ -13,6 +14,8 @@ import type { TreeContext } from '../common/tree-context.type.ts';
 import type { PackagesTreeApi } from '../common/tree-node.type.ts';
 import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
 import { packagesTreeApiMock } from '../test/mocks/packages-tree-api.mock.ts';
+import { sharedAffectedMock } from '../test/mocks/shared-affected.mock.ts';
+import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 
 type CommandCallback = () => unknown;
 
@@ -20,6 +23,8 @@ type TreeViewFake = {
   readonly visible: boolean;
   readonly onDidChangeVisibility: Mock<() => Disposable>;
   readonly dispose: Mock<() => void>;
+  // eslint-disable-next-line local/readonly-type-properties -- registerTree writes the view description
+  description: string | undefined;
 };
 
 const disposableFake = (): Disposable => {
@@ -65,6 +70,7 @@ describe('FEATURE: registerTree scope toggle', () => {
   let prediction: ScriptsToggleFake;
   let affected: ScriptsToggleFake;
   let context: TreeContext;
+  let view: TreeViewFake;
   let session: Session;
   let output: Output;
 
@@ -83,6 +89,7 @@ describe('FEATURE: registerTree scope toggle', () => {
       scripts: scriptsToggleMock(),
       prediction,
       affected,
+      affectedLoads: sharedAffectedMock(),
       iconTheme: iconThemeProbeMock()
     };
 
@@ -117,7 +124,7 @@ describe('FEATURE: registerTree scope toggle', () => {
     editor.executeCommand.mockReset();
     editor.onDidChangeConfiguration.mockReset();
 
-    const view: TreeViewFake = { visible: true, onDidChangeVisibility: vi.fn(disposableFake), dispose: vi.fn() };
+    view = { visible: true, onDidChangeVisibility: vi.fn(disposableFake), dispose: vi.fn(), description: undefined };
 
     editor.createTreeView.mockImplementation(() => {
       calls.push('createTreeView');
@@ -203,6 +210,30 @@ describe('FEATURE: registerTree scope toggle', () => {
 
     it('WHEN the tree registers THEN it does not redraw yet', () => {
       expect(tree.loadsToggled).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN the affected store reports the root Failed', () => {
+    beforeEach(() => {
+      const store = new RootStore();
+
+      store.set([ROOT_FOLDER_STUB], coordinatorMock);
+      session = { ...session, store };
+      vi.mocked(context.affectedLoads.status).mockReturnValue('failed');
+    });
+
+    it('WHEN the tree registers with the toggle on THEN the view description says unavailable', () => {
+      affected = scriptsToggleMock(true);
+      context = { ...context, affected };
+      registerWith();
+
+      expect(view.description).toBe('affected: unavailable, see Output');
+    });
+
+    it('WHEN the tree registers with the toggle off THEN the view description is empty', () => {
+      registerWith();
+
+      expect(view.description).toBe('');
     });
   });
 

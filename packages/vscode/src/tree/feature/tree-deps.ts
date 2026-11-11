@@ -44,15 +44,16 @@ export const treeDepsOf = (
   return deps;
 };
 
-/** What `registerTree` reads of the extension context, with the scope, scripts, prediction and affected toggles and the icon theme's folder probe beside it. */
+/** What `registerTree` reads of the extension context, with the scope, scripts, prediction and affected toggles, the affected store's reads and the icon theme's folder probe beside it. */
 export const contextOf = (
   context: Pick<vscode.ExtensionContext, 'subscriptions'>,
   toggles: Pick<TreeContext, 'scope' | 'scripts' | 'prediction' | 'affected'>,
-  iconTheme: IconThemeProbe
+  iconTheme: IconThemeProbe,
+  affectedLoads: TreeContext['affectedLoads']
 ): TreeContext => {
   const { subscriptions } = context;
   const { scope, scripts, prediction, affected } = toggles;
-  const treeContext: TreeContext = { subscriptions, scope, scripts, prediction, affected, iconTheme };
+  const treeContext: TreeContext = { subscriptions, scope, scripts, prediction, affected, affectedLoads, iconTheme };
 
   return treeContext;
 };

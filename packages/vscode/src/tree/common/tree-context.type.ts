@@ -1,5 +1,6 @@
 import type { Disposable } from 'vscode';
 
+import type { SharedAffected } from './affected.type.ts';
 import type { IconThemeProbe } from './icon-theme.type.ts';
 import type { ScriptsToggleApi } from '../../shared/common/scripts-toggle.type.ts';
 
@@ -13,5 +14,6 @@ export type TreeContext = {
   readonly scripts: ScriptsToggleApi;
   readonly prediction: ScriptsToggleApi;
   readonly affected: ScriptsToggleApi;
+  readonly affectedLoads: Pick<SharedAffected, 'view' | 'status' | 'onDidChange'>;
   readonly iconTheme: IconThemeProbe;
 };

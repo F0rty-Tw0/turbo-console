@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import { followAffectedLabel } from './affected-label.ts';
 import { currentIconsSetting, watchIcons } from './icons-setting.ts';
 import type { Session } from '../../roots/common/coordinator.type.ts';
 import type { Output } from '../../shared/common/output.type.ts';
@@ -153,6 +154,7 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
     affectingCommands,
     predicting,
     affecting,
+    followAffectedLabel(view, context, tree, session.store),
     settings
   );
 
