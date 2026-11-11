@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { PRESETS, applyEdit } from '@turbo-console/repo-gen';
-import type { FixtureHandle, FixtureSpec } from '@turbo-console/repo-gen';
+import type { FixtureHandle, FixtureSpec, Manifest, ManifestPackage } from '@turbo-console/repo-gen';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
@@ -60,6 +60,20 @@ const editLeafReadme = async (fixture: FixtureHandle): Promise<void> => {
   await applyEdit(fixture.dir, [`${leaf.path}/README.md`]);
 };
 
+/** A `regular` package that has a dependency, and that dependency; read from the manifest, so a generator change fails loudly. */
+type DependencyPair = { readonly dependent: ManifestPackage; readonly dependency: ManifestPackage };
+
+const dependencyPairOf = (manifest: Manifest): DependencyPair => {
+  const dependent = manifest.packages.find((pkg) => pkg.role === 'regular' && pkg.dependencies.length > 0);
+  const dependency = manifest.packages.find((pkg) => pkg.name === dependent?.dependencies[0]);
+
+  if (dependent === undefined || dependency === undefined) throw new Error('no regular package with a dependency');
+
+  const pair: DependencyPair = { dependent, dependency };
+
+  return pair;
+};
+
 describe('FEATURE: affected tasks from a real turbo', () => {
   describe('GIVEN a target-like copy with a leaf README edit committed as HEAD', () => {
     const fixture = fixtureHook(targetLike);
@@ -80,6 +94,13 @@ describe('FEATURE: affected tasks from a real turbo', () => {
       const leaf = leafPackage(fixture().manifest);
 
       expect(taskIds(result)).toContain(`${leaf.name}#build`);
+    });
+
+    it('WHEN read THEN the leaf build is a file change and its detail is the edited README path', () => {
+      const leaf = leafPackage(fixture().manifest);
+      const build = result.tasks.find((task) => task.id === `${leaf.name}#build`);
+
+      expect(build).toStrictEqual({ id: `${leaf.name}#build`, reason: 'TaskFileChanged', detail: `${leaf.path}/README.md` });
     });
 
     it('WHEN read THEN the leaf test, whose inputs are src/** only, is not affected', () => {
@@ -112,17 +133,60 @@ describe('FEATURE: affected tasks from a real turbo', () => {
     });
   });
 
-  describe('GIVEN a target-like copy with affectedUsingTaskInputs off and a leaf README edit', () => {
-    const fixture = fixtureHook(FLAG_OFF);
+  describe('GIVEN a target-like copy with a README edit of a package another package depends on', () => {
+    const fixture = fixtureHook(targetLike);
+    let pair: DependencyPair;
+    let result: AffectedResult;
 
-    it('WHEN read THEN the mode is package, and the leaf test is affected too', async () => {
-      await editLeafReadme(fixture());
+    beforeAll(async () => {
+      pair = dependencyPairOf(fixture().manifest);
+      await applyEdit(fixture().dir, [`${pair.dependency.path}/README.md`]);
+
       const binary = await binaryFor(fixture());
 
-      const result = await readAffected(binary, AFFECTED_RANGE);
+      result = await readAffected(binary, AFFECTED_RANGE);
+    });
 
+    it('WHEN read THEN the edited package build is TaskFileChanged with the README path as detail', () => {
+      const build = result.tasks.find((task) => task.id === `${pair.dependency.name}#build`);
+
+      expect(build).toStrictEqual({
+        id: `${pair.dependency.name}#build`,
+        reason: 'TaskFileChanged',
+        detail: `${pair.dependency.path}/README.md`
+      });
+    });
+
+    it('WHEN read THEN the dependent build is a dependency reason whose detail names the edited package', () => {
+      const build = result.tasks.find((task) => task.id === `${pair.dependent.name}#build`);
+
+      expect(['TaskDependencyTaskChanged', 'TaskPackageDependencyChanged']).toContain(build?.reason);
+      expect(build?.detail).toContain(pair.dependency.name);
+    });
+  });
+
+  describe('GIVEN a target-like copy with affectedUsingTaskInputs off and a leaf README edit', () => {
+    const fixture = fixtureHook(FLAG_OFF);
+    let result: AffectedResult;
+
+    beforeAll(async () => {
+      await editLeafReadme(fixture());
+
+      const binary = await binaryFor(fixture());
+
+      result = await readAffected(binary, AFFECTED_RANGE);
+    });
+
+    it('WHEN read THEN the mode is package, and the leaf test is affected too', () => {
       expect(result.mode).toBe('package');
       expect(taskIds(result)).toContain(leafTestId(fixture()));
+    });
+
+    it('WHEN read THEN the leaf test reads TaskAllChanged with a string detail', () => {
+      const leafTest = result.tasks.find((task) => task.id === leafTestId(fixture()));
+
+      expect(leafTest?.reason).toBe('TaskAllChanged');
+      expect(typeof leafTest?.detail).toBe('string');
     });
   });
 
