@@ -85,14 +85,19 @@ export const readSuiteEnv = (): SuiteEnv => {
   return env;
 };
 
+/** The fields the suites read from the fixture manifest at `file`; throws when the file is unreadable or a field is malformed. */
+export const readManifestFile = async (file: string): Promise<ShownManifest> => {
+  const text = await readFile(file, 'utf8');
+  const manifest: unknown = JSON.parse(text);
+
+  if (!isShownManifest(manifest)) throw new Error(`${file} is not a fixture manifest`);
+
+  return manifest;
+};
+
 /** The fields the suites read from the fixture manifest; throws when the launch has none or a field is malformed. */
 export const readManifest = async (env: SuiteEnv): Promise<ShownManifest> => {
   if (env.manifestFile === null) throw new Error('this launch has no fixture manifest');
 
-  const text = await readFile(env.manifestFile, 'utf8');
-  const manifest: unknown = JSON.parse(text);
-
-  if (!isShownManifest(manifest)) throw new Error(`${env.manifestFile} is not a fixture manifest`);
-
-  return manifest;
+  return readManifestFile(env.manifestFile);
 };

@@ -4,7 +4,17 @@ import { join } from 'node:path';
 
 import { PRESETS, fixtureFor } from '@turbo-console/repo-gen';
 
-import type { RunScratch } from '../common/launch.type.ts';
+import type { LaunchName, PreparedWorkspace, RunScratch } from '../common/launch.type.ts';
+
+/** The dir a launch's own workspace copy lives in. */
+export const workspaceDirOf = (scratch: RunScratch, name: LaunchName): string => join(scratch.dir, `${name}-workspace`);
+
+/** A single-folder window on `dir`. */
+export const folderWorkspace = (dir: string): PreparedWorkspace => {
+  const prepared: PreparedWorkspace = { open: dir, folders: [dir] };
+
+  return prepared;
+};
 
 const reportLater = (error: unknown): void => {
   process.stderr.write(`also failed: ${String(error)}\n`);

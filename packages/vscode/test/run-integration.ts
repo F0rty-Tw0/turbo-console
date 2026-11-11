@@ -24,6 +24,8 @@ const X11_ARGS = ['--ozone-platform=x11', '--disable-gpu', '--disable-software-r
 
 const NO_ARGS: string[] = [];
 
+const NO_KEYS: string[] = [];
+
 const packageRoot = resolve(import.meta.dirname, '..');
 const vsixPath = resolve(packageRoot, '.vsix/turbo-console.vsix');
 const extensionDevelopmentPath = resolve(import.meta.dirname, 'harness');
@@ -48,7 +50,9 @@ const launchesFor = (platform: NodeJS.Platform): Launch[] => {
  */
 const runAttempt = async (launch: Launch, workspace: PreparedWorkspace, userDataDir: string, suiteEnv: SuiteEnv): Promise<void> => {
   const suiteEnvText = JSON.stringify(suiteEnv);
-  const extensionTestsEnv = { ...launch.env, [SUITE_ENV_KEY]: suiteEnvText };
+  const unsetKeys = launch.unsetEnv ?? NO_KEYS;
+  const unset = Object.fromEntries(unsetKeys.map((key) => [key, undefined]));
+  const extensionTestsEnv = { ...unset, ...launch.env, [SUITE_ENV_KEY]: suiteEnvText };
   const extensionTestsPath = resolve(packageRoot, `dist-test/${launch.suite}.cjs`);
   const platformArgs = isLinux ? X11_ARGS : NO_ARGS;
   const launchArgs = [workspace.open, `--user-data-dir=${userDataDir}`, ...platformArgs];
