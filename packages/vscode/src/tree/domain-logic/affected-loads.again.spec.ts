@@ -83,18 +83,29 @@ describe('FEATURE: affected loads asking again', () => {
       expect(h.readAffected).toHaveBeenCalledTimes(2);
       expect(h.changed).toHaveBeenCalledOnce();
     });
+  });
 
-    it('WHEN it refreshes twice THEN each aborts the previous and only the last result stores', async () => {
+  describe('GIVEN a loading root that refreshed twice', () => {
+    beforeEach(async () => {
+      await toState(h, store, 'loading');
       store.refreshAll();
       store.refreshAll();
+    });
+
+    it('WHEN the earlier queries are checked THEN each one is aborted', () => {
+      expect(readAt(h, 0).signal.aborted).toBe(true);
+      expect(readAt(h, 1).signal.aborted).toBe(true);
+    });
+
+    it('WHEN the two earlier queries resolve THEN nothing is stored', async () => {
       readAt(h, 0).resolve(affectedResultOf([[ID_A, 'TaskFileChanged']]));
       readAt(h, 1).resolve(affectedResultOf([[ID_A, 'TaskFileChanged']]));
       await flush();
 
-      expect(readAt(h, 0).signal.aborted).toBe(true);
-      expect(readAt(h, 1).signal.aborted).toBe(true);
       expect(store.view(ROOT)).toBeNull();
+    });
 
+    it('WHEN the last query resolves THEN its result stores', async () => {
       readAt(h, 2).resolve(affectedResultOf([[ID_A, 'TaskPackageDependencyChanged']]));
       await flush();
 
@@ -151,17 +162,37 @@ describe('FEATURE: affected loads asking again', () => {
     });
   });
 
-  describe('GIVEN two loaded roots', () => {
-    it('WHEN everything refreshes THEN exactly one new spawn runs per root', async () => {
+  describe('GIVEN two settled roots', () => {
+    beforeEach(async () => {
       h.model(OTHER_ROOT, buildModelOf([PKG_A]));
       await toState(h, store, 'loading');
       store.rootShown(OTHER_ROOT);
       readAt(h, 0).resolve(affectedResultOf([]));
       readAt(h, 1).resolve(affectedResultOf([]));
       await flush();
+    });
+
+    it('WHEN everything refreshes THEN each root gets exactly one new query, still live', () => {
       store.refreshAll();
 
-      expect(h.readAffected).toHaveBeenCalledTimes(4);
+      const aborted = h.reads.map((read) => read.signal.aborted);
+
+      expect(aborted).toStrictEqual([false, false, false, false]);
+      expect([store.status(ROOT), store.status(OTHER_ROOT)]).toStrictEqual(['loading', 'loading']);
+    });
+  });
+
+  describe('GIVEN a root whose change announcement shows another root', () => {
+    it('WHEN everything refreshes THEN the root shown meanwhile spawns once and is not restarted', async () => {
+      h.model(OTHER_ROOT, buildModelOf([PKG_A]));
+      await toState(h, store, 'loaded');
+      h.changed.mockImplementationOnce(() => {
+        store.rootShown(OTHER_ROOT);
+      });
+
+      store.refreshAll();
+
+      expect(h.readAffected).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -187,6 +218,23 @@ describe('FEATURE: affected loads asking again', () => {
 
       expect(h.readAffected).toHaveBeenCalledTimes(2);
       expect(store.status(ROOT)).toBe('loading');
+    });
+  });
+
+  describe('GIVEN a loading root whose binary vanished', () => {
+    beforeEach(async () => {
+      await toState(h, store, 'loading');
+      h.changed.mockClear();
+      h.noBinary();
+      store.refreshAll();
+    });
+
+    it('WHEN everything refreshes THEN it is absent', () => {
+      expect(store.status(ROOT)).toBe('absent');
+    });
+
+    it('WHEN everything refreshes THEN changed fires once', () => {
+      expect(h.changed).toHaveBeenCalledExactlyOnceWith(ROOT);
     });
   });
 });

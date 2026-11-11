@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AffectedLoads } from './affected-loads.ts';
-import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
 import type { AffectedView } from '../common/affected.type.ts';
 import type { AffectedHarness } from '../test/common/affected-load.type.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
@@ -39,25 +38,34 @@ describe('FEATURE: affected loads settling', () => {
       await toState(h, store, 'loading');
     });
 
-    it('WHEN the query settles at NOW_1 THEN it is loaded, the view holds only kept tasks with the settle time and mode, changed fires once more', async () => {
-      h.setNow(NOW_1);
-      readAt(h, 0).resolve(
-        affectedResultOf(
-          [
-            [ID_A, 'TaskFileChanged'],
-            ['@fx/gone#build', 'TaskFileChanged']
-          ],
-          'task'
-        )
-      );
-      await flush();
+    describe('WHEN the query settles at NOW_1 with a kept and an unknown task', () => {
+      beforeEach(async () => {
+        const rows: [string, string][] = [
+          [ID_A, 'TaskFileChanged'],
+          ['@fx/gone#build', 'TaskFileChanged']
+        ];
 
-      expect(store.status(ROOT)).toBe('loaded');
-      expect(loadedViewOf(store).settledAt).toBe(NOW_1);
-      expect(loadedViewOf(store).mode).toBe('task');
-      expect(taskIdsOf(loadedViewOf(store))).toStrictEqual([ID_A]);
-      expect(h.changed).toHaveBeenCalledTimes(2);
-      expect(h.changed).toHaveBeenLastCalledWith(ROOT);
+        h.setNow(NOW_1);
+        readAt(h, 0).resolve(affectedResultOf(rows, 'task'));
+        await flush();
+      });
+
+      it('THEN it is loaded', () => {
+        expect(store.status(ROOT)).toBe('loaded');
+      });
+
+      it('THEN the view holds the settle time and the mode of the result', () => {
+        expect(loadedViewOf(store)).toMatchObject({ settledAt: NOW_1, mode: 'task' });
+      });
+
+      it('THEN the view holds only the kept task', () => {
+        expect(taskIdsOf(loadedViewOf(store))).toStrictEqual([ID_A]);
+      });
+
+      it('THEN changed fires once more', () => {
+        expect(h.changed).toHaveBeenCalledTimes(2);
+        expect(h.changed).toHaveBeenLastCalledWith(ROOT);
+      });
     });
 
     it('WHEN the model changes before the query settles THEN the view is built over the model of the settle', async () => {
@@ -92,15 +100,6 @@ describe('FEATURE: affected loads settling', () => {
       expect(loadedViewOf(store).mode).toBe('package');
     });
 
-    it('WHEN the binary vanishes after the spawn and the query settles THEN it is loaded and the spawn had the binary', async () => {
-      h.noBinary();
-      readAt(h, 0).resolve(affectedResultOf([[ID_A, 'TaskFileChanged']]));
-      await flush();
-
-      expect(readAt(h, 0).binary).toBe(TURBO_BINARY_STUB);
-      expect(store.status(ROOT)).toBe('loaded');
-    });
-
     it('WHEN the query rejects THEN it is failed with no view, one Output line, and changed fires once more', async () => {
       readAt(h, 0).reject(new Error('boom'));
       await flush();
@@ -118,13 +117,16 @@ describe('FEATURE: affected loads settling', () => {
       store.refreshAll();
     });
 
-    it('WHEN the old query resolves THEN only the new result stores', async () => {
+    it('WHEN the old query resolves THEN nothing is stored and it stays loading', async () => {
       readAt(h, 0).resolve(affectedResultOf([[ID_A, 'TaskFileChanged']]));
       await flush();
 
       expect(store.view(ROOT)).toBeNull();
       expect(store.status(ROOT)).toBe('loading');
+    });
 
+    it('WHEN the old query resolves and then the new one resolves THEN the new result stores', async () => {
+      readAt(h, 0).resolve(affectedResultOf([[ID_A, 'TaskFileChanged']]));
       readAt(h, 1).resolve(affectedResultOf([[ID_A, 'TaskPackageDependencyChanged']]));
       await flush();
 

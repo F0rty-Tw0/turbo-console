@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AffectedLoads } from './affected-loads.ts';
-import type { AffectedHarness, AffectedState } from '../test/common/affected-load.type.ts';
+import type { AffectedHarness, AffectedState, DeferredRead } from '../test/common/affected-load.type.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
 import { ID_A, PKG_A } from '../test/common/prediction-load.const.ts';
 import { affectedHarness, readAt, toState } from '../test/utils/affected-load.spec.util.ts';
@@ -153,23 +153,41 @@ describe('FEATURE: affected loads toggle', () => {
   });
 
   describe('GIVEN a live query', () => {
-    it('WHEN the toggle goes off and on in the same tick THEN the old result never stores, the old query is aborted, one new spawn on the next rootShown', async () => {
+    let old: DeferredRead;
+
+    beforeEach(async () => {
       await toState(h, store, 'loading');
-      const old = readAt(h, 0);
+      old = readAt(h, 0);
+    });
 
-      store.toggled(false);
-      store.toggled(true);
-      old.resolve(affectedResultOf([[ID_A, 'TaskFileChanged']]));
-      await flush();
+    describe('WHEN the toggle goes off and on in the same tick and the old query resolves', () => {
+      beforeEach(async () => {
+        store.toggled(false);
+        store.toggled(true);
+        old.resolve(affectedResultOf([[ID_A, 'TaskFileChanged']]));
+        await flush();
+      });
 
-      expect(old.signal.aborted).toBe(true);
-      expect(store.view(ROOT)).toBeNull();
-      expect(store.status(ROOT)).toBe('absent');
-      expect(h.readAffected).toHaveBeenCalledOnce();
-      expect(h.changed).toHaveBeenCalledOnce();
-      store.rootShown(ROOT);
-      expect(h.readAffected).toHaveBeenCalledTimes(2);
-      expect(readAt(h, 1).signal.aborted).toBe(false);
+      it('THEN the old query was aborted', () => {
+        expect(old.signal.aborted).toBe(true);
+      });
+
+      it('THEN the old result never stores and the root is absent', () => {
+        expect(store.view(ROOT)).toBeNull();
+        expect(store.status(ROOT)).toBe('absent');
+      });
+
+      it('THEN nothing spawns and nothing is announced', () => {
+        expect(h.readAffected).toHaveBeenCalledOnce();
+        expect(h.changed).toHaveBeenCalledOnce();
+      });
+
+      it('THEN the next rootShown spawns one new query that stays live', () => {
+        store.rootShown(ROOT);
+
+        expect(h.readAffected).toHaveBeenCalledTimes(2);
+        expect(readAt(h, 1).signal.aborted).toBe(false);
+      });
     });
   });
 });

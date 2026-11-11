@@ -90,7 +90,10 @@ export class AffectedLoads {
   }
 
   public refreshAll(): void {
-    for (const root of this.slots.keys()) this.restart(root);
+    const keys = this.slots.keys();
+    const roots = Array.from(keys);
+
+    for (const root of roots) this.restart(root);
   }
 
   /** A removed root keeps nothing: its query aborts and nothing is announced. */
@@ -164,7 +167,9 @@ export class AffectedLoads {
   }
 
   private settle(root: string, controller: AbortController, result: AffectedResult): void {
-    if (this.slots.get(root)?.controller !== controller) return;
+    const isCurrent = this.slots.get(root)?.controller === controller;
+
+    if (!isCurrent) return;
 
     const view = viewOf(result, this.ports.modelOf(root), this.ports.now());
 
@@ -173,7 +178,9 @@ export class AffectedLoads {
   }
 
   private fail(root: string, controller: AbortController, error: unknown): void {
-    if (this.slots.get(root)?.controller !== controller) return;
+    const isCurrent = this.slots.get(root)?.controller === controller;
+
+    if (!isCurrent) return;
 
     this.slots.set(root, { view: null, controller: null });
     this.ports.log(logTextOf(`affected ${root}: ${logTextOf(error)}`));

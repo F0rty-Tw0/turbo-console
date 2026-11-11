@@ -69,6 +69,22 @@ describe('FEATURE: affected loads when roots go away', () => {
     });
   });
 
+  describe('GIVEN a kept root on the wait list', () => {
+    it('WHEN the binary arrives and the model is republished THEN it spawns once', () => {
+      const same = buildModelOf([PKG_A]);
+
+      h.model(ROOT, same);
+      h.noBinary();
+      store.toggled(true);
+      store.rootShown(ROOT);
+      store.rootsKept(new Set([ROOT]));
+      h.binary();
+      store.modelChanged(changeOf(same, same));
+
+      expect(h.readAffected).toHaveBeenCalledOnce();
+    });
+  });
+
   describe('GIVEN a disposed store with a live query', () => {
     beforeEach(async () => {
       await toState(h, store, 'loading');
