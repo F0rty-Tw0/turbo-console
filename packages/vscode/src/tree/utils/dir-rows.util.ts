@@ -1,8 +1,11 @@
 import type { PackageNode } from '@turbo-console/core';
 
+import { withAffectedWord } from './affected-word.util.ts';
 import { packagePathTextOf, packageTextOf, shownTextOf } from './model-view.util.ts';
+import { packageAffectedOf } from './package-affected.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import { withRunningSuffix } from './running-count.util.ts';
+import { lineOf } from './task-row.util.ts';
 import { DESCRIPTION_MAX, LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
@@ -41,7 +44,8 @@ export const dirRow = (root: string, dir: FolderDir, view: ModelView, running: R
  * `key` and `packageName` keep the raw model name; only `label` and `description` are cleaned. The label is the cleaned
  * text `shownTextOf` returns: the full shown text or the bare text (spec §4.8). The description is the package path, or empty when it equals the label the row
  * shows (spec §4.7: descriptions never repeat the label). The tooltip always starts with the full shown text (spec §4.9) and
- * counts the visible tasks the view holds for it. UB5a §3.3: the cut path, then the count of its runs.
+ * counts the visible tasks the view holds for it. UB5a §3.3: the cut path, then the count of its runs. The affected word
+ * joins last (never cut) and its count line ends the tooltip.
  */
 export const packageRow = (root: string, pkg: PackageNode, view: ModelView, inputs: RowInputs): TreeRow => {
   const label = shownTextOf(view, pkg, inputs.scopeShown);
@@ -49,8 +53,11 @@ export const packageRow = (root: string, pkg: PackageNode, view: ModelView, inpu
   const path = cleanText(pathText, DESCRIPTION_MAX);
   const shownPath = path === label ? '' : path;
   const runningCount = inputs.running.packages.get(pkg.name) ?? 0;
-  const description = withRunningSuffix(shownPath, runningCount);
   const taskCount = view.visibleTaskCounts.get(pkg.name) ?? 0;
+  const affected = packageAffectedOf(pkg, taskCount, inputs.affected);
+  const description = withAffectedWord(withRunningSuffix(shownPath, runningCount), affected?.word ?? null);
+  const counts = [packageTextOf(pkg), `Path: ${pathText}`, `Tasks: ${taskCount}`];
+  const marked = lineOf(affected?.line ?? null);
   const row: TreeRow = {
     id: rowIdOf('pkg', root, pkg.name),
     kind: 'pkg',
@@ -62,7 +69,7 @@ export const packageRow = (root: string, pkg: PackageNode, view: ModelView, inpu
     icon: PACKAGE_ICON,
     contextValue: 'turboPackage',
     collapsible: 'collapsed',
-    tooltip: [packageTextOf(pkg), `Path: ${pathText}`, `Tasks: ${taskCount}`],
+    tooltip: [...counts, ...marked],
     command: null,
     folder: pkg.path
   };

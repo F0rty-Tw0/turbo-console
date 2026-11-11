@@ -1,5 +1,6 @@
 import type { PackageManager } from '@turbo-console/core';
 
+import type { AffectedView } from './affected.type.ts';
 import type { ModelView } from './model-view.type.ts';
 import type { RunState } from '../../run/common/run.type.ts';
 
@@ -115,10 +116,11 @@ type RunningCountsOfLive = {
  */
 export type RunningCountsMemo = WeakMap<ModelView, RunningCountsOfLive>;
 
-/** What package and folder rows read beside the view: whether full names show, and the running counts of their root. */
+/** What package and folder rows read beside the view: whether full names show, the running counts of their root, and its affected view (`null` when it has none). */
 export type RowInputs = {
   readonly scopeShown: boolean;
   readonly running: RunningCounts;
+  readonly affected: AffectedView | null;
 };
 
 export type EndedState = Exclude<RunState, 'running'>;

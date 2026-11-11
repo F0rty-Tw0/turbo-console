@@ -19,5 +19,5 @@ export const TREE_ROW_STUB: TreeRow = {
 /** Nothing runs. */
 export const RUNNING_COUNTS_STUB: RunningCounts = { packages: new Map(), dirs: new Map() };
 
-/** Bare labels, nothing runs. */
-export const ROW_INPUTS_STUB: RowInputs = { scopeShown: false, running: RUNNING_COUNTS_STUB };
+/** Bare labels, nothing runs, nothing affected. */
+export const ROW_INPUTS_STUB: RowInputs = { scopeShown: false, running: RUNNING_COUNTS_STUB, affected: null };
