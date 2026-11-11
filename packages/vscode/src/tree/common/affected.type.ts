@@ -8,6 +8,9 @@ export type AffectedMode = AffectedResult['mode'];
 /** `changed`: the task's own package changed; `dependency`: it runs because of another package or task. */
 export type AffectedMark = 'changed' | 'dependency';
 
+/** What the other tasks of a package say about it: a file reason among its kept rows, a kept upstream row its tasks depend on. */
+export type AffectedPackageFlags = { readonly hasFileSibling: boolean; readonly hasAffectedUpstream: boolean };
+
 /** `line` is the full task tooltip line. */
 export type AffectedEntry = { readonly mark: AffectedMark; readonly line: string };
 

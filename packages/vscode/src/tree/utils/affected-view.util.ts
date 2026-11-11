@@ -4,7 +4,7 @@ import { affectedMarkOf } from './affected-mark.util.ts';
 import { affectedWhyOf } from './affected-why.util.ts';
 import { clockOf } from './clock-text.util.ts';
 import { AFFECTED_FILE_REASONS, AFFECTED_LEVELS } from '../common/affected.const.ts';
-import type { AffectedEntry, AffectedView } from '../common/affected.type.ts';
+import type { AffectedEntry, AffectedPackageFlags, AffectedView } from '../common/affected.type.ts';
 
 type AffectedRow = AffectedResult['tasks'][number];
 
@@ -35,6 +35,27 @@ const fileReasonPackagesOf = (rows: AffectedRow[], keptById: Map<string, Kept>):
   return packages;
 };
 
+const upstreamPackagesOf = (model: WorkspaceModel, rows: AffectedRow[], keptById: Map<string, Kept>): Set<string> => {
+  const rowIds = new Set(rows.map((row) => row.id));
+  const packages = new Set<string>();
+
+  for (const pkg of model.packages) {
+    const dependencyIds = pkg.tasks.flatMap((task) => task.dependencies);
+    const isUpstreamRow = (id: string): boolean => {
+      const owner = keptById.get(id);
+      const isOtherPackage = owner !== undefined && owner.packageName !== pkg.name;
+
+      return isOtherPackage && rowIds.has(id);
+    };
+
+    const hasUpstream = dependencyIds.some(isUpstreamRow);
+
+    if (hasUpstream) packages.add(pkg.name);
+  }
+
+  return packages;
+};
+
 const lineOf = (result: AffectedResult, row: AffectedRow, settledAt: number): string => {
   const level = AFFECTED_LEVELS[result.mode];
   const why = affectedWhyOf(row.reason, row.detail);
@@ -46,6 +67,7 @@ const lineOf = (result: AffectedResult, row: AffectedRow, settledAt: number): st
 export const affectedViewOf = (result: AffectedResult, model: WorkspaceModel, settledAt: number): AffectedView => {
   const keptById = keptByIdOf(model);
   const fileReasonPackages = fileReasonPackagesOf(result.tasks, keptById);
+  const upstreamPackages = upstreamPackagesOf(model, result.tasks, keptById);
   const tasks = new Map<string, AffectedEntry>();
 
   for (const row of result.tasks) {
@@ -54,7 +76,9 @@ export const affectedViewOf = (result: AffectedResult, model: WorkspaceModel, se
     if (kept === undefined) continue;
 
     const hasFileSibling = fileReasonPackages.has(kept.packageName);
-    const mark = affectedMarkOf(kept.task, row.reason, hasFileSibling);
+    const hasAffectedUpstream = upstreamPackages.has(kept.packageName);
+    const flags: AffectedPackageFlags = { hasFileSibling, hasAffectedUpstream };
+    const mark = affectedMarkOf(kept.task, row.reason, row.detail, flags);
     const line = lineOf(result, row, settledAt);
 
     tasks.set(row.id, { mark, line });

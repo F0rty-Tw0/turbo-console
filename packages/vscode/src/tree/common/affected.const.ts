@@ -19,3 +19,6 @@ export const AFFECTED_FILE_REASONS: ReadonlySet<string> = new Set([
 
 /** The turbo reasons that name another task or package as the cause. */
 export const AFFECTED_DEPENDENCY_REASONS: ReadonlySet<string> = new Set(['TaskDependencyTaskChanged', 'TaskPackageDependencyChanged']);
+
+/** Turbo's own `detail` text of a `TaskAllChanged` row for an upstream task that runs only because a dependent is affected. */
+export const AFFECTED_REQUIRED_DETAIL = 'required by an affected task';

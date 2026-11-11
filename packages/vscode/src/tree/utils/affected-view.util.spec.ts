@@ -35,6 +35,25 @@ const abModel = (): WorkspaceModel => {
   return predictionModelOf(packages);
 };
 
+const TASK_NAMES = ['build', 'lint', 'test'];
+
+const PACKAGE_NAMES = ['lib', 'app'];
+
+const ALL_CHANGED_IDS = PACKAGE_NAMES.flatMap((pkg) => TASK_NAMES.map((name) => `@fx/${pkg}#${name}`));
+
+const libAppModel = (appBuildDependencies: string[]): WorkspaceModel => {
+  const lib = TASK_NAMES.map((name) => turboTaskOf('@fx/lib', name));
+  const app = TASK_NAMES.map((name) => {
+    const isBuild = name === 'build';
+    const none: string[] = [];
+    const dependencies = isBuild ? appBuildDependencies : none;
+
+    return turboTaskOf('@fx/app', name, { dependencies });
+  });
+
+  return predictionModelOf({ '@fx/lib': lib, '@fx/app': app });
+};
+
 describe('FEATURE: affected view', () => {
   describe('GIVEN a kept task', () => {
     it('WHEN the view is built THEN its entry holds the mark and the full line', () => {
@@ -119,11 +138,11 @@ describe('FEATURE: affected view', () => {
       ]);
     });
 
-    it('WHEN @fx/b#lint is TaskAllChanged alone in its package THEN it is "dependency"', () => {
-      expect(marksOf(abModel(), [['@fx/b#lint', 'TaskAllChanged']])).toStrictEqual([['@fx/b#lint', 'dependency']]);
+    it('WHEN @fx/b#lint is TaskAllChanged alone in its package with no upstream row THEN it is "changed"', () => {
+      expect(marksOf(abModel(), [['@fx/b#lint', 'TaskAllChanged']])).toStrictEqual([['@fx/b#lint', 'changed']]);
     });
 
-    it('WHEN the only file-reason sibling is an atom-file task of the package THEN the plain TaskAllChanged task is "dependency"', () => {
+    it('WHEN the only file-reason sibling is an atom-file task of the package THEN the plain TaskAllChanged task is "changed"', () => {
       const atomFile = turboTaskOf('@fx/a', 'e2e-ci--x.spec.ts', { kind: 'atom-file' });
       const model = predictionModelOf({ '@fx/a': [atomFile, turboTaskOf('@fx/a', 'build')] });
       const rows: [string, string][] = [
@@ -131,16 +150,16 @@ describe('FEATURE: affected view', () => {
         ['@fx/a#build', 'TaskAllChanged']
       ];
 
-      expect(marksOf(model, rows)).toStrictEqual([['@fx/a#build', 'dependency']]);
+      expect(marksOf(model, rows)).toStrictEqual([['@fx/a#build', 'changed']]);
     });
 
-    it('WHEN the only file-reason sibling id is not in the model THEN the TaskAllChanged task is "dependency"', () => {
+    it('WHEN the only file-reason sibling id is not in the model THEN the TaskAllChanged task is "changed"', () => {
       const rows: [string, string][] = [
         ['@fx/a#carrier', 'TaskFileChanged'],
         ['@fx/a#build', 'TaskAllChanged']
       ];
 
-      expect(marksOf(abModel(), rows)).toStrictEqual([['@fx/a#build', 'dependency']]);
+      expect(marksOf(abModel(), rows)).toStrictEqual([['@fx/a#build', 'changed']]);
     });
 
     it('WHEN the file-reason sibling is in another package THEN it does not count', () => {
@@ -151,7 +170,7 @@ describe('FEATURE: affected view', () => {
 
       expect(marksOf(abModel(), rows)).toStrictEqual([
         ['@fx/a#build', 'changed'],
-        ['@fx/b#lint', 'dependency']
+        ['@fx/b#lint', 'changed']
       ]);
     });
 
@@ -167,6 +186,59 @@ describe('FEATURE: affected view', () => {
         mark: 'dependency',
         line: 'Affected (task level): required by an affected task (as of 14:05)'
       });
+    });
+
+    it('WHEN every task of lib and app is "package is affected" and app#build depends on lib#build THEN lib is "changed" and app is "dependency"', () => {
+      const model = libAppModel(['@fx/lib#build']);
+      const rows = ALL_CHANGED_IDS.map((id): [string, string, string] => [id, 'TaskAllChanged', 'package is affected']);
+
+      expect(marksOf(model, rows)).toStrictEqual([
+        ['@fx/lib#build', 'changed'],
+        ['@fx/lib#lint', 'changed'],
+        ['@fx/lib#test', 'changed'],
+        ['@fx/app#build', 'dependency'],
+        ['@fx/app#lint', 'dependency'],
+        ['@fx/app#test', 'dependency']
+      ]);
+    });
+
+    it('WHEN the upstream task app#build depends on is not a row THEN app reads "changed"', () => {
+      const model = libAppModel(['@fx/lib#build']);
+      const rows: [string, string, string][] = [
+        ['@fx/lib#lint', 'TaskAllChanged', 'package is affected'],
+        ['@fx/app#build', 'TaskAllChanged', 'package is affected']
+      ];
+
+      expect(marksOf(model, rows)).toStrictEqual([
+        ['@fx/lib#lint', 'changed'],
+        ['@fx/app#build', 'changed']
+      ]);
+    });
+
+    it('WHEN the upstream task is a row but is an atom-file task THEN app reads "changed"', () => {
+      const atomFile = turboTaskOf('@fx/lib', 'e2e-ci--x.spec.ts', { kind: 'atom-file' });
+      const app = turboTaskOf('@fx/app', 'build', { dependencies: ['@fx/lib#e2e-ci--x.spec.ts'] });
+      const model = predictionModelOf({ '@fx/lib': [atomFile], '@fx/app': [app] });
+      const rows: [string, string, string][] = [
+        ['@fx/lib#e2e-ci--x.spec.ts', 'TaskAllChanged', 'package is affected'],
+        ['@fx/app#build', 'TaskAllChanged', 'package is affected']
+      ];
+
+      expect(marksOf(model, rows)).toStrictEqual([['@fx/app#build', 'changed']]);
+    });
+
+    it('WHEN a task depends only on tasks of its own package that are rows THEN it reads "changed"', () => {
+      const lint = turboTaskOf('@fx/lib', 'lint', { dependencies: ['@fx/lib#build'] });
+      const model = predictionModelOf({ '@fx/lib': [turboTaskOf('@fx/lib', 'build'), lint] });
+      const rows: [string, string, string][] = [
+        ['@fx/lib#build', 'TaskAllChanged', 'package is affected'],
+        ['@fx/lib#lint', 'TaskAllChanged', 'package is affected']
+      ];
+
+      expect(marksOf(model, rows)).toStrictEqual([
+        ['@fx/lib#build', 'changed'],
+        ['@fx/lib#lint', 'changed']
+      ]);
     });
 
     it('WHEN an umbrella has TaskFileChanged and a TaskAllChanged task shares its package THEN the umbrella reads "dependency" and the other "changed"', () => {
