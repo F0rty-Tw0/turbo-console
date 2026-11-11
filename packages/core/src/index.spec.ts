@@ -71,6 +71,7 @@ const RUNTIME_EXPORTS = [
   'SUPPORTED_TURBO_RANGE',
   'TurboException',
   'affectedTasksSchema',
+  'assertRunExtras',
   'assertTaskName',
   'atomGroupsOf',
   'dryRunSchema',
