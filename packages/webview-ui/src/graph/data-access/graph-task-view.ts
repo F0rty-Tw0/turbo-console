@@ -5,11 +5,11 @@ import { positionOf } from './graph-place.ts';
 import { applyRoutes } from './graph-routes.ts';
 import { boxesOf } from './graph-task-boxes.ts';
 import { applyBoxFrames, refitBoxFrames } from './graph-task-frames.ts';
-import { markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
+import { markAffected, markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
 import { paintTasks } from './graph-task-paint.ts';
 import type { GraphEdge, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
-import { NO_PREDICTIONS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
-import type { TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
+import { NO_AFFECTED, NO_PREDICTIONS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
+import type { TaskAffectedMarks, TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
@@ -59,26 +59,42 @@ const centresOf = (cy: Core): Positions => {
   return Object.fromEntries(entries);
 };
 
+/** Replaces every element with the drawn tasks, their box frames and link routes; marks and paint come after. */
+const drawTasks = (cy: Core, drawing: TaskDrawing): void => {
+  const elements = elementsOf(drawing);
+
+  cy.resize();
+  cy.elements().remove();
+  cy.add(elements);
+  applyBoxFrames(cy, drawing.boxFrames);
+  applyRoutes(cy, drawing.routes);
+};
+
+const moveTasks = (cy: Core, positions: Positions): void => {
+  const placeNode = (node: NodeSingular): Position => positionOf(positions, node.id());
+
+  taskNodes(cy).positions(placeNode);
+};
+
 /**
  * The task graph on `cy`, the core the package graph shares; showing it removes the package graph. The last paint
- * target, runs map and predictions are kept, so a task graph drawn again carries them.
+ * target, runs map, predictions and affected marks are kept, so a task graph drawn again carries them.
  */
 export const createTaskCanvas = (cy: Core): TaskCanvas => {
   let target: string | null = null;
   let runs: TaskRuns = {};
   let predicted: TaskPredictions = NO_PREDICTIONS;
-  const show = (drawing: TaskDrawing): void => {
-    const elements = elementsOf(drawing);
-
-    cy.resize();
-    cy.elements().remove();
-    cy.add(elements);
-    applyBoxFrames(cy, drawing.boxFrames);
-    applyRoutes(cy, drawing.routes);
+  let marked: TaskAffectedMarks = NO_AFFECTED;
+  const remark = (): void => {
     paintTasks(cy, target);
     markRuns(cy, runs);
     markPredictions(cy, predicted);
+    markAffected(cy, marked);
     refitBoxFrames(cy);
+  };
+  const show = (drawing: TaskDrawing): void => {
+    drawTasks(cy, drawing);
+    remark();
   };
   const paint = (next: string | null): void => {
     target = next;
@@ -99,22 +115,19 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
 
     if (isChanged) refitBoxFrames(cy);
   };
-  const setPositions = (positions: Positions): void => {
-    const placeNode = (node: NodeSingular): Position => positionOf(positions, node.id());
+  const affected = (next: TaskAffectedMarks): void => {
+    if (next === marked) return;
 
-    taskNodes(cy).positions(placeNode);
+    marked = next;
+    markAffected(cy, next);
   };
+  const setPositions = (positions: Positions): void => moveTasks(cy, positions);
   const setRoutes = (routes: Routes): void => applyRoutes(cy, routes);
   const positions = (): Positions => centresOf(cy);
   const clear = (): void => void cy.elements().remove();
   const setCounts = (labels: ReadonlyMap<string, string>): void => setCountLabels(cy, labels);
-  const remark = (): void => {
-    paintTasks(cy, target);
-    markRuns(cy, runs);
-    markPredictions(cy, predicted);
-    refitBoxFrames(cy);
-  };
-  const canvas: TaskCanvas = { show, clear, setPositions, setRoutes, positions, paint, runStates, predictions, setCounts, remark };
+  const marks = { paint, runStates, predictions, affected, remark };
+  const canvas: TaskCanvas = { show, clear, setPositions, setRoutes, positions, setCounts, ...marks };
 
   return canvas;
 };

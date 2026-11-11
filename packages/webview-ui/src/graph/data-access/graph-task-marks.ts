@@ -1,11 +1,11 @@
 import type { Core, NodeCollection, NodeSingular } from 'cytoscape';
 
 import { setClassesAmong } from './graph-classes.ts';
-import { PREDICTION_WORDS, RUN_STATES } from '../../bridge/common/graph-message.const.ts';
+import { AFFECTED_MARKS, PREDICTION_WORDS, RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
-import { NO_CLASSES, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
-import type { TaskPredictions } from '../common/task-canvas.type.ts';
+import { AFFECTED_CLASS_PREFIX, NO_CLASSES, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import type { TaskAffectedMarks, TaskPredictions } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
 import { runClassOf } from '../utils/package-run.util.ts';
 import { predictionClassOf } from '../utils/prediction-class.util.ts';
@@ -14,6 +14,8 @@ import { runStateOf } from '../utils/task-run.util.ts';
 const RUN_CLASS_NAMES: string[] = RUN_STATES.map(runClassOf);
 
 const PREDICTION_CLASS_NAMES: string[] = PREDICTION_WORDS.map(predictionClassOf);
+
+const AFFECTED_CLASS_NAMES: string[] = AFFECTED_MARKS.map((mark) => AFFECTED_CLASS_PREFIX + mark);
 
 const runClassesOf = (state: GraphRunState | null): string[] => {
   if (state === null) return NO_CLASSES;
@@ -31,6 +33,18 @@ const predictionClassesOf = (predicted: TaskPredictions, id: string): string[] =
   if (!hasWord || word === undefined) return NO_CLASSES;
 
   const name = predictionClassOf(word);
+
+  return [name];
+};
+
+/** The class of the task's mark in `marked`; an own key only, so `constructor` or `__proto__` never reads as a mark. */
+const affectedClassesOf = (marked: TaskAffectedMarks, id: string): string[] => {
+  const hasMark = Object.hasOwn(marked, id);
+  const mark = marked[id];
+
+  if (!hasMark || mark === undefined) return NO_CLASSES;
+
+  const name = AFFECTED_CLASS_PREFIX + mark;
 
   return [name];
 };
@@ -67,4 +81,15 @@ export const markPredictions = (cy: Core, predicted: TaskPredictions): boolean =
   cy.batch((): void => void taskNodes(cy).forEach(markTask));
 
   return isChanged;
+};
+
+/** One `affected-<mark>` class per task node in `marked`, none on the rest; a node already right is not touched. */
+export const markAffected = (cy: Core, marked: TaskAffectedMarks): void => {
+  const markTask = (node: NodeSingular): void => {
+    const wanted = affectedClassesOf(marked, node.id());
+
+    setClassesAmong(node, AFFECTED_CLASS_NAMES, wanted);
+  };
+
+  cy.batch((): void => void taskNodes(cy).forEach(markTask));
 };

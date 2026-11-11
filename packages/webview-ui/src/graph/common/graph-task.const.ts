@@ -1,5 +1,5 @@
 import type { RunStateIconId } from './graph-icon.type.ts';
-import type { TaskPredictions } from './task-canvas.type.ts';
+import type { TaskAffectedMarks, TaskPredictions } from './task-canvas.type.ts';
 import type { TaskOwners } from './task-details.type.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 
@@ -105,6 +105,9 @@ export const SHOW_PREDICTION_LABEL = 'Show cache prediction';
 /** Starts each prediction class on a task node: `predict-cached`, `predict-notCached`, `predict-unknown`. */
 export const PREDICTION_CLASS_PREFIX = 'predict-';
 
+/** Starts each affected class on a task node: `affected-changed`, `affected-dependency`. */
+export const AFFECTED_CLASS_PREFIX = 'affected-';
+
 /** The run states whose glyph wins over a cache prediction; an ended run's glyph yields to it. */
 export const LIVE_RUN_STATES: GraphRunState[] = ['running', 'continuous'];
 
@@ -166,6 +169,9 @@ export const NO_OWNERS: TaskOwners = {};
 
 /** No predictions: the canvas before any record, or an untrusted record; one shared object, so the canvas skips a repeat. */
 export const NO_PREDICTIONS: TaskPredictions = {};
+
+/** No affected marks: the canvas before any record, or a cleared one; one shared object, so the canvas skips a repeat. */
+export const NO_AFFECTED: TaskAffectedMarks = {};
 
 /** The wanted classes of an element that should carry none of a class set. */
 export const NO_CLASSES: string[] = [];
