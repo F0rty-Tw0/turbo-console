@@ -128,7 +128,10 @@ export class PackagesTree {
     this.refresher.refreshTasks(running);
   }
 
-  /** The Refresh command: every shared load (Atomizer, prediction and affected) loads again; a package never opened stays unloaded. */
+  /**
+   * The Refresh command: the Atomizer and prediction loads load again; a package never opened stays unloaded. Affected
+   * follows the reloaded model, so a failed reload keeps the old model and with it the old affected marks.
+   */
   public refreshAtoms(): void {
     this.loads.refreshAll();
   }

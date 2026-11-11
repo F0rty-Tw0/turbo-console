@@ -1,15 +1,24 @@
-import { chmod, cp, mkdir, symlink, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { PRESETS, fixtureFor } from '@turbo-console/repo-gen';
+import { PRESETS } from '@turbo-console/repo-gen';
 import type { FixtureSpec } from '@turbo-console/repo-gen';
 
+import { featRepoOf } from './feat-repo.spec.util.ts';
+import { copyFixture } from './fixture-copy.spec.util.ts';
 import { initGit, writeEmptyWorkspace, writeSingleApp } from './single-package-fixture.spec.util.ts';
-import { runEach } from './workspace.spec.util.ts';
+import { folderWorkspace, workspaceDirOf } from './workspace.spec.util.ts';
 import { devTurboPath } from '../../src/shared/test/utils/dev-turbo.spec.util.ts';
 import { ROOT_TASK_NAME } from '../common/graph.const.ts';
 import { LATE_TURBO_COMMAND, LATE_TURBO_DIR } from '../common/launch.const.ts';
-import type { LaunchName, LaunchTurboPath, LaunchWorkspace, PreparedWorkspace, RunScratch } from '../common/launch.type.ts';
+import type {
+  LaunchName,
+  LaunchTurboPath,
+  LaunchWorkspace,
+  PreparedWorkspace,
+  RunScratch,
+  WorkspacePrep
+} from '../common/launch.type.ts';
 
 const BAD_TURBO_JSON = '{ "tasks": { oops';
 
@@ -25,23 +34,6 @@ const EXECUTABLE_MODE = 0o755;
 
 const devTurbo = devTurboPath();
 
-const workspaceDirOf = (scratch: RunScratch, name: LaunchName): string => join(scratch.dir, `${name}-workspace`);
-
-/** A single-folder window on `dir`. */
-const folderWorkspace = (dir: string): PreparedWorkspace => {
-  const prepared: PreparedWorkspace = { open: dir, folders: [dir] };
-
-  return prepared;
-};
-
-/** A fresh copy of `spec` (`target-like` unless given) at `dir`, from repo-gen's cache, so no earlier launch's edits or turbo files reach it. */
-const copyFixture = async (dir: string, spec: FixtureSpec = PRESETS['target-like']): Promise<void> => {
-  const fixture = await fixtureFor(spec);
-  const copy = async (): Promise<void> => cp(fixture.dir, dir, { recursive: true });
-
-  await runEach([copy, fixture.dispose]);
-};
-
 /** `empty-folder`: an empty dir. */
 const emptyFolder = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
   const dir = workspaceDirOf(scratch, name);
@@ -52,7 +44,7 @@ const emptyFolder = async (scratch: RunScratch, name: LaunchName): Promise<Prepa
 };
 
 /** A workspace prep that opens a fresh copy of `spec` in the launch's own dir. */
-const fixtureCopyOf = (spec: FixtureSpec): ((scratch: RunScratch, name: LaunchName) => Promise<PreparedWorkspace>) => {
+const fixtureCopyOf = (spec: FixtureSpec): WorkspacePrep => {
   const prepare = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
     const dir = workspaceDirOf(scratch, name);
 
@@ -71,6 +63,25 @@ const ROOT_TASK = { name: ROOT_TASK_NAME, command: 'echo root' };
 
 /** `fixture-root-task`: a `target-like` copy whose root has the real script `rootgen`, so turbo lists `//#rootgen` with a command. */
 const rootTaskFixture = fixtureCopyOf({ ...PRESETS['target-like'], rootTask: ROOT_TASK });
+
+/** `fixture-feat`: a `target-like` copy on branch `feat` with a README commit and an uncommitted leaf source edit. */
+const featFixture = featRepoOf(PRESETS['target-like'], { uncommitted: true });
+
+/** `fixture-feat-package`: `fixture-feat` with `futureFlags.affectedUsingTaskInputs` off, so turbo lists affected tasks per package. */
+const featPackageFixture = featRepoOf({ ...PRESETS['target-like'], affectedUsingTaskInputs: false }, { uncommitted: true });
+
+/** `fixture-feat-committed`: `fixture-feat` without the uncommitted edit, so every change is on the `feat` branch. */
+const featCommittedFixture = featRepoOf(PRESETS['target-like'], { uncommitted: false });
+
+/** `fixture-no-git`: a `target-like` copy without its `.git`; turbo lists and dry-runs it, but cannot compute the affected list. */
+const noGitFixture = async (scratch: RunScratch, name: LaunchName): Promise<PreparedWorkspace> => {
+  const dir = workspaceDirOf(scratch, name);
+
+  await copyFixture(dir);
+  await rm(join(dir, '.git'), { recursive: true, force: true });
+
+  return folderWorkspace(dir);
+};
 
 /**
  * `error-roots`: a `.code-workspace` with two `target-like` copies, `bad` whose `turbo.json` is invalid JSON and `empty`
@@ -159,10 +170,14 @@ const lateTurbo = async (scratch: RunScratch): Promise<string> => {
 };
 
 /** Each workspace kind's prep; a new `LaunchWorkspace` member fails to compile until it has one. */
-export const WORKSPACES: Record<LaunchWorkspace, (scratch: RunScratch, name: LaunchName) => Promise<PreparedWorkspace>> = {
+export const WORKSPACES: Record<LaunchWorkspace, WorkspacePrep> = {
   'fixture-l1': async (scratch) => Promise.resolve(folderWorkspace(scratch.fixtureDir)),
   fixture: fixtureCopy,
   'fixture-root-task': rootTaskFixture,
+  'fixture-feat': featFixture,
+  'fixture-feat-package': featPackageFixture,
+  'fixture-feat-committed': featCommittedFixture,
+  'fixture-no-git': noGitFixture,
   'empty-folder': emptyFolder,
   'error-roots': errorRoots,
   'two-roots': twoRoots,

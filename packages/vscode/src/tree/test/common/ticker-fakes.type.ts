@@ -8,6 +8,12 @@ export type VisibleViewFake = {
   readonly setVisible: (visible: boolean) => void;
 };
 
+/** A shown Packages view whose description a spec sets: `setDescription` changes what `view.description` reads. */
+export type DescribedView = {
+  readonly view: VisibleView;
+  readonly setDescription: (description: string | undefined) => void;
+};
+
 /** A run store whose entry changes a spec emits by hand. */
 export type RunChangesFake = {
   readonly runs: RunChanges;

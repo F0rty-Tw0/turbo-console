@@ -109,11 +109,11 @@ describe('FEATURE: affected loads when roots go away', () => {
       expect(h.log).not.toHaveBeenCalled();
     });
 
-    it('WHEN the root is shown, the toggle goes on and everything refreshes THEN nothing spawns', () => {
+    it('WHEN the root is shown, the toggle goes on and a new model arrives THEN nothing spawns', () => {
       store.rootShown(ROOT);
       store.toggled(true);
       store.rootShown(ROOT);
-      store.refreshAll();
+      store.modelChanged(changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_A])));
 
       expect(h.readAffected).toHaveBeenCalledOnce();
     });

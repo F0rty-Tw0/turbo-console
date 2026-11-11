@@ -5,6 +5,7 @@ import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import type { TreeNode } from '../common/tree-node.type.ts';
+import { sharedAffectedMock } from '../test/mocks/shared-affected.mock.ts';
 import { SHARED_AFFECTED_STUB } from '../test/stubs/shared-affected.stub.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { SHARED_PREDICTION_STUB } from '../test/stubs/shared-prediction.stub.ts';
@@ -29,7 +30,7 @@ const FORWARD_CASES: ForwardCase[] = [
   { method: 'dispose', call: (trees) => trees.dispose(), args: [] }
 ];
 
-type AffectedForwarded = 'modelChanged' | 'rootsChanged' | 'refreshAll' | 'dispose';
+type AffectedForwarded = 'modelChanged' | 'rootsChanged' | 'dispose';
 
 type AffectedForwardCase = {
   readonly method: AffectedForwarded;
@@ -40,7 +41,6 @@ type AffectedForwardCase = {
 const AFFECTED_FORWARD_CASES: AffectedForwardCase[] = [
   { method: 'modelChanged', call: (trees) => trees.modelChanged(CHANGE), args: [CHANGE] },
   { method: 'rootsChanged', call: (trees) => trees.rootsChanged(), args: [] },
-  { method: 'refreshAll', call: (trees) => trees.refreshAll(), args: [] },
   { method: 'dispose', call: (trees) => trees.dispose(), args: [] }
 ];
 
@@ -84,5 +84,20 @@ describe('FEATURE: load trees', () => {
         expect(affected).toHaveBeenCalledExactlyOnceWith(...args);
       }
     );
+  });
+
+  describe('GIVEN load trees over a spied shared affected store', () => {
+    it('WHEN refreshAll is called THEN no store entry that starts a query is reached: the reloaded model asks again, one query per Refresh', () => {
+      const shared = sharedAffectedMock();
+      const ports = { atom: SHARED_ATOMS_STUB, prediction: SHARED_PREDICTION_STUB, affected: shared, fire: vi.fn() };
+      const spied = new LoadTrees(new RootStore(), new Map(), ports);
+      const starters = [shared.rootShown, shared.toggled, shared.modelChanged];
+
+      spied.refreshAll();
+
+      const reached = starters.filter((starter) => vi.mocked(starter).mock.calls.length > 0);
+
+      expect(reached).toStrictEqual([]);
+    });
   });
 });

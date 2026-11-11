@@ -12,4 +12,6 @@ export class TreeVisibility {
   }
 
   public readonly read = (): boolean => this.view?.visible ?? false;
+
+  public readonly description = (): string => this.view?.description ?? '';
 }

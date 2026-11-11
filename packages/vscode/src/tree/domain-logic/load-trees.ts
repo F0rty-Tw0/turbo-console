@@ -5,7 +5,7 @@ import type { RootChange, Roots } from '../../roots/common/coordinator.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 
-/** The shared loads the tree feeds (the Atomizer's, the cache prediction's, the affected tasks'): a model, roots or refresh event reaches each; a node or run event only the first two. */
+/** The shared loads the tree feeds (the Atomizer's, the cache prediction's, the affected tasks'): a model or roots event reaches each, a refresh event the first two (the Refresh reloads every model and each new model asks the affected tasks again, so a refresh here would spawn a second query); a node or run event only the first two. */
 export class LoadTrees {
   public readonly atoms: AtomTree;
   public readonly prediction: PredictionTree;
@@ -46,7 +46,6 @@ export class LoadTrees {
   public refreshAll(): void {
     this.atoms.refreshAll();
     this.prediction.refreshAll();
-    this.affected.refreshAll();
   }
 
   public dispose(): void {

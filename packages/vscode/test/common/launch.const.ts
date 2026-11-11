@@ -27,6 +27,22 @@ const THEME_ICONS: Readonly<Record<string, string>> = { 'turboConsole.icons': 't
 
 const SCM_BASE_KEY = 'TURBO_SCM_BASE';
 
+/**
+ * The CI variables turbo derives its default affected base from: with `GITHUB_ACTIONS` and a pull-request event whose base
+ * branch the repo lacks, `turbo query affectedTasks` lists far more tasks than on a local run (probed on turbo 2.11.7).
+ * A launch whose case relies on turbo's default base deletes them from the extension host env, so a GitHub runner reads
+ * the same list as a local run.
+ */
+export const CI_ENV_KEYS: string[] = [
+  'GITHUB_ACTIONS',
+  'GITHUB_BASE_REF',
+  'GITHUB_HEAD_REF',
+  'GITHUB_EVENT_NAME',
+  'GITHUB_EVENT_PATH',
+  'GITHUB_SHA',
+  'GITHUB_REF'
+];
+
 const SCM_HEAD_KEY = 'TURBO_SCM_HEAD';
 
 const LOG_ORDER_KEY = 'TURBO_LOG_ORDER';
@@ -95,7 +111,34 @@ const L13: Launch = { ...L9, name: 'L13', suite: 'graph.suite', workspace: 'fixt
 const L14: Launch = { ...L9, name: 'L14', suite: 'prediction.suite' };
 
 /**
- * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L14 each get a user-data dir
+ * L15: affected tasks (M3-2) on a `target-like` copy on branch `feat` with a README commit and an uncommitted source edit,
+ * toggle at its default (off). Turbo's default base is the case, so the CI variables are deleted from the host env.
+ */
+const L15: Launch = { ...L9, name: 'L15', suite: 'affected.suite', workspace: 'fixture-feat', unsetEnv: CI_ENV_KEYS };
+
+/** L16: the same toggle on a `target-like` copy without its `.git`, where turbo cannot compute the affected list. */
+const L16: Launch = { ...L9, name: 'L16', suite: 'affected-failed.suite', workspace: 'fixture-no-git' };
+
+/** L17: the same toggle with turbo's package level (`affectedUsingTaskInputs` off); turbo's default base again, so the same CI strip. */
+const L17: Launch = { ...L9, name: 'L17', suite: 'affected-package.suite', workspace: 'fixture-feat-package', unsetEnv: CI_ENV_KEYS };
+
+const HEAD_BASE: Readonly<Record<string, string>> = { [SCM_BASE_KEY]: 'HEAD' };
+
+/**
+ * L18: only committed changes, and `TURBO_SCM_BASE=HEAD` in the host env: the editor port must pass it as the base (F10).
+ * The head default is still turbo's, so the same CI strip.
+ */
+const L18: Launch = {
+  ...L9,
+  name: 'L18',
+  suite: 'affected-committed.suite',
+  workspace: 'fixture-feat-committed',
+  env: HEAD_BASE,
+  unsetEnv: CI_ENV_KEYS
+};
+
+/**
+ * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L18 each get a user-data dir
  * of their own.
  */
-export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14];
+export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14, L15, L16, L17, L18];

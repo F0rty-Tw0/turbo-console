@@ -1,6 +1,7 @@
 import type { PackageRole, TaskKind } from '@turbo-console/repo-gen';
 
-export type LaunchName = 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12' | 'L13' | 'L14';
+export type LaunchName =
+  'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8' | 'L9' | 'L10' | 'L11' | 'L12' | 'L13' | 'L14' | 'L15' | 'L16' | 'L17' | 'L18';
 
 /**
  * `fixture-l1` is the `target-like` copy L1 opens and L2 reopens, so L2 finds the cache L1 stored. `fixture` is a
@@ -8,10 +9,24 @@ export type LaunchName = 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6' | 'L7' | 'L8' |
  * with an invalid `turbo.json`, `empty` with `pnpm-workspace.yaml` globs that match no package. `two-roots` is a
  * two-folder `.code-workspace` of clean copies, `a` and `b`. `single-package` is a git-initialised single-package repo
  * (`single-app`), `empty-workspace` one whose `pnpm-workspace.yaml` declares `packages/*` and finds none. `fixture-root-task` is
- * a `fixture` copy whose root also has the task `//#rootgen` (L13 only).
+ * a `fixture` copy whose root also has the task `//#rootgen` (L13 only). `fixture-feat` is a `fixture` copy on branch `feat`
+ * with a README commit in one package and an uncommitted source edit in a leaf (L15); `fixture-no-git` a `fixture` copy
+ * without its `.git` (L16); `fixture-feat-package` is `fixture-feat` with `futureFlags.affectedUsingTaskInputs` off (L17),
+ * `fixture-feat-committed` the same without the uncommitted edit (L18).
  */
 export type LaunchWorkspace =
-  'fixture-l1' | 'fixture' | 'fixture-root-task' | 'empty-folder' | 'error-roots' | 'two-roots' | 'single-package' | 'empty-workspace';
+  | 'fixture-l1'
+  | 'fixture'
+  | 'fixture-root-task'
+  | 'fixture-feat'
+  | 'fixture-no-git'
+  | 'fixture-feat-package'
+  | 'fixture-feat-committed'
+  | 'empty-folder'
+  | 'error-roots'
+  | 'two-roots'
+  | 'single-package'
+  | 'empty-workspace';
 
 /**
  * The user setting `turboConsole.turboPath`: `dev` is the dev turbo binary, `stub` a POSIX script that prints
@@ -25,7 +40,8 @@ type LaunchUserData = 'U1' | 'own';
 
 /**
  * One VS Code window of the integration run (spec §5.3). `suite` names the bundle `dist-test/<suite>.cjs`, `env` is
- * merged into `extensionTestsEnv`, and `settings` go into the user settings before the window opens.
+ * merged into `extensionTestsEnv`, `unsetEnv` names host env variables the launch deletes, and `settings` go into the user
+ * settings before the window opens.
  */
 export type Launch = {
   readonly name: LaunchName;
@@ -35,6 +51,7 @@ export type Launch = {
   readonly userData: LaunchUserData;
   readonly posixOnly: boolean;
   readonly env: Readonly<Record<string, string>>;
+  readonly unsetEnv?: string[];
   readonly settings: Readonly<Record<string, string>>;
 };
 
@@ -57,6 +74,9 @@ export type PreparedWorkspace = {
   readonly open: string;
   readonly folders: string[];
 };
+
+/** How a workspace kind prepares what its launch opens. */
+export type WorkspacePrep = (scratch: RunScratch, name: LaunchName) => Promise<PreparedWorkspace>;
 
 /** The run's shared state: the fixture copy, its manifest file and the scratch dir that holds U1. */
 export type RunScratch = {
@@ -100,10 +120,12 @@ export type DryRunClose = {
  * idle while turbo processes ran inside `window` (see `idleMs`), `--version` calls included; a process still running is
  * left out. `dryRuns` is the `spawnargs` of each counted spawn that carries `--dry=json` since the last `reset`, and
  * `dryRunCloses` when each of them closed since then, and whether a signal ended it (an aborted prediction).
+ * `affectedQueries` is the `spawnargs` of each counted spawn whose args carry the `affectedTasks(` query since the last `reset`.
  */
 export type SpawnCounter = {
   readonly count: () => number;
   readonly dryRuns: () => string[][];
+  readonly affectedQueries: () => string[][];
   readonly dryRunCloses: () => DryRunClose[];
   readonly turboMs: (window: TimeRange) => number;
   readonly reset: () => void;

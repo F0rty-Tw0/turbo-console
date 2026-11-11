@@ -7,7 +7,7 @@ export { PNPM_ENV_LOCKFILE } from './generate/common/pnpm-env-lockfile.const.ts'
 
 export { fixtureFor, warmFixtureCache } from './generate/domain-logic/fixture-for.ts';
 
-export { applyEdit, commitBaseRepo, generateFixture } from './generate/domain-logic/fixture-generation.ts';
+export { applyEdit, checkoutBranch, commitBaseRepo, generateFixture } from './generate/domain-logic/fixture-generation.ts';
 
 export { renderLockfile } from './generate/utils/render-lockfile.util.ts';
 

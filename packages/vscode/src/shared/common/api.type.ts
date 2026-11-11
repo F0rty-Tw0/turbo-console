@@ -84,7 +84,8 @@ export type RunCommandsUi = {
  * Code gives it. `loads` holds an empty list per root from activation on. `whenIdle` waits for a pending debounced
  * watcher change and any load it starts, then for the root's load in flight; it rejects for a key that is not a current
  * root. `treeVisible` is the Packages view's `visible`, `false` before the workspace is trusted. `progress` reads the
- * task records of the turbo runs this window launched.
+ * task records of the turbo runs this window launched. `treeDescription` is the Packages view's description, `''`
+ * before the view exists or when it has none.
  */
 export type TurboConsoleApi = {
   readonly tree: PackagesTreeApi;
@@ -98,5 +99,6 @@ export type TurboConsoleApi = {
   readonly details: DetailsApi;
   readonly graph: GraphApi;
   readonly treeVisible: () => boolean;
+  readonly treeDescription: () => string;
   readonly ticker: TickerApi;
 };

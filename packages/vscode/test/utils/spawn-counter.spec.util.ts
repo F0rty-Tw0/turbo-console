@@ -3,6 +3,7 @@ import { subscribe, unsubscribe } from 'node:diagnostics_channel';
 import { basename } from 'node:path';
 
 import { idleMs } from './timing.spec.util.ts';
+import { AFFECTED_QUERY_MARK } from '../common/affected.const.ts';
 import type { DryRunClose, SpawnCounter, TurboRun } from '../common/launch.type.ts';
 
 const CHANNEL = 'child_process';
@@ -45,6 +46,13 @@ const recordDryRun = (child: ChildProcess, dryRuns: string[][], closes: DryRunCl
   child.once('close', onClose);
 };
 
+/** Keeps the args of a spawn that runs the affected query. */
+const recordAffectedQuery = (child: ChildProcess, queries: string[][]): void => {
+  const isAffectedQuery = child.spawnargs.some((arg) => arg.includes(AFFECTED_QUERY_MARK));
+
+  if (isAffectedQuery) queries.push([...child.spawnargs]);
+};
+
 /**
  * Spec §5.1 V1: counts the turbo spawns of this extension host through the `child_process` diagnostics channel. Only
  * spawns of `turboPath` count (VS Code's own git spawns arrive too), and never a `--version` call (the override's
@@ -59,6 +67,7 @@ const recordDryRun = (child: ChildProcess, dryRuns: string[][], closes: DryRunCl
 export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
   let count = 0;
   const dryRuns: string[][] = [];
+  const affectedQueries: string[][] = [];
   const closes: DryRunClose[] = [];
   const runs: TurboRun[] = [];
 
@@ -82,6 +91,7 @@ export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
     if (isVersion) return;
 
     count += 1;
+    recordAffectedQuery(child, affectedQueries);
 
     const isDryRun = child.spawnargs.includes(DRY_RUN_ARG);
 
@@ -106,10 +116,11 @@ export const countTurboSpawns = (turboPath: string | null): SpawnCounter => {
     turboMs: (window) => idleMs(runs, window),
     dryRuns: () => dryRuns.map((args) => [...args]),
     dryRunCloses: () => [...closes],
+    affectedQueries: () => affectedQueries.map((args) => [...args]),
     reset: () => {
       count = 0;
-      dryRuns.length = 0;
-      closes.length = 0;
+
+      for (const list of [dryRuns, affectedQueries, closes]) list.length = 0;
     },
     dispose: () => {
       unsubscribe(CHANNEL, onMessage);

@@ -21,7 +21,7 @@ const showTasksInGraph = async (scene: PredictionScene): Promise<void> => {
 };
 
 /** Closes the active editor, the graph panel a case opened, and waits for the panel to go. */
-export const closeGraph = async (scene: PredictionScene): Promise<void> => {
+export const closeGraph = async (scene: Pick<PredictionScene, 'api'>): Promise<void> => {
   await vscode.commands.executeCommand(CLOSE_EDITOR_COMMAND);
   await waitFor('panel closed', () => scene.api.graph.panels().length === 0);
 };
