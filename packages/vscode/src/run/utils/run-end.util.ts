@@ -53,5 +53,9 @@ export const runToMatchOf = (entry: RunEntry): RunToMatch | null => {
 
   const run: RunToMatch = { task: entry.task, packageName: entry.packageName, launchedAt: entry.launchedAt, endedAt, exitCode };
 
-  return run;
+  if (entry.extras === undefined) return run;
+
+  const withExtras: RunToMatch = { ...run, extras: entry.extras };
+
+  return withExtras;
 };
