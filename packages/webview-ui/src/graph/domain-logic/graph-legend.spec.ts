@@ -66,10 +66,28 @@ describe('FEATURE: GraphLegend', () => {
       expect(render).toHaveBeenCalledOnce();
     });
 
-    it('WHEN runs carry an affected object while the toggle is off THEN render ran with no level', () => {
+    it('WHEN runs carry an affected object while the toggle is off THEN nothing more renders', () => {
       legend.received(runsOf(TASK_AFFECTED));
 
-      expect(render).toHaveBeenLastCalledWith(COLORS, null);
+      expect(render).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN a state with the toggle off arrives THEN nothing more renders', () => {
+      legend.received(STATE_OFF);
+
+      expect(render).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN it is themed with the same colors object THEN nothing more renders', () => {
+      legend.themed(COLORS);
+
+      expect(render).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN it is themed with a new colors object THEN render runs again with them', () => {
+      legend.themed(NEXT_COLORS);
+
+      expect(render).toHaveBeenLastCalledWith(NEXT_COLORS, null);
     });
 
     describe('GIVEN a graph state with the affected toggle on', () => {
@@ -84,6 +102,13 @@ describe('FEATURE: GraphLegend', () => {
         legend.received(runsOf(affected));
 
         expect(render).toHaveBeenLastCalledWith(COLORS, level);
+      });
+
+      it('WHEN runs carry the same level again THEN nothing more renders', () => {
+        legend.received(runsOf(TASK_AFFECTED));
+        legend.received(runsOf(TASK_AFFECTED));
+
+        expect(render).toHaveBeenCalledTimes(2);
       });
 
       it('WHEN runs carry affected null after an object THEN render ran with no level', () => {
