@@ -4,9 +4,10 @@ import { setClassesAmong } from './graph-classes.ts';
 import { AFFECTED_MARKS, PREDICTION_WORDS, RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
-import { AFFECTED_CLASS_PREFIX, NO_CLASSES, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import { NO_CLASSES, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import type { TaskAffectedMarks, TaskPredictions } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
+import { affectedClassOf } from '../utils/affected-class.util.ts';
 import { runClassOf } from '../utils/package-run.util.ts';
 import { predictionClassOf } from '../utils/prediction-class.util.ts';
 import { runStateOf } from '../utils/task-run.util.ts';
@@ -15,7 +16,7 @@ const RUN_CLASS_NAMES: string[] = RUN_STATES.map(runClassOf);
 
 const PREDICTION_CLASS_NAMES: string[] = PREDICTION_WORDS.map(predictionClassOf);
 
-const AFFECTED_CLASS_NAMES: string[] = AFFECTED_MARKS.map((mark) => AFFECTED_CLASS_PREFIX + mark);
+const AFFECTED_CLASS_NAMES: string[] = AFFECTED_MARKS.map(affectedClassOf);
 
 const runClassesOf = (state: GraphRunState | null): string[] => {
   if (state === null) return NO_CLASSES;
@@ -44,7 +45,7 @@ const affectedClassesOf = (marked: TaskAffectedMarks, id: string): string[] => {
 
   if (!hasMark || mark === undefined) return NO_CLASSES;
 
-  const name = AFFECTED_CLASS_PREFIX + mark;
+  const name = affectedClassOf(mark);
 
   return [name];
 };

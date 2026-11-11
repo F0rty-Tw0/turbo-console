@@ -15,7 +15,6 @@ import {
 } from '../common/graph-atom.const.ts';
 import { PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import {
-  AFFECTED_CLASS_PREFIX,
   AFFECTED_UNDERLAY_OPACITY,
   AFFECTED_UNDERLAY_PADDING_PX,
   BOX_FRAMED_CLASS,
@@ -29,6 +28,7 @@ import {
 } from '../common/graph-task.const.ts';
 import { DASHED_BORDER_PX, FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+import { affectedClassOf } from '../utils/affected-class.util.ts';
 import { glyphOf } from '../utils/glyph.util.ts';
 
 /** A task node shows its task name; its id is `package#name`. */
@@ -124,7 +124,8 @@ const haloRuleOf = (colors: ThemeColors, mark: GraphAffectedMark): StylesheetJso
     'underlay-opacity': AFFECTED_UNDERLAY_OPACITY[mark],
     'underlay-padding': AFFECTED_UNDERLAY_PADDING_PX
   };
-  const rule: StylesheetJsonBlock = { selector: `node.${AFFECTED_CLASS_PREFIX}${mark}`, style };
+  const name = affectedClassOf(mark);
+  const rule: StylesheetJsonBlock = { selector: `node.${name}`, style };
 
   return rule;
 };
@@ -132,7 +133,8 @@ const haloRuleOf = (colors: ThemeColors, mark: GraphAffectedMark): StylesheetJso
 /** A dimmed node's `opacity` does not reach its underlay, so a dimmed affected task's halo fades by `dimmedOpacity` here. */
 const dimmedHaloRuleOf = (colors: ThemeColors, mark: GraphAffectedMark): StylesheetJsonBlock => {
   const style = { 'underlay-opacity': AFFECTED_UNDERLAY_OPACITY[mark] * colors.dimmedOpacity };
-  const rule: StylesheetJsonBlock = { selector: `node.dimmed.${AFFECTED_CLASS_PREFIX}${mark}`, style };
+  const name = affectedClassOf(mark);
+  const rule: StylesheetJsonBlock = { selector: `node.dimmed.${name}`, style };
 
   return rule;
 };
