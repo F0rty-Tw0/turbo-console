@@ -80,7 +80,8 @@ export const executeTurboTask = async (request: RunRequest, args: string[], laun
  * Spec 1c-b §4.3 step 4: runs `<package manager> run <script>` in the package dir as a `vscode.Task` of the same
  * definition, name and panel as a turbo run, so its task events are the run's. The args are plain strings: the manager
  * name is a closed enum and `refusalOf` has already admitted only a script name that needs no quoting in any shell.
- * Rejects when `request.root` is no workspace folder.
+ * The pass-through args come from `scriptArgsOf`, which checks them with core `assertRunExtras` and throws
+ * `invalid-argument` (the run flow catches it: failed to start). Rejects when `request.root` is no workspace folder.
  */
 export const executeScriptTask = async (request: RunRequest, launchedAt: number): Promise<Terminable> => {
   const definition = taskDefinitionOf(request, launchedAt);
