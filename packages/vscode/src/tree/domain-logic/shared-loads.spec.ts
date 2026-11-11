@@ -30,7 +30,7 @@ describe('FEATURE: shared loads', () => {
   let store: RootStore;
 
   const build = (toggle: ScriptsToggleFake): SharedLoads => {
-    const loads = sharedLoadsOf(store, outputMock(), toggle);
+    const loads = sharedLoadsOf(store, outputMock(), toggle, scriptsToggleMock(false));
 
     return loads;
   };

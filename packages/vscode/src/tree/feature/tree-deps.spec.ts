@@ -7,6 +7,7 @@ import { scriptsToggleMock } from '../../shared/test/mocks/scripts-toggle.mock.t
 import type { SharedLoads } from '../common/shared-loads.type.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
 import { iconThemeProbeMock } from '../test/mocks/icon-theme-probe.mock.ts';
+import { SHARED_AFFECTED_STUB } from '../test/stubs/shared-affected.stub.ts';
 import { SHARED_ATOMS_STUB } from '../test/stubs/shared-atoms.stub.ts';
 import { SHARED_PREDICTION_STUB } from '../test/stubs/shared-prediction.stub.ts';
 import { TIMINGS_STUB } from '../test/stubs/timings.stub.ts';
@@ -21,7 +22,12 @@ vi.mock('vscode', () => {
   return module;
 });
 
-const LOADS: SharedLoads = { atoms: SHARED_ATOMS_STUB, prediction: SHARED_PREDICTION_STUB };
+const LOADS: SharedLoads = {
+  atoms: SHARED_ATOMS_STUB,
+  prediction: SHARED_PREDICTION_STUB,
+  affected: SHARED_AFFECTED_STUB,
+  dispose: () => undefined
+};
 
 const RUNS: TreeProviderDeps['runs'] = { get: () => undefined, runningIds: () => new Set() };
 

@@ -22,7 +22,7 @@ import type { RunCommandsUi, Timings, TimingsStart, TurboConsoleApi } from './sh
 import type { Output } from './shared/common/output.type.ts';
 import type { Span } from './shared/common/span.type.ts';
 import { createOutput } from './shared/data-access/output.ts';
-import { togglesOf } from './shared/domain-logic/toggles.ts';
+import { togglesDisposableOf, togglesOf } from './shared/domain-logic/toggles.ts';
 import { COMMAND_ITEMS, HELP_ITEMS } from './tree/common/fixed-view.const.ts';
 import type { VisibleView } from './tree/common/visible-view.type.ts';
 import { editorIconThemePorts } from './tree/data-access/icon-theme-ports.ts';
@@ -133,7 +133,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const session = createSession(context, output);
   const runSession = new RunSession(editorRunPorts(output, runDependenciesOf(session.store)), timings.runs);
   const toggles = togglesOf(context.workspaceState, output);
-  const loads = sharedLoadsOf(session.store, output, toggles.prediction);
+  const loads = sharedLoadsOf(session.store, output, toggles.prediction, toggles.affected);
   const treeDeps = treeDepsOf(runSession.runs, timings, toggles.scripts, loads, output.error);
   const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDeps);
   const commands = new FixedViewProvider(COMMAND_ITEMS);
@@ -157,7 +157,7 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     ticker: ticker.api()
   };
 
-  context.subscriptions.push(output, tree, session, ticker, toggles.scripts, toggles.scope, toggles.prediction, loads.prediction);
+  context.subscriptions.push(output, tree, session, ticker, togglesDisposableOf(toggles), loads);
 
   if (vscode.workspace.isTrusted) {
     const treeContext = contextOf(context, toggles, new IconThemeFolders(editorIconThemePorts()));
