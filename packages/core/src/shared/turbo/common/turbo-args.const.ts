@@ -16,5 +16,8 @@ export const BARE = /^[A-Za-z0-9@/._:=+-]+$/u;
  */
 export const BARE_FIRST_BLOCKED = /^[=@]/u;
 
-/** A whole number of at least 1, or a percentage. */
-export const CONCURRENCY_VALUE = /^[1-9][0-9]*%?$/u;
+/**
+ * A whole number of at least 1, or a percentage. At most 9 digits: turbo 2.11.7 rejects a count past u32
+ * (`--concurrency=4294967296` exits 1), so a longer value is refused before the run starts.
+ */
+export const CONCURRENCY_VALUE = /^[1-9][0-9]{0,8}%?$/u;

@@ -13,9 +13,9 @@ const VALID: RunExtras[] = [
   { passThrough: ['--watch', '--port=3000', './src/a.ts', '--env=dev:local'] }
 ];
 
-const GOOD_CONCURRENCY = ['1', '50%', '150%'];
+const GOOD_CONCURRENCY = ['1', '50%', '150%', '999999999'];
 
-const BAD_CONCURRENCY = ['0', '01', '-1', 'abc', '1.5', '0%', '', ' 2'];
+const BAD_CONCURRENCY = ['0', '01', '-1', 'abc', '1.5', '0%', '', ' 2', '4294967296'];
 
 const BAD_ARGS = ['a b', '$HOME', "it's", 'a,b', '@scope/x', '=x', '', 'a\n'];
 
