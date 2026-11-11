@@ -25,6 +25,9 @@ const KEEP_GOING: RunExtras = { continueMode: 'dependencies-successful' };
 const CONCURRENT: RunExtras = { concurrency: '50%' };
 const WATCH: RunExtras = { passThrough: ['--watch'] };
 const SCRIPT_ARGS: RunExtras = { passThrough: ['--watch', '--port=3000'] };
+const ONLY_WITH_FORCE = { only: true, force: true };
+/** Wider at runtime than its type: the run launched without `--force`, so the line must not claim it. */
+const WIDE: RunExtras = ONLY_WITH_FORCE;
 
 describe('FEATURE: run options tooltip line', () => {
   describe('GIVEN an entry', () => {
@@ -35,6 +38,7 @@ describe('FEATURE: run options tooltip line', () => {
       ['force with an empty pass-through', { force: true, extras: EMPTY_ARGS }, null],
       ['only', { extras: ONLY }, 'Options: --only'],
       ['force and only', { force: true, extras: ONLY }, 'Options: --force --only'],
+      ['extras that also carry force at runtime', { extras: WIDE }, 'Options: --only'],
       ['keep going', { extras: KEEP_GOING }, 'Options: --continue=dependencies-successful'],
       ['concurrency', { extras: CONCURRENT }, 'Options: --concurrency=50%'],
       ['pass-through', { extras: WATCH }, 'Options: -- --watch'],

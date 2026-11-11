@@ -4,12 +4,12 @@ import type { RunTaskOptions } from '@turbo-console/core';
 import type { RunEntry } from '../../run/common/run.type.ts';
 
 const turboOptionsLineOf = (entry: RunEntry): string | null => {
-  const options: RunTaskOptions = { force: false, ...entry.extras };
+  const options: RunTaskOptions = { ...entry.extras, force: false };
   const chosen = turboOptionArgs(options);
 
   if (chosen.length === 0) return null;
 
-  const forced: RunTaskOptions = { force: entry.force, ...entry.extras };
+  const forced: RunTaskOptions = { ...entry.extras, force: entry.force };
   const words = turboOptionArgs(forced);
 
   return `Options: ${words.join(' ')}`;
