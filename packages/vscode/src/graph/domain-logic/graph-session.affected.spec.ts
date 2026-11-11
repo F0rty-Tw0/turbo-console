@@ -1,5 +1,5 @@
 import type { GraphRunsMessage } from '@turbo-console/webview-ui';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GraphSession } from './graph-session.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
@@ -46,30 +46,49 @@ const isMarked = (message: GraphRunsMessage): boolean => message.affected !== nu
 
 describe('FEATURE: graph session affected marks', () => {
   describe('GIVEN the affected toggle on', () => {
-    it('WHEN the page is ready THEN the state has affectedShown true, rootShown ran once and the first runs message carries the marks', async () => {
-      const { session, ports, toggles, fake } = affectedSession();
+    describe('WHEN the page is ready', () => {
+      let shown: AffectedSession;
 
-      toggles.affected.isShown.mockReturnValue(true);
-      await session.receive({ type: 'ready' });
+      beforeEach(async () => {
+        shown = affectedSession();
+        shown.toggles.affected.isShown.mockReturnValue(true);
+        await shown.session.receive({ type: 'ready' });
+      });
 
-      expect(postedStatesOf(ports).at(-1)).toMatchObject({ affectedShown: true });
-      expect(fake.rootShown).toHaveBeenCalledExactlyOnceWith('/ws');
-      expect(postedRunsMessagesOf(ports).at(-1)?.affected).toStrictEqual(AFFECTED_MARKS_STUB);
+      it('THEN the state has affectedShown true', () => {
+        expect(postedStatesOf(shown.ports).at(-1)).toMatchObject({ affectedShown: true });
+      });
+
+      it('THEN rootShown ran once for the root', () => {
+        expect(shown.fake.rootShown).toHaveBeenCalledExactlyOnceWith('/ws');
+      });
+
+      it('THEN the first runs message carries the marks', () => {
+        expect(postedRunsMessagesOf(shown.ports).at(-1)?.affected).toStrictEqual(AFFECTED_MARKS_STUB);
+      });
     });
   });
 
   describe('GIVEN marks on the page', () => {
-    it('WHEN the toggle turns off THEN the next runs message has affected null, in one message', async () => {
-      const { session, ports, toggles } = affectedSession();
+    describe('WHEN the toggle turns off', () => {
+      let runs: GraphRunsMessage[];
 
-      await toggles.affected.set(true);
-      await session.receive({ type: 'ready' });
-      await toggles.affected.set(false);
+      beforeEach(async () => {
+        const { session, ports, toggles } = affectedSession();
 
-      const runs = postedRunsMessagesOf(ports);
+        await toggles.affected.set(true);
+        await session.receive({ type: 'ready' });
+        await toggles.affected.set(false);
+        runs = postedRunsMessagesOf(ports);
+      });
 
-      expect(runs.at(-1)).toHaveProperty('affected', null);
-      expect(runs.filter(isMarked)).toHaveLength(1);
+      it('THEN the next runs message has affected null', () => {
+        expect(runs.at(-1)).toHaveProperty('affected', null);
+      });
+
+      it('THEN only the first runs message carried marks', () => {
+        expect(runs.filter(isMarked)).toHaveLength(1);
+      });
     });
   });
 });

@@ -1,5 +1,6 @@
 import type { GraphRunsMessage, GraphState } from '@turbo-console/webview-ui';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { MockInstance } from 'vitest';
 
 import { GraphTaskFeed } from './graph-task-feed.ts';
 import { RunStore } from '../../run/domain-logic/run-store.ts';
@@ -70,18 +71,28 @@ describe('FEATURE: affected marks in the graph feed', () => {
       expect(lastRunsOf(ports)?.affected).toStrictEqual(AFFECTED_MARKS_STUB);
     });
 
-    it('WHEN the store reports a changed view of this root THEN one runs message with the new marks follows the coalesce window', () => {
-      const { feed, ports, fake } = fixtureOf();
+    describe('WHEN the store reports a changed view of this root twice within the coalesce window', () => {
+      let ports: GraphPorts;
 
-      feed.start();
-      feed.flush(GRAPH_STATE_STUB);
-      fake.setView(OTHER_AFFECTED_VIEW_STUB);
-      fake.changed('/ws');
-      fake.changed('/ws');
-      vi.advanceTimersByTime(RUNS_COALESCE_MS);
+      beforeEach(() => {
+        const fixture = fixtureOf();
 
-      expect(postedRunsMessagesOf(ports)).toHaveLength(2);
-      expect(lastRunsOf(ports)?.affected).toStrictEqual(OTHER_AFFECTED_MARKS_STUB);
+        ports = fixture.ports;
+        fixture.feed.start();
+        fixture.feed.flush(GRAPH_STATE_STUB);
+        fixture.fake.setView(OTHER_AFFECTED_VIEW_STUB);
+        fixture.fake.changed('/ws');
+        fixture.fake.changed('/ws');
+        vi.advanceTimersByTime(RUNS_COALESCE_MS);
+      });
+
+      it('THEN one runs message follows the forced one', () => {
+        expect(postedRunsMessagesOf(ports)).toHaveLength(2);
+      });
+
+      it('THEN it carries the new marks', () => {
+        expect(lastRunsOf(ports)?.affected).toStrictEqual(OTHER_AFFECTED_MARKS_STUB);
+      });
     });
 
     it('WHEN the store reports a change but the view is unchanged THEN nothing more is posted', () => {
@@ -134,27 +145,48 @@ describe('FEATURE: affected marks in the graph feed', () => {
   });
 
   describe('GIVEN the toggle off', () => {
-    it('WHEN the state is flushed THEN the forced post carries null and the store is not read', () => {
-      const { feed, ports, fake, toggles } = fixtureOf();
-      const view = vi.spyOn(fake.affected, 'view');
+    describe('WHEN the state is flushed', () => {
+      let ports: GraphPorts;
+      let view: MockInstance<AffectedFake['affected']['view']>;
 
-      toggles.affected.isShown.mockReturnValue(false);
-      feed.flush(GRAPH_STATE_STUB);
+      beforeEach(() => {
+        const fixture = fixtureOf();
 
-      expect(lastRunsOf(ports)).toHaveProperty('affected', null);
-      expect(view).not.toHaveBeenCalled();
+        ports = fixture.ports;
+        view = vi.spyOn(fixture.fake.affected, 'view');
+        fixture.toggles.affected.isShown.mockReturnValue(false);
+        fixture.feed.flush(GRAPH_STATE_STUB);
+      });
+
+      it('THEN the forced post carries affected null', () => {
+        expect(lastRunsOf(ports)).toHaveProperty('affected', null);
+      });
+
+      it('THEN the store is not read', () => {
+        expect(view).not.toHaveBeenCalled();
+      });
     });
 
-    it('WHEN nothing was flushed and the store changes THEN the first coalesced post carries affected null', () => {
-      const { feed, ports, fake, toggles } = fixtureOf();
+    describe('WHEN nothing was flushed and the store changes', () => {
+      let ports: GraphPorts;
 
-      toggles.affected.isShown.mockReturnValue(false);
-      feed.start();
-      fake.changed('/ws');
-      vi.advanceTimersByTime(RUNS_COALESCE_MS);
+      beforeEach(() => {
+        const fixture = fixtureOf();
 
-      expect(postedRunsMessagesOf(ports)).toHaveLength(1);
-      expect(lastRunsOf(ports)).toHaveProperty('affected', null);
+        ports = fixture.ports;
+        fixture.toggles.affected.isShown.mockReturnValue(false);
+        fixture.feed.start();
+        fixture.fake.changed('/ws');
+        vi.advanceTimersByTime(RUNS_COALESCE_MS);
+      });
+
+      it('THEN one coalesced post goes out', () => {
+        expect(postedRunsMessagesOf(ports)).toHaveLength(1);
+      });
+
+      it('THEN it carries affected null', () => {
+        expect(lastRunsOf(ports)).toHaveProperty('affected', null);
+      });
     });
   });
 
