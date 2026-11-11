@@ -36,6 +36,7 @@ export class GraphTaskControls {
     elements.scope.addEventListener('input', (): void => deps.actions.onViewToggle('scope', elements.scope.checked));
     elements.scripts.addEventListener('input', (): void => deps.actions.onViewToggle('scripts', elements.scripts.checked));
     elements.prediction.addEventListener('input', (): void => deps.actions.onViewToggle('prediction', elements.prediction.checked));
+    elements.affected.addEventListener('input', (): void => deps.actions.onViewToggle('affected', elements.affected.checked));
     deps.page.controls.addEventListener('click', (): void => this.toggleOpen());
   }
 
@@ -67,7 +68,7 @@ export class GraphTaskControls {
 
   /** Sets the boxes as properties, which fire no event, so a state-driven sync reports nothing; Show scripts needs a listed script. */
   public setView(checks: TaskViewChecks): void {
-    const { grouping, groupingField, scope, scripts, scriptsField, prediction } = this.elements;
+    const { grouping, groupingField, scope, scripts, scriptsField, prediction, affected } = this.elements;
 
     grouping.checked = checks.grouped;
     groupingField.hidden = !checks.canGroup;
@@ -75,6 +76,7 @@ export class GraphTaskControls {
     scripts.checked = checks.scriptsShown;
     scriptsField.hidden = !checks.hasScripts;
     prediction.checked = checks.predictionShown;
+    affected.checked = checks.affectedShown;
   }
 
   /** Lists the pool as the Projects grid; a cell with focus hands it, and the Tab stop, to its twin among the new rows. */

@@ -49,6 +49,23 @@ describe('FEATURE: GraphTaskMemory View checks', () => {
     });
   });
 
+  describe('GIVEN a state with the affected marks shown', () => {
+    it('WHEN the checks are read THEN Show affected is ticked', () => {
+      const state: GraphReady = { ...TASK_STATE_STUB, affectedShown: true };
+      const checks = memoryOf(state).viewChecks();
+
+      expect(checks.affectedShown).toBe(true);
+    });
+  });
+
+  describe('GIVEN a state with the affected marks hidden', () => {
+    it('WHEN the checks are read THEN Show affected is unticked', () => {
+      const checks = memoryOf(TASK_STATE_STUB).viewChecks();
+
+      expect(checks.affectedShown).toBe(false);
+    });
+  });
+
   describe('GIVEN a listing with a script while scripts are hidden', () => {
     it('WHEN the checks are read THEN Show scripts is unticked but still present', () => {
       const checks = memoryOf(scriptState(false)).viewChecks();

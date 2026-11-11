@@ -103,6 +103,8 @@ export const SHOW_SCRIPTS_LABEL = 'Show scripts';
 
 export const SHOW_PREDICTION_LABEL = 'Show cache prediction';
 
+export const SHOW_AFFECTED_LABEL = 'Show affected';
+
 /** Starts each prediction class on a task node: `predict-cached`, `predict-notCached`, `predict-unknown`. */
 export const PREDICTION_CLASS_PREFIX = 'predict-';
 

@@ -1,4 +1,5 @@
 import {
+  affectedField,
   checkbox,
   controlsSection,
   field,
@@ -39,7 +40,7 @@ const taskDepthInput = (): HTMLInputElement => {
 
 /**
  * The task Controls panel `aside#graph-task-controls`, hidden and unwired: the Search section, the View section (Dependents
- * depth, Group by folder, Show package scopes, Show scripts, Show cache prediction), then the Projects grid. Show scripts
+ * depth, Group by folder, Show package scopes, Show scripts, Show cache prediction, Show affected), then the Projects grid. Show scripts
  * starts hidden: only the task listing tells whether there is a script to show.
  */
 export const buildTaskControls = (): TaskControlsElements => {
@@ -49,12 +50,13 @@ export const buildTaskControls = (): TaskControlsElements => {
   const scope = checkbox('controls-check');
   const scripts = checkbox('controls-check');
   const prediction = checkbox('controls-check');
+  const affected = checkbox('controls-check');
   const depthField = hintedField(DEPENDENTS_DEPTH_LABEL, depth, DEPENDENTS_DEPTH_HINT, DEPENDENTS_DEPTH_HINT_ID);
   const groupField = groupingField(grouping);
   const scriptsLine = scriptsField(scripts);
   const searchSection = controlsSection(SEARCH_SECTION_TITLE, field(SEARCH_TASKS_LABEL, search));
-  const predictionLine = predictionField(prediction);
-  const viewSection = controlsSection(VIEW_SECTION_TITLE, depthField, groupField, scopeField(scope), scriptsLine, predictionLine);
+  const markLines = [predictionField(prediction), affectedField(affected)];
+  const viewSection = controlsSection(VIEW_SECTION_TITLE, depthField, groupField, scopeField(scope), scriptsLine, ...markLines);
   const list = textElement('div', 'controls-list', '');
   const projectsSection = controlsSection(PROJECTS_SECTION_TITLE, list);
   const panel = textElement('aside', 'graph-controls graph-task-controls', '');
@@ -74,6 +76,7 @@ export const buildTaskControls = (): TaskControlsElements => {
     scope,
     scripts,
     prediction,
+    affected,
     groupingField: groupField,
     scriptsField: scriptsLine,
     list
