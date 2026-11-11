@@ -65,7 +65,8 @@ export type TaskCanvas = {
   readonly predictions: (next: TaskPredictions | null) => void;
   /**
    * Replaces every task's `affected-<mark>` class with the one the record names, own keys only; kept, so a task graph drawn
-   * again carries it. The record it already holds is skipped. A halo moves no node, so box frames are not refit.
+   * again carries it. The record it already holds is skipped. Box frames are not refit: Cytoscape leaves an underlay out
+   * of a node's body bounds, which a compound's size and a box frame are measured from, so a halo moves no box.
    */
   readonly affected: (next: TaskAffectedMarks) => void;
   /** Sets the label of each umbrella in `labels` to its name and counts line; a task not drawn is skipped, no node moves. */
