@@ -123,14 +123,15 @@ describe('FEATURE: affected view', () => {
       expect(marksOf(abModel(), [['@fx/b#lint', 'TaskAllChanged']])).toStrictEqual([['@fx/b#lint', 'dependency']]);
     });
 
-    it('WHEN the only file-reason sibling is an atom-file task of the package THEN the TaskAllChanged task is "dependency"', () => {
-      const model = atomModelOf(['tests/a.spec.ts']);
+    it('WHEN the only file-reason sibling is an atom-file task of the package THEN the plain TaskAllChanged task is "dependency"', () => {
+      const atomFile = turboTaskOf('@fx/a', 'e2e-ci--x.spec.ts', { kind: 'atom-file' });
+      const model = predictionModelOf({ '@fx/a': [atomFile, turboTaskOf('@fx/a', 'build')] });
       const rows: [string, string][] = [
-        ['@fx/e2e#e2e-ci--tests/a.spec.ts', 'TaskFileChanged'],
-        ['@fx/e2e#e2e-ci', 'TaskAllChanged']
+        ['@fx/a#e2e-ci--x.spec.ts', 'TaskFileChanged'],
+        ['@fx/a#build', 'TaskAllChanged']
       ];
 
-      expect(marksOf(model, rows)).toStrictEqual([['@fx/e2e#e2e-ci', 'dependency']]);
+      expect(marksOf(model, rows)).toStrictEqual([['@fx/a#build', 'dependency']]);
     });
 
     it('WHEN the only file-reason sibling id is not in the model THEN the TaskAllChanged task is "dependency"', () => {
