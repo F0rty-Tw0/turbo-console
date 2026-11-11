@@ -55,11 +55,11 @@ export type {
   TsconfigPaths
 } from './imports/common/import-scan.type.ts';
 
-export type { RunAllOptions, RunTaskOptions } from './run-args/common/run-args.type.ts';
+export type { ContinueMode, RunAllOptions, RunExtras, RunTaskOptions } from './run-args/common/run-args.type.ts';
 
-export { turboRunAllArgs, turboRunArgs } from './run-args/utils/run-args.util.ts';
+export { turboOptionArgs, turboRunAllArgs, turboRunArgs } from './run-args/utils/run-args.util.ts';
 
-export { SINGLE_PACKAGE } from './shared/turbo/common/turbo-args.const.ts';
+export { BARE, BARE_FIRST_BLOCKED, CONCURRENCY_VALUE, SINGLE_PACKAGE } from './shared/turbo/common/turbo-args.const.ts';
 
 export { TurboException } from './shared/errors/common/turbo.exception.ts';
 

@@ -57,6 +57,9 @@ import type {
  */
 const RUNTIME_EXPORTS = [
   'AFFECTED_TASKS_QUERY',
+  'BARE',
+  'BARE_FIRST_BLOCKED',
+  'CONCURRENCY_VALUE',
   'ImportFileCache',
   'PACKAGE_GRAPH_QUERY',
   'PACKAGE_NAME',
@@ -89,6 +92,7 @@ const RUNTIME_EXPORTS = [
   'runSummarySchema',
   'scanPackageImports',
   'scanRunLog',
+  'turboOptionArgs',
   'turboRunAllArgs',
   'turboRunArgs'
 ];
