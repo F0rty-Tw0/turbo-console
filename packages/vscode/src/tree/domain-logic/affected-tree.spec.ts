@@ -33,43 +33,43 @@ describe('FEATURE: affected tree', () => {
     tree = new AffectedTree(store, cache, { affected: shared, fire });
   });
 
-  it('WHEN rootShown runs THEN the store gets that root once', () => {
-    tree.rootShown('/ws');
-
-    expect(shared.rootShown).toHaveBeenCalledExactlyOnceWith('/ws');
-  });
-
-  it('WHEN a RootChange arrives THEN modelChanged gets that same object', () => {
-    const change: RootChange = { root: '/ws', before: null, after: null, errorBefore: null, errorAfter: null };
-
-    tree.modelChanged(change);
-
-    expect(shared.modelChanged).toHaveBeenCalledExactlyOnceWith(change);
-  });
-
-  it('WHEN rootsChanged runs THEN rootsKept gets the set of the store roots', () => {
-    tree.rootsChanged();
-
-    expect(shared.rootsKept).toHaveBeenCalledExactlyOnceWith(new Set(['/ws']));
-  });
-
-  it('WHEN refreshAll runs THEN the store refreshes once', () => {
-    tree.refreshAll();
-
-    expect(shared.refreshAll).toHaveBeenCalledOnce();
-  });
-
-  it('WHEN dispose runs THEN the store is disposed once', () => {
-    tree.dispose();
-
-    expect(shared.dispose).toHaveBeenCalledOnce();
-  });
-
-  it('THEN reads exposes the shared view and status', () => {
-    expect([tree.reads.view, tree.reads.status]).toStrictEqual([shared.view, shared.status]);
-  });
-
   describe('GIVEN one root in the store', () => {
+    it('WHEN rootShown runs THEN the store gets that root once', () => {
+      tree.rootShown('/ws');
+
+      expect(shared.rootShown).toHaveBeenCalledExactlyOnceWith('/ws');
+    });
+
+    it('WHEN a RootChange arrives THEN modelChanged gets that same object', () => {
+      const change: RootChange = { root: '/ws', before: null, after: null, errorBefore: null, errorAfter: null };
+
+      tree.modelChanged(change);
+
+      expect(shared.modelChanged).toHaveBeenCalledExactlyOnceWith(change);
+    });
+
+    it('WHEN rootsChanged runs THEN rootsKept gets the set of the store roots', () => {
+      tree.rootsChanged();
+
+      expect(shared.rootsKept).toHaveBeenCalledExactlyOnceWith(new Set(['/ws']));
+    });
+
+    it('WHEN refreshAll runs THEN the store refreshes once', () => {
+      tree.refreshAll();
+
+      expect(shared.refreshAll).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN dispose runs THEN the store is disposed once', () => {
+      tree.dispose();
+
+      expect(shared.dispose).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN reads is read THEN it exposes the shared view and status', () => {
+      expect([tree.reads.view, tree.reads.status]).toStrictEqual([shared.view, shared.status]);
+    });
+
     it('WHEN the store changes /ws THEN fire gets undefined once, cached nodes or not', () => {
       shared.emit('/ws');
 

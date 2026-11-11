@@ -60,9 +60,14 @@ export class AffectedTree {
   private changed(root: string): void {
     const isSingleRoot = this.store.all().length === 1;
 
+    if (isSingleRoot) {
+      this.fire(undefined);
+
+      return;
+    }
+
     const node = this.cache.get(rowIdOf('root', root, root));
 
-    if (isSingleRoot) this.fire(undefined);
-    else if (node !== undefined) this.fire(node);
+    if (node !== undefined) this.fire(node);
   }
 }
