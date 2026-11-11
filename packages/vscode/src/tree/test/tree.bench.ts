@@ -3,10 +3,12 @@ import { bench } from '@turbo-console/tools';
 import type { BenchDescriptor } from '@turbo-console/tools';
 
 import { SHARED_AFFECTED_STUB } from './stubs/shared-affected.stub.ts';
+import { readsOf } from './utils/affected-reads.spec.util.ts';
 import { benchStateOf, captureModel } from './utils/bench-model.spec.util.ts';
 import { withScripts } from './utils/scripts-model.spec.util.ts';
 import type { ToolLookup } from '../../tool/common/tool.type.ts';
 import { resolveTool } from '../../tool/utils/tool-of.util.ts';
+import type { AffectedEntry, AffectedMark, AffectedView } from '../common/affected.type.ts';
 import type { ModelViewsOf } from '../common/model-view.type.ts';
 import type { PredictionCache, PredictionLookup, PredictionView } from '../common/prediction.type.ts';
 import type { RowContext } from '../common/tree-node.type.ts';
@@ -40,7 +42,23 @@ const allHitOf = (model: WorkspaceModel): PredictionLookup => {
   return lookup;
 };
 
+/** A loaded affected view that marks every task of every package of `model`, `changed` and `dependency` alternating, built once outside the timed call. */
+const allMarkedOf = (model: WorkspaceModel): RowsShown['affected'] => {
+  const entryOf = (task: TaskNode, index: number): [string, AffectedEntry] => {
+    const mark: AffectedMark = index % 2 === 0 ? 'changed' : 'dependency';
+    const entry: AffectedEntry = { mark, line: `Affected (task level): ${mark} (as of 14:05)` };
+
+    return [task.id, entry];
+  };
+  const tasks = model.packages.flatMap((pkg) => pkg.tasks);
+  const view: AffectedView = { settledAt: SETTLED_AT, mode: 'task', tasks: new Map(tasks.map(entryOf)) };
+
+  return readsOf(view);
+};
+
 const isPredictedRow = (row: TreeRow): boolean => row.tooltip.some((line) => line.startsWith('Prediction:'));
+
+const isMarkedRow = (row: TreeRow): boolean => row.tooltip.some((line) => line.startsWith('Affected'));
 
 /** A fresh `ModelViews` per call, so the shown filter, folder tree and labels are measured, not a warm cache hit. */
 const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, inputs = PLAIN): BenchDescriptor => {
@@ -70,7 +88,12 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, inputs =
   const isPredicting = prediction !== NO_PREDICTION;
   const hasPredictedRow = build().some(isPredictedRow);
 
+  const isMarking = affected !== SHARED_AFFECTED_STUB;
+  const hasMarkedRow = build().some(isMarkedRow);
+
   if (isPredicting && !hasPredictedRow) throw new Error(`bench ${name} shows no predicted row`);
+
+  if (isMarking && !hasMarkedRow) throw new Error(`bench ${name} shows no affected row`);
 
   return bench(name, build, { gate: true });
 };
@@ -102,6 +125,7 @@ const diffBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
 const targetLike = await captureModel('target-like');
 const stretch300 = await captureModel('stretch-300');
 const allHit: RowsShown = { scriptsShown: false, prediction: allHitOf(stretch300), affected: SHARED_AFFECTED_STUB };
+const allMarked: RowsShown = { scriptsShown: false, prediction: NO_PREDICTION, affected: allMarkedOf(stretch300) };
 
 const benches: BenchDescriptor[] = [
   rowsBench('tree-rows-folders-target-like', targetLike, 'folders'),
@@ -110,6 +134,7 @@ const benches: BenchDescriptor[] = [
   rowsBench('tree-rows-list-stretch-300', stretch300, 'list'),
   rowsBench('tree-rows-scripts-stretch-300', withScripts(stretch300), 'folders', WITH_SCRIPTS),
   rowsBench('tree-rows-predicted-stretch-300', stretch300, 'folders', allHit),
+  rowsBench('tree-rows-affected-stretch-300', stretch300, 'folders', allMarked),
   diffBench('model-diff-stretch-300', stretch300)
 ];
 
