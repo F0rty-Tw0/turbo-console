@@ -1,6 +1,7 @@
 import type { RunStateIconId } from './graph-icon.type.ts';
 import type { TaskAffectedMarks, TaskPredictions } from './task-canvas.type.ts';
 import type { TaskOwners } from './task-details.type.ts';
+import type { GraphAffectedMark } from '../../bridge/common/graph-affected.type.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 
 /** The most tasks task mode draws before it cuts dependent and dependency hops. */
@@ -107,6 +108,12 @@ export const PREDICTION_CLASS_PREFIX = 'predict-';
 
 /** Starts each affected class on a task node: `affected-changed`, `affected-dependency`. */
 export const AFFECTED_CLASS_PREFIX = 'affected-';
+
+/** The halo's opacity per mark: a task whose own package changed reads stronger than one affected through a dependency. */
+export const AFFECTED_UNDERLAY_OPACITY: Readonly<Record<GraphAffectedMark, number>> = { changed: 0.4, dependency: 0.18 };
+
+/** How far the halo reaches past a task node's frame. */
+export const AFFECTED_UNDERLAY_PADDING_PX = 6;
 
 /** The run states whose glyph wins over a cache prediction; an ended run's glyph yields to it. */
 export const LIVE_RUN_STATES: GraphRunState[] = ['running', 'continuous'];

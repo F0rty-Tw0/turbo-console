@@ -1,6 +1,7 @@
 import type { Css, NodeSingular, StylesheetJsonBlock } from 'cytoscape';
 
-import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
+import type { GraphAffectedMark } from '../../bridge/common/graph-affected.type.ts';
+import { AFFECTED_MARKS, RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import {
   ATOM_BOX_CLASS,
@@ -14,6 +15,9 @@ import {
 } from '../common/graph-atom.const.ts';
 import { PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import {
+  AFFECTED_CLASS_PREFIX,
+  AFFECTED_UNDERLAY_OPACITY,
+  AFFECTED_UNDERLAY_PADDING_PX,
   BOX_FRAMED_CLASS,
   RUN_CLASS_PREFIX,
   SCRIPTS_BOX_CLASS,
@@ -113,8 +117,36 @@ const selectedRunRuleOf = (state: GraphRunState): StylesheetJsonBlock => {
   return rule;
 };
 
+/** An affected task's halo: the affected colour under the node, `AFFECTED_UNDERLAY_PADDING_PX` past its frame. */
+const haloRuleOf = (colors: ThemeColors, mark: GraphAffectedMark): StylesheetJsonBlock => {
+  const style = {
+    'underlay-color': colors.affected,
+    'underlay-opacity': AFFECTED_UNDERLAY_OPACITY[mark],
+    'underlay-padding': AFFECTED_UNDERLAY_PADDING_PX
+  };
+  const rule: StylesheetJsonBlock = { selector: `node.${AFFECTED_CLASS_PREFIX}${mark}`, style };
+
+  return rule;
+};
+
+/** A dimmed node's `opacity` does not reach its underlay, so a dimmed affected task's halo fades by `dimmedOpacity` here. */
+const dimmedHaloRuleOf = (colors: ThemeColors, mark: GraphAffectedMark): StylesheetJsonBlock => {
+  const style = { 'underlay-opacity': AFFECTED_UNDERLAY_OPACITY[mark] * colors.dimmedOpacity };
+  const rule: StylesheetJsonBlock = { selector: `node.dimmed.${AFFECTED_CLASS_PREFIX}${mark}`, style };
+
+  return rule;
+};
+
+/** The halo rules of both marks, then their dimmed rules, so a dimmed one wins by stylesheet order. */
+const affectedRulesOf = (colors: ThemeColors): StylesheetJsonBlock[] => {
+  const halos = AFFECTED_MARKS.map((mark) => haloRuleOf(colors, mark));
+  const dimmedHalos = AFFECTED_MARKS.map((mark) => dimmedHaloRuleOf(colors, mark));
+
+  return [...halos, ...dimmedHalos];
+};
+
 /**
- * The task mode rules: a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the
+ * The task mode rules:a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the
  * name, an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a
  * file (dashed border when `atom-live`), a `run-<state>` class outlines a task or file after them (a selected task
  * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned
@@ -151,6 +183,7 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
   const packageBox = glyphedOf(taskBox, glyphFamily, boxGlyphLabelOf);
   const taskNode = glyphedOf(TASK_NODE, glyphFamily);
   const atomFile = glyphedOf(ATOM_FILE, glyphFamily);
+  const affectedRules = affectedRulesOf(colors);
   const rules: StylesheetJsonBlock[] = [
     { selector: `node.${TASK_NODE_CLASS}`, style: taskNode },
     { selector: `node.${ATOM_UMBRELLA_CLASS}`, style: UMBRELLA_NODE },
@@ -164,7 +197,8 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
     ...outcomeRules,
     { selector: `node.${ATOM_LIVE_CLASS}`, style: ATOM_LIVE },
     ...runRules,
-    ...selectedRunRules
+    ...selectedRunRules,
+    ...affectedRules
   ];
 
   return rules;
