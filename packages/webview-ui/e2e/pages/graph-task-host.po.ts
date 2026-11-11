@@ -3,6 +3,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import type { GraphAffected } from '../../src/bridge/common/graph-affected.type.ts';
 import type {
   GraphAtomGroupState,
   GraphAtomsMessage,
@@ -46,6 +47,13 @@ export class GraphTaskHost {
     const predicted: GraphRunsMessage = { type: 'runs', runs, predictions };
 
     await this.sendRaw(predicted);
+  }
+
+  /** A `runs` message carrying the `affected` marks (`null` clears every mark) and the `runs` that go with them. */
+  public async sendAffected(affected: GraphAffected | null, runs: Readonly<Record<string, GraphRunState>> = {}): Promise<void> {
+    const message: GraphRunsMessage = { type: 'runs', runs, affected };
+
+    await this.sendRaw(message);
   }
 
   /** A `runs` message whose `owners` name the task run that runs a dependency: `owners[id]` is the owner's task id. */
