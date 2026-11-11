@@ -17,6 +17,9 @@ export type GraphTask = GraphPackage['tasks']['items'][number];
 
 export type AffectedTasks = output<typeof affectedTasksSchema>;
 
+/** Why turbo lists an affected task: the change kind in `__typename`, plus the detail keys that kind carries. */
+export type ChangedReason = AffectedTasks['data']['affectedTasks']['items'][number]['reason'];
+
 export type DryRun = output<typeof dryRunSchema>;
 
 export type RunSummary = output<typeof runSummarySchema>;
