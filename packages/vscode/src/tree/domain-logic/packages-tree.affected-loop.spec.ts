@@ -5,7 +5,7 @@ import { sharedAffectedOf } from './shared-affected.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import type { SharedAffected } from '../common/affected.type.ts';
-import type { TreePorts, TreeRefresh } from '../common/tree-node.type.ts';
+import type { TreeNode, TreePorts, TreeRefresh } from '../common/tree-node.type.ts';
 import type { AffectedHarness } from '../test/common/affected-load.type.ts';
 import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
@@ -26,6 +26,8 @@ type LoopFixture = {
 const SETTLED = new Date(2026, 10, 11, 14, 5).getTime();
 
 const TASK_A_LINE = 'Affected (task level): file changed, packages/a/src/a.ts (as of 14:05)';
+
+const TASK_A: TreeNode = { kind: 'task', id: 'task:/ws\0a#build', root: '/ws', key: 'a#build', packageName: 'a' };
 
 const RESULT = affectedResultOf([['a#build', 'TaskFileChanged', 'packages/a/src/a.ts']]);
 
@@ -93,6 +95,12 @@ describe('FEATURE: packages tree affected redraw loop', () => {
       expect(fixture.fired).toStrictEqual([undefined, undefined]);
     });
 
+    it('WHEN the query resolves THEN the task row says affected with the file line last', () => {
+      const row = fixture.tree.rowOf(TASK_A);
+
+      expect([row.description, row.tooltip.at(-1)]).toStrictEqual(['affected', TASK_A_LINE]);
+    });
+
     it('WHEN the query resolves THEN the store holds the task line with the file last', () => {
       const entry = fixture.shared.view('/ws')?.tasks.get('a#build');
 
@@ -115,6 +123,10 @@ describe('FEATURE: packages tree affected redraw loop', () => {
       const lines = fixture.h.log.mock.calls.map(([line]) => line).filter((line) => line.startsWith('affected /ws:'));
 
       expect(lines).toHaveLength(1);
+    });
+
+    it('THEN the task row has no mark', () => {
+      expect(fixture.tree.rowOf(TASK_A).description).toBe('');
     });
 
     it('THEN the root reads as failed with no view', () => {

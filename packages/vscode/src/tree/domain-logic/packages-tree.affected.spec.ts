@@ -6,9 +6,11 @@ import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
+import type { AffectedStatus, AffectedView } from '../common/affected.type.ts';
 import type { TreeNode, TreePorts } from '../common/tree-node.type.ts';
 import type { SharedAffectedFake } from '../test/common/shared-affected-fake.type.ts';
 import { sharedAffectedMock } from '../test/mocks/shared-affected.mock.ts';
+import { AFFECTED_VIEW_STUB } from '../test/stubs/affected-view.stub.ts';
 import { ICONS_STATE_STUB } from '../test/stubs/icons-state.stub.ts';
 import { ROOT_FOLDER_STUB } from '../test/stubs/root-state.stub.ts';
 import { TREE_NODE_STUB } from '../test/stubs/tree-node.stub.ts';
@@ -16,6 +18,8 @@ import { loadedWith, packageNamed } from '../test/utils/tree-model.spec.util.ts'
 import { SCRIPTS_HIDDEN_PORTS } from '../test/utils/tree-ports.spec.util.ts';
 
 const ROOT_B: RootFolder = { root: '/other', name: 'other' };
+
+const TASK_A: TreeNode = { kind: 'task', id: 'task:/ws\0a#build', root: '/ws', key: 'a#build', packageName: 'a' };
 
 const rootNodeOf = (root: string): TreeNode => {
   const node: TreeNode = { kind: 'root', id: `root:${root}`, root, key: root, packageName: null };
@@ -139,6 +143,39 @@ describe('FEATURE: packages tree affected feed', () => {
       await tree.children(rootNodeOf('/ws'));
 
       expect(shared.rootShown).toHaveBeenCalledExactlyOnceWith('/ws');
+    });
+  });
+
+  describe('GIVEN the shared store holds a view for /ws', () => {
+    const viewOf = (root: string): AffectedView | null => (root === '/ws' ? AFFECTED_VIEW_STUB : null);
+    const statusOf = (root: string): AffectedStatus => (root === '/ws' ? 'loaded' : 'failed');
+
+    beforeEach(() => {
+      vi.mocked(shared.view).mockImplementation(viewOf);
+      vi.mocked(shared.status).mockImplementation(statusOf);
+    });
+
+    it('WHEN the task and the package nodes are read THEN both rows carry the mark', async () => {
+      await tree.children();
+      await tree.children(TREE_NODE_STUB);
+
+      expect([tree.rowOf(TASK_A).description, tree.rowOf(TREE_NODE_STUB).description]).toStrictEqual([
+        'affected',
+        'packages/a · affected'
+      ]);
+    });
+
+    it('WHEN /other is Failed THEN its root row says unavailable while the /ws package keeps its mark', () => {
+      store.set([ROOT_FOLDER_STUB, ROOT_B], coordinatorMock);
+      store.apply('/ws', loadedWith([packageNamed('a')]));
+      store.apply('/other', loadedWith([packageNamed('b')]));
+
+      const otherRoot = tree.rowOf(rootNodeOf('/other'));
+
+      expect([otherRoot.tooltip.at(-1), tree.rowOf(TREE_NODE_STUB).description]).toStrictEqual([
+        'Affected: unavailable',
+        'packages/a · affected'
+      ]);
     });
   });
 });
