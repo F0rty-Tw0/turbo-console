@@ -1,5 +1,7 @@
 import type { AffectedResult, TurboBinary, WorkspaceModel } from '@turbo-console/core';
 
+import type { RootChange } from '../../roots/common/coordinator.type.ts';
+
 /** How turbo answered: per task (`task`) or per package (`package`), from the root `turbo.json(c)`. */
 export type AffectedMode = AffectedResult['mode'];
 
@@ -30,4 +32,30 @@ export type AffectedLoadPorts = {
   readonly now: () => number;
   readonly log: (line: string) => void;
   readonly changed: (root: string) => void;
+};
+
+/** What the host supplies to `AffectedLoads`: the model and the change callback come from the shared store. */
+export type AffectedHostPorts = Omit<AffectedLoadPorts, 'changed' | 'modelOf'>;
+
+/** Hears that the view or status of `root` changed. */
+export type AffectedListener = (root: string) => void;
+
+/** The listeners of a shared store: `changed` tells each one, `clear` drops them all. */
+export type AffectedListeners = {
+  readonly changed: AffectedListener;
+  readonly onDidChange: (listener: AffectedListener) => () => void;
+  readonly clear: () => void;
+};
+
+/** One `AffectedLoads` shared by the tree and the graph; `onDidChange` returns its remover. */
+export type SharedAffected = {
+  readonly view: (root: string) => AffectedView | null;
+  readonly status: (root: string) => AffectedStatus;
+  readonly rootShown: (root: string) => void;
+  readonly toggled: (shown: boolean) => void;
+  readonly modelChanged: (change: RootChange) => void;
+  readonly refreshAll: () => void;
+  readonly rootsKept: (kept: ReadonlySet<string>) => void;
+  readonly dispose: () => void;
+  readonly onDidChange: (listener: AffectedListener) => () => void;
 };
