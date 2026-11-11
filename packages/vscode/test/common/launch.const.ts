@@ -124,13 +124,17 @@ const L17: Launch = { ...L9, name: 'L17', suite: 'affected-package.suite', works
 
 const HEAD_BASE: Readonly<Record<string, string>> = { [SCM_BASE_KEY]: 'HEAD' };
 
-/** L18: only committed changes, and `TURBO_SCM_BASE=HEAD` in the host env: the editor port must pass it as the base (F10). */
+/**
+ * L18: only committed changes, and `TURBO_SCM_BASE=HEAD` in the host env: the editor port must pass it as the base (F10).
+ * The head default is still turbo's, so the same CI strip.
+ */
 const L18: Launch = {
   ...L9,
   name: 'L18',
   suite: 'affected-committed.suite',
   workspace: 'fixture-feat-committed',
-  env: HEAD_BASE
+  env: HEAD_BASE,
+  unsetEnv: CI_ENV_KEYS
 };
 
 /**
