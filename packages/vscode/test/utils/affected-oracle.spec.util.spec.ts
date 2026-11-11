@@ -149,6 +149,17 @@ describe('FEATURE: expectedAffected', () => {
     });
   });
 
+  describe('GIVEN a README edit of q, whose only seed is an atom file task that requires q#test', () => {
+    const atomOnly = manifestOf([taskOf('q#test', []), taskOf('q#e2e-ci--a', ['q#test'], { kind: 'atom-file' })]);
+    const README_Q: AffectedEdit = { packageName: 'q', file: 'README.md' };
+
+    it('WHEN the oracle runs THEN q#test reads dependency: a seed the tree does not keep makes no task changed', () => {
+      const marks = expectedAffected(atomOnly, [README_Q], 'task');
+
+      expect(marks).toStrictEqual(new Map([['q#test', 'dependency']]));
+    });
+  });
+
   describe('GIVEN edits of x and of b, whose b#build depends on x#build', () => {
     it('WHEN the oracle runs THEN it throws ambiguous edit set', () => {
       const edits: AffectedEdit[] = [SRC_X, { packageName: 'b', file: 'src/index.ts' }];
