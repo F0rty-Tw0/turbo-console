@@ -19,7 +19,7 @@ import { affectedFake, predictionFake, progressFake, togglesOf } from '../test/u
 
 const OTHER_FOLDER = { root: '/other', name: 'other' };
 const READY = { type: 'ready' };
-const RUNS_POSTED: GraphHostMessage = { type: 'runs', runs: {}, predictions: {} };
+const RUNS_POSTED: GraphHostMessage = { type: 'runs', runs: {}, predictions: {}, affected: null };
 const STATE_POSTED: GraphHostMessage = { type: 'state', state: GRAPH_STATE_STUB };
 
 const viewAt = (fakes: GraphHostFakes, index: number): ViewFake<GraphHostMessage> => {

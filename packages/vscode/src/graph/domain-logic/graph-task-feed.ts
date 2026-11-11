@@ -1,6 +1,7 @@
 import type { GraphRunsMessage, GraphShowRequest, GraphState } from '@turbo-console/webview-ui';
 
 import { Coalescer } from './coalescer.ts';
+import { GraphAffectedFeed } from './graph-affected-feed.ts';
 import { GraphAtomFeed } from './graph-atom-feed.ts';
 import type { ProgressRecord } from '../../run/common/run-progress.type.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
@@ -28,10 +29,10 @@ type TaskFeedDeps = {
 /**
  * What a graph panel is told about tasks besides its state: the run words and owners of its root, merged from its own runs and
  * the task progress (spec D11) and coalesced so a burst of task events, progress or prediction changes is one post, the cache
- * prediction of its tasks while the prediction toggle is on, the Atomizer counts of its
+ * prediction of its tasks while the prediction toggle is on, the affected marks (a `GraphAffectedFeed`), the Atomizer counts of its
  * groups (a `GraphAtomFeed`) and the one `showTasks` or `showPackage` request held until the page can take it. A coalesced post that
- * equals the last one sent is skipped, and a post carries `predictions` only when they changed since the last one sent: an absent
- * key leaves the page's marks as they are. A request is never posted before a `graph` state: `flush` is the one point that posts the
+ * equals the last one sent is skipped, and a post carries `predictions` or `affected` only when they changed since the last one sent:
+ * an absent key leaves the page's marks as they are. A request is never posted before a `graph` state: `flush` is the one point that posts the
  * full runs message, always, the atoms and the held request, in that order, right after a state is posted.
  */
 export class GraphTaskFeed {
@@ -42,6 +43,7 @@ export class GraphTaskFeed {
   private lastPredictions: string | null = null;
   private held: GraphShowRequest | null = null;
   private readonly atomFeed: GraphAtomFeed;
+  private readonly affectedFeed: GraphAffectedFeed;
 
   public constructor(deps: TaskFeedDeps) {
     this.deps = deps;
@@ -49,10 +51,12 @@ export class GraphTaskFeed {
       this.fire();
     });
     this.atomFeed = new GraphAtomFeed({ root: deps.root, atoms: deps.feeds.atoms, ports: deps.ports, gate: deps.gate });
+    this.affectedFeed = new GraphAffectedFeed({ ...deps, changed: this.changed.bind(this) });
   }
 
   public start(): void {
     this.atomFeed.start();
+    this.affectedFeed.start();
 
     if (this.unsubscribes.length > 0) return;
 
@@ -72,6 +76,7 @@ export class GraphTaskFeed {
 
   public stop(): void {
     this.atomFeed.stop();
+    this.affectedFeed.stop();
 
     for (const unsubscribe of this.unsubscribes) unsubscribe();
 
@@ -82,6 +87,7 @@ export class GraphTaskFeed {
 
   public flush(state: GraphState): void {
     this.coalescer.cancel();
+    this.affectedFeed.flushed(state);
     this.postRuns(runIdsOf(state), true);
     this.atomFeed.flush(state);
     this.postHeld(state);
@@ -145,7 +151,7 @@ export class GraphTaskFeed {
   }
 
   /**
-   * Skips a message whose runs and owners equal the last ones sent and whose predictions did not change, unless `isForced`, as a
+   * Skips a message whose runs and owners equal the last ones sent and whose predictions and affected marks did not change, unless `isForced`, as a
    * reloaded page needs the message again.
    */
   private postRuns(ids: string[], isForced: boolean): void {
@@ -154,14 +160,22 @@ export class GraphTaskFeed {
     const recordsOf = (recordsRoot: string, taskId: string): ProgressRecord[] => progress.recordsOf(recordsRoot, taskId);
     const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds() };
     const predictions = this.predictionsToPost(isForced);
+    const affected = this.affectedFeed.toPost(isForced);
     const message = runsMessageOf(root, ids, sources, predictions);
     const runsText = JSON.stringify([message.runs, message.owners]);
-    const isRepeat = !isForced && predictions === null && runsText === this.lastRuns;
+    const isRepeat = !isForced && predictions === null && affected === undefined && runsText === this.lastRuns;
 
     if (isRepeat) return;
 
     this.lastRuns = runsText;
-    ports.post(message);
+
+    if (affected === undefined) {
+      ports.post(message);
+
+      return;
+    }
+
+    ports.post({ ...message, affected });
   }
 
   /**

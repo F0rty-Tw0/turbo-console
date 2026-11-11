@@ -86,7 +86,7 @@ describe('FEATURE: cache prediction in the graph feed', () => {
 
   it('GIVEN the toggle off and an answer WHEN the state is flushed THEN the runs message carries {}, which clears every mark', () => {
     const { feed, ports } = feedWith(false, HIT_A);
-    const expected: GraphRunsMessage = { type: 'runs', runs: {}, predictions: {} };
+    const expected: GraphRunsMessage = { type: 'runs', runs: {}, predictions: {}, affected: null };
 
     feed.flush(GRAPH_STATE_STUB);
 
