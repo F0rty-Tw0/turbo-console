@@ -3,14 +3,23 @@ import type { GraphViewMode } from '../../bridge/common/graph-view-state.type.ts
 
 /** A theme colour a swatch is drawn in; `run-<state>` is the outline of a task in that run state. */
 export type LegendColour =
-  'frame' | 'background' | 'edge' | 'selected' | 'highlighted' | 'cached' | 'selectionFill' | `run-${GraphRunState}`;
+  'frame' | 'background' | 'edge' | 'selected' | 'highlighted' | 'cached' | 'selectionFill' | 'affected' | `run-${GraphRunState}`;
 
 export type LegendOutline = {
   readonly colour: LegendColour;
   readonly px: number;
 };
 
-/** What one swatch draws. `flow`: `stroke`/`strokePx` is the highlighted edge; `dashPx` and `outline` are the dash pen drawn over it. */
+/** The affected halo under a task box, as the stylesheet's `underlay` draws it. */
+export type LegendHalo = {
+  readonly colour: 'affected';
+  readonly opacity: number;
+};
+
+/**
+ * What one swatch draws. `flow`: `stroke`/`strokePx` is the highlighted edge; `dashPx` and `outline` are the dash pen drawn over it.
+ * `halo`: a box's affected halo, drawn under the outline and the frame.
+ */
 export type LegendSwatch = {
   readonly shape: 'box' | 'pill' | 'line' | 'flow';
   readonly stroke: LegendColour;
@@ -24,6 +33,7 @@ export type LegendSwatch = {
   readonly isDimmed: boolean;
   readonly isNested: boolean;
   readonly hasPlate: boolean;
+  readonly halo: LegendHalo | null;
 };
 
 export type LegendRow = {
