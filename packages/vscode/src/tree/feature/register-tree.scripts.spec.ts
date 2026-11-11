@@ -91,6 +91,7 @@ describe('FEATURE: registerTree scripts toggle', () => {
       scope: scriptsToggleMock(),
       scripts: toggle,
       prediction: scriptsToggleMock(),
+      affected: scriptsToggleMock(),
       iconTheme: iconThemeProbeMock()
     };
   };

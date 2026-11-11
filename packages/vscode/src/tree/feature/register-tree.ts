@@ -102,6 +102,7 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
   const scope = registerToggle(context.scope, 'turboConsole.showScope', 'turboConsole.hideScope');
   const scripts = registerToggle(context.scripts, 'turboConsole.showScripts', 'turboConsole.hideScripts');
   const prediction = registerToggle(context.prediction, 'turboConsole.showPrediction', 'turboConsole.hidePrediction');
+  const affecting = registerToggle(context.affected, 'turboConsole.showAffected', 'turboConsole.hideAffected');
   const predicting = context.prediction.onDidChange(() => {
     tree.predictionChanged();
   });
@@ -139,6 +140,7 @@ export const registerTree = (context: TreeContext, session: Session, tree: Packa
     scope,
     scripts,
     prediction,
+    affecting,
     { dispose: predicting },
     settings
   );

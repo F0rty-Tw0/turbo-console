@@ -63,6 +63,7 @@ describe('FEATURE: registerTree scope toggle', () => {
   let tree: PackagesTreeApi;
   let scope: ScriptsToggleFake;
   let prediction: ScriptsToggleFake;
+  let affected: ScriptsToggleFake;
   let context: TreeContext;
   let session: Session;
   let output: Output;
@@ -81,6 +82,7 @@ describe('FEATURE: registerTree scope toggle', () => {
       scope: toggle,
       scripts: scriptsToggleMock(),
       prediction,
+      affected,
       iconTheme: iconThemeProbeMock()
     };
 
@@ -98,6 +100,7 @@ describe('FEATURE: registerTree scope toggle', () => {
 
     scope = scriptsToggleMock();
     prediction = scriptsToggleMock();
+    affected = scriptsToggleMock();
     context = contextWith(scope);
     session = {
       store: new RootStore(),
@@ -146,6 +149,36 @@ describe('FEATURE: registerTree scope toggle', () => {
       registerWith();
 
       expect(calls.slice(0, 2)).toStrictEqual([`setScopeShown:${String(shown)}`, 'createTreeView']);
+    });
+  });
+
+  describe('GIVEN a registered tree with the affected toggle off', () => {
+    beforeEach(() => {
+      registerWith();
+    });
+
+    it('WHEN showAffected runs THEN affected.set(true) is called once', async () => {
+      await invoke('turboConsole.showAffected');
+
+      expect(affected.set).toHaveBeenCalledExactlyOnceWith(true);
+    });
+
+    it('WHEN hideAffected runs THEN affected.set(false) is called once', async () => {
+      await invoke('turboConsole.hideAffected');
+
+      expect(affected.set).toHaveBeenCalledExactlyOnceWith(false);
+    });
+
+    it('WHEN showAffected runs THEN the prediction toggle is not touched', async () => {
+      await invoke('turboConsole.showAffected');
+
+      expect(prediction.set).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the subscriptions are disposed THEN both affected commands are unregistered', () => {
+      for (const subscription of context.subscriptions) subscription.dispose();
+
+      expect(disposed).toStrictEqual(expect.arrayContaining(['turboConsole.showAffected', 'turboConsole.hideAffected']));
     });
   });
 

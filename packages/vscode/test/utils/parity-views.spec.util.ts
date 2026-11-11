@@ -86,6 +86,17 @@ export const predictionRegisteredCase = async (): Promise<void> => {
   });
 };
 
+/** The Show and Hide Affected title commands are registered by the extension. */
+export const affectedRegisteredCase = async (): Promise<void> => {
+  await step('8: the Show and Hide Affected commands are registered', async () => {
+    const registered = await vscode.commands.getCommands(true);
+
+    for (const command of ['turboConsole.showAffected', 'turboConsole.hideAffected']) {
+      assert.ok(registered.includes(command), `${command} is not registered`);
+    }
+  });
+};
+
 /** Spec §5.3 case 8: the default tree mode shows the folders `apps` and `packages`, holding the manifest's visible packages. */
 export const foldersCase = async (scene: ParityScene): Promise<void> => {
   const { api, manifest } = scene;

@@ -96,14 +96,16 @@ describe('FEATURE: tree provider deps', () => {
       const scope = scriptsToggleMock();
       const scripts = scriptsToggleMock();
       const prediction = scriptsToggleMock();
+      const affected = scriptsToggleMock();
       const iconTheme = iconThemeProbeMock();
 
-      const treeContext = contextOf({ subscriptions }, { scope, scripts, prediction }, iconTheme);
+      const treeContext = contextOf({ subscriptions }, { scope, scripts, prediction, affected }, iconTheme);
 
       expect(treeContext.subscriptions).toBe(subscriptions);
       expect(treeContext.scope).toBe(scope);
       expect(treeContext.scripts).toBe(scripts);
       expect(treeContext.prediction).toBe(prediction);
+      expect(treeContext.affected).toBe(affected);
       expect(treeContext.iconTheme).toBe(iconTheme);
     });
   });

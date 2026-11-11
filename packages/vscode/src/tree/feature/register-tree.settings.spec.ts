@@ -83,6 +83,7 @@ describe('FEATURE: registerTree settings', () => {
       scope: scriptsToggleMock(),
       scripts: scriptsToggleMock(),
       prediction: scriptsToggleMock(),
+      affected: scriptsToggleMock(),
       iconTheme
     };
     const session: Session = {
