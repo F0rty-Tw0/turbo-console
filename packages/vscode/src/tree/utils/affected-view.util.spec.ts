@@ -202,6 +202,21 @@ describe('FEATURE: affected view', () => {
       ]);
     });
 
+    it('WHEN app is "package is affected" and its upstream lib#build is only "required by an affected task" THEN app is "changed" and lib "dependency"', () => {
+      const model = libAppModel(['@fx/lib#build']);
+      const rows: [string, string, string][] = [
+        ['@fx/lib#build', 'TaskAllChanged', 'required by an affected task'],
+        ['@fx/app#build', 'TaskAllChanged', 'package is affected'],
+        ['@fx/app#lint', 'TaskAllChanged', 'package is affected']
+      ];
+
+      expect(marksOf(model, rows)).toStrictEqual([
+        ['@fx/lib#build', 'dependency'],
+        ['@fx/app#build', 'changed'],
+        ['@fx/app#lint', 'changed']
+      ]);
+    });
+
     it('WHEN the upstream task app#build depends on is not a row THEN app reads "changed"', () => {
       const model = libAppModel(['@fx/lib#build']);
       const rows: [string, string, string][] = [

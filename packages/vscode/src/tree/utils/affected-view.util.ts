@@ -3,7 +3,7 @@ import type { AffectedResult, TaskNode, WorkspaceModel } from '@turbo-console/co
 import { affectedMarkOf } from './affected-mark.util.ts';
 import { affectedWhyOf } from './affected-why.util.ts';
 import { clockOf } from './clock-text.util.ts';
-import { AFFECTED_FILE_REASONS, AFFECTED_LEVELS } from '../common/affected.const.ts';
+import { AFFECTED_FILE_REASONS, AFFECTED_LEVELS, AFFECTED_REQUIRED_DETAIL } from '../common/affected.const.ts';
 import type { AffectedEntry, AffectedPackageFlags, AffectedView } from '../common/affected.type.ts';
 
 type AffectedRow = AffectedResult['tasks'][number];
@@ -35,8 +35,11 @@ const fileReasonPackagesOf = (rows: AffectedRow[], keptById: Map<string, Kept>):
   return packages;
 };
 
+/** A row affected on its own: a `required by an affected task` row is there only because its dependent needs it. */
+const isSelfAffected = (row: AffectedRow): boolean => row.detail !== AFFECTED_REQUIRED_DETAIL;
+
 const upstreamPackagesOf = (model: WorkspaceModel, rows: AffectedRow[], keptById: Map<string, Kept>): Set<string> => {
-  const rowIds = new Set(rows.map((row) => row.id));
+  const rowIds = new Set(rows.filter(isSelfAffected).map((row) => row.id));
   const packages = new Set<string>();
 
   for (const pkg of model.packages) {
