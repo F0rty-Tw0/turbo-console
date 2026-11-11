@@ -83,6 +83,17 @@ describe('FEATURE: run flow, Run with Options', () => {
     });
   });
 
+  describe('GIVEN a request with force false and extras that carry force true at runtime', () => {
+    it('WHEN it is run THEN turbo gets no --force', async () => {
+      const widened = { only: true, force: true };
+      const extras: RunExtras = widened;
+
+      await runTask(store, ports, withExtras(extras));
+
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(expect.anything(), [...ARGS, '--only'], 1000, LOG_ENV_STUB);
+    });
+  });
+
   describe('GIVEN a force-only request', () => {
     it('WHEN it is run THEN the stored entry has no extras key', async () => {
       const forced: RunRequest = { ...RUN_REQUEST_STUB, force: true };

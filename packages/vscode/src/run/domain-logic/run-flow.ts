@@ -68,7 +68,7 @@ const launchTurbo = async (store: Runs, ports: RunPorts, request: RunRequest, la
     return null;
   }
 
-  const args = turboRunArgs(request.task, request.packageName, { force: request.force, ...request.extras }, request.singlePackage);
+  const args = turboRunArgs(request.task, request.packageName, { ...request.extras, force: request.force }, request.singlePackage);
 
   const env = await startLiveLog(store, ports, request, launchedAt);
 
