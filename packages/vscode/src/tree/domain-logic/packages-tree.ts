@@ -138,7 +138,7 @@ export class PackagesTree {
     this.loads.dispose();
   }
 
-  /** A shared-load toggle (cache prediction, affected) changed: one redraw */
+  /** A shared-load toggle (cache prediction, affected) changed: one redraw. */
   public loadsToggled(): void {
     this.redraw();
   }
