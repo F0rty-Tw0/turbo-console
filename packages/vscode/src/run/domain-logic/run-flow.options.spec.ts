@@ -1,7 +1,7 @@
 import type { RunExtras } from '@turbo-console/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { runTask } from './run-flow.ts';
+import { finishRun, runTask } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
 import { TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { RunPorts, RunRequest, Terminable } from '../common/run.type.ts';
@@ -91,6 +91,19 @@ describe('FEATURE: run flow, Run with Options', () => {
       await runTask(store, ports, withExtras(extras));
 
       expect(ports.execute).toHaveBeenCalledExactlyOnceWith(expect.anything(), [...ARGS, '--only'], 1000, LOG_ENV_STUB);
+    });
+  });
+
+  describe('GIVEN a turbo request with extras whose process ended', () => {
+    it('WHEN its summary is matched THEN the run to match carries those extras', async () => {
+      await runTask(store, ports, withExtras(ONLY));
+      const ended = store.processEnded({ root: '/ws', id: 'build' }, 0, 4000);
+
+      if (ended === null) throw new Error('the run was not running');
+
+      await finishRun(store, ports, ended);
+
+      expect(ports.match).toHaveBeenCalledExactlyOnceWith('/ws', expect.objectContaining({ extras: ONLY }));
     });
   });
 
