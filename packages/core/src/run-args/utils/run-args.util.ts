@@ -30,7 +30,8 @@ export const turboOptionArgs = (options: RunTaskOptions): string[] => {
 
 /**
  * The arguments for running one task of one package, ready for `vscode.ProcessExecution`; `singlePackage` adds
- * `--single-package`, then `--force`, `--only`, `--continue`, `--concurrency` and `--` with the args follow it.
+ * `--single-package`, then `--force`, `--only`, `--continue`, `--concurrency` and `--` with the args follow it. Throws
+ * `invalid-argument` on a bad task or package name, concurrency or pass-through arg.
  */
 export const turboRunArgs = (
   task: TaskNode,
