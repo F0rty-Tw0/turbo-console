@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { registerCodeLens } from './codelens/feature/register-codelens.ts';
 import { createPanels } from './details/details-wiring.ts';
 import { registerDetails } from './details/feature/register-details.ts';
+import { apiOf } from './extension-api.ts';
 import { createGraph, graphFeedsOf } from './graph/graph-wiring.ts';
 import { runDependenciesOf } from './graph/utils/graph-dependencies.util.ts';
 import type { Roots } from './roots/common/coordinator.type.ts';
@@ -142,26 +143,9 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const graph = createGraph(context, session, panels, output, graphFeedsOf(runSession, loads, toggles));
   const treeVisibility = new TreeVisibility();
   const ticker = new ElapsedTicker(runSession.runs, tickerPortsOf(tree));
-  const api: TurboConsoleApi = {
-    tree,
-    commands,
-    help,
-    runs: runSession.runs,
-    progress: runSession.progress,
-    timings,
-    loads: session.loads,
-    whenIdle: async (root: string): Promise<void> => session.whenIdle(root),
-    details: panels.api(),
-    graph: graph.api,
-    treeVisible: treeVisibility.read,
-    treeDescription: treeVisibility.description,
-    ticker: ticker.api()
-  };
+  const api = apiOf({ tree, commands, help, timings, session, runSession, panels, graph, visibility: treeVisibility, ticker });
 
   context.subscriptions.push(output, tree, session, ticker, togglesDisposableOf(toggles), loads);
-
-  // An untrusted workspace stops here; the trusted branch ends the span again after its registrations.
-  timings.activation = { start, end: performance.now() };
 
   if (vscode.workspace.isTrusted) {
     const treeContext = contextOf(context, toggles, new IconThemeFolders(editorIconThemePorts()), loads.affected);
@@ -184,6 +168,8 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
     // CI runners logged 10–470 ms for identical code, so the wait is left out of the budget.
     timings.activation = { start, end: performance.now() };
     await rootsFound;
+  } else {
+    timings.activation = { start, end: performance.now() };
   }
 
   timings.activationResume = resumeSpanOf(session.rootsFoundAt);
