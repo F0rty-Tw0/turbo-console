@@ -1,0 +1,139 @@
+import type { Page, Request } from '@playwright/test';
+import { errors, test } from '@playwright/test';
+
+import type { RouteHandler } from '../common/playwright.type.ts';
+import { SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
+
+/**
+ * How long one navigation to the shell may take before it counts as stuck (C84): on a macOS runner the routed
+ * `index.html` request twice never completed, so `goto` sat out the test timeout with zero network entries in the trace.
+ * A local load takes well under a second. The retry gets the same bound, so a second stuck try still throws the
+ * diagnosis inside the test timeout instead of running into it.
+ */
+const SHELL_GOTO_MS = 10_000;
+
+/**
+ * Where the retry goes first: a timed-out `goto` leaves its navigation pending, and a second `goto` to the same URL then
+ * fails at once with `net::ERR_ABORTED` and issues no request, so the stuck one is replaced by a blank page first.
+ */
+const CLEAR_PAGE = 'about:blank';
+
+/** The ways a stuck navigation ends: a timeout, or the abort Chromium reports when the frame goes away. */
+const isStuckNavigation = (error: unknown): boolean => {
+  const isAborted = error instanceof Error && error.message.includes('net::ERR_ABORTED');
+
+  return error instanceof errors.TimeoutError || isAborted;
+};
+
+/** Navigates to `SHELL_URL` bounded, retrying a stuck first try once and saying what Chromium did with it (C84). */
+export class ShellNavigation {
+  private readonly page: Page;
+  private readonly tryMs: number;
+  private issued: number;
+  private finished: number;
+  private failure: string | null;
+
+  /** `tryMs` bounds each try; only the spec of this retry passes a shorter one, to stay fast. */
+  public constructor(page: Page, tryMs: number = SHELL_GOTO_MS) {
+    this.page = page;
+    this.tryMs = tryMs;
+    this.issued = 0;
+    this.finished = 0;
+    this.failure = null;
+  }
+
+  /** Serves every shell file with `handler`, then goes to `SHELL_URL` as `goto` does. */
+  public async open(handler: RouteHandler): Promise<void> {
+    await this.page.route(`${SHELL_ORIGIN}/**`, handler);
+    await this.goto();
+  }
+
+  /**
+   * Goes to `SHELL_URL`, each try bounded by `tryMs`. A first try that times out or aborts is retried once; a retry that
+   * loads is recorded as a `C84` annotation, also written to stderr since the list reporter prints no annotations, and
+   * one that fails throws `C84: …` with what Chromium did with the `index.html` request on both tries.
+   */
+  public async goto(): Promise<void> {
+    const onRequest = (request: Request): void => this.noteIssued(request);
+    const onFinished = (request: Request): void => this.noteFinished(request);
+    const onFailed = (request: Request): void => this.noteFailed(request);
+
+    this.page.on('request', onRequest);
+    this.page.on('requestfinished', onFinished);
+    this.page.on('requestfailed', onFailed);
+
+    try {
+      await this.gotoWithRetry();
+    } finally {
+      this.page.off('request', onRequest);
+      this.page.off('requestfinished', onFinished);
+      this.page.off('requestfailed', onFailed);
+    }
+  }
+
+  private async gotoWithRetry(): Promise<void> {
+    const firstTry = await this.tried();
+
+    if (firstTry === null) return;
+
+    const gotoOptions = { timeout: this.tryMs };
+
+    await this.page.goto(CLEAR_PAGE, gotoOptions);
+
+    const secondTry = await this.tried();
+
+    if (secondTry !== null) throw new Error(`C84: shell navigation stuck twice; first try ${firstTry}; retry ${secondTry}`);
+
+    const description = `shell navigation retried and loaded; first try ${firstTry}`;
+
+    test.info().annotations.push({ type: 'C84', description });
+    console.warn(`C84 ${description}`);
+  }
+
+  /** Runs one bounded `goto`; returns `null` when it loaded, else what happened, and rethrows any other failure. */
+  private async tried(): Promise<string | null> {
+    const gotoOptions = { timeout: this.tryMs };
+
+    this.issued = 0;
+    this.finished = 0;
+    this.failure = null;
+
+    try {
+      await this.page.goto(SHELL_URL, gotoOptions);
+
+      return null;
+    } catch (error) {
+      const isStuck = isStuckNavigation(error);
+
+      if (!isStuck) throw error;
+
+      return this.diagnosis(error);
+    }
+  }
+
+  private diagnosis(error: unknown): string {
+    const message = error instanceof Error ? error.message : 'a non-Error value';
+    const [firstLine] = message.split('\n');
+    const failed = this.failure === null ? 'none failed' : `failed: ${this.failure}`;
+
+    return `failed with "${firstLine}": index.html requests issued ${this.issued}, finished ${this.finished}, ${failed}`;
+  }
+
+  private noteIssued(request: Request): void {
+    const url = request.url();
+
+    if (url === SHELL_URL) this.issued += 1;
+  }
+
+  private noteFinished(request: Request): void {
+    const url = request.url();
+
+    if (url === SHELL_URL) this.finished += 1;
+  }
+
+  private noteFailed(request: Request): void {
+    const url = request.url();
+
+    if (url === SHELL_URL) this.failure = request.failure()?.errorText ?? 'no error text';
+  }
+}
