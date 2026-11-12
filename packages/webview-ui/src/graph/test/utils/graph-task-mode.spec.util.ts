@@ -58,6 +58,15 @@ const taskViewMockOf = (noting: (name: string) => () => void): TaskViewMock => {
 
 const sizeOf = (): NodeSize => NODE_SIZE;
 
+/** Every sizer task mode takes, one px a character for the chips. */
+const SIZER_DEPS: Pick<TaskModeDeps, 'sizeOf' | 'textSizeOf' | 'boxTitleSizeOf' | 'chipMeasure' | 'glyphs'> = {
+  sizeOf,
+  textSizeOf: sizeOf,
+  boxTitleSizeOf: sizeOf,
+  chipMeasure: (text: string): number => text.length,
+  glyphs: false
+};
+
 const taskPartsMockOf = (): TaskPartsMock => {
   const panel = taskPanelMock();
   const controls = taskControlsMock();
@@ -98,9 +107,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const deps: TaskModeDeps = {
     view,
     runner: runs.runner,
-    sizeOf,
-    textSizeOf: sizeOf,
-    boxTitleSizeOf: sizeOf,
+    ...SIZER_DEPS,
     bridge,
     screen,
     modes,

@@ -41,7 +41,7 @@ const DRAWING: TaskDrawing = {
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: SIZES,
-  labels: new Map([['web#e2e-ci', '2 files']]),
+  labels: new Map([['web#e2e-ci', { files: 2, cached: null, failed: null }]]),
   titleWidths: new Map(),
   rootLabel: null,
   naming: NAMING_STUB

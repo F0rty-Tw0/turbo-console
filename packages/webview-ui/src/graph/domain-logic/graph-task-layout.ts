@@ -6,7 +6,6 @@ import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutDeps, TaskLayoutRequest } from '../common/graph-task.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
-import { countTextsOf } from '../utils/atom-count-texts.util.ts';
 import { elkTaskGraphOf } from '../utils/elk-task-graph.util.ts';
 import { engineNoticeOf } from '../utils/layout-plan.util.ts';
 import { titleWidthsOf } from '../utils/task-title-width.util.ts';
@@ -173,7 +172,7 @@ export class GraphTaskLayout {
     const isSavedCamera = canRestore && saved?.layoutKey === request.key && !saved.fitted;
     const isOpenKey = isOpenFor(saved, request.key);
     const isOpen = canRestore && isOpenKey;
-    const labels = countTextsOf(this.atoms.labels());
+    const labels = this.atoms.labels();
 
     flow.stop();
     view.tasks.show({

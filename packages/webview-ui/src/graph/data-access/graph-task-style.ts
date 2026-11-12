@@ -1,5 +1,6 @@
 import type { Css, NodeSingular, StylesheetJsonBlock } from 'cytoscape';
 
+import { UMBRELLA_EXPORT, UMBRELLA_NODE, umbrellaExportTextOf } from './graph-task-umbrella-style.ts';
 import type { GraphAffectedMark } from '../../bridge/common/graph-affected.type.ts';
 import { AFFECTED_MARKS, RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
@@ -26,16 +27,13 @@ import {
   TASK_FOLDER_CLASS,
   TASK_NODE_CLASS
 } from '../common/graph-task.const.ts';
-import { DASHED_BORDER_PX, FOLDER_PADDING_PX } from '../common/graph.const.ts';
+import { DASHED_BORDER_PX, EXPORTING_CLASS, FOLDER_PADDING_PX } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 import { affectedClassOf } from '../utils/affected-class.util.ts';
 import { glyphOf } from '../utils/glyph.util.ts';
 
 /** A task node shows its task name; its id is `package#name`. */
 const TASK_NODE = { label: 'data(label)' } as const;
-
-/** An umbrella's label holds a line break: its name over its counts. */
-const UMBRELLA_NODE = { 'text-wrap': 'wrap' } as const;
 
 /**
  * A file node is a pill: its corners are half its 20 px height. It reads its file name, one line cut with an ellipsis 4 px short of each
@@ -78,7 +76,7 @@ const FRAMED_BOX = {
   'text-margin-y': frameTitleYOf
 } as const;
 
-/** A node's state glyph, a space and its name; an umbrella's counts line stays under it. */
+/** A node's state glyph, a space and its label. */
 const glyphLabelOf = (node: NodeSingular): string => `${glyphOf(node.classes())} ${node.data('label')}`;
 
 /** A package task box's glyph, a space and its title. */
@@ -151,8 +149,8 @@ const affectedRulesOf = (colors: ThemeColors): StylesheetJsonBlock[] => {
 };
 
 /**
- * The task mode rules: a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the
- * name, an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a
+ * The task mode rules: a `task` node reads its name, an `atom-umbrella` lifts its name half a chip row to leave the row
+ * room, and while `exporting` draws its name over its counts text instead (after both rules, so it wins), an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a
  * file (dashed border when `atom-live`), a `run-<state>` class outlines a task or file after them (a selected task
  * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports (the box
  * see-through, its title on a backdrop of the theme background, so a task link drawn under it passes behind the title), left-aligned
@@ -193,10 +191,12 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
   const packageBox = glyphedOf(taskBox, glyphFamily, boxGlyphLabelOf);
   const taskNode = glyphedOf(TASK_NODE, glyphFamily);
   const atomFile = glyphedOf(ATOM_FILE, glyphFamily);
+  const umbrellaExport = glyphedOf(UMBRELLA_EXPORT, glyphFamily, umbrellaExportTextOf);
   const affectedRules = affectedRulesOf(colors);
   const rules: StylesheetJsonBlock[] = [
     { selector: `node.${TASK_NODE_CLASS}`, style: taskNode },
     { selector: `node.${ATOM_UMBRELLA_CLASS}`, style: UMBRELLA_NODE },
+    { selector: `node.${ATOM_UMBRELLA_CLASS}.${EXPORTING_CLASS}`, style: umbrellaExport },
     { selector: `node:parent.${TASK_BOX_CLASS}`, style: packageBox },
     { selector: `node:parent.${TASK_BOX_CLASS}.${BOX_FRAMED_CLASS}`, style: FRAMED_BOX },
     { selector: `node:parent.${SCRIPTS_BOX_CLASS}`, style: scriptsBox },

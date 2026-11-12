@@ -1,12 +1,14 @@
 import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 
-import { labelOf, setCountLabels, taskClassesOf } from './graph-atom-view.ts';
+import { setCountLabels, taskClassesOf } from './graph-atom-view.ts';
 import { positionOf } from './graph-place.ts';
 import { boxesOf } from './graph-task-boxes.ts';
 import { applyBoxFrames, refitBoxFrames } from './graph-task-frames.ts';
 import { markAffected, markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
 import { paintTasks } from './graph-task-paint.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
 import type { GraphEdge, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import { atomCountsText } from '../../bridge/utils/atom-counts-text.util.ts';
 import { NO_AFFECTED, NO_PREDICTIONS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
 import type { TaskAffectedMarks, TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
@@ -14,11 +16,22 @@ import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
 import { parentIdOf } from '../utils/task-compound.util.ts';
 
+/** An umbrella's counts text as node data; a task with no counts adds none. */
+const countsDataOf = (counts: GraphAtomCounts | undefined): Record<string, string> => {
+  const none: Record<string, string> = {};
+
+  if (counts === undefined) return none;
+
+  const data = { countsText: atomCountsText(counts) };
+
+  return data;
+};
+
 const taskDefinitionOf = (task: GraphTask, drawing: TaskDrawing): ElementDefinition => {
   const { width, height } = drawing.sizes.get(task.id) ?? drawing.sizeOf(task.name);
-  const label = labelOf(task.name, drawing.labels.get(task.id));
+  const countsData = countsDataOf(drawing.labels.get(task.id));
   const parent = parentIdOf(task);
-  const data = { id: task.id, name: task.name, label, parent, width, height };
+  const data = { id: task.id, name: task.name, label: task.name, ...countsData, parent, width, height };
   const position = positionOf(drawing.positions, task.id);
   const classes = taskClassesOf(drawing.sizes.has(task.id));
   const definition: ElementDefinition = { data, position, classes };
@@ -122,7 +135,7 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
   const setPositions = (positions: Positions): void => moveTasks(cy, positions);
   const positions = (): Positions => centresOf(cy);
   const clear = (): void => void cy.elements().remove();
-  const setCounts = (labels: ReadonlyMap<string, string>): void => setCountLabels(cy, labels);
+  const setCounts = (labels: ReadonlyMap<string, GraphAtomCounts>): void => setCountLabels(cy, labels);
   const marks = { paint, runStates, predictions, affected, remark };
   const canvas: TaskCanvas = { show, clear, setPositions, positions, setCounts, ...marks };
 

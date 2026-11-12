@@ -57,6 +57,8 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
     sizeOf: deps.taskSizeOf,
     textSizeOf: deps.sizeOf,
     boxTitleSizeOf: deps.boxTitleSizeOf,
+    chipMeasure: deps.chipMeasure,
+    glyphs: deps.glyphs,
     bridge,
     screen,
     now: deps.now,

@@ -44,7 +44,7 @@ test.describe('FEATURE: graph task state glyphs', () => {
   );
 
   test(
-    'GIVEN the umbrella graph open with the font and again with the font held, a plain task is wider with glyphs and the umbrella is as wide',
+    'GIVEN the umbrella graph open with the font and again with the font held, a plain task is wider with glyphs and the umbrella is wider by its two chip glyph slots',
     { annotation: SIZING },
     async ({ graphGlyphs, secondGlyphs }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => graphGlyphs.open());
@@ -52,7 +52,7 @@ test.describe('FEATURE: graph task state glyphs', () => {
       await test.step('AND a second page is opened with codicon.ttf held', async (): Promise<void> =>
         secondGlyphs.open({ isCodiconHeld: true }));
 
-      await test.step('THEN the plain task is wider with glyphs and the umbrella has the same width', async (): Promise<void> =>
+      await test.step('THEN the plain task is wider with glyphs and the umbrella is wider by its two chip glyph slots', async (): Promise<void> =>
         graphGlyphs.expectWidthsAgainst(secondGlyphs));
     }
   );
