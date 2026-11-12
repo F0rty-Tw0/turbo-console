@@ -392,20 +392,21 @@ p {
   color: var(--vscode-foreground);
 }
 
+/* The outline falls back to the text colour, as the stylesheet holds no colour literal: an unset variable would drop the whole border, and the umbrella's width counts it. */
 .atom-chip-cached {
-  border: 1px solid var(--vscode-charts-purple);
+  border: 1px solid var(--vscode-charts-purple, currentColor);
 }
 
 .atom-chip-failed {
-  border: 1px solid var(--vscode-testing-iconFailed);
+  border: 1px solid var(--vscode-testing-iconFailed, currentColor);
 }
 
 .atom-chip-cached .atom-chip-glyph {
-  color: var(--vscode-charts-purple);
+  color: var(--vscode-charts-purple, currentColor);
 }
 
 .atom-chip-failed .atom-chip-glyph {
-  color: var(--vscode-testing-iconFailed);
+  color: var(--vscode-testing-iconFailed, currentColor);
 }
 
 .widget-row {

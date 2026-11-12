@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { css, declarationsOf, ruleOf, ruleStartOf } from './test/utils/graph-css-rules.spec.util.ts';
+import { allDeclarationsOf, css, declarationsOf, ruleOf, ruleStartOf } from './test/utils/graph-css-rules.spec.util.ts';
 
 const WIDGET_SELECTOR = '.widget-button';
 
@@ -99,6 +99,19 @@ describe('FEATURE: graph.css widget rules', () => {
 
       expect(declarations).toContain('color: var(--tc-muted)');
       expect(declarations).not.toContain('background');
+    });
+  });
+
+  describe('GIVEN the umbrella chip rules', () => {
+    it.each([
+      ['.atom-chip-cached', 'border: 1px solid var(--vscode-charts-purple, currentColor)'],
+      ['.atom-chip-failed', 'border: 1px solid var(--vscode-testing-iconFailed, currentColor)'],
+      ['.atom-chip-cached .atom-chip-glyph', 'color: var(--vscode-charts-purple, currentColor)'],
+      ['.atom-chip-failed .atom-chip-glyph', 'color: var(--vscode-testing-iconFailed, currentColor)']
+    ])('WHEN the rule %s is read THEN it declares %s, so an unset variable keeps the outline', (selector, expected) => {
+      const declarations = allDeclarationsOf(css, selector);
+
+      expect(declarations).toContain(expected);
     });
   });
 
