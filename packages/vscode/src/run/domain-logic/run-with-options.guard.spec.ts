@@ -28,7 +28,7 @@ const UMBRELLA_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [UMBRELLA_T
 
 const EMPTY_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [] };
 
-describe('FEATURE: Run with Options on a turbo task', () => {
+describe('FEATURE: Run with Options on a turbo task stops or redirects', () => {
   let roots: RootStore;
   let fakes: RunOptionsFakes;
 
