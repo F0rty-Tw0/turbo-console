@@ -39,8 +39,8 @@ export const run = async (): Promise<void> => {
     nodes = await rootNodes(api, roots);
   });
   await step('6c: the load-error row alone under bad', async () => assertOnlyMessage(api, nodes.at(0), 'load-no-model'));
-  await step('6d: the no-shown-packages row alone under empty, its root // holding no task', async () =>
-    assertOnlyMessage(api, nodes.at(1), 'no-shown-packages')
+  await step('6d: the no-packages row alone under empty, its root // holding no task', async () =>
+    assertOnlyMessage(api, nodes.at(1), 'no-packages')
   );
   await markDone(env);
 };
