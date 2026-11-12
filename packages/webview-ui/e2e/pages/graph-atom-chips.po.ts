@@ -1,8 +1,21 @@
 /* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Locator, Page } from '@playwright/test';
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
+import { GraphCanvas } from './graph-canvas.po.ts';
+import { GraphProbePage } from './graph-probe.po.ts';
 import type { ProbeRect } from '../../src/graph/common/graph-probe-titles.type.ts';
+import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
+import type { ChipRowMargins } from '../common/graph-atom-chips.type.ts';
+import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
+import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
+import { nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
+
+/** How far, in page px, the row may poke out of its umbrella (spec AC3): its left edge and width match the body exactly. */
+const INSIDE_TOLERANCE_PX = 1;
+
+/** One wheel notch; a positive `deltaY` zooms out. */
+const WHEEL_NOTCH_PX = 100;
 
 /** Runs in the page: whether the chip's first child node is its glyph span, which `prepend(glyph)` makes and `append(glyph)` does not. */
 const isGlyphFirst = (chip: HTMLElement): boolean => {
@@ -17,9 +30,13 @@ const exportLabelIn = (id: string): string | null => window.__tcGraphProbe?.expo
 /** The chip row over each drawn umbrella in the widgets layer, and the label the umbrella draws while it is exported. */
 export class GraphAtomChips {
   private readonly page: Page;
+  private readonly canvas: GraphCanvas;
+  private readonly probe: GraphProbePage;
 
   public constructor(page: Page) {
     this.page = page;
+    this.canvas = new GraphCanvas(page);
+    this.probe = new GraphProbePage(page);
   }
 
   /** The text of each chip in the row of `umbrellaId`, in order; `[]` while it has no row. */
@@ -65,9 +82,137 @@ export class GraphAtomChips {
     return rect;
   }
 
+  /**
+   * The umbrella is wholly in view, and its row lies inside its rendered box within `INSIDE_TOLERANCE_PX`, the row's top
+   * at or below the umbrella's centre; polled, since the row follows one render behind. The margins are kept as a test
+   * annotation.
+   */
+  public async expectInsideUmbrella(umbrellaId: string): Promise<void> {
+    const inView = `${umbrellaId} lies wholly inside the canvas`;
+    const inside = `the chip row lies inside ${umbrellaId}`;
+    const isInView = async (): Promise<boolean> => this.isUmbrellaInView(umbrellaId);
+    const worstMargin = async (): Promise<number> => this.worstMarginOf(umbrellaId);
+
+    await expect.poll(isInView, { message: inView }).toBe(true);
+    await expect.poll(worstMargin, { message: inside }).toBeGreaterThanOrEqual(-INSIDE_TOLERANCE_PX);
+
+    const margins = await this.marginsOf(umbrellaId);
+
+    test.info().annotations.push({ type: 'chip-row-margins-px', description: JSON.stringify(margins) });
+  }
+
+  /** The row of `umbrellaId` has moved off `before` and lies inside the umbrella again. */
+  public async expectFollowsAfter(umbrellaId: string, before: ProbeRect): Promise<void> {
+    const hasMoved = async (): Promise<boolean> => {
+      const now = await this.rectOf(umbrellaId);
+
+      return now.left !== before.left || now.top !== before.top;
+    };
+
+    await expect.poll(hasMoved, { message: `the chip row of ${umbrellaId} moved` }).toBe(true);
+    await this.expectInsideUmbrella(umbrellaId);
+  }
+
+  /** Clicks the centre of the row with the mouse: the row lets pointer events through, so the click reaches the canvas. */
+  public async tapRowCentre(umbrellaId: string): Promise<void> {
+    const centre = await this.rowCentreOf(umbrellaId);
+
+    await this.page.mouse.click(centre.x, centre.y);
+  }
+
+  /** Double clicks the centre of the row with the mouse, which toggles the group when the click reaches the canvas. */
+  public async doubleTapRowCentre(umbrellaId: string): Promise<void> {
+    const centre = await this.rowCentreOf(umbrellaId);
+
+    await this.page.mouse.dblclick(centre.x, centre.y);
+  }
+
+  /** Pans the canvas so the umbrella's rendered centre sits at the container's centre, where a wheel zooms about. */
+  public async centreUmbrella(umbrellaId: string): Promise<void> {
+    const node = await this.umbrellaOf(umbrellaId);
+    const container = await this.canvas.container.evaluate(readRect);
+    const dx = container.left + container.width / 2 - node.renderedX;
+    const dy = container.top + container.height / 2 - node.renderedY;
+
+    await this.canvas.panBy(dx, dy);
+  }
+
+  /** Wheels out over the container centre, one notch at a time, until the zoom is `zoom` or less. */
+  public async zoomOutTo(zoom: number): Promise<void> {
+    const isOut = async (): Promise<boolean> => {
+      const now = await this.probe.zoom();
+
+      return now <= zoom;
+    };
+
+    await this.canvas.zoomUntil(WHEEL_NOTCH_PX, isOut);
+  }
+
+  /** Wheels in over the container centre, one notch at a time, until the zoom is `zoom` or more. */
+  public async zoomInTo(zoom: number): Promise<void> {
+    const isIn = async (): Promise<boolean> => {
+      const now = await this.probe.zoom();
+
+      return now >= zoom;
+    };
+
+    await this.canvas.zoomUntil(-WHEEL_NOTCH_PX, isIn);
+  }
+
   /** The label `id` draws while an export is on is `text`. */
   public async expectExportLabel(id: string, text: string): Promise<void> {
     await expect.poll(async (): Promise<string | null> => this.page.evaluate(exportLabelIn, id)).toEqual(text);
+  }
+
+  private async isUmbrellaInView(umbrellaId: string): Promise<boolean> {
+    const box = await this.umbrellaBoxOf(umbrellaId);
+    const container = await this.canvas.container.evaluate(readRect);
+
+    return isInside(box, container);
+  }
+
+  private async worstMarginOf(umbrellaId: string): Promise<number> {
+    const margins = await this.marginsOf(umbrellaId);
+
+    return Math.min(margins.left, margins.right, margins.top, margins.bottom);
+  }
+
+  private async marginsOf(umbrellaId: string): Promise<ChipRowMargins> {
+    const row = await this.rectOf(umbrellaId);
+    const box = await this.umbrellaBoxOf(umbrellaId);
+    const centreY = box.top + box.height / 2;
+    const margins: ChipRowMargins = {
+      left: row.left - box.left,
+      right: box.left + box.width - (row.left + row.width),
+      top: row.top - centreY,
+      bottom: box.top + box.height - (row.top + row.height)
+    };
+
+    return margins;
+  }
+
+  /** The umbrella's rendered box in page CSS px, from the probe's centre and model size. */
+  private async umbrellaBoxOf(umbrellaId: string): Promise<ElementRect> {
+    const node = await this.umbrellaOf(umbrellaId);
+    const zoom = await this.probe.zoom();
+
+    return nodeBoxOf(node, zoom);
+  }
+
+  private async umbrellaOf(umbrellaId: string): Promise<ProbeNode> {
+    const nodes = await this.probe.nodes();
+    const node = nodes.find((candidate): boolean => candidate.id === umbrellaId);
+
+    if (node === undefined) throw new Error(`graph e2e: ${umbrellaId} is not drawn`);
+
+    return node;
+  }
+
+  private async rowCentreOf(umbrellaId: string): Promise<ViewportPoint> {
+    const rect = await this.rectOf(umbrellaId);
+    const centre: ViewportPoint = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+
+    return centre;
   }
 
   private rowOf(umbrellaId: string): Locator {
