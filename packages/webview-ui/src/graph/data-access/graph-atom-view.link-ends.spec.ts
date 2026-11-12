@@ -3,11 +3,13 @@ import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createAtomCanvas } from './graph-atom-view.ts';
+import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
+import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 
@@ -78,6 +80,44 @@ describe('FEATURE: createAtomCanvas setLinkEnds', () => {
       atoms.setLinkEnds(new Map([[LINK_ID, null]]));
 
       expect(cy.getElementById(LINK_ID).data('srcEnd')).toBeUndefined();
+    });
+  });
+});
+
+describe('FEATURE: createAtomCanvas setLinkEnds under the graph stylesheet', () => {
+  let cy: Core;
+  let atoms: AtomCanvas;
+
+  beforeEach(() => {
+    const layout = { name: 'preset', fit: false };
+
+    cy = cytoscape({ headless: true, styleEnabled: true, layout });
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    createTaskCanvas(cy).show(DRAWING);
+    atoms = createAtomCanvas(cy);
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  describe('GIVEN a link with a source end', () => {
+    it('WHEN its source end is set THEN it is drawn from that end', () => {
+      atoms.setLinkEnds(new Map([[LINK_ID, BOX_BOTTOM_END]]));
+
+      expect(cy.getElementById(LINK_ID).style('source-endpoint')).toBe(BOX_BOTTOM_END);
+    });
+
+    it('WHEN it is drawn from that end, then set to null THEN it is drawn from its source border again', () => {
+      const link = cy.getElementById(LINK_ID);
+
+      atoms.setLinkEnds(new Map([[LINK_ID, BOX_BOTTOM_END]]));
+      const opened: unknown = link.style('source-endpoint');
+
+      atoms.setLinkEnds(new Map([[LINK_ID, null]]));
+      const closed: unknown = link.style('source-endpoint');
+
+      expect([opened, closed]).toStrictEqual([BOX_BOTTOM_END, 'outside-to-node']);
     });
   });
 });
