@@ -1,3 +1,4 @@
+import { AtomChips } from './atom-chips.ts';
 import { GraphAtomExpansion } from './graph-atom-expansion.ts';
 import { GraphAtomTally } from './graph-atom-tally.ts';
 import { GraphAtomTiming } from './graph-atom-timing.ts';
@@ -23,8 +24,9 @@ const umbrellaOfPrefixed = (nodeId: string, prefix: string): string => {
 
 /**
  * The Atomizer groups of the task graph: the host's groups by umbrella id, the counts and file outcomes of each, the
- * umbrellas the last placed layout shows, which it reports to the host as `shownUmbrellas` so their loads arrive, and
- * which of them are expanded into their files. An `atoms` message for an umbrella no group names is ignored.
+ * umbrellas the last placed layout shows, which it reports to the host as `shownUmbrellas` so their loads arrive,
+ * which of them are expanded into their files, and the count chip row of each drawn umbrella. An `atoms` message for an
+ * umbrella no group names is ignored.
  */
 export class GraphAtomGroups {
   private readonly deps: AtomGroupsDeps;
@@ -34,17 +36,19 @@ export class GraphAtomGroups {
   private placement: AtomPlacement | null = null;
   private readonly expansion: GraphAtomExpansion;
   private readonly timing: GraphAtomTiming;
+  private readonly chips: AtomChips;
 
   public constructor(deps: AtomGroupsDeps) {
     this.deps = deps;
     this.expansion = new GraphAtomExpansion(deps.view);
     this.timing = new GraphAtomTiming(deps.now);
+    this.chips = new AtomChips({ port: deps.chips, view: deps.view });
   }
 
   /**
    * Keeps the state's groups by umbrella id; the counts and outcomes of an umbrella no group names are forgotten. While a
-   * layout is kept, the expanded groups follow: one that left collapses, one whose drawn files or hidden count changed is
-   * drawn again.
+   * layout is kept, the expanded groups follow: one that left collapses and loses its chip row, one whose drawn files or
+   * hidden count changed is drawn again.
    */
   public received(groups: GraphAtomGroup[]): void {
     const entryOf = (group: GraphAtomGroup): [string, GraphAtomGroup] => [group.umbrellaId, group];
@@ -58,11 +62,13 @@ export class GraphAtomGroups {
     this.tally.keep(known);
     this.outcomes = new Map(keptOutcomes);
     this.sync();
+    this.syncChips();
   }
 
   /**
    * Keeps the counts and file outcomes of the known umbrellas in `groups`, then writes the counts of the placed umbrellas
-   * to the canvas, draws again each expanded group whose drawn files the outcomes changed, and writes their outcomes.
+   * to the canvas and their chip rows, draws again each expanded group whose drawn files the outcomes changed, and writes
+   * their outcomes.
    */
   public states(groups: Record<string, GraphAtomGroupState>): void {
     const isKnown = ([id]: [string, GraphAtomGroupState]): boolean => this.groups.has(id);
@@ -76,7 +82,10 @@ export class GraphAtomGroups {
 
     if (this.placement === null) return;
 
-    this.deps.view.tasks.setCounts(this.tally.drawnOf(this.groups, this.placement));
+    const drawn = this.tally.drawnOf(this.groups, this.placement);
+
+    this.deps.view.tasks.setCounts(drawn);
+    this.chips.sync(drawn);
     this.sync();
     this.expansion.outcomes(this.outcomes);
   }
@@ -109,6 +118,7 @@ export class GraphAtomGroups {
     this.expansion.forget();
     this.reshown();
     this.sync();
+    this.syncChips();
   }
 
   /** Keeps the dragged centres as the base the groups expand from; groups are collapsed while a drag can happen. */
@@ -131,8 +141,9 @@ export class GraphAtomGroups {
     this.sync();
   }
 
-  /** A frame was drawn: the first one after a toggle ends its timing. */
+  /** A frame was drawn: the chip rows follow their umbrellas, and the first frame after a toggle ends its timing. */
   public rendered(): void {
+    this.chips.place();
     this.timing.rendered();
   }
 
@@ -156,10 +167,11 @@ export class GraphAtomGroups {
     this.deps.bridge.post({ type: 'shownUmbrellas', ids });
   }
 
-  /** The task layout is gone: every group collapses and grabbing returns; no placement, so nothing is written or reported. */
+  /** The task layout is gone: every group collapses, grabbing returns and the chip rows go; no placement, so nothing is written or reported. */
   public clear(): void {
     this.placement = null;
     this.expansion.release();
+    this.chips.clear();
   }
 
   /**
@@ -201,6 +213,11 @@ export class GraphAtomGroups {
     if (group === undefined || placement === null) return false;
 
     return atomSpecOf(group, placement, outcomesOf(this.outcomes, umbrellaId)) !== null;
+  }
+
+  /** Keeps a chip row for each umbrella the kept layout draws; nothing before a layout is placed. */
+  private syncChips(): void {
+    if (this.placement !== null) this.chips.sync(this.tally.drawnOf(this.groups, this.placement));
   }
 
   /** Makes the canvas match the expanded set against the kept layout; nothing before a layout is placed. */

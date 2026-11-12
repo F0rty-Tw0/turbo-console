@@ -50,6 +50,7 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
     showFailure(page, error);
     hooks.onMessage();
   };
+  const chips: TaskModeDeps['chips'] = { layer: page.widgets, rowOf: (counts) => widgetViews.atomChips(counts, deps.glyphs) };
   const taskDeps: TaskModeDeps = {
     ...hooks,
     view,
@@ -59,6 +60,7 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
     boxTitleSizeOf: deps.boxTitleSizeOf,
     chipMeasure: deps.chipMeasure,
     glyphs: deps.glyphs,
+    chips,
     bridge,
     screen,
     now: deps.now,
