@@ -11,7 +11,7 @@ import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import { ARGS_PLACEHOLDER, CONCURRENCY_MESSAGE, CONCURRENCY_PLACEHOLDER, CONCURRENCY_PROMPT } from '../common/run-options.const.ts';
-import type { OptionItem } from '../common/run-options.type.ts';
+import type { OptionItem, RunOption } from '../common/run-options.type.ts';
 import { ALREADY_RUNNING_TEXT } from '../common/run.const.ts';
 import type { RunRequest, Terminable } from '../common/run.type.ts';
 import type { RunOptionsFakes } from '../test/common/run-options-fakes.type.ts';
@@ -230,11 +230,13 @@ describe('FEATURE: Run with Options on a turbo task', () => {
   });
 
   describe('GIVEN the root changes while the picker is open', () => {
-    const changeDuring = (change: () => void): void => {
-      const pickAfterChange = async (): Promise<OptionItem[]> => {
+    const changeDuring = (change: () => void, picked: RunOption[] = []): void => {
+      const pickAfterChange = async (items: OptionItem[]): Promise<OptionItem[]> => {
         change();
 
-        return Promise.resolve([]);
+        const chosen = items.filter((item) => picked.includes(item.option));
+
+        return Promise.resolve(chosen);
       };
 
       fakes.pickMany.mockImplementationOnce(pickAfterChange);
@@ -292,6 +294,27 @@ describe('FEATURE: Run with Options on a turbo task', () => {
       await invoke();
 
       expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, binaryPath: '/other/turbo' });
+    });
+
+    it('WHEN Only is picked and a second state lands with another binary THEN run gets that binary with the extras', async () => {
+      changeDuring(() => {
+        roots.apply('/ws', loadedAt([PACKAGE_NODE_STUB], '/other/turbo'));
+      }, ['only']);
+
+      await invoke();
+
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, binaryPath: '/other/turbo', extras: ONLY_EXTRAS });
+    });
+
+    it('WHEN Only is picked and the root is removed THEN nothing runs and no notice shows', async () => {
+      changeDuring(() => {
+        roots.set([], coordinatorMock);
+      }, ['only']);
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
     });
   });
 
