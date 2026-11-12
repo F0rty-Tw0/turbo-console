@@ -11,3 +11,6 @@ export const FULL_TEXTS_STUB: string[][] = [
   ['@org/lib', '@org/lib'],
   ['tool', 'tool']
 ];
+
+/** The label the host sends for the monorepo root `//` in `rootNamedState`: its root package.json name. */
+export const ROOT_LABEL_STUB: string = 'root-fixture';
