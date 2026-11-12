@@ -3,7 +3,8 @@ import type { Core, EdgeCollection } from 'cytoscape';
 import { packageEdges } from './graph-boxes.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
-import type { ProbeEdgeLine, ProbeLineSource } from '../common/graph-probe.type.ts';
+import type { ProbeLineSource } from '../common/graph-probe-line-source.type.ts';
+import type { ProbeEdgeLine } from '../common/graph-probe.type.ts';
 import { FOLDER_LINK_CLASS } from '../common/graph.const.ts';
 import { drawnBendsOf } from '../utils/drawn-bends.util.ts';
 

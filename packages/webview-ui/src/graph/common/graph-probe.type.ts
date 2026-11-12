@@ -48,6 +48,8 @@ export type ProbeEdge = {
   /** Cytoscape's `visible()`: false with a hidden end or a `display: none` bypass. */
   readonly isDrawn: boolean;
   readonly lineStyle: string;
+  /** Cytoscape's `curve-style`: `round-segments` for an edge on its ELK route, else the base edge rule's `bezier`. */
+  readonly curveStyle: string;
 };
 
 /**
@@ -62,24 +64,6 @@ export type ProbeEdgeLine = {
   readonly isDrawn: boolean;
   readonly points: Position[];
   readonly midpoint: Position;
-};
-
-/** An edge end, read for its id. */
-export type ProbeLineEnd = {
-  readonly id: () => string;
-};
-
-/** What `ProbeEdgeLine` reads of a Cytoscape edge; `segmentPoints` is `undefined` unless the edge is drawn `round-segments`. */
-export type ProbeLineSource = {
-  readonly source: () => ProbeLineEnd;
-  readonly target: () => ProbeLineEnd;
-  readonly visible: () => boolean;
-  readonly hasClass: (name: string) => boolean;
-  readonly sourceEndpoint: () => Position;
-  readonly targetEndpoint: () => Position;
-  readonly segmentPoints: () => Position[] | undefined;
-  readonly controlPoints: () => Position[] | undefined;
-  readonly midpoint: () => Position;
 };
 
 /**

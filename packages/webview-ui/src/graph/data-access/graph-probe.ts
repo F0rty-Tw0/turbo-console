@@ -40,7 +40,8 @@ const probeEdgeOf = (edge: EdgeSingular): ProbeEdge => {
     state: probeStateOf(edge),
     isGhost: edge.hasClass(GHOST_CLASS),
     isDrawn: edge.visible(),
-    lineStyle: styleText(edge, 'line-style')
+    lineStyle: styleText(edge, 'line-style'),
+    curveStyle: styleText(edge, 'curve-style')
   };
 
   return probeEdge;
