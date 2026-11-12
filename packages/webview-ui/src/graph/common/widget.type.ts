@@ -1,6 +1,7 @@
 import type { LocationViews } from './location.type.ts';
 import type { TaskToolbarElements } from './task-toolbar.type.ts';
 import type { MenuElements, MenuItemModel } from './widget-menu.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
 
 /** A rectangle in container px, as Cytoscape's `renderedBoundingBox`. */
 export type RectPx = {
@@ -194,4 +195,6 @@ export type WidgetViews = {
   /** `label` is the menu's accessible name, the one its "…" has. */
   readonly menu: (model: MenuItemModel[], label: string) => MenuElements;
   readonly location: LocationViews;
+  /** An umbrella's count chip row; `glyphs` leads the cached and failed chips with their icon. */
+  readonly atomChips: (counts: GraphAtomCounts, glyphs: boolean) => HTMLElement;
 };

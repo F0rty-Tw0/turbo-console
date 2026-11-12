@@ -36,7 +36,8 @@ export const GRAPH_ICON_IDS = [
   'fold',
   'unfold',
   'play',
-  'debug-rerun'
+  'debug-rerun',
+  'history'
 ] as const;
 
 /** The one icon per action that menus, Details buttons and Controls toggles draw (spec D10). */
