@@ -1,5 +1,7 @@
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
+import type { NodeSizer } from '../common/graph-page.type.ts';
 import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
+import type { NodeSize } from '../common/node-size.type.ts';
 
 /**
  * A package's node and row text: its raw `name` while scopes are shown, its host-cleaned `bareName` while hidden; the
@@ -22,3 +24,14 @@ export const labelsOf = (infos: GraphPackage[], scopeShown: boolean): ReadonlyMa
 
 /** The label `labels` gives the package `name`; a name it lacks reads as itself. */
 export const labelIn = (labels: ReadonlyMap<string, string>, name: string): string => labels.get(name) ?? name;
+
+/**
+ * The box of the package `name` drawn as `label`: the wider of the two texts' boxes. The raw name is the widest text a
+ * package draws, so its box stays put when scopes are hidden; the root `//` draws its label, which is wider than `//`.
+ */
+export const labelledSizeOf = (name: string, label: string, sizeOf: NodeSizer): NodeSize => {
+  const nameSize = sizeOf(name);
+  const labelSize = sizeOf(label);
+
+  return labelSize.width > nameSize.width ? labelSize : nameSize;
+};
