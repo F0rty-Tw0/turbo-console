@@ -14,8 +14,9 @@ export const run = async (): Promise<void> => {
 
   await step('edit the fixture before the view is revealed', async () => prepareOptionsFixture(api, root));
   await step('reveal the view', async () => revealTree(api, root));
-  await emptyPickCase(api);
-  await turboOptionsCase(api);
+  const plainArgs = await emptyPickCase(api);
+
+  await turboOptionsCase(api, plainArgs);
   await scriptArgsCase(api);
   await markDone(env);
 };

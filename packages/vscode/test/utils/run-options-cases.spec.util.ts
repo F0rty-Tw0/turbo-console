@@ -51,8 +51,10 @@ const argsOfRun = async (api: TurboConsoleApi, node: TreeNode, start: () => Prom
   }
 };
 
-/** I3: an empty pick starts the same process and records the same entry as the plain Run. */
-export const emptyPickCase = async (api: TurboConsoleApi): Promise<void> => {
+/** I3: an empty pick starts the same process and records the same entry as the plain Run. Returns the plain Run's args. */
+export const emptyPickCase = async (api: TurboConsoleApi): Promise<string[]> => {
+  let plainArgs: string[] = [];
+
   await step('L19-3: an empty pick runs the same argv and entry as Run (I3)', async () => {
     const node = await taskNodeNamed(api, OPTIONS_PACKAGE, OPTIONS_BUILD_ID);
     const plain = await argsOfRun(api, node, async () => startRun(api, node));
@@ -65,11 +67,18 @@ export const emptyPickCase = async (api: TurboConsoleApi): Promise<void> => {
     assert.equal(empty.ended.state, 'passed');
     assert.equal(empty.ended.force, false);
     assert.equal('extras' in empty.ended, false);
+
+    plainArgs = plain.args;
   });
+
+  return plainArgs;
 };
 
-/** I1: Only + Keep going + Extra arguments launch the spec §5 argv, record the entry and the tooltip line, and reach the script. */
-export const turboOptionsCase = async (api: TurboConsoleApi): Promise<void> => {
+/**
+ * I1: Only + Keep going + Extra arguments launch the spec §5 argv (the plain Run's `plainArgs`, then the options), record
+ * the entry and the tooltip line, and reach the script.
+ */
+export const turboOptionsCase = async (api: TurboConsoleApi, plainArgs: string[]): Promise<void> => {
   await step('L19-1: Only + Keep going + Extra --watch launches spec §5 argv, records Options and passes the args', async () => {
     const node = await taskNodeNamed(api, OPTIONS_PACKAGE, OPTIONS_BUILD_ID);
     const dir = await packageDirOf(node.root, OPTIONS_PACKAGE);
@@ -80,7 +89,7 @@ export const turboOptionsCase = async (api: TurboConsoleApi): Promise<void> => {
     const run = await argsOfRun(api, node, async () => runWithText(api, node, rows, OPTION_ARGS.join(' ')));
     const lines = tooltipLinesOf(api.tree.getTreeItem(node));
 
-    assert.deepEqual(run.args.slice(-5), ['--summarize', '--only', '--continue=dependencies-successful', '--', '--watch']);
+    assert.deepEqual(run.args, [...plainArgs, '--only', '--continue=dependencies-successful', '--', ...OPTION_ARGS]);
     assert.equal(run.ended.state, 'passed');
     assert.equal(run.ended.match?.cache, 'MISS');
     assert.deepEqual(run.ended.extras, { only: true, continueMode: 'dependencies-successful', passThrough: OPTION_ARGS });
@@ -104,6 +113,7 @@ export const scriptArgsCase = async (api: TurboConsoleApi): Promise<void> => {
       const launchedAt = await runScriptWithText(api, node, SCRIPT_ARGS.join(' '));
       const ended = await endedRun(api, node, launchedAt);
       const facts = watch.facts();
+      const lines = tooltipLinesOf(api.tree.getTreeItem(node));
 
       assert.ok(facts !== null, 'no shell execution seen for the run');
       assert.equal(facts.command, 'pnpm');
@@ -112,6 +122,7 @@ export const scriptArgsCase = async (api: TurboConsoleApi): Promise<void> => {
       assert.equal(ended.state, 'passed');
       assert.deepEqual(ended.extras, { passThrough: SCRIPT_ARGS });
       assert.deepEqual(await argvOf(dir), SCRIPT_ARGS);
+      assert.ok(lines.includes(`Arguments: ${SCRIPT_ARGS.join(' ')}`), lines.join(' | '));
     } finally {
       watch.dispose();
     }
