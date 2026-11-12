@@ -7,6 +7,7 @@ import type { GraphViewState } from '../../bridge/common/graph-view-state.type.t
 import { ATOM_COUNTS_LINE_PX } from '../common/graph-atom.const.ts';
 import type { NodeSizer, ViewStateSaver } from '../common/graph-page.type.ts';
 import type { TaskModeDeps } from '../common/graph-task.type.ts';
+import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { GROUPED_NAMING_STUB, TASK_CHAIN_STUB, TASK_STATE_STUB } from '../test/stubs/graph-task.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
@@ -44,7 +45,7 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
   const shownUmbrellaPosts = (): unknown[] => rig.posts().filter((message) => message.type === 'shownUmbrellas');
 
   /** A task mode over a real `ViewStateModes` that starts from `saved`. */
-  const open = (saved: GraphViewState, sizers: Partial<Pick<TaskModeDeps, 'sizeOf' | 'textSizeOf'>> = {}): void => {
+  const open = (saved: GraphViewState, sizers: Partial<Pick<TaskModeDeps, 'sizeOf' | 'chipMeasure' | 'glyphs'>> = {}): void => {
     const saver: ViewStateSaver = { schedule: vi.fn(), flush: vi.fn() };
 
     rig = taskModeRigOf(new ViewStateModes(saver, saved));
@@ -61,7 +62,7 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
       mode.enter(8);
       await rig.runs.settle(0, resultOf(UMBRELLA_KEY, POSITIONS));
 
-      const size = umbrellaSizeOf({ name: rig.deps.sizeOf, counts: rig.deps.textSizeOf }, 'build', 2);
+      const size = umbrellaSizeOf({ name: rig.deps.sizeOf, chips: rig.deps.chipMeasure, glyphs: rig.deps.glyphs }, 'build', 2);
 
       expect(rig.view.tasks.show).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -72,15 +73,16 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
     });
 
     it.each([
-      ['counts', { width: 150, height: 20 }, { width: 100, height: 30 }, 150],
-      ['name', { width: 150, height: 20 }, { width: 200, height: 30 }, 200]
-    ])('WHEN the %s line is wider THEN the umbrella takes its width and the name height', async (_wider, counts, name, width) => {
+      ['chip row, glyphs', 100, true, 265],
+      ['chip row, glyph-off', 100, false, 235],
+      ['name', 300, false, 300]
+    ])('WHEN the %s is wider THEN the umbrella takes its width and the name height', async (_wider, nameWidth, glyphs, width) => {
+      const name: NodeSize = { width: nameWidth, height: 30 };
       const sizeOf: NodeSizer = () => name;
-      const textSizeOf: NodeSizer = () => counts;
+      const chipMeasure = (text: string): number => text.length * 7;
 
-      open(taskSavedOf({}, 'packages'), { sizeOf, textSizeOf });
+      open(taskSavedOf({}, 'packages'), { sizeOf, chipMeasure, glyphs });
       mode.received(UMBRELLA_STATE, 7);
-
       mode.enter(8);
       await rig.runs.settle(0, resultOf(UMBRELLA_KEY, POSITIONS));
 

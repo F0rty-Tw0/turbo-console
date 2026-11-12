@@ -13,6 +13,7 @@ import type { NodeSize } from './node-size.type.ts';
 import type { PageElements } from './page-elements.type.ts';
 import type { Paint } from './paint.type.ts';
 import type { AtomCanvas, TaskCanvas } from './task-canvas.type.ts';
+import type { TaskChipDeps } from './task-chip-deps.type.ts';
 import type { TaskControlsViews } from './task-controls.type.ts';
 import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
@@ -41,14 +42,15 @@ export type NodeSizer = (name: string) => NodeSize;
 /** Package name → the run state drawn on it. */
 export type PackageRuns = ReadonlyMap<string, GraphRunState>;
 
-/** What sizes an umbrella: `name` its task name line, `counts` its counts line. */
-export type UmbrellaSizers = {
-  readonly name: NodeSizer;
-  readonly counts: NodeSizer;
-};
-
 /** The raw width of `text` in the label font, in px, no padding. */
 export type TextMeasure = (text: string) => number;
+
+/** What sizes an umbrella: `name` its task name line, `chips` the text of its count chips, `glyphs` whether chips carry glyphs. */
+export type UmbrellaSizers = {
+  readonly name: NodeSizer;
+  readonly chips: TextMeasure;
+  readonly glyphs: boolean;
+};
 
 export type Viewport = {
   readonly zoom: number;
@@ -171,7 +173,7 @@ export type GraphViewFactory = (container: HTMLElement, handlers: GraphViewHandl
 
 export type FlowFactory = (view: GraphView) => FlowControl;
 
-export type GraphControllerDeps = {
+type GraphControllerOwnDeps = {
   readonly bridge: Bridge;
   readonly page: PageElements;
   readonly createView: GraphViewFactory;
@@ -202,6 +204,8 @@ export type GraphControllerDeps = {
   /** The computed `--vscode-editor-background` of `body`, read at each export. */
   readonly background: () => string;
 };
+
+export type GraphControllerDeps = GraphControllerOwnDeps & TaskChipDeps;
 
 /** The graph the page shows: its hash, package names and records, its drawable edges, and its package labels. */
 export type DrawnGraph = {

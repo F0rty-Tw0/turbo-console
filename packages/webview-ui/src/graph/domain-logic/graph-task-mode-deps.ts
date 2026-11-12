@@ -38,9 +38,9 @@ export const selectionDepsOf = (deps: TaskModeDeps, memory: TaskMemoryPort): Tas
   return selectionDeps;
 };
 
-/** How task mode sizes the shown umbrellas: the file counts `atoms` holds, and its name and counts sizers. */
+/** How task mode sizes the shown umbrellas: the file counts `atoms` holds, and its name sizer and chip measure. */
 export const umbrellaFactsOf = (deps: TaskModeDeps, atoms: AtomCounts): UmbrellaFacts => {
-  const sizers: UmbrellaSizers = { name: deps.sizeOf, counts: deps.textSizeOf };
+  const sizers: UmbrellaSizers = { name: deps.sizeOf, chips: deps.chipMeasure, glyphs: deps.glyphs };
   const facts: UmbrellaFacts = { fileCounts: atoms.fileCounts(), sizers };
 
   return facts;

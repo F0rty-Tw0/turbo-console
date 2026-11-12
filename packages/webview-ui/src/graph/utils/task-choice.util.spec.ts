@@ -28,7 +28,7 @@ const sizer: NodeSizer = (text) => {
   return size;
 };
 
-const SIZERS: UmbrellaSizers = { name: sizer, counts: sizer };
+const SIZERS: UmbrellaSizers = { name: sizer, chips: (text: string): number => text.length, glyphs: false };
 
 const NO_COUNTS = new Map<string, number>();
 
