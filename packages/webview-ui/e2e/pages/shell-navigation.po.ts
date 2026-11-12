@@ -7,16 +7,19 @@ import { SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
 /**
  * How long one navigation to the shell may take before it counts as stuck (C84): on a macOS runner the routed
  * `index.html` request twice never completed, so `goto` sat out the test timeout with zero network entries in the trace.
- * A local load takes well under a second. The retry gets the same bound, so a second stuck try still throws the
- * diagnosis inside the test timeout instead of running into it.
+ * A local load takes well under a second. The retry gets the same bound and the clear its own short one, so a second
+ * stuck try still throws the diagnosis inside the test timeout (10 + 2 + 10 s of 30) instead of running into it.
  */
 const SHELL_GOTO_MS = 10_000;
 
 /**
- * Where the retry goes first: a timed-out `goto` leaves its navigation pending, and a second `goto` to the same URL then
- * fails at once with `net::ERR_ABORTED` and issues no request, so the stuck one is replaced by a blank page first.
+ * Where the retry goes first: a timed-out `goto` leaves its held `index.html` request pending. Going to a blank page makes
+ * Chromium abort it there, so its `requestfailed` lands before the retry resets the counters, not in the retry's diagnosis.
  */
 const CLEAR_PAGE = 'about:blank';
+
+/** The clear's own bound: a blank page loads at once, so a clear slower than this means the frame is wedged. */
+const CLEAR_MS = 2000;
 
 /** The ways a stuck navigation ends: a timeout, or the abort Chromium reports when the frame goes away. */
 const isStuckNavigation = (error: unknown): boolean => {
@@ -90,7 +93,7 @@ export class ShellNavigation {
 
   /** Replaces the stuck navigation with a blank page; a frame too wedged for that still throws with the first try's diagnosis. */
   private async cleared(firstTry: string): Promise<void> {
-    const gotoOptions = { timeout: this.tryMs };
+    const gotoOptions = { timeout: CLEAR_MS };
 
     try {
       await this.page.goto(CLEAR_PAGE, gotoOptions);
