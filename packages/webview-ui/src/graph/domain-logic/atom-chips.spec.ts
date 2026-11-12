@@ -64,6 +64,16 @@ describe('FEATURE: AtomChips', () => {
     expect(rowOf).toHaveBeenCalledTimes(2);
   });
 
+  it('GIVEN a toolbar in the layer WHEN a row is rebuilt THEN the row sits before the toolbar, which paints over it', () => {
+    const toolbar = document.createElement('div');
+
+    layer.append(toolbar);
+    chips.sync(new Map([['u', ALL]]));
+    chips.sync(new Map([['u', { ...ALL, failed: 0 }]]));
+
+    expect(layerRowsOf(layer).at(-1)).toBe(toolbar);
+  });
+
   it('GIVEN box centre (100,50) width 200, pan (10,20), zoom 2 WHEN placed THEN transform and width are written', () => {
     chips.sync(new Map([['u', ALL]]));
     chips.place();
