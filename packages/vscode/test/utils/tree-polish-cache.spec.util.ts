@@ -19,7 +19,7 @@ const PLAIN_DESCRIPTION = /^\d+\.\ds$/u;
 const FORCE_ARGS = ['--summarize', '--force'];
 
 /** The args of the process of the task named `taskName`, read as VS Code starts it (it is gone from `taskExecutions` once it ends). */
-const watchStartedArgs = (taskName: string): StartedArgs => {
+export const watchStartedArgs = (taskName: string): StartedArgs => {
   let args: string[] = [];
   let starts = 0;
   const listening = vscode.tasks.onDidStartTask((event) => {

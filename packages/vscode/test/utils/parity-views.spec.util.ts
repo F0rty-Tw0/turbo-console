@@ -10,6 +10,7 @@ import type { FixedItem } from '../../src/tree/common/fixed-view.type.ts';
 import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
 import type { ShownManifest } from '../common/launch.type.ts';
 import type { ParityScene } from '../common/parity.type.ts';
+import { RUN_OPTIONS_COMMAND } from '../common/run-options.const.ts';
 
 const COMMAND_IDS = ['runEverywhere', 'runAffected', 'refresh'];
 
@@ -72,6 +73,15 @@ export const openSpecRegisteredCase = async (): Promise<void> => {
     const registered = await vscode.commands.getCommands(true);
 
     assert.ok(registered.includes(OPEN_SPEC_COMMAND), `${OPEN_SPEC_COMMAND} is not registered`);
+  });
+};
+
+/** The Run with Options command, the context-menu entry of a task row, is registered by the extension. */
+export const runOptionsRegisteredCase = async (): Promise<void> => {
+  await step('8: the Run with Options command of the task rows is registered', async () => {
+    const registered = await vscode.commands.getCommands(true);
+
+    assert.ok(registered.includes(RUN_OPTIONS_COMMAND), `${RUN_OPTIONS_COMMAND} is not registered`);
   });
 };
 

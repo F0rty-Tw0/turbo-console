@@ -138,7 +138,13 @@ const L18: Launch = {
 };
 
 /**
- * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L18 each get a user-data dir
+ * L19: Run with Options (M3-3) on a `target-like` copy of its own; the suite edits `build` and adds a script before the view
+ * is revealed.
+ */
+const L19: Launch = { ...L9, name: 'L19', suite: 'run-options.suite' };
+
+/**
+ * Spec §5.3 launches, in run order. L2 reopens L1's workspace with L1's user-data dir; L3 to L19 each get a user-data dir
  * of their own.
  */
-export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14, L15, L16, L17, L18];
+export const LAUNCHES: Launch[] = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L13, L14, L15, L16, L17, L18, L19];
