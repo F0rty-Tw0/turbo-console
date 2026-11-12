@@ -4,29 +4,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runTask } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
 import { runWithOptions } from './run-with-options.ts';
-import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
-import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import { ARGS_PLACEHOLDER, CONCURRENCY_MESSAGE, CONCURRENCY_PLACEHOLDER, CONCURRENCY_PROMPT } from '../common/run-options.const.ts';
-import type { InputAsk } from '../common/run-options.type.ts';
 import { ALREADY_RUNNING_TEXT } from '../common/run.const.ts';
 import type { RunRequest, Terminable } from '../common/run.type.ts';
 import type { RunOptionsFakes } from '../test/common/run-options-fakes.type.ts';
-import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { PLAIN_REQUEST } from '../test/common/run-options.const.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 import { loadedAt, runOptionsFakes } from '../test/utils/run-options-fakes.spec.util.ts';
 import { optionItemsOf } from '../utils/option-items.util.ts';
 import { argsErrorText, pickerPlaceholderOf, turboArgsPromptOf } from '../utils/run-options-text.util.ts';
 
-const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
-
-const REQUEST: RunRequest = { ...RUN_REQUEST_STUB, binaryPath: TURBO_BINARY_STUB.path };
-
-const FORCED: RunRequest = { ...REQUEST, force: true };
+const FORCED: RunRequest = { ...PLAIN_REQUEST, force: true };
 
 const ONLY_EXTRAS: RunExtras = { only: true };
 
@@ -57,19 +51,11 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
   const invokeOn = async (arg: unknown): Promise<void> => runWithOptions(roots, fakes.ports, arg);
   const invoke = async (): Promise<void> => invokeOn(TASK_TREE_NODE_STUB);
-  const launched = (): RunRequest | undefined => fakes.run.mock.calls[0]?.[0];
-  const askOf = (index: number): InputAsk => {
-    const ask = fakes.input.mock.calls[index]?.[0];
-
-    if (ask === undefined) throw new Error(`box ${index} was not asked`);
-
-    return ask;
-  };
 
   beforeEach(() => {
     roots = new RootStore();
     fakes = runOptionsFakes();
-    roots.set([FOLDER], coordinatorMock);
+    roots.set([ROOT_FOLDER_STUB], coordinatorMock);
     roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
   });
 
@@ -87,7 +73,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual(REQUEST);
+      expect(fakes.launched()).toStrictEqual(PLAIN_REQUEST);
       expect(fakes.input).not.toHaveBeenCalled();
     });
 
@@ -96,7 +82,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual(FORCED);
+      expect(fakes.launched()).toStrictEqual(FORCED);
     });
 
     it('WHEN only Only is picked THEN run gets extras with only', async () => {
@@ -104,7 +90,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual({ ...REQUEST, extras: ONLY_EXTRAS });
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, extras: ONLY_EXTRAS });
     });
 
     it('WHEN only Keep going is picked THEN run gets extras with the continue mode', async () => {
@@ -112,7 +98,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual({ ...REQUEST, extras: KEEP_EXTRAS });
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, extras: KEEP_EXTRAS });
     });
 
     describe('WHEN all five are picked and the boxes answer 50% and --watch', () => {
@@ -124,7 +110,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
       });
 
       it('THEN run gets force and all four extras', () => {
-        expect(launched()).toStrictEqual({ ...FORCED, extras: ALL_EXTRAS });
+        expect(fakes.launched()).toStrictEqual({ ...FORCED, extras: ALL_EXTRAS });
       });
 
       it('THEN the boxes were asked concurrency first, then the arguments', () => {
@@ -140,7 +126,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual(REQUEST);
+      expect(fakes.launched()).toStrictEqual(PLAIN_REQUEST);
     });
 
     describe('WHEN the concurrency box answers with spaces around 4', () => {
@@ -152,11 +138,11 @@ describe('FEATURE: Run with Options on a turbo task', () => {
       });
 
       it('THEN extras holds the trimmed 4', () => {
-        expect(launched()).toStrictEqual({ ...REQUEST, extras: TRIMMED_EXTRAS });
+        expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, extras: TRIMMED_EXTRAS });
       });
 
       it('THEN the box asks with its placeholder and validates the spaced 4 but not 0', () => {
-        const ask = askOf(0);
+        const ask = fakes.askOf(0);
 
         expect(ask.placeholder).toBe(CONCURRENCY_PLACEHOLDER);
         expect(ask.validate(' 4 ')).toBeNull();
@@ -169,7 +155,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      const ask = askOf(0);
+      const ask = fakes.askOf(0);
 
       expect(ask.placeholder).toBe(ARGS_PLACEHOLDER);
       expect(ask.validate('a,b')).toBe(argsErrorText(1, 'a,b'));
@@ -269,7 +255,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual({ ...REQUEST, binaryPath: '/other/turbo' });
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, binaryPath: '/other/turbo' });
     });
   });
 

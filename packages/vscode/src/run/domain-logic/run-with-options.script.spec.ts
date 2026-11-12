@@ -2,29 +2,25 @@ import type { PackageNode, RunExtras, TaskNode } from '@turbo-console/core';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { runWithOptions } from './run-with-options.ts';
-import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
-import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { TASK_TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import { ARGS_PLACEHOLDER } from '../common/run-options.const.ts';
-import type { InputAsk } from '../common/run-options.type.ts';
 import type { RunRequest } from '../common/run.type.ts';
 import type { RunOptionsFakes } from '../test/common/run-options-fakes.type.ts';
-import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { PLAIN_REQUEST } from '../test/common/run-options.const.ts';
 import { runOptionsFakes } from '../test/utils/run-options-fakes.spec.util.ts';
 import { argsErrorText, scriptArgsPromptOf } from '../utils/run-options-text.util.ts';
 import { unsafeScriptText } from '../utils/run-text.util.ts';
-
-const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
 
 const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
 const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [SCRIPT_TASK] };
 
-const SCRIPT_REQUEST: RunRequest = { ...RUN_REQUEST_STUB, binaryPath: TURBO_BINARY_STUB.path, task: SCRIPT_TASK };
+const SCRIPT_REQUEST: RunRequest = { ...PLAIN_REQUEST, task: SCRIPT_TASK };
 
 const UNSAFE_TASK: TaskNode = { ...SCRIPT_TASK, name: 'a b' };
 
@@ -41,19 +37,11 @@ describe('FEATURE: Run with Options on a package script', () => {
   let fakes: RunOptionsFakes;
 
   const invoke = async (): Promise<void> => runWithOptions(roots, fakes.ports, TASK_TREE_NODE_STUB);
-  const launched = (): RunRequest | undefined => fakes.run.mock.calls[0]?.[0];
-  const askOf = (index: number): InputAsk => {
-    const ask = fakes.input.mock.calls[index]?.[0];
-
-    if (ask === undefined) throw new Error(`box ${index} was not asked`);
-
-    return ask;
-  };
 
   beforeEach(() => {
     roots = new RootStore();
     fakes = runOptionsFakes();
-    roots.set([FOLDER], coordinatorMock);
+    roots.set([ROOT_FOLDER_STUB], coordinatorMock);
   });
 
   describe('GIVEN a script row of a package run with pnpm', () => {
@@ -64,7 +52,7 @@ describe('FEATURE: Run with Options on a package script', () => {
     it('WHEN it is invoked THEN no picker opens and the box asks for the script arguments', async () => {
       await invoke();
 
-      const ask = askOf(0);
+      const ask = fakes.askOf(0);
 
       expect(fakes.pickMany).not.toHaveBeenCalled();
       expect(ask.prompt).toBe(scriptArgsPromptOf('pnpm', 'build'));
@@ -76,7 +64,7 @@ describe('FEATURE: Run with Options on a package script', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual({ ...SCRIPT_REQUEST, extras: WATCH_EXTRAS });
+      expect(fakes.launched()).toStrictEqual({ ...SCRIPT_REQUEST, extras: WATCH_EXTRAS });
     });
 
     it('WHEN the box answers nothing THEN run gets the plain request with no extras key', async () => {
@@ -84,7 +72,7 @@ describe('FEATURE: Run with Options on a package script', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual(SCRIPT_REQUEST);
+      expect(fakes.launched()).toStrictEqual(SCRIPT_REQUEST);
     });
 
     it('WHEN the box is closed THEN nothing runs', async () => {
@@ -98,7 +86,7 @@ describe('FEATURE: Run with Options on a package script', () => {
     it('WHEN the box is asked THEN it rejects a shell variable by naming the first argument', async () => {
       await invoke();
 
-      const ask = askOf(0);
+      const ask = fakes.askOf(0);
 
       expect(ask.validate('$HOME')).toBe(argsErrorText(1, '$HOME'));
     });

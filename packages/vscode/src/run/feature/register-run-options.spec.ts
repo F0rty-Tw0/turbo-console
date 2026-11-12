@@ -2,21 +2,16 @@ import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { registerRunOptions } from './register-run-options.ts';
-import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
-import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
-import type { CommandRegistry, Disposed, RunRequest } from '../common/run.type.ts';
+import type { CommandRegistry, Disposed } from '../common/run.type.ts';
 import type { RunOptionsFakes } from '../test/common/run-options-fakes.type.ts';
-import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { PLAIN_REQUEST } from '../test/common/run-options.const.ts';
 import { runOptionsFakes } from '../test/utils/run-options-fakes.spec.util.ts';
-
-const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
-
-const REQUEST: RunRequest = { ...RUN_REQUEST_STUB, binaryPath: TURBO_BINARY_STUB.path };
 
 const COMMAND = 'turboConsole.runTaskWithOptions';
 
@@ -36,7 +31,7 @@ describe('FEATURE: register the Run with Options command', () => {
     fakes = runOptionsFakes();
     commands = new Map();
     unregister = vi.fn<() => void>();
-    roots.set([FOLDER], coordinatorMock);
+    roots.set([ROOT_FOLDER_STUB], coordinatorMock);
     roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
 
     const register: CommandRegistry = (name, callback) => {
@@ -62,7 +57,7 @@ describe('FEATURE: register the Run with Options command', () => {
 
     await invoke(TASK_TREE_NODE_STUB);
 
-    expect(fakes.run).toHaveBeenCalledExactlyOnceWith(REQUEST);
+    expect(fakes.run).toHaveBeenCalledExactlyOnceWith(PLAIN_REQUEST);
   });
 
   it.each([

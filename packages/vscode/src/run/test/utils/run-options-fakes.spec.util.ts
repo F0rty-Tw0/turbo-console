@@ -24,7 +24,7 @@ export const loadedAt = (packages: PackageNode[], binaryPath: string): LoadedMod
 export const runOptionsFakes = (): RunOptionsFakes => {
   const picks: (RunOption[] | undefined)[] = [];
   const texts: (string | undefined)[] = [];
-  const pickMany = vi.fn<(items: OptionItem[], placeholder: string) => Promise<OptionItem[] | undefined>>(async (items) => {
+  const pickNext = async (items: OptionItem[]): Promise<OptionItem[] | undefined> => {
     const listed = picks.shift();
 
     if (listed === undefined) return Promise.resolve(undefined);
@@ -32,18 +32,27 @@ export const runOptionsFakes = (): RunOptionsFakes => {
     const chosen = items.filter((item) => listed.includes(item.option));
 
     return Promise.resolve(chosen);
-  });
-  const input = vi.fn<(ask: InputAsk) => Promise<string | undefined>>(async () => Promise.resolve(texts.shift()));
-  const info = vi.fn<(text: string) => void>();
-  const run = vi.fn<(request: RunRequest) => Promise<void>>().mockResolvedValue(undefined);
+  };
+  const pickMany = vi.fn<RunOptionsPorts['pickMany']>(pickNext);
+  const input = vi.fn<RunOptionsPorts['input']>(async () => Promise.resolve(texts.shift()));
+  const info = vi.fn<RunOptionsPorts['info']>();
+  const run = vi.fn<RunOptionsPorts['run']>().mockResolvedValue(undefined);
   const choose = (...next: (RunOption[] | undefined)[]): void => {
     picks.push(...next);
   };
   const answer = (...next: (string | undefined)[]): void => {
     texts.push(...next);
   };
+  const askOf = (index: number): InputAsk => {
+    const ask = input.mock.calls[index]?.[0];
+
+    if (ask === undefined) throw new Error(`box ${index} was not asked`);
+
+    return ask;
+  };
+  const launched = (): RunRequest | undefined => run.mock.calls[0]?.[0];
   const ports: RunOptionsPorts = { pickMany, input, info, run };
-  const fakes: RunOptionsFakes = { ports, pickMany, input, info, run, choose, answer };
+  const fakes: RunOptionsFakes = { ports, pickMany, input, info, run, choose, answer, askOf, launched };
 
   return fakes;
 };
