@@ -84,7 +84,7 @@ const chipOf = (model: ChipModel, glyphs: boolean): HTMLElement => {
 export const buildAtomChipRow = (counts: GraphAtomCounts, glyphs: boolean): HTMLElement => {
   const row = document.createElement('div');
   const models = chipModelsOf(counts);
-  const chips = models.map((model) => chipOf(model, glyphs));
+  const chips = models.map((model): HTMLElement => chipOf(model, glyphs));
 
   row.className = 'atom-chips';
   Object.assign(row.style, ROW_STYLE);

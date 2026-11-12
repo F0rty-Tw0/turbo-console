@@ -40,7 +40,6 @@ export class AtomChips {
     for (const [id, row] of entries) this.placeRow(id, row, viewport);
   }
 
-  /** Removes every row. */
   public clear(): void {
     for (const row of this.rows.values()) row.element.remove();
 
