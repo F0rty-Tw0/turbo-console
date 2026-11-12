@@ -66,11 +66,12 @@ const choose = async (step: PickStep, factor: number): Promise<void> => {
 
 /** Runs `command`, accepts the wanted row of each quick pick it opens in turn, and waits for it to finish (`driveCommand`). */
 export const runPicked = async (command: string, steps: PickStep[], factor: number): Promise<void> => {
-  const moves = steps.map(
-    (step) =>
-      async (stepFactor: number): Promise<void> =>
-        choose(step, stepFactor)
-  );
+  const moveOf = (step: PickStep): ((stepFactor: number) => Promise<void>) => {
+    const move = async (stepFactor: number): Promise<void> => choose(step, stepFactor);
+
+    return move;
+  };
+  const moves = steps.map(moveOf);
 
   await driveCommand(command, [], moves, factor);
 };
