@@ -49,14 +49,37 @@ describe('FEATURE: Run with Options on a package script', () => {
       roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
     });
 
-    it('WHEN it is invoked THEN no picker opens and the box asks for the script arguments', async () => {
-      await invoke();
+    describe('WHEN it is invoked', () => {
+      beforeEach(async () => {
+        await invoke();
+      });
 
-      const ask = fakes.askOf(0);
+      it('THEN no picker opens', () => {
+        expect(fakes.pickMany).not.toHaveBeenCalled();
+      });
 
-      expect(fakes.pickMany).not.toHaveBeenCalled();
-      expect(ask.prompt).toBe(scriptArgsPromptOf('pnpm', 'build'));
-      expect(ask.placeholder).toBe(ARGS_PLACEHOLDER);
+      it('THEN the box asks for the arguments of the pnpm script', () => {
+        const expected = scriptArgsPromptOf('pnpm', 'build');
+
+        const ask = fakes.askOf(0);
+
+        expect(ask.prompt).toBe(expected);
+      });
+
+      it('THEN the box shows the arguments placeholder', () => {
+        const ask = fakes.askOf(0);
+
+        expect(ask.placeholder).toBe(ARGS_PLACEHOLDER);
+      });
+
+      it('THEN the box rejects a shell variable by naming the first argument', () => {
+        const expected = argsErrorText(1, '$HOME');
+
+        const ask = fakes.askOf(0);
+        const error = ask.validate('$HOME');
+
+        expect(error).toBe(expected);
+      });
     });
 
     it('WHEN the box answers two arguments THEN run gets them as pass-through without force', async () => {
@@ -83,20 +106,14 @@ describe('FEATURE: Run with Options on a package script', () => {
       expect(fakes.run).not.toHaveBeenCalled();
     });
 
-    it('WHEN the box is asked THEN it rejects a shell variable by naming the first argument', async () => {
-      await invoke();
-
-      const ask = fakes.askOf(0);
-
-      expect(ask.validate('$HOME')).toBe(argsErrorText(1, '$HOME'));
-    });
-
     it('WHEN the script turns into a turbo task during the box THEN nothing runs and no notice shows', async () => {
-      fakes.input.mockImplementationOnce(async () => {
+      const answerAfterTurn = async (): Promise<string> => {
         roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
 
         return Promise.resolve('--watch');
-      });
+      };
+
+      fakes.input.mockImplementationOnce(answerAfterTurn);
 
       await invoke();
 
@@ -105,34 +122,69 @@ describe('FEATURE: Run with Options on a package script', () => {
     });
   });
 
-  describe('GIVEN a script that must not run', () => {
-    it('WHEN its name needs quoting THEN the notice shows and no box opens', async () => {
+  describe('GIVEN a script whose name needs quoting', () => {
+    beforeEach(() => {
       roots.apply('/ws', loadedWith([UNSAFE_PACKAGE]));
-
-      await invoke();
-
-      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(unsafeScriptText('a b'));
-      expect(fakes.input).not.toHaveBeenCalled();
     });
 
-    it('WHEN it has no command THEN the notice shows and no box opens', async () => {
-      roots.apply('/ws', loadedWith([NO_BODY_PACKAGE]));
+    describe('WHEN it is invoked', () => {
+      beforeEach(async () => {
+        await invoke();
+      });
 
-      await invoke();
+      it('THEN the notice names the script', () => {
+        const expected = unsafeScriptText('a b');
 
-      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(unsafeScriptText('build'));
-      expect(fakes.input).not.toHaveBeenCalled();
+        expect(fakes.info).toHaveBeenCalledExactlyOnceWith(expected);
+      });
+
+      it('THEN no box opens', () => {
+        expect(fakes.input).not.toHaveBeenCalled();
+      });
     });
   });
 
-  it('GIVEN a root with no binary WHEN a script row is invoked THEN no box opens and nothing runs', async () => {
-    const loaded = loadedWith([SCRIPT_PACKAGE]);
+  describe('GIVEN a script with no command', () => {
+    beforeEach(() => {
+      roots.apply('/ws', loadedWith([NO_BODY_PACKAGE]));
+    });
 
-    roots.apply('/ws', { ...loaded, binary: null });
+    describe('WHEN it is invoked', () => {
+      beforeEach(async () => {
+        await invoke();
+      });
 
-    await invoke();
+      it('THEN the notice names the script', () => {
+        const expected = unsafeScriptText('build');
 
-    expect(fakes.input).not.toHaveBeenCalled();
-    expect(fakes.run).not.toHaveBeenCalled();
+        expect(fakes.info).toHaveBeenCalledExactlyOnceWith(expected);
+      });
+
+      it('THEN no box opens', () => {
+        expect(fakes.input).not.toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('GIVEN a root with no binary', () => {
+    beforeEach(() => {
+      const loaded = loadedWith([SCRIPT_PACKAGE]);
+
+      roots.apply('/ws', { ...loaded, binary: null });
+    });
+
+    describe('WHEN a script row is invoked', () => {
+      beforeEach(async () => {
+        await invoke();
+      });
+
+      it('THEN no box opens', () => {
+        expect(fakes.input).not.toHaveBeenCalled();
+      });
+
+      it('THEN nothing runs', () => {
+        expect(fakes.run).not.toHaveBeenCalled();
+      });
+    });
   });
 });

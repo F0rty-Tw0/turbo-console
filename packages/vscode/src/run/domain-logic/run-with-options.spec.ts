@@ -11,6 +11,7 @@ import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import { ARGS_PLACEHOLDER, CONCURRENCY_MESSAGE, CONCURRENCY_PLACEHOLDER, CONCURRENCY_PROMPT } from '../common/run-options.const.ts';
+import type { OptionItem } from '../common/run-options.type.ts';
 import { ALREADY_RUNNING_TEXT } from '../common/run.const.ts';
 import type { RunRequest, Terminable } from '../common/run.type.ts';
 import type { RunOptionsFakes } from '../test/common/run-options-fakes.type.ts';
@@ -61,11 +62,12 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
   describe('GIVEN a root with a binary and package a holding the build task', () => {
     it('WHEN it is invoked THEN the picker gets the option items and the placeholder of the task', async () => {
-      await invoke();
-
+      const items = optionItemsOf(TASK_NODE_STUB);
       const placeholder = pickerPlaceholderOf('build', 'a');
 
-      expect(fakes.pickMany).toHaveBeenCalledExactlyOnceWith(optionItemsOf(TASK_NODE_STUB), placeholder);
+      await invoke();
+
+      expect(fakes.pickMany).toHaveBeenCalledExactlyOnceWith(items, placeholder);
     });
 
     it('WHEN the pick is empty THEN run gets the plain request with no extras key and no box opens', async () => {
@@ -114,9 +116,11 @@ describe('FEATURE: Run with Options on a turbo task', () => {
       });
 
       it('THEN the boxes were asked concurrency first, then the arguments', () => {
+        const expected = [CONCURRENCY_PROMPT, turboArgsPromptOf('build')];
+
         const prompts = fakes.input.mock.calls.map((call) => call[0].prompt);
 
-        expect(prompts).toStrictEqual([CONCURRENCY_PROMPT, turboArgsPromptOf('build')]);
+        expect(prompts).toStrictEqual(expected);
       });
     });
 
@@ -141,25 +145,55 @@ describe('FEATURE: Run with Options on a turbo task', () => {
         expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, extras: TRIMMED_EXTRAS });
       });
 
-      it('THEN the box asks with its placeholder and validates the spaced 4 but not 0', () => {
+      it('THEN the box shows the concurrency placeholder', () => {
         const ask = fakes.askOf(0);
 
         expect(ask.placeholder).toBe(CONCURRENCY_PLACEHOLDER);
-        expect(ask.validate(' 4 ')).toBeNull();
-        expect(ask.validate('0')).toBe(CONCURRENCY_MESSAGE);
+      });
+
+      it('THEN the box accepts the spaced 4', () => {
+        const ask = fakes.askOf(0);
+        const error = ask.validate(' 4 ');
+
+        expect(error).toBeNull();
+      });
+
+      it('THEN the box rejects 0', () => {
+        const ask = fakes.askOf(0);
+        const error = ask.validate('0');
+
+        expect(error).toBe(CONCURRENCY_MESSAGE);
       });
     });
 
-    it('WHEN the arguments box is asked THEN it names the first bad argument and accepts plain ones', async () => {
-      fakes.choose(['passThrough']);
+    describe('WHEN Extra arguments is picked and its box is asked', () => {
+      beforeEach(async () => {
+        fakes.choose(['passThrough']);
 
-      await invoke();
+        await invoke();
+      });
 
-      const ask = fakes.askOf(0);
+      it('THEN the box shows the arguments placeholder', () => {
+        const ask = fakes.askOf(0);
 
-      expect(ask.placeholder).toBe(ARGS_PLACEHOLDER);
-      expect(ask.validate('a,b')).toBe(argsErrorText(1, 'a,b'));
-      expect(ask.validate('--a --b')).toBeNull();
+        expect(ask.placeholder).toBe(ARGS_PLACEHOLDER);
+      });
+
+      it('THEN the box names the first bad argument', () => {
+        const expected = argsErrorText(1, 'a,b');
+
+        const ask = fakes.askOf(0);
+        const error = ask.validate('a,b');
+
+        expect(error).toBe(expected);
+      });
+
+      it('THEN the box accepts plain arguments', () => {
+        const ask = fakes.askOf(0);
+        const error = ask.validate('--a --b');
+
+        expect(error).toBeNull();
+      });
     });
   });
 
@@ -197,11 +231,13 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
   describe('GIVEN the root changes while the picker is open', () => {
     const changeDuring = (change: () => void): void => {
-      fakes.pickMany.mockImplementationOnce(async () => {
+      const pickAfterChange = async (): Promise<OptionItem[]> => {
         change();
 
         return Promise.resolve([]);
-      });
+      };
+
+      fakes.pickMany.mockImplementationOnce(pickAfterChange);
     };
 
     it('WHEN the root is removed THEN nothing runs and no notice shows', async () => {

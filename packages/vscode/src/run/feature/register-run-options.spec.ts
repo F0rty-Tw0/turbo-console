@@ -45,34 +45,43 @@ describe('FEATURE: register the Run with Options command', () => {
     registered = registerRunOptions(roots, fakes.ports, register);
   });
 
-  it('WHEN registered THEN exactly ["turboConsole.runTaskWithOptions"] is registered', () => {
-    const keys = commands.keys();
-    const names = [...keys];
+  describe('GIVEN the command registered on a root whose package a holds the build task', () => {
+    it('WHEN registered THEN exactly ["turboConsole.runTaskWithOptions"] is registered', () => {
+      const keys = commands.keys();
+      const names = [...keys];
 
-    expect(names).toStrictEqual([COMMAND]);
-  });
+      expect(names).toStrictEqual([COMMAND]);
+    });
 
-  it('WHEN the command runs on a task row with an empty pick THEN run gets exactly the plain request', async () => {
-    fakes.choose([]);
+    it('WHEN the command runs on a task row with an empty pick THEN run gets exactly the plain request', async () => {
+      fakes.choose([]);
 
-    await invoke(TASK_TREE_NODE_STUB);
+      await invoke(TASK_TREE_NODE_STUB);
 
-    expect(fakes.run).toHaveBeenCalledExactlyOnceWith(PLAIN_REQUEST);
-  });
+      expect(fakes.run).toHaveBeenCalledExactlyOnceWith(PLAIN_REQUEST);
+    });
 
-  it.each([
-    ['undefined (palette)', undefined],
-    ['a package row', TREE_NODE_STUB]
-  ])('WHEN it runs with %s THEN the picker does not open and nothing runs', async (_name, arg) => {
-    await invoke(arg);
+    describe.each([
+      ['undefined (palette)', undefined],
+      ['a package row', TREE_NODE_STUB]
+    ])('WHEN it runs with %s', (_name, arg) => {
+      beforeEach(async () => {
+        await invoke(arg);
+      });
 
-    expect(fakes.pickMany).not.toHaveBeenCalled();
-    expect(fakes.run).not.toHaveBeenCalled();
-  });
+      it('THEN the picker does not open', () => {
+        expect(fakes.pickMany).not.toHaveBeenCalled();
+      });
 
-  it('WHEN disposed THEN the command unregisters once', () => {
-    registered.dispose();
+      it('THEN nothing runs', () => {
+        expect(fakes.run).not.toHaveBeenCalled();
+      });
+    });
 
-    expect(unregister).toHaveBeenCalledOnce();
+    it('WHEN disposed THEN the command unregisters once', () => {
+      registered.dispose();
+
+      expect(unregister).toHaveBeenCalledOnce();
+    });
   });
 });
