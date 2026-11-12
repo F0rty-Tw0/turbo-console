@@ -1,15 +1,14 @@
 import * as vscode from 'vscode';
 
-import { sleep, waitFor } from './suite-env.spec.util.ts';
+import { driveCommand } from './quick-input-drive.spec.util.ts';
+import { sleep } from './suite-env.spec.util.ts';
 import { manifestTree } from './tree-walk.spec.util.ts';
 import type { ShownManifest, ShownPackage } from '../common/launch.type.ts';
 import { BUILD_TASK } from '../common/parity.const.ts';
 import type { PickStep } from '../common/parity.type.ts';
 
-/** Spec §5.3 case 8: how long a quick pick gets to open before the suite sends it a key, and to finish after the last one. */
+/** Spec §5.3 case 8: how long a quick pick gets to open before the suite sends it a key. */
 const PICK_OPEN_MS = 200;
-
-const PICK_FINISH_MS = 10_000;
 
 const taskNameOf = (packageName: string, id: string): string => id.slice(packageName.length + 1);
 
@@ -65,30 +64,13 @@ const choose = async (step: PickStep, factor: number): Promise<void> => {
   await vscode.commands.executeCommand('workbench.action.acceptSelectedQuickOpenItem');
 };
 
-/**
- * Starts `command` without awaiting it, accepts the wanted row of each quick pick it opens in turn, then waits for the
- * command to finish. The picks are driven through VS Code's quick-open commands, as a user's keys would. A pick that
- * never opened, or a command that never finishes, closes the quick pick (which settles the pending `showQuickPick` with
- * `undefined`) and fails with the command named, instead of hanging.
- */
+/** Runs `command`, accepts the wanted row of each quick pick it opens in turn, and waits for it to finish (`driveCommand`). */
 export const runPicked = async (command: string, steps: PickStep[], factor: number): Promise<void> => {
-  let isDone = false;
+  const moves = steps.map(
+    (step) =>
+      async (stepFactor: number): Promise<void> =>
+        choose(step, stepFactor)
+  );
 
-  const finished = Promise.resolve(vscode.commands.executeCommand(command)).finally(() => {
-    isDone = true;
-  });
-
-  try {
-    for (const step of steps) await choose(step, factor);
-
-    await waitFor(`${command} to finish`, () => isDone, PICK_FINISH_MS * factor);
-  } catch (error) {
-    await vscode.commands.executeCommand('workbench.action.closeQuickOpen');
-
-    void finished.catch(() => undefined);
-
-    throw new Error(`${command} did not complete: ${String(error)}`, { cause: error });
-  }
-
-  await finished;
+  await driveCommand(command, [], moves, factor);
 };

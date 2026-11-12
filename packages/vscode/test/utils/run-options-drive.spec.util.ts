@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 
+import { driveCommand } from './quick-input-drive.spec.util.ts';
 import { startRunBy } from './run-wait.spec.util.ts';
-import { sleep, waitFor } from './suite-env.spec.util.ts';
+import { sleep } from './suite-env.spec.util.ts';
 import { readSuiteEnv } from './suite-input.spec.util.ts';
 import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
@@ -11,8 +12,6 @@ type Step = (factor: number) => Promise<void>;
 
 /** How long the quick pick gets (x budgetFactor) to open before the suite sends it a key; the parity pick uses 200. */
 const PICK_OPEN_MS = 300;
-
-const COMMAND_FINISH_MS = 10_000;
 
 /** A multi-select quick pick opens with no row highlighted (VS Code 1.141.0), so the first move lands on row 0. */
 const FIRST_HIGHLIGHT = -1;
@@ -51,32 +50,11 @@ const pickRowsStep = (rows: number[]): Step => {
   return pick;
 };
 
-/**
- * Starts the command without awaiting it, runs each step, then waits for the command to finish. A step that fails, or a
- * command that never finishes, closes the quick input (which settles the pending ask with `undefined`) and fails with the
- * command named, as `runPicked` does.
- */
+/** Runs Run with Options on `node` and drives its quick inputs with `steps` (`driveCommand`). */
 const driveOptions = async (node: TreeNode, steps: Step[]): Promise<void> => {
   const { budgetFactor } = readSuiteEnv();
-  let isDone = false;
 
-  const finished = Promise.resolve(vscode.commands.executeCommand(RUN_OPTIONS_COMMAND, node)).finally(() => {
-    isDone = true;
-  });
-
-  try {
-    for (const step of steps) await step(budgetFactor);
-
-    await waitFor(`${RUN_OPTIONS_COMMAND} to finish`, () => isDone, COMMAND_FINISH_MS * budgetFactor);
-  } catch (error) {
-    await runCommand('workbench.action.closeQuickOpen');
-
-    void finished.catch(() => undefined);
-
-    throw new Error(`${RUN_OPTIONS_COMMAND} did not complete: ${String(error)}`, { cause: error });
-  }
-
-  await finished;
+  await driveCommand(RUN_OPTIONS_COMMAND, [node], steps, budgetFactor);
 };
 
 /** Pastes `text` into the open input box: VS Code has no command that sets a quick input's value (spiked: `type` did not reach it). */
