@@ -4,29 +4,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runTask } from './run-flow.ts';
 import { RunStore } from './run-store.ts';
 import { runWithOptions } from './run-with-options.ts';
-import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
-import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
 import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
 import { ARGS_PLACEHOLDER, CONCURRENCY_MESSAGE, CONCURRENCY_PLACEHOLDER, CONCURRENCY_PROMPT } from '../common/run-options.const.ts';
-import type { InputAsk } from '../common/run-options.type.ts';
+import type { OptionItem, RunOption } from '../common/run-options.type.ts';
 import { ALREADY_RUNNING_TEXT } from '../common/run.const.ts';
 import type { RunRequest, Terminable } from '../common/run.type.ts';
 import type { RunOptionsFakes } from '../test/common/run-options-fakes.type.ts';
-import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { PLAIN_REQUEST } from '../test/common/run-options.const.ts';
 import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
 import { loadedAt, runOptionsFakes } from '../test/utils/run-options-fakes.spec.util.ts';
 import { optionItemsOf } from '../utils/option-items.util.ts';
 import { argsErrorText, pickerPlaceholderOf, turboArgsPromptOf } from '../utils/run-options-text.util.ts';
 
-const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
-
-const REQUEST: RunRequest = { ...RUN_REQUEST_STUB, binaryPath: TURBO_BINARY_STUB.path };
-
-const FORCED: RunRequest = { ...REQUEST, force: true };
+const FORCED: RunRequest = { ...PLAIN_REQUEST, force: true };
 
 const ONLY_EXTRAS: RunExtras = { only: true };
 
@@ -45,6 +40,10 @@ const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
 const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [SCRIPT_TASK] };
 
+const UMBRELLA_TASK: TaskNode = { ...TASK_NODE_STUB, kind: 'atom-umbrella' };
+
+const UMBRELLA_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [UMBRELLA_TASK] };
+
 const EMPTY_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [] };
 
 describe('FEATURE: Run with Options on a turbo task', () => {
@@ -53,29 +52,22 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
   const invokeOn = async (arg: unknown): Promise<void> => runWithOptions(roots, fakes.ports, arg);
   const invoke = async (): Promise<void> => invokeOn(TASK_TREE_NODE_STUB);
-  const launched = (): RunRequest | undefined => fakes.run.mock.calls[0]?.[0];
-  const askOf = (index: number): InputAsk => {
-    const ask = fakes.input.mock.calls[index]?.[0];
-
-    if (ask === undefined) throw new Error(`box ${index} was not asked`);
-
-    return ask;
-  };
 
   beforeEach(() => {
     roots = new RootStore();
     fakes = runOptionsFakes();
-    roots.set([FOLDER], coordinatorMock);
+    roots.set([ROOT_FOLDER_STUB], coordinatorMock);
     roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
   });
 
   describe('GIVEN a root with a binary and package a holding the build task', () => {
     it('WHEN it is invoked THEN the picker gets the option items and the placeholder of the task', async () => {
-      await invoke();
-
+      const items = optionItemsOf(TASK_NODE_STUB);
       const placeholder = pickerPlaceholderOf('build', 'a');
 
-      expect(fakes.pickMany).toHaveBeenCalledExactlyOnceWith(optionItemsOf(TASK_NODE_STUB), placeholder);
+      await invoke();
+
+      expect(fakes.pickMany).toHaveBeenCalledExactlyOnceWith(items, placeholder);
     });
 
     it('WHEN the pick is empty THEN run gets the plain request with no extras key and no box opens', async () => {
@@ -83,7 +75,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual(REQUEST);
+      expect(fakes.launched()).toStrictEqual(PLAIN_REQUEST);
       expect(fakes.input).not.toHaveBeenCalled();
     });
 
@@ -92,7 +84,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual(FORCED);
+      expect(fakes.launched()).toStrictEqual(FORCED);
     });
 
     it('WHEN only Only is picked THEN run gets extras with only', async () => {
@@ -100,7 +92,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual({ ...REQUEST, extras: ONLY_EXTRAS });
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, extras: ONLY_EXTRAS });
     });
 
     it('WHEN only Keep going is picked THEN run gets extras with the continue mode', async () => {
@@ -108,7 +100,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual({ ...REQUEST, extras: KEEP_EXTRAS });
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, extras: KEEP_EXTRAS });
     });
 
     describe('WHEN all five are picked and the boxes answer 50% and --watch', () => {
@@ -120,13 +112,15 @@ describe('FEATURE: Run with Options on a turbo task', () => {
       });
 
       it('THEN run gets force and all four extras', () => {
-        expect(launched()).toStrictEqual({ ...FORCED, extras: ALL_EXTRAS });
+        expect(fakes.launched()).toStrictEqual({ ...FORCED, extras: ALL_EXTRAS });
       });
 
       it('THEN the boxes were asked concurrency first, then the arguments', () => {
+        const expected = [CONCURRENCY_PROMPT, turboArgsPromptOf('build')];
+
         const prompts = fakes.input.mock.calls.map((call) => call[0].prompt);
 
-        expect(prompts).toStrictEqual([CONCURRENCY_PROMPT, turboArgsPromptOf('build')]);
+        expect(prompts).toStrictEqual(expected);
       });
     });
 
@@ -136,7 +130,7 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual(REQUEST);
+      expect(fakes.launched()).toStrictEqual(PLAIN_REQUEST);
     });
 
     describe('WHEN the concurrency box answers with spaces around 4', () => {
@@ -148,28 +142,58 @@ describe('FEATURE: Run with Options on a turbo task', () => {
       });
 
       it('THEN extras holds the trimmed 4', () => {
-        expect(launched()).toStrictEqual({ ...REQUEST, extras: TRIMMED_EXTRAS });
+        expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, extras: TRIMMED_EXTRAS });
       });
 
-      it('THEN the box asks with its placeholder and validates the spaced 4 but not 0', () => {
-        const ask = askOf(0);
+      it('THEN the box shows the concurrency placeholder', () => {
+        const ask = fakes.askOf(0);
 
         expect(ask.placeholder).toBe(CONCURRENCY_PLACEHOLDER);
-        expect(ask.validate(' 4 ')).toBeNull();
-        expect(ask.validate('0')).toBe(CONCURRENCY_MESSAGE);
+      });
+
+      it('THEN the box accepts the spaced 4', () => {
+        const ask = fakes.askOf(0);
+        const error = ask.validate(' 4 ');
+
+        expect(error).toBeNull();
+      });
+
+      it('THEN the box rejects 0', () => {
+        const ask = fakes.askOf(0);
+        const error = ask.validate('0');
+
+        expect(error).toBe(CONCURRENCY_MESSAGE);
       });
     });
 
-    it('WHEN the arguments box is asked THEN it names the first bad argument and accepts plain ones', async () => {
-      fakes.choose(['passThrough']);
+    describe('WHEN Extra arguments is picked and its box is asked', () => {
+      beforeEach(async () => {
+        fakes.choose(['passThrough']);
 
-      await invoke();
+        await invoke();
+      });
 
-      const ask = askOf(0);
+      it('THEN the box shows the arguments placeholder', () => {
+        const ask = fakes.askOf(0);
 
-      expect(ask.placeholder).toBe(ARGS_PLACEHOLDER);
-      expect(ask.validate('a,b')).toBe(argsErrorText(1, 'a,b'));
-      expect(ask.validate('--a --b')).toBeNull();
+        expect(ask.placeholder).toBe(ARGS_PLACEHOLDER);
+      });
+
+      it('THEN the box names the first bad argument', () => {
+        const expected = argsErrorText(1, 'a,b');
+
+        const ask = fakes.askOf(0);
+        const error = ask.validate('a,b');
+
+        expect(error).toBe(expected);
+      });
+
+      it('THEN the box accepts plain arguments', () => {
+        const ask = fakes.askOf(0);
+        const error = ask.validate('--a --b');
+
+        expect(error).toBeNull();
+      });
     });
   });
 
@@ -206,12 +230,16 @@ describe('FEATURE: Run with Options on a turbo task', () => {
   });
 
   describe('GIVEN the root changes while the picker is open', () => {
-    const changeDuring = (change: () => void): void => {
-      fakes.pickMany.mockImplementationOnce(async () => {
+    const changeDuring = (change: () => void, picked: RunOption[] = []): void => {
+      const pickAfterChange = async (items: OptionItem[]): Promise<OptionItem[]> => {
         change();
 
-        return Promise.resolve([]);
-      });
+        const chosen = items.filter((item) => picked.includes(item.option));
+
+        return Promise.resolve(chosen);
+      };
+
+      fakes.pickMany.mockImplementationOnce(pickAfterChange);
     };
 
     it('WHEN the root is removed THEN nothing runs and no notice shows', async () => {
@@ -247,6 +275,17 @@ describe('FEATURE: Run with Options on a turbo task', () => {
       expect(fakes.info).not.toHaveBeenCalled();
     });
 
+    it('WHEN the task turns into an Atomizer umbrella THEN nothing runs and no notice shows', async () => {
+      changeDuring(() => {
+        roots.apply('/ws', loadedWith([UMBRELLA_PACKAGE]));
+      });
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
     it('WHEN a second state lands with another binary THEN run gets that binary', async () => {
       changeDuring(() => {
         roots.apply('/ws', loadedAt([PACKAGE_NODE_STUB], '/other/turbo'));
@@ -254,7 +293,28 @@ describe('FEATURE: Run with Options on a turbo task', () => {
 
       await invoke();
 
-      expect(launched()).toStrictEqual({ ...REQUEST, binaryPath: '/other/turbo' });
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, binaryPath: '/other/turbo' });
+    });
+
+    it('WHEN Only is picked and a second state lands with another binary THEN run gets that binary with the extras', async () => {
+      changeDuring(() => {
+        roots.apply('/ws', loadedAt([PACKAGE_NODE_STUB], '/other/turbo'));
+      }, ['only']);
+
+      await invoke();
+
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, binaryPath: '/other/turbo', extras: ONLY_EXTRAS });
+    });
+
+    it('WHEN Only is picked and the root is removed THEN nothing runs and no notice shows', async () => {
+      changeDuring(() => {
+        roots.set([], coordinatorMock);
+      }, ['only']);
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
     });
   });
 

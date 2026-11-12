@@ -1,7 +1,13 @@
 import type { PackageManagerName } from '@turbo-console/core';
 
-export const argsErrorText = (position: number, arg: string): string =>
-  `Argument ${position} ("${arg}") can only use letters, digits and @ / . _ : = + -, and cannot start with = or @`;
+/** Same cap as core's `ECHO_LIMIT` (packages/core/src/run-args/utils/run-extras.util.ts), which core does not export. */
+const ECHO_LIMIT = 200;
+
+export const argsErrorText = (position: number, arg: string): string => {
+  const echoed = arg.slice(0, ECHO_LIMIT);
+
+  return `Argument ${position} ("${echoed}") can only use letters, digits and @ / . _ : = + -, and cannot start with = or @`;
+};
 
 export const pickerPlaceholderOf = (taskName: string, packageName: string): string => `Run ${taskName} in ${packageName} with…`;
 

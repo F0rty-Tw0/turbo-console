@@ -1,4 +1,4 @@
-import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
+import type { PackageNode, RunExtras, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { bench } from '@turbo-console/tools';
 import type { BenchDescriptor } from '@turbo-console/tools';
 
@@ -33,9 +33,29 @@ const runningEntryOf = (root: string, pkg: PackageNode, task: TaskNode): RunEntr
   return entry;
 };
 
+/** Every option Run with Options can set, so the ticked tooltips also build the `Options:` line (its slow path). */
+const EXTRAS: RunExtras = {
+  only: true,
+  continueMode: 'dependencies-successful',
+  concurrency: '4',
+  passThrough: ['--watch', '--port=3000']
+};
+
+/** One ticked entry in `EXTRAS_EVERY` carries `EXTRAS`: 3 of the 20. */
+const EXTRAS_EVERY = 7;
+
+const withSomeExtras = (entry: RunEntry, index: number): RunEntry => {
+  if (index % EXTRAS_EVERY !== 0) return entry;
+
+  const withExtras: RunEntry = { ...entry, extras: EXTRAS };
+
+  return withExtras;
+};
+
 /**
  * The first `TICKED_TASKS` visible turbo tasks of the shown packages in model order (packages, then `tasks` order),
- * running. Scripts and an Atomizer group's aggregate are not ticked: the tree lists no row for them (the umbrella stands in).
+ * running; every `EXTRAS_EVERY`th one started with Run with Options. Scripts and an Atomizer group's aggregate are not
+ * ticked: the tree lists no row for them (the umbrella stands in).
  */
 const firstRunning = (model: WorkspaceModel, view: ModelView): RunEntry[] => {
   const atoms = staticAtomLookup(() => model);
@@ -50,7 +70,9 @@ const firstRunning = (model: WorkspaceModel, view: ModelView): RunEntry[] => {
     if (entries.length >= TICKED_TASKS) break;
   }
 
-  return entries.slice(0, TICKED_TASKS);
+  const ticked = entries.slice(0, TICKED_TASKS);
+
+  return ticked.map(withSomeExtras);
 };
 
 /** The tree row of `entry`'s task: the row the tree caches a node for. */
@@ -68,6 +90,13 @@ const entryRowOf = (model: WorkspaceModel, entry: RunEntry, context: RowContext)
 
 /** A running task's row (plain or continuous), not the loading stand-in of a node the tree no longer has. */
 const isRunningRow = (row: TreeRow): boolean => row.contextValue === 'turboTask.running';
+
+/** A row whose tooltip carries the Run with Options line, the slow path `EXTRAS` is there to time. */
+const hasOptionsLine = (row: TreeRow): boolean => {
+  const text = row.tooltip.join('\n');
+
+  return text.includes('Options:');
+};
 
 /**
  * Spec §4.6 tick cost, warm: the model's view is built and the running tasks' nodes are cached, as after the first draw.
@@ -109,6 +138,10 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const isAllRunning = firstRows.every(isRunningRow);
 
   if (!isAllRunning) throw new Error('bench tick rebuilds a row that is not a running task');
+
+  const hasOptions = firstRows.some(hasOptionsLine);
+
+  if (!hasOptions) throw new Error('bench tick builds no Options: tooltip line');
 
   for (let round = 1; round < WARM_TICKS; round += 1) tick();
 

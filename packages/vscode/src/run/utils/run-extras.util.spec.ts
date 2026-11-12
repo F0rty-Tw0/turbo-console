@@ -11,6 +11,7 @@ const FORCE_PICKS: RunPicks = { ...NONE, options: ['force'] };
 const ONLY_PICKS: RunPicks = { ...NONE, options: ['only'] };
 const CONTINUE_PICKS: RunPicks = { ...NONE, options: ['continue'] };
 const CONC_PICKS: RunPicks = { options: ['concurrency'], concurrency: '4', args: [] };
+const SPACED_CONC_PICKS: RunPicks = { options: ['concurrency'], concurrency: ' 4 ', args: [] };
 const ARGS_PICKS: RunPicks = { options: ['passThrough'], concurrency: null, args: ['--watch'] };
 const EMPTY_ARGS_PICKS: RunPicks = { ...NONE, options: ['passThrough'] };
 const ONLY_EMPTY_ARGS_PICKS: RunPicks = { ...NONE, options: ['only', 'passThrough'] };
@@ -35,6 +36,7 @@ describe('FEATURE: extras from the Run with Options picks', () => {
     ['only', ONLY_PICKS, ONLY_EXTRAS],
     ['continue', CONTINUE_PICKS, CONTINUE_EXTRAS],
     ['concurrency "4"', CONC_PICKS, CONC_EXTRAS],
+    ['concurrency " 4 " (trimmed, core does not trim)', SPACED_CONC_PICKS, CONC_EXTRAS],
     ['passThrough with args', ARGS_PICKS, ARGS_EXTRAS],
     ['passThrough with no args, alone', EMPTY_ARGS_PICKS, null],
     ['only + passThrough with no args (no passThrough key)', ONLY_EMPTY_ARGS_PICKS, ONLY_EXTRAS],

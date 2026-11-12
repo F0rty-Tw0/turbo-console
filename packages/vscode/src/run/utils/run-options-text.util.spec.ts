@@ -22,6 +22,15 @@ describe('FEATURE: Run with Options texts', () => {
     );
   });
 
+  it('GIVEN an arg of 250 characters WHEN the error is asked THEN it echoes only the first 200', () => {
+    const arg = `${'a'.repeat(200)}${'b'.repeat(50)}`;
+    const echoed = 'a'.repeat(200);
+
+    expect(argsErrorText(1, arg)).toBe(
+      `Argument 1 ("${echoed}") can only use letters, digits and @ / . _ : = + -, and cannot start with = or @`
+    );
+  });
+
   it('GIVEN the box consts WHEN read THEN the spec words', () => {
     expect([CONCURRENCY_PROMPT, CONCURRENCY_PLACEHOLDER, CONCURRENCY_MESSAGE, ARGS_PLACEHOLDER]).toStrictEqual([
       'Concurrency for this run (--concurrency)',

@@ -23,7 +23,8 @@ const continueFieldOf = (isPicked: boolean): RunExtras => {
 const concurrencyFieldOf = (isPicked: boolean, concurrency: string | null): RunExtras => {
   if (!isPicked || concurrency === null) return NO_FIELD;
 
-  const field: RunExtras = { concurrency };
+  const trimmed = concurrency.trim();
+  const field: RunExtras = { concurrency: trimmed };
 
   return field;
 };
@@ -46,7 +47,8 @@ export const extrasOf = (picks: RunPicks): RunExtras | null => {
   const concurrencyField = concurrencyFieldOf(isConcurrency, picks.concurrency);
   const passThroughField = passThroughFieldOf(isPassThrough, picks.args);
   const extras: RunExtras = { ...onlyField, ...continueField, ...concurrencyField, ...passThroughField };
-  const isEmpty = Object.keys(extras).length === 0;
+  const keys = Object.keys(extras);
+  const isEmpty = keys.length === 0;
 
   if (isEmpty) return null;
 
