@@ -32,3 +32,6 @@ export type ProbeLink = {
   readonly source: string;
   readonly target: string;
 };
+
+/** The export read: the label a node draws while an export is on. */
+export type ProbeExport = { readonly exportLabel: (id: string) => string };
