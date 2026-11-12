@@ -22,6 +22,16 @@ describe('FEATURE: packageLabelOf', () => {
     });
   });
 
+  describe('GIVEN the root // package, its bare name the host text of its label', () => {
+    it('WHEN labelled both ways THEN both labels are the bare name', () => {
+      const root: GraphPackage = { ...PLAIN, name: '//', bareName: 'root-fixture', path: '' };
+
+      const labels = [packageLabelOf(root, true), packageLabelOf(root, false)];
+
+      expect(labels).toStrictEqual(['root-fixture', 'root-fixture']);
+    });
+  });
+
   describe('GIVEN an unscoped package', () => {
     it('WHEN labelled both ways THEN both labels match', () => {
       const labels = [packageLabelOf(PLAIN, true), packageLabelOf(PLAIN, false)];
