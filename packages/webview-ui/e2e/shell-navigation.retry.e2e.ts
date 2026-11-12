@@ -1,7 +1,7 @@
 import { test } from './shell-stall.fixture.ts';
 
 const RETRIED_NOTE =
-  /^shell navigation retried and loaded; first try failed with "page\.goto: Timeout 1000ms exceeded\.": index\.html requests issued 1, finished 0, none failed$/u;
+  /^shell navigation retried and loaded; first try failed with "page\.goto: Timeout 3000ms exceeded\.": index\.html requests issued 1, finished 0, none failed$/u;
 
 const STUCK_TWICE_ERROR =
   /^C84: shell navigation stuck twice; first try failed with .*index\.html requests issued 1, finished 0, .*; retry failed with .*index\.html requests issued 1, finished 0, /u;

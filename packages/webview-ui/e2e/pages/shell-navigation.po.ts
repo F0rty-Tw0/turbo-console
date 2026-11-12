@@ -76,9 +76,7 @@ export class ShellNavigation {
 
     if (firstTry === null) return;
 
-    const gotoOptions = { timeout: this.tryMs };
-
-    await this.page.goto(CLEAR_PAGE, gotoOptions);
+    await this.cleared(firstTry);
 
     const secondTry = await this.tried();
 
@@ -88,6 +86,19 @@ export class ShellNavigation {
 
     test.info().annotations.push({ type: 'C84', description });
     console.warn(`C84 ${description}`);
+  }
+
+  /** Replaces the stuck navigation with a blank page; a frame too wedged for that still throws with the first try's diagnosis. */
+  private async cleared(firstTry: string): Promise<void> {
+    const gotoOptions = { timeout: this.tryMs };
+
+    try {
+      await this.page.goto(CLEAR_PAGE, gotoOptions);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'a non-Error value';
+
+      throw new Error(`C84: clearing the stuck navigation failed; first try ${firstTry}; then ${message}`, { cause: error });
+    }
   }
 
   /** Runs one bounded `goto`; returns `null` when it loaded, else what happened, and rethrows any other failure. */

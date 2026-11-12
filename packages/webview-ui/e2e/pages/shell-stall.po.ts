@@ -6,8 +6,11 @@ import type { RouteHandler } from '../common/playwright.type.ts';
 import { SHELL_URL } from '../common/shell.const.ts';
 import { detailsDistMock } from '../test/mocks/details-dist.mock.ts';
 
-/** Bounds each try, short so a held try costs the spec one second rather than the real ten. */
-const TRY_MS = 1000;
+/**
+ * Bounds each try, short so a held try costs the spec three seconds rather than the real ten, yet well above a cold load
+ * on a slow runner (local loads take under 100 ms), so the try that answers never records a C84 note.
+ */
+const TRY_MS = 3000;
 
 /** The `<title>` of the built details shell. */
 const SHELL_TITLE = 'Package Details';
