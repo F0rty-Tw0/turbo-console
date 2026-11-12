@@ -78,19 +78,11 @@ describe('FEATURE: cache file schema', () => {
     });
   });
 
-  describe('GIVEN a model with a rootPackage', () => {
+  describe('GIVEN a monorepo model whose // package holds a root task', () => {
     it('WHEN parsed THEN it parses unchanged', () => {
       const parsed = workspaceModelSchema.parse(ROOT_TASKS_MODEL_STUB);
 
       expect(parsed).toStrictEqual(ROOT_TASKS_MODEL_STUB);
-    });
-  });
-
-  describe('GIVEN a model without rootPackage', () => {
-    it('WHEN parsed THEN it fails', () => {
-      const result = workspaceModelSchema.safeParse(modelWithoutKey('rootPackage'));
-
-      expect(result.success).toBe(false);
     });
   });
 

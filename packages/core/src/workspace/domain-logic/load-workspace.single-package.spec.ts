@@ -187,20 +187,20 @@ describe('FEATURE: load a workspace in single-package mode', () => {
       expect(store.args[0]?.[1]).toStrictEqual([ROOT_PACKAGE]);
     });
 
-    it('WHEN pnpm declares workspace packages THEN no packages, singlePackage false, no warning, and it is stored', async () => {
+    it('WHEN pnpm declares workspace packages THEN only the labelled // package, singlePackage false, no warning, and it is stored', async () => {
       pnpm.answer = async (): Promise<boolean> => Promise.resolve(true);
 
       const model = await loadWorkspace(pnpmRoot.binary);
 
-      expect(model).toMatchObject({ packages: [], singlePackage: false, warnings: [] });
+      expect(model).toMatchObject({ packages: [ROOT_ROW], singlePackage: false, warnings: [] });
       expect(store.args).toHaveLength(1);
       expect(turbo.queryArgs).toHaveLength(1);
     });
 
-    it('WHEN npm declares workspaces THEN no packages and no workspace file is read', async () => {
+    it('WHEN npm declares workspaces THEN only the // package and no workspace file is read', async () => {
       const model = await loadWorkspace(npmWorkspacesRoot.binary);
 
-      expect(model).toMatchObject({ packages: [], singlePackage: false });
+      expect(model).toMatchObject({ packages: [ROOT_ROW], singlePackage: false });
       expect(pnpm.calls).toStrictEqual([]);
     });
 
@@ -256,7 +256,7 @@ describe('FEATURE: load a workspace in single-package mode', () => {
       const model = await loadWorkspace(pnpmRoot.binary);
 
       expect(pnpm.calls).toStrictEqual([]);
-      expect(model.packages.map((pkg) => pkg.label)).toStrictEqual([null]);
+      expect(model.packages.map((pkg) => pkg.label)).toStrictEqual(['single-app', null]);
       expect(turbo.queryArgs).toHaveLength(1);
     });
   });

@@ -45,6 +45,14 @@ const ROOT_ROW = { name: '//', path: '', label: 'single-app' };
 
 const CACHED_ROOT_ROW = { label: 'single-app' };
 
+/** The empty-workspace root: a monorepo `//` whose `build` and `lint` no `//#` key names, so both are plain scripts. */
+const EMPTY_WORKSPACE_ROOT_TASKS = [
+  { id: '//#build', isTurboTask: false },
+  { id: '//#lint', isTurboTask: false }
+];
+
+const EMPTY_WORKSPACE_ROOT_ROW = { name: '//', path: '', label: 'empty-ws', tasks: EMPTY_WORKSPACE_ROOT_TASKS };
+
 const TRUSTED = { trusted: true } as const;
 
 /** The four scripts the fixture's `turbo.json` keys; `format` is the one it does not. */
@@ -177,8 +185,8 @@ describe('FEATURE: load a workspace from a real turbo in each repo shape', () =>
       loadSpawns = turboSpawns(binary);
     });
 
-    it('THEN no packages, singlePackage false, no warnings; one spawn', () => {
-      expect(model).toMatchObject({ packages: [], singlePackage: false, warnings: [] });
+    it('THEN only the // package with its two plain scripts, singlePackage false, no warnings; one spawn', () => {
+      expect(model).toMatchObject({ packages: [EMPTY_WORKSPACE_ROOT_ROW], singlePackage: false, warnings: [] });
       expect(loadSpawns).toBe(1);
     });
   });

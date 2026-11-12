@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { withRootGraphOf } from './single-package.util.ts';
 import { buildWorkspaceModel, withWarning } from './workspace-model.util.ts';
-import type { GraphPackage } from '../../shared/turbo/common/turbo.type.ts';
+import type { GraphPackage, PackageGraph } from '../../shared/turbo/common/turbo.type.ts';
 import type { TurboConfigFile, TurboConfigOk } from '../common/turbo-config.type.ts';
-import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type.ts';
+import type { ModelSource, PackageNode, WorkspaceModel } from '../common/workspace-model.type.ts';
 import { MODEL_SOURCE_STUB } from '../test/stubs/model-source.stub.ts';
 import { configOf } from '../test/utils/config-ok.spec.util.ts';
 import { graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
@@ -34,38 +35,42 @@ const describedConfig = (descriptions: Record<string, string>): TurboConfigOk =>
   return config;
 };
 
-const build = (root: GraphPackage | null, configs: TurboConfigFile[]): WorkspaceModel => {
-  const graph = packageGraph([PKG_A, PKG_B], [], root);
+const MONOREPO_SOURCE: ModelSource = { ...MODEL_SOURCE_STUB, rootLabel: 'root-fixture' };
 
-  return buildWorkspaceModel(graph, configs, MODEL_SOURCE_STUB);
-};
+/** The graph `loadWorkspace` builds a monorepo model from: `root`, when there is one, listed first among the nodes. */
+const monorepoGraphOf = (root: GraphPackage | null): PackageGraph => withRootGraphOf(packageGraph([PKG_A, PKG_B], [], root));
+
+const build = (root: GraphPackage | null, configs: TurboConfigFile[]): WorkspaceModel =>
+  buildWorkspaceModel(monorepoGraphOf(root), configs, MONOREPO_SOURCE);
+
+const rootOf = (model: WorkspaceModel): PackageNode | undefined => model.packages.find((pkg) => pkg.name === '//');
 
 describe('FEATURE: workspace model root package', () => {
   describe('GIVEN a monorepo whose root keys //#fmt and a bare lint', () => {
     const model = build(ROOT, [ROOT_CONFIG]);
 
-    it('WHEN built THEN rootPackage holds only //#fmt', () => {
-      expect(model.rootPackage?.tasks.map((task) => task.id)).toStrictEqual(['//#fmt']);
+    it('WHEN built THEN model.packages lists // first, beside the other packages', () => {
+      expect(model.packages.map((pkg) => pkg.name)).toStrictEqual(['//', 'a', 'b']);
     });
 
-    it('WHEN built THEN rootPackage is the unlabelled // package with the root tags', () => {
-      expect(model.rootPackage).toMatchObject({ name: '//', label: null, tags: ['root-tag'] });
+    it('WHEN built THEN // is the package at path "" with the root tags and the source label', () => {
+      expect(rootOf(model)).toMatchObject({ path: '', label: 'root-fixture', tags: ['root-tag'] });
     });
 
     it('WHEN built THEN //#fmt is a turbo task', () => {
-      expect(model.rootPackage?.tasks[0]?.isTurboTask).toBe(true);
+      expect(taskOf(model, '//#fmt')?.isTurboTask).toBe(true);
+    });
+
+    it('WHEN built THEN //#lint is a plain script: turbo runs only the //#fmt key for the root', () => {
+      expect(taskOf(model, '//#lint')?.isTurboTask).toBe(false);
     });
 
     it('WHEN built THEN //#fmt keeps only the visible dependencies, sorted', () => {
-      expect(model.rootPackage?.tasks[0]?.dependencies).toStrictEqual(['a#build', 'b#build']);
+      expect(taskOf(model, '//#fmt')?.dependencies).toStrictEqual(['//#lint', 'a#build', 'b#build']);
     });
 
-    it('WHEN a package task depends on //#fmt and //#lint THEN only the //#fmt edge is kept', () => {
-      expect(taskOf(model, 'a#build')?.dependencies).toStrictEqual(['//#fmt']);
-    });
-
-    it('WHEN built THEN model.packages does not list //', () => {
-      expect(model.packages.map((pkg) => pkg.name)).toStrictEqual(['a', 'b']);
+    it('WHEN a package task depends on //#fmt and //#lint THEN both edges are kept', () => {
+      expect(taskOf(model, 'a#build')?.dependencies).toStrictEqual(['//#fmt', '//#lint']);
     });
   });
 
@@ -76,7 +81,7 @@ describe('FEATURE: workspace model root package', () => {
     it('WHEN //#fmt has no //#fmt description THEN it has none: turbo never applies a bare key to //', () => {
       const model = build(ROOT, [bare]);
 
-      expect(model.rootPackage?.tasks[0]?.description).toBeNull();
+      expect(taskOf(model, '//#fmt')?.description).toBeNull();
     });
 
     it('WHEN the config also describes //#fmt THEN that description is used', () => {
@@ -85,15 +90,15 @@ describe('FEATURE: workspace model root package', () => {
 
       const model = build(ROOT, [qualified]);
 
-      expect(model.rootPackage?.tasks[0]?.description).toBe('Root fmt');
+      expect(taskOf(model, '//#fmt')?.description).toBe('Root fmt');
     });
   });
 
   describe('GIVEN a monorepo whose root config cannot be read', () => {
-    it('WHEN built THEN rootPackage.tasks is empty', () => {
+    it('WHEN built THEN every root script counts as a turbo task, as for any other package', () => {
       const model = build(ROOT, []);
 
-      expect(model.rootPackage?.tasks).toStrictEqual([]);
+      expect(rootOf(model)?.tasks.map((task) => task.isTurboTask)).toStrictEqual([true, true]);
     });
   });
 
@@ -106,9 +111,9 @@ describe('FEATURE: workspace model root package', () => {
       expect(model.warnings).toStrictEqual([warning]);
     });
 
-    it('WHEN a warning is added after the build THEN the two-group warning is still listed', () => {
-      const graph = packageGraph([PKG_A, PKG_B], [], CONFLICT_ROOT);
-      const model = buildWorkspaceModel(graph, [ROOT_CONFIG], MODEL_SOURCE_STUB);
+    it('WHEN a warning is added after the build THEN the two-group warning is still listed once', () => {
+      const graph = monorepoGraphOf(CONFLICT_ROOT);
+      const model = buildWorkspaceModel(graph, [ROOT_CONFIG], MONOREPO_SOURCE);
 
       const warned = withWarning(model, graph, [ROOT_CONFIG], 'cache: x');
 
@@ -117,20 +122,16 @@ describe('FEATURE: workspace model root package', () => {
   });
 
   describe('GIVEN a monorepo whose graph has no root', () => {
-    it('WHEN built THEN rootPackage is null', () => {
+    it('WHEN built THEN model.packages holds only the other packages', () => {
       const model = build(null, [ROOT_CONFIG]);
 
-      expect(model.rootPackage).toBeNull();
+      expect(model.packages.map((pkg) => pkg.name)).toStrictEqual(['a', 'b']);
     });
   });
 
   describe('GIVEN a single-package source whose // package is the only node', () => {
     const graph = packageGraph([ROOT], [], ROOT);
     const model = buildWorkspaceModel(graph, [configOf({ lint: 'defined' })], SINGLE_SOURCE);
-
-    it('WHEN built THEN rootPackage is null', () => {
-      expect(model.rootPackage).toBeNull();
-    });
 
     it('WHEN built THEN // is packages[0]', () => {
       expect(model.packages[0]?.name).toBe('//');

@@ -31,8 +31,8 @@ import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type
 import { hasPnpmWorkspacePackages } from '../data-access/pnpm-workspace.ts';
 import { detectPackageManager } from '../data-access/root-manifest.ts';
 import { readTurboConfigs } from '../data-access/turbo-config.ts';
-import { rootLabelOf } from '../utils/root-label.util.ts';
-import { declaresWorkspaces, singlePackageGraphOf } from '../utils/single-package.util.ts';
+import { monorepoRootLabelOf, rootLabelOf } from '../utils/root-label.util.ts';
+import { declaresWorkspaces, singlePackageGraphOf, withRootGraphOf } from '../utils/single-package.util.ts';
 import { buildWorkspaceModel, withWarning } from '../utils/workspace-model.util.ts';
 
 const COMMAND = 'query packageGraph';
@@ -70,11 +70,12 @@ const refuseHostile = (rootFiles: KeyedFile[]): void => {
   );
 };
 
-/** The facts of the load the model build reads besides the graph; the label only for a single-package repo. */
+/** The facts of the load the model build reads besides the graph, the `//` package's label among them. */
 const sourceOf = (binary: TurboBinary, detected: DetectedRoot, isSingle: boolean): ModelSource => {
   const { packageManager, name } = detected;
-  const label = rootLabelOf(name, binary.root);
-  const rootLabel = isSingle ? label : null;
+  const singleLabel = rootLabelOf(name, binary.root);
+  const monorepoLabel = monorepoRootLabelOf(name);
+  const rootLabel = isSingle ? singleLabel : monorepoLabel;
   const source: ModelSource = {
     turboVersion: binary.version,
     root: binary.root,
@@ -125,7 +126,8 @@ const singleGraphOf = async (
  * of the root and of every graph package (hidden ones included), the pure model build, then the model keyed and kept in
  * memory, and written to `cacheDir` when one is given. The mode is a file rule, never a spawn (`modeOf`): an empty
  * graph, a non-null `root` and no declared workspaces make a single-package model of the `//` package, labelled from
- * the manifest `name`; `pnpm-workspace.yaml` is read only for pnpm and only on an empty graph, a failed read rejects
+ * the manifest `name`; any other graph is a monorepo, whose `root` joins the nodes as the `//` package (`withRootGraphOf`),
+ * labelled from the manifest `name` or `root`; `pnpm-workspace.yaml` is read only for pnpm and only on an empty graph, a failed read rejects
  * `io` and an abort rejects `failed`. A failed write does not fail the load: the returned model, and only it, gains a
  * `cache: <message>` warning under the usual cut, sort and cap. The caller gets its own copy of the model: changing it
  * changes nothing the cache holds. The caller's `signal` reaches the root keyed file hash, the spawn and the reads, and
@@ -159,7 +161,7 @@ export const loadWorkspace = async (binary: TurboBinary, options: LoadWorkspaceO
     const graph = await runTurboJson(run, COMMAND, graphSchema);
     const packages = graph.data.packageGraph.nodes.items;
     const isSingle = await modeOf(graph, detected, binary.root, signal);
-    let modelGraph = graph;
+    let modelGraph = withRootGraphOf(graph);
 
     if (isSingle) modelGraph = await singleGraphOf(binary, queryOptions, graphSchema);
 

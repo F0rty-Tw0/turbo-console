@@ -116,12 +116,12 @@ describe('FEATURE: affected view', () => {
       expect(marksOf(model, [['//#build', 'TaskFileChanged']])).toStrictEqual([['//#build', 'changed']]);
     });
 
-    it('WHEN a monorepo root task in model.rootPackage ("//#lint") is a row THEN it is dropped', () => {
-      const rootPackage: PackageNode = { name: '//', path: '.', label: null, tags: [], tasks: [turboTaskOf('//', 'lint')] };
+    it('WHEN a monorepo root task in the // package ("//#lint") is a row THEN it is marked', () => {
+      const root: PackageNode = { name: '//', path: '', label: 'root', tags: [], tasks: [turboTaskOf('//', 'lint')] };
       const base = abModel();
-      const model: WorkspaceModel = { ...base, rootPackage };
+      const model: WorkspaceModel = { ...base, packages: [root, ...base.packages] };
 
-      expect(marksOf(model, [['//#lint', 'TaskFileChanged']])).toStrictEqual([]);
+      expect(marksOf(model, [['//#lint', 'TaskFileChanged']])).toStrictEqual([['//#lint', 'changed']]);
     });
   });
 
