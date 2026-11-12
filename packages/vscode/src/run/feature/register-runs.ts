@@ -1,21 +1,12 @@
-import type { RootState, Roots } from '../../roots/common/coordinator.type.ts';
+import type { Roots } from '../../roots/common/coordinator.type.ts';
 import type { PackagesTreeApi } from '../../tree/common/tree-node.type.ts';
-import type { CommandRegistry, Disposed, RunControl, TaskTarget } from '../common/run.type.ts';
+import type { CommandRegistry, Disposed, RunControl } from '../common/run.type.ts';
 import { hasScriptBody } from '../utils/run-refusal.util.ts';
 import { directRequestOf, runRequestOf, taskTargetOf } from '../utils/run-target.util.ts';
 import { noScriptText } from '../utils/run-text.util.ts';
-import { whenRunnable } from '../utils/runnable.util.ts';
+import { runnableStateOf } from '../utils/runnable-state.util.ts';
 
 type Info = (text: string) => void;
-
-/** The state of the root of `target` once it can run: a cached model published before the binary waits for its load to settle. */
-const runnableStateOf = async (roots: Roots, target: TaskTarget): Promise<RootState | undefined> => {
-  const entry = roots.get(target.definition.root);
-
-  if (entry?.state.binary === null) await whenRunnable(roots, target.definition.root, entry.coordinator);
-
-  return roots.get(target.definition.root)?.state;
-};
 
 /**
  * UB4 Run Without Turbo on a task row: the task's package script through the package manager, the script-row launch.
