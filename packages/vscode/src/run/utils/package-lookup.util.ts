@@ -16,17 +16,12 @@ export const relativePathOf = (root: string, file: string): string => {
   return file.slice(root.length + separatorLength);
 };
 
-/** The package at the repo root (path `""`) of a single-package model; `null` for a monorepo model. */
-const rootPackageOf = (model: WorkspaceModel): PackageNode | null => {
-  if (!model.singlePackage) return null;
-
-  return model.packages.find((pkg) => posixOf(pkg.path) === '') ?? null;
-};
+/** The package at the repo root (path `""`), the `//` package of either mode; `null` for a model without one. */
+const rootPackageOf = (model: WorkspaceModel): PackageNode | null => model.packages.find((pkg) => posixOf(pkg.path) === '') ?? null;
 
 /**
- * The package whose directory holds the manifest at `relative` (a path inside the root, either separator); `null` for
- * the root manifest of a monorepo (a single-package model maps it to its `//` package), a file that is no `package.json`,
- * or a directory no package has. Matched as given, case included.
+ * The package whose directory holds the manifest at `relative` (a path inside the root, either separator), the root
+ * manifest mapping to the `//` package; `null` for a file that is no `package.json` or a directory no package has. Matched as given, case included.
  */
 export const packageForManifest = (relative: string, model: WorkspaceModel): PackageNode | null => {
   const path = posixOf(relative);
