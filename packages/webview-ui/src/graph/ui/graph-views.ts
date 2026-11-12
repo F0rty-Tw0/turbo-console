@@ -1,3 +1,4 @@
+import { buildAtomChipRow } from './atom-chips-elements.ts';
 import { bundleView } from './details-bundle.ts';
 import { buildDetails } from './details-elements.ts';
 import { emptyView } from './details-empty.ts';
@@ -46,7 +47,8 @@ export const widgetViews: WidgetViews = {
   taskToolbar: buildTaskToolbar,
   packageToolbar: buildPackageToolbar,
   menu: buildMenu,
-  location: locationViews
+  location: locationViews,
+  atomChips: buildAtomChipRow
 };
 
 export const taskViews: TaskControlsViews = { build: buildTaskControls, line: buildProjectLine };

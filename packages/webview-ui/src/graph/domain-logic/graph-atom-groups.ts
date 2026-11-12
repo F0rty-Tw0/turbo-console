@@ -1,4 +1,5 @@
 import { GraphAtomExpansion } from './graph-atom-expansion.ts';
+import { GraphAtomTally } from './graph-atom-tally.ts';
 import { GraphAtomTiming } from './graph-atom-timing.ts';
 import type { GraphAtomCounts, GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomGroup, GraphTask } from '../../bridge/common/graph-state.type.ts';
@@ -28,7 +29,7 @@ const umbrellaOfPrefixed = (nodeId: string, prefix: string): string => {
 export class GraphAtomGroups {
   private readonly deps: AtomGroupsDeps;
   private groups = new Map<string, GraphAtomGroup>();
-  private counts = new Map<string, GraphAtomCounts>();
+  private readonly tally = new GraphAtomTally();
   private outcomes = new Map<string, Record<string, GraphAtomOutcome>>();
   private placement: AtomPlacement | null = null;
   private readonly expansion: GraphAtomExpansion;
@@ -50,13 +51,11 @@ export class GraphAtomGroups {
     const entries = groups.map(entryOf);
     const known = new Map(entries);
     const isKnown = ([id]: [string, unknown]): boolean => known.has(id);
-    const countEntries = [...this.counts];
     const outcomeEntries = [...this.outcomes];
-    const keptCounts = countEntries.filter(isKnown);
     const keptOutcomes = outcomeEntries.filter(isKnown);
 
     this.groups = known;
-    this.counts = new Map(keptCounts);
+    this.tally.keep(known);
     this.outcomes = new Map(keptOutcomes);
     this.sync();
   }
@@ -71,13 +70,13 @@ export class GraphAtomGroups {
     const knownEntries = entries.filter(isKnown);
 
     for (const [id, state] of knownEntries) {
-      this.counts.set(id, state.counts);
+      this.tally.set(id, state.counts);
       this.outcomes.set(id, state.files);
     }
 
     if (this.placement === null) return;
 
-    this.deps.view.tasks.setCounts(this.drawnLabels(this.placement));
+    this.deps.view.tasks.setCounts(this.tally.drawnOf(this.groups, this.placement));
     this.sync();
     this.expansion.outcomes(this.outcomes);
   }
@@ -93,25 +92,7 @@ export class GraphAtomGroups {
 
   /** The counts of each umbrella: the host's, or its file count with nothing settled while it has sent none. */
   public labels(): ReadonlyMap<string, GraphAtomCounts> {
-    const labelOf = ([id, group]: [string, GraphAtomGroup]): [string, GraphAtomCounts] => {
-      const fallback: GraphAtomCounts = { files: group.files.length, cached: null, failed: null };
-
-      return [id, this.counts.get(id) ?? fallback];
-    };
-    const groupEntries = [...this.groups];
-    const entries = groupEntries.map(labelOf);
-
-    return new Map(entries);
-  }
-
-  /** The counts of each umbrella the placed layout draws as one; a plain-sized task keeps its name. */
-  private drawnLabels(placement: AtomPlacement): ReadonlyMap<string, GraphAtomCounts> {
-    const isDrawn = ([id]: [string, GraphAtomCounts]): boolean => placement.sizes.has(id);
-    const labels = this.labels();
-    const labelEntries = [...labels];
-    const drawn = labelEntries.filter(isDrawn);
-
-    return new Map(drawn);
+    return this.tally.labelsOf(this.groups);
   }
 
   /**

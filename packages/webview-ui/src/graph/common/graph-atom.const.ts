@@ -19,6 +19,12 @@ export const ATOM_CHIP_PAD_PX = 6;
 /** The gap between count chips in a row. */
 export const ATOM_CHIP_GAP_PX = 4;
 
+/** The border on each side of a count chip, in every theme. */
+export const ATOM_CHIP_BORDER_PX = 1;
+
+/** The gap between a chip glyph and the chip's text. */
+export const ATOM_CHIP_GLYPH_GAP_PX = 3;
+
 /** The width of a chip glyph (cached or failed): the glyph itself. */
 export const ATOM_CHIP_GLYPH_PX = 12;
 

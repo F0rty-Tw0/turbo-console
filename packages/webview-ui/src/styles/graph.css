@@ -369,6 +369,46 @@ p {
   pointer-events: none;
 }
 
+/* Umbrella count chips: a row in the widgets layer over each umbrella's counts line, placed from script; sizes are inline from the chip constants. Every chip has a 1 px border in every theme, which the umbrella's width counts. */
+.atom-chips,
+.atom-chip {
+  pointer-events: none;
+}
+
+.atom-chip {
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.atom-chip-files {
+  border: 1px solid var(--vscode-contrastBorder, transparent);
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.atom-chip-cached,
+.atom-chip-failed {
+  background: transparent;
+  color: var(--vscode-foreground);
+}
+
+/* The outline falls back to the text colour, as the stylesheet holds no colour literal: an unset variable would drop the whole border, and the umbrella's width counts it. */
+.atom-chip-cached {
+  border: 1px solid var(--vscode-charts-purple, currentColor);
+}
+
+.atom-chip-failed {
+  border: 1px solid var(--vscode-testing-iconFailed, currentColor);
+}
+
+.atom-chip-cached .atom-chip-glyph {
+  color: var(--vscode-charts-purple, currentColor);
+}
+
+.atom-chip-failed .atom-chip-glyph {
+  color: var(--vscode-testing-iconFailed, currentColor);
+}
+
 .widget-row {
   position: absolute;
   top: 0;

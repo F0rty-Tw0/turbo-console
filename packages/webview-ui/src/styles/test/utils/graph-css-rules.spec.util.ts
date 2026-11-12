@@ -40,5 +40,15 @@ export const declarationsOf = (text: string, selector: string): string => {
   return bodyOf(rule);
 };
 
+/** The bodies of every rule whose selector list holds exactly `selector`, joined: a selector can sit in a shared rule and in its own. */
+export const allDeclarationsOf = (text: string, selector: string): string => {
+  const matches = text.matchAll(RULE_PATTERN);
+  const rules = Array.from(matches);
+  const owned = rules.filter((rule) => hasSelector(rule, selector));
+  const bodies = owned.map(bodyOf);
+
+  return bodies.join('');
+};
+
 /** Where the first rule with `selector` starts in `css`, `-1` when no rule has it; a later start wins a tie in the cascade. */
 export const ruleStartOf = (selector: string): number => ruleOf(css, selector)?.index ?? -1;
