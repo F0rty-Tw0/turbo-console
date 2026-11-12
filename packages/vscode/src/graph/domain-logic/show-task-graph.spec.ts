@@ -228,6 +228,22 @@ describe('FEATURE: the Show Task Graph command', () => {
     });
   });
 
+  describe('GIVEN a monorepo whose // package is labelled', () => {
+    it('WHEN the command runs THEN its task row reads the label', async () => {
+      const labelledRoot: PackageNode = { ...ROOT_PACKAGE, label: 'root-fixture' };
+      const monorepo: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [labelledRoot] };
+
+      fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: monorepo });
+
+      await runWith(undefined, fixture);
+
+      expect(fixture.pickMany).toHaveBeenCalledWith(
+        [{ label: 'build', description: 'root-fixture', root: '/ws', value: '//#build' }],
+        PLACEHOLDER
+      );
+    });
+  });
+
   describe('GIVEN a single-package root', () => {
     beforeEach(() => {
       fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: SINGLE_PACKAGE_MODEL });
