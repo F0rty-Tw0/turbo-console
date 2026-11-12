@@ -23,7 +23,7 @@ type CountsCase = [GraphAtomCounts, string[]];
 
 /** The chips `atomCountsText` words: the files chip always, cached once the dry run settled, failed only above 0. */
 const COUNTS_CASES: CountsCase[] = [
-  [{ files: 10, cached: null, failed: null }, ['10 files']],
+  [{ files: 9, cached: null, failed: null }, ['9 files']],
   [{ files: 10, cached: 9, failed: 0 }, ['10 files', '9 cached']],
   [{ files: 10, cached: null, failed: 2 }, ['10 files', '2 failed']]
 ];
@@ -109,6 +109,9 @@ test.describe('FEATURE: graph task umbrella count chips', () => {
     { annotation: AC1 },
     async ({ openUmbrella, graphTask, graphAtomChips }): Promise<void> => {
       await test.step('WHEN the umbrella is chosen', async (): Promise<void> => openUmbrella());
+
+      await test.step('AND its chip row reads 10 files', async (): Promise<void> =>
+        graphAtomChips.expectTexts(TARGET_LIKE_UMBRELLA, ['10 files']));
 
       await test.step('AND task mode is left', async (): Promise<void> => graphTask.leave());
 
