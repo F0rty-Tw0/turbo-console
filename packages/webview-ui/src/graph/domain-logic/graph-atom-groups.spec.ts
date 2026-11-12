@@ -31,16 +31,16 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       groups.states(COUNTED_E2E_CI);
 
       expect(rig.tasks.setCounts).not.toHaveBeenCalled();
-      expect(groups.labels().size).toBe(0);
+      expect(groups.counts().size).toBe(0);
     });
 
-    it('WHEN atoms arrive and the group follows THEN its label is its file count, not those counts', () => {
+    it('WHEN atoms arrive and the group follows THEN its counts are its file count, not those counts', () => {
       groups.states(COUNTED_E2E_CI);
       groups.received([E2E_CI]);
 
-      const labels = groups.labels();
+      const counts = groups.counts();
 
-      expect([...labels]).toStrictEqual([['app#e2e-ci', { files: 10, cached: null, failed: null }]]);
+      expect([...counts]).toStrictEqual([['app#e2e-ci', { files: 10, cached: null, failed: null }]]);
     });
   });
 
@@ -58,10 +58,10 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       ]);
     });
 
-    it('WHEN the labels are read before any atoms THEN each is its file count in files', () => {
-      const labels = groups.labels();
+    it('WHEN the counts are read before any atoms THEN each is its file count in files', () => {
+      const counts = groups.counts();
 
-      expect([...labels]).toStrictEqual([
+      expect([...counts]).toStrictEqual([
         ['lib#e2e-ci', { files: 2, cached: null, failed: null }],
         ['app#e2e-ci', { files: 10, cached: null, failed: null }]
       ]);
@@ -72,9 +72,9 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
 
       groups.states(both);
 
-      const labels = groups.labels();
+      const counts = groups.counts();
 
-      expect([...labels]).toStrictEqual([
+      expect([...counts]).toStrictEqual([
         ['lib#e2e-ci', { files: 2, cached: null, failed: null }],
         ['app#e2e-ci', { files: 10, cached: 3, failed: null }]
       ]);
@@ -85,14 +85,14 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       groups.received([E2E_CI]);
       groups.received([LIB_CI, E2E_CI]);
 
-      expect(groups.labels().get('lib#e2e-ci')).toStrictEqual({ files: 2, cached: null, failed: null });
+      expect(groups.counts().get('lib#e2e-ci')).toStrictEqual({ files: 2, cached: null, failed: null });
     });
 
     it('WHEN the same groups are received again THEN their counts are kept', () => {
       groups.states(COUNTED_E2E_CI);
       groups.received([LIB_CI, E2E_CI]);
 
-      expect(groups.labels().get('app#e2e-ci')).toStrictEqual({ files: 10, cached: 3, failed: null });
+      expect(groups.counts().get('app#e2e-ci')).toStrictEqual({ files: 10, cached: 3, failed: null });
     });
 
     it('WHEN atoms arrive before any layout is placed THEN the canvas is not touched', () => {

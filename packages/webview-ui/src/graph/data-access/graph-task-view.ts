@@ -29,7 +29,7 @@ const countsDataOf = (counts: GraphAtomCounts | undefined): Record<string, strin
 
 const taskDefinitionOf = (task: GraphTask, drawing: TaskDrawing): ElementDefinition => {
   const { width, height } = drawing.sizes.get(task.id) ?? drawing.sizeOf(task.name);
-  const countsData = countsDataOf(drawing.labels.get(task.id));
+  const countsData = countsDataOf(drawing.counts.get(task.id));
   const parent = parentIdOf(task);
   const data = { id: task.id, name: task.name, label: task.name, ...countsData, parent, width, height };
   const position = positionOf(drawing.positions, task.id);
@@ -135,7 +135,7 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
   const setPositions = (positions: Positions): void => moveTasks(cy, positions);
   const positions = (): Positions => centresOf(cy);
   const clear = (): void => void cy.elements().remove();
-  const setCounts = (labels: ReadonlyMap<string, GraphAtomCounts>): void => setCountLabels(cy, labels);
+  const setCounts = (counts: ReadonlyMap<string, GraphAtomCounts>): void => setCountLabels(cy, counts);
   const marks = { paint, runStates, predictions, affected, remark };
   const canvas: TaskCanvas = { show, clear, setPositions, positions, setCounts, ...marks };
 

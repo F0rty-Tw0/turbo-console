@@ -172,7 +172,7 @@ export class GraphTaskLayout {
     const isSavedCamera = canRestore && saved?.layoutKey === request.key && !saved.fitted;
     const isOpenKey = isOpenFor(saved, request.key);
     const isOpen = canRestore && isOpenKey;
-    const labels = this.atoms.labels();
+    const counts = this.atoms.counts();
 
     flow.stop();
     view.tasks.show({
@@ -181,7 +181,7 @@ export class GraphTaskLayout {
       boxFrames: result.boxFrames,
       sizeOf,
       sizes: request.sizes,
-      labels,
+      counts,
       titleWidths,
       rootLabel: this.deps.rootLabel(),
       naming: request.naming

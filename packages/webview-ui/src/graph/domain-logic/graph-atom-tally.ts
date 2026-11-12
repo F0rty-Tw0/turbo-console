@@ -21,14 +21,14 @@ export class GraphAtomTally {
   }
 
   /** The counts of each group: the host's, or its file count with nothing settled while it has sent none. */
-  public labelsOf(groups: ReadonlyMap<string, GraphAtomGroup>): ReadonlyMap<string, GraphAtomCounts> {
-    const labelOf = ([id, group]: [string, GraphAtomGroup]): [string, GraphAtomCounts] => {
+  public countsOf(groups: ReadonlyMap<string, GraphAtomGroup>): ReadonlyMap<string, GraphAtomCounts> {
+    const countsEntryOf = ([id, group]: [string, GraphAtomGroup]): [string, GraphAtomCounts] => {
       const fallback: GraphAtomCounts = { files: group.files.length, cached: null, failed: null };
 
       return [id, this.counts.get(id) ?? fallback];
     };
     const groupEntries = [...groups];
-    const entries = groupEntries.map(labelOf);
+    const entries = groupEntries.map(countsEntryOf);
 
     return new Map(entries);
   }
@@ -36,9 +36,9 @@ export class GraphAtomTally {
   /** The counts of each group the placed layout draws as one umbrella; a plain-sized task keeps its name. */
   public drawnOf(groups: ReadonlyMap<string, GraphAtomGroup>, placement: AtomPlacement): ReadonlyMap<string, GraphAtomCounts> {
     const isDrawn = ([id]: [string, GraphAtomCounts]): boolean => placement.sizes.has(id);
-    const labels = this.labelsOf(groups);
-    const labelEntries = [...labels];
-    const drawn = labelEntries.filter(isDrawn);
+    const counts = this.countsOf(groups);
+    const countsEntries = [...counts];
+    const drawn = countsEntries.filter(isDrawn);
 
     return new Map(drawn);
   }

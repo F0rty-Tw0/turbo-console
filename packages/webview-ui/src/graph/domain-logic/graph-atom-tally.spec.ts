@@ -29,27 +29,27 @@ describe('FEATURE: GraphAtomTally', () => {
       tally.set('app#e2e-ci', SENT);
     });
 
-    it('WHEN the labels of both groups are read THEN app#e2e-ci has the sent counts and lib#e2e-ci its file count', () => {
-      const labels = tally.labelsOf(BOTH);
+    it('WHEN the counts of both groups are read THEN app#e2e-ci has the sent counts and lib#e2e-ci its file count', () => {
+      const counts = tally.countsOf(BOTH);
 
-      expect([...labels]).toStrictEqual([
+      expect([...counts]).toStrictEqual([
         ['app#e2e-ci', SENT],
         ['lib#e2e-ci', { files: 2, cached: null, failed: null }]
       ]);
     });
 
-    it('WHEN the drawn labels are read THEN only the umbrella the placement sizes is in them', () => {
+    it('WHEN the drawn counts are read THEN only the umbrella the placement sizes is in them', () => {
       const drawn = tally.drawnOf(BOTH, PLACEMENT);
 
       expect([...drawn]).toStrictEqual([['app#e2e-ci', SENT]]);
     });
 
-    it('WHEN only lib#e2e-ci is kept and app#e2e-ci comes back THEN its label is its file count again', () => {
+    it('WHEN only lib#e2e-ci is kept and app#e2e-ci comes back THEN its counts are its file count again', () => {
       tally.keep(LIB_ONLY);
 
-      const labels = tally.labelsOf(BOTH);
+      const counts = tally.countsOf(BOTH);
 
-      expect(labels.get('app#e2e-ci')).toStrictEqual({ files: 10, cached: null, failed: null });
+      expect(counts.get('app#e2e-ci')).toStrictEqual({ files: 10, cached: null, failed: null });
     });
   });
 });

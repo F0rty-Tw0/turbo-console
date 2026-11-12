@@ -26,7 +26,7 @@ export type TaskDrawing = {
   readonly boxFrames: BoxFrames;
   readonly sizeOf: (name: string) => NodeSize;
   readonly sizes: ReadonlyMap<string, NodeSize>;
-  readonly labels: ReadonlyMap<string, GraphAtomCounts>;
+  readonly counts: ReadonlyMap<string, GraphAtomCounts>;
   /**
    * The width each box title needs to draw whole, which its box is at least as wide as: by package name for a package
    * box, by `scripts:<name>` for a Scripts box.
@@ -67,8 +67,8 @@ export type TaskCanvas = {
    * of a node's body bounds, which a compound's size and a box frame are measured from, so a halo moves no box.
    */
   readonly affected: (next: TaskAffectedMarks) => void;
-  /** Sets the `countsText` of each umbrella in `labels` from its counts, its label staying its name; a task not drawn is skipped, no node moves. */
-  readonly setCounts: (labels: ReadonlyMap<string, GraphAtomCounts>) => void;
+  /** Sets the `countsText` of each umbrella in `counts` from its counts, its label staying its name; a task not drawn is skipped, no node moves. */
+  readonly setCounts: (counts: ReadonlyMap<string, GraphAtomCounts>) => void;
   /** Marks the tasks and the Atomizer file nodes again with the kept runs map, predictions and affected marks and paints the kept target again; an expand adds nodes the last mark and paint never saw. */
   readonly remark: () => void;
 };
