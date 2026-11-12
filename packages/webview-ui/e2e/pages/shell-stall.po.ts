@@ -25,6 +25,7 @@ export class ShellStall {
   private readonly serve: RouteHandler;
   private readonly handler: RouteHandler;
   private heldCount: number;
+  private abortedCount: number;
   private seenCount: number;
 
   public constructor(page: Page, testInfo: TestInfo) {
@@ -34,12 +35,18 @@ export class ShellStall {
     this.serve = detailsDistMock();
     this.handler = async (route: Route): Promise<void> => this.holdOrServe(route);
     this.heldCount = 0;
+    this.abortedCount = 0;
     this.seenCount = 0;
   }
 
   /** Before `open`: the first `count` `index.html` requests never answer; later ones are served. */
   public holdShell(count: number): void {
     this.heldCount = count;
+  }
+
+  /** Before `open`: the first `count` `index.html` requests are aborted as Chromium aborts a detached frame's. */
+  public abortShell(count: number): void {
+    this.abortedCount = count;
   }
 
   public async open(): Promise<void> {
@@ -66,15 +73,18 @@ export class ShellStall {
     expect(noteTexts).toEqual(matchers);
   }
 
-  /** Holds the first `heldCount` `index.html` requests forever and serves every other shell file. */
+  /** Holds the first `heldCount` `index.html` requests forever, aborts the first `abortedCount`, serves every other shell file. */
   private async holdOrServe(route: Route): Promise<void> {
     const url = route.request().url();
 
     if (url === SHELL_URL) this.seenCount += 1;
 
     const isHeld = url === SHELL_URL && this.seenCount <= this.heldCount;
+    const isAborted = url === SHELL_URL && this.seenCount <= this.abortedCount;
 
     if (isHeld) return holdRequest();
+
+    if (isAborted) return route.abort('aborted');
 
     await this.serve(route);
   }
