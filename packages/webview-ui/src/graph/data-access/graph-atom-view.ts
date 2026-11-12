@@ -1,8 +1,9 @@
 import type { Core, ElementDefinition, EventObjectNode, NodeSingular } from 'cytoscape';
 
 import { reframeBox, unframeBox } from './graph-task-frames.ts';
-import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import { atomCountsText } from '../../bridge/utils/atom-counts-text.util.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import {
   ATOM_BOX_CLASS,
@@ -20,23 +21,20 @@ import { moreIdOf } from '../utils/atom-spec.util.ts';
 
 const OUTCOME_CLASSES = Object.values(ATOM_OUTCOME_CLASSES).join(' ');
 
-/** A task's label: its name, over its counts line when it has one. */
-export const labelOf = (name: string, counts: string | undefined): string => (counts === undefined ? name : `${name}\n${counts}`);
-
 /** A task node's classes: `task`, and `atom-umbrella` too for an umbrella. */
 export const taskClassesOf = (isUmbrella: boolean): string =>
   isUmbrella ? `${TASK_NODE_CLASS} ${ATOM_UMBRELLA_CLASS}` : TASK_NODE_CLASS;
 
-/** Sets the label of each task in `labels` to its name over its counts; a task not drawn is skipped. */
-export const setCountLabels = (cy: Core, labels: ReadonlyMap<string, string>): void => {
-  const countNode = (counts: string, id: string): void => {
+/** Sets the `countsText` of each task in `counts` from its counts, its label staying its name; a task not drawn is skipped. */
+export const setCountLabels = (cy: Core, counts: ReadonlyMap<string, GraphAtomCounts>): void => {
+  const countNode = (nodeCounts: GraphAtomCounts, id: string): void => {
     const node = cy.getElementById(id);
     const name: unknown = node.data('name');
 
-    node.data('label', labelOf(String(name), counts));
+    node.data({ label: String(name), countsText: atomCountsText(nodeCounts) });
   };
 
-  cy.batch((): void => labels.forEach(countNode));
+  cy.batch((): void => counts.forEach(countNode));
 };
 
 const outcomeClassOf = (outcome: GraphAtomOutcome | undefined): string => {

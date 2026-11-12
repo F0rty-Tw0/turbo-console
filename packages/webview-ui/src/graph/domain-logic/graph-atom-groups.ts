@@ -5,7 +5,6 @@ import type { GraphAtomGroup, GraphTask } from '../../bridge/common/graph-state.
 import { ATOM_BOX_PREFIX, ATOM_MORE_PREFIX } from '../common/graph-atom.const.ts';
 import type { AtomGroupsDeps, AtomLayout, AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import { countTextsOf } from '../utils/atom-count-texts.util.ts';
 import { atomSpecOf, outcomesOf } from '../utils/atom-spec.util.ts';
 import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
 import { parentIdOf } from '../utils/task-compound.util.ts';
@@ -105,15 +104,14 @@ export class GraphAtomGroups {
     return new Map(entries);
   }
 
-  /** The counts line of each umbrella the placed layout draws as one; a plain-sized task keeps its name. */
-  private drawnLabels(placement: AtomPlacement): ReadonlyMap<string, string> {
+  /** The counts of each umbrella the placed layout draws as one; a plain-sized task keeps its name. */
+  private drawnLabels(placement: AtomPlacement): ReadonlyMap<string, GraphAtomCounts> {
     const isDrawn = ([id]: [string, GraphAtomCounts]): boolean => placement.sizes.has(id);
     const labels = this.labels();
     const labelEntries = [...labels];
     const drawn = labelEntries.filter(isDrawn);
-    const drawnCounts = new Map(drawn);
 
-    return countTextsOf(drawnCounts);
+    return new Map(drawn);
   }
 
   /**

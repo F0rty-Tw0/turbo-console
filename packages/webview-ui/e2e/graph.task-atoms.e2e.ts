@@ -54,9 +54,9 @@ const extraOf = (umbrella: ProbeNode): NodeSize => {
   return extra;
 };
 
-const COLLAPSED_TEXT = `${GLYPH_CODE_POINTS.blank} e2e-ci\n10 files`;
+const COLLAPSED_TEXT = `${GLYPH_CODE_POINTS.blank} e2e-ci`;
 
-const COUNTED_TEXT = `${GLYPH_CODE_POINTS.blank} e2e-ci\n10 files · 3 cached · 1 failed`;
+const COUNTED_TEXT = `${GLYPH_CODE_POINTS.blank} e2e-ci`;
 
 const COUNTED_COUNTS: GraphAtomCounts = { files: 10, cached: 3, failed: 1 };
 
@@ -81,12 +81,12 @@ const PACKAGE_NAMES = stateNamesOf(targetLikeTasksState());
 
 test.describe('FEATURE: graph task mode with an Atomizer group', () => {
   test(
-    'GIVEN the umbrella chosen and the target-like state sent, the umbrella shows its file count and the page reports the umbrella shown',
+    'GIVEN the umbrella chosen and the target-like state sent, the umbrella shows its name and the page reports the umbrella shown',
     { annotation: SPEC_3_3 },
     async ({ graphTaskHost, graphTaskProbe, openUmbrella }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
 
-      await test.step('THEN the umbrella text is its name over its file count', async (): Promise<void> =>
+      await test.step('THEN the umbrella text is its name', async (): Promise<void> =>
         graphTaskProbe.expectText(TARGET_LIKE_UMBRELLA, COLLAPSED_TEXT));
 
       await test.step('AND the page posted shownUmbrellas with the umbrella', async (): Promise<void> =>
@@ -95,7 +95,7 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
   );
 
   test(
-    'GIVEN the umbrella chosen and the target-like state sent, atoms update the counts line and move no task node',
+    'GIVEN the umbrella chosen and the target-like state sent, atoms leave the umbrella label as its name and move no task node',
     { annotation: SPEC_3_3 },
     async ({ graphTaskHost, graphTaskProbe, openUmbrella }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
@@ -105,7 +105,7 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
 
       await test.step('AND atoms arrive with counts', async (): Promise<void> => graphTaskHost.sendAtoms(COUNTED_GROUPS));
 
-      await test.step('THEN the umbrella text shows the counts', async (): Promise<void> =>
+      await test.step('THEN the umbrella text is still its name', async (): Promise<void> =>
         graphTaskProbe.expectText(TARGET_LIKE_UMBRELLA, COUNTED_TEXT));
 
       await test.step('AND no task node moved', async (): Promise<void> => graphTaskProbe.expectTaskPositions(before));

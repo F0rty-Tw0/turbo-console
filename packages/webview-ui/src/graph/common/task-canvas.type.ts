@@ -4,7 +4,7 @@ import type { BoxFrames } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
 import type { GraphAffectedMark } from '../../bridge/common/graph-affected.type.ts';
-import type { GraphAtomOutcome, GraphPrediction } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomOutcome, GraphPrediction } from '../../bridge/common/graph-message.type.ts';
 import type { GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
 
 /** The cache prediction word of each predicted task, by task id; a task not named has none. */
@@ -14,7 +14,8 @@ export type TaskPredictions = Readonly<Record<string, GraphPrediction>>;
 export type TaskAffectedMarks = Readonly<Record<string, GraphAffectedMark>>;
 
 /**
- * What task mode draws: the shown tasks, their centres, the frame of each titled-row box, the node sizer for their names, the size of each umbrella that has one of its own, the label of each umbrella that has a counts line, and the
+ * What task mode draws: the shown tasks, their centres, the frame of each titled-row box, the node sizer for their names,
+ * the size of each umbrella that has one of its own, the counts of each umbrella, and the
  * title text width of each package.
  */
 export type TaskDrawing = {
@@ -24,7 +25,7 @@ export type TaskDrawing = {
   readonly boxFrames: BoxFrames;
   readonly sizeOf: (name: string) => NodeSize;
   readonly sizes: ReadonlyMap<string, NodeSize>;
-  readonly labels: ReadonlyMap<string, string>;
+  readonly labels: ReadonlyMap<string, GraphAtomCounts>;
   /**
    * The width each box title needs to draw whole, which its box is at least as wide as: by package name for a package
    * box, by `scripts:<name>` for a Scripts box.
@@ -65,8 +66,8 @@ export type TaskCanvas = {
    * of a node's body bounds, which a compound's size and a box frame are measured from, so a halo moves no box.
    */
   readonly affected: (next: TaskAffectedMarks) => void;
-  /** Sets the label of each umbrella in `labels` to its name and counts line; a task not drawn is skipped, no node moves. */
-  readonly setCounts: (labels: ReadonlyMap<string, string>) => void;
+  /** Sets the `countsText` of each umbrella in `labels` from its counts, its label staying its name; a task not drawn is skipped, no node moves. */
+  readonly setCounts: (labels: ReadonlyMap<string, GraphAtomCounts>) => void;
   /** Marks the tasks and the Atomizer file nodes again with the kept runs map, predictions and affected marks and paints the kept target again; an expand adds nodes the last mark and paint never saw. */
   readonly remark: () => void;
 };

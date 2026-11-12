@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { probeStateOf } from './graph-probe-state.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
@@ -29,7 +30,7 @@ const POSITIONS: Positions = { 'api#build': API_AT, 'web#build': WEB_AT };
 
 const NO_SIZES = new Map<string, NodeSize>();
 
-const NO_LABELS = new Map<string, string>();
+const NO_LABELS = new Map<string, GraphAtomCounts>();
 
 const DRAWING: TaskDrawing = {
   tasks: TASKS,
@@ -54,7 +55,7 @@ const UMBRELLA_SIZE: NodeSize = { width: 200, height: 48 };
 const UMBRELLA_DRAWING: TaskDrawing = {
   ...DRAWING,
   sizes: new Map([['web#build', UMBRELLA_SIZE]]),
-  labels: new Map([['web#build', '10 files']])
+  labels: new Map([['web#build', { files: 10, cached: null, failed: null }]])
 };
 
 const PAINT_TASKS: GraphTask[] = [...TASKS, taskOf('ui#lint', [])];
@@ -201,24 +202,34 @@ describe('FEATURE: createTaskCanvas', () => {
       expect(cy.getElementById('api#build').data()).toMatchObject(NODE_SIZE);
     });
 
-    it('WHEN shown THEN its label is the name over its counts line', () => {
-      expect(cy.getElementById('web#build').data('label')).toBe('build\n10 files');
+    it('WHEN an umbrella is shown THEN its label is its name and countsText holds the counts text', () => {
+      const node = cy.getElementById('web#build');
+
+      expect(node.data('label')).toBe('build');
+      expect(node.data('countsText')).toBe('10 files');
     });
 
-    it('WHEN setCounts names it THEN its label is the name over the new counts', () => {
-      canvas.setCounts(new Map([['web#build', '10 files · 3 cached']]));
+    it('WHEN a plain task is shown THEN it has no countsText', () => {
+      expect(cy.getElementById('api#build').data('countsText')).toBeUndefined();
+    });
 
-      expect(cy.getElementById('web#build').data('label')).toBe('build\n10 files · 3 cached');
+    it('WHEN setCounts names it THEN the label stays the name and countsText is the new text', () => {
+      canvas.setCounts(new Map([['web#build', { files: 10, cached: 3, failed: null }]]));
+
+      const node = cy.getElementById('web#build');
+
+      expect(node.data('label')).toBe('build');
+      expect(node.data('countsText')).toBe('10 files · 3 cached');
     });
 
     it('WHEN setCounts names it THEN no node moves', () => {
-      canvas.setCounts(new Map([['web#build', '10 files · 3 cached']]));
+      canvas.setCounts(new Map([['web#build', { files: 10, cached: 3, failed: null }]]));
 
       expect(canvas.positions()).toStrictEqual(POSITIONS);
     });
 
     it('WHEN setCounts names a task that is not drawn THEN nothing throws', () => {
-      const setGone = (): void => canvas.setCounts(new Map([['gone#build', '1 files']]));
+      const setGone = (): void => canvas.setCounts(new Map([['gone#build', { files: 1, cached: null, failed: null }]]));
 
       expect(setGone).not.toThrow();
     });
