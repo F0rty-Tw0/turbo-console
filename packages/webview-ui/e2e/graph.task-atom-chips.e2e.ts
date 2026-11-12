@@ -41,6 +41,9 @@ test.describe('FEATURE: graph task umbrella count chips', () => {
       await test.step('THEN three chips read in order', async (): Promise<void> =>
         graphAtomChips.expectTexts(TARGET_LIKE_UMBRELLA, ['10 files', '3 cached', '1 failed']));
 
+      await test.step('AND the three chips lie inside the umbrella', async (): Promise<void> =>
+        graphAtomChips.expectInsideUmbrella(TARGET_LIKE_UMBRELLA));
+
       await test.step('AND the canvas label is the glyph and the name', async (): Promise<void> =>
         graphTaskProbe.expectText(TARGET_LIKE_UMBRELLA, NAME_ONLY));
     }
