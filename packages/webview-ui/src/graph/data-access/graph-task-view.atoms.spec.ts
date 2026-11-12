@@ -28,7 +28,7 @@ const DRAWING: TaskDrawing = {
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map([['web#e2e-ci', UMBRELLA_SIZE]]),
-  labels: new Map(),
+  counts: new Map(),
   titleWidths: new Map(),
   rootLabel: null,
   naming: NAMING_STUB

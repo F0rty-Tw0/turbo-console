@@ -93,7 +93,7 @@ const drawingOf = (laidOut: ElkNode): TaskDrawing => {
     boxFrames: boxFramesOf(laidOut),
     sizeOf: SIZE_OF,
     sizes: new Map(),
-    labels: new Map(),
+    counts: new Map(),
     titleWidths: TITLE_WIDTHS,
     rootLabel: null,
     naming: NAMING_STUB

@@ -30,7 +30,7 @@ const POSITIONS: Positions = { 'api#build': API_AT, 'web#build': WEB_AT };
 
 const NO_SIZES = new Map<string, NodeSize>();
 
-const NO_LABELS = new Map<string, GraphAtomCounts>();
+const NO_COUNTS = new Map<string, GraphAtomCounts>();
 
 const DRAWING: TaskDrawing = {
   tasks: TASKS,
@@ -38,7 +38,7 @@ const DRAWING: TaskDrawing = {
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: NO_SIZES,
-  labels: NO_LABELS,
+  counts: NO_COUNTS,
   titleWidths: new Map(),
   rootLabel: null,
   naming: NAMING_STUB
@@ -55,7 +55,7 @@ const UMBRELLA_SIZE: NodeSize = { width: 200, height: 48 };
 const UMBRELLA_DRAWING: TaskDrawing = {
   ...DRAWING,
   sizes: new Map([['web#build', UMBRELLA_SIZE]]),
-  labels: new Map([['web#build', { files: 10, cached: null, failed: null }]])
+  counts: new Map([['web#build', { files: 10, cached: null, failed: null }]])
 };
 
 const PAINT_TASKS: GraphTask[] = [...TASKS, taskOf('ui#lint', [])];

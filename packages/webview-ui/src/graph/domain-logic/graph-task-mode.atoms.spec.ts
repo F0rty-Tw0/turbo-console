@@ -75,7 +75,7 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
       expect(rig.view.tasks.show).toHaveBeenCalledWith(
         expect.objectContaining({
           sizes: new Map([['web#build', size]]),
-          labels: new Map([['web#build', { files: 2, cached: null, failed: null }]])
+          counts: new Map([['web#build', { files: 2, cached: null, failed: null }]])
         })
       );
     });

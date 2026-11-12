@@ -36,7 +36,7 @@ const drawingOf = (tasks: GraphTask[]): TaskDrawing => {
     boxFrames: {},
     sizeOf: (): NodeSize => NODE_SIZE,
     sizes: new Map(),
-    labels: new Map(),
+    counts: new Map(),
     titleWidths: TITLE_WIDTHS,
     rootLabel: null,
     naming: NAMING_STUB

@@ -74,7 +74,7 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
       boxFrames: {},
       sizeOf: (): NodeSize => NODE_SIZE,
       sizes: SIZES,
-      labels: new Map(),
+      counts: new Map(),
       titleWidths: new Map(),
       rootLabel: null,
       naming: NAMING_STUB

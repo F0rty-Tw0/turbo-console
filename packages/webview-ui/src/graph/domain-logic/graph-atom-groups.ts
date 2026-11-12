@@ -100,8 +100,8 @@ export class GraphAtomGroups {
   }
 
   /** The counts of each umbrella: the host's, or its file count with nothing settled while it has sent none. */
-  public labels(): ReadonlyMap<string, GraphAtomCounts> {
-    return this.tally.labelsOf(this.groups);
+  public counts(): ReadonlyMap<string, GraphAtomCounts> {
+    return this.tally.countsOf(this.groups);
   }
 
   /**
