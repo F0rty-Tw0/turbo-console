@@ -1,0 +1,84 @@
+import * as vscode from 'vscode';
+
+import { startRunBy } from './run-wait.spec.util.ts';
+import { sleep, waitFor } from './suite-env.spec.util.ts';
+import { readSuiteEnv } from './suite-input.spec.util.ts';
+import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
+import type { TreeNode } from '../../src/tree/common/tree-node.type.ts';
+import { RUN_OPTIONS_COMMAND } from '../common/run-options.const.ts';
+
+type Step = (factor: number) => Promise<void>;
+
+/** How long the quick pick gets (x budgetFactor) to open before the suite sends it a key; the parity pick uses 200. */
+const PICK_OPEN_MS = 300;
+
+const COMMAND_FINISH_MS = 10_000;
+
+/** A multi-select quick pick opens with no row highlighted (VS Code 1.141.0), so the first move lands on row 0. */
+const FIRST_HIGHLIGHT = -1;
+
+const runCommand = async (command: string): Promise<void> => {
+  await vscode.commands.executeCommand(command);
+};
+
+const moveTo = async (from: number, to: number): Promise<void> => {
+  for (let at = from; at < to; at += 1) await runCommand('workbench.action.quickOpenSelectNext');
+};
+
+const assertAscending = (rows: number[]): void => {
+  const isAscending = rows.every((row, index) => index === 0 || row > (rows[index - 1] ?? 0));
+
+  if (!isAscending) throw new Error(`rows must ascend: ${rows.join(', ')}`);
+};
+
+const pickRowsStep = (rows: number[]): Step => {
+  const pick: Step = async (factor) => {
+    assertAscending(rows);
+    await sleep(PICK_OPEN_MS * factor);
+
+    let highlight = FIRST_HIGHLIGHT;
+
+    for (const row of rows) {
+      await moveTo(highlight, row);
+      await runCommand('workbench.action.quickPickManyToggle');
+
+      highlight = row;
+    }
+
+    await runCommand('workbench.action.acceptSelectedQuickOpenItem');
+  };
+
+  return pick;
+};
+
+/**
+ * Starts the command without awaiting it, runs each step, then waits for the command to finish. A step that fails, or a
+ * command that never finishes, closes the quick input (which settles the pending ask with `undefined`) and fails with the
+ * command named, as `runPicked` does.
+ */
+const driveOptions = async (node: TreeNode, steps: Step[]): Promise<void> => {
+  const { budgetFactor } = readSuiteEnv();
+  let isDone = false;
+
+  const finished = Promise.resolve(vscode.commands.executeCommand(RUN_OPTIONS_COMMAND, node)).finally(() => {
+    isDone = true;
+  });
+
+  try {
+    for (const step of steps) await step(budgetFactor);
+
+    await waitFor(`${RUN_OPTIONS_COMMAND} to finish`, () => isDone, COMMAND_FINISH_MS * budgetFactor);
+  } catch (error) {
+    await runCommand('workbench.action.closeQuickOpen');
+
+    void finished.catch(() => undefined);
+
+    throw new Error(`${RUN_OPTIONS_COMMAND} did not complete: ${String(error)}`, { cause: error });
+  }
+
+  await finished;
+};
+
+/** Runs Run with Options on `node`: checks the given 0-based picker rows (strictly ascending), accepts; returns the launch token. */
+export const runWithPicks = async (api: TurboConsoleApi, node: TreeNode, rows: number[]): Promise<number> =>
+  startRunBy(api, node, async () => driveOptions(node, [pickRowsStep(rows)]));
