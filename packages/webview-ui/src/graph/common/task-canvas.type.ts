@@ -1,3 +1,4 @@
+import type { AtomChipBox } from './atom-chips.type.ts';
 import type { AtomDrawSpec } from './atom-layout.type.ts';
 import type { TaskNaming } from './graph-task.type.ts';
 import type { BoxFrames } from './layout.type.ts';
@@ -102,4 +103,6 @@ export type AtomCanvas = {
   readonly setGrabbable: (isGrabbable: boolean) => void;
   /** Whether `id` is a box or file this canvas drew; a task that merely shares the id of one is not. */
   readonly isAtomNode: (id: string) => boolean;
+  /** The model centre and width of the drawn node `id`, which a chip row is placed over; `null` when it is not drawn. */
+  readonly boxOf: (id: string) => AtomChipBox | null;
 };

@@ -1,5 +1,6 @@
 import type { Core, ElementDefinition, EventObjectNode, NodeSingular } from 'cytoscape';
 
+import { atomBoxOf } from './graph-atom-box.ts';
 import { reframeBox, unframeBox } from './graph-task-frames.ts';
 import type { GraphAtomCounts, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
@@ -189,7 +190,8 @@ export const createAtomCanvas = (cy: Core): AtomCanvas => {
 
     return node.hasClass(ATOM_BOX_CLASS) || node.hasClass(ATOM_FILE_CLASS) || node.hasClass(ATOM_MORE_CLASS);
   };
-  const canvas: AtomCanvas = { expand, collapse, setPositions, setLinkEnds, setOutcomes, setGrabbable, isAtomNode };
+  const boxOf: AtomCanvas['boxOf'] = (id) => atomBoxOf(cy, id);
+  const canvas: AtomCanvas = { expand, collapse, setPositions, setLinkEnds, setOutcomes, setGrabbable, isAtomNode, boxOf };
 
   titleFilesOn(cy);
 

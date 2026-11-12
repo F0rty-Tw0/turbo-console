@@ -43,7 +43,8 @@ export const atomCanvasMock = (): Mocked<AtomCanvas> => {
     setLinkEnds: vi.fn<AtomCanvas['setLinkEnds']>(),
     setOutcomes: vi.fn<AtomCanvas['setOutcomes']>(),
     setGrabbable: vi.fn<AtomCanvas['setGrabbable']>(),
-    isAtomNode: vi.fn<AtomCanvas['isAtomNode']>(() => true)
+    isAtomNode: vi.fn<AtomCanvas['isAtomNode']>(() => true),
+    boxOf: vi.fn<AtomCanvas['boxOf']>(() => null)
   };
 
   return canvas;

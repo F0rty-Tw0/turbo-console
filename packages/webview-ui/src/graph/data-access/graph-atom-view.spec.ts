@@ -3,6 +3,7 @@ import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAtomCanvas } from './graph-atom-view.ts';
+import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
@@ -12,6 +13,7 @@ import type { AtomCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { fileOf } from '../test/utils/atom-file.spec.util.ts';
+import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA_SIZE: NodeSize = { width: 160, height: 52 };
@@ -332,6 +334,36 @@ describe('FEATURE: createAtomCanvas', () => {
       atoms.setGrabbable(true);
 
       expect([whileOff, cy.autoungrabify()]).toStrictEqual([true, false]);
+    });
+  });
+});
+
+describe('FEATURE: createAtomCanvas boxOf on the styled canvas', () => {
+  let cy: Core;
+  let atoms: AtomCanvas;
+
+  beforeEach(() => {
+    const layout = { name: 'preset', fit: false };
+
+    cy = cytoscape({ headless: true, styleEnabled: true, layout });
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    createTaskCanvas(cy).show(DRAWING);
+    atoms = createAtomCanvas(cy);
+  });
+
+  afterEach(() => {
+    cy.destroy();
+  });
+
+  describe('GIVEN the umbrella drawn at its centre with its size', () => {
+    it('WHEN its box is read THEN it is the drawn centre and the sized width', () => {
+      const box = atoms.boxOf('web#e2e-ci');
+
+      expect(box).toStrictEqual({ centre: UMBRELLA_AT, width: UMBRELLA_SIZE.width });
+    });
+
+    it('WHEN the box of an id not drawn is read THEN it is null', () => {
+      expect(atoms.boxOf('nope')).toBeNull();
     });
   });
 });
