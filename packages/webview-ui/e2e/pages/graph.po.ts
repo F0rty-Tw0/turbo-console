@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { PageDiagnostics } from './page-diagnostics.po.ts';
+import { ShellNavigation } from './shell-navigation.po.ts';
 import {
   FALLBACK_NOTICE_TEXT,
   GRAPH_LABEL,
@@ -12,7 +13,7 @@ import {
 import { BROKEN_MEASURE, MEASURE_FIXED } from '../common/broken-measure.const.ts';
 import { NEXT_FRAME, PROBE_WANTED, TOOLBAR_LABELS, WORKER_STUBS } from '../common/graph.const.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
-import { HOST_API_STUB, SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
+import { HOST_API_STUB } from '../common/shell.const.ts';
 import { graphDistMock } from '../test/mocks/graph-dist.mock.ts';
 import { FLAT_SAVED_STUB } from '../test/stubs/graph-saved.stub.ts';
 import { layoutTimeoutScript } from '../test/utils/graph-layout-timeout.spec.util.ts';
@@ -60,8 +61,7 @@ export class GraphPage {
     if (options.isMeasureBroken === true) await this.page.addInitScript({ content: BROKEN_MEASURE });
 
     await this.page.addInitScript({ content: WORKER_STUBS[options.workers ?? 'real'] });
-    await this.page.route(`${SHELL_ORIGIN}/**`, graphDistMock(options));
-    await this.page.goto(SHELL_URL);
+    await new ShellNavigation(this.page).open(graphDistMock(options));
     await this.container.waitFor();
   }
 
