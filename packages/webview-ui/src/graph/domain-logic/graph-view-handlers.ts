@@ -41,7 +41,7 @@ type HandledAtoms = {
 
 type HandledLayout = {
   readonly atoms: HandledAtoms;
-  readonly dragged: (touched: string[]) => void;
+  readonly dragged: () => void;
 };
 
 type HandledTasks = {
@@ -122,7 +122,7 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
     onDoubleTapFolder: byMode((folder: string): void => filtering().folders.toggle(folder)),
     onDragEnd: byMode(
       (drag: GraphDrag): void => layouts().dragged(drag),
-      (drag: GraphDrag): void => tasks().layout.dragged(drag.touched)
+      (): void => tasks().layout.dragged()
     ),
     onViewport: (): void => {
       flow().viewportChanged();

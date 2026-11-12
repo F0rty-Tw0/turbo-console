@@ -176,13 +176,13 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
   );
 
   test(
-    'GIVEN the umbrella chosen and the target-like state sent, a double tap on the umbrella draws its links from the box bottom past its files, and a second one draws them where they were',
+    'GIVEN the umbrella chosen and the target-like state sent, a double tap on the umbrella draws its links straight from the box bottom past its files, and a second one draws them straight from the umbrella again',
     { annotation: SPEC_3_4 },
     async ({ graphAtoms, openUmbrella }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
 
-      const before = await test.step('AND its two routed links are read', async () =>
-        graphAtoms.links.routedBendsFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT));
+      await test.step('AND its two links are straight', async (): Promise<void> =>
+        graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT));
 
       const centre = await test.step('AND its centre is read', async () => graphAtoms.links.centreOf(TARGET_LIKE_UMBRELLA));
 
@@ -191,15 +191,20 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
         await graphAtoms.expectFilesDrawn(FILE_IDS, true);
       });
 
-      await test.step('THEN no link crosses a file', async (): Promise<void> => graphAtoms.links.expectThroughFiles(FILE_IDS, 0));
+      await test.step('THEN its links are straight and no link crosses a file', async (): Promise<void> => {
+        await graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+        await graphAtoms.links.expectThroughFiles(FILE_IDS, 0);
+      });
 
       await test.step('WHEN the umbrella is double tapped again', async (): Promise<void> => {
         await graphAtoms.toggle(TARGET_LIKE_UMBRELLA);
         await graphAtoms.expectFilesDrawn(FILE_IDS, false);
       });
 
-      await test.step('THEN its links are on the routes they had', async (): Promise<void> =>
-        graphAtoms.links.expectRoutedBendsFrom(TARGET_LIKE_UMBRELLA, before));
+      await test.step('THEN its links are straight from the umbrella again', async (): Promise<void> => {
+        await graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+        await graphAtoms.links.expectStartingOn(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+      });
 
       await test.step('AND the umbrella has not moved', async (): Promise<void> =>
         graphAtoms.links.expectCentreOf(TARGET_LIKE_UMBRELLA, centre));
@@ -207,7 +212,7 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
   );
 
   test(
-    'GIVEN the umbrella chosen and dragged, which straightens its links, a double tap on it draws them from the box bottom past its files, and a second one draws them straight again',
+    'GIVEN the umbrella chosen and dragged, its links still straight, a double tap on it draws them from the box bottom past its files, and a second one draws them straight from the umbrella again',
     { annotation: SPEC_3_4 },
     async ({ graphAtoms, graphCanvas, openUmbrella }): Promise<void> => {
       await test.step('WHEN the page is opened', async (): Promise<void> => openUmbrella());
@@ -233,9 +238,10 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
         await graphAtoms.expectFilesDrawn(FILE_IDS, false);
       });
 
-      await test.step('THEN the umbrella is back where it was dragged and its links are drawn straight again', async (): Promise<void> => {
+      await test.step('THEN the umbrella is back where it was dragged and its links are drawn straight from it again', async (): Promise<void> => {
         await graphAtoms.links.expectCentreOf(TARGET_LIKE_UMBRELLA, dragged);
         await graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+        await graphAtoms.links.expectStartingOn(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
       });
     }
   );

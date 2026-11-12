@@ -195,7 +195,7 @@ describe('FEATURE: GraphTaskLayout', () => {
       layout.atoms.received([UMBRELLA_GROUP]);
       await landWith('k0', sizes);
       rig.view.tasks.positions.mockReturnValue(DRAGGED_AT);
-      layout.dragged([]);
+      layout.dragged();
     });
 
     it('WHEN the group expands THEN its positions start from the dragged centres', () => {

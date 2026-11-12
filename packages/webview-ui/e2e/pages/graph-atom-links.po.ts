@@ -3,16 +3,14 @@ import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { ProbeEdgeLine, ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
-import type { RouteBends } from '../common/graph-route.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
-import { readEdgeLines, readRoute, throughNodeCountOf } from '../test/utils/graph-lines.spec.util.ts';
-import { bendShiftOf, routeBendsOf } from '../test/utils/graph-route-bends.spec.util.ts';
+import { readEdgeLines, startsOnNodeCountOf, throughNodeCountOf } from '../test/utils/graph-lines.spec.util.ts';
 
 /** How far, in page px, a line must reach inside a file's box to count as crossing it, so one grazing its border does not. */
 const THROUGH_INSET_PX = 1;
 
-/** How far, as a fraction of the umbrella box, a bend may sit from where it was and still be the same route. */
-const BEND_TOLERANCE = 0.01;
+/** How far, in page px, a line may start past its source's box and still start on it: its border and float rounding. */
+const START_SLACK_PX = 2;
 
 /** Hundredths of a page px: a line drawn again on the same segments can land a float rounding step off. */
 const POINT_PRECISION = 100;
@@ -36,34 +34,6 @@ export class GraphAtomLinks {
   }
 
   /**
-   * The bends of each drawn, routed line out of `umbrellaId`, by target, once `count` of them are drawn and routed: each
-   * bend's offset from the umbrella centre as a fraction of the umbrella box, so it holds whatever the camera. Read from
-   * the line state in one page task, so it holds however late Cytoscape recomputes the drawn ends.
-   */
-  public async routedBendsFrom(umbrellaId: string, count: number): Promise<RouteBends> {
-    const countOf = async (): Promise<number> => {
-      const bends = await this.drawnBendsFrom(umbrellaId);
-
-      return Object.keys(bends).length;
-    };
-
-    await expect.poll(countOf).toBe(count);
-
-    return this.drawnBendsFrom(umbrellaId);
-  }
-
-  /** The routed lines out of `umbrellaId` have the targets, bend counts and bends of `bends`, each bend within `BEND_TOLERANCE` of the umbrella box. */
-  public async expectRoutedBendsFrom(umbrellaId: string, bends: RouteBends): Promise<void> {
-    const shiftOf = async (): Promise<number> => {
-      const now = await this.drawnBendsFrom(umbrellaId);
-
-      return bendShiftOf(bends, now);
-    };
-
-    await expect.poll(shiftOf).toBeLessThanOrEqual(BEND_TOLERANCE);
-  }
-
-  /**
    * `count` lines out of `umbrellaId` are drawn straight: unrouted, one segment each. Read from the line state, not page
    * points, so it holds whatever the camera and however late Cytoscape recomputes the drawn ends.
    */
@@ -77,6 +47,14 @@ export class GraphAtomLinks {
     };
 
     await expect.poll(straightCountOf).toBe(count);
+  }
+
+  /**
+   * `count` drawn lines out of `umbrellaId` start on its box, `START_SLACK_PX` past it at most, so none still starts at
+   * the bottom of a box opened around it before.
+   */
+  public async expectStartingOn(umbrellaId: string, count: number): Promise<void> {
+    await expect.poll(async (): Promise<number> => this.startsOnOf(umbrellaId)).toBe(count);
   }
 
   /** The model centre of node `id`, rounded to hundredths. */
@@ -99,12 +77,6 @@ export class GraphAtomLinks {
     await expect.poll(async (): Promise<number> => this.throughFilesOf(fileIds)).toBe(count);
   }
 
-  private async drawnBendsFrom(umbrellaId: string): Promise<RouteBends> {
-    const read = await readRoute(this.page);
-
-    return routeBendsOf(read, umbrellaId);
-  }
-
   private async throughFilesOf(fileIds: string[]): Promise<number> {
     const lines = await readEdgeLines(this.page);
     const nodes = await this.probe.nodes();
@@ -113,5 +85,16 @@ export class GraphAtomLinks {
     const files = nodes.filter(isFile);
 
     return throughNodeCountOf(lines, files, zoom, THROUGH_INSET_PX);
+  }
+
+  private async startsOnOf(umbrellaId: string): Promise<number> {
+    const lines = await readEdgeLines(this.page);
+    const nodes = await this.probe.nodes();
+    const zoom = await this.probe.zoom();
+    const umbrella = nodes.find((node: ProbeNode): boolean => node.id === umbrellaId);
+
+    if (umbrella === undefined) return 0;
+
+    return startsOnNodeCountOf(lines, umbrella, zoom, START_SLACK_PX);
   }
 }

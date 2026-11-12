@@ -23,7 +23,6 @@ export const taskCanvasMock = (): Mocked<TaskCanvas> => {
     show: vi.fn<TaskCanvas['show']>(),
     clear: vi.fn<TaskCanvas['clear']>(),
     setPositions: vi.fn<TaskCanvas['setPositions']>(),
-    setRoutes: vi.fn<TaskCanvas['setRoutes']>(),
     positions: vi.fn<TaskCanvas['positions']>(none),
     paint: vi.fn<TaskCanvas['paint']>(),
     runStates: vi.fn<TaskCanvas['runStates']>(),
@@ -41,7 +40,7 @@ export const atomCanvasMock = (): Mocked<AtomCanvas> => {
     expand: vi.fn<AtomCanvas['expand']>(() => true),
     collapse: vi.fn<AtomCanvas['collapse']>(),
     setPositions: vi.fn<AtomCanvas['setPositions']>(),
-    setSegments: vi.fn<AtomCanvas['setSegments']>(),
+    setLinkEnds: vi.fn<AtomCanvas['setLinkEnds']>(),
     setOutcomes: vi.fn<AtomCanvas['setOutcomes']>(),
     setGrabbable: vi.fn<AtomCanvas['setGrabbable']>(),
     isAtomNode: vi.fn<AtomCanvas['isAtomNode']>(() => true)

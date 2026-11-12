@@ -18,7 +18,6 @@ const TASKS: GraphTask[] = [taskOf('api#build', []), taskOf('web#build', ['api#b
 const DRAWING: TaskDrawing = {
   tasks: TASKS,
   positions: {},
-  routes: {},
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),

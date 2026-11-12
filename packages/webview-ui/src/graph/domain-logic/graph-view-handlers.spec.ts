@@ -27,7 +27,7 @@ describe('FEATURE: viewHandlersOf', () => {
     let keepClearTask: Mock<() => void>;
     let toggle: Mock<(folder: string) => void>;
     let dragged: Mock<(drag: GraphDrag) => void>;
-    let taskDragged: Mock<(touched: string[]) => void>;
+    let taskDragged: Mock<() => void>;
     let saveCamera: Mock<() => void>;
     let selectTask: Mock<(id: string) => void>;
     let clearTask: Mock<() => void>;
@@ -47,7 +47,7 @@ describe('FEATURE: viewHandlersOf', () => {
       keepClearTask = vi.fn<() => void>();
       toggle = vi.fn<(folder: string) => void>();
       dragged = vi.fn<(drag: GraphDrag) => void>();
-      taskDragged = vi.fn<(touched: string[]) => void>();
+      taskDragged = vi.fn<() => void>();
       saveCamera = vi.fn<() => void>();
       selectTask = vi.fn<(id: string) => void>();
       clearTask = vi.fn<() => void>();
@@ -223,10 +223,10 @@ describe('FEATURE: viewHandlersOf', () => {
         expect(toggleAtoms).toHaveBeenCalledExactlyOnceWith('web#e2e-ci--tests/b fails.spec.ts');
       });
 
-      it('WHEN a drag ends THEN task mode keeps it with the touched edges and the layouts hear nothing', () => {
+      it('WHEN a drag ends THEN task mode keeps it and the layouts hear nothing', () => {
         handlers.onDragEnd(DRAG);
 
-        expect(taskDragged).toHaveBeenCalledExactlyOnceWith(['web>ui']);
+        expect(taskDragged).toHaveBeenCalledExactlyOnceWith();
         expect(dragged).not.toHaveBeenCalled();
       });
 

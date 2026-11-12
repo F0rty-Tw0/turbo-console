@@ -8,7 +8,7 @@ import { FOLDER_PADDING_PX } from '../../src/graph/common/graph.const.ts';
 import { overlaps } from '../test/utils/element-rect.spec.util.ts';
 import { nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
-import { readBoxTitles, titleCrossingsOf } from '../test/utils/graph-title-crossings.spec.util.ts';
+import { readBoxTitles, titleCrossingsOf, unreadableTitlesOf } from '../test/utils/graph-title-crossings.spec.util.ts';
 
 /** How far, in model pixels, a framed box may be drawn from its ELK frame and its title from the placeholder (spec AC 2). */
 const FRAME_TOLERANCE_PX = 4;
@@ -16,10 +16,10 @@ const FRAME_TOLERANCE_PX = 4;
 /** How far, in model pixels, one framed box may be drawn from its ELK frame: below a 2 px run outline's shift. */
 const ON_FRAME_PX = 1;
 
-/** The package box titles the probe lists, and the ones a drawn line crosses: how many, and their box ids. */
+/** The package box titles the probe lists, and the ones a drawn line crossing them hides: how many, and their box ids. */
 type TitleCrossings = {
   readonly titles: number;
-  readonly crossed: number;
+  readonly unreadable: number;
   readonly ids: string[];
 };
 
@@ -73,11 +73,12 @@ export class GraphBoxTitles {
   }
 
   /**
-   * The probe lists `titles` package box titles and no drawn line meets the label box of any; a failure lists how many
-   * titles are crossed and their ids. The count keeps an empty list (no probe, renamed box class) from passing.
+   * The probe lists `titles` package box titles and each stays readable: a drawn line meeting its label box runs under
+   * it, behind its opaque backdrop. A failure lists how many titles a line is drawn over and their ids. The count keeps
+   * an empty list (no probe, renamed box class) from passing.
    */
-  public async expectNoTitleCrossed(titles: number): Promise<void> {
-    const none: TitleCrossings = { titles, crossed: 0, ids: [] };
+  public async expectTitlesReadable(titles: number): Promise<void> {
+    const none: TitleCrossings = { titles, unreadable: 0, ids: [] };
 
     await expect.poll(async (): Promise<TitleCrossings> => this.crossings()).toStrictEqual(none);
   }
@@ -182,8 +183,8 @@ export class GraphBoxTitles {
 
   private async crossings(): Promise<TitleCrossings> {
     const titles = await readBoxTitles(this.page);
-    const ids = titleCrossingsOf(titles, await readEdgeLines(this.page));
-    const crossings: TitleCrossings = { titles: titles.length, crossed: ids.length, ids };
+    const ids = unreadableTitlesOf(titles, await readEdgeLines(this.page));
+    const crossings: TitleCrossings = { titles: titles.length, unreadable: ids.length, ids };
 
     return crossings;
   }

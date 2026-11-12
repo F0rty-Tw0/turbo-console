@@ -12,7 +12,7 @@ import type { RunOutline } from '../common/graph.type.ts';
 import { readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 import { withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
-import { readBoxTitles, titleCrossingsOf } from '../test/utils/graph-title-crossings.spec.util.ts';
+import { readBoxTitles, unreadableTitlesOf } from '../test/utils/graph-title-crossings.spec.util.ts';
 import { expectTitlesFit } from '../test/utils/graph-title-measure.spec.util.ts';
 
 const BOX_PREFIX = 'pkg:';
@@ -117,14 +117,14 @@ export class GraphTaskProbe {
   }
 
   /**
-   * The `pkg:` boxes are titled `names`, no drawn line meets any title's label, and each label lies inside its box
-   * (spec §7: the label sits inside the frame).
+   * The `pkg:` boxes are titled `names`, each title draws over any drawn line meeting its label, on its opaque backdrop,
+   * and each label lies inside its box (spec §7: the label sits inside the frame).
    */
   public async expectBoxTitlesDrawn(names: string[]): Promise<void> {
     const sorted = sortedNames(names);
 
     await expect.poll(async (): Promise<string[]> => this.boxTitles()).toEqual(sorted);
-    await expect.poll(async (): Promise<string[]> => this.crossedTitleIds()).toEqual([]);
+    await expect.poll(async (): Promise<string[]> => this.unreadableTitleIds()).toEqual([]);
     await expect.poll(async (): Promise<string[]> => this.outsideTitleIds()).toEqual([]);
   }
 
@@ -177,11 +177,11 @@ export class GraphTaskProbe {
     return titles.sort();
   }
 
-  private async crossedTitleIds(): Promise<string[]> {
+  private async unreadableTitleIds(): Promise<string[]> {
     const titles = await readBoxTitles(this.page);
     const lines = await readEdgeLines(this.page);
 
-    return titleCrossingsOf(titles, lines);
+    return unreadableTitlesOf(titles, lines);
   }
 
   private async outsideTitleIds(): Promise<string[]> {

@@ -2,11 +2,10 @@ import type { AtomDrawSpec } from './atom-layout.type.ts';
 import type { TaskNaming } from './graph-task.type.ts';
 import type { BoxFrames } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
-import type { RouteSegments } from './route-segments.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
 import type { GraphAffectedMark } from '../../bridge/common/graph-affected.type.ts';
 import type { GraphAtomOutcome, GraphPrediction } from '../../bridge/common/graph-message.type.ts';
-import type { GraphTask, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
 
 /** The cache prediction word of each predicted task, by task id; a task not named has none. */
 export type TaskPredictions = Readonly<Record<string, GraphPrediction>>;
@@ -15,14 +14,12 @@ export type TaskPredictions = Readonly<Record<string, GraphPrediction>>;
 export type TaskAffectedMarks = Readonly<Record<string, GraphAffectedMark>>;
 
 /**
- * What task mode draws: the shown tasks, their centres, the route of each link that has one, the frame of each titled-row
- * box, the node sizer for their names, the size of each umbrella that has one of its own, the label of each umbrella that has a counts line, and the
+ * What task mode draws: the shown tasks, their centres, the frame of each titled-row box, the node sizer for their names, the size of each umbrella that has one of its own, the label of each umbrella that has a counts line, and the
  * title text width of each package.
  */
 export type TaskDrawing = {
   readonly tasks: GraphTask[];
   readonly positions: Positions;
-  readonly routes: Routes;
   /** The ELK frame of each titled-row box, by box id; a box with none draws as any package box. */
   readonly boxFrames: BoxFrames;
   readonly sizeOf: (name: string) => NodeSize;
@@ -41,7 +38,8 @@ export type TaskDrawing = {
 
 /**
  * The task graph on the one Cytoscape core: package compounds `pkg:<name>` holding turbo `task` nodes and, when a script
- * is drawn, a Scripts compound `scripts:<name>` holding the script `task` nodes; links task to dependency.
+ * is drawn, a Scripts compound `scripts:<name>` holding the script `task` nodes; links task to dependency, each one straight
+ * line whatever bends ELK routed it on.
  */
 export type TaskCanvas = {
   /** Removes every element, package graph included, then draws the tasks. */
@@ -49,8 +47,6 @@ export type TaskCanvas = {
   readonly clear: () => void;
   /** Moves the task nodes only; a compound follows its tasks. */
   readonly setPositions: (positions: Positions) => void;
-  /** Draws each link in `routes` on its route and every other link straight; call it after the positions are set. */
-  readonly setRoutes: (routes: Routes) => void;
   /** The task nodes' centres. */
   readonly positions: () => Positions;
   /** Paints `target` selected and its closure highlighted, the rest dimmed; `null` paints every task normal. */
@@ -94,8 +90,11 @@ export type AtomCanvas = {
   readonly collapse: (umbrellaId: string, pkgBoxId: string) => void;
   /** Moves each drawn node in `positions` to its centre; an id not drawn is skipped. */
   readonly setPositions: (positions: Positions) => void;
-  /** Draws each drawn link in `segments`, by edge id, on its segments as a routed link, or straight for `null`; an id not drawn is skipped. */
-  readonly setSegments: (segments: ReadonlyMap<string, RouteSegments | null>) => void;
+  /**
+   * Starts each drawn link in `ends`, by edge id, at its source end offset (`0px 100px`, from its source's centre), or at
+   * its source's border for `null`; an id not drawn is skipped.
+   */
+  readonly setLinkEnds: (ends: ReadonlyMap<string, string | null>) => void;
   /** Gives each drawn file in `outcomes` the class of its outcome in place of the one it had. */
   readonly setOutcomes: (outcomes: Record<string, GraphAtomOutcome>) => void;
   /** Whether the canvas lets the user drag nodes: it does not while any group is expanded. */

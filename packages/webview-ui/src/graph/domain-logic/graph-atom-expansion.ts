@@ -4,7 +4,7 @@ import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomGroupsDeps, AtomPlacement } from '../common/graph-atom.type.ts';
 import { atomPositionsOf } from '../utils/atom-positions.util.ts';
 import { atomSpecOf, outcomesOf } from '../utils/atom-spec.util.ts';
-import { umbrellaLinkSegmentsOf } from '../utils/umbrella-links.util.ts';
+import { umbrellaLinkEndsOf } from '../utils/umbrella-links.util.ts';
 
 type Outcomes = Record<string, GraphAtomOutcome>;
 
@@ -21,7 +21,7 @@ const keyOfMaybe = (spec: AtomDrawSpec | undefined): string | null => {
 /**
  * The umbrellas open on the canvas and the groups drawn for them. `apply` makes the canvas match: a group that closed,
  * left the layout or got other drawn files or another hidden count is collapsed, one newly open is drawn (or closed
- * again if the canvas refuses it), and every position is set from the base, with the links out of the umbrellas drawn
+ * again if the canvas refuses it), and every position is set from the base, with the links out of the umbrellas started
  * again for where their boxes now are.
  */
 export class GraphAtomExpansion {
@@ -79,10 +79,10 @@ export class GraphAtomExpansion {
 
     if (hasDrawn || collapsed) {
       const atoms = atomPositionsOf(placement.base, specList, this.open);
-      const segments = umbrellaLinkSegmentsOf(placement, atoms);
+      const ends = umbrellaLinkEndsOf(placement, atoms);
 
       this.view.atoms.setPositions(atoms.positions);
-      this.view.atoms.setSegments(segments);
+      this.view.atoms.setLinkEnds(ends);
     }
 
     if (hasDrawn) this.view.tasks.remark();

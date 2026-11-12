@@ -25,19 +25,11 @@ const DRAGGED_AT: Positions = { ...POSITIONS, 'ui#build': UI_DRAGGED_AT };
 
 const APP_LIB = 'app#build>lib#build';
 
-const LIB_UI = 'lib#build>ui#build';
-
 const APP_LIB_BENDS: Position[] = [{ x: 20, y: 50 }];
-
-const LIB_UI_BENDS: Position[] = [{ x: 20, y: 150 }];
 
 const APP_LIB_ROUTE: EdgeRoute = { start: APP_AT, bends: APP_LIB_BENDS, end: LIB_AT };
 
-const LIB_UI_ROUTE: EdgeRoute = { start: LIB_AT, bends: LIB_UI_BENDS, end: UI_AT };
-
-const ROUTES: Routes = { [APP_LIB]: APP_LIB_ROUTE, [LIB_UI]: LIB_UI_ROUTE };
-
-const APP_LIB_ONLY: Routes = { [APP_LIB]: APP_LIB_ROUTE };
+const ROUTES: Routes = { [APP_LIB]: APP_LIB_ROUTE };
 
 const requestOf = (key: string): TaskLayoutRequest => {
   const request: TaskLayoutRequest = {
@@ -51,6 +43,7 @@ const requestOf = (key: string): TaskLayoutRequest => {
   return request;
 };
 
+/** The runner's result for `key`: ELK still routes its links, which task mode never draws. */
 const routedOf = (key: string): LayoutResult => {
   const plain = resultOf(key, POSITIONS);
   const routed: LayoutResult = { ...plain, routes: ROUTES };
@@ -58,7 +51,7 @@ const routedOf = (key: string): LayoutResult => {
   return routed;
 };
 
-describe('FEATURE: GraphTaskLayout routes', () => {
+describe('FEATURE: GraphTaskLayout draws its links straight', () => {
   let rig: TaskModeRig;
   let layout: GraphTaskLayout;
 
@@ -84,49 +77,31 @@ describe('FEATURE: GraphTaskLayout routes', () => {
     rig.view.tasks.positions.mockReturnValue(DRAGGED_AT);
   });
 
-  describe('GIVEN a task layout with routes', () => {
-    it('WHEN placed THEN show gets those routes', async () => {
+  describe('GIVEN a task layout whose run came back with routes', () => {
+    it('WHEN placed THEN show gets no routes', async () => {
       await landRouted('k0');
 
-      expect(rig.view.tasks.show).toHaveBeenCalledWith(expect.objectContaining({ routes: ROUTES }));
+      expect(rig.view.tasks.show.mock.lastCall?.[0]).not.toHaveProperty('routes');
     });
   });
 
-  describe('GIVEN routes app>lib and lib>ui on screen', () => {
+  describe('GIVEN the layout on screen', () => {
     beforeEach(async () => {
       await landRouted('k0');
     });
 
-    it('WHEN dragged with touched [lib>ui] THEN setRoutes gets app>lib only', () => {
-      layout.dragged([LIB_UI]);
-
-      expect(rig.view.tasks.setRoutes).toHaveBeenCalledExactlyOnceWith(APP_LIB_ONLY);
-    });
-
-    it('WHEN dragged and the same layout key is placed again from memory THEN lib>ui stays straight', async () => {
-      layout.dragged([LIB_UI]);
+    it('WHEN dragged and the same layout key is placed again from memory THEN show gets the dragged centres', async () => {
+      layout.dragged();
       rig.view.tasks.show.mockClear();
 
       await layout.show(requestOf('k0'));
 
       expect(rig.runs.count()).toBe(1);
-      expect(rig.view.tasks.show).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ routes: APP_LIB_ONLY }));
-    });
-
-    it('WHEN dragged and Re-layout lands THEN show gets every route', async () => {
-      layout.dragged([LIB_UI]);
-      rig.view.tasks.show.mockClear();
-
-      const relaid = layout.relayout();
-
-      await rig.runs.settle(1, routedOf('k0'));
-      await relaid;
-
-      expect(rig.view.tasks.show).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ routes: ROUTES }));
+      expect(rig.view.tasks.show).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ positions: DRAGGED_AT }));
     });
 
     it('WHEN dragged THEN nothing is posted', () => {
-      layout.dragged([LIB_UI]);
+      layout.dragged();
 
       const positionPosts = rig.posts().filter((message): boolean => message.type === 'positions');
 

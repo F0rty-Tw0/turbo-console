@@ -4,7 +4,6 @@ import type { Page } from '@playwright/test';
 import { isInside, pointBoxOf } from './element-rect.spec.util.ts';
 import { emptySpotOf, lineSegmentsOf, nodeBoxOf } from './graph-geometry.spec.util.ts';
 import type { ProbeEdgeLine, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
-import type { RouteRead } from '../../common/graph-route.type.ts';
 import type { ElementRect, LinkEnds, ViewportPoint } from '../../common/playwright.type.ts';
 
 /** Where Liang-Barsky has clipped a segment so far: the share of it inside the box runs from `enter` to `leave`. */
@@ -25,18 +24,6 @@ const WHOLE_SEGMENT: Clip = { enter: 0, leave: 1, isOutside: false };
 /** The drawn lines the probe reports, in page pixels; runs in the page through `evaluate`. */
 export const readEdgeLines = async (page: Page): Promise<ProbeEdgeLine[]> =>
   page.evaluate((): ProbeEdgeLine[] => window.__tcGraphProbe?.edgeLines() ?? []);
-
-/** The drawn lines, nodes and zoom in one page task, so the camera cannot move between them. */
-export const readRoute = async (page: Page): Promise<RouteRead> => {
-  const readInPage = (): RouteRead => {
-    const probe = window.__tcGraphProbe;
-    const read: RouteRead = { lines: probe?.edgeLines() ?? [], nodes: probe?.nodes() ?? [], zoom: probe?.zoom() ?? 0 };
-
-    return read;
-  };
-
-  return page.evaluate(readInPage);
-};
 
 /** The first empty corner or side of the container, off every node and every line the page draws now. */
 export const emptySpotOn = async (page: Page, container: ElementRect, nodes: ProbeNode[], zoom: number): Promise<ViewportPoint> => {
@@ -143,6 +130,19 @@ export const throughNodeCountOf = (lines: ProbeEdgeLine[], nodes: ProbeNode[], z
   const pairsOf = (line: ProbeEdgeLine): ProbeNode[] => drawnNodes.filter((node): boolean => passesThrough(line, node, zoom, insetPx));
 
   return lines.flatMap(pairsOf).length;
+};
+
+/** How many drawn lines out of `node` start on its box at `zoom`, grown by `slackPx` on every side. */
+export const startsOnNodeCountOf = (lines: ProbeEdgeLine[], node: ProbeNode, zoom: number, slackPx: number): number => {
+  const box = shrunkBy(nodeBoxOf(node, zoom), -slackPx);
+  const startsOnBox = (line: ProbeEdgeLine): boolean => {
+    const [start] = line.points;
+    const isOut = line.source === node.id && line.isDrawn;
+
+    return isOut && start !== undefined && isInside(pointBoxOf(start), box);
+  };
+
+  return lines.filter(startsOnBox).length;
 };
 
 /** How many drawn lines have their midpoint under the box of a drawn node. */

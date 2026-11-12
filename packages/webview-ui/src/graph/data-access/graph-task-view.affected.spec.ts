@@ -28,7 +28,6 @@ const POSITIONS: Positions = { 'app#build': APP_AT, 'lib#build': LIB_AT, 'ui#bui
 const DRAWING: TaskDrawing = {
   tasks: TASKS,
   positions: POSITIONS,
-  routes: {},
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),
