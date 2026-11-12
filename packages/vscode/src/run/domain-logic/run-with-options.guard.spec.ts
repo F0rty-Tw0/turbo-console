@@ -1,0 +1,217 @@
+import type { PackageNode, TaskNode } from '@turbo-console/core';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { runTask } from './run-flow.ts';
+import { RunStore } from './run-store.ts';
+import { runWithOptions } from './run-with-options.ts';
+import { RootStore } from '../../roots/domain-logic/root-store.ts';
+import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { ROOT_FOLDER_STUB } from '../../tree/test/stubs/root-state.stub.ts';
+import { TASK_TREE_NODE_STUB, TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
+import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
+import type { OptionItem, RunOption } from '../common/run-options.type.ts';
+import { ALREADY_RUNNING_TEXT } from '../common/run.const.ts';
+import type { Terminable } from '../common/run.type.ts';
+import type { RunOptionsFakes } from '../test/common/run-options-fakes.type.ts';
+import { ONLY_EXTRAS, PLAIN_REQUEST } from '../test/common/run-options.const.ts';
+import { fakeRunPorts } from '../test/utils/fake-run-ports.spec.util.ts';
+import { loadedAt, runOptionsFakes } from '../test/utils/run-options-fakes.spec.util.ts';
+
+const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+
+const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [SCRIPT_TASK] };
+
+const UMBRELLA_TASK: TaskNode = { ...TASK_NODE_STUB, kind: 'atom-umbrella' };
+
+const UMBRELLA_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [UMBRELLA_TASK] };
+
+const EMPTY_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [] };
+
+describe('FEATURE: Run with Options on a turbo task stops or redirects', () => {
+  let roots: RootStore;
+  let fakes: RunOptionsFakes;
+
+  const invokeOn = async (arg: unknown): Promise<void> => runWithOptions(roots, fakes.ports, arg);
+  const invoke = async (): Promise<void> => invokeOn(TASK_TREE_NODE_STUB);
+
+  beforeEach(() => {
+    roots = new RootStore();
+    fakes = runOptionsFakes();
+    roots.set([ROOT_FOLDER_STUB], coordinatorMock);
+    roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
+  });
+
+  describe('GIVEN a box or the picker is closed', () => {
+    it('WHEN the picker is closed THEN no box opens, nothing runs and no notice shows', async () => {
+      fakes.choose(undefined);
+
+      await invoke();
+
+      expect(fakes.input).not.toHaveBeenCalled();
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the concurrency box is closed THEN the arguments box is not asked and nothing runs', async () => {
+      fakes.choose(['concurrency', 'passThrough']);
+      fakes.answer(undefined);
+
+      await invoke();
+
+      expect(fakes.input).toHaveBeenCalledOnce();
+      expect(fakes.run).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the arguments box is closed after a valid concurrency THEN nothing runs and no notice shows', async () => {
+      fakes.choose(['concurrency', 'passThrough']);
+      fakes.answer('4', undefined);
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN the root changes while the picker is open', () => {
+    const changeDuring = (change: () => void, picked: RunOption[] = []): void => {
+      const pickAfterChange = async (items: OptionItem[]): Promise<OptionItem[]> => {
+        change();
+
+        const chosen = items.filter((item) => picked.includes(item.option));
+
+        return Promise.resolve(chosen);
+      };
+
+      fakes.pickMany.mockImplementationOnce(pickAfterChange);
+    };
+
+    it('WHEN the root is removed THEN nothing runs and no notice shows', async () => {
+      changeDuring(() => {
+        roots.set([], coordinatorMock);
+      });
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the task is gone from the model THEN nothing runs and no notice shows', async () => {
+      changeDuring(() => {
+        roots.apply('/ws', loadedWith([EMPTY_PACKAGE]));
+      });
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the task turns into a script THEN nothing runs and no notice shows', async () => {
+      changeDuring(() => {
+        roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
+      });
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the task turns into an Atomizer umbrella THEN nothing runs and no notice shows', async () => {
+      changeDuring(() => {
+        roots.apply('/ws', loadedWith([UMBRELLA_PACKAGE]));
+      });
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a second state lands with another binary THEN run gets that binary', async () => {
+      changeDuring(() => {
+        roots.apply('/ws', loadedAt([PACKAGE_NODE_STUB], '/other/turbo'));
+      });
+
+      await invoke();
+
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, binaryPath: '/other/turbo' });
+    });
+
+    it('WHEN Only is picked and a second state lands with another binary THEN run gets that binary with the extras', async () => {
+      changeDuring(() => {
+        roots.apply('/ws', loadedAt([PACKAGE_NODE_STUB], '/other/turbo'));
+      }, ['only']);
+
+      await invoke();
+
+      expect(fakes.launched()).toStrictEqual({ ...PLAIN_REQUEST, binaryPath: '/other/turbo', extras: ONLY_EXTRAS });
+    });
+
+    it('WHEN Only is picked and the root is removed THEN nothing runs and no notice shows', async () => {
+      changeDuring(() => {
+        roots.set([], coordinatorMock);
+      }, ['only']);
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN there is nothing to run', () => {
+    it('WHEN the root has no binary and its load settles THEN no picker, no box and no run', async () => {
+      const loaded = loadedWith([PACKAGE_NODE_STUB]);
+
+      roots.apply('/ws', { ...loaded, binary: null });
+      vi.mocked(roots.get('/ws')?.coordinator.whenSettled ?? vi.fn()).mockResolvedValue(undefined);
+
+      await invoke();
+
+      expect(fakes.pickMany).not.toHaveBeenCalled();
+      expect(fakes.input).not.toHaveBeenCalled();
+      expect(fakes.run).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it is invoked from the palette THEN nothing happens', async () => {
+      await invokeOn(undefined);
+
+      expect(fakes.pickMany).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it is invoked on a package row THEN nothing happens', async () => {
+      await invokeOn(TREE_NODE_STUB);
+
+      expect(fakes.pickMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN VS Code already runs the task', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('WHEN the picks are accepted THEN the run flow shows the already-running notice and does not execute', async () => {
+      const execution: Terminable = { terminate: vi.fn() };
+      const isActive = vi.fn().mockReturnValue(true);
+      const runPorts = fakeRunPorts(execution, { isActive });
+      const store = new RunStore();
+
+      fakes.run.mockImplementation(async (request) => runTask(store, runPorts, request));
+      fakes.choose([]);
+
+      await invoke();
+
+      expect(runPorts.info).toHaveBeenCalledExactlyOnceWith(ALREADY_RUNNING_TEXT);
+      expect(runPorts.execute).not.toHaveBeenCalled();
+    });
+  });
+});
