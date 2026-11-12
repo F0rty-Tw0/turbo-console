@@ -167,6 +167,11 @@
         "icon": "$(terminal)"
       },
       {
+        "command": "turboConsole.runTaskWithOptions",
+        "title": "Run with Options…",
+        "category": "Turbo Console"
+      },
+      {
         "command": "turboConsole.stopTask",
         "title": "Stop Task",
         "category": "Turbo Console",
@@ -351,6 +356,11 @@
           "group": "1_run@2"
         },
         {
+          "command": "turboConsole.runTaskWithOptions",
+          "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)(?!\\.running)/",
+          "group": "1_run@3"
+        },
+        {
           "command": "turboConsole.stopTask",
           "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)\\.running/",
           "group": "1_run@0"
@@ -487,6 +497,10 @@
         },
         {
           "command": "turboConsole.runTaskWithoutTurbo",
+          "when": "false"
+        },
+        {
+          "command": "turboConsole.runTaskWithOptions",
           "when": "false"
         },
         {

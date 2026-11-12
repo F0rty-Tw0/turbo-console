@@ -37,6 +37,7 @@ const STOP = ['turboConsole.stopTask inline@0', 'turboConsole.stopTask 1_run@0']
 const FORCE = ['turboConsole.runTaskWithoutCache 1_run@1'];
 const FORCE_INLINE = ['turboConsole.runTaskWithoutCache inline@3'];
 const DIRECT = ['turboConsole.runTaskWithoutTurbo 1_run@2'];
+const OPTIONS = ['turboConsole.runTaskWithOptions 1_run@3'];
 const COPY = ['turboConsole.copyCommand inline@1', 'turboConsole.copyCommand 3_copy'];
 const OPEN_JSON = ['turboConsole.openPackageJson inline@2', 'turboConsole.openPackageJson 2_open@1'];
 const OPEN_SPEC = ['turboConsole.openSpec inline@4'];
@@ -72,17 +73,17 @@ const paletteScriptsOf = (keys: ContextKeys): string[] => {
 
 describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
   it.each([
-    ['turboTask', [...RUN, ...FORCE, ...DIRECT, ...COPY, ...OPEN_JSON]],
-    ['turboTask.cached', [...RUN, ...FORCE, ...FORCE_INLINE, ...DIRECT, ...COPY, ...OPEN_JSON]],
+    ['turboTask', [...RUN, ...FORCE, ...DIRECT, ...OPTIONS, ...COPY, ...OPEN_JSON]],
+    ['turboTask.cached', [...RUN, ...FORCE, ...FORCE_INLINE, ...DIRECT, ...OPTIONS, ...COPY, ...OPEN_JSON]],
     ['turboTask.running', [...STOP, ...COPY, ...OPEN_JSON]],
-    ['turboScript', [...RUN, ...COPY, ...OPEN_JSON]],
+    ['turboScript', [...RUN, ...OPTIONS, ...COPY, ...OPEN_JSON]],
     ['turboScript.running', [...STOP, ...COPY, ...OPEN_JSON]],
-    ['turboScript.x', [...RUN, ...COPY, ...OPEN_JSON]],
+    ['turboScript.x', [...RUN, ...OPTIONS, ...COPY, ...OPEN_JSON]],
     ['turboTask.running.x', [...STOP, ...COPY, ...OPEN_JSON]],
-    ['turboTask.atomFile', [...RUN, ...FORCE, ...COPY, ...OPEN_JSON, ...OPEN_SPEC]],
-    ['turboTask.cached.atomFile', [...RUN, ...FORCE, ...FORCE_INLINE, ...COPY, ...OPEN_JSON, ...OPEN_SPEC]],
+    ['turboTask.atomFile', [...RUN, ...FORCE, ...OPTIONS, ...COPY, ...OPEN_JSON, ...OPEN_SPEC]],
+    ['turboTask.cached.atomFile', [...RUN, ...FORCE, ...FORCE_INLINE, ...OPTIONS, ...COPY, ...OPEN_JSON, ...OPEN_SPEC]],
     ['turboTask.running.atomFile', [...STOP, ...COPY, ...OPEN_JSON, ...OPEN_SPEC]],
-    ['turboTask.cached.x', [...RUN, ...FORCE, ...FORCE_INLINE, ...COPY, ...OPEN_JSON]],
+    ['turboTask.cached.x', [...RUN, ...FORCE, ...FORCE_INLINE, ...OPTIONS, ...COPY, ...OPEN_JSON]],
     ['xturboTask', []],
     ['xturboScript', []],
     ['turboGroup', []],
@@ -249,6 +250,7 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     'turboConsole.runTask',
     'turboConsole.runTaskWithoutCache',
     'turboConsole.runTaskWithoutTurbo',
+    'turboConsole.runTaskWithOptions',
     'turboConsole.stopTask',
     'turboConsole.copyCommand',
     'turboConsole.openSpec',
