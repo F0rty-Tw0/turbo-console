@@ -1,4 +1,4 @@
-import type { ProbeRect, ProbeTitle } from './graph-probe-titles.type.ts';
+import type { ProbeExport, ProbeRect, ProbeTitle } from './graph-probe-titles.type.ts';
 import type { Inspection } from './inspection.type.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 
@@ -105,6 +105,7 @@ export type ProbeFolderLink = {
 export type LayoutEngine = 'elk' | 'cache' | 'fallback';
 
 /** What the e2e tests read from the page; exposed only when `window.__tcGraphProbeWanted === true` before `main.js` runs. */
+// eslint-disable-next-line local/no-inline-object-types -- `ProbeExport` joins the literal here because this file is at its line cap
 export type GraphProbe = {
   readonly nodes: () => ProbeNode[];
   readonly edges: () => ProbeEdge[];
@@ -166,7 +167,7 @@ export type GraphProbe = {
   readonly pickingBuiltMs: () => number | null;
   /** From a `trace` inspection being set, before its path is walked, to its view shown; `null` until one is. */
   readonly traceMs: () => number | null;
-};
+} & ProbeExport;
 
 /** The probe facts only the page controller knows. */
 export type ProbeFacts = Pick<
