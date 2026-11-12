@@ -45,6 +45,7 @@ const webviewHostImports: FlatConfig.Config = {
               'TASK_CAP',
               'TASK_COUNT_MAX',
               'TOOL_ICON_PREFIX',
+              'atomCountsText',
               'durationText',
               'edgeIdOf',
               'elapsedText',

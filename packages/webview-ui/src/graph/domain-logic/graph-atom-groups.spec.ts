@@ -9,11 +9,11 @@ const UMBRELLA = 'app#e2e-ci';
 
 const SHOWN_UMBRELLA = new Set([UMBRELLA]);
 
-const COUNTED_E2E_CI = statesOf('app#e2e-ci', '10 files · 3 cached');
+const COUNTED_E2E_CI = statesOf('app#e2e-ci', { files: 10, cached: 3, failed: null });
 
-const UNKNOWN_GONE = statesOf('gone#e2e-ci', '5 files');
+const UNKNOWN_GONE = statesOf('gone#e2e-ci', { files: 5, cached: null, failed: null });
 
-const COUNTED_LIB_CI = statesOf('lib#e2e-ci', '2 files · 1 failed');
+const COUNTED_LIB_CI = statesOf('lib#e2e-ci', { files: 2, cached: null, failed: 1 });
 
 const SHOWN_E2E_CI = { type: 'shownUmbrellas', ids: ['app#e2e-ci'] };
 
@@ -40,7 +40,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
 
       const labels = groups.labels();
 
-      expect([...labels]).toStrictEqual([['app#e2e-ci', '10 files']]);
+      expect([...labels]).toStrictEqual([['app#e2e-ci', { files: 10, cached: null, failed: null }]]);
     });
   });
 
@@ -62,8 +62,8 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       const labels = groups.labels();
 
       expect([...labels]).toStrictEqual([
-        ['lib#e2e-ci', '2 files'],
-        ['app#e2e-ci', '10 files']
+        ['lib#e2e-ci', { files: 2, cached: null, failed: null }],
+        ['app#e2e-ci', { files: 10, cached: null, failed: null }]
       ]);
     });
 
@@ -75,8 +75,8 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       const labels = groups.labels();
 
       expect([...labels]).toStrictEqual([
-        ['lib#e2e-ci', '2 files'],
-        ['app#e2e-ci', '10 files · 3 cached']
+        ['lib#e2e-ci', { files: 2, cached: null, failed: null }],
+        ['app#e2e-ci', { files: 10, cached: 3, failed: null }]
       ]);
     });
 
@@ -85,14 +85,14 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       groups.received([E2E_CI]);
       groups.received([LIB_CI, E2E_CI]);
 
-      expect(groups.labels().get('lib#e2e-ci')).toBe('2 files');
+      expect(groups.labels().get('lib#e2e-ci')).toStrictEqual({ files: 2, cached: null, failed: null });
     });
 
     it('WHEN the same groups are received again THEN their counts are kept', () => {
       groups.states(COUNTED_E2E_CI);
       groups.received([LIB_CI, E2E_CI]);
 
-      expect(groups.labels().get('app#e2e-ci')).toBe('10 files · 3 cached');
+      expect(groups.labels().get('app#e2e-ci')).toStrictEqual({ files: 10, cached: 3, failed: null });
     });
 
     it('WHEN atoms arrive before any layout is placed THEN the canvas is not touched', () => {

@@ -95,9 +95,16 @@ export type GraphShowRequest = GraphShowTasksMessage | GraphShowPackageMessage;
 /** What a file of an Atomizer group last did, or `none` when nothing is known of it. */
 export type GraphAtomOutcome = 'passed' | 'failed' | 'cached' | 'none';
 
-/** The counts line of one umbrella and the outcome of each of its files, by file task id. */
+/** An umbrella's counts: `cached` is null until the dry run settled, `failed` null until the results settled. */
+export type GraphAtomCounts = {
+  readonly files: number;
+  readonly cached: number | null;
+  readonly failed: number | null;
+};
+
+/** The counts of one umbrella and the outcome of each of its files, by file task id. */
 export type GraphAtomGroupState = {
-  readonly counts: string;
+  readonly counts: GraphAtomCounts;
   readonly files: Record<string, GraphAtomOutcome>;
 };
 

@@ -1,7 +1,7 @@
 import { test } from './graph-task.fixture.ts';
 import { THEME_HC_STUB } from './test/stubs/graph-theme.stub.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeFileIds } from './test/utils/graph-target-like-tasks.spec.util.ts';
-import type { GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
 import { ATOM_BOX_PADDING_PX, ATOM_FILE_SIZE, ATOM_GRID_GAP_PX, ATOM_MORE_PREFIX } from '../src/graph/common/graph-atom.const.ts';
 
 const CAP_SPEC = { description: '2026-10-25-graph-atom-cap §5', type: 'requirement' };
@@ -45,7 +45,9 @@ const FAILED_OUTCOME = { width: 2, colour: 'rgb(244, 135, 113)' };
 
 const FAILED_FILES = { [FAILED_FILE]: 'failed' } as const;
 
-const FAILED_STATE: GraphAtomGroupState = { counts: '200 files · 1 failed', files: FAILED_FILES };
+const FAILED_COUNTS: GraphAtomCounts = { files: 200, cached: null, failed: 1 };
+
+const FAILED_STATE: GraphAtomGroupState = { counts: FAILED_COUNTS, files: FAILED_FILES };
 
 const FAILED_GROUPS = { [TARGET_LIKE_UMBRELLA]: FAILED_STATE };
 

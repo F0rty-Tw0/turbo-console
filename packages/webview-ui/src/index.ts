@@ -26,6 +26,7 @@ export type { GraphAffected, GraphAffectedMark } from './bridge/common/graph-aff
 
 export type {
   EdgeExplainResult,
+  GraphAtomCounts,
   GraphAtomGroupState,
   GraphAtomOutcome,
   GraphAtomsMessage,
@@ -90,6 +91,8 @@ export { LAYOUT_VERSION, ROUTE_BENDS_MAX } from './graph/common/graph-layout.con
 export { ROOT_TASKS_TITLE, ROOT_TASK_PACKAGE, TASK_CAP } from './graph/common/graph-task.const.ts';
 
 export { ICON_ID_PATTERN, TOOL_ICON_PREFIX } from './details/common/run-view.const.ts';
+
+export { atomCountsText } from './bridge/utils/atom-counts-text.util.ts';
 
 export { durationText, elapsedText } from './bridge/utils/duration-text.util.ts';
 

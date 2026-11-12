@@ -143,7 +143,13 @@ const ATOM_GROUPS = [{ umbrellaId: 'app#e2e-ci', files: ATOM_FILES }];
 
 const FAILED_FILES = { [ATOM_FILE.id]: 'failed' };
 
-const ATOM_STATE = { counts: '1 files', files: FAILED_FILES };
+const ONE_FILE_COUNTS = { files: 1, cached: null, failed: null };
+
+const ATOM_STATE = { counts: ONE_FILE_COUNTS, files: FAILED_FILES };
+
+const STRING_COUNTS_STATE = { counts: '10 files', files: FAILED_FILES };
+
+const STRING_COUNTS_STATES = { 'app#e2e-ci': STRING_COUNTS_STATE };
 
 const ATOM_STATES = { 'app#e2e-ci': ATOM_STATE };
 
@@ -153,7 +159,7 @@ const NO_IS_LIVE_GROUPS = [{ umbrellaId: 'u', files: NO_IS_LIVE_FILES }];
 
 const SKIPPED_FILES = { f: 'skipped' };
 
-const SKIPPED_STATE = { counts: '1 files', files: SKIPPED_FILES };
+const SKIPPED_STATE = { counts: ONE_FILE_COUNTS, files: SKIPPED_FILES };
 
 const SKIPPED_STATES = { u: SKIPPED_STATE };
 
@@ -349,6 +355,7 @@ describe('FEATURE: isGraphHostMessage', () => {
       ['a graph with a group whose file has no isLive', stateMessageOf({ ...HOST_GRAPH_STUB, atomGroups: NO_IS_LIVE_GROUPS })],
       ['an atoms message with string groups', { type: 'atoms', groups: 'x' }],
       ['an atoms message with an outcome outside the four', { type: 'atoms', groups: SKIPPED_STATES }],
+      ['an atoms message with string counts', { type: 'atoms', groups: STRING_COUNTS_STATES }],
       ['a graph with string tasks', stateMessageOf({ ...HOST_GRAPH_STUB, tasks: 'x' })],
       ['a graph with a null task', stateMessageOf({ ...HOST_GRAPH_STUB, tasks: [null] })],
       ['a graph with a numeric task id', graphWithTaskOf({ id: 1 })],

@@ -1,14 +1,23 @@
-import type { GraphAtomGroup, GraphAtomGroupState, GraphAtomOutcome, GraphAtomsMessage, GraphState } from '@turbo-console/webview-ui';
+import type {
+  GraphAtomCounts,
+  GraphAtomGroup,
+  GraphAtomGroupState,
+  GraphAtomOutcome,
+  GraphAtomsMessage,
+  GraphState
+} from '@turbo-console/webview-ui';
 
 import type { AtomLookup, AtomView } from '../../tree/common/atom-view.type.ts';
-import { umbrellaCounts } from '../../tree/utils/atom-text.util.ts';
+import { umbrellaCountsOf } from '../../tree/utils/atom-text.util.ts';
 
-const countsOf = (group: GraphAtomGroup, view: AtomView): string => {
+const countsOf = (group: GraphAtomGroup, view: AtomView): GraphAtomCounts => {
   const known = view.groups.find((candidate) => candidate.umbrella.id === group.umbrellaId);
 
-  if (known === undefined) return `${group.files.length} files`;
+  if (known !== undefined) return umbrellaCountsOf(known, view);
 
-  return umbrellaCounts(known, view);
+  const unsettled: GraphAtomCounts = { files: group.files.length, cached: null, failed: null };
+
+  return unsettled;
 };
 
 const outcomesOf = (group: GraphAtomGroup, view: AtomView): Record<string, GraphAtomOutcome> => {

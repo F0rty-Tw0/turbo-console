@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  isAtomCounts,
   isAtomGroupList,
   isAtomStateRecord,
   isGraphTaskList,
@@ -95,7 +96,13 @@ const GROUP = { umbrellaId: 'app#e2e-ci', files: [FILE] };
 
 const PASSED_FILES = { [FILE.id]: 'passed' };
 
-const STATE = { counts: '1 files', files: PASSED_FILES };
+const ONE_FILE_COUNTS = { files: 1, cached: null, failed: null };
+
+const STATE = { counts: ONE_FILE_COUNTS, files: PASSED_FILES };
+
+const EVERY_COUNT = { files: 4, cached: 2, failed: 1 };
+
+const NO_FILE_COUNTS = { files: 0, cached: null, failed: null };
 
 /** A group list of one group with `files`. */
 const groupsWithFiles = (files: unknown): unknown[] => [{ ...GROUP, files }];
@@ -112,6 +119,9 @@ const recordOf = (state: unknown): unknown => {
 
 /** An atom state record of one umbrella whose state has `change`. */
 const recordWith = (change: object): unknown => recordOf({ ...STATE, ...change });
+
+/** An atom state record of one umbrella whose state has `counts`. */
+const recordWithCounts = (counts: unknown): unknown => recordWith({ counts });
 
 const FILE_WITH_NO_IS_LIVE = { id: FILE.id, specPath: FILE.specPath };
 
@@ -202,9 +212,8 @@ describe('FEATURE: atom group list shape', () => {
 describe('FEATURE: atom state record shape', () => {
   it.each([
     ['an empty record', {}],
-    ['a group with every outcome', recordWith({ counts: '4 files', files: EVERY_OUTCOME })],
-    ['a group with no files', recordWith({ counts: '0 files', files: {} })],
-    ['counts of 200 characters', recordWith({ counts: 'c'.repeat(200) })],
+    ['a group with every outcome', recordWith({ counts: EVERY_COUNT, files: EVERY_OUTCOME })],
+    ['a group with no files', recordWith({ counts: NO_FILE_COUNTS, files: {} })],
     ['TASK_COUNT_MAX files', recordWith({ files: idsWith(TASK_COUNT_MAX, PASSED) })]
   ])('GIVEN %s WHEN checked THEN it is an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(true);
@@ -221,11 +230,55 @@ describe('FEATURE: atom state record shape', () => {
     ['an unknown outcome', recordWith({ files: SKIPPED_FILES })],
     ['a numeric outcome', recordWith({ files: NUMERIC_FILES })],
     ['one bad group after a good one', ONE_BAD_RECORD],
-    ['counts of 201 characters', recordWith({ counts: 'c'.repeat(201) })],
-    ['counts with a line break', recordWith({ counts: '1 files\n2 cached' })],
+    ['string counts', recordWithCounts('10 files')],
+    ['negative files', recordWithCounts({ files: -1, cached: null, failed: null })],
+    ['fractional cached', recordWithCounts({ files: 1, cached: 0.5, failed: null })],
+    ['failed over the cap', recordWithCounts({ files: 1, cached: null, failed: TASK_COUNT_MAX + 1 })],
+    ['counts with no failed key', recordWithCounts({ files: 1, cached: null })],
     ['TASK_COUNT_MAX + 1 files', recordWith({ files: idsWith(TASK_COUNT_MAX + 1, PASSED) })]
   ])('GIVEN %s WHEN checked THEN it is not an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(false);
+  });
+});
+
+const COUNTS = { files: 10, cached: 3, failed: 1 };
+
+const OVER = TASK_COUNT_MAX + 1;
+
+describe('FEATURE: atom counts shape', () => {
+  it.each([
+    ['all null but files', { files: 0, cached: null, failed: null }],
+    ['every number', COUNTS],
+    ['zeros', { files: 0, cached: 0, failed: 0 }],
+    ['TASK_COUNT_MAX in each', { files: TASK_COUNT_MAX, cached: TASK_COUNT_MAX, failed: TASK_COUNT_MAX }]
+  ])('GIVEN counts with %s WHEN checked THEN they are atom counts', (_label, value) => {
+    expect(isAtomCounts(value)).toBe(true);
+  });
+
+  it.each([
+    ['a string', '10 files'],
+    ['null', null],
+    ['an array', [10, 3, 1]],
+    ['no keys', {}],
+    ['no cached key', { files: 10, failed: null }],
+    ['no failed key', { files: 10, cached: null }],
+    ['null files', { ...COUNTS, files: null }],
+    ['string files', { ...COUNTS, files: '10' }],
+    ['negative files', { ...COUNTS, files: -1 }],
+    ['fractional files', { ...COUNTS, files: 1.5 }],
+    ['NaN files', { ...COUNTS, files: Number.NaN }],
+    ['Infinity files', { ...COUNTS, files: Number.POSITIVE_INFINITY }],
+    ['files over the cap', { ...COUNTS, files: OVER }],
+    ['negative cached', { ...COUNTS, cached: -1 }],
+    ['fractional cached', { ...COUNTS, cached: 2.5 }],
+    ['string cached', { ...COUNTS, cached: '3' }],
+    ['cached over the cap', { ...COUNTS, cached: OVER }],
+    ['negative failed', { ...COUNTS, failed: -1 }],
+    ['fractional failed', { ...COUNTS, failed: 0.5 }],
+    ['string failed', { ...COUNTS, failed: '1' }],
+    ['failed over the cap', { ...COUNTS, failed: OVER }]
+  ])('GIVEN counts with %s WHEN checked THEN they are not atom counts', (_label, value) => {
+    expect(isAtomCounts(value)).toBe(false);
   });
 });
 

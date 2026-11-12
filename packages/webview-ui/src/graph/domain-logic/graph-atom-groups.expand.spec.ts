@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GraphAtomGroups } from './graph-atom-groups.ts';
-import type { GraphAtomGroupState } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomGroup, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
@@ -33,7 +33,9 @@ const [FIRST_FILE = '', SECOND_FILE = ''] = FILE_IDS;
 
 const OUTCOME_FILES: GraphAtomGroupState['files'] = { [FIRST_FILE]: 'failed', [SECOND_FILE]: 'cached' };
 
-const OUTCOME_GROUP: GraphAtomGroupState = { counts: '10 files · 1 failed', files: OUTCOME_FILES };
+const OUTCOME_COUNTS: GraphAtomCounts = { files: 10, cached: null, failed: 1 };
+
+const OUTCOME_GROUP: GraphAtomGroupState = { counts: OUTCOME_COUNTS, files: OUTCOME_FILES };
 
 const OUTCOME_STATE: Record<string, GraphAtomGroupState> = { [UMBRELLA]: OUTCOME_GROUP };
 

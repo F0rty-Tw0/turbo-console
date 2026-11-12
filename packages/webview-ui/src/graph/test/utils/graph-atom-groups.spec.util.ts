@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 import { taskOf } from './shown-set.spec.util.ts';
-import type { GraphAtomGroupState } from '../../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../../../bridge/common/graph-message.type.ts';
 import type { GraphAtomGroup, GraphTask, Position, Positions, Routes } from '../../../bridge/common/graph-state.type.ts';
 import type { AtomGroupsDeps, AtomLayout } from '../../common/graph-atom.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
@@ -28,7 +28,7 @@ export const layoutOf = (positions: Positions, routes = NO_ROUTES): AtomLayout =
 /** The tasks a layout is placed with: the umbrella `app#e2e-ci` in package `app`. */
 export const TASKS: GraphTask[] = [taskOf('app#e2e-ci', []), taskOf('lib#e2e-ci', [])];
 
-export const statesOf = (umbrellaId: string, counts: string): Record<string, GraphAtomGroupState> => {
+export const statesOf = (umbrellaId: string, counts: GraphAtomCounts): Record<string, GraphAtomGroupState> => {
   const state: GraphAtomGroupState = { counts, files: {} };
   const states = { [umbrellaId]: state };
 
