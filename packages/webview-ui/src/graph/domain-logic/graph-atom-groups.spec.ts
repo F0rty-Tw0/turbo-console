@@ -2,7 +2,17 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GraphAtomGroups } from './graph-atom-groups.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
-import { BASE, E2E_CI, LIB_CI, SIZES, TASKS, atomRigOf, layoutOf, statesOf } from '../test/utils/graph-atom-groups.spec.util.ts';
+import {
+  BASE,
+  E2E_CI,
+  LIB_CI,
+  SIZES,
+  TASKS,
+  atomRigOf,
+  groupOf,
+  layoutOf,
+  statesOf
+} from '../test/utils/graph-atom-groups.spec.util.ts';
 import { scriptOf, taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA = 'app#e2e-ci';
@@ -106,6 +116,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
     beforeEach(() => {
       groups.received([E2E_CI]);
       groups.placed(new Set(['app#e2e-ci']), layoutOf(BASE), SIZES, TASKS);
+      rig.tasks.setCounts.mockClear();
     });
 
     it('WHEN atoms arrive for it THEN setCounts gets its counts without the name', () => {
@@ -130,6 +141,12 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       expect(rig.tasks.setCounts).toHaveBeenLastCalledWith(new Map([['app#e2e-ci', { files: 10, cached: 3, failed: null }]]));
     });
 
+    it('WHEN the group is received again with fewer files and no counts sent THEN setCounts gets the new file count', () => {
+      groups.received([groupOf(UMBRELLA, 4)]);
+
+      expect(rig.tasks.setCounts).toHaveBeenLastCalledWith(new Map([[UMBRELLA, { files: 4, cached: null, failed: null }]]));
+    });
+
     it('WHEN atoms name an unknown umbrella THEN the counts it has are unchanged', () => {
       groups.states(UNKNOWN_GONE);
 
@@ -143,6 +160,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
     beforeEach(() => {
       groups.received([LIB_CI, E2E_CI]);
       groups.placed(new Set(['app#e2e-ci', 'lib#e2e-ci']), layoutOf(BASE), SIZES, TASKS);
+      rig.tasks.setCounts.mockClear();
     });
 
     it('WHEN atoms name both THEN setCounts gets only the umbrella the layout sized', () => {
@@ -225,6 +243,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
       groups.received([E2E_CI]);
       groups.placed(new Set(['app#e2e-ci']), layoutOf(BASE), SIZES, TASKS);
       rig.post.mockClear();
+      rig.tasks.setCounts.mockClear();
       groups.clear();
     });
 

@@ -48,7 +48,7 @@ export class GraphAtomGroups {
   /**
    * Keeps the state's groups by umbrella id; the counts and outcomes of an umbrella no group names are forgotten. While a
    * layout is kept, the expanded groups follow: one that left collapses and loses its chip row, one whose drawn files or
-   * hidden count changed is drawn again.
+   * hidden count changed is drawn again, and the drawn umbrellas' counts are written to the canvas and their chip rows.
    */
   public received(groups: GraphAtomGroup[]): void {
     const entryOf = (group: GraphAtomGroup): [string, GraphAtomGroup] => [group.umbrellaId, group];
@@ -62,7 +62,7 @@ export class GraphAtomGroups {
     this.tally.keep(known);
     this.outcomes = new Map(keptOutcomes);
     this.sync();
-    this.syncChips();
+    this.syncCounts();
   }
 
   /**
@@ -82,10 +82,7 @@ export class GraphAtomGroups {
 
     if (this.placement === null) return;
 
-    const drawn = this.tally.drawnOf(this.groups, this.placement);
-
-    this.deps.view.tasks.setCounts(drawn);
-    this.chips.sync(drawn);
+    this.syncCounts();
     this.sync();
     this.expansion.outcomes(this.outcomes);
   }
@@ -118,7 +115,7 @@ export class GraphAtomGroups {
     this.expansion.forget();
     this.reshown();
     this.sync();
-    this.syncChips();
+    this.syncCounts();
   }
 
   /** Keeps the dragged centres as the base the groups expand from; groups are collapsed while a drag can happen. */
@@ -215,9 +212,14 @@ export class GraphAtomGroups {
     return atomSpecOf(group, placement, outcomesOf(this.outcomes, umbrellaId)) !== null;
   }
 
-  /** Keeps a chip row for each umbrella the kept layout draws; nothing before a layout is placed. */
-  private syncChips(): void {
-    if (this.placement !== null) this.chips.sync(this.tally.drawnOf(this.groups, this.placement));
+  /** Writes the counts of each umbrella the kept layout draws to the canvas and keeps its chip row; nothing before a layout is placed. */
+  private syncCounts(): void {
+    if (this.placement === null) return;
+
+    const drawn = this.tally.drawnOf(this.groups, this.placement);
+
+    this.deps.view.tasks.setCounts(drawn);
+    this.chips.sync(drawn);
   }
 
   /** Makes the canvas match the expanded set against the kept layout; nothing before a layout is placed. */
