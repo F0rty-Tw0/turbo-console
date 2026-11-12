@@ -3,7 +3,15 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import type { GraphEdge, GraphPackage, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { graphHashOf, graphStateOf, graphStateOfRoot, persistentIdsOfRoot, rootLabelOf, runIdsOfRoot } from './graph-state.util.ts';
+import {
+  graphHashOf,
+  graphStateOf,
+  graphStateOfRoot,
+  persistentIdsOfRoot,
+  rootLabelOf,
+  rootPackageLabelOf,
+  runIdsOfRoot
+} from './graph-state.util.ts';
 import { runIdsOf } from './graph-tasks.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
@@ -171,6 +179,10 @@ describe('FEATURE: graph state builder', () => {
 
     it('WHEN the root label is read THEN it is null', () => {
       expect(rootLabelOf(model)).toBeNull();
+    });
+
+    it('WHEN the // package label is read THEN it is the label', () => {
+      expect(rootPackageLabelOf(model)).toBe('labelled');
     });
   });
 

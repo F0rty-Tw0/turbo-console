@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { labelIn, labelsOf, packageLabelOf } from './package-label.util.ts';
+import { labelIn, labelledSizeOf, labelsOf, packageLabelOf } from './package-label.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
+import { lengthSizeOf } from '../test/utils/length-size.spec.util.ts';
 
 const SCOPED: GraphPackage = { name: '@org/x', bareName: 'x', path: 'packages/x', tags: [], taskCount: 0 };
 
@@ -19,6 +20,16 @@ describe('FEATURE: packageLabelOf', () => {
       const label = packageLabelOf(SCOPED, false);
 
       expect(label).toBe('x');
+    });
+  });
+
+  describe('GIVEN the root // package, its bare name the host text of its label', () => {
+    it('WHEN labelled both ways THEN both labels are the bare name', () => {
+      const root: GraphPackage = { ...PLAIN, name: '//', bareName: 'root-fixture', path: '' };
+
+      const labels = [packageLabelOf(root, true), packageLabelOf(root, false)];
+
+      expect(labels).toStrictEqual(['root-fixture', 'root-fixture']);
     });
   });
 
@@ -56,6 +67,20 @@ describe('FEATURE: labelIn', () => {
 
       expect(label).toBe('app');
     });
+  });
+});
+
+describe('FEATURE: labelledSizeOf', () => {
+  it('GIVEN the root // labelled root-fixture WHEN sized THEN the box fits the label', () => {
+    const size = labelledSizeOf('//', 'root-fixture', lengthSizeOf);
+
+    expect(size).toStrictEqual({ width: 120, height: 32 });
+  });
+
+  it('GIVEN @org/x labelled x with scopes hidden WHEN sized THEN the box keeps the width of the name', () => {
+    const size = labelledSizeOf('@org/x', 'x', lengthSizeOf);
+
+    expect(size).toStrictEqual({ width: 60, height: 32 });
   });
 });
 

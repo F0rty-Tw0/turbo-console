@@ -1,6 +1,7 @@
 import { packageOf } from './graph-package.spec.util.ts';
 import type { GraphEdge, GraphPackage, GraphReady } from '../../../src/bridge/common/graph-state.type.ts';
 import type { ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
+import { ROOT_LABEL_STUB } from '../stubs/graph-scope-names.stub.ts';
 
 /** The `[id, text]` of each probe node, in probe order. */
 export const textsOf = (nodes: ProbeNode[]): string[][] => nodes.map(({ id, text }) => [id, text]);
@@ -42,6 +43,16 @@ export const scopedNamesState = (scopeShown: boolean): GraphReady => {
     tasks: [],
     atomGroups: []
   };
+
+  return state;
+};
+
+/** `scopedNamesState` with scopes shown plus the monorepo root `//` at the workspace root, labelled `ROOT_LABEL_STUB`. */
+export const rootNamedState = (): GraphReady => {
+  const base = scopedNamesState(true);
+  const root = scopedOf('//', ROOT_LABEL_STUB, '');
+  const packages = [...base.packages, root];
+  const state: GraphReady = { ...base, hash: '0f2a91c4', packages };
 
   return state;
 };

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { graphStateOf } from './graph-state.util.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import { modelViewOf } from '../../tree/utils/model-view.util.ts';
+import type { GraphShown } from '../common/graph.type.ts';
 import { GRAPH_HASH_STUB, GRAPH_MODEL_STUB, GRAPH_SHOWN_STUB, NO_LAYOUT_CACHES_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const ROOT_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
@@ -23,6 +24,15 @@ const SAME_BARE_MODEL: WorkspaceModel = {
   packages: [packageNamed('@a/ui', [SCRIPT_TASK]), packageNamed('@b/ui', [TASK_NODE_STUB])]
 };
 
+const SCOPED_ROOT_NODE: PackageNode = { ...ROOT_NODE, label: '@acme/monorepo' };
+
+const SCOPED_ROOT_MODEL: WorkspaceModel = {
+  ...GRAPH_MODEL_STUB,
+  packages: [SCOPED_ROOT_NODE, packageNamed('@acme/web', [TASK_NODE_STUB])]
+};
+
+const SCOPES_SHOWN: GraphShown = { ...GRAPH_SHOWN_STUB, scopeShown: true };
+
 const bareNamesOf = (state: GraphState): string[] => {
   if (state.kind !== 'graph') return [];
 
@@ -40,6 +50,20 @@ describe('FEATURE: graph package bareName', () => {
     const state = graphStateOf(SINGLE_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
     expect(bareNamesOf(state)).toStrictEqual(['single-app']);
+  });
+
+  describe('GIVEN a monorepo root labelled @acme/monorepo beside @acme/web', () => {
+    it('WHEN built with scopes shown THEN the root reads @acme/monorepo, as its tree row does', () => {
+      const state = graphStateOf(SCOPED_ROOT_MODEL, NO_LAYOUT_CACHES_STUB, SCOPES_SHOWN);
+
+      expect(bareNamesOf(state)).toStrictEqual(['@acme/monorepo', 'web']);
+    });
+
+    it('WHEN built with scopes hidden THEN the root reads monorepo', () => {
+      const state = graphStateOf(SCOPED_ROOT_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+
+      expect(bareNamesOf(state)).toStrictEqual(['monorepo', 'web']);
+    });
   });
 
   it('GIVEN @a/ui is script-only and @b/ui is a turbo package WHEN built THEN both keep their full name', () => {

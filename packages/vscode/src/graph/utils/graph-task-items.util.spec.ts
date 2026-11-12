@@ -19,11 +19,11 @@ describe('FEATURE: the Show Task Graph picker items', () => {
     });
   });
 
-  describe('GIVEN a single-package root label', () => {
-    it('WHEN the items are made THEN every description is the label', () => {
-      const items = taskGraphItemsOf(GRAPH_TASKS_STUB, '/ws', 'single-app');
+  describe('GIVEN a root label and no // task', () => {
+    it('WHEN the items are made THEN every description keeps its package name: the label names only the // package', () => {
+      const items = taskGraphItemsOf(GRAPH_TASKS_STUB, '/ws', 'root-fixture');
 
-      expect(items.map((item) => item.description)).toStrictEqual(['single-app', 'single-app', 'single-app', 'single-app']);
+      expect(items.map((item) => item.description)).toStrictEqual(['@org/x', 'a', 'web', 'web']);
     });
   });
 
@@ -44,7 +44,7 @@ describe('FEATURE: the Show Task Graph picker items', () => {
       expect(item?.description).toBe(ROOT_TASKS_TITLE);
     });
 
-    it('WHEN the root has a single-package label THEN the description keeps the label', () => {
+    it('WHEN the // package has a label THEN the description is the label', () => {
       const [item] = taskGraphItemsOf([ROOT_GEN], '/ws', 'My repo');
 
       expect(item?.description).toBe('My repo');

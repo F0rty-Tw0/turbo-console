@@ -3,7 +3,7 @@ import { taskTargetOf } from '../../run/utils/run-target.util.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { RootPickPorts, ShowTaskGraphDeps, TaskChoice, TaskGraphRequest } from '../common/graph-panel.type.ts';
 import { GRAPH_OPEN_FAILED_TEXT, SCRIPTS_HIDDEN_TEXT, TASK_PICK_PLACEHOLDER } from '../common/graph.const.ts';
-import { rootLabelOf } from '../utils/graph-state.util.ts';
+import { rootPackageLabelOf } from '../utils/graph-state.util.ts';
 import { taskGraphItemsOf } from '../utils/graph-task-items.util.ts';
 import { graphTasksOf, pooledTasksOf } from '../utils/graph-tasks.util.ts';
 
@@ -52,7 +52,7 @@ export const chosenRequestOf = async ({ roots, ports }: ShowTaskGraphDeps, choos
     return null;
   }
 
-  const rootLabel = rootLabelOf(model);
+  const rootLabel = rootPackageLabelOf(model);
   const items = taskGraphItemsOf(pool, root, rootLabel);
   const taskIds = await choose(items);
 

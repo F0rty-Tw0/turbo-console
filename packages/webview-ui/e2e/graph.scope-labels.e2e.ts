@@ -1,6 +1,7 @@
 import { expect, test } from './graph-task.fixture.ts';
-import { BARE_TEXTS_STUB, FULL_TEXTS_STUB } from './test/stubs/graph-scope-names.stub.ts';
-import { scopedNamesState, textsOf } from './test/utils/graph-scope-names.spec.util.ts';
+import { BARE_TEXTS_STUB, FULL_TEXTS_STUB, ROOT_LABEL_STUB } from './test/stubs/graph-scope-names.stub.ts';
+import { rootNamedState, scopedNamesState, textsOf } from './test/utils/graph-scope-names.spec.util.ts';
+import { measuredWidthsOf } from './test/utils/graph-title-measure.spec.util.ts';
 import type { ProbeNode } from '../src/graph/common/graph-probe.type.ts';
 
 const SCOPE_LABELS = { description: 'U5 spec D7, §5 rows 11-14', type: 'requirement' };
@@ -49,6 +50,29 @@ test.describe('FEATURE: package labels follow scopeShown', () => {
 
       await test.step('AND the Controls rows read the full names', async (): Promise<void> =>
         expect(graphList.nameButtons).toHaveText(IDS));
+    }
+  );
+
+  test(
+    'GIVEN a monorepo root // labelled root-fixture, its node draws that label and is as wide as it',
+    { annotation: SCOPE_LABELS },
+    async ({ graphHost, graphPage, graphProbe, page }): Promise<void> => {
+      await test.step('WHEN the graph with the root is laid out', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(rootNamedState());
+        await graphProbe.expectNodeIds([...IDS, '//']);
+        await graphProbe.expectLayoutSettled();
+      });
+
+      await test.step('THEN the // node reads root-fixture and its box holds the measured label', async (): Promise<void> => {
+        const nodes = await graphProbe.nodes();
+        const rootWidth = nodes.find((node): boolean => node.id === '//')?.width ?? 0;
+        const widths = await measuredWidthsOf(page, [ROOT_LABEL_STUB]);
+        const measured = Number(widths.get(ROOT_LABEL_STUB));
+
+        expect(textsOf(nodes)).toContainEqual(['//', ROOT_LABEL_STUB]);
+        expect(rootWidth).toBeGreaterThanOrEqual(measured);
+      });
     }
   );
 

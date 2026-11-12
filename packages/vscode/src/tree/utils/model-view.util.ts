@@ -100,11 +100,14 @@ export const bareTextsOf = (packages: PackageNode[]): Map<string, string> => {
   return new Map(pairs);
 };
 
+/** The cleaned full text a package row reads while scopes are shown: its label or name, scope kept. */
+export const fullTextOf = (pkg: PackageNode): string => rowTextOf(packageTextOf(pkg));
+
 /** The cleaned label a package row reads: its full shown text while scopes are shown, else its bare text. */
 export const shownTextOf = (view: ModelView, pkg: PackageNode, scopeShown: boolean): string => {
   const bareText = view.bareTexts.get(pkg.name);
 
-  if (scopeShown || bareText === undefined) return rowTextOf(packageTextOf(pkg));
+  if (scopeShown || bareText === undefined) return fullTextOf(pkg);
 
   return bareText;
 };

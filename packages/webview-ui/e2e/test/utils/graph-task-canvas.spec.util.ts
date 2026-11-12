@@ -6,9 +6,16 @@ import type { GraphEdge, GraphPackage, GraphReady, GraphTask } from '../../../sr
 import type { GraphViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
 import type { TaskShotSetup } from '../../common/graph-shots.type.ts';
 
+/** The label the host sends as the root `//` package's bare name: its `package.json` name. */
+export const CANVAS_ROOT_LABEL = 'monorepo';
+
+const ROOT_BASE = packageOf('//', '.', [], 1);
+
+const ROOT_PACKAGE: GraphPackage = { ...ROOT_BASE, bareName: CANVAS_ROOT_LABEL };
+
 /** `ui` and `core` under `packages/`, `web` under `apps/`, `root-lib` at the repo root and the root package `//`. */
 const PACKAGES: GraphPackage[] = [
-  packageOf('//', '.', [], 1),
+  ROOT_PACKAGE,
   packageOf('core', 'packages/core', [], 1),
   packageOf('root-lib', 'root-lib', [], 1),
   packageOf('ui', 'packages/ui', [], 1),
