@@ -89,6 +89,17 @@ describe('FEATURE: the repo declares workspaces', () => {
     });
   });
 
+  describe('GIVEN a monorepo graph whose nodes already hold a // node', () => {
+    it('WHEN the graph is derived THEN exactly one // is listed, the root, first', () => {
+      const listed = graphPackage('//', '', [], []);
+      const ui = graphPackage('ui', 'libs/ui', [], []);
+
+      const derived = withRootGraphOf(packageGraph([ui, listed], [], ROOT_PACKAGE));
+
+      expect(derived.data.packageGraph.nodes.items).toStrictEqual([ROOT_PACKAGE, ui]);
+    });
+  });
+
   describe('GIVEN a monorepo graph whose root is null', () => {
     it('WHEN the graph is derived with the root THEN it is returned as is', () => {
       const graph = packageGraph([ROOT_PACKAGE], [], null);
