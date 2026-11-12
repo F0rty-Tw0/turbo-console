@@ -1,8 +1,8 @@
-import type { PackageNode, TurboBinary } from '@turbo-console/core';
+import type { PackageNode } from '@turbo-console/core';
 import { vi } from 'vitest';
 
 import type { LoadedModel } from '../../../roots/common/root.type.ts';
-import { TURBO_BINARY_STUB } from '../../../roots/test/stubs/root.stub.ts';
+import { turboBinaryAt } from '../../../roots/test/utils/turbo-binary.spec.util.ts';
 import { loadedWith } from '../../../tree/test/utils/tree-model.spec.util.ts';
 import type { InputAsk, OptionItem, RunOption, RunOptionsPorts } from '../../common/run-options.type.ts';
 import type { RunRequest } from '../../common/run.type.ts';
@@ -11,9 +11,7 @@ import type { RunOptionsFakes } from '../common/run-options-fakes.type.ts';
 /** `loadedWith(packages)` whose binary lives at `binaryPath`. */
 export const loadedAt = (packages: PackageNode[], binaryPath: string): LoadedModel => {
   const loaded = loadedWith(packages);
-  const fields = { ...TURBO_BINARY_STUB, path: binaryPath };
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- core exports TurboBinary type-only and its #brand makes a literal unassignable; no production path builds one in a spec.
-  const binary = fields as TurboBinary;
+  const binary = turboBinaryAt(binaryPath);
   const at: LoadedModel = { ...loaded, binary };
 
   return at;
