@@ -2,10 +2,11 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { PageDiagnostics } from './page-diagnostics.po.ts';
+import { ShellNavigation } from './shell-navigation.po.ts';
 import { TaskCardSection } from './task-card.po.ts';
 import type { HostMessage, WebviewMessage } from '../../src/bridge/common/details-message.type.ts';
 import type { DetailsState, RunView } from '../../src/bridge/common/details-state.type.ts';
-import { CODICON_LOADED, HOST_API_STUB, SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
+import { CODICON_LOADED, HOST_API_STUB, SHELL_ORIGIN } from '../common/shell.const.ts';
 import { detailsDistMock } from '../test/mocks/details-dist.mock.ts';
 
 const postToPage = (message: HostMessage): void => window.postMessage(message, '*');
@@ -67,7 +68,7 @@ export class DetailsPage {
 
     if (this.isCodiconHeld) await this.page.route(`${SHELL_ORIGIN}/codicon.ttf*`, holdRequest);
 
-    await this.page.goto(SHELL_URL);
+    await new ShellNavigation(this.page).goto();
     await this.page.evaluate(postToPage, message);
     await this.heading.waitFor();
   }
