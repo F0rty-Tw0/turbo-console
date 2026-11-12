@@ -12,7 +12,7 @@ const GROUPED_SAVED = groupedSavedState(CANVAS_STATE.hash);
 const BOTH_TASKS = [`//#${ROOT_TASK_NAME}`, `@org/app#${APP_TASK_NAME}`];
 
 /** Folders and collapsed projects of the canvas state, grouped: the root folder first, then by code unit. */
-const GROUPED_LINES = ['(root)', 'Workspace root (//) (1)', 'root-lib (1)', 'apps', 'web (2)', 'packages', 'core (1)', 'ui (1)'];
+const GROUPED_LINES = ['(root)', 'monorepo (1)', 'root-lib (1)', 'apps', 'web (2)', 'packages', 'core (1)', 'ui (1)'];
 
 const BEFORE_WEB_TASKS = GROUPED_LINES.slice(0, 5);
 
@@ -25,7 +25,7 @@ const GROUP_CHECKS = [
   'Choose tasks of folder (root)',
   'Choose tasks of folder apps',
   'Choose tasks of folder packages',
-  'Choose tasks of Workspace root (//)',
+  'Choose tasks of monorepo',
   'Choose tasks of root-lib',
   'Choose tasks of web',
   'Choose tasks of core',
