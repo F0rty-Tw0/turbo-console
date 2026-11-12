@@ -7,7 +7,7 @@ import { graphStyleOf } from './graph-style.ts';
 import { applyBoxFrames } from './graph-task-frames.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeRect, ProbeTitle } from '../common/graph-probe-titles.type.ts';
-import { BOX_FRAMED_CLASS, TASK_BOX_CLASS, TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
+import { BOX_FRAMED_CLASS, TASK_BOX_CLASS, TASK_FOLDER_CLASS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
 import type { BoxFrame, BoxFrames } from '../common/layout.type.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
@@ -21,11 +21,25 @@ const WEB_DATA = { id: 'pkg:web', parent: APPS_ID, title: 'web' };
 
 const BUILD_DATA = { id: 'web#build', parent: 'pkg:web', width: 80, height: 32 };
 
+const WEB_DATA_ALONE = { id: 'pkg:web', title: 'web' };
+
 /** The folder box `apps` holds the package box `pkg:web`, which holds the task `web#build`. */
 const TASK_BOXES: ElementDefinition[] = [
   { data: APPS_DATA, classes: TASK_FOLDER_CLASS },
   { data: WEB_DATA, classes: TASK_BOX_CLASS },
   { data: BUILD_DATA }
+];
+
+const API_DATA = { id: 'api#build', width: 80, height: 32 };
+
+const LINK_DATA = { id: 'web-api', source: 'web#build', target: 'api#build' };
+
+/** The package box `pkg:web` around `web#build`, and a task link from it to `api#build` outside the box. */
+const LINKED_BOXES: ElementDefinition[] = [
+  { data: WEB_DATA_ALONE, classes: TASK_BOX_CLASS },
+  { data: BUILD_DATA },
+  { data: API_DATA },
+  { data: LINK_DATA, classes: TASK_LINK_CLASS }
 ];
 
 /** `pkg:web` as ELK framed it: 150 x 120 around `web#build`. */
@@ -176,6 +190,40 @@ describe('FEATURE: probeTitlesOf', () => {
       const { isFramed, frameError, titleError } = firstTitleOf(cy, ORIGIN);
 
       expect([isFramed, frameError, titleError]).toStrictEqual([false, null, null]);
+    });
+  });
+
+  describe('GIVEN pkg:web holding web#build, linked to api#build outside it', () => {
+    let cy: Core;
+
+    beforeEach(() => {
+      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+
+      cy = cytoscape({ headless: true, styleEnabled: true, elements: LINKED_BOXES, style });
+    });
+
+    afterEach(() => {
+      cy.destroy();
+    });
+
+    it('WHEN the titles are probed THEN its title sits on an opaque backdrop of the theme background', () => {
+      expect(firstTitleOf(cy, ORIGIN).backdrop).toBe('rgb(17,17,17)');
+    });
+
+    it('WHEN the link is a task link THEN it is drawn under the box, so no line is over the title', () => {
+      expect(firstTitleOf(cy, ORIGIN).linesOver).toStrictEqual([]);
+    });
+
+    it('WHEN the link is a package edge THEN it is drawn after the box, over the title', () => {
+      cy.edges().removeClass(TASK_LINK_CLASS);
+
+      expect(firstTitleOf(cy, ORIGIN).linesOver).toStrictEqual([{ source: 'web#build', target: 'api#build' }]);
+    });
+
+    it('WHEN the title backdrop is see-through THEN no backdrop is reported', () => {
+      cy.getElementById('pkg:web').style('text-background-opacity', 0);
+
+      expect(firstTitleOf(cy, ORIGIN).backdrop).toBeNull();
     });
   });
 });

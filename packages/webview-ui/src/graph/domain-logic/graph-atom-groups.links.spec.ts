@@ -1,16 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GraphAtomGroups } from './graph-atom-groups.ts';
-import type { EdgeRoute, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import { ATOM_BOX_PREFIX } from '../common/graph-atom.const.ts';
-import type { RouteSegments } from '../common/route-segments.type.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
 import { E2E_CI, SIZE, SIZES, atomRigOf, layoutOf } from '../test/utils/graph-atom-groups.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { atomPositionsOf } from '../utils/atom-positions.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
-import { routeSegmentsOf } from '../utils/route-segments.util.ts';
 
 const UMBRELLA = 'app#e2e-ci';
 
@@ -28,17 +26,9 @@ const TARGET_AT: Position = { x: 0, y: 200 };
 
 const BASE: Positions = { [UMBRELLA]: UMBRELLA_AT, [TARGET]: TARGET_AT };
 
+const UMBRELLA_DRAGGED_AT: Position = { x: 40, y: 0 };
+
 const LINK_ID = edgeIdOf({ source: UMBRELLA, target: TARGET });
-
-const ROUTE_START: Position = { x: 10, y: 24 };
-
-const ROUTE_BENDS: Position[] = [{ x: 10, y: 100 }];
-
-const ROUTE_END: Position = { x: 10, y: 184 };
-
-const ROUTE: EdgeRoute = { start: ROUTE_START, bends: ROUTE_BENDS, end: ROUTE_END };
-
-const ROUTES: Routes = { [LINK_ID]: ROUTE };
 
 const SPEC: AtomDrawSpec = {
   umbrellaId: UMBRELLA,
@@ -59,8 +49,7 @@ const boxDropOf = (): number => {
   return box.y + box.height - umbrella.y;
 };
 
-const lastSegmentsOf = (rig: AtomRig): ReadonlyMap<string, RouteSegments | null> | undefined =>
-  rig.atoms.setSegments.mock.lastCall?.[0];
+const lastEndsOf = (rig: AtomRig): ReadonlyMap<string, string | null> | undefined => rig.atoms.setLinkEnds.mock.lastCall?.[0];
 
 describe('FEATURE: the links out of an expanded Atomizer umbrella', () => {
   let rig: AtomRig;
@@ -70,55 +59,35 @@ describe('FEATURE: the links out of an expanded Atomizer umbrella', () => {
     rig = atomRigOf();
     groups = new GraphAtomGroups(rig.deps);
     groups.received([E2E_CI]);
-    groups.placed(SHOWN, layoutOf(BASE, ROUTES), SIZES, TASKS);
+    groups.placed(SHOWN, layoutOf(BASE), SIZES, TASKS);
   });
 
-  describe('GIVEN a placed layout with a routed link out of the collapsed umbrella', () => {
-    it('WHEN the umbrella is toggled THEN its link leaves the bottom of the box at the x its route left the umbrella by', () => {
-      const expected = `10px ${boxDropOf()}px`;
-
-      groups.toggle(UMBRELLA);
-
-      expect(lastSegmentsOf(rig)?.get(LINK_ID)?.srcEnd).toBe(expected);
-    });
-
-    it('WHEN the umbrella is toggled twice THEN its link is back on the segments of its base route', () => {
-      const base = routeSegmentsOf(ROUTE, UMBRELLA_AT, TARGET_AT);
-      const expected = new Map([[LINK_ID, base]]);
-
-      groups.toggle(UMBRELLA);
-      groups.toggle(UMBRELLA);
-
-      expect(lastSegmentsOf(rig)).toStrictEqual(expected);
-    });
-
-    it('WHEN a drag straightened the link and the umbrella is then toggled THEN the link leaves the box bottom under the umbrella', () => {
+  describe('GIVEN a placed layout with a link out of the collapsed umbrella', () => {
+    it('WHEN the umbrella is toggled THEN its link leaves the bottom of the box under the umbrella centre', () => {
       const expected = `0px ${boxDropOf()}px`;
 
-      groups.rebased(layoutOf(BASE));
-
       groups.toggle(UMBRELLA);
 
-      expect(lastSegmentsOf(rig)?.get(LINK_ID)?.srcEnd).toBe(expected);
+      expect(lastEndsOf(rig)?.get(LINK_ID)).toBe(expected);
     });
 
-    it('WHEN a drag straightened the link and the umbrella is then toggled THEN the link ends outside its target', () => {
-      groups.rebased(layoutOf(BASE));
-
-      groups.toggle(UMBRELLA);
-
-      expect(lastSegmentsOf(rig)?.get(LINK_ID)?.tgtEnd).toBe('outside-to-node');
-    });
-
-    it('WHEN a drag straightened the link and the umbrella is then toggled twice THEN the link is drawn straight again', () => {
+    it('WHEN the umbrella is toggled twice THEN its link leaves the umbrella border again', () => {
       const expected = new Map([[LINK_ID, null]]);
 
-      groups.rebased(layoutOf(BASE));
-
       groups.toggle(UMBRELLA);
       groups.toggle(UMBRELLA);
 
-      expect(lastSegmentsOf(rig)).toStrictEqual(expected);
+      expect(lastEndsOf(rig)).toStrictEqual(expected);
+    });
+
+    it('WHEN the umbrella was dragged and is then toggled THEN its link leaves the box bottom under its dragged centre', () => {
+      const dragged: Positions = { ...BASE, [UMBRELLA]: UMBRELLA_DRAGGED_AT };
+      const expected = `0px ${boxDropOf()}px`;
+
+      groups.rebased(layoutOf(dragged));
+      groups.toggle(UMBRELLA);
+
+      expect(lastEndsOf(rig)?.get(LINK_ID)).toBe(expected);
     });
   });
 });

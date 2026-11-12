@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { lineThrough } from './graph-lines.spec.util.ts';
-import { titleCrossingsOf } from './graph-title-crossings.spec.util.ts';
-import type { ProbeRect, ProbeTitle } from '../../../src/graph/common/graph-probe-titles.type.ts';
+import { titleCrossingsOf, unreadableTitlesOf } from './graph-title-crossings.spec.util.ts';
+import type { ProbeLink, ProbeRect, ProbeTitle } from '../../../src/graph/common/graph-probe-titles.type.ts';
 import type { ProbeEdgeLine } from '../../../src/graph/common/graph-probe.type.ts';
 
 /** The title of `pkg:web`: its label runs x 100-160, y 100-113. */
@@ -18,8 +18,20 @@ const TITLE: ProbeTitle = {
   modelBox: BOX,
   isFramed: false,
   frameError: null,
-  titleError: null
+  titleError: null,
+  backdrop: 'rgb(17,17,17)',
+  linesOver: []
 };
+
+const A_TO_B: ProbeLink = { source: 'a', target: 'b' };
+
+const OVER_A_TO_B: ProbeLink[] = [A_TO_B];
+
+/** `TITLE` drawn before the line a to b, so under it. */
+const UNDER_TITLE: ProbeTitle = { ...TITLE, linesOver: OVER_A_TO_B };
+
+/** `TITLE` with no opaque backdrop. */
+const BARE_TITLE: ProbeTitle = { ...TITLE, backdrop: null };
 
 /** A vertical line at x 130 through the label, from y 90 to 130. */
 const THROUGH_LINE: ProbeEdgeLine = lineThrough('a', 'b', [
@@ -50,5 +62,19 @@ describe('FEATURE: titleCrossingsOf', () => {
     const crossed = titleCrossingsOf([TITLE], [line]);
 
     expect(crossed).toStrictEqual(expected);
+  });
+});
+
+describe('FEATURE: unreadableTitlesOf', () => {
+  it.each([
+    { title: 'a line through the label, drawn under the title on its backdrop', box: TITLE, line: THROUGH_LINE, expected: [] },
+    { title: 'a line through the label, drawn over the title', box: UNDER_TITLE, line: THROUGH_LINE, expected: ['pkg:web'] },
+    { title: 'a line through a label with no backdrop', box: BARE_TITLE, line: THROUGH_LINE, expected: ['pkg:web'] },
+    { title: 'a line beside the label, drawn over the title', box: UNDER_TITLE, line: BESIDE_LINE, expected: [] },
+    { title: 'the line drawn over the title not drawn', box: UNDER_TITLE, line: HIDDEN_LINE, expected: [] }
+  ])('GIVEN $title WHEN the unreadable titles are listed THEN they are $expected', ({ box, line, expected }) => {
+    const unreadable = unreadableTitlesOf([box], [line]);
+
+    expect(unreadable).toStrictEqual(expected);
   });
 });

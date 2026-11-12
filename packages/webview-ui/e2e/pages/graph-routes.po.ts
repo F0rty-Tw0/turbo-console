@@ -5,7 +5,7 @@ import { GraphGroupingPage } from './graph-grouping.po.ts';
 import { GraphHost } from './graph-host.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { GraphReady } from '../../src/bridge/common/graph-state.type.ts';
-import type { ProbeEdgeLine } from '../../src/graph/common/graph-probe.type.ts';
+import type { ProbeEdge, ProbeEdgeLine } from '../../src/graph/common/graph-probe.type.ts';
 import { edgeIdOf } from '../../src/graph/utils/edge-id.util.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
 import { foreignBoxHitsOf, readFolders } from '../test/utils/graph-foreign-boxes.spec.util.ts';
@@ -23,7 +23,16 @@ const lineIdOf = (line: ProbeEdgeLine): string => edgeIdOf({ source: line.source
 
 const isDrawnRouted = (line: ProbeEdgeLine): boolean => line.isDrawn && line.isRouted && line.points.length >= ROUTED_POINTS_MIN;
 
-/** The edge routes the page posts and draws, and the reopens that serve a posted layout back from the cache. */
+/** A straight line is one segment: its two ends and no bend. */
+const STRAIGHT_POINTS = 2;
+
+const STRAIGHT_CURVE = 'straight';
+
+const isDrawnStraight = (line: ProbeEdgeLine): boolean => line.isDrawn && !line.isRouted && line.points.length === STRAIGHT_POINTS;
+
+const curveStyleOf = (edge: ProbeEdge): string => edge.curveStyle;
+
+/** The edge routes the page posts and draws, the lines it draws straight, and the reopens that serve a posted layout back from the cache. */
 export class GraphRoutes {
   private readonly grouping: GraphGroupingPage;
   private readonly host: GraphHost;
@@ -45,6 +54,14 @@ export class GraphRoutes {
   /** The page draws exactly `count` package lines, every one on its route with at least one bend between its ends. */
   public async expectEveryLineRouted(count: number): Promise<void> {
     await expect.poll(async (): Promise<number[]> => this.lineAndRoutedCounts()).toStrictEqual([count, count]);
+  }
+
+  /** The page draws exactly `count` lines, each `curve-style: straight` and one segment from its source end to its target end. */
+  public async expectEveryLineStraight(count: number): Promise<void> {
+    const straight = Array.from({ length: count }, (): string => STRAIGHT_CURVE);
+
+    await expect.poll(async (): Promise<string[]> => this.curveStyles()).toStrictEqual(straight);
+    await expect.poll(async (): Promise<number[]> => this.lineAndStraightCounts()).toStrictEqual([count, count]);
   }
 
   /** Every drawn line, bends included, lies inside the `container`. */
@@ -125,6 +142,20 @@ export class GraphRoutes {
     const routed = lines.filter(isDrawnRouted);
 
     const counts = [lines.length, routed.length];
+
+    return counts;
+  }
+
+  private async curveStyles(): Promise<string[]> {
+    const edges = await this.probe.edges();
+
+    return edges.map(curveStyleOf);
+  }
+
+  private async lineAndStraightCounts(): Promise<number[]> {
+    const lines = await readEdgeLines(this.page);
+    const straight = lines.filter(isDrawnStraight);
+    const counts = [lines.length, straight.length];
 
     return counts;
   }

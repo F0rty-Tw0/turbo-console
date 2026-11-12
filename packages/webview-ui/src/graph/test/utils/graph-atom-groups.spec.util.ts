@@ -2,7 +2,7 @@ import { vi } from 'vitest';
 
 import { taskOf } from './shown-set.spec.util.ts';
 import type { GraphAtomCounts, GraphAtomGroupState } from '../../../bridge/common/graph-message.type.ts';
-import type { GraphAtomGroup, GraphTask, Position, Positions, Routes } from '../../../bridge/common/graph-state.type.ts';
+import type { GraphAtomGroup, GraphTask, Position, Positions } from '../../../bridge/common/graph-state.type.ts';
 import type { AtomGroupsDeps, AtomLayout } from '../../common/graph-atom.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import type { AtomRig } from '../common/graph-atom-groups.type.ts';
@@ -16,11 +16,9 @@ const E2E_CI_AT: Position = { x: 10, y: 20 };
 
 export const BASE: Positions = { 'app#e2e-ci': E2E_CI_AT };
 
-const NO_ROUTES: Routes = {};
-
-/** A placed layout at `positions`, its links on `routes` (none by default). */
-export const layoutOf = (positions: Positions, routes = NO_ROUTES): AtomLayout => {
-  const layout: AtomLayout = { positions, routes };
+/** A placed layout at `positions`. */
+export const layoutOf = (positions: Positions): AtomLayout => {
+  const layout: AtomLayout = { positions };
 
   return layout;
 };

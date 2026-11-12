@@ -38,7 +38,6 @@ const SIZES = new Map([['web#e2e-ci', UMBRELLA_SIZE]]);
 const DRAWING: TaskDrawing = {
   tasks: [taskOf('web#e2e-ci', []), taskOf(CLASH_ID, [])],
   positions: POSITIONS,
-  routes: {},
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: SIZES,
@@ -58,8 +57,7 @@ const PLACEMENT: AtomPlacement = {
   base: POSITIONS,
   sizes: SIZES,
   pkgBoxes: PKG_BOXES,
-  links: [],
-  routes: {}
+  links: []
 };
 
 const parentIdOf = (cy: Core, id: string): string => {

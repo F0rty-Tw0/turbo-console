@@ -82,10 +82,10 @@ const everyTaskSaved = (state: GraphReady, isGrouped: boolean): GraphViewState =
   return view;
 };
 
-test.describe('FEATURE: task box titles clear of lines', () => {
+test.describe('FEATURE: task box titles readable over lines', () => {
   for (const row of ROWS)
     for (const layout of LAYOUTS)
-      test(`GIVEN the ${row.name} tasks ${layout.name} with every task chosen, no drawn line crosses a package box title`, async ({
+      test(`GIVEN the ${row.name} tasks ${layout.name} with every task chosen, every package box title draws over the lines crossing it`, async ({
         graphHost,
         graphPage,
         graphProbe,
@@ -107,8 +107,8 @@ test.describe('FEATURE: task box titles clear of lines', () => {
 
         await test.step('AND every task is drawn', async (): Promise<void> => graphTaskProbe.expectTaskIds(state.tasks.map(idOf)));
 
-        await test.step('THEN no drawn line crosses a package box title', async (): Promise<void> =>
-          graphBoxTitles.expectNoTitleCrossed(titleCountOf(state)));
+        await test.step('THEN every package box title draws over the lines crossing it, on its opaque backdrop', async (): Promise<void> =>
+          graphBoxTitles.expectTitlesReadable(titleCountOf(state)));
 
         await test.step('AND each framed box is drawn on its ELK frame, its title at the placeholder', async (): Promise<void> =>
           graphBoxTitles.expectFramesTrue(row.mustFrame));

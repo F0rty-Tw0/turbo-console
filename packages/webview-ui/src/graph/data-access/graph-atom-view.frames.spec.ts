@@ -37,7 +37,6 @@ const DRAWN_AT: Positions = { 'web#e2e-ci': UMBRELLA_AT, 'api#build': API_AT };
 const DRAWING: TaskDrawing = {
   tasks: [taskOf('web#e2e-ci', []), taskOf('api#build', [])],
   positions: DRAWN_AT,
-  routes: {},
   boxFrames: FRAMES,
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map([['web#e2e-ci', UMBRELLA_SIZE]]),

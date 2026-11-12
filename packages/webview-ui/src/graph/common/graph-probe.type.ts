@@ -48,7 +48,7 @@ export type ProbeEdge = {
   /** Cytoscape's `visible()`: false with a hidden end or a `display: none` bypass. */
   readonly isDrawn: boolean;
   readonly lineStyle: string;
-  /** Cytoscape's `curve-style`: `round-segments` for an edge on its ELK route, else the base edge rule's `bezier`. */
+  /** Cytoscape's `curve-style`: `round-segments` for a package edge on its ELK route, `straight` for a task link, else `bezier`. */
   readonly curveStyle: string;
 };
 

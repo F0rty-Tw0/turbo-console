@@ -17,8 +17,7 @@ const PLACEMENT: AtomPlacement = {
   base: {},
   sizes: new Map([['app#e2e', SIZE]]),
   pkgBoxes: new Map([['app#e2e', 'pkg:app']]),
-  links: [],
-  routes: {}
+  links: []
 };
 
 const withGroupFiles = (...ids: string[]): GraphAtomGroup => {

@@ -2,12 +2,11 @@ import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 
 import { labelOf, setCountLabels, taskClassesOf } from './graph-atom-view.ts';
 import { positionOf } from './graph-place.ts';
-import { applyRoutes } from './graph-routes.ts';
 import { boxesOf } from './graph-task-boxes.ts';
 import { applyBoxFrames, refitBoxFrames } from './graph-task-frames.ts';
 import { markAffected, markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
 import { paintTasks } from './graph-task-paint.ts';
-import type { GraphEdge, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { NO_AFFECTED, NO_PREDICTIONS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
 import type { TaskAffectedMarks, TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
@@ -59,7 +58,7 @@ const centresOf = (cy: Core): Positions => {
   return Object.fromEntries(entries);
 };
 
-/** Replaces every element with the drawn tasks, their box frames and link routes; marks and paint come after. */
+/** Replaces every element with the drawn tasks, their box frames and their links, drawn straight; marks and paint come after. */
 const drawTasks = (cy: Core, drawing: TaskDrawing): void => {
   const elements = elementsOf(drawing);
 
@@ -67,7 +66,6 @@ const drawTasks = (cy: Core, drawing: TaskDrawing): void => {
   cy.elements().remove();
   cy.add(elements);
   applyBoxFrames(cy, drawing.boxFrames);
-  applyRoutes(cy, drawing.routes);
 };
 
 const moveTasks = (cy: Core, positions: Positions): void => {
@@ -122,12 +120,11 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
     markAffected(cy, next);
   };
   const setPositions = (positions: Positions): void => moveTasks(cy, positions);
-  const setRoutes = (routes: Routes): void => applyRoutes(cy, routes);
   const positions = (): Positions => centresOf(cy);
   const clear = (): void => void cy.elements().remove();
   const setCounts = (labels: ReadonlyMap<string, string>): void => setCountLabels(cy, labels);
   const marks = { paint, runStates, predictions, affected, remark };
-  const canvas: TaskCanvas = { show, clear, setPositions, setRoutes, positions, setCounts, ...marks };
+  const canvas: TaskCanvas = { show, clear, setPositions, positions, setCounts, ...marks };
 
   return canvas;
 };

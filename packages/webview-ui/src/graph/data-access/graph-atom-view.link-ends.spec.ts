@@ -5,9 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createAtomCanvas } from './graph-atom-view.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
-import type { RouteSegments } from '../common/route-segments.type.ts';
 import type { AtomCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
@@ -30,7 +28,6 @@ const DRAWN_AT: Positions = { [UMBRELLA]: UMBRELLA_AT, [TARGET]: TARGET_AT };
 const DRAWING: TaskDrawing = {
   tasks: [taskOf(UMBRELLA, [TARGET]), taskOf(TARGET, [])],
   positions: DRAWN_AT,
-  routes: {},
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),
@@ -40,9 +37,9 @@ const DRAWING: TaskDrawing = {
   naming: NAMING_STUB
 };
 
-const SEGMENTS: RouteSegments = { segWeights: [0.6], segDistances: [-10], srcEnd: '10px 100px', tgtEnd: '10px -16px' };
+const BOX_BOTTOM_END = '0px 100px';
 
-describe('FEATURE: createAtomCanvas setSegments', () => {
+describe('FEATURE: createAtomCanvas setLinkEnds', () => {
   let cy: Core;
   let atoms: AtomCanvas;
 
@@ -58,33 +55,29 @@ describe('FEATURE: createAtomCanvas setSegments', () => {
     cy.destroy();
   });
 
-  describe('GIVEN a straight link between two drawn tasks', () => {
-    it('WHEN its segments are set THEN it is drawn on them as a routed link', () => {
-      atoms.setSegments(new Map([[LINK_ID, SEGMENTS]]));
+  describe('GIVEN a link between two drawn tasks', () => {
+    it('WHEN its source end is set THEN it carries that end as data(srcEnd)', () => {
+      atoms.setLinkEnds(new Map([[LINK_ID, BOX_BOTTOM_END]]));
 
-      const edge = cy.getElementById(LINK_ID);
-
-      expect(edge.hasClass(ROUTED_CLASS)).toBe(true);
-      expect(edge.data('srcEnd')).toBe(SEGMENTS.srcEnd);
-      expect(edge.data('segWeights')).toStrictEqual(SEGMENTS.segWeights);
+      expect(cy.getElementById(LINK_ID).data('srcEnd')).toBe(BOX_BOTTOM_END);
     });
 
-    it('WHEN segments are set for a link not drawn THEN no element is added', () => {
+    it('WHEN an end is set for a link not drawn THEN no element is added', () => {
       const before = cy.elements().length;
 
-      atoms.setSegments(new Map([['edge:missing', SEGMENTS]]));
+      atoms.setLinkEnds(new Map([['edge:missing', BOX_BOTTOM_END]]));
 
       expect(cy.elements()).toHaveLength(before);
     });
   });
 
-  describe('GIVEN a link drawn on segments', () => {
-    it('WHEN it is set to null THEN it is drawn straight again', () => {
-      atoms.setSegments(new Map([[LINK_ID, SEGMENTS]]));
+  describe('GIVEN a link with a source end', () => {
+    it('WHEN it is set to null THEN it carries no source end, so it leaves its source at the border again', () => {
+      atoms.setLinkEnds(new Map([[LINK_ID, BOX_BOTTOM_END]]));
 
-      atoms.setSegments(new Map([[LINK_ID, null]]));
+      atoms.setLinkEnds(new Map([[LINK_ID, null]]));
 
-      expect(cy.getElementById(LINK_ID).hasClass(ROUTED_CLASS)).toBe(false);
+      expect(cy.getElementById(LINK_ID).data('srcEnd')).toBeUndefined();
     });
   });
 });

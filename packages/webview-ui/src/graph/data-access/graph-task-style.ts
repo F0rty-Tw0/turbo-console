@@ -48,8 +48,11 @@ const ATOM_FILE = {
   'corner-radius': '10px'
 } as const;
 
-/** An expanded group's box pads its content and sizes from the nodes, not from their labels. */
-const ATOM_BOX = { padding: `${ATOM_BOX_PADDING_PX}px`, 'compound-sizing-wrt-labels': 'exclude' } as const;
+/**
+ * An expanded group's box pads its content and sizes from the nodes, not from their labels; see-through, so a task link
+ * drawn under it shows.
+ */
+const ATOM_BOX = { padding: `${ATOM_BOX_PADDING_PX}px`, 'compound-sizing-wrt-labels': 'exclude', 'background-opacity': 0 } as const;
 
 /** A live file's border and outline are dashed; a solid outcome outline would hide a dashed border alone. */
 const ATOM_LIVE = { 'border-style': 'dashed', 'border-dash-pattern': DASHED_BORDER_PX, 'outline-style': 'dashed' } as const;
@@ -151,7 +154,8 @@ const affectedRulesOf = (colors: ThemeColors): StylesheetJsonBlock[] => {
  * The task mode rules: a `task` node reads its name, an `atom-umbrella` wraps its label to put the counts under the
  * name, an `atom-file` reads its file name and an `atom-box` pads its content, an `atom-<outcome>` class outlines a
  * file (dashed border when `atom-live`), a `run-<state>` class outlines a task or file after them (a selected task
- * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports, left-aligned
+ * drops that outline), and a `task-box` draws a dashed frame and `boxTitle` on the page and in exports (the box
+ * see-through, its title on a backdrop of the theme background, so a task link drawn under it passes behind the title), left-aligned
  * one padding in from the frame, at least `data(minWidth)` wide inside its padding, the extra width on the right so its
  * tasks keep their place, while a `box-framed` one (a titled-row box: one task, so ELK reserves a title row above it
  * and a link entering that task's top centre passes below the title) is drawn on its ELK frame with its title at the
@@ -171,7 +175,10 @@ export const taskRulesOf = (colors: ThemeColors, boxTitle: Css.Node, glyphFamily
     'text-margin-x': -FOLDER_PADDING_PX,
     'min-width': 'data(minWidth)',
     'min-width-bias-left': '0%',
-    'min-width-bias-right': '100%'
+    'min-width-bias-right': '100%',
+    'background-opacity': 0,
+    'text-background-color': colors.background,
+    'text-background-opacity': 1
   } as const;
   const taskBox = { ...titledBox, 'border-style': 'dashed', 'border-dash-pattern': TASK_BOX_DASH_PX } as const;
   const scriptsBox = { ...taskBox, 'border-dash-pattern': SCRIPTS_BOX_DASH_PX } as const;

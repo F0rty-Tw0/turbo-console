@@ -16,7 +16,6 @@ import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 import { nestedCentresOf } from '../utils/elk-centres.util.ts';
 import { boxFramesOf } from '../utils/elk-frames.util.ts';
-import { routesOf } from '../utils/elk-routes.util.ts';
 import { elkTaskGraphOf } from '../utils/elk-task-graph.util.ts';
 
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
@@ -91,7 +90,6 @@ const drawingOf = (laidOut: ElkNode): TaskDrawing => {
   const drawing: TaskDrawing = {
     tasks: TASKS,
     positions: nestedCentresOf(laidOut),
-    routes: routesOf(laidOut),
     boxFrames: boxFramesOf(laidOut),
     sizeOf: SIZE_OF,
     sizes: new Map(),

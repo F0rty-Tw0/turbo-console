@@ -3,16 +3,11 @@ import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { ProbeEdgeLine, ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
-import type { RouteBends } from '../common/graph-route.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
-import { readEdgeLines, readRoute, throughNodeCountOf } from '../test/utils/graph-lines.spec.util.ts';
-import { bendShiftOf, routeBendsOf } from '../test/utils/graph-route-bends.spec.util.ts';
+import { readEdgeLines, throughNodeCountOf } from '../test/utils/graph-lines.spec.util.ts';
 
 /** How far, in page px, a line must reach inside a file's box to count as crossing it, so one grazing its border does not. */
 const THROUGH_INSET_PX = 1;
-
-/** How far, as a fraction of the umbrella box, a bend may sit from where it was and still be the same route. */
-const BEND_TOLERANCE = 0.01;
 
 /** Hundredths of a page px: a line drawn again on the same segments can land a float rounding step off. */
 const POINT_PRECISION = 100;
@@ -33,34 +28,6 @@ export class GraphAtomLinks {
   public constructor(page: Page) {
     this.page = page;
     this.probe = new GraphProbePage(page);
-  }
-
-  /**
-   * The bends of each drawn, routed line out of `umbrellaId`, by target, once `count` of them are drawn and routed: each
-   * bend's offset from the umbrella centre as a fraction of the umbrella box, so it holds whatever the camera. Read from
-   * the line state in one page task, so it holds however late Cytoscape recomputes the drawn ends.
-   */
-  public async routedBendsFrom(umbrellaId: string, count: number): Promise<RouteBends> {
-    const countOf = async (): Promise<number> => {
-      const bends = await this.drawnBendsFrom(umbrellaId);
-
-      return Object.keys(bends).length;
-    };
-
-    await expect.poll(countOf).toBe(count);
-
-    return this.drawnBendsFrom(umbrellaId);
-  }
-
-  /** The routed lines out of `umbrellaId` have the targets, bend counts and bends of `bends`, each bend within `BEND_TOLERANCE` of the umbrella box. */
-  public async expectRoutedBendsFrom(umbrellaId: string, bends: RouteBends): Promise<void> {
-    const shiftOf = async (): Promise<number> => {
-      const now = await this.drawnBendsFrom(umbrellaId);
-
-      return bendShiftOf(bends, now);
-    };
-
-    await expect.poll(shiftOf).toBeLessThanOrEqual(BEND_TOLERANCE);
   }
 
   /**
@@ -97,12 +64,6 @@ export class GraphAtomLinks {
   /** `count` pairs of a drawn line and one of the `fileIds` have the line cross the file's box, `THROUGH_INSET_PX` in. */
   public async expectThroughFiles(fileIds: string[], count: number): Promise<void> {
     await expect.poll(async (): Promise<number> => this.throughFilesOf(fileIds)).toBe(count);
-  }
-
-  private async drawnBendsFrom(umbrellaId: string): Promise<RouteBends> {
-    const read = await readRoute(this.page);
-
-    return routeBendsOf(read, umbrellaId);
   }
 
   private async throughFilesOf(fileIds: string[]): Promise<number> {

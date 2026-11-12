@@ -1,5 +1,6 @@
 import type { Css, NodeSingular, StylesheetJson } from 'cytoscape';
 
+import { dimmedBoxRulesOf } from './graph-dimmed-box-style.ts';
 import { routeRulesOf } from './graph-route-style.ts';
 import { selectionRulesOf } from './graph-selection-style.ts';
 import { taskRulesOf } from './graph-task-style.ts';
@@ -7,7 +8,6 @@ import {
   COLLAPSED_LABEL_MAX_PX,
   DASHED_BORDER_PX,
   DASHED_LINE_PX,
-  DIMMED_BOX_CLASS,
   EDGE_WIDTH,
   EXPORTING_CLASS,
   FOLDER_HIDDEN_CLASS,
@@ -57,14 +57,6 @@ const boxStyleOf = (colors: ThemeColors): Css.Node => {
   } as const;
 
   return box;
-};
-
-/** A box faded with `dimmed-box`: its frame, title and fill at the theme's dimmed opacity, its packages untouched. */
-const dimmedBoxStyleOf = (colors: ThemeColors): Css.Node => {
-  const opacity = colors.dimmedOpacity;
-  const dimmedBox = { 'border-opacity': opacity, 'text-opacity': opacity, 'background-opacity': opacity } as const;
-
-  return dimmedBox;
 };
 
 /** A folder link's `<n> link(s)` label, on the canvas background so a crossing line never runs through it; the label takes taps. */
@@ -165,8 +157,9 @@ const BOX_TITLE = {
 
 /**
  * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with a
- * triangle at the dependency, drawn on their ELK route while `routed` (`routeRulesOf`). `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost`
- * (dashed) is the one `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
+ * triangle at the dependency, drawn on their ELK route while `routed` and a task link straight (`routeRulesOf`).
+ * `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost` (dashed) is the one
+ * `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
  * background; `taskRulesOf` adds the task mode rules and `selectionRulesOf` the selected border and fill and the bold focus target.
  * The folder pass draws `folder-node` (a collapsed folder, its label wrapped only while exporting or `row-less`) and
  * `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it. Every colour
@@ -197,6 +190,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
   const taskRules = taskRulesOf(colors, BOX_TITLE, glyphFamily);
   const selectionRules = selectionRulesOf(colors);
   const routeRules = routeRulesOf();
+  const dimmedBoxRules = dimmedBoxRulesOf(colors);
   const style: StylesheetJson = [
     { selector: 'node', style: node },
     { selector: 'node[label]', style: LABELLED_NODE },
@@ -216,7 +210,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     { selector: `node.${FOLDER_NODE_CLASS}`, style: FOLDER_NODE },
     { selector: FOLDER_NODE_LABELLED_SELECTOR, style: FOLDER_NODE_LABELLED },
     { selector: `edge.${FOLDER_LINK_CLASS}`, style: folderLinkStyleOf(colors, fontFamily) },
-    { selector: `node.${DIMMED_BOX_CLASS}`, style: dimmedBoxStyleOf(colors) },
+    ...dimmedBoxRules,
     { selector: `.${FOLDER_HIDDEN_CLASS}`, style: HIDDEN }
   ];
 

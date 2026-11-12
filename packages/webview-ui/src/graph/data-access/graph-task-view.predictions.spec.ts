@@ -34,7 +34,6 @@ const POSITIONS: Positions = { 'api#build': API_AT, 'web#build': WEB_AT, 'ui#lin
 const DRAWING: TaskDrawing = {
   tasks: TASKS,
   positions: POSITIONS,
-  routes: {},
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),

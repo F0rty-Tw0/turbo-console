@@ -4,8 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { probeStateOf } from './graph-probe-state.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
-import type { EdgeRoute, GraphTask, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
-import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
+import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
@@ -35,7 +34,6 @@ const NO_LABELS = new Map<string, string>();
 const DRAWING: TaskDrawing = {
   tasks: TASKS,
   positions: POSITIONS,
-  routes: {},
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: NO_SIZES,
@@ -66,18 +64,6 @@ const PAINT_DRAWING: TaskDrawing = { ...DRAWING, tasks: PAINT_TASKS };
 const STATE_SELECTOR = '.selected, .highlighted, .dimmed, .dimmed-box';
 
 const WEB_LINK = edgeIdOf({ source: 'web#build', target: 'api#build' });
-
-const WEB_LINK_START: Position = { x: 10, y: 104 };
-
-const WEB_LINK_BENDS: Position[] = [{ x: 30, y: 70 }];
-
-const WEB_LINK_END: Position = { x: 10, y: 36 };
-
-const WEB_LINK_ROUTE: EdgeRoute = { start: WEB_LINK_START, bends: WEB_LINK_BENDS, end: WEB_LINK_END };
-
-const WEB_LINK_ROUTES: Routes = { [WEB_LINK]: WEB_LINK_ROUTE };
-
-const ROUTED_DRAWING: TaskDrawing = { ...DRAWING, routes: WEB_LINK_ROUTES };
 
 const idOf = (node: NodeSingular): string => node.id();
 
@@ -188,36 +174,6 @@ describe('FEATURE: createTaskCanvas', () => {
 
       expect(edge.source().id()).toBe('web#build');
       expect(edge.target().id()).toBe('api#build');
-    });
-  });
-
-  describe('GIVEN a drawing with a route for a task link', () => {
-    it('WHEN shown THEN that link is routed and carries the segment data', () => {
-      canvas.show(ROUTED_DRAWING);
-
-      const link = cy.getElementById(WEB_LINK);
-      const weights: unknown = link.data('segWeights');
-      const drawn: unknown[] = [link.hasClass(ROUTED_CLASS), Array.isArray(weights)];
-
-      expect(drawn).toStrictEqual([true, true]);
-    });
-
-    it('WHEN shown without that route THEN the link is straight', () => {
-      canvas.show(DRAWING);
-
-      const isRouted = cy.getElementById(WEB_LINK).hasClass(ROUTED_CLASS);
-
-      expect(isRouted).toBe(false);
-    });
-
-    it('WHEN setRoutes({}) is called on the routed link THEN it is straight', () => {
-      canvas.show(ROUTED_DRAWING);
-
-      canvas.setRoutes({});
-
-      const isRouted = cy.getElementById(WEB_LINK).hasClass(ROUTED_CLASS);
-
-      expect(isRouted).toBe(false);
     });
   });
 

@@ -29,7 +29,6 @@ const PRESET = { name: 'preset', fit: false };
 const DRAWING: TaskDrawing = {
   tasks: [WEB_BUILD],
   positions: POSITIONS,
-  routes: {},
   boxFrames: {},
   sizeOf: (): NodeSize => NODE_SIZE,
   sizes: new Map(),

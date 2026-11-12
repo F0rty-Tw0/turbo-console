@@ -1,12 +1,16 @@
-import type { BoundingBox12, Core, NodeSingular } from 'cytoscape';
+import type { BoundingBox12, CollectionReturnValue, Core, EdgeSingular, NodeSingular } from 'cytoscape';
 
 import { styleNumber, styleText } from './graph-probe-state.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import type { ProbeRect, ProbeTitle } from '../common/graph-probe-titles.type.ts';
+import type { ProbeLink, ProbeRect, ProbeTitle } from '../common/graph-probe-titles.type.ts';
 import { BOX_FRAMED_CLASS, TASK_BOX_CLASS } from '../common/graph-task.const.ts';
 import { isBoxFrame } from '../utils/box-frame.util.ts';
 
 type FrameErrors = Pick<ProbeTitle, 'isFramed' | 'frameError' | 'titleError'>;
+
+type ZSortable = {
+  readonly sortByZIndex: () => CollectionReturnValue;
+};
 
 const BOX_OPTIONS = { includeLabels: false, includeOverlays: false };
 
@@ -58,20 +62,64 @@ const frameErrorsOf = (box: NodeSingular): FrameErrors => {
   return errors;
 };
 
-/** `box` with its title, `origin` being the container's top left corner in page CSS pixels. */
-const probeTitleOf = (box: NodeSingular, origin: Position): ProbeTitle => {
+const isZSortable = (value: unknown): value is ZSortable =>
+  typeof value === 'object' && value !== null && 'sortByZIndex' in value && typeof value.sortByZIndex === 'function';
+
+/**
+ * Each element's place in the order the canvas draws them, by id: Cytoscape's own sort (cytoscape 3.34
+ * `sortByZIndex`, untyped), the one its renderer draws by. Throws when it is gone, so a renamed sort fails here.
+ */
+const drawOrderOf = (cy: Core): ReadonlyMap<string, number> => {
+  const elements = cy.elements();
+
+  if (!isZSortable(elements)) throw new Error('graph probe: no sortByZIndex');
+
+  const sorted = elements.sortByZIndex();
+  const entries = sorted.map((element, index): [string, number] => [element.id(), index]);
+
+  return new Map(entries);
+};
+
+const linkOf = (edge: EdgeSingular): ProbeLink => {
+  const source = edge.source().id();
+  const target = edge.target().id();
+  const link: ProbeLink = { source, target };
+
+  return link;
+};
+
+/** The links `order` draws after `box`, so over its title. */
+const linesOverOf = (box: NodeSingular, order: ReadonlyMap<string, number>): ProbeLink[] => {
+  const boxOrder = order.get(box.id()) ?? Infinity;
+  const isOver = (edge: EdgeSingular): boolean => (order.get(edge.id()) ?? -Infinity) > boxOrder;
+
+  return box.cy().edges().filter(isOver).map(linkOf);
+};
+
+/** The colour `box`'s title is drawn on while that backdrop is opaque, else `null`. */
+const backdropOf = (box: NodeSingular): string | null => {
+  const isOpaque = styleNumber(box, 'text-background-opacity') === 1;
+  const colour = styleText(box, 'text-background-color');
+
+  return isOpaque ? colour : null;
+};
+
+/** `box` with its title, `origin` being the container's top left corner in page CSS pixels, `order` the draw order. */
+const probeTitleOf = (box: NodeSingular, origin: Position, order: ReadonlyMap<string, number>): ProbeTitle => {
   const label = rectOf(box.renderedBoundingBox(LABEL_OPTIONS), origin);
   const rendered = rectOf(box.renderedBoundingBox(BOX_OPTIONS), origin);
   const modelBox = rectOf(box.boundingBox(BOX_OPTIONS), ORIGIN);
   const errors = frameErrorsOf(box);
-  const title: ProbeTitle = { id: box.id(), text: styleText(box, 'label'), label, box: rendered, modelBox, ...errors };
+  const drawn = { backdrop: backdropOf(box), linesOver: linesOverOf(box, order) };
+  const title: ProbeTitle = { id: box.id(), text: styleText(box, 'label'), label, box: rendered, modelBox, ...errors, ...drawn };
 
   return title;
 };
 
 /** Every task mode package box of `cy` with its title, in element order; none outside task mode. */
 export const probeTitlesOf = (cy: Core, origin: Position): ProbeTitle[] => {
-  const probeTitle = (box: NodeSingular): ProbeTitle => probeTitleOf(box, origin);
+  const order = drawOrderOf(cy);
+  const probeTitle = (box: NodeSingular): ProbeTitle => probeTitleOf(box, origin, order);
 
   return cy.nodes(`.${TASK_BOX_CLASS}`).map(probeTitle);
 };
