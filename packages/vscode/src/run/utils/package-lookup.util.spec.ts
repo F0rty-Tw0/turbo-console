@@ -29,7 +29,7 @@ describe('FEATURE: package lookup', () => {
       expect(packageForManifest('packages/libs/x/package.json', MODEL)?.name).toBe('x');
     });
 
-    it('GIVEN the root manifest WHEN looked up THEN there is none', () => {
+    it('GIVEN a model with no // package WHEN the root manifest is looked up THEN there is none', () => {
       expect(packageForManifest('package.json', MODEL)).toBeNull();
     });
 
@@ -41,8 +41,10 @@ describe('FEATURE: package lookup', () => {
       expect(packageForManifest('sub/package.json', SINGLE)).toBeNull();
     });
 
-    it('GIVEN a model that is not single-package but holds a path-"" package WHEN the root manifest is looked up THEN there is none', () => {
-      expect(packageForManifest('package.json', { ...SINGLE, singlePackage: false })).toBeNull();
+    it('GIVEN a monorepo model holding the // package at path "" WHEN the root manifest is looked up THEN the // package returns', () => {
+      const monorepo: WorkspaceModel = { ...MODEL, packages: [ROOT_PACKAGE, ...MODEL.packages] };
+
+      expect(packageForManifest('package.json', monorepo)?.name).toBe('//');
     });
 
     it('GIVEN the root itself WHEN looked up THEN there is none', () => {
