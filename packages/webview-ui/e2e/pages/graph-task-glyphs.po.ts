@@ -4,6 +4,7 @@ import { expect } from '@playwright/test';
 import { GraphHost } from './graph-host.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphPage } from './graph.po.ts';
+import { ATOM_CHIP_GLYPH_PX } from '../../src/graph/common/graph-atom.const.ts';
 import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from '../../src/graph/common/graph-glyph.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
@@ -18,7 +19,10 @@ const READY_BUDGET_MS = CODICON_WAIT_MS + 500;
 /** Every character the codicon font covers: Cytoscape draws a state glyph from it. */
 const CODICON_RANGE = /[\uea60-\uf102]/u;
 
-/** A task whose label is the bare name, and the umbrella whose counts line is wider than its name. */
+/** The width glyphs add to an umbrella's chip row: a glyph and its 3 px gap on the cached and the failed chip. */
+const CHIP_GLYPH_SLOTS_PX = 2 * (ATOM_CHIP_GLYPH_PX + 3);
+
+/** A task whose label is the bare name, and the umbrella whose chip row is wider than its name. */
 const PLAIN_TASK = 'hub#build';
 
 /** The task of the task-mode stub that a cold open chooses. */
@@ -121,13 +125,13 @@ export class GraphTaskGlyphs {
     return width ?? 0;
   }
 
-  /** The plain task is wider here than on `held`, a page whose font never came; the umbrella, wide from its counts line, is as wide. */
+  /** The plain task is wider here than on `held`, a page whose font never came; the umbrella, wide from its chip row, is wider by the two chip glyph slots. */
   public async expectWidthsAgainst(held: GraphTaskGlyphs): Promise<void> {
     const here = await this.sizes();
     const there = await held.sizes();
 
     expect(here.task).toBeGreaterThan(there.task);
-    expect(here.umbrella).toBe(there.umbrella);
+    expect(here.umbrella).toBe(there.umbrella + CHIP_GLYPH_SLOTS_PX);
   }
 
   /** A node is drawn and no drawn label holds a codicon character. */

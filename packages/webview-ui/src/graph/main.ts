@@ -1,5 +1,6 @@
 import { REDUCED_MOTION_QUERY } from './common/flow.const.ts';
 import type { FlowControl, FlowEdgeGeometry } from './common/flow.type.ts';
+import { ATOM_CHIP_FONT_PX } from './common/graph-atom.const.ts';
 import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from './common/graph-glyph.const.ts';
 import type { FlowFactory, GraphController, GraphView, GraphViewFactory, Viewport } from './common/graph-page.type.ts';
 import type { GraphProbe } from './common/graph-probe.type.ts';
@@ -70,6 +71,7 @@ const createFlow: FlowFactory = (view: GraphView): FlowControl => {
 const controllerOf = (glyphs: boolean): GraphController => {
   const measure = textMeasure(`${NODE_FONT_SIZE}px ${fontFamily}`);
   const glyphMeasure = textMeasure(`${NODE_FONT_SIZE}px codicon, ${fontFamily}`);
+  const chipMeasure = textMeasure(`${ATOM_CHIP_FONT_PX}px ${fontFamily}`);
   const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fontFamily, glyphs);
   const controller = createGraphController({
     bridge,
@@ -81,6 +83,8 @@ const controllerOf = (glyphs: boolean): GraphController => {
     sizeOf: labelSizer(measure),
     taskSizeOf: taskSizerOf(glyphs, measure, glyphMeasure),
     boxTitleSizeOf: boxTitleSizerOf(glyphs, measure, glyphMeasure),
+    chipMeasure,
+    glyphs,
     measure,
     now,
     build: buildControls,

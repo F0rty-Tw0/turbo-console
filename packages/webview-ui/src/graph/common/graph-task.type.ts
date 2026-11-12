@@ -5,6 +5,7 @@ import type { LayoutScreen } from './graph-layouts.type.ts';
 import type { GraphView, NodeSizer, PackageSaver, UmbrellaSizers } from './graph-page.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
+import type { TaskChipDeps } from './task-chip-deps.type.ts';
 import type { TaskControls, TaskControlsActions } from './task-controls.type.ts';
 import type { TaskDetails, TaskDetailsActions, TaskWidgets } from './task-details.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
@@ -119,11 +120,11 @@ export type TaskMemoryPort = {
   readonly save: (edit: Partial<TaskViewState>) => void;
 };
 
-export type TaskModeDeps = {
+type TaskModeOwnDeps = {
   readonly view: TaskView;
   readonly runner: LayoutRunner;
   readonly sizeOf: NodeSizer;
-  /** Sizes plain text, the umbrella counts line. */
+  /** Sizes plain text, the box titles. */
   readonly textSizeOf: NodeSizer;
   /** Sizes package box titles, glyph included when the page draws glyphs. */
   readonly boxTitleSizeOf: NodeSizer;
@@ -154,6 +155,8 @@ export type TaskModeDeps = {
   /** The package selected in the package graph, whose tasks Tasks opens on. */
   readonly selectedPackage: () => string | null;
 };
+
+export type TaskModeDeps = TaskModeOwnDeps & TaskChipDeps;
 
 /** What a task panel's open or close touches: the canvas, re-measured, and the saved open state. */
 export type PanelToggleDeps = {

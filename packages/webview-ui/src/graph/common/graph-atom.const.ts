@@ -1,3 +1,4 @@
+import { NODE_FONT_SIZE } from './graph.const.ts';
 import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 
 /** The class of a task node that is an Atomizer umbrella; it keeps `task` and adds this one. */
@@ -5,6 +6,21 @@ export const ATOM_UMBRELLA_CLASS = 'atom-umbrella';
 
 /** The height one counts line adds under an umbrella's name. */
 export const ATOM_COUNTS_LINE_PX = 16;
+
+/** The height of one count chip: the counts line an umbrella has under its name. */
+export const ATOM_CHIP_HEIGHT_PX = ATOM_COUNTS_LINE_PX;
+
+/** The font size of a count chip: two px under a node label. */
+export const ATOM_CHIP_FONT_PX = NODE_FONT_SIZE - 2;
+
+/** The inset on each side of a count chip's text, inside its border. */
+export const ATOM_CHIP_PAD_PX = 6;
+
+/** The gap between count chips in a row. */
+export const ATOM_CHIP_GAP_PX = 4;
+
+/** The width of a chip glyph (cached or failed): the glyph itself. */
+export const ATOM_CHIP_GLYPH_PX = 12;
 
 /** The class of an expanded group's box. */
 export const ATOM_BOX_CLASS = 'atom-box';

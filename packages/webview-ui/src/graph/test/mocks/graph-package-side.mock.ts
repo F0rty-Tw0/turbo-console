@@ -116,6 +116,8 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
     sizeOf: (): NodeSize => NODE_SIZE,
     taskSizeOf: (): NodeSize => NODE_SIZE,
     boxTitleSizeOf: (): NodeSize => NODE_SIZE,
+    chipMeasure: (text: string): number => text.length,
+    glyphs: false,
     measure: (text: string): number => text.length,
     now: (): number => 0,
     build: buildControls,
