@@ -1,4 +1,4 @@
-import type { TaskNode } from '@turbo-console/core';
+import type { RunExtras, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { progressKeyOf, runKeyOf, runningEntryOf } from './run-entry.util.ts';
@@ -65,5 +65,34 @@ describe('FEATURE: running entry of a request', () => {
     const entry = runningEntryOf({ ...RUN_REQUEST_STUB, force: true }, 1000);
 
     expect(entry.force).toBe(true);
+  });
+
+  describe('GIVEN run extras', () => {
+    const EXTRAS: RunExtras = {
+      only: true,
+      continueMode: 'dependencies-successful',
+      concurrency: '4',
+      passThrough: ['--watch', '--port=3000']
+    };
+
+    it('WHEN a request with extras makes its entry THEN the entry carries those extras', () => {
+      const entry = runningEntryOf({ ...RUN_REQUEST_STUB, extras: EXTRAS }, 1000);
+
+      expect(entry.extras).toStrictEqual(EXTRAS);
+    });
+
+    it('WHEN a request with no extras makes its entry THEN the entry has no extras key at all', () => {
+      const entry = runningEntryOf(RUN_REQUEST_STUB, 1000);
+
+      expect(Object.keys(entry)).not.toContain('extras');
+    });
+
+    it('WHEN a forced request with extras makes its entry THEN force and extras are both kept', () => {
+      const extras: RunExtras = { only: true };
+
+      const entry = runningEntryOf({ ...RUN_REQUEST_STUB, force: true, extras }, 1000);
+
+      expect(entry).toMatchObject({ force: true, extras });
+    });
   });
 });

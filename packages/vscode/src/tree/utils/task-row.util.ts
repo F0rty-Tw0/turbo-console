@@ -5,6 +5,7 @@ import { withAffectedWord } from './affected-word.util.ts';
 import { rowAffectedOf } from './row-affected.util.ts';
 import { rowIdOf } from './row-id.util.ts';
 import { rowPredictionOf } from './row-prediction.util.ts';
+import { runOptionsLineOf } from './run-options-line.util.ts';
 import { taskDisplay } from './task-display.util.ts';
 import { themeFilesOf, toolIcon } from './tool-icon.util.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
@@ -102,9 +103,7 @@ const matchLines = (match: RunMatch | null, force: boolean): string[] => {
  * Spec 1c-a §4.5 run lines: the start time always; a stopped run adds its end time; a passed or failed run adds exit
  * code, duration and cache (each only when known) before both times.
  */
-const runLines = (entry: RunEntry | undefined): string[] => {
-  if (entry === undefined) return [];
-
+const stateRunLines = (entry: RunEntry): string[] => {
   const { state } = entry;
   const started = timeLine('Started', entry.launchedAt);
 
@@ -121,6 +120,17 @@ const runLines = (entry: RunEntry | undefined): string[] => {
   const lines = [exit, ...matched, ...times];
 
   return lines.flatMap(lineOf);
+};
+
+/** The options line (what Run with Options chose) leads the run lines in every state. */
+const runLines = (entry: RunEntry | undefined): string[] => {
+  if (entry === undefined) return [];
+
+  const options = lineOf(runOptionsLineOf(entry));
+
+  const stateLines = stateRunLines(entry);
+
+  return [...options, ...stateLines];
 };
 
 /**

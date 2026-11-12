@@ -40,5 +40,9 @@ export const runningEntryOf = (request: RunRequest, now: number): RunEntry => {
     packageManager
   };
 
-  return entry;
+  if (request.extras === undefined) return entry;
+
+  const withExtras: RunEntry = { ...entry, extras: request.extras };
+
+  return withExtras;
 };

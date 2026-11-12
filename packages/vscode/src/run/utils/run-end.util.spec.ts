@@ -1,4 +1,4 @@
-import type { RunToMatch } from '@turbo-console/core';
+import type { RunExtras, RunToMatch } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { endStateOf, isMatchedEnd, runToMatchOf } from './run-end.util.ts';
@@ -108,6 +108,27 @@ describe('FEATURE: run to match of an entry', () => {
       const entry: RunEntry = { ...ENDED, processStartedAt: 1200 };
 
       expect(runToMatchOf(entry)?.launchedAt).toBe(1000);
+    });
+  });
+
+  describe('GIVEN an ended entry and run extras', () => {
+    const EXTRAS: RunExtras = { continueMode: 'dependencies-successful', passThrough: ['--watch'] };
+
+    it('WHEN an entry with extras is read THEN the run to match carries them and the five existing fields', () => {
+      const expected: RunToMatch = {
+        task: ENDED.task,
+        packageName: 'a',
+        launchedAt: 1000,
+        endedAt: 4000,
+        exitCode: 1,
+        extras: EXTRAS
+      };
+
+      expect(runToMatchOf({ ...ENDED, extras: EXTRAS })).toStrictEqual(expected);
+    });
+
+    it('WHEN an entry with no extras is read THEN the run to match has no extras key at all', () => {
+      expect(Object.keys(runToMatchOf(ENDED) ?? {})).not.toContain('extras');
     });
   });
 

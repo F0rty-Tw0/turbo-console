@@ -1,4 +1,4 @@
-import type { PackageManager, RunMatch, RunTasksMatch, RunToMatch, TaskNode, TaskOutcome } from '@turbo-console/core';
+import type { PackageManager, RunExtras, RunMatch, RunTasksMatch, RunToMatch, TaskNode, TaskOutcome } from '@turbo-console/core';
 
 import type { RunLogs } from './run-log-tail.type.ts';
 import type { DependenciesOf, ProgressPort } from './run-progress.type.ts';
@@ -34,6 +34,8 @@ export type RunEntry = {
   readonly force: boolean;
   /** The package manager a script run was launched with, so its end can name it; `null` for a turbo task. */
   readonly packageManager: PackageManager | null;
+  /** What Run with Options added besides `force`; absent when none. */
+  readonly extras?: RunExtras;
 };
 
 export type RunLookup = (root: string, taskId: string) => RunEntry | undefined;
@@ -70,6 +72,8 @@ export type RunRequest = {
   readonly binaryPath: string;
   readonly force: boolean;
   readonly singlePackage: boolean;
+  /** What Run with Options added besides `force`; absent when none. */
+  readonly extras?: RunExtras;
 };
 
 /** Variables added to the environment of one turbo process. */

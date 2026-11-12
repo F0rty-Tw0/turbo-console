@@ -59,6 +59,8 @@ export type { ContinueMode, RunAllOptions, RunExtras, RunTaskOptions } from './r
 
 export { turboOptionArgs, turboRunAllArgs, turboRunArgs } from './run-args/utils/run-args.util.ts';
 
+export { assertRunExtras } from './run-args/utils/run-extras.util.ts';
+
 export { BARE, BARE_FIRST_BLOCKED, CONCURRENCY_VALUE, SINGLE_PACKAGE } from './shared/turbo/common/turbo-args.const.ts';
 
 export { TurboException } from './shared/errors/common/turbo.exception.ts';

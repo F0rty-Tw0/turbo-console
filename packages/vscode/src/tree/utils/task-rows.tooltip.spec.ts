@@ -1,4 +1,4 @@
-import type { PackageNode, RunMatch, TaskNode } from '@turbo-console/core';
+import type { PackageNode, RunExtras, RunMatch, TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { taskRowOf } from './task-rows.util.ts';
@@ -183,6 +183,68 @@ describe('FEATURE: task row tooltip', () => {
       const lines = tooltipLinesOf(taskOf({}), entryIn({ state: 'stopped', stopRequested: true, endedAt: null }));
 
       expect(lines).toStrictEqual(['Kind: task', STARTED]);
+    });
+  });
+
+  describe('GIVEN a run with options', () => {
+    const SCRIPT_TASK = taskOf({ isTurboTask: false, name: 'lint', command: null });
+    const ONLY: RunExtras = { only: true };
+    const ONLY_KEEP_GOING: RunExtras = { only: true, continueMode: 'dependencies-successful' };
+    const KEEP_GOING: RunExtras = { continueMode: 'dependencies-successful' };
+    const WATCH_PORT: RunExtras = { passThrough: ['--watch', '--port=3000'] };
+    const PASSED_MISS: Partial<RunEntry> = { state: 'passed', exitCode: 0, match: MISS_MATCH };
+
+    it.each<[string, Partial<RunEntry>, string[]]>([
+      ['it is running', { state: 'running', endedAt: null, extras: ONLY }, ['Kind: task', 'Options: --only', STARTED]],
+      ['it failed to start', { state: 'failed-to-start', extras: ONLY }, ['Kind: task', 'Options: --only', STARTED]],
+      [
+        'it was stopped',
+        { state: 'stopped', stopRequested: true, exitCode: 1, extras: ONLY },
+        ['Kind: task', 'Options: --only', STARTED, ENDED]
+      ],
+      [
+        'it passed with a cache miss',
+        { ...PASSED_MISS, extras: ONLY_KEEP_GOING },
+        [
+          'Kind: task',
+          'Options: --only --continue=dependencies-successful',
+          'Exit code: 0',
+          'Duration: 3.2s',
+          'Cache: not cached, ran',
+          STARTED,
+          ENDED
+        ]
+      ],
+      [
+        'it failed with no match',
+        { state: 'failed', exitCode: 3, match: null, extras: KEEP_GOING },
+        ['Kind: task', 'Options: --continue=dependencies-successful', 'Exit code: 3', STARTED, ENDED]
+      ],
+      [
+        'it was forced',
+        { ...PASSED_MISS, force: true, extras: ONLY },
+        [
+          'Kind: task',
+          'Options: --force --only',
+          'Exit code: 0',
+          'Duration: 3.2s',
+          'Cache: skipped (Run Without Cache)',
+          STARTED,
+          ENDED
+        ]
+      ]
+    ])('WHEN %s THEN the Options line follows the kind', (_name, overrides, expected) => {
+      const lines = tooltipLinesOf(taskOf({}), entryIn(overrides));
+
+      expect(lines).toStrictEqual(expected);
+    });
+
+    it('WHEN a script runs with arguments THEN an Arguments line follows the kind', () => {
+      const entry = entryIn({ task: SCRIPT_TASK, state: 'running', endedAt: null, extras: WATCH_PORT });
+
+      const lines = tooltipLinesOf(SCRIPT_TASK, entry);
+
+      expect(lines).toStrictEqual(['Command: pnpm run lint', 'Kind: task', 'Arguments: --watch --port=3000', STARTED]);
     });
   });
 });
