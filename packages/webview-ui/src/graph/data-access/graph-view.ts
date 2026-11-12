@@ -1,5 +1,5 @@
 import cytoscape from 'cytoscape';
-import type { Core, ElementDefinition } from 'cytoscape';
+import type { Core } from 'cytoscape';
 
 import { createAtomCanvas } from './graph-atom-view.ts';
 import { setBoxes } from './graph-boxes.ts';
@@ -10,58 +10,30 @@ import { flowEdgesOf } from './graph-flow-edges.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
+import { packageWritersOf } from './graph-package-nodes.ts';
 import { applyFocusTarget, applyPaint } from './graph-paint.ts';
-import { placeNodes, positionOf } from './graph-place.ts';
+import { placeNodes } from './graph-place.ts';
 import { markRowLess, widgetRectsOf } from './graph-rects.ts';
 import { applyRoutes } from './graph-routes.ts';
 import { markPackageRuns } from './graph-run-marks.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import { showOnly } from './graph-visibility.ts';
-import type { GraphEdge, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
-import type { FoldersView, GraphView, GraphViewHandlers, NodeSizer, PackageRuns, Viewport } from '../common/graph-page.type.ts';
+import type { FoldersView, GraphView, GraphViewHandlers, PackageRuns, Viewport } from '../common/graph-page.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { Paint } from '../common/paint.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 import type { RowPlan, WidgetRects } from '../common/widget.type.ts';
-import { edgeIdOf } from '../utils/edge-id.util.ts';
 
 /** Bounds for fit and wheel zoom, so a two-node graph is not fitted to a giant scale. */
 const MIN_ZOOM = 0.05;
 
 const MAX_ZOOM = 2;
-
-const nodeDefinitionsOf = (packages: string[], positions: Positions, sizeOf: NodeSizer): ElementDefinition[] => {
-  const definitionOf = (name: string): ElementDefinition => {
-    const { width, height } = sizeOf(name);
-    const data = { id: name, label: name, width, height };
-    const position = positionOf(positions, name);
-    const definition: ElementDefinition = { data, position };
-
-    return definition;
-  };
-
-  return packages.map(definitionOf);
-};
-
-const edgeDefinitionOf = (edge: GraphEdge): ElementDefinition => {
-  const data = { id: edgeIdOf(edge), source: edge.source, target: edge.target };
-  const definition: ElementDefinition = { data };
-
-  return definition;
-};
-
-const drawGraph = (cy: Core, nodes: ElementDefinition[], edges: GraphEdge[]): void => {
-  const links = edges.map(edgeDefinitionOf);
-
-  cy.resize();
-  cy.elements().remove();
-  cy.add([...nodes, ...links]);
-};
 
 /**
  * Cytoscape on `container` with the preset layout (positions are node centres) and the canvas renderer. Its own resize
@@ -82,18 +54,6 @@ const cytoscapeOn = (container: HTMLElement): Core => {
   };
 
   return cytoscape(options);
-};
-
-/**
- * Writes each named package node's label data; a name not drawn is skipped. Only the named nodes are touched, never
- * `cy.nodes()`, so a collapsed folder keeps its own label.
- */
-export const labelPackages = (cy: Core, labels: ReadonlyMap<string, string>): void => {
-  const relabel = (): void => {
-    for (const [name, label] of labels) cy.getElementById(name).data('label', label);
-  };
-
-  cy.batch(relabel);
 };
 
 /** Marks the package nodes, then the collapsed folders, with their run states. */
@@ -132,14 +92,10 @@ export const createGraphView = (
   const folders = createFoldersView(cy);
   const tasks = createTaskCanvas(cy);
   const atoms = createAtomCanvas(cy);
-  const setGraph = (packages: string[], edges: GraphEdge[], placed: Positions, sizeOf: NodeSizer): void => {
-    const nodes = nodeDefinitionsOf(packages, placed, sizeOf);
-
-    drawGraph(cy, nodes, edges);
-  };
+  const { setGraph, setLabels } = packageWritersOf(cy);
   const view: GraphView = {
     setGraph,
-    setLabels: (labels: ReadonlyMap<string, string>): void => labelPackages(cy, labels),
+    setLabels,
     setPackageRuns: (runs: PackageRuns): void => markRunsOn(cy, folders, runs),
     paint: (next: Paint): void => paintOn(cy, folders, next),
     fit: camera.fit,
