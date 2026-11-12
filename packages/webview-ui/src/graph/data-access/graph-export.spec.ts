@@ -11,15 +11,20 @@ const BG = '#1f1f1f';
 
 const MAX_PX = 4096;
 
+const UMBRELLA_ID = 'web#build';
+
+const UMBRELLA_DATA = { id: UMBRELLA_ID, name: 'build', countsText: '3 files' };
+
 type PngSeen = {
   readonly options: ExportStringOptions | undefined;
   readonly classes: boolean[];
   readonly labels: string[];
   readonly width: number;
   readonly height: number;
+  readonly umbrellaExporting: boolean;
 };
 
-const EMPTY_SEEN: PngSeen = { options: undefined, classes: [], labels: [], width: 0, height: 0 };
+const EMPTY_SEEN: PngSeen = { options: undefined, classes: [], labels: [], width: 0, height: 0, umbrellaExporting: false };
 
 const hasExportingClass = (cy: Core, id: string): boolean => cy.getElementById(id).hasClass('exporting');
 
@@ -34,7 +39,8 @@ const stubPng = (cy: Core, result: string): PngSeen[] => {
   const seen: PngSeen[] = [];
   const png = (options?: ExportStringOptions): string => {
     const { w, h } = cy.elements(':visible').boundingBox();
-    const call: PngSeen = { options, classes: classesOf(cy), labels: labelsOf(cy), width: w, height: h };
+    const umbrellaExporting = hasExportingClass(cy, UMBRELLA_ID);
+    const call: PngSeen = { options, classes: classesOf(cy), labels: labelsOf(cy), width: w, height: h, umbrellaExporting };
 
     seen.push(call);
 
@@ -124,6 +130,28 @@ describe('FEATURE: exportPngOf', () => {
       stubPng(cy, 'iVBORw0KGgo=');
 
       expect(exportPngOf(cy, BG, 1)).toBe('iVBORw0KGgo=');
+    });
+  });
+
+  describe('GIVEN a graph with an umbrella task', () => {
+    beforeEach(() => {
+      cy.add({ group: 'nodes', data: UMBRELLA_DATA, classes: 'task atom-umbrella' });
+    });
+
+    it('WHEN exporting THEN the umbrella carries the exporting class during cy.png and not after', () => {
+      const seen = stubPng(cy, 'PNG');
+
+      exportPngOf(cy, BG, 1);
+
+      expect(callOf(seen, 0).umbrellaExporting).toBe(true);
+      expect(hasExportingClass(cy, UMBRELLA_ID)).toBe(false);
+    });
+
+    it('WHEN cy.png throws THEN the umbrella loses the exporting class', () => {
+      Object.assign(cy, { png: throwingPng });
+
+      expect(() => exportPngOf(cy, BG, 1)).toThrow('boom');
+      expect(hasExportingClass(cy, UMBRELLA_ID)).toBe(false);
     });
   });
 
