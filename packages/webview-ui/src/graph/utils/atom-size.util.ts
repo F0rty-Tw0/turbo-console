@@ -1,13 +1,20 @@
-import { ATOM_CHIP_GAP_PX, ATOM_CHIP_GLYPH_PX, ATOM_CHIP_PAD_PX, ATOM_COUNTS_LINE_PX } from '../common/graph-atom.const.ts';
+import {
+  ATOM_CHIP_BORDER_PX,
+  ATOM_CHIP_GAP_PX,
+  ATOM_CHIP_GLYPH_GAP_PX,
+  ATOM_CHIP_GLYPH_PX,
+  ATOM_CHIP_PAD_PX,
+  ATOM_COUNTS_LINE_PX
+} from '../common/graph-atom.const.ts';
 import type { TextMeasure, UmbrellaSizers } from '../common/graph-page.type.ts';
 import { NODE_PADDING_X } from '../common/graph.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 
-/** A chip's border, 1 px each side. */
-const CHIP_BORDER_PX = 2;
+/** A chip's border, both sides. */
+const CHIP_BORDER_PX = 2 * ATOM_CHIP_BORDER_PX;
 
-/** The glyph slot of a chip: the glyph and its 3 px gap to the text. */
-const CHIP_GLYPH_SLOT_PX = ATOM_CHIP_GLYPH_PX + 3;
+/** The glyph slot of a chip: the glyph and its gap to the text. */
+const CHIP_GLYPH_SLOT_PX = ATOM_CHIP_GLYPH_PX + ATOM_CHIP_GLYPH_GAP_PX;
 
 /** The chips every group can show, each worded at the file count: the worst case of its width. */
 const chipTextsOf = (fileCount: number): string[] => [`${fileCount} files`, `${fileCount} cached`, `${fileCount} failed`];
