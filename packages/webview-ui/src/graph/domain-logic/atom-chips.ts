@@ -58,7 +58,7 @@ export class AtomChips {
     const element = this.deps.port.rowOf(counts);
 
     element.dataset['umbrella'] = id;
-    this.deps.port.layer.append(element);
+    this.deps.port.layer.prepend(element);
     this.rows.set(id, { element, text, transform: '', width: '' });
   }
 
