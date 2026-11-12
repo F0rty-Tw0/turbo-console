@@ -87,7 +87,7 @@ describe('FEATURE: task dependents', () => {
     it('WHEN inverted THEN the root id has an entry although no tree node holds it', () => {
       const deploy: TaskNode = { ...TEST_TASK_STUB, id: 'a#deploy', dependencies: ['//#gen'] };
       const pkg: PackageNode = { ...A_PACKAGE_STUB, tasks: [deploy] };
-      const model: WorkspaceModel = { ...DETAILS_MODEL_STUB, packages: [pkg], rootPackage: null };
+      const model: WorkspaceModel = { ...DETAILS_MODEL_STUB, packages: [pkg] };
 
       const dependents = dependentsOf(model);
 

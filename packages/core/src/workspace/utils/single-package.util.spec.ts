@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { declaresWorkspaces, singlePackageGraphOf } from './single-package.util.ts';
+import { declaresWorkspaces, singlePackageGraphOf, withRootGraphOf } from './single-package.util.ts';
 import type { PackageManagerName } from '../common/workspace-model.type.ts';
-import { graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
+import { graphEdge, graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
 
 type Row = {
   readonly title: string;
@@ -70,6 +70,41 @@ describe('FEATURE: the repo declares workspaces', () => {
       const graph = packageGraph([], [], null);
 
       expect(singlePackageGraphOf(graph)).toBe(graph);
+    });
+  });
+
+  describe('GIVEN a monorepo graph with packages, an edge and a root package', () => {
+    const web = graphPackage('web', 'apps/web', [], []);
+    const ui = graphPackage('ui', 'libs/ui', [], []);
+    const edge = graphEdge('web', 'ui', 'production');
+    const derived = withRootGraphOf(packageGraph([ui, web], [edge], ROOT_PACKAGE));
+
+    it('WHEN the graph is derived THEN the root is listed first among the nodes', () => {
+      expect(derived.data.packageGraph.nodes.items).toStrictEqual([ROOT_PACKAGE, ui, web]);
+    });
+
+    it('WHEN the graph is derived THEN the edges and the root are kept', () => {
+      expect(derived.data.packageGraph.edges.items).toStrictEqual([edge]);
+      expect(derived.data.root).toStrictEqual(ROOT_PACKAGE);
+    });
+  });
+
+  describe('GIVEN a monorepo graph whose nodes already hold a // node', () => {
+    it('WHEN the graph is derived THEN exactly one // is listed, the root, first', () => {
+      const listed = graphPackage('//', '', [], []);
+      const ui = graphPackage('ui', 'libs/ui', [], []);
+
+      const derived = withRootGraphOf(packageGraph([ui, listed], [], ROOT_PACKAGE));
+
+      expect(derived.data.packageGraph.nodes.items).toStrictEqual([ROOT_PACKAGE, ui]);
+    });
+  });
+
+  describe('GIVEN a monorepo graph whose root is null', () => {
+    it('WHEN the graph is derived with the root THEN it is returned as is', () => {
+      const graph = packageGraph([ROOT_PACKAGE], [], null);
+
+      expect(withRootGraphOf(graph)).toBe(graph);
     });
   });
 });

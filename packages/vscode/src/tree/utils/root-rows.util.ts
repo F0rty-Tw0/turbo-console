@@ -1,4 +1,5 @@
 import type { PackageNode, TurboErrorKind, WorkspaceModel } from '@turbo-console/core';
+import { ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
 
 import { dirRows, packageRow } from './dir-rows.util.ts';
 import { packageList } from './folder-tree.util.ts';
@@ -58,16 +59,31 @@ const listRowsOf = (root: string, view: ModelView, inputs: RowInputs): TreeRow[]
   return listed.map(rowOf);
 };
 
-/** Spec 1c-b: an empty view is `no-turbo-packages` when showing scripts would list packages (never while they are shown). */
+/** A monorepo whose workspace globs match no package: turbo lists its root `//` alone. */
+const isRootOnly = (model: WorkspaceModel): boolean => {
+  const isRoot = (pkg: PackageNode): boolean => pkg.name === ROOT_TASK_PACKAGE;
+
+  return !model.singlePackage && model.packages.every(isRoot);
+};
+
+/**
+ * Spec 1c-b: an empty view is `no-packages` for a monorepo holding only its root `//`, else `no-turbo-packages` when
+ * showing scripts would list packages (never while they are shown).
+ */
 const emptyKindOf = (model: WorkspaceModel, context: RowContext, live: ReadonlySet<string>): MessageKind => {
+  const isEmptyMonorepo = isRootOnly(model);
+
+  if (isEmptyMonorepo) return 'no-packages';
+
   const withScripts = context.views(model, true, live);
 
   return withScripts.packages.size > 0 ? 'no-turbo-packages' : 'no-shown-packages';
 };
 
 /**
- * The folder or list rows of a model's shown packages; the `no-packages` row when it has no package, the
- * `no-shown-packages` row when none is shown, the `no-turbo-packages` row when only the scripts toggle hides them (spec §4.7).
+ * The folder or list rows of a model's shown packages; the `no-packages` row when it has no package, or when none is
+ * shown and a monorepo holds only its root `//`; else the `no-shown-packages` row when none is shown, the
+ * `no-turbo-packages` row when only the scripts toggle hides them (spec §4.7). A shown root `//` is listed like any package.
  */
 const packageRowsOf = (root: string, model: WorkspaceModel, context: RowContext): TreeRow[] => {
   if (model.packages.length === 0) return messageRows(root, 'no-packages');

@@ -72,8 +72,7 @@ export const toPackageNode = (pkg: ClassifiedPackage, context: PackageContext): 
 
   const tasks = pkg.tasks.map(toNode).toSorted(byId);
   const tags = pkg.tags.toSorted();
-  const isLabelled = isRoot && context.lookup.singlePackage;
-  const label = isLabelled ? context.rootLabel : null;
+  const label = isRoot ? context.rootLabel : null;
   const node: PackageNode = { name: pkg.name, path, label, tags, tasks };
 
   return node;

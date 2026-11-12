@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { withRootGraphOf } from './single-package.util.ts';
 import { buildWorkspaceModel } from './workspace-model.util.ts';
 import type { GraphPackage } from '../../shared/turbo/common/turbo.type.ts';
 import type { WorkspaceModel } from '../common/workspace-model.type.ts';
@@ -19,7 +20,7 @@ const PKG_B = graphPackage(
 
 const build = (aDeploy: string[], root: GraphPackage | null): WorkspaceModel => {
   const pkgA = graphPackage('a', 'packages/a', [], [graphTask('a#deploy', COMMAND, [], aDeploy)]);
-  const graph = packageGraph([pkgA, PKG_B], [], root);
+  const graph = withRootGraphOf(packageGraph([pkgA, PKG_B], [], root));
 
   return buildWorkspaceModel(graph, [configOf({ '//#gen': 'defined' })], MODEL_SOURCE_STUB);
 };
@@ -46,8 +47,8 @@ describe('FEATURE: workspace model phantom pass-through', () => {
       expect(taskOf(model, 'a#deploy')?.dependencies).toStrictEqual(['b#build']);
     });
 
-    it('WHEN built THEN //#gen is no task of rootPackage', () => {
-      expect(model.rootPackage?.tasks).toStrictEqual([]);
+    it('WHEN built THEN //#gen is no task of the // package', () => {
+      expect(taskOf(model, '//#gen')).toBeUndefined();
     });
   });
 
@@ -67,7 +68,11 @@ describe('FEATURE: workspace model phantom pass-through', () => {
     const root = graphPackage('//', '', [], [fmt]);
     const pkgA = graphPackage('a', 'packages/a', [], [graphTask('a#deploy', COMMAND, [], ['b#deploy'])]);
     const pkgB = graphPackage('b', 'packages/b', [], [graphTask('b#deploy', null, [], ['//#fmt'])]);
-    const model = buildWorkspaceModel(packageGraph([pkgA, pkgB], [], root), [configOf({ '//#fmt': 'defined' })], MODEL_SOURCE_STUB);
+    const model = buildWorkspaceModel(
+      withRootGraphOf(packageGraph([pkgA, pkgB], [], root)),
+      [configOf({ '//#fmt': 'defined' })],
+      MODEL_SOURCE_STUB
+    );
 
     it('WHEN built THEN a#deploy.dependencies is [//#fmt]', () => {
       expect(taskOf(model, 'a#deploy')?.dependencies).toStrictEqual(['//#fmt']);

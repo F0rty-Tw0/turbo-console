@@ -1,3 +1,4 @@
+import { ROOT_NAME } from './turbo-task-lookup.util.ts';
 import type { PackageGraph } from '../../shared/turbo/common/turbo.type.ts';
 import type { PackageManagerName } from '../common/workspace-model.type.ts';
 
@@ -32,6 +33,25 @@ export const singlePackageGraphOf = (graph: PackageGraph): PackageGraph => {
   const edges = { items: [] };
   const packageGraph = { nodes, edges };
   const data = { packageGraph, root };
+  const derived: PackageGraph = { data };
+
+  return derived;
+};
+
+/**
+ * A monorepo `graph` with its `root` package listed first among the nodes and any `//` node turbo already listed
+ * dropped, edges kept, so the model build, the cache and its keys see the root `//` as one more package, once; `graph`
+ * itself when `root` is `null`.
+ */
+export const withRootGraphOf = (graph: PackageGraph): PackageGraph => {
+  const { root, packageGraph } = graph.data;
+
+  if (root === null) return graph;
+
+  const others = packageGraph.nodes.items.filter((node) => node.name !== ROOT_NAME);
+  const nodes = { items: [root, ...others] };
+  const withRoot = { ...packageGraph, nodes };
+  const data = { packageGraph: withRoot, root };
   const derived: PackageGraph = { data };
 
   return derived;

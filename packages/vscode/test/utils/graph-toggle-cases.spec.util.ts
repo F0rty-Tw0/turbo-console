@@ -28,14 +28,14 @@ const isScopeHidden = (scene: GraphScene): boolean => flagsOf(scene)?.[0] === fa
 
 const isScriptsHidden = (scene: GraphScene): boolean => flagsOf(scene)?.[1] === false;
 
-/** The root task `//#rootgen` is listed as a turbo task of the `//` package that Run refuses, and `//` is no graph package. */
+/** The root task `//#rootgen` is listed as a runnable turbo task of the `//` package, which is a graph package like the others. */
 export const rootTaskCase = async (scene: GraphScene): Promise<void> => {
-  await step('L13-12: the root task is listed as a // task, turbo, not runnable, and // is not a graph package', () => {
+  await step('L13-12: the root task is listed as a // task, turbo and runnable, and // is a graph package', () => {
     const state = lastGraphState(scene.api, scene.root);
     const task = state?.tasks.find(({ id }): boolean => id === ROOT_TASK_ID);
 
-    assert.deepEqual([task?.packageName, task?.isTurboTask, task?.isRunnable], [ROOT_PACKAGE_NAME, true, false]);
-    assert.ok(state?.packages.every(({ name }): boolean => name !== ROOT_PACKAGE_NAME));
+    assert.deepEqual([task?.packageName, task?.isTurboTask, task?.isRunnable], [ROOT_PACKAGE_NAME, true, true]);
+    assert.ok(state?.packages.some(({ name }): boolean => name === ROOT_PACKAGE_NAME));
   });
 };
 

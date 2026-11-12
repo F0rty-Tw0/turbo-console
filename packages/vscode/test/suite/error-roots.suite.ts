@@ -24,7 +24,10 @@ const rootNodes = async (api: TurboConsoleApi, roots: string[]): Promise<TreeNod
   return nodes;
 };
 
-/** L6: a two-folder `.code-workspace`, `bad` with an invalid `turbo.json` and `empty` whose globs match no package. */
+/**
+ * L6: a two-folder `.code-workspace`, `bad` with an invalid `turbo.json` and `empty` whose globs match no package, so its
+ * one package is the root `//`, which holds no task: the `target-like` root `package.json` has no scripts.
+ */
 export const run = async (): Promise<void> => {
   const env = readSuiteEnv();
   const api = await turboApi();
@@ -36,6 +39,8 @@ export const run = async (): Promise<void> => {
     nodes = await rootNodes(api, roots);
   });
   await step('6c: the load-error row alone under bad', async () => assertOnlyMessage(api, nodes.at(0), 'load-no-model'));
-  await step('6d: the no-packages row alone under empty', async () => assertOnlyMessage(api, nodes.at(1), 'no-packages'));
+  await step('6d: the no-packages row alone under empty, its root // holding no task', async () =>
+    assertOnlyMessage(api, nodes.at(1), 'no-packages')
+  );
   await markDone(env);
 };

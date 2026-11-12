@@ -12,7 +12,7 @@ import { PACKAGE_GRAPH_QUERY } from '../../shared/turbo/common/turbo-query.const
 import type { PackageGraph, TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import type { TurboConfigError, TurboConfigFile } from '../common/turbo-config.type.ts';
 import type { ModelSource, WorkspaceModel } from '../common/workspace-model.type.ts';
-import { graphPackage, packageGraph } from '../test/utils/graph.spec.util.ts';
+import { graphPackage, graphTask, packageGraph } from '../test/utils/graph.spec.util.ts';
 import type * as workspaceModelUtil from '../utils/workspace-model.util.ts';
 
 const turbo = vi.hoisted(() => {
@@ -107,6 +107,14 @@ const QUERY_MAX_BUFFER = 128 * 1024 * 1024;
 const WINDOWS_PACKAGE = graphPackage('@fx/e2e-1', String.raw`apps\e2e-1`, [], []);
 
 const GRAPH = packageGraph([WINDOWS_PACKAGE], []);
+
+const ROOT_PACKAGE = graphPackage('//', '', [], [graphTask('//#lint', 'eslint .', [], [])]);
+
+const ROOT_GRAPH = packageGraph([WINDOWS_PACKAGE], [], ROOT_PACKAGE);
+
+const ROOT_LINT_ROW = { id: '//#lint', name: 'lint' };
+
+const ROOT_ROW = { name: '//', path: '', label: 'root', tasks: [ROOT_LINT_ROW] };
 
 const ABORTED = 'turbo query packageGraph was aborted';
 
@@ -239,6 +247,24 @@ describe('FEATURE: workspace loading', () => {
       await loadWorkspace(BINARY);
 
       expect(turbo.readDirs).toStrictEqual([['apps/e2e-1']]);
+    });
+  });
+
+  describe('GIVEN a monorepo graph whose root package has a plain script', () => {
+    beforeEach(() => {
+      turbo.stdout = JSON.stringify(ROOT_GRAPH);
+    });
+
+    it('WHEN loaded THEN the root // is a package beside the others, labelled root for a manifest with no name', async () => {
+      const model = await loadWorkspace(BINARY);
+
+      expect(model.packages).toMatchObject([ROOT_ROW, { name: '@fx/e2e-1', label: null }]);
+    });
+
+    it('WHEN loaded THEN the root is stored among the graph packages', async () => {
+      await loadWorkspace(BINARY, { cacheDir: CACHE_DIR });
+
+      expect(store.args[0]?.[1]).toStrictEqual([ROOT_PACKAGE, WINDOWS_PACKAGE]);
     });
   });
 

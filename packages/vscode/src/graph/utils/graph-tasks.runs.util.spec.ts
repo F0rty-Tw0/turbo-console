@@ -280,8 +280,8 @@ describe('FEATURE: persistent ids of a model', () => {
   });
 
   it('GIVEN a persistent root task //#dev WHEN taken THEN //#dev is among them', () => {
-    const rootPackage = packageOf('//', [taskNamed('//#dev', true)]);
-    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [], rootPackage };
+    const root = packageOf('//', [taskNamed('//#dev', true)]);
+    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [root] };
 
     const ids = persistentIdsOf(model);
 

@@ -6,6 +6,8 @@ import { plainLine } from '../../shared/errors/utils/plain-text.util.ts';
 /** npm's package name limit: a longer `name` is cut, so a hostile one never makes a long row. */
 const MAX_NAME_LENGTH = 214;
 
+const MONOREPO_ROOT_LABEL = 'root';
+
 /** `name` cut, made well-formed and one plain line, trimmed; `''` when nothing printable is left. */
 const cleanName = (name: string): string => plainLine(name.slice(0, MAX_NAME_LENGTH).toWellFormed()).trim();
 
@@ -29,4 +31,13 @@ export const rootLabelOf = (name: unknown, root: string): string => {
   if (folder !== '') return folder;
 
   return ROOT_NAME;
+};
+
+/** The display label of a monorepo's root `//` package: its `package.json` `name`, cleaned as `rootLabelOf` does, else `root`. */
+export const monorepoRootLabelOf = (name: unknown): string => {
+  const cleaned = cleanedLabelOf(name);
+
+  if (cleaned !== '') return cleaned;
+
+  return MONOREPO_ROOT_LABEL;
 };

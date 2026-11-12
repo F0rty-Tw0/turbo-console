@@ -48,6 +48,16 @@ describe('FEATURE: folder grouping of packages', () => {
     });
   });
 
+  describe('GIVEN the root // package at path "" beside apps/web and libs/ui', () => {
+    it('WHEN grouped THEN // is a top-level package and the folders keep their own packages', () => {
+      const packages = [packageAt('//', ''), packageAt('web', 'apps/web'), packageAt('ui', 'libs/ui')];
+
+      const tree = folderTree(packages);
+
+      expect(tree).toStrictEqual({ packages: ['//'], dirs: [dirOf('apps', 'apps', ['web']), dirOf('libs', 'libs', ['ui'])] });
+    });
+  });
+
   describe('GIVEN a directory with one child directory and no package of its own', () => {
     it('WHEN grouped THEN the two merge into one node labelled with the joined path', () => {
       const packages = [packageAt('y', 'packages/libs/y'), packageAt('x', 'packages/libs/x')];

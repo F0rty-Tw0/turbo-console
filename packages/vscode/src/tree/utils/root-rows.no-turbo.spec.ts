@@ -1,4 +1,4 @@
-import type { WorkspaceModel } from '@turbo-console/core';
+import type { PackageNode, WorkspaceModel } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
 import { rootRows } from './root-rows.util.ts';
@@ -33,6 +33,24 @@ const NO_TASKS = stateOf({ ...WORKSPACE_MODEL_STUB, packages: EMPTY_PACKAGES });
 const MIXED_PACKAGES = [packageNamed('a'), scriptPackageNamed('s')];
 
 const MIXED = stateOf({ ...WORKSPACE_MODEL_STUB, packages: MIXED_PACKAGES });
+
+const ROOT_SCRIPT_PACKAGE = scriptPackageNamed('//');
+
+const ROOT_SCRIPTS: PackageNode = { ...ROOT_SCRIPT_PACKAGE, path: '', label: 'root' };
+
+const ROOT_SCRIPTS_ONLY = stateOf({ ...WORKSPACE_MODEL_STUB, packages: [ROOT_SCRIPTS] });
+
+const ROOT_EMPTY: PackageNode = { ...ROOT_SCRIPTS, tasks: [] };
+
+const ROOT_NO_TASKS = stateOf({ ...WORKSPACE_MODEL_STUB, packages: [ROOT_EMPTY] });
+
+const ROOT_TURBO_PACKAGE = packageNamed('//');
+
+const ROOT_TURBO: PackageNode = { ...ROOT_TURBO_PACKAGE, path: '', label: 'root' };
+
+const ROOT_TURBO_ONLY = stateOf({ ...WORKSPACE_MODEL_STUB, packages: [ROOT_TURBO] });
+
+const SINGLE_SCRIPTS_ONLY = stateOf({ ...WORKSPACE_MODEL_STUB, singlePackage: true, packages: [ROOT_SCRIPTS] });
 
 const hiddenOf = (mode: TreeMode): RowContext => rowContextOf(mode);
 
@@ -75,6 +93,43 @@ describe('FEATURE: the empty state while scripts are hidden', () => {
       const rows = rootRows(NO_TASKS, shownOf('list'));
 
       expect(labelsOf(rows)).toStrictEqual(['No packages with tasks found.']);
+    });
+  });
+
+  describe('GIVEN a monorepo whose only package is its root //', () => {
+    it.each(MODES)(
+      'WHEN the root has only scripts and scripts are hidden in %s mode THEN one row says no packages were found',
+      (mode) => {
+        const rows = rootRows(ROOT_SCRIPTS_ONLY, hiddenOf(mode));
+
+        expect(labelsOf(rows)).toStrictEqual(['No packages found.']);
+      }
+    );
+
+    it('WHEN the root has no task and scripts are shown THEN one row says no packages were found', () => {
+      const rows = rootRows(ROOT_NO_TASKS, shownOf('list'));
+
+      expect(labelsOf(rows)).toStrictEqual(['No packages found.']);
+    });
+
+    it('WHEN the root has only scripts and scripts are shown THEN the root is listed, no message', () => {
+      const rows = rootRows(ROOT_SCRIPTS_ONLY, shownOf('list'));
+
+      expect(rows.map((row) => row.packageName)).toStrictEqual(['//']);
+    });
+
+    it('WHEN the root has a turbo task and scripts are hidden THEN the root is listed, no message', () => {
+      const rows = rootRows(ROOT_TURBO_ONLY, hiddenOf('list'));
+
+      expect(rows.map((row) => row.packageName)).toStrictEqual(['//']);
+    });
+  });
+
+  describe('GIVEN a single-package model whose root has only scripts', () => {
+    it('WHEN scripts are hidden THEN one row says there are no turbo tasks', () => {
+      const rows = rootRows(SINGLE_SCRIPTS_ONLY, hiddenOf('list'));
+
+      expect(labelsOf(rows)).toStrictEqual(['No turbo tasks. Try Show Scripts.']);
     });
   });
 

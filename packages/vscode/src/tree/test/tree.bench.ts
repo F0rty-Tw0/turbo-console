@@ -98,11 +98,17 @@ const rowsBench = (name: string, model: WorkspaceModel, mode: TreeMode, inputs =
   return bench(name, build, { gate: true });
 };
 
-/** A copy of `model` with the first task description of the first package changed: one changed package, nothing else. */
+/**
+ * A copy of `model` with the first task description of the first package that has tasks changed: one changed package,
+ * nothing else. The root `//` that repo-gen lists first has no tasks, so the edit lands on the same package as before
+ * the root joined the model.
+ */
 const withOneEdit = (model: WorkspaceModel): WorkspaceModel => {
-  const [first, ...rest] = model.packages;
+  const hasTasks = (pkg: PackageNode): boolean => pkg.tasks.length > 0;
+  const at = model.packages.findIndex(hasTasks);
+  const first = model.packages[at];
 
-  if (first === undefined) throw new Error('bench model has no packages');
+  if (first === undefined) throw new Error('bench model has no package with tasks');
 
   const [task, ...tasks] = first.tasks;
 
@@ -110,7 +116,8 @@ const withOneEdit = (model: WorkspaceModel): WorkspaceModel => {
 
   const editedTask: TaskNode = { ...task, description: 'edited' };
   const edited: PackageNode = { ...first, tasks: [editedTask, ...tasks] };
-  const copy: WorkspaceModel = { ...model, packages: [edited, ...rest] };
+  const packages = model.packages.with(at, edited);
+  const copy: WorkspaceModel = { ...model, packages };
 
   return copy;
 };

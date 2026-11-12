@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { rootLabelOf } from './root-label.util.ts';
+import { monorepoRootLabelOf, rootLabelOf } from './root-label.util.ts';
 
 const ROOT = '/work/my-app';
 
@@ -23,6 +23,13 @@ const NAMES: NameRow[] = [
   { title: 'a 10 kB string', name: 'x'.repeat(10_000), expected: 'x'.repeat(214) }
 ];
 
+const MONOREPO_NAMES: NameRow[] = [
+  { title: 'a plain name', name: 'root-fixture', expected: 'root-fixture' },
+  { title: 'a name with control characters', name: 'mono\u0000repo\n', expected: 'monorepo' },
+  { title: 'missing', name: undefined, expected: 'root' },
+  { title: 'whitespace only', name: '  \t ', expected: 'root' }
+];
+
 describe('FEATURE: root label', () => {
   describe('GIVEN a root package.json name of any shape', () => {
     it.each(NAMES)('WHEN the name is $title THEN the label is $expected', ({ name, expected }) => {
@@ -37,6 +44,12 @@ describe('FEATURE: root label', () => {
 
     it('WHEN the root has no folder name THEN the label is //', () => {
       expect(rootLabelOf(undefined, '/')).toBe('//');
+    });
+  });
+
+  describe('GIVEN the root package.json name of a monorepo', () => {
+    it.each(MONOREPO_NAMES)('WHEN the name is $title THEN the label is $expected', ({ name, expected }) => {
+      expect(monorepoRootLabelOf(name)).toBe(expected);
     });
   });
 });

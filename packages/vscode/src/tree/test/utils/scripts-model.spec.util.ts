@@ -31,13 +31,22 @@ const withTwoScripts = (pkg: PackageNode): PackageNode => {
   return edited;
 };
 
+/** The monorepo root package, which repo-gen lists with no tasks; it is left out of the every-third count. */
+const ROOT = '//';
+
 /**
- * Spec 1c-b §4.13: a copy of `model` where every third package, in model order, gains two scripts `zz-s1` and `zz-s2`
- * (repo-gen writes `package.json` scripts for turbo tasks only), so the scripts bench has script rows to build.
+ * Spec 1c-b §4.13: a copy of `model` where every third package other than the root `//`, in model order, gains two
+ * scripts `zz-s1` and `zz-s2` (repo-gen writes `package.json` scripts for turbo tasks only), so the scripts bench has
+ * script rows to build. Skipping the root keeps the same packages scripted as before the root joined the model.
  */
 export const withScripts = (model: WorkspaceModel): WorkspaceModel => {
-  const edit = (pkg: PackageNode, index: number): PackageNode => {
-    if (index % EVERY !== 0) return pkg;
+  const isMember = (pkg: PackageNode): boolean => pkg.name !== ROOT;
+  const isPicked = (_pkg: PackageNode, index: number): boolean => index % EVERY === 0;
+  const picked = new Set(model.packages.filter(isMember).filter(isPicked));
+  const edit = (pkg: PackageNode): PackageNode => {
+    const isPickedPackage = picked.has(pkg);
+
+    if (!isPickedPackage) return pkg;
 
     return withTwoScripts(pkg);
   };

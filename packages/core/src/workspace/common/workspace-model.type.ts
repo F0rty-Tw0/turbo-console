@@ -62,7 +62,7 @@ export type TaskNode = {
 
 /**
  * A visible package; `path` is posix, relative to the workspace root. `label` is what a view shows instead of `name`:
- * the root `package.json` name of a single-package repo's `//` package, `null` for every other package.
+ * the label of the root `//` package (see `ModelSource.rootLabel`), `null` for every other package.
  */
 export type PackageNode = {
   readonly name: string;
@@ -122,12 +122,8 @@ export type WorkspaceModel = {
   readonly affectedMode: AffectedMode;
   /** `true` when the `//` package is the only package (spec §1): a repo with no declared workspaces. */
   readonly singlePackage: boolean;
+  /** Every visible package, the root `//` (path `""`) among them in either mode, unless its tags hide it. */
   readonly packages: PackageNode[];
-  /**
-   * The monorepo root `//` with only its `//#<name>` turbo tasks; `null` for a single-package repo (`//` is then
-   * `packages[0]`) or a graph with no root. Kept apart from `packages`, which feeds the tree and the run picker.
-   */
-  readonly rootPackage: PackageNode | null;
   readonly edges: PackageEdge[];
   readonly warnings: string[];
 };
@@ -138,6 +134,9 @@ export type ModelSource = {
   readonly root: string;
   readonly packageManager: PackageManager;
   readonly singlePackage: boolean;
-  /** The label of the `//` package; `null` unless `singlePackage`. */
+  /**
+   * The label of the `//` package: the root `package.json` name, else the root folder name (single-package) or `root`
+   * (monorepo); `null` only for a model built with none.
+   */
   readonly rootLabel: string | null;
 };
