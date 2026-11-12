@@ -201,8 +201,10 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
         await graphAtoms.expectFilesDrawn(FILE_IDS, false);
       });
 
-      await test.step('THEN its links are straight again', async (): Promise<void> =>
-        graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT));
+      await test.step('THEN its links are straight from the umbrella again', async (): Promise<void> => {
+        await graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+        await graphAtoms.links.expectStartingOn(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+      });
 
       await test.step('AND the umbrella has not moved', async (): Promise<void> =>
         graphAtoms.links.expectCentreOf(TARGET_LIKE_UMBRELLA, centre));
@@ -236,9 +238,10 @@ test.describe('FEATURE: graph task mode with an Atomizer group', () => {
         await graphAtoms.expectFilesDrawn(FILE_IDS, false);
       });
 
-      await test.step('THEN the umbrella is back where it was dragged and its links are drawn straight again', async (): Promise<void> => {
+      await test.step('THEN the umbrella is back where it was dragged and its links are drawn straight from it again', async (): Promise<void> => {
         await graphAtoms.links.expectCentreOf(TARGET_LIKE_UMBRELLA, dragged);
         await graphAtoms.links.expectStraightFrom(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
+        await graphAtoms.links.expectStartingOn(TARGET_LIKE_UMBRELLA, UMBRELLA_LINK_COUNT);
       });
     }
   );

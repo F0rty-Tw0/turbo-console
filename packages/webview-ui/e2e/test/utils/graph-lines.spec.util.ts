@@ -132,6 +132,19 @@ export const throughNodeCountOf = (lines: ProbeEdgeLine[], nodes: ProbeNode[], z
   return lines.flatMap(pairsOf).length;
 };
 
+/** How many drawn lines out of `node` start on its box at `zoom`, grown by `slackPx` on every side. */
+export const startsOnNodeCountOf = (lines: ProbeEdgeLine[], node: ProbeNode, zoom: number, slackPx: number): number => {
+  const box = shrunkBy(nodeBoxOf(node, zoom), -slackPx);
+  const startsOnBox = (line: ProbeEdgeLine): boolean => {
+    const [start] = line.points;
+    const isOut = line.source === node.id && line.isDrawn;
+
+    return isOut && start !== undefined && isInside(pointBoxOf(start), box);
+  };
+
+  return lines.filter(startsOnBox).length;
+};
+
 /** How many drawn lines have their midpoint under the box of a drawn node. */
 export const midpointsUnderCountOf = (lines: ProbeEdgeLine[], nodes: ProbeNode[], zoom: number): number => {
   const boxes = nodes.filter(isDrawnNode).map((node): ElementRect => nodeBoxOf(node, zoom));
