@@ -91,6 +91,13 @@ const entryRowOf = (model: WorkspaceModel, entry: RunEntry, context: RowContext)
 /** A running task's row (plain or continuous), not the loading stand-in of a node the tree no longer has. */
 const isRunningRow = (row: TreeRow): boolean => row.contextValue === 'turboTask.running';
 
+/** A row whose tooltip carries the Run with Options line, the slow path `EXTRAS` is there to time. */
+const hasOptionsLine = (row: TreeRow): boolean => {
+  const text = row.tooltip.join('\n');
+
+  return text.includes('Options:');
+};
+
 /**
  * Spec §4.6 tick cost, warm: the model's view is built and the running tasks' nodes are cached, as after the first draw.
  * The timed function rebuilds only the rows one tick redraws, the first `TICKED_TASKS` running ones. It times only the
@@ -131,6 +138,10 @@ const tickBench = (name: string, model: WorkspaceModel): BenchDescriptor => {
   const isAllRunning = firstRows.every(isRunningRow);
 
   if (!isAllRunning) throw new Error('bench tick rebuilds a row that is not a running task');
+
+  const hasOptions = firstRows.some(hasOptionsLine);
+
+  if (!hasOptions) throw new Error('bench tick builds no Options: tooltip line');
 
   for (let round = 1; round < WARM_TICKS; round += 1) tick();
 
