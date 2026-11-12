@@ -6,12 +6,12 @@ import { GraphCanvas } from './graph-canvas.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { ProbeRect } from '../../src/graph/common/graph-probe-titles.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
-import type { ChipRowMargins } from '../common/graph-atom-chips.type.ts';
 import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
-import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
+import { isInside, readRect, readRects, unionOf } from '../test/utils/element-rect.spec.util.ts';
+import { chipRowMarginsOf } from '../test/utils/graph-atom-chips.spec.util.ts';
 import { nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 
-/** How far, in page px, the row may poke out of its umbrella (spec AC3): its left edge and width match the body exactly. */
+/** How far, in page px, the row or its chips may poke out of the umbrella (spec AC3): its left edge and width match the body exactly. */
 const INSIDE_TOLERANCE_PX = 1;
 
 /** One wheel notch; a positive `deltaY` zooms out. */
@@ -83,20 +83,22 @@ export class GraphAtomChips {
   }
 
   /**
-   * The umbrella is wholly in view, and its row lies inside its rendered box within `INSIDE_TOLERANCE_PX`, the row's top
-   * at or below the umbrella's centre; polled, since the row follows one render behind. The margins are kept as a test
-   * annotation.
+   * The umbrella is wholly in view, and its row and the union of its chips lie inside its rendered box within
+   * `INSIDE_TOLERANCE_PX`, their tops at or below the umbrella's centre; polled, since the row follows one render behind.
+   * The row's margins are kept as a test annotation.
    */
   public async expectInsideUmbrella(umbrellaId: string): Promise<void> {
     const inView = `${umbrellaId} lies wholly inside the canvas`;
-    const inside = `the chip row lies inside ${umbrellaId}`;
+    const inside = `the chip row and its chips lie inside ${umbrellaId}`;
     const isInView = async (): Promise<boolean> => this.isUmbrellaInView(umbrellaId);
     const worstMargin = async (): Promise<number> => this.worstMarginOf(umbrellaId);
 
     await expect.poll(isInView, { message: inView }).toBe(true);
     await expect.poll(worstMargin, { message: inside }).toBeGreaterThanOrEqual(-INSIDE_TOLERANCE_PX);
 
-    const margins = await this.marginsOf(umbrellaId);
+    const row = await this.rectOf(umbrellaId);
+    const box = await this.umbrellaBoxOf(umbrellaId);
+    const margins = chipRowMarginsOf(row, box);
 
     test.info().annotations.push({ type: 'chip-row-margins-px', description: JSON.stringify(margins) });
   }
@@ -171,24 +173,25 @@ export class GraphAtomChips {
     return isInside(box, container);
   }
 
+  /** The worst side of the row and of its chips' union: the row is always the node's width, so only the chips show an overflow. */
   private async worstMarginOf(umbrellaId: string): Promise<number> {
-    const margins = await this.marginsOf(umbrellaId);
+    const row = await this.rectOf(umbrellaId);
+    const chips = await this.chipsRectOf(umbrellaId);
+    const box = await this.umbrellaBoxOf(umbrellaId);
+    const rowSides = Object.values(chipRowMarginsOf(row, box));
+    const chipSides = Object.values(chipRowMarginsOf(chips, box));
+    const sides = [...rowSides, ...chipSides];
 
-    return Math.min(margins.left, margins.right, margins.top, margins.bottom);
+    return Math.min(...sides);
   }
 
-  private async marginsOf(umbrellaId: string): Promise<ChipRowMargins> {
-    const row = await this.rectOf(umbrellaId);
-    const box = await this.umbrellaBoxOf(umbrellaId);
-    const centreY = box.top + box.height / 2;
-    const margins: ChipRowMargins = {
-      left: row.left - box.left,
-      right: box.left + box.width - (row.left + row.width),
-      top: row.top - centreY,
-      bottom: box.top + box.height - (row.top + row.height)
-    };
+  /** The union of the chip boxes in the row of `umbrellaId`, in page CSS pixels. */
+  private async chipsRectOf(umbrellaId: string): Promise<ElementRect> {
+    const rects = await this.rowOf(umbrellaId).locator('.atom-chip').evaluateAll(readRects);
 
-    return margins;
+    if (rects.length === 0) throw new Error(`no chip is drawn for ${umbrellaId}`);
+
+    return unionOf(rects);
   }
 
   /** The umbrella's rendered box in page CSS px, from the probe's centre and model size. */

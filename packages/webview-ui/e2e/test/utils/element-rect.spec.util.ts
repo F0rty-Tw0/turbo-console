@@ -31,6 +31,21 @@ export const readRects = (elements: Element[]): ElementRect[] => {
   return rects;
 };
 
+/** The smallest box holding every one of `rects`, which must not be empty. */
+export const unionOf = (rects: ElementRect[]): ElementRect => {
+  const lefts = rects.map((rect): number => rect.left);
+  const tops = rects.map((rect): number => rect.top);
+  const rights = rects.map((rect): number => rect.left + rect.width);
+  const bottoms = rects.map((rect): number => rect.top + rect.height);
+  const left = Math.min(...lefts);
+  const top = Math.min(...tops);
+  const right = Math.max(...rights);
+  const bottom = Math.max(...bottoms);
+  const union: ElementRect = { left, top, width: right - left, height: bottom - top };
+
+  return union;
+};
+
 /** `inner` lies wholly inside `outer`, edges included. */
 export const isInside = (inner: ElementRect, outer: ElementRect): boolean => {
   const fitsAcross = inner.left >= outer.left && inner.left + inner.width <= outer.left + outer.width;
