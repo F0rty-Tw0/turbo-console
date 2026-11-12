@@ -6,9 +6,10 @@ import { edgeIdOf } from './edge-id.util.ts';
 import { elkGraphOf, layoutGraphOf } from './elk-graph.util.ts';
 import { groupedElkGraphOf } from './elk-grouped-graph.util.ts';
 import { folderGroupsOf } from './folder-group.util.ts';
-import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import { STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
+import { lengthSizeOf } from '../test/utils/length-size.spec.util.ts';
 
 const SIZE: NodeSize = { width: 100, height: 32 };
 
@@ -17,6 +18,8 @@ const sizeOf = (): NodeSize => SIZE;
 const APP_CORE: GraphEdge = { source: 'app', target: 'core' };
 
 const A_B: GraphEdge = { source: 'a', target: 'b' };
+
+const ROOT: GraphPackage = { name: '//', bareName: 'root-fixture', path: '', tags: [], taskCount: 0 };
 
 const AB_C: GraphEdge = { source: 'a>b', target: 'c' };
 
@@ -105,6 +108,26 @@ describe('FEATURE: layoutGraphOf', () => {
       const graph = layoutGraphOf(drawn, 'folders', sizeOf);
 
       expect(graph).toStrictEqual(groupedElkGraphOf(groups, drawn.edges, sizeOf));
+    });
+  });
+
+  describe('GIVEN the root // labelled root-fixture beside web, and a sizer 10 px per character', () => {
+    const packages: GraphPackage[] = [...STATE_STUB.packages, ROOT];
+    const drawn = drawnGraphOf({ ...STATE_STUB, packages });
+
+    it('WHEN built flat THEN // is as wide as its label and web as its name', () => {
+      const graph = layoutGraphOf(drawn, 'flat', lengthSizeOf);
+
+      expect(graph.children).toContainEqual({ id: '//', width: 120, height: 32 });
+      expect(graph.children).toContainEqual({ id: 'web', width: 30, height: 32 });
+    });
+
+    it('WHEN built grouped THEN // is as wide as its label', () => {
+      const graph = layoutGraphOf(drawn, 'folders', lengthSizeOf);
+
+      const leaves = JSON.stringify(graph);
+
+      expect(leaves).toContain('{"id":"//","width":120,"height":32}');
     });
   });
 });
