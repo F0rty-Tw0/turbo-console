@@ -1,5 +1,6 @@
 import type { AtomFile, AtomGroup, AtomResult } from '@turbo-console/core';
-import { durationText } from '@turbo-console/webview-ui';
+import type { GraphAtomCounts } from '@turbo-console/webview-ui';
+import { atomCountsText, durationText } from '@turbo-console/webview-ui';
 
 import { lineOf, timeLine } from './task-row.util.ts';
 import type { AtomCache, AtomView } from '../common/atom-view.type.ts';
@@ -33,35 +34,40 @@ const resultParts = (result: AtomResult | undefined): string[] => {
   return [RESULT_TEXTS[result.outcome](result)];
 };
 
-const cachedParts = (group: AtomGroup, dryRun: AtomView['dryRun']): string[] => {
-  if (dryRun === null) return NO_PARTS;
+const cachedCount = (group: AtomGroup, dryRun: AtomView['dryRun']): number | null => {
+  if (dryRun === null) return null;
 
   const isHit = (file: AtomFile): boolean => dryRun.get(file.task.id) === 'HIT';
   const hits = group.files.filter(isHit);
 
-  return [`${hits.length} cached`];
+  return hits.length;
 };
 
-const failedParts = (group: AtomGroup, results: AtomView['results']): string[] => {
-  if (results === null) return NO_PARTS;
+const failedCount = (group: AtomGroup, results: AtomView['results']): number | null => {
+  if (results === null) return null;
 
   const isFailed = (file: AtomFile): boolean => results.get(file.task.id)?.outcome === 'failed';
   const failed = group.files.filter(isFailed);
 
-  if (failed.length === 0) return NO_PARTS;
-
-  return [`${failed.length} failed`];
+  return failed.length;
 };
 
 const livePartsOf = (file: AtomFile): string[] => (file.isLive ? LIVE_PARTS : NO_PARTS);
 
+/** The umbrella's file count, its HIT count once the dry run settled and its failed count once the results settled; `null` before. */
+export const umbrellaCountsOf = (group: AtomGroup, view: AtomView): GraphAtomCounts => {
+  const cached = cachedCount(group, view.dryRun);
+  const failed = failedCount(group, view.results);
+  const counts: GraphAtomCounts = { files: group.files.length, cached, failed };
+
+  return counts;
+};
+
 /** `<n> files`, then ` · <c> cached` once the dry run settled, then ` · <f> failed` once the results settled and some failed. */
 export const umbrellaCounts = (group: AtomGroup, view: AtomView): string => {
-  const cached = cachedParts(group, view.dryRun);
-  const failed = failedParts(group, view.results);
-  const parts = [`${group.files.length} files`, ...cached, ...failed];
+  const counts = umbrellaCountsOf(group, view);
 
-  return parts.join(RESULT_SEPARATOR);
+  return atomCountsText(counts);
 };
 
 /** `live` for a live file, then the newest result: `✓ 4.2s`, `✗ 7.9s` or `cached`. */

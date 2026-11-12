@@ -91,7 +91,10 @@ type ExpectedTask = {
 type ExpectedAtomFile = { readonly id: string; readonly specPath: string; readonly isLive: boolean };
 type ExpectedAtomGroup = { readonly umbrellaId: string; readonly files: GraphAtomFile[] };
 type ExpectedAtomCounts = { readonly files: number; readonly cached: number | null; readonly failed: number | null };
-type ExpectedAtomGroupState = { readonly counts: string; readonly files: Record<string, 'passed' | 'failed' | 'cached' | 'none'> };
+type ExpectedAtomGroupState = {
+  readonly counts: ExpectedAtomCounts;
+  readonly files: Record<string, 'passed' | 'failed' | 'cached' | 'none'>;
+};
 type ExpectedAtomsMessage = { readonly type: 'atoms'; readonly groups: Record<string, GraphAtomGroupState> };
 type ExpectedAffected = { readonly mode: 'task' | 'package'; readonly tasks: Readonly<Record<string, GraphAffectedMark>> };
 type ExpectedRunsMessage = {
@@ -147,7 +150,7 @@ type PositionsKey = { readonly type: 'positions' };
 type ExportImageKey = { readonly type: 'exportImage' };
 type RunTaskKey = { readonly type: 'runTask' };
 
-/** The host-facing API: the HTML renderer, CSP, duration formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, the import sites cap, root tasks title, root task package, layout version and route bend limit constants; everything else is wire-contract types. The webview-only bridge stays internal. */
+/** The host-facing API: the HTML renderer, CSP, duration and atom-counts formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, the import sites cap, root tasks title, root task package, layout version and route bend limit constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
   'ENTRY_TEXT_MAX',
   'ICON_ID_PATTERN',

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-import type { GraphAtomGroup, GraphReady } from '@turbo-console/webview-ui';
+import type { GraphAtomCounts, GraphAtomGroup, GraphReady } from '@turbo-console/webview-ui';
 
 import { lastGraphState, postedAtoms } from './graph-posted.spec.util.ts';
 import { step, waitFor } from './suite-env.spec.util.ts';
@@ -8,9 +8,7 @@ import type { TurboConsoleApi } from '../../src/shared/common/api.type.ts';
 import type { GraphScene } from '../common/graph.type.ts';
 import type { ShownManifest, ShownTask } from '../common/launch.type.ts';
 
-const COUNTS_BEFORE_LOAD = '10 files';
-
-const COUNTS_AFTER_LOAD = /^10 files · \d+ cached/;
+const COUNTS_BEFORE_LOAD: GraphAtomCounts = { files: 10, cached: null, failed: null };
 
 const isUmbrella = (task: ShownTask): boolean => task.kind === 'umbrella';
 
@@ -61,8 +59,8 @@ const requireGroup = (state: GraphReady | null): GraphAtomGroup => {
   return requireOne(state.atomGroups, 'atom group in the graph state');
 };
 
-const countsOf = (api: TurboConsoleApi, root: string, umbrellaId: string): string[] => {
-  const counts: string[] = [];
+const countsOf = (api: TurboConsoleApi, root: string, umbrellaId: string): GraphAtomCounts[] => {
+  const counts: GraphAtomCounts[] = [];
 
   for (const message of postedAtoms(api, root)) {
     const group = message.groups[umbrellaId];
@@ -73,7 +71,9 @@ const countsOf = (api: TurboConsoleApi, root: string, umbrellaId: string): strin
   return counts;
 };
 
-const hasLoadedCounts = (counts: string[]): boolean => counts.some((text) => COUNTS_AFTER_LOAD.test(text));
+const isLoaded = (counts: GraphAtomCounts): boolean => counts.files === 10 && counts.cached !== null;
+
+const hasLoadedCounts = (counts: GraphAtomCounts[]): boolean => counts.some(isLoaded);
 
 /** The state lists an atom group as its umbrella only, posts its counts, and loads its package once the page shows the umbrella. */
 export const atomGroupCase = async (scene: GraphScene): Promise<void> => {
@@ -98,7 +98,7 @@ export const atomGroupCase = async (scene: GraphScene): Promise<void> => {
     );
     assert.equal(isAggregateListed, false, 'aggregate listed');
     assert.deepEqual(listed.get(umbrella.fullName)?.dependencies, outerDependenciesOf(files, manifest));
-    assert.equal(first?.groups[umbrella.fullName]?.counts, COUNTS_BEFORE_LOAD);
+    assert.deepEqual(first?.groups[umbrella.fullName]?.counts, COUNTS_BEFORE_LOAD);
 
     await api.graph.receive(root, { type: 'shownUmbrellas', ids: [umbrella.fullName] });
     await waitFor('cached counts', () => hasLoadedCounts(countsOf(api, root, umbrella.fullName)));

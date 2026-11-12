@@ -2,7 +2,7 @@ import { test } from './graph-task.fixture.ts';
 import { THEME_HC_STUB } from './test/stubs/graph-theme.stub.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeFileIds, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
-import type { GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
 import type { Positions } from '../src/bridge/common/graph-state.type.ts';
 import { GLYPH_CODE_POINTS } from '../src/graph/common/graph-glyph.const.ts';
 import type { ProbeNode } from '../src/graph/common/graph-probe.type.ts';
@@ -26,7 +26,9 @@ const LIVE_SPEC_PATH = 'tests/spec-001.live.spec.ts';
 
 const OUTCOME_FILES = { [LIVE_FILE]: 'passed', [FAILED_FILE]: 'failed', [CACHED_FILE]: 'cached' } as const;
 
-const OUTCOME_STATE = { counts: '10 files · 1 cached · 1 failed', files: OUTCOME_FILES } as const;
+const OUTCOME_COUNTS = { files: 10, cached: 1, failed: 1 } as const;
+
+const OUTCOME_STATE = { counts: OUTCOME_COUNTS, files: OUTCOME_FILES } as const;
 
 const OUTCOME_GROUPS = { [TARGET_LIKE_UMBRELLA]: OUTCOME_STATE } as const;
 
@@ -56,13 +58,17 @@ const COLLAPSED_TEXT = `${GLYPH_CODE_POINTS.blank} e2e-ci\n10 files`;
 
 const COUNTED_TEXT = `${GLYPH_CODE_POINTS.blank} e2e-ci\n10 files · 3 cached · 1 failed`;
 
-const COUNTED: GraphAtomGroupState = { counts: '10 files · 3 cached · 1 failed', files: {} };
+const COUNTED_COUNTS: GraphAtomCounts = { files: 10, cached: 3, failed: 1 };
+
+const COUNTED: GraphAtomGroupState = { counts: COUNTED_COUNTS, files: {} };
 
 const COUNTED_GROUPS = { [TARGET_LIKE_UMBRELLA]: COUNTED };
 
 const SKIPPED_FILES = { 'app-1#e2e-ci--tests/spec-002.spec.ts': 'skipped' };
 
-const SKIPPED_STATE = { counts: '10 files · 9 cached', files: SKIPPED_FILES };
+const SKIPPED_COUNTS = { files: 10, cached: 9, failed: null };
+
+const SKIPPED_STATE = { counts: SKIPPED_COUNTS, files: SKIPPED_FILES };
 
 const SKIPPED_GROUPS = { [TARGET_LIKE_UMBRELLA]: SKIPPED_STATE };
 

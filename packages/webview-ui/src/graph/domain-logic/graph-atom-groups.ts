@@ -1,10 +1,11 @@
 import { GraphAtomExpansion } from './graph-atom-expansion.ts';
 import { GraphAtomTiming } from './graph-atom-timing.ts';
-import type { GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomGroup, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { ATOM_BOX_PREFIX, ATOM_MORE_PREFIX } from '../common/graph-atom.const.ts';
 import type { AtomGroupsDeps, AtomLayout, AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
+import { countTextsOf } from '../utils/atom-count-texts.util.ts';
 import { atomSpecOf, outcomesOf } from '../utils/atom-spec.util.ts';
 import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
 import { parentIdOf } from '../utils/task-compound.util.ts';
@@ -21,14 +22,14 @@ const umbrellaOfPrefixed = (nodeId: string, prefix: string): string => {
 };
 
 /**
- * The Atomizer groups of the task graph: the host's groups by umbrella id, the counts line and file outcomes of each, the
+ * The Atomizer groups of the task graph: the host's groups by umbrella id, the counts and file outcomes of each, the
  * umbrellas the last placed layout shows, which it reports to the host as `shownUmbrellas` so their loads arrive, and
  * which of them are expanded into their files. An `atoms` message for an umbrella no group names is ignored.
  */
 export class GraphAtomGroups {
   private readonly deps: AtomGroupsDeps;
   private groups = new Map<string, GraphAtomGroup>();
-  private counts = new Map<string, string>();
+  private counts = new Map<string, GraphAtomCounts>();
   private outcomes = new Map<string, Record<string, GraphAtomOutcome>>();
   private placement: AtomPlacement | null = null;
   private readonly expansion: GraphAtomExpansion;
@@ -91,10 +92,10 @@ export class GraphAtomGroups {
     return new Map(entries);
   }
 
-  /** The counts line of each umbrella: the host's, or `<n> files` while it has sent none. */
-  public labels(): ReadonlyMap<string, string> {
-    const labelOf = ([id, group]: [string, GraphAtomGroup]): [string, string] => {
-      const fallback = `${group.files.length} files`;
+  /** The counts of each umbrella: the host's, or its file count with nothing settled while it has sent none. */
+  public labels(): ReadonlyMap<string, GraphAtomCounts> {
+    const labelOf = ([id, group]: [string, GraphAtomGroup]): [string, GraphAtomCounts] => {
+      const fallback: GraphAtomCounts = { files: group.files.length, cached: null, failed: null };
 
       return [id, this.counts.get(id) ?? fallback];
     };
@@ -106,12 +107,13 @@ export class GraphAtomGroups {
 
   /** The counts line of each umbrella the placed layout draws as one; a plain-sized task keeps its name. */
   private drawnLabels(placement: AtomPlacement): ReadonlyMap<string, string> {
-    const isDrawn = ([id]: [string, string]): boolean => placement.sizes.has(id);
+    const isDrawn = ([id]: [string, GraphAtomCounts]): boolean => placement.sizes.has(id);
     const labels = this.labels();
     const labelEntries = [...labels];
     const drawn = labelEntries.filter(isDrawn);
+    const drawnCounts = new Map(drawn);
 
-    return new Map(drawn);
+    return countTextsOf(drawnCounts);
   }
 
   /**

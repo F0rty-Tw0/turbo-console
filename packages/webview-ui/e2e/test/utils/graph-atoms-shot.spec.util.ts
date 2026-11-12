@@ -1,7 +1,7 @@
 import { closedPanelsSavedState } from './graph-shot-state.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeFileIds, targetLikeTasksState } from './graph-target-like-tasks.spec.util.ts';
 import { taskViewOf } from './graph-task-saved.spec.util.ts';
-import type { GraphAtomGroupState } from '../../../src/bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../../../src/bridge/common/graph-message.type.ts';
 import type { GraphViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
 import type { TaskShotSetup } from '../../common/graph-shots.type.ts';
 
@@ -19,8 +19,10 @@ const ATOMS_SHOT_FILES: GraphAtomGroupState['files'] = {
   [CACHED]: 'cached'
 };
 
+const ATOMS_SHOT_COUNTS: GraphAtomCounts = { files: 10, cached: 1, failed: 2 };
+
 export const ATOMS_SHOT_STATE: GraphAtomGroupState = {
-  counts: '10 files · 1 cached · 2 failed',
+  counts: ATOMS_SHOT_COUNTS,
   files: ATOMS_SHOT_FILES
 };
 

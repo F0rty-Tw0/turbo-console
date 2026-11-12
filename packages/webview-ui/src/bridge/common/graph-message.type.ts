@@ -102,9 +102,9 @@ export type GraphAtomCounts = {
   readonly failed: number | null;
 };
 
-/** The counts line of one umbrella and the outcome of each of its files, by file task id. */
+/** The counts of one umbrella and the outcome of each of its files, by file task id. */
 export type GraphAtomGroupState = {
-  readonly counts: string;
+  readonly counts: GraphAtomCounts;
   readonly files: Record<string, GraphAtomOutcome>;
 };
 

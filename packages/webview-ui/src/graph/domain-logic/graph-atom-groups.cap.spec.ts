@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GraphAtomGroups } from './graph-atom-groups.ts';
-import type { GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
 import type { GraphAtomFile, GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomRig } from '../test/common/graph-atom-groups.type.ts';
@@ -28,8 +28,10 @@ const F30_FAILED = { [F30]: 'failed' } as const;
 
 const F30_PASSED = { [F30]: 'passed' } as const;
 
+const CAP_COUNTS: GraphAtomCounts = { files: 40, cached: null, failed: null };
+
 const atomsOf = (files: Record<string, GraphAtomOutcome>): Record<string, GraphAtomGroupState> => {
-  const state: GraphAtomGroupState = { counts: '40 files', files };
+  const state: GraphAtomGroupState = { counts: CAP_COUNTS, files };
   const states = { [UMBRELLA]: state };
 
   return states;

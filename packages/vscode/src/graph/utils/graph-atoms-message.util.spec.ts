@@ -5,7 +5,7 @@ import { atomsMessageOf } from './graph-atoms-message.util.ts';
 import { graphStateOf } from './graph-state.util.ts';
 import type { AtomLookup } from '../../tree/common/atom-view.type.ts';
 import { NO_ATOMS } from '../../tree/common/atom.const.ts';
-import { umbrellaCounts } from '../../tree/utils/atom-text.util.ts';
+import { umbrellaCountsOf } from '../../tree/utils/atom-text.util.ts';
 import {
   ATOM_FILE_A_TASK_STUB,
   ATOM_FILE_B_TASK_STUB,
@@ -31,10 +31,14 @@ const ATOM_STATE = readyOf(graphStateOf(GRAPH_ATOM_MODEL_STUB, NO_LAYOUT_CACHES_
 const UNLOADED_LOOKUP: AtomLookup = () => GRAPH_ATOM_UNLOADED_VIEW_STUB;
 const NO_GROUP_LOOKUP: AtomLookup = () => NO_ATOMS;
 const UNLOADED_FILES = { [FILE_A]: 'none', [FILE_B]: 'none' };
-const UNLOADED_GROUP = { counts: '2 files', files: UNLOADED_FILES };
+const UNLOADED_COUNTS = { files: 2, cached: null, failed: null };
+const UNLOADED_GROUP = { counts: UNLOADED_COUNTS, files: UNLOADED_FILES };
 const UNLOADED_GROUPS = { [UMBRELLA_ID]: UNLOADED_GROUP };
 const UNLOADED_MESSAGE = { type: 'atoms', groups: UNLOADED_GROUPS };
 const LOADED_FILES = { [FILE_A]: 'passed', [FILE_B]: 'none' };
+/** The loaded stub: file A a HIT that passed, file B unknown, so the results settled with none failed. */
+const LOADED_COUNTS = { files: 2, cached: 1, failed: 0 };
+const PROTO_COUNTS = { files: 0, cached: null, failed: null };
 const PROTO_ID = '__proto__';
 const PROTO_UMBRELLA: GraphTask = {
   id: PROTO_ID,
@@ -60,8 +64,10 @@ describe('FEATURE: atoms message of a graph state', () => {
   });
 
   describe('GIVEN a state with an atom group and a settled load', () => {
-    it('WHEN the message is built THEN counts are umbrellaCounts verbatim and files map to outcome or none', () => {
-      const counts = umbrellaCounts(GRAPH_ATOM_GROUP_STUB, GRAPH_ATOM_VIEW_STUB);
+    it('WHEN the message is built THEN counts are umbrellaCountsOf verbatim and files map to outcome or none', () => {
+      const counts = umbrellaCountsOf(GRAPH_ATOM_GROUP_STUB, GRAPH_ATOM_VIEW_STUB);
+
+      expect(counts).toStrictEqual(LOADED_COUNTS);
 
       const group = { counts, files: LOADED_FILES };
       const groups = { [UMBRELLA_ID]: group };
@@ -73,13 +79,13 @@ describe('FEATURE: atoms message of a graph state', () => {
   });
 
   describe('GIVEN a state with an atom group and no load', () => {
-    it('WHEN the message is built THEN counts is "2 files" and every file is none', () => {
+    it('WHEN the message is built THEN counts is { files: 2, cached: null, failed: null } and every file is none', () => {
       expect(atomsMessageOf(ROOT, ATOM_STATE, UNLOADED_LOOKUP)).toStrictEqual(UNLOADED_MESSAGE);
     });
   });
 
   describe('GIVEN a view that does not know the group', () => {
-    it('WHEN the message is built THEN counts is "2 files" and every file is none', () => {
+    it('WHEN the message is built THEN counts is { files: 2, cached: null, failed: null } and every file is none', () => {
       expect(atomsMessageOf(ROOT, ATOM_STATE, NO_GROUP_LOOKUP)).toStrictEqual(UNLOADED_MESSAGE);
     });
   });
@@ -89,7 +95,7 @@ describe('FEATURE: atoms message of a graph state', () => {
       const unlistedGroup: GraphAtomGroup = { umbrellaId: 'gone#smoke', files: [] };
       const atomGroups = [...ATOM_STATE.atomGroups, unlistedGroup];
       const state: GraphReady = { ...ATOM_STATE, atomGroups };
-      const counts = umbrellaCounts(GRAPH_ATOM_GROUP_STUB, GRAPH_ATOM_VIEW_STUB);
+      const counts = umbrellaCountsOf(GRAPH_ATOM_GROUP_STUB, GRAPH_ATOM_VIEW_STUB);
       const group = { counts, files: LOADED_FILES };
       const groups = { [UMBRELLA_ID]: group };
 
@@ -111,7 +117,7 @@ describe('FEATURE: atoms message of a graph state', () => {
     it('WHEN the message is built THEN it holds that group as an own key', () => {
       const protoGroup: GraphAtomGroup = { umbrellaId: PROTO_ID, files: [] };
       const state: GraphReady = { ...ATOM_STATE, tasks: [PROTO_UMBRELLA], atomGroups: [protoGroup] };
-      const group = { counts: '0 files', files: {} };
+      const group = { counts: PROTO_COUNTS, files: {} };
       const groups = { [PROTO_ID]: group };
 
       const message = atomsMessageOf(ROOT, state, GRAPH_ATOM_LOOKUP_STUB);

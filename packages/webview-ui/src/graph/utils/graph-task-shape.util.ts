@@ -2,7 +2,6 @@ import { ATOM_OUTCOMES, RUN_STATES, TASK_COUNT_MAX } from '../../bridge/common/g
 import { isCount } from '../../bridge/utils/number.util.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { isString } from '../../bridge/utils/string.util.ts';
-import { ATOM_COUNTS_TEXT_MAX } from '../common/graph-atom.const.ts';
 
 const isStringList = (value: unknown): boolean => Array.isArray(value) && value.every(isString);
 
@@ -103,19 +102,17 @@ export const isAtomCounts = (value: unknown): boolean => {
   return isCappedCount(files) && isCappedCountOrNull(cached) && isCappedCountOrNull(failed);
 };
 
-const isCountsLine = (value: unknown): boolean => isString(value) && value.length <= ATOM_COUNTS_TEXT_MAX && !value.includes('\n');
-
 const isAtomState = (value: unknown): boolean => {
   if (!isRecord(value)) return false;
 
   const { counts, files } = value;
 
-  return isCountsLine(counts) && isAtomOutcomeRecord(files);
+  return isAtomCounts(counts) && isAtomOutcomeRecord(files);
 };
 
 /**
- * An `atoms` message's `groups`: umbrella ids to a one-line counts string of at most `ATOM_COUNTS_TEXT_MAX` characters
- * and at most `TASK_COUNT_MAX` file ids to the four outcome words.
+ * An `atoms` message's `groups`: umbrella ids to counts `isAtomCounts` accepts and at most `TASK_COUNT_MAX` file ids to
+ * the four outcome words.
  */
 export const isAtomStateRecord = (value: unknown): boolean => {
   if (!isRecord(value) || Array.isArray(value)) return false;

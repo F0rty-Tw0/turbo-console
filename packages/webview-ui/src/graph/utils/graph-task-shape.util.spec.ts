@@ -96,7 +96,13 @@ const GROUP = { umbrellaId: 'app#e2e-ci', files: [FILE] };
 
 const PASSED_FILES = { [FILE.id]: 'passed' };
 
-const STATE = { counts: '1 files', files: PASSED_FILES };
+const ONE_FILE_COUNTS = { files: 1, cached: null, failed: null };
+
+const STATE = { counts: ONE_FILE_COUNTS, files: PASSED_FILES };
+
+const EVERY_COUNT = { files: 4, cached: 2, failed: 1 };
+
+const NO_FILE_COUNTS = { files: 0, cached: null, failed: null };
 
 /** A group list of one group with `files`. */
 const groupsWithFiles = (files: unknown): unknown[] => [{ ...GROUP, files }];
@@ -113,6 +119,9 @@ const recordOf = (state: unknown): unknown => {
 
 /** An atom state record of one umbrella whose state has `change`. */
 const recordWith = (change: object): unknown => recordOf({ ...STATE, ...change });
+
+/** An atom state record of one umbrella whose state has `counts`. */
+const recordWithCounts = (counts: unknown): unknown => recordWith({ counts });
 
 const FILE_WITH_NO_IS_LIVE = { id: FILE.id, specPath: FILE.specPath };
 
@@ -203,9 +212,8 @@ describe('FEATURE: atom group list shape', () => {
 describe('FEATURE: atom state record shape', () => {
   it.each([
     ['an empty record', {}],
-    ['a group with every outcome', recordWith({ counts: '4 files', files: EVERY_OUTCOME })],
-    ['a group with no files', recordWith({ counts: '0 files', files: {} })],
-    ['counts of 200 characters', recordWith({ counts: 'c'.repeat(200) })],
+    ['a group with every outcome', recordWith({ counts: EVERY_COUNT, files: EVERY_OUTCOME })],
+    ['a group with no files', recordWith({ counts: NO_FILE_COUNTS, files: {} })],
     ['TASK_COUNT_MAX files', recordWith({ files: idsWith(TASK_COUNT_MAX, PASSED) })]
   ])('GIVEN %s WHEN checked THEN it is an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(true);
@@ -222,8 +230,11 @@ describe('FEATURE: atom state record shape', () => {
     ['an unknown outcome', recordWith({ files: SKIPPED_FILES })],
     ['a numeric outcome', recordWith({ files: NUMERIC_FILES })],
     ['one bad group after a good one', ONE_BAD_RECORD],
-    ['counts of 201 characters', recordWith({ counts: 'c'.repeat(201) })],
-    ['counts with a line break', recordWith({ counts: '1 files\n2 cached' })],
+    ['string counts', recordWithCounts('10 files')],
+    ['negative files', recordWithCounts({ files: -1, cached: null, failed: null })],
+    ['fractional cached', recordWithCounts({ files: 1, cached: 0.5, failed: null })],
+    ['failed over the cap', recordWithCounts({ files: 1, cached: null, failed: TASK_COUNT_MAX + 1 })],
+    ['counts with no failed key', recordWithCounts({ files: 1, cached: null })],
     ['TASK_COUNT_MAX + 1 files', recordWith({ files: idsWith(TASK_COUNT_MAX + 1, PASSED) })]
   ])('GIVEN %s WHEN checked THEN it is not an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(false);
