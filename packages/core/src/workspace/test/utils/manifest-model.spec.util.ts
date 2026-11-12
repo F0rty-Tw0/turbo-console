@@ -56,6 +56,9 @@ export const misplacedTaskIds = (model: WorkspaceModel): string[] => {
   return model.packages.flatMap(misplacedIn);
 };
 
+/** The root `//` package turbo lists for every generated fixture: the manifest plans no root package, and its root `package.json` holds no tags. */
+const ROOT_PROJECTION: ProjectedPackage = { name: '//', path: '', tags: [] };
+
 const isShownPackage = (pkg: ManifestPackage): boolean => pkg.role !== 'atom-definitions';
 
 const manifestPackage = (pkg: ManifestPackage): ProjectedPackage => {
@@ -114,7 +117,7 @@ const manifestTask = (task: ManifestTask, visibleIds: Set<string>, phantoms: Map
   return [projected];
 };
 
-/** What the model of a fixture must hold: definitions packages, carriers and phantoms left out, phantom dependencies passed on to their dependents. */
+/** What the model of a fixture must hold: the root `//` package, definitions packages, carriers and phantoms left out, phantom dependencies passed on to their dependents. */
 export const expectedModelOf = (manifest: Manifest): ModelProjection => {
   const shown = manifest.packages.filter(isShownPackage);
   const shownNames = new Set(shown.map((pkg) => pkg.name));
@@ -130,7 +133,9 @@ export const expectedModelOf = (manifest: Manifest): ModelProjection => {
     return shownNames.has(source) && shownNames.has(target);
   };
 
-  const packages = shown.map(manifestPackage).toSorted(byName);
+  const shownPackages = shown.map(manifestPackage);
+  const allPackages = [ROOT_PROJECTION, ...shownPackages];
+  const packages = allPackages.toSorted(byName);
   const tasks = manifest.tasks.flatMap(toTask).toSorted(byId);
   const edges = manifestDependencyPairs(manifest).filter(isShownPair);
   const projection: ModelProjection = { packages, tasks, edges };

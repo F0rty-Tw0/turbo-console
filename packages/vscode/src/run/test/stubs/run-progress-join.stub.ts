@@ -34,14 +34,13 @@ const A_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'a', tasks: [BUILD_
 
 const B_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: 'b', tasks: [B_TASK] };
 
-const ROOT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '.', tasks: [LINT_TASK] };
+const ROOT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', tasks: [LINT_TASK] };
 
 /** The model of `/ws` with a#build, b#build and the root task //#lint. */
 export const JOIN_MODEL_STUB: WorkspaceModel = {
   ...WORKSPACE_MODEL_STUB,
-  packages: [A_PACKAGE, B_PACKAGE],
-  rootPackage: ROOT_PACKAGE
+  packages: [ROOT_PACKAGE, A_PACKAGE, B_PACKAGE]
 };
 
 /** `JOIN_MODEL_STUB` after b#build is gone. */
-export const JOIN_MODEL_NO_B_STUB: WorkspaceModel = { ...JOIN_MODEL_STUB, packages: [A_PACKAGE] };
+export const JOIN_MODEL_NO_B_STUB: WorkspaceModel = { ...JOIN_MODEL_STUB, packages: [ROOT_PACKAGE, A_PACKAGE] };

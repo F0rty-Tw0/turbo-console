@@ -23,10 +23,10 @@ const packageOf = (name: string, tasks: TaskNode[]): PackageNode => {
 const WEB_PACKAGE = packageOf('web', [taskOf('web#build', ['ui#build', 'gone#build'])]);
 const UI_PACKAGE = packageOf('ui', [taskOf('ui#build', [])]);
 const ROOT_PACKAGE = packageOf('//', [taskOf('//#lint', ['web#build'])]);
-const MODEL: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [WEB_PACKAGE, UI_PACKAGE], rootPackage: ROOT_PACKAGE };
+const MODEL: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [ROOT_PACKAGE, WEB_PACKAGE, UI_PACKAGE] };
 
 const SINGLE_PACKAGE = packageOf('//', [taskOf('//#build', ['//#codegen']), taskOf('//#codegen', [])]);
-const SINGLE_MODEL: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, singlePackage: true, packages: [SINGLE_PACKAGE], rootPackage: null };
+const SINGLE_MODEL: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, singlePackage: true, packages: [SINGLE_PACKAGE] };
 
 describe('FEATURE: the dependency snapshot of a run (spec D3, D10)', () => {
   let model: WorkspaceModel | null;

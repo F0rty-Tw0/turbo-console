@@ -74,7 +74,7 @@ describe('FEATURE: package node', () => {
 
   describe.each([
     ['the // package of a single-package repo', '//', true, 'single-app'],
-    ['the // package of a monorepo', '//', false, null],
+    ['the // package of a monorepo', '//', false, 'single-app'],
     ['a package of a single-package repo', 'a', true, null]
   ])('GIVEN %s', (_title, name, singlePackage, expected) => {
     it('WHEN built THEN its label is the one expected', () => {

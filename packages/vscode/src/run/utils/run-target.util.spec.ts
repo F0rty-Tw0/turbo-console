@@ -198,8 +198,8 @@ describe('FEATURE: run targets', () => {
       expect(ids).toStrictEqual(new Set(['build', 'a#test']));
     });
 
-    it('WHEN the model has a root package with //#lint THEN //#lint is among the ids', () => {
-      const withRoot: WorkspaceModel = { ...MODEL, rootPackage: ROOT_PACKAGE };
+    it('WHEN the model lists a root package with //#lint THEN //#lint is among the ids', () => {
+      const withRoot: WorkspaceModel = { ...MODEL, packages: [...MODEL.packages, ROOT_PACKAGE] };
 
       const ids = taskIdsOf(withRoot);
 

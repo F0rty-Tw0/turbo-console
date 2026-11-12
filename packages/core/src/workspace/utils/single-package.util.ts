@@ -36,3 +36,20 @@ export const singlePackageGraphOf = (graph: PackageGraph): PackageGraph => {
 
   return derived;
 };
+
+/**
+ * A monorepo `graph` with its `root` package listed first among the nodes, edges kept, so the model build, the cache and
+ * its keys see the root `//` as one more package; `graph` itself when `root` is `null`.
+ */
+export const withRootGraphOf = (graph: PackageGraph): PackageGraph => {
+  const { root, packageGraph } = graph.data;
+
+  if (root === null) return graph;
+
+  const nodes = { items: [root, ...packageGraph.nodes.items] };
+  const withRoot = { ...packageGraph, nodes };
+  const data = { packageGraph: withRoot, root };
+  const derived: PackageGraph = { data };
+
+  return derived;
+};

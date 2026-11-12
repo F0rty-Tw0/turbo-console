@@ -58,7 +58,7 @@ const FMT_TASK: TaskNode = {
   persistent: false
 };
 
-const ROOT_TASKS_PACKAGE: PackageNode = { name: '//', path: '', label: null, tags: [], tasks: [FMT_TASK] };
+const ROOT_TASKS_PACKAGE: PackageNode = { name: '//', path: '', label: 'root', tags: [], tasks: [FMT_TASK] };
 
 /** A small model holding every field kind: an atom and a plain task, a description and a null one, an edge and a warning. */
 export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
@@ -68,7 +68,6 @@ export const WORKSPACE_MODEL_STUB: WorkspaceModel = {
   affectedMode: 'task',
   singlePackage: false,
   packages: PACKAGES,
-  rootPackage: null,
   edges: EDGES,
   warnings: ['turbo.jsonc: x']
 };
@@ -81,5 +80,5 @@ export const SINGLE_PACKAGE_MODEL_STUB: WorkspaceModel = {
   edges: []
 };
 
-/** A monorepo model whose root `//` package holds one `//#fmt` turbo task. */
-export const ROOT_TASKS_MODEL_STUB: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, rootPackage: ROOT_TASKS_PACKAGE };
+/** A monorepo model whose root `//` package, listed first, holds one `//#fmt` turbo task. */
+export const ROOT_TASKS_MODEL_STUB: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [ROOT_TASKS_PACKAGE, ...PACKAGES] };
