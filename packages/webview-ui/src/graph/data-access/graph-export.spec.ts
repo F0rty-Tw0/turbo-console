@@ -138,12 +138,19 @@ describe('FEATURE: exportPngOf', () => {
       cy.add({ group: 'nodes', data: UMBRELLA_DATA, classes: 'task atom-umbrella' });
     });
 
-    it('WHEN exporting THEN the umbrella carries the exporting class during cy.png and not after', () => {
+    it('WHEN exporting THEN the umbrella carries the exporting class during cy.png', () => {
       const seen = stubPng(cy, 'PNG');
 
       exportPngOf(cy, BG, 1);
 
       expect(callOf(seen, 0).umbrellaExporting).toBe(true);
+    });
+
+    it('WHEN exporting THEN the umbrella loses the exporting class after cy.png', () => {
+      stubPng(cy, 'PNG');
+
+      exportPngOf(cy, BG, 1);
+
       expect(hasExportingClass(cy, UMBRELLA_ID)).toBe(false);
     });
 
