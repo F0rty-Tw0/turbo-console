@@ -1,4 +1,5 @@
-import { emptyPickCase } from '../utils/run-options-cases.spec.util.ts';
+import { emptyPickCase, scriptArgsCase, turboOptionsCase } from '../utils/run-options-cases.spec.util.ts';
+import { prepareOptionsFixture } from '../utils/run-options-fixture.spec.util.ts';
 import { markDone, revealTree, rootAt, step, turboApi } from '../utils/suite-env.spec.util.ts';
 import { readSuiteEnv } from '../utils/suite-input.spec.util.ts';
 
@@ -11,7 +12,10 @@ export const run = async (): Promise<void> => {
   const api = await turboApi();
   const root = rootAt(0);
 
+  await step('edit the fixture before the view is revealed', async () => prepareOptionsFixture(api, root));
   await step('reveal the view', async () => revealTree(api, root));
   await emptyPickCase(api);
+  await turboOptionsCase(api);
+  await scriptArgsCase(api);
   await markDone(env);
 };

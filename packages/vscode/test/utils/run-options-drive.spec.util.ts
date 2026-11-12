@@ -79,6 +79,30 @@ const driveOptions = async (node: TreeNode, steps: Step[]): Promise<void> => {
   await finished;
 };
 
+/** Pastes `text` into the open input box: VS Code has no command that sets a quick input's value (spiked: `type` did not reach it). */
+const writeBox = async (text: string): Promise<void> => {
+  await vscode.env.clipboard.writeText(text);
+  await runCommand('editor.action.clipboardPasteAction');
+};
+
+const typeStep = (text: string): Step => {
+  const typeIn: Step = async (factor) => {
+    await sleep(PICK_OPEN_MS * factor);
+    await writeBox(text);
+    await runCommand('workbench.action.acceptSelectedQuickOpenItem');
+  };
+
+  return typeIn;
+};
+
 /** Runs Run with Options on `node`: checks the given 0-based picker rows (strictly ascending), accepts; returns the launch token. */
 export const runWithPicks = async (api: TurboConsoleApi, node: TreeNode, rows: number[]): Promise<number> =>
   startRunBy(api, node, async () => driveOptions(node, [pickRowsStep(rows)]));
+
+/** Like `runWithPicks`, then pastes `text` into the Extra arguments box and accepts it. */
+export const runWithText = async (api: TurboConsoleApi, node: TreeNode, rows: number[], text: string): Promise<number> =>
+  startRunBy(api, node, async () => driveOptions(node, [pickRowsStep(rows), typeStep(text)]));
+
+/** A script row opens only the arguments box. */
+export const runScriptWithText = async (api: TurboConsoleApi, node: TreeNode, text: string): Promise<number> =>
+  startRunBy(api, node, async () => driveOptions(node, [typeStep(text)]));
