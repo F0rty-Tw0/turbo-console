@@ -5,7 +5,8 @@ import { runWithOptions } from '../domain-logic/run-with-options.ts';
 
 /** Run with Options on a task row; the palette hides it and a non-task argument does nothing. */
 export const registerRunOptions = (roots: Roots, ports: RunOptionsPorts, register: CommandRegistry): Disposed => {
-  const registered = register('turboConsole.runTaskWithOptions', async (arg) => runWithOptions(roots, ports, arg));
+  const run = async (arg: unknown): Promise<void> => runWithOptions(roots, ports, arg);
+  const registered = register('turboConsole.runTaskWithOptions', run);
 
   return registered;
 };
