@@ -1,4 +1,5 @@
 import { ATOM_OUTCOMES, RUN_STATES, TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
+import { isCount } from '../../bridge/utils/number.util.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { isString } from '../../bridge/utils/string.util.ts';
 import { ATOM_COUNTS_TEXT_MAX } from '../common/graph-atom.const.ts';
@@ -87,6 +88,19 @@ const isAtomOutcomeRecord = (value: unknown): boolean => {
   const isCapped = Object.keys(value).length <= TASK_COUNT_MAX;
 
   return isCapped && Object.values(value).every(isAtomOutcome);
+};
+
+const isCappedCount = (value: unknown): boolean => isCount(value) && value <= TASK_COUNT_MAX;
+
+const isCappedCountOrNull = (value: unknown): boolean => value === null || isCappedCount(value);
+
+/** An umbrella's counts: `files` a whole number in 0..`TASK_COUNT_MAX`, `cached` and `failed` each one too or `null`; a missing key fails. */
+export const isAtomCounts = (value: unknown): boolean => {
+  if (!isRecord(value) || Array.isArray(value)) return false;
+
+  const { files, cached, failed } = value;
+
+  return isCappedCount(files) && isCappedCountOrNull(cached) && isCappedCountOrNull(failed);
 };
 
 const isCountsLine = (value: unknown): boolean => isString(value) && value.length <= ATOM_COUNTS_TEXT_MAX && !value.includes('\n');

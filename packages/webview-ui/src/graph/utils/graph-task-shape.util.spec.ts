@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  isAtomCounts,
   isAtomGroupList,
   isAtomStateRecord,
   isGraphTaskList,
@@ -226,6 +227,47 @@ describe('FEATURE: atom state record shape', () => {
     ['TASK_COUNT_MAX + 1 files', recordWith({ files: idsWith(TASK_COUNT_MAX + 1, PASSED) })]
   ])('GIVEN %s WHEN checked THEN it is not an atom state record', (_label, value) => {
     expect(isAtomStateRecord(value)).toBe(false);
+  });
+});
+
+const COUNTS = { files: 10, cached: 3, failed: 1 };
+
+const OVER = TASK_COUNT_MAX + 1;
+
+describe('FEATURE: atom counts shape', () => {
+  it.each([
+    ['all null but files', { files: 0, cached: null, failed: null }],
+    ['every number', COUNTS],
+    ['zeros', { files: 0, cached: 0, failed: 0 }],
+    ['TASK_COUNT_MAX in each', { files: TASK_COUNT_MAX, cached: TASK_COUNT_MAX, failed: TASK_COUNT_MAX }]
+  ])('GIVEN counts with %s WHEN checked THEN they are atom counts', (_label, value) => {
+    expect(isAtomCounts(value)).toBe(true);
+  });
+
+  it.each([
+    ['a string', '10 files'],
+    ['null', null],
+    ['an array', [10, 3, 1]],
+    ['no keys', {}],
+    ['no cached key', { files: 10, failed: null }],
+    ['no failed key', { files: 10, cached: null }],
+    ['null files', { ...COUNTS, files: null }],
+    ['string files', { ...COUNTS, files: '10' }],
+    ['negative files', { ...COUNTS, files: -1 }],
+    ['fractional files', { ...COUNTS, files: 1.5 }],
+    ['NaN files', { ...COUNTS, files: Number.NaN }],
+    ['Infinity files', { ...COUNTS, files: Number.POSITIVE_INFINITY }],
+    ['files over the cap', { ...COUNTS, files: OVER }],
+    ['negative cached', { ...COUNTS, cached: -1 }],
+    ['fractional cached', { ...COUNTS, cached: 2.5 }],
+    ['string cached', { ...COUNTS, cached: '3' }],
+    ['cached over the cap', { ...COUNTS, cached: OVER }],
+    ['negative failed', { ...COUNTS, failed: -1 }],
+    ['fractional failed', { ...COUNTS, failed: 0.5 }],
+    ['string failed', { ...COUNTS, failed: '1' }],
+    ['failed over the cap', { ...COUNTS, failed: OVER }]
+  ])('GIVEN counts with %s WHEN checked THEN they are not atom counts', (_label, value) => {
+    expect(isAtomCounts(value)).toBe(false);
   });
 });
 

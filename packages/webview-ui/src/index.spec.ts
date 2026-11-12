@@ -3,6 +3,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import {
   ICON_ID_PATTERN,
   TOOL_ICON_PREFIX,
+  atomCountsText,
   durationText,
   edgeIdOf,
   elapsedText,
@@ -19,6 +20,7 @@ import type {
   FocusInGraphMessage,
   GraphAffected,
   GraphAffectedMark,
+  GraphAtomCounts,
   GraphAtomFile,
   GraphAtomGroup,
   GraphAtomGroupState,
@@ -88,6 +90,7 @@ type ExpectedTask = {
 };
 type ExpectedAtomFile = { readonly id: string; readonly specPath: string; readonly isLive: boolean };
 type ExpectedAtomGroup = { readonly umbrellaId: string; readonly files: GraphAtomFile[] };
+type ExpectedAtomCounts = { readonly files: number; readonly cached: number | null; readonly failed: number | null };
 type ExpectedAtomGroupState = { readonly counts: string; readonly files: Record<string, 'passed' | 'failed' | 'cached' | 'none'> };
 type ExpectedAtomsMessage = { readonly type: 'atoms'; readonly groups: Record<string, GraphAtomGroupState> };
 type ExpectedAffected = { readonly mode: 'task' | 'package'; readonly tasks: Readonly<Record<string, GraphAffectedMark>> };
@@ -160,6 +163,7 @@ const RUNTIME_EXPORTS = [
   'TASK_CAP',
   'TASK_COUNT_MAX',
   'TOOL_ICON_PREFIX',
+  'atomCountsText',
   'durationText',
   'edgeIdOf',
   'elapsedText',
@@ -192,6 +196,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.ROUTE_BENDS_MAX).toBe(64);
       expect(entry.edgeIdOf).toBe(edgeIdOf);
       expect(entry.TOOL_ICON_PREFIX).toBe(TOOL_ICON_PREFIX);
+      expect(entry.atomCountsText).toBe(atomCountsText);
       expect(entry.durationText).toBe(durationText);
       expect(entry.elapsedText).toBe(elapsedText);
       expect(entry.graphCsp).toBe(graphCsp);
@@ -252,6 +257,7 @@ describe('FEATURE: webview-ui package entry', () => {
         | GraphAtomsMessage
       >();
       expectTypeOf<GraphAtomOutcome>().toEqualTypeOf<'passed' | 'failed' | 'cached' | 'none'>();
+      expectTypeOf<GraphAtomCounts>().toEqualTypeOf<ExpectedAtomCounts>();
       expectTypeOf<GraphAtomGroupState>().toEqualTypeOf<ExpectedAtomGroupState>();
       expectTypeOf<GraphAtomsMessage>().toEqualTypeOf<ExpectedAtomsMessage>();
       expectTypeOf<GraphPrediction>().toEqualTypeOf<'cached' | 'notCached' | 'unknown'>();
