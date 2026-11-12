@@ -4,8 +4,14 @@ import { withSession } from './bench-session.ts';
 import { NOTHING_SAVED, PAN_FRAMES, WARM_UP_FRAMES } from './common/bench.const.ts';
 import type { BenchSession, PanSample } from './common/bench.type.ts';
 import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
-import { targetLikeHubSavedState, targetLikeTasksState } from '../test/utils/graph-target-like-tasks.spec.util.ts';
+import { GraphAtoms } from '../pages/graph-atoms.po.ts';
+import {
+  TARGET_LIKE_UMBRELLA,
+  targetLikeHubSavedState,
+  targetLikeTasksState
+} from '../test/utils/graph-target-like-tasks.spec.util.ts';
 import { targetLikeState } from '../test/utils/graph-target-like.spec.util.ts';
+import { taskSavedState } from '../test/utils/graph-task-saved.spec.util.ts';
 import { p95 } from '../test/utils/stats.spec.util.ts';
 
 const pannedAfterElk = async (session: BenchSession): Promise<PanSample> => {
@@ -45,6 +51,43 @@ const taskPannedCpu = async (session: BenchSession): Promise<number> => {
 /** Main-thread CPU of a scripted 2 s pan over the target-like task graph with the hub task chosen, framed by Fit first. */
 export const taskPan = async (browser: Browser): Promise<number> =>
   withSession(browser, { savedState: targetLikeHubSavedState() }, taskPannedCpu);
+
+const expandedUmbrella = async (session: BenchSession): Promise<void> => {
+  const { canvas, page } = session;
+  const atoms = new GraphAtoms(page);
+
+  await canvas.doubleTapNode(TARGET_LIKE_UMBRELLA);
+  await atoms.expectBoxDrawn(TARGET_LIKE_UMBRELLA, true);
+};
+
+const taskAtomsPannedCpu = async (session: BenchSession, isExpanded: boolean): Promise<number> => {
+  const { canvas, graphPage, host, probe } = session;
+
+  await host.sendState(targetLikeTasksState());
+  await probe.expectLayoutEngine('elk');
+  await graphPage.pressButton(FIT_LABEL);
+  await canvas.expectAllNodesInView();
+
+  if (isExpanded) await expandedUmbrella(session);
+
+  await canvas.scriptedPan(WARM_UP_FRAMES, PAN_FRAMES);
+
+  const cpu = canvas.measuredPanCpu();
+
+  return cpu.totalMs;
+};
+
+/**
+ * Main-thread CPU of a scripted 2 s pan over the target-like task graph with the Atomizer umbrella chosen, framed by Fit
+ * first; `isExpanded` double taps the umbrella open before the pan, so its files and box are drawn.
+ */
+export const taskAtomsPan = async (browser: Browser, isExpanded: boolean): Promise<number> => {
+  const { hash } = targetLikeTasksState();
+  const savedState = taskSavedState(hash, { chosen: [TARGET_LIKE_UMBRELLA] });
+  const work = async (session: BenchSession): Promise<number> => taskAtomsPannedCpu(session, isExpanded);
+
+  return withSession(browser, { savedState }, work);
+};
 
 const defaultPannedCpu = async (session: BenchSession): Promise<number> => {
   const { canvas, graphPage, grouping, host, probe } = session;
