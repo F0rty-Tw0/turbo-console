@@ -132,11 +132,11 @@ describe('FEATURE: GraphTaskLayout', () => {
       expect(leaf).toMatchObject({ id: 'api#build', ...UMBRELLA_SIZE });
     });
 
-    it('WHEN a layout lands THEN the canvas draws the sizes and the counts lines', async () => {
+    it('WHEN a layout lands THEN the canvas draws the sizes and the counts', async () => {
       await landWith('k0', sizes);
 
       expect(rig.view.tasks.show).toHaveBeenCalledWith(
-        expect.objectContaining({ sizes, labels: new Map([['api#build', '1 files']]) })
+        expect.objectContaining({ sizes, labels: new Map([['api#build', { files: 1, cached: null, failed: null }]]) })
       );
     });
 

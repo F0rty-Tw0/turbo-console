@@ -111,7 +111,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
     it('WHEN atoms arrive for it THEN setCounts gets its counts without the name', () => {
       groups.states(COUNTED_E2E_CI);
 
-      expect(rig.tasks.setCounts).toHaveBeenCalledExactlyOnceWith(new Map([['app#e2e-ci', '10 files · 3 cached']]));
+      expect(rig.tasks.setCounts).toHaveBeenCalledExactlyOnceWith(new Map([['app#e2e-ci', { files: 10, cached: 3, failed: null }]]));
     });
 
     it('WHEN atoms arrive for it THEN no position is set', () => {
@@ -127,13 +127,15 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
 
       groups.states(UNKNOWN_GONE);
 
-      expect(rig.tasks.setCounts).toHaveBeenLastCalledWith(new Map([['app#e2e-ci', '10 files · 3 cached']]));
+      expect(rig.tasks.setCounts).toHaveBeenLastCalledWith(new Map([['app#e2e-ci', { files: 10, cached: 3, failed: null }]]));
     });
 
     it('WHEN atoms name an unknown umbrella THEN the counts it has are unchanged', () => {
       groups.states(UNKNOWN_GONE);
 
-      expect(rig.tasks.setCounts).toHaveBeenCalledExactlyOnceWith(new Map([['app#e2e-ci', '10 files']]));
+      expect(rig.tasks.setCounts).toHaveBeenCalledExactlyOnceWith(
+        new Map([['app#e2e-ci', { files: 10, cached: null, failed: null }]])
+      );
     });
   });
 
@@ -148,7 +150,7 @@ describe('FEATURE: Atomizer groups of the task graph', () => {
 
       groups.states(both);
 
-      expect(rig.tasks.setCounts).toHaveBeenCalledExactlyOnceWith(new Map([['app#e2e-ci', '10 files · 3 cached']]));
+      expect(rig.tasks.setCounts).toHaveBeenCalledExactlyOnceWith(new Map([['app#e2e-ci', { files: 10, cached: 3, failed: null }]]));
     });
   });
 

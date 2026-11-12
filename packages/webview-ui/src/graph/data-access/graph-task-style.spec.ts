@@ -236,14 +236,6 @@ describe('FEATURE: taskRulesOf task nodes in graphStyleOf', () => {
     expect(cy.getElementById('web#build').style('text-wrap')).not.toBe('wrap');
   });
 
-  it('GIVEN an umbrella node THEN its label wraps so the counts line sits under the name', () => {
-    const node = cy.getElementById('web#build');
-
-    node.addClass('atom-umbrella');
-
-    expect(node.style('text-wrap')).toBe('wrap');
-  });
-
   it('GIVEN a task with no run class THEN it has no outline', () => {
     expect(cy.getElementById('web#build').numericStyle('outline-width')).toBe(0);
   });
@@ -268,7 +260,7 @@ const glyphElementOf = (id: string, label: string, classes: string): ElementDefi
 
 const GLYPH_ELEMENTS = [
   glyphElementOf('web#build', 'build', 'task'),
-  glyphElementOf('web#lint', 'lint\n3 files', 'task atom-umbrella'),
+  glyphElementOf('web#lint', 'lint', 'task atom-umbrella'),
   glyphElementOf('web#build--a.ts', 'a.ts', 'atom-file atom-cached run-running'),
   glyphElementOf('web#build--more', '+3 more', 'atom-more'),
   glyphElementOf('pkg:web', 'web', '')
@@ -340,8 +332,8 @@ describe('FEATURE: taskRulesOf glyph labels in graphStyleOf with glyphs on', () 
     expect(node.data('width')).toBe(width);
   });
 
-  it('GIVEN an umbrella node THEN the glyph leads its first line and the counts line follows', () => {
-    expect(labelOf('web#lint')).toBe('\uec03 lint\n3 files');
+  it('GIVEN an umbrella node THEN the glyph leads its name', () => {
+    expect(labelOf('web#lint')).toBe('\uec03 lint');
   });
 
   it('GIVEN a cached file that is running THEN its label starts with the sync glyph, not history', () => {

@@ -64,7 +64,10 @@ describe('FEATURE: GraphTaskMode with an Atomizer group', () => {
       const size = umbrellaSizeOf({ name: rig.deps.sizeOf, counts: rig.deps.textSizeOf }, 'build', 2);
 
       expect(rig.view.tasks.show).toHaveBeenCalledWith(
-        expect.objectContaining({ sizes: new Map([['web#build', size]]), labels: new Map([['web#build', '2 files']]) })
+        expect.objectContaining({
+          sizes: new Map([['web#build', size]]),
+          labels: new Map([['web#build', { files: 2, cached: null, failed: null }]])
+        })
       );
     });
 
