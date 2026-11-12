@@ -32,10 +32,15 @@ describe('FEATURE: exportLabelOf', () => {
     cy.destroy();
   });
 
-  it("GIVEN an umbrella node WHEN its export label is read THEN it is the exporting rule's label and the class is gone after", () => {
+  it("GIVEN an umbrella node WHEN its export label is read THEN it is the exporting rule's label", () => {
     const label = exportLabelOf(cy, 'u');
 
     expect(label).toBe(COUNTS_TEXT);
+  });
+
+  it('GIVEN an umbrella node WHEN its export label is read THEN the exporting class is gone after', () => {
+    exportLabelOf(cy, 'u');
+
     expect(cy.getElementById('u').hasClass(EXPORTING_CLASS)).toBe(false);
   });
 

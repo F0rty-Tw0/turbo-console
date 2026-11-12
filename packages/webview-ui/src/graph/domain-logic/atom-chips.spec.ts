@@ -50,18 +50,24 @@ describe('FEATURE: AtomChips', () => {
     expect(layerRowAt(layer, 0).dataset['umbrella']).toBe('u');
   });
 
-  it('GIVEN a row WHEN a number changes THEN it is replaced; WHEN the same text is synced THEN the element is kept', () => {
+  it('GIVEN a row WHEN a number changes THEN a new element replaces it', () => {
     chips.sync(new Map([['u', ALL]]));
     const first = layerRowAt(layer, 0);
 
     chips.sync(new Map([['u', { ...ALL, failed: 0 }]]));
-    const second = layerRowAt(layer, 0);
+
+    expect(layerRowsOf(layer)).toHaveLength(1);
+    expect(layerRowAt(layer, 0)).not.toBe(first);
+  });
+
+  it('GIVEN a row WHEN counts with the same text are synced THEN the element is kept, not rebuilt', () => {
+    chips.sync(new Map([['u', { ...ALL, failed: 0 }]]));
+    const first = layerRowAt(layer, 0);
 
     chips.sync(new Map([['u', { files: 10, cached: 3, failed: null }]]));
 
-    expect([second === first, layerRowAt(layer, 0) === second]).toStrictEqual([false, true]);
-    expect(layerRowsOf(layer)).toHaveLength(1);
-    expect(rowOf).toHaveBeenCalledTimes(2);
+    expect(layerRowAt(layer, 0)).toBe(first);
+    expect(rowOf).toHaveBeenCalledOnce();
   });
 
   it('GIVEN a toolbar in the layer WHEN a row is rebuilt THEN the row sits before the toolbar, which paints over it', () => {
@@ -139,7 +145,7 @@ describe('FEATURE: AtomChips', () => {
     expect(layerRowsOf(layer)).toHaveLength(0);
   });
 
-  it('GIVEN rows WHEN cleared THEN no row remains, and a sync after builds them again', () => {
+  it('GIVEN rows WHEN cleared THEN no row remains', () => {
     chips.sync(
       new Map([
         ['u', ALL],
@@ -147,10 +153,15 @@ describe('FEATURE: AtomChips', () => {
       ])
     );
     chips.clear();
-    const afterClear = layerRowsOf(layer).length;
 
+    expect(layerRowsOf(layer)).toHaveLength(0);
+  });
+
+  it('GIVEN cleared rows WHEN synced again THEN the row is built again', () => {
+    chips.sync(new Map([['u', ALL]]));
+    chips.clear();
     chips.sync(new Map([['u', ALL]]));
 
-    expect([afterClear, layerRowsOf(layer).length]).toStrictEqual([0, 1]);
+    expect(layerRowsOf(layer)).toHaveLength(1);
   });
 });
