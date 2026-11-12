@@ -13,6 +13,7 @@ import type { TaskControls } from '../../common/task-controls.type.ts';
 import type { TaskDetails } from '../../common/task-details.type.ts';
 import { freshViewStateOf } from '../../utils/fresh-view-state.util.ts';
 import type { TaskModeRig, TaskPartsMock, TaskViewMock } from '../common/graph-task-mode.type.ts';
+import { atomChipsMock } from '../mocks/atom-chips.mock.ts';
 import { flowControlMock } from '../mocks/graph-flow.mock.ts';
 import { layoutScreenMock } from '../mocks/graph-layouts.mock.ts';
 import { taskControlsMock, taskDetailsMock, taskPanelMock, taskWidgetsMock } from '../mocks/graph-task-mode.mock.ts';
@@ -79,8 +80,8 @@ const taskPartsMockOf = (): TaskPartsMock => {
   return parts;
 };
 
-/** Every double a `GraphTaskMode` needs, over the spec's `modes`. */
-export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
+/** Every double a `GraphTaskMode` needs, over the spec's `modes`, the chip rows' `chips` by default stubs. */
+export const taskModeRigOf = (modes: TaskModes, chips = atomChipsMock()): TaskModeRig => {
   const posted: (WebviewMessage | GraphWebviewMessage)[] = [];
   const called: string[] = [];
   const noting = (name: string): (() => void) => {
@@ -108,6 +109,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
     view,
     runner: runs.runner,
     ...SIZER_DEPS,
+    chips,
     bridge,
     screen,
     modes,
@@ -127,7 +129,7 @@ export const taskModeRigOf = (modes: TaskModes): TaskModeRig => {
   const posts = (): (WebviewMessage | GraphWebviewMessage)[] => [...posted];
   const calls = (): string[] => [...called];
 
-  const rig: TaskModeRig = { ...parts, ...doubles, deps, view, runs, screen, frames, modes, posts, calls };
+  const rig: TaskModeRig = { ...parts, ...doubles, deps, view, runs, screen, frames, modes, chips, posts, calls };
 
   return rig;
 };

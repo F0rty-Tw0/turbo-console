@@ -4,8 +4,10 @@ import { taskOf } from './shown-set.spec.util.ts';
 import type { GraphAtomCounts, GraphAtomGroupState } from '../../../bridge/common/graph-message.type.ts';
 import type { GraphAtomGroup, GraphTask, Position, Positions } from '../../../bridge/common/graph-state.type.ts';
 import type { AtomGroupsDeps, AtomLayout } from '../../common/graph-atom.type.ts';
+import type { Viewport } from '../../common/graph-page.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import type { AtomRig } from '../common/graph-atom-groups.type.ts';
+import { atomChipsMock } from '../mocks/atom-chips.mock.ts';
 import { atomCanvasMock, taskCanvasMock } from '../mocks/graph-view.mock.ts';
 
 export const SIZE: NodeSize = { width: 200, height: 48 };
@@ -49,16 +51,25 @@ export const E2E_CI = groupOf('app#e2e-ci', 10);
 
 export const LIB_CI = groupOf('lib#e2e-ci', 2);
 
-/** Mock canvases, a spy bridge and a clock the spec sets with `rig.now.mockReturnValue`, as the deps of a `GraphAtomGroups`. */
-export const atomRigOf = (): AtomRig => {
+const ORIGIN: Position = { x: 0, y: 0 };
+
+/** The camera at rest: no pan, zoom 1. */
+export const RESTING_CAMERA: Viewport = { zoom: 1, pan: ORIGIN };
+
+/**
+ * Mock canvases, a camera the spec sets with `rig.viewport.mockReturnValue`, a spy bridge, a clock the spec sets with
+ * `rig.now.mockReturnValue`, and the chip rows' `chips`, as the deps of a `GraphAtomGroups`.
+ */
+export const atomRigOf = (chips = atomChipsMock()): AtomRig => {
   const tasks = taskCanvasMock();
   const atoms = atomCanvasMock();
+  const viewport = vi.fn<AtomGroupsDeps['view']['viewport']>(() => RESTING_CAMERA);
   const post = vi.fn<AtomGroupsDeps['bridge']['post']>();
   const now = vi.fn<AtomGroupsDeps['now']>(() => 0);
-  const view = { tasks, atoms };
+  const view = { tasks, atoms, viewport };
   const bridge = { post };
-  const deps: AtomGroupsDeps = { view, bridge, now };
-  const rig: AtomRig = { deps, tasks, atoms, post, now };
+  const deps: AtomGroupsDeps = { view, bridge, now, chips };
+  const rig: AtomRig = { deps, tasks, atoms, viewport, post, now, chips };
 
   return rig;
 };

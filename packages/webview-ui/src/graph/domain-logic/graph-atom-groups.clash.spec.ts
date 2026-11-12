@@ -9,8 +9,9 @@ import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas } from '../common/task-canvas.type.ts';
 import { createAtomCanvas } from '../data-access/graph-atom-view.ts';
 import { createTaskCanvas } from '../data-access/graph-task-view.ts';
+import { atomChipsMock } from '../test/mocks/atom-chips.mock.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
-import { layoutOf } from '../test/utils/graph-atom-groups.spec.util.ts';
+import { RESTING_CAMERA, layoutOf } from '../test/utils/graph-atom-groups.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
 
 const UMBRELLA = 'web#e2e-ci';
@@ -73,7 +74,7 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
       boxFrames: {},
       sizeOf: (): NodeSize => NODE_SIZE,
       sizes: SIZES,
-      labels: new Map(),
+      counts: new Map(),
       titleWidths: new Map(),
       rootLabel: null,
       naming: NAMING_STUB
@@ -84,9 +85,9 @@ describe('FEATURE: Atomizer groups on a canvas where a task is named like the bo
     tasks.show(drawing);
     cy.add(boxTaskOf());
 
-    const view: AtomGroupsDeps['view'] = { tasks, atoms: createAtomCanvas(cy) };
+    const view: AtomGroupsDeps['view'] = { tasks, atoms: createAtomCanvas(cy), viewport: () => RESTING_CAMERA };
     const bridge: AtomGroupsDeps['bridge'] = { post: vi.fn() };
-    const deps: AtomGroupsDeps = { view, bridge, now: () => 0 };
+    const deps: AtomGroupsDeps = { view, bridge, now: () => 0, chips: atomChipsMock() };
 
     groups = new GraphAtomGroups(deps);
     groups.received([GROUP]);

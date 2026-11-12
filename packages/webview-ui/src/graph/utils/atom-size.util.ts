@@ -26,7 +26,7 @@ const chipTextsOf = (fileCount: number): string[] => [`${fileCount} files`, `${f
 export const chipRowWidthOf = (measure: TextMeasure, fileCount: number, glyphs: boolean): number => {
   const chipWidthOf = (text: string): number => measure(text) + 2 * ATOM_CHIP_PAD_PX + CHIP_BORDER_PX;
   const chipTexts = chipTextsOf(fileCount);
-  const chipsWidth = chipTexts.reduce((sum, text) => sum + chipWidthOf(text), 0);
+  const chipsWidth = chipTexts.reduce((sum, text): number => sum + chipWidthOf(text), 0);
   const glyphSlots = 2 * CHIP_GLYPH_SLOT_PX;
   const glyphsWidth = glyphs ? glyphSlots : 0;
   const gapsWidth = 2 * ATOM_CHIP_GAP_PX;

@@ -3,16 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildAtomChipRow } from './atom-chips-elements.ts';
 import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { layerRowsOf } from '../test/utils/atom-chips.spec.util.ts';
 
 const ALL_THREE: GraphAtomCounts = { files: 10, cached: 3, failed: 1 };
 
-const isHtmlElement = (element: Element): element is HTMLElement => 'dataset' in element;
-
-const chipsOf = (row: HTMLElement): HTMLElement[] => {
-  const children = Array.from(row.children);
-
-  return children.filter(isHtmlElement);
-};
+/** The element children of a row or chip, as the layer's rows are read. */
+const chipsOf = layerRowsOf;
 
 const textsOf = (row: HTMLElement): string[] => {
   const chips = chipsOf(row);

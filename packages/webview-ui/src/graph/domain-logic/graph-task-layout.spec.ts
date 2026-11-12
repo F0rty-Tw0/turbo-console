@@ -136,7 +136,7 @@ describe('FEATURE: GraphTaskLayout', () => {
       await landWith('k0', sizes);
 
       expect(rig.view.tasks.show).toHaveBeenCalledWith(
-        expect.objectContaining({ sizes, labels: new Map([['api#build', { files: 1, cached: null, failed: null }]]) })
+        expect.objectContaining({ sizes, counts: new Map([['api#build', { files: 1, cached: null, failed: null }]]) })
       );
     });
 

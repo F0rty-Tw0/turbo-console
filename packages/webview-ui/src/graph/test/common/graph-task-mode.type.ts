@@ -3,6 +3,7 @@ import type { Mock, Mocked } from 'vitest';
 import type { LayoutRuns } from './graph-layouts.type.ts';
 import type { WebviewMessage } from '../../../bridge/common/details-message.type.ts';
 import type { GraphWebviewMessage } from '../../../bridge/common/graph-message.type.ts';
+import type { AtomChipsPort } from '../../common/atom-chips.type.ts';
 import type { FlowControl } from '../../common/flow.type.ts';
 import type { FrameClock } from '../../common/frame-clock.type.ts';
 import type { LayoutScreen } from '../../common/graph-layouts.type.ts';
@@ -30,6 +31,8 @@ export type TaskModeRig = {
   readonly frames: Mocked<Pick<FrameClock, 'start' | 'arm'>>;
   /** The spec's modes, a real `ViewStateModes` over a saver spy. */
   readonly modes: TaskModes;
+  /** The chip rows' layer and builder. */
+  readonly chips: AtomChipsPort;
   readonly panel: Mocked<TaskPanel>;
   readonly controls: Mocked<TaskControls>;
   readonly details: Mocked<TaskDetails>;

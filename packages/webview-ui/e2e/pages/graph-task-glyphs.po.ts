@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 import { GraphHost } from './graph-host.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphPage } from './graph.po.ts';
-import { ATOM_CHIP_GLYPH_PX } from '../../src/graph/common/graph-atom.const.ts';
+import { ATOM_CHIP_GLYPH_GAP_PX, ATOM_CHIP_GLYPH_PX } from '../../src/graph/common/graph-atom.const.ts';
 import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from '../../src/graph/common/graph-glyph.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
@@ -19,8 +19,8 @@ const READY_BUDGET_MS = CODICON_WAIT_MS + 500;
 /** Every character the codicon font covers: Cytoscape draws a state glyph from it. */
 const CODICON_RANGE = /[\uea60-\uf102]/u;
 
-/** The width glyphs add to an umbrella's chip row: a glyph and its 3 px gap on the cached and the failed chip. */
-const CHIP_GLYPH_SLOTS_PX = 2 * (ATOM_CHIP_GLYPH_PX + 3);
+/** The width glyphs add to an umbrella's chip row: a glyph and its gap on the cached and the failed chip. */
+const CHIP_GLYPH_SLOTS_PX = 2 * (ATOM_CHIP_GLYPH_PX + ATOM_CHIP_GLYPH_GAP_PX);
 
 /** A task whose label is the bare name, and the umbrella whose chip row is wider than its name. */
 const PLAIN_TASK = 'hub#build';
