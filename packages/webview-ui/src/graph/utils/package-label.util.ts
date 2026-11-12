@@ -3,8 +3,8 @@ import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
 
 /**
  * A package's node and row text: its raw `name` while scopes are shown, its host-cleaned `bareName` while hidden; the
- * root `//` always reads its `bareName`, the host's text for its label. The webview cannot clean text, so a name with
- * control or zero-width characters keeps them while scopes are shown.
+ * root `//` always reads its `bareName`, the host's text for its label under the scope setting. The webview cannot
+ * clean text, so a name with control or zero-width characters keeps them while scopes are shown.
  */
 export const packageLabelOf = (pkg: GraphPackage, scopeShown: boolean): string => {
   const isRaw = scopeShown && pkg.name !== ROOT_TASK_PACKAGE;

@@ -7,7 +7,7 @@ import { packageNamesOf } from './graph-package.util.ts';
 import { graphListingOf, persistentIdsOf, runIdsOfListing } from './graph-tasks.util.ts';
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
-import { bareTextsOf } from '../../tree/utils/model-view.util.ts';
+import { bareTextsOf, fullTextOf } from '../../tree/utils/model-view.util.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
 import { isListedTask } from '../../tree/utils/script-task.util.ts';
 import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
@@ -53,11 +53,20 @@ export const graphHashOf = (packages: GraphPackage[], edges: GraphEdge[]): strin
   return fnv1a(text);
 };
 
+/** The bare text of a node; the root `//` reads its full label while scopes are shown, the text of its tree row. */
+const bareNameOf = (node: PackageNode, bareTexts: ReadonlyMap<string, string>, scopeShown: boolean): string => {
+  const isRootShown = scopeShown && node.name === ROOT_TASK_PACKAGE;
+
+  if (isRootShown) return fullTextOf(node);
+
+  return bareTexts.get(node.name) ?? node.name;
+};
+
 /** The name, its bare name, the path, the tags (deduplicated and sorted) and the listed task count of a node (scripts count only while `scriptsShown`); only name, path and tags are hashed. */
-const packageOf = (node: PackageNode, bareTexts: ReadonlyMap<string, string>, scriptsShown: boolean): GraphPackage => {
+const packageOf = (node: PackageNode, bareTexts: ReadonlyMap<string, string>, shown: GraphShown): GraphPackage => {
   const tags = Array.from(new Set(node.tags)).toSorted(compareText);
-  const taskCount = node.tasks.filter((task): boolean => isListedTask(task, scriptsShown)).length;
-  const bareName = bareTexts.get(node.name) ?? node.name;
+  const taskCount = node.tasks.filter((task): boolean => isListedTask(task, shown.scriptsShown)).length;
+  const bareName = bareNameOf(node, bareTexts, shown.scopeShown);
   const info: GraphPackage = { name: node.name, bareName, path: node.path, tags, taskCount };
 
   return info;
@@ -107,7 +116,7 @@ export const shownOf = (toggles: GraphToggles): GraphShown => {
 
 export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, shown: GraphShown): GraphState => {
   const bareTexts = bareTextsOf(model.packages);
-  const packages = model.packages.map((node) => packageOf(node, bareTexts, shown.scriptsShown)).toSorted(comparePackages);
+  const packages = model.packages.map((node) => packageOf(node, bareTexts, shown)).toSorted(comparePackages);
   const edges = edgesOf(model.edges);
   const hash = graphHashOf(packages, edges);
   const names = packageNamesOf(packages);
