@@ -79,13 +79,18 @@ const cachedEntryOf = (cache: GraphLayoutCacheEntry | null, hash: string, packag
   return coversExactly(cache.positions, packages) ? cache : null;
 };
 
-/** The `//` package's label of a single-package model; `null` for a monorepo or when the root has no label. */
-export const rootLabelOf = (model: WorkspaceModel): string | null => {
-  if (!model.singlePackage) return null;
-
+/** The `//` package's label in either mode; `null` when the model has no `//` package or it has no label. */
+export const rootPackageLabelOf = (model: WorkspaceModel): string | null => {
   const root = model.packages.find((node) => node.name === ROOT_TASK_PACKAGE);
 
   return root?.label ?? null;
+};
+
+/** The `//` package's label of a single-package model, which names the owner of every task; `null` for a monorepo. */
+export const rootLabelOf = (model: WorkspaceModel): string | null => {
+  if (!model.singlePackage) return null;
+
+  return rootPackageLabelOf(model);
 };
 
 /** The tree's four toggles as they are now, read at every state build. */
