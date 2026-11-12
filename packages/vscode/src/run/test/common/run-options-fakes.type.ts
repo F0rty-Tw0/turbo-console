@@ -15,6 +15,6 @@ export type RunOptionsFakes = {
   readonly answer: (...texts: (string | undefined)[]) => void;
   /** The ask of box `index` (0 is the first box opened); throws when fewer boxes opened. */
   readonly askOf: (index: number) => InputAsk;
-  /** The request of the first run; `undefined` when nothing ran. */
-  readonly launched: () => RunRequest | undefined;
+  /** The request of the one run; throws unless `run` was called exactly once. */
+  readonly launched: () => RunRequest;
 };

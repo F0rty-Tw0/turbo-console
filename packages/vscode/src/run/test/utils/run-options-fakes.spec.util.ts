@@ -50,7 +50,14 @@ export const runOptionsFakes = (): RunOptionsFakes => {
 
     return ask;
   };
-  const launched = (): RunRequest | undefined => run.mock.calls[0]?.[0];
+  const launched = (): RunRequest => {
+    const count = run.mock.calls.length;
+    const request = run.mock.calls[0]?.[0];
+
+    if (count !== 1 || request === undefined) throw new Error(`run was called ${count} times, not once`);
+
+    return request;
+  };
   const ports: RunOptionsPorts = { pickMany, input, info, run };
   const fakes: RunOptionsFakes = { ports, pickMany, input, info, run, choose, answer, askOf, launched };
 
