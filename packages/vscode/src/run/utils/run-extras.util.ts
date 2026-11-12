@@ -23,7 +23,8 @@ const continueFieldOf = (isPicked: boolean): RunExtras => {
 const concurrencyFieldOf = (isPicked: boolean, concurrency: string | null): RunExtras => {
   if (!isPicked || concurrency === null) return NO_FIELD;
 
-  const field: RunExtras = { concurrency };
+  const trimmed = concurrency.trim();
+  const field: RunExtras = { concurrency: trimmed };
 
   return field;
 };
