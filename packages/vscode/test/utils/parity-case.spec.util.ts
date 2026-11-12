@@ -12,7 +12,8 @@ import {
   fixedViewsCase,
   foldersCase,
   openSpecRegisteredCase,
-  predictionRegisteredCase
+  predictionRegisteredCase,
+  runOptionsRegisteredCase
 } from './parity-views.spec.util.ts';
 import { taskNodeNamed } from './run-wait.spec.util.ts';
 import { log, step, waitFor } from './suite-env.spec.util.ts';
@@ -116,6 +117,7 @@ export const parityCase = async (api: TurboConsoleApi, root: string, manifest: S
   await affectedCase(scene);
   await fixedViewsCase(scene);
   await openSpecRegisteredCase();
+  await runOptionsRegisteredCase();
   await predictionRegisteredCase();
   await affectedRegisteredCase();
   await foldersCase(scene);
