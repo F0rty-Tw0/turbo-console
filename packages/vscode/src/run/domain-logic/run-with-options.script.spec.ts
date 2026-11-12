@@ -1,0 +1,150 @@
+import type { PackageNode, RunExtras, TaskNode } from '@turbo-console/core';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { runWithOptions } from './run-with-options.ts';
+import type { RootFolder } from '../../roots/common/root.type.ts';
+import { RootStore } from '../../roots/domain-logic/root-store.ts';
+import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
+import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
+import { TASK_TREE_NODE_STUB } from '../../tree/test/stubs/tree-node.stub.ts';
+import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import { loadedWith } from '../../tree/test/utils/tree-model.spec.util.ts';
+import { ARGS_PLACEHOLDER } from '../common/run-options.const.ts';
+import type { InputAsk } from '../common/run-options.type.ts';
+import type { RunRequest } from '../common/run.type.ts';
+import type { RunOptionsFakes } from '../test/common/run-options-fakes.type.ts';
+import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
+import { runOptionsFakes } from '../test/utils/run-options-fakes.spec.util.ts';
+import { argsErrorText, scriptArgsPromptOf } from '../utils/run-options-text.util.ts';
+import { unsafeScriptText } from '../utils/run-text.util.ts';
+
+const FOLDER: RootFolder = { root: '/ws', name: 'ws' };
+
+const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+
+const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [SCRIPT_TASK] };
+
+const SCRIPT_REQUEST: RunRequest = { ...RUN_REQUEST_STUB, binaryPath: TURBO_BINARY_STUB.path, task: SCRIPT_TASK };
+
+const UNSAFE_TASK: TaskNode = { ...SCRIPT_TASK, name: 'a b' };
+
+const UNSAFE_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [UNSAFE_TASK] };
+
+const NO_BODY_TASK: TaskNode = { ...SCRIPT_TASK, command: null };
+
+const NO_BODY_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [NO_BODY_TASK] };
+
+const WATCH_EXTRAS: RunExtras = { passThrough: ['--watch', '--port=3000'] };
+
+describe('FEATURE: Run with Options on a package script', () => {
+  let roots: RootStore;
+  let fakes: RunOptionsFakes;
+
+  const invoke = async (): Promise<void> => runWithOptions(roots, fakes.ports, TASK_TREE_NODE_STUB);
+  const launched = (): RunRequest | undefined => fakes.run.mock.calls[0]?.[0];
+  const askOf = (index: number): InputAsk => {
+    const ask = fakes.input.mock.calls[index]?.[0];
+
+    if (ask === undefined) throw new Error(`box ${index} was not asked`);
+
+    return ask;
+  };
+
+  beforeEach(() => {
+    roots = new RootStore();
+    fakes = runOptionsFakes();
+    roots.set([FOLDER], coordinatorMock);
+  });
+
+  describe('GIVEN a script row of a package run with pnpm', () => {
+    beforeEach(() => {
+      roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
+    });
+
+    it('WHEN it is invoked THEN no picker opens and the box asks for the script arguments', async () => {
+      await invoke();
+
+      const ask = askOf(0);
+
+      expect(fakes.pickMany).not.toHaveBeenCalled();
+      expect(ask.prompt).toBe(scriptArgsPromptOf('pnpm', 'build'));
+      expect(ask.placeholder).toBe(ARGS_PLACEHOLDER);
+    });
+
+    it('WHEN the box answers two arguments THEN run gets them as pass-through without force', async () => {
+      fakes.answer('--watch --port=3000');
+
+      await invoke();
+
+      expect(launched()).toStrictEqual({ ...SCRIPT_REQUEST, extras: WATCH_EXTRAS });
+    });
+
+    it('WHEN the box answers nothing THEN run gets the plain request with no extras key', async () => {
+      fakes.answer('');
+
+      await invoke();
+
+      expect(launched()).toStrictEqual(SCRIPT_REQUEST);
+    });
+
+    it('WHEN the box is closed THEN nothing runs', async () => {
+      fakes.answer(undefined);
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the box is asked THEN it rejects a shell variable by naming the first argument', async () => {
+      await invoke();
+
+      const ask = askOf(0);
+
+      expect(ask.validate('$HOME')).toBe(argsErrorText(1, '$HOME'));
+    });
+
+    it('WHEN the script turns into a turbo task during the box THEN nothing runs and no notice shows', async () => {
+      fakes.input.mockImplementationOnce(async () => {
+        roots.apply('/ws', loadedWith([PACKAGE_NODE_STUB]));
+
+        return Promise.resolve('--watch');
+      });
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a script that must not run', () => {
+    it('WHEN its name needs quoting THEN the notice shows and no box opens', async () => {
+      roots.apply('/ws', loadedWith([UNSAFE_PACKAGE]));
+
+      await invoke();
+
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(unsafeScriptText('a b'));
+      expect(fakes.input).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it has no command THEN the notice shows and no box opens', async () => {
+      roots.apply('/ws', loadedWith([NO_BODY_PACKAGE]));
+
+      await invoke();
+
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(unsafeScriptText('build'));
+      expect(fakes.input).not.toHaveBeenCalled();
+    });
+  });
+
+  it('GIVEN a root with no binary WHEN a script row is invoked THEN no box opens and nothing runs', async () => {
+    const loaded = loadedWith([SCRIPT_PACKAGE]);
+
+    roots.apply('/ws', { ...loaded, binary: null });
+
+    await invoke();
+
+    expect(fakes.input).not.toHaveBeenCalled();
+    expect(fakes.run).not.toHaveBeenCalled();
+  });
+});
