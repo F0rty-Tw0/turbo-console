@@ -1,5 +1,6 @@
 import type { Core } from 'cytoscape';
 
+import { ATOM_UMBRELLA_CLASS } from '../common/graph-atom.const.ts';
 import { EXPORTING_CLASS, FOLDER_NODE_CLASS } from '../common/graph.const.ts';
 
 /** Longest side of an exported image, in px. */
@@ -16,9 +17,9 @@ const scaleOf = (cy: Core, pixelRatio: number): number => {
   return limit / pixelRatio;
 };
 
-/** The visible graph as base64 PNG at `pixelRatio`-corrected scale, folder titles and collapsed folder labels drawn; a throw from `cy.png` reaches the caller, the class is removed either way. */
+/** The visible graph as base64 PNG at `pixelRatio`-corrected scale, folder titles, collapsed folder labels and umbrella counts drawn; a throw from `cy.png` reaches the caller, the class is removed either way. */
 export const exportPngOf = (cy: Core, bg: string, pixelRatio: number): string => {
-  const boxes = cy.nodes(`:parent, .${FOLDER_NODE_CLASS}`);
+  const boxes = cy.nodes(`:parent, .${FOLDER_NODE_CLASS}, .${ATOM_UMBRELLA_CLASS}`);
 
   boxes.addClass(EXPORTING_CLASS);
 
