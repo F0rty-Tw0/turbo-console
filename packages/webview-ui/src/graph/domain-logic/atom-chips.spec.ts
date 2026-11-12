@@ -88,6 +88,13 @@ describe('FEATURE: AtomChips', () => {
     expect([row.style.transform, row.style.width]).toStrictEqual(['translate(10px, 120px) scale(2)', '200px']);
   });
 
+  it('GIVEN a new umbrella WHEN synced, with no place call THEN its row already holds its transform and width', () => {
+    chips.sync(new Map([['u', ALL]]));
+    const row = layerRowAt(layer, 0);
+
+    expect([row.style.transform, row.style.width]).toStrictEqual(['translate(10px, 120px) scale(2)', '200px']);
+  });
+
   it('GIVEN a placed row WHEN placed again with the same box and camera THEN nothing is rewritten', () => {
     chips.sync(new Map([['u', ALL]]));
     chips.place();
