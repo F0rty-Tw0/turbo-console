@@ -14,6 +14,7 @@ import type { NodeSize } from '../../common/node-size.type.ts';
 import type { TaskControlsViews } from '../../common/task-controls.type.ts';
 import type { TaskDetailsViews } from '../../common/task-details.type.ts';
 import type { WidgetViews } from '../../common/widget.type.ts';
+import { buildAtomChipRow } from '../../ui/atom-chips-elements.ts';
 import { buildControls } from '../../ui/controls-elements.ts';
 import { bundleView } from '../../ui/details-bundle.ts';
 import { buildDetails } from '../../ui/details-elements.ts';
@@ -67,7 +68,8 @@ const WIDGET_VIEWS: WidgetViews = {
   taskToolbar: buildTaskToolbar,
   packageToolbar: buildPackageToolbar,
   menu: buildMenu,
-  location: LOCATION_VIEWS
+  location: LOCATION_VIEWS,
+  atomChips: buildAtomChipRow
 };
 
 const TASK_VIEWS: TaskControlsViews = { build: buildTaskControls, line: buildProjectLine };
