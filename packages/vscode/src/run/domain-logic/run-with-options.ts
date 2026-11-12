@@ -102,7 +102,8 @@ const picksOf = async (ports: RunOptionsPorts, request: RunRequest): Promise<Run
 /**
  * Run with Options on a task row: the picker (a script row skips it and asks only for its arguments), the boxes the picks
  * need, then one run. The request is built again after the last answer, so a binary, root or task that changed while a
- * dialog was open decides what runs; a task gone, or turned from turbo task to script or back, ends silently.
+ * dialog was open decides what runs; a task gone, turned from turbo task to script or back, or changed kind (a task turned
+ * Atomizer group, whose picker offers neither Only nor Extra arguments), ends silently.
  */
 export const runWithOptions = async (roots: Roots, ports: RunOptionsPorts, arg: unknown): Promise<void> => {
   const target = taskTargetOf(arg);
@@ -124,6 +125,8 @@ export const runWithOptions = async (roots: Roots, ports: RunOptionsPorts, arg: 
   if (latest === null) return;
 
   if (latest.task.isTurboTask !== plain.task.isTurboTask) return;
+
+  if (latest.task.kind !== plain.task.kind) return;
 
   const extras = extrasOf(picks);
 

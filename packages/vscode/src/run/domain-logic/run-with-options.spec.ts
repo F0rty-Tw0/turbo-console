@@ -45,6 +45,10 @@ const SCRIPT_TASK: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
 const SCRIPT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [SCRIPT_TASK] };
 
+const UMBRELLA_TASK: TaskNode = { ...TASK_NODE_STUB, kind: 'atom-umbrella' };
+
+const UMBRELLA_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [UMBRELLA_TASK] };
+
 const EMPTY_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, tasks: [] };
 
 describe('FEATURE: Run with Options on a turbo task', () => {
@@ -239,6 +243,17 @@ describe('FEATURE: Run with Options on a turbo task', () => {
     it('WHEN the task turns into a script THEN nothing runs and no notice shows', async () => {
       changeDuring(() => {
         roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
+      });
+
+      await invoke();
+
+      expect(fakes.run).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the task turns into an Atomizer umbrella THEN nothing runs and no notice shows', async () => {
+      changeDuring(() => {
+        roots.apply('/ws', loadedWith([UMBRELLA_PACKAGE]));
       });
 
       await invoke();
