@@ -12,12 +12,14 @@ import { coreLoadDeps } from './roots/data-access/core-load-deps.ts';
 import { RootsSession } from './roots/domain-logic/roots-session.ts';
 import { registerRoots } from './roots/feature/register-roots.ts';
 import { editorCopyPorts } from './run/data-access/copy-ports.ts';
+import { editorRunOptionsPorts } from './run/data-access/run-options-ports.ts';
 import { editorRunAllPorts, editorRunPorts, showInfo } from './run/data-access/run-ports.ts';
 import { forwardRunAllEvents, forwardTaskEvents } from './run/data-access/turbo-tasks.ts';
 import { RunSession } from './run/domain-logic/run-session.ts';
 import { registerCopy } from './run/feature/register-copy.ts';
 import { manifestFile, registerPickers } from './run/feature/register-pickers.ts';
 import { registerRunAll } from './run/feature/register-run-all.ts';
+import { registerRunOptions } from './run/feature/register-run-options.ts';
 import { registerRuns } from './run/feature/register-runs.ts';
 import type { RunCommandsUi, Timings, TimingsStart, TurboConsoleApi } from './shared/common/api.type.ts';
 import type { Output } from './shared/common/output.type.ts';
@@ -73,8 +75,16 @@ const registerRunCommands = (session: RootsSession, runSession: RunSession, ui: 
   const pickers = registerPickers(runSession, session.store, register, () => ui.scripts.isShown());
   const runAllPorts = editorRunAllPorts(session.store, output);
   const runAll = registerRunAll(session.store, runAllPorts, forwardRunAllEvents, register);
+  const runOptions = registerRunOptions(session.store, editorRunOptionsPorts(runSession), register);
 
-  return vscode.Disposable.from(runs, pickers, runAll, forwardTaskEvents(runSession), registerCodeLens(session.store, ui.scripts));
+  return vscode.Disposable.from(
+    runs,
+    pickers,
+    runAll,
+    runOptions,
+    forwardTaskEvents(runSession),
+    registerCodeLens(session.store, ui.scripts)
+  );
 };
 
 /** The activation start and the timing records `activate` fills in. */
