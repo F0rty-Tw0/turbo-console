@@ -4,6 +4,7 @@ import { BOX_TITLE } from './graph-box-title-style.ts';
 import { dimmedBoxRulesOf } from './graph-dimmed-box-style.ts';
 import { routeRulesOf } from './graph-route-style.ts';
 import { selectionRulesOf } from './graph-selection-style.ts';
+import { UNMEASURED_CARDS, cardRulesOf } from './graph-task-card-style.ts';
 import { taskRulesOf } from './graph-task-style.ts';
 import {
   COLLAPSED_LABEL_MAX_PX,
@@ -116,18 +117,8 @@ const emphasisEdgeOf = (width: number, colour: string): Css.Edge => {
   return edge;
 };
 
-/**
- * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with a
- * triangle at the dependency, drawn on their ELK route while `routed` and a task link straight (`routeRulesOf`).
- * `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost` (dashed) is the one
- * `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
- * background; `taskRulesOf` adds the task mode rules and `selectionRulesOf` the selected border and fill and the bold focus target.
- * The folder pass draws `folder-node` (a collapsed folder, its label wrapped only while exporting or `row-less`) and
- * `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it. Every colour
- * comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font before their name, and a package
- * task box draws the package glyph before its title; the base node rule keeps `fontFamily`.
- */
-export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: boolean): StylesheetJson => {
+/** The base node: a round rectangle sized from its data, its label centred, in the theme's label colour and frame. */
+const nodeStyleOf = (colors: ThemeColors, fontFamily: string): Css.Node => {
   const node = {
     shape: 'round-rectangle',
     width: 'data(width)',
@@ -143,12 +134,37 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     'border-color': colors.frame,
     'corner-radius': '6px'
   } as const;
+
+  return node;
+};
+
+/**
+ * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with a
+ * triangle at the dependency, drawn on their ELK route while `routed` and a task link straight (`routeRulesOf`).
+ * `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost` (dashed) is the one
+ * `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
+ * background; `taskRulesOf` adds the task mode rules and `selectionRulesOf` the selected border and fill and the bold focus target.
+ * The folder pass draws `folder-node` (a collapsed folder, its label wrapped only while exporting or `row-less`) and
+ * `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it. Every colour
+ * comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font before their name, and a package
+ * task box draws the package glyph before its title; the base node rule keeps `fontFamily`. A plain task's `task-card`
+ * label (`cardRulesOf`, after the task rules) draws two rows and takes its margin from `measures`; umbrellas keep the
+ * task rule's one row.
+ */
+export const graphStyleOf = (
+  colors: ThemeColors,
+  fontFamily: string,
+  glyphs: boolean,
+  measures = UNMEASURED_CARDS
+): StylesheetJson => {
+  const node = nodeStyleOf(colors, fontFamily);
   const highlightedNode = { 'border-width': NODE_BORDER_PX, 'border-color': colors.highlighted };
   const highlightedEdge = emphasisEdgeOf(HIGHLIGHTED_EDGE_WIDTH, colors.highlighted);
   const selectedEdge = emphasisEdgeOf(SELECTED_EDGE_WIDTH, colors.selected);
   const dimmed = { opacity: colors.dimmedOpacity };
   const glyphFamily = glyphs ? `codicon, ${fontFamily}` : null;
   const taskRules = taskRulesOf(colors, BOX_TITLE, glyphFamily);
+  const cardRules = cardRulesOf(glyphFamily, measures);
   const selectionRules = selectionRulesOf(colors);
   const routeRules = routeRulesOf();
   const dimmedBoxRules = dimmedBoxRulesOf(colors);
@@ -158,6 +174,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     { selector: 'node:parent', style: boxStyleOf(colors) },
     { selector: `node:parent.${EXPORTING_CLASS}`, style: BOX_TITLE },
     ...taskRules,
+    ...cardRules,
     { selector: 'edge', style: edgeStyleOf(colors) },
     ...routeRules,
     ...NO_PRESS_RULES,

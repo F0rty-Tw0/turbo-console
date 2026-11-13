@@ -38,6 +38,10 @@ export type ProbeNode = {
   /** The affected halo under a task: 0 opaque with no `affected-<mark>` class. */
   readonly underlayColor: string;
   readonly underlayOpacity: number;
+  /** Cytoscape's cached main label box width in model px, read after `node.boundingBox()`; null while the node has no label box. */
+  readonly labelBoxWidth: number | null;
+  /** The label width Cytoscape measured in model px (`_private.rstyle.labelWidth`); 0 while it has measured none. */
+  readonly labelWidth: number;
 };
 
 export type ProbeEdge = {

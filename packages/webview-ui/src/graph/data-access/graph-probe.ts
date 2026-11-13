@@ -4,6 +4,7 @@ import { packageEdges, packageNodes } from './graph-boxes.ts';
 import { dirtyEdgeEndIdsOf } from './graph-probe-edge-ends.ts';
 import { exportLabelOf } from './graph-probe-export.ts';
 import { probeFolderLinksOf, probeFoldersOf } from './graph-probe-folders.ts';
+import { labelBoxWidthOf, labelWidthOf } from './graph-probe-label.ts';
 import { drawWithoutLayers } from './graph-probe-layers.ts';
 import { edgeLinesOf, folderLinkLinesOf } from './graph-probe-lines.ts';
 import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
@@ -80,7 +81,9 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
     outlineWidth: styleNumber(node, 'outline-width'),
     outlineColor: styleText(node, 'outline-color'),
     underlayColor: styleText(node, 'underlay-color'),
-    underlayOpacity: styleNumber(node, 'underlay-opacity')
+    underlayOpacity: styleNumber(node, 'underlay-opacity'),
+    labelBoxWidth: labelBoxWidthOf(node),
+    labelWidth: labelWidthOf(node)
   };
 
   return probeNode;

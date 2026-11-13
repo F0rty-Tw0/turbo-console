@@ -8,7 +8,7 @@ import { ATOM_CHIP_GLYPH_GAP_PX, ATOM_CHIP_GLYPH_PX } from '../../src/graph/comm
 import { CARD_MIN_WIDTH } from '../../src/graph/common/graph-card.const.ts';
 import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from '../../src/graph/common/graph-glyph.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
-import type { GraphOptions } from '../common/graph.type.ts';
+import type { GraphOpenOptions } from '../common/graph-open.type.ts';
 import { TASK_MODE_STATE_STUB } from '../test/stubs/graph-task-mode.stub.ts';
 import { fontWaitOf } from '../test/utils/graph-font-wait.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeTasksState } from '../test/utils/graph-target-like-tasks.spec.util.ts';
@@ -90,7 +90,7 @@ export class GraphTaskGlyphs {
   }
 
   /** Opens the target-like task graph with its Atomizer umbrella chosen and sends its state. */
-  public async open(options: GraphOptions = {}): Promise<void> {
+  public async open(options: GraphOpenOptions = {}): Promise<void> {
     const state = targetLikeTasksState();
     const savedState = taskSavedState(state.hash, { chosen: [TARGET_LIKE_UMBRELLA] });
 
