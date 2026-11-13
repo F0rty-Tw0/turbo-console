@@ -5,7 +5,9 @@ import { GraphHost } from './graph-host.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphPage } from './graph.po.ts';
 import type { GraphReady, GraphTask } from '../../src/bridge/common/graph-state.type.ts';
+import { CARD_PADDING_X } from '../../src/graph/common/graph-card.const.ts';
 import { CODICON_FONT, GLYPH_CODE_POINTS } from '../../src/graph/common/graph-glyph.const.ts';
+import type { ProbeLabelFit } from '../../src/graph/common/graph-probe-label.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import { NODE_FONT_SIZE } from '../../src/graph/common/graph.const.ts';
 import type { GraphOpenOptions } from '../common/graph-open.type.ts';
@@ -42,14 +44,22 @@ type CardSize = {
   readonly height: number;
 };
 
-/** A card's cached label box against its measured label: `isFit` when the label is wider than the floor and the box holds it. */
-type LabelFit = {
-  readonly isFit: boolean;
-  readonly box: number | null;
-  readonly label: number;
+/** A card's label fit against a check: `isMet` when the check holds; `fit` is what a failure prints. */
+type LabelCheck = {
+  readonly isMet: boolean;
+  readonly fit: ProbeLabelFit | null;
 };
 
-const NO_LABEL_FIT: LabelFit = { isFit: false, box: null, label: 0 };
+// eslint-disable-next-line no-underscore-dangle -- the page exposes this exact name on window
+const labelFitIn = (id: string): ProbeLabelFit | null => window.__tcGraphProbe?.labelFit(id) ?? null;
+
+/** The margin centres a block as wide as the label Cytoscape measured so its left edge sits one padding in, within 1 px. */
+const isBlockAtLeftEdge = (fit: ProbeLabelFit): boolean => {
+  const margin = (fit.labelWidth - (fit.width - CARD_PADDING_X)) / 2;
+  const isMeasured = fit.labelWidth > 0;
+
+  return isMeasured && Math.abs(fit.textMarginX - margin) <= 1;
+};
 
 /** The status card of a plain task: its drawn size, and the width a name wider than the minimum gives it. */
 export class GraphTaskCards {
@@ -125,24 +135,39 @@ export class GraphTaskCards {
     expect(blankWidth).not.toBe(widths.body[blankAt]);
   }
 
-  /** The label of `id` is wider than `minLabelPx` and its cached label box is at least as wide; a failure prints both widths. */
+  /** The label of `id` is wider than `minLabelPx` and its cached label box is at least as wide; a failure prints the fit. */
   public async expectLabelBoxFits(id: string, minLabelPx: number): Promise<void> {
-    const fit = expect.objectContaining({ isFit: true });
+    const isBoxFit = (fit: ProbeLabelFit): boolean => {
+      const box = fit.labelBoxWidth;
 
-    await expect.poll(async (): Promise<LabelFit> => this.labelFitOf(id, minLabelPx)).toEqual(fit);
+      return box !== null && fit.labelWidth > minLabelPx && box >= fit.labelWidth;
+    };
+
+    await this.expectLabel(id, isBoxFit);
   }
 
-  private async labelFitOf(id: string, minLabelPx: number): Promise<LabelFit> {
-    const node = await this.nodeOf(id);
+  /** The label block of `id` starts one padding in from the card's left edge, measured at the weight the card draws; a failure prints the fit. */
+  public async expectBlockLeftEdge(id: string): Promise<void> {
+    await this.expectLabel(id, isBlockAtLeftEdge);
+  }
 
-    if (node === undefined) return NO_LABEL_FIT;
+  /** The long-named card's label block starts one padding in. */
+  public async expectLongBlockLeftEdge(): Promise<void> {
+    await this.expectBlockLeftEdge(LONG_ID);
+  }
 
-    const box = node.labelBoxWidth;
-    const label = node.labelWidth;
-    const isFit = box !== null && label > minLabelPx && box >= label;
-    const fit: LabelFit = { isFit, box, label };
+  private async expectLabel(id: string, check: (fit: ProbeLabelFit) => boolean): Promise<void> {
+    const met = expect.objectContaining({ isMet: true });
 
-    return fit;
+    await expect.poll(async (): Promise<LabelCheck> => this.labelCheckOf(id, check)).toEqual(met);
+  }
+
+  private async labelCheckOf(id: string, check: (fit: ProbeLabelFit) => boolean): Promise<LabelCheck> {
+    const fit = await this.page.evaluate(labelFitIn, id);
+    const isMet = fit !== null && check(fit);
+    const labelCheck: LabelCheck = { isMet, fit };
+
+    return labelCheck;
   }
 
   private async sizeOf(id: string): Promise<CardSize | null> {

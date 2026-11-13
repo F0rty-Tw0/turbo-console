@@ -104,6 +104,30 @@ test.describe('FEATURE: graph task status cards', () => {
   );
 
   test(
+    'GIVEN app#build open, its label block starts one padding in idle, failed to start and selected',
+    { annotation: LABEL },
+    async ({ graphGlyphs, graphTaskHost, graphTaskProbe, graphProbe, graphCanvas, page }): Promise<void> => {
+      const cards = new GraphTaskCards(page);
+
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphGlyphs.openChosen());
+
+      await test.step('THEN the idle block starts one padding in', async (): Promise<void> => cards.expectBlockLeftEdge('app#build'));
+
+      await test.step('WHEN app#build fails to start THEN its wider block starts one padding in', async (): Promise<void> => {
+        await graphTaskHost.sendRuns({ 'app#build': 'failed-to-start' });
+        await graphTaskProbe.expectText('app#build', TEXT_BY_STATE['failed-to-start']);
+        await cards.expectBlockLeftEdge('app#build');
+      });
+
+      await test.step('WHEN app#build is tapped THEN its bold block starts one padding in', async (): Promise<void> => {
+        await graphCanvas.tapNode('app#build');
+        await graphProbe.expectSelected('app#build');
+        await cards.expectBlockLeftEdge('app#build');
+      });
+    }
+  );
+
+  test(
     'GIVEN codicon.ttf held, hub#build is a 180 x 60 card whose label is the bare name over Not run',
     { annotation: LABEL },
     async ({ graphGlyphs, graphTaskProbe, page }): Promise<void> => {
@@ -131,6 +155,8 @@ test.describe('FEATURE: graph task status cards', () => {
 
       await test.step('THEN the card is wider than 180 px and as wide as the bold glyph slot, space and name plus the padding', async (): Promise<void> =>
         cards.expectLongCardFitsBoldRow(true));
+
+      await test.step('AND its block starts one padding in', async (): Promise<void> => cards.expectLongBlockLeftEdge());
     }
   );
 
