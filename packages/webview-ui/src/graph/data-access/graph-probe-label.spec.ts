@@ -118,11 +118,14 @@ describe('FEATURE: createGraphProbe label fit', () => {
     expect(probeOf().labelFit('a')).toMatchObject({ labelBoxWidth: null, labelWidth: 0 });
   });
 
-  it('GIVEN a headless graph WHEN the probe reads its nodes THEN no node runs boundingBox', () => {
-    const boundingBox = vi.spyOn(cy.getElementById('a'), 'boundingBox');
+  it('GIVEN a headless graph WHEN the probe reads its nodes THEN no node runs boundingBox or renderedBoundingBox', () => {
+    const node = cy.getElementById('a');
+    const boundingBox = vi.spyOn(node, 'boundingBox');
+    const renderedBoundingBox = vi.spyOn(node, 'renderedBoundingBox');
 
     probeOf().nodes();
 
     expect(boundingBox).not.toHaveBeenCalled();
+    expect(renderedBoundingBox).not.toHaveBeenCalled();
   });
 });

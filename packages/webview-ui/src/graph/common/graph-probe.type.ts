@@ -110,7 +110,7 @@ export type LayoutEngine = 'elk' | 'cache' | 'fallback';
 export type GraphProbe = {
   readonly nodes: () => ProbeNode[];
   readonly edges: () => ProbeEdge[];
-  /** Node `id`'s label against its box, `null` when there is no such node; the only read that runs `node.boundingBox()`. */
+  /** Node `id`'s label against its box, `null` when there is no such node; the only read that runs `boundingBox()` on a task node; `nodes()` never does. */
   readonly labelFit: (id: string) => ProbeLabelFit | null;
   /** Every drawn edge's line (package or task link), in the order `edges` lists them. */
   readonly edgeLines: () => ProbeEdgeLine[];

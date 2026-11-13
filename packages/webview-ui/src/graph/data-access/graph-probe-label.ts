@@ -17,8 +17,8 @@ const numberOr = <T>(value: unknown, fallback: T): number | T => (typeof value =
 
 /**
  * The label fit of node `id`, `null` when there is none. Runs `node.boundingBox()` before it reads the internals, so
- * the cached label box (cytoscape 3.34 `_private.labelBounds.main.w`) is what every `boundingBox()` caller sees; no
- * other probe read runs it, so none heals a stale label box the page leaves.
+ * the cached label box (cytoscape 3.34 `_private.labelBounds.main.w`) is what every `boundingBox()` caller sees. It is
+ * the only probe read that runs it on a task node, and `nodes()` never does, so polling nodes heals no stale label box.
  */
 export const labelFitOf = (cy: Pick<Core, 'getElementById'>, id: string): ProbeLabelFit | null => {
   const node = cy.getElementById(id);
