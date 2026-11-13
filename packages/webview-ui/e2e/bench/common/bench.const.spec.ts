@@ -15,14 +15,16 @@ const SPEC_NAMES = [
   'graph open cold target-like default',
   'graph pan cpu target-like default',
   'graph task atoms pan cpu',
-  'graph task atoms expanded pan cpu'
+  'graph task atoms expanded pan cpu',
+  'graph task cards pan cpu fit',
+  'graph task cards pan cpu readable'
 ];
 
 const ROWS = Object.values(BENCH_ROWS);
 
 describe('FEATURE: bench rows', () => {
   describe('GIVEN the table', () => {
-    it("WHEN its names are listed THEN they are the 13 rows: spec 3.1's 7, the 2 task rows, then the 2 default-open rows, then the 2 task-atoms rows", () => {
+    it("WHEN its names are listed THEN they are the 15 rows: spec 3.1's 7, the 2 task rows, then the 2 default-open rows, then the 2 task-atoms rows, then the 2 task-cards rows", () => {
       const names = ROWS.map((row): string => row.name);
 
       expect(names).toStrictEqual(SPEC_NAMES);
@@ -52,7 +54,7 @@ describe('FEATURE: bench rows', () => {
     it('WHEN they are listed THEN each row keeps the count the A/A check ran with, and the default-open rows copy their twins', () => {
       const samples = ROWS.map((row): number => row.samples);
 
-      expect(samples).toStrictEqual([7, 7, 5, 5, 3, 3, 3, 3, 3, 7, 5, 5, 5]);
+      expect(samples).toStrictEqual([7, 7, 5, 5, 3, 3, 3, 3, 3, 7, 5, 5, 5, 3, 3]);
     });
   });
 
@@ -60,7 +62,7 @@ describe('FEATURE: bench rows', () => {
     it('WHEN they are listed THEN the target-like package rows gate and the large and task rows do not (roadmap Decision 8)', () => {
       const gates = ROWS.map((row): boolean => row.gate);
 
-      expect(gates).toStrictEqual([true, true, true, true, false, false, false, false, false, true, true, false, false]);
+      expect(gates).toStrictEqual([true, true, true, true, false, false, false, false, false, true, true, false, false, false, false]);
     });
   });
 
@@ -70,6 +72,8 @@ describe('FEATURE: bench rows', () => {
       expect(BENCH_ROWS.taskPanCpu.gate).toBe(false);
       expect(BENCH_ROWS.taskAtomsPanCpu.gate).toBe(false);
       expect(BENCH_ROWS.taskAtomsExpandedPanCpu.gate).toBe(false);
+      expect(BENCH_ROWS.taskCardsPanFit.gate).toBe(false);
+      expect(BENCH_ROWS.taskCardsPanReadable.gate).toBe(false);
     });
   });
 
