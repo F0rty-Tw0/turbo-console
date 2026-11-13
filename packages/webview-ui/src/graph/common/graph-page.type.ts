@@ -182,7 +182,7 @@ type GraphControllerOwnDeps = {
   readonly runner: LayoutRunner;
   readonly saver: ViewStateSaver;
   readonly sizeOf: NodeSizer;
-  /** Sizes task names; the package graph keeps `sizeOf`. */
+  /** Sizes umbrella task names; plain tasks use `cardSizeOf`, the package graph keeps `sizeOf`. */
   readonly taskSizeOf: NodeSizer;
   /** Sizes package task box titles, glyph included when the page draws glyphs. */
   readonly boxTitleSizeOf: NodeSizer;

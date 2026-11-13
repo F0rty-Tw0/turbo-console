@@ -123,6 +123,7 @@ export type TaskMemoryPort = {
 type TaskModeOwnDeps = {
   readonly view: TaskView;
   readonly runner: LayoutRunner;
+  /** Sizes umbrella task names; plain tasks use `cardSizeOf`. */
   readonly sizeOf: NodeSizer;
   /** Sizes plain text, the box titles. */
   readonly textSizeOf: NodeSizer;
