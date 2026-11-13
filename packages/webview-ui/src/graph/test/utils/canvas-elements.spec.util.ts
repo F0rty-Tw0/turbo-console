@@ -27,7 +27,9 @@ export const CANVAS_COLORS: ThemeColors = {
   runs: CANVAS_RUN_COLORS,
   selection: CANVAS_SELECTION,
   dimmedOpacity: 0.25,
-  affected: '#fa0'
+  affected: '#fa0',
+  cardFill: '#123',
+  cardFrame: '#456'
 };
 
 /** `CANVAS_COLORS.affected` (`#fa0`) as the `rgb(...)` text Cytoscape resolves it to. */
@@ -35,6 +37,12 @@ export const CANVAS_AFFECTED_RGB = 'rgb(255,170,0)';
 
 /** `CANVAS_COLORS.frame` (`#444`) as the `rgb(...)` text Cytoscape resolves it to. */
 export const CANVAS_FRAME_RGB = 'rgb(68,68,68)';
+
+/** `CANVAS_COLORS.cardFill` (`#123`) as the `rgb(...)` text Cytoscape resolves it to. */
+export const CANVAS_CARD_FILL_RGB = 'rgb(17,34,51)';
+
+/** `CANVAS_COLORS.cardFrame` (`#456`) as the `rgb(...)` text Cytoscape resolves it to. */
+export const CANVAS_CARD_FRAME_RGB = 'rgb(68,85,102)';
 
 /** `CANVAS_COLORS.selected` (`#f00`) as Cytoscape resolves it. */
 export const CANVAS_SELECTED_RGB = 'rgb(255,0,0)';

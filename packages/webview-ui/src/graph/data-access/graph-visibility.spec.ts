@@ -28,7 +28,9 @@ const COLORS: ThemeColors = {
   runs: CANVAS_RUN_COLORS,
   selection: null,
   dimmedOpacity: 0.25,
-  affected: '#fa0'
+  affected: '#fa0',
+  cardFill: '#123',
+  cardFrame: '#456'
 };
 
 const PADDING_PX = 24;

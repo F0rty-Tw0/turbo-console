@@ -25,6 +25,8 @@ const DARK: Record<string, string> = {
   '--vscode-charts-purple': '#b180d7',
   '--vscode-list-activeSelectionBackground': '#04395e',
   '--vscode-list-activeSelectionForeground': '#ffffff',
+  '--vscode-input-background': '#313131',
+  '--vscode-input-border': '#3c3c3c',
   [GIT_VARIABLE]: '#e2c08d'
 };
 
@@ -66,7 +68,9 @@ const DARK_COLORS: ThemeColors = {
   runs: DARK_RUNS,
   selection: DARK_SELECTION,
   dimmedOpacity: 0.25,
-  affected: '#e2c08d'
+  affected: '#e2c08d',
+  cardFill: '#313131',
+  cardFrame: '#3c3c3c'
 };
 
 describe('FEATURE: themeColorsOf', () => {
@@ -77,7 +81,7 @@ describe('FEATURE: themeColorsOf', () => {
       expect(colors).toStrictEqual(DARK_COLORS);
     });
 
-    it('WHEN the colours are read THEN only the sixteen theme variables are read', () => {
+    it('WHEN the colours are read THEN only the eighteen theme variables are read', () => {
       const read: string[] = [];
 
       themeColorsOf(cssVariableReaderMock(DARK, read));
@@ -198,6 +202,30 @@ describe('FEATURE: themeColorsOf', () => {
     const colors = themeColorsOf(cssVariableReaderMock(HC_STUB_UNSELECTED));
 
     expect(colors.selection).toBeNull();
+  });
+
+  it('GIVEN blank input variables WHEN the colours are read THEN the card takes the editor background and the panel border', () => {
+    const blank = { ...DARK, '--vscode-input-background': '', '--vscode-input-border': '' };
+
+    const colors = themeColorsOf(cssVariableReaderMock(blank));
+
+    expect([colors.cardFill, colors.cardFrame]).toStrictEqual(['#1f1f1f', '#2b2b2b']);
+  });
+
+  it('GIVEN a contrast border and a different input border WHEN the colours are read THEN the card frame is the contrast border', () => {
+    const highContrast = { ...DARK, '--vscode-contrastBorder': '#6fc3df' };
+
+    const colors = themeColorsOf(cssVariableReaderMock(highContrast));
+
+    expect(colors.cardFrame).toBe('#6fc3df');
+  });
+
+  it('GIVEN an input border with alpha WHEN the colours are read THEN the card frame reads as the rgba Cytoscape parses', () => {
+    const translucent = { ...DARK, '--vscode-input-border': '#d8d8d866' };
+
+    const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+    expect(colors.cardFrame).toBe('rgba(216, 216, 216, 0.4)');
   });
 
   it('GIVEN a value with surrounding spaces WHEN the colours are read THEN it is trimmed', () => {

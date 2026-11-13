@@ -24,6 +24,10 @@ export type ThemeColors = {
   readonly dimmedOpacity: number;
   /** The halo under an affected task: the git modified colour. */
   readonly affected: string;
+  /** The fill of a task card: the input background. */
+  readonly cardFill: string;
+  /** The frame of a task card: the input border, the contrast border in a high contrast theme. */
+  readonly cardFrame: string;
 };
 
 /** Returns a CSS custom property's computed value, `''` when it is unset. */

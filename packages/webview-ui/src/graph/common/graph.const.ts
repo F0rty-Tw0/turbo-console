@@ -98,7 +98,10 @@ export const FALLBACK_COLORS: ThemeColors = {
   runs: FALLBACK_RUN_COLORS,
   selection: null,
   dimmedOpacity: 0.25,
-  affected: '#895503'
+  affected: '#895503',
+  /** Equal to `background` and `frame`: the card is told apart only where the theme sets input colours. */
+  cardFill: '#ffffff',
+  cardFrame: '#e5e5e5'
 };
 
 /** The one Trusted Types policy the graph CSP allows (`trusted-types tc-elk`). */

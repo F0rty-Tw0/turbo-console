@@ -9,6 +9,10 @@ export type ExpectedThemeColors = {
   readonly selected: string;
   /** A selected node's fill: the list's active selection, or the editor background in a theme without one. */
   readonly selectedFill: string;
+  /** A task card's fill: `--vscode-input-background`. */
+  readonly cardFill: string;
+  /** A task card's frame: `--vscode-input-border`, or the contrast border in a high contrast theme. */
+  readonly cardFrame: string;
 };
 
 export type ThemeStub = {

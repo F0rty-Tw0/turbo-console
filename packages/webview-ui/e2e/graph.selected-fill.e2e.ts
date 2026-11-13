@@ -1,13 +1,8 @@
 import { test } from './graph-task.fixture.ts';
 import { DETAILS_STUB } from './test/stubs/graph-details.stub.ts';
 import { DIAMOND_CHAIN_CACHED_STUB } from './test/stubs/graph-state.stub.ts';
-import {
-  THEME_DARK_2026_STUB,
-  THEME_DARK_STUB,
-  THEME_HC_STUB,
-  THEME_LIGHT_2026_STUB,
-  THEME_LIGHT_STUB
-} from './test/stubs/graph-theme.stub.ts';
+import { THEME_DARK_2026_STUB, THEME_LIGHT_2026_STUB } from './test/stubs/graph-theme-2026.stub.ts';
+import { THEME_DARK_STUB, THEME_HC_STUB, THEME_LIGHT_STUB } from './test/stubs/graph-theme.stub.ts';
 import { targetLikeState } from './test/utils/graph-target-like.spec.util.ts';
 import type { GraphReady } from '../src/bridge/common/graph-state.type.ts';
 
