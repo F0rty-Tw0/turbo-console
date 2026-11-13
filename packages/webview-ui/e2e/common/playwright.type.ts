@@ -8,7 +8,7 @@ export type AriaRoleName = Parameters<Page['getByRole']>[0];
 export type RouteHandler = (route: Route) => Promise<void>;
 
 /** The event a navigation waits for before it returns; `load` also waits for a held font, so a test that reads the page before the font arrives passes `domcontentloaded`. */
-export type NavigationWait = 'load' | 'domcontentloaded' | 'commit';
+export type NavigationWait = 'load' | 'domcontentloaded';
 
 /** The page size, in CSS pixels. */
 export type ViewportSize = {
