@@ -5,6 +5,7 @@ import { GraphHost } from './graph-host.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphPage } from './graph.po.ts';
 import type { GraphReady, GraphTask } from '../../src/bridge/common/graph-state.type.ts';
+import { CARD_PADDING_X } from '../../src/graph/common/graph-card.const.ts';
 import { CODICON_FONT, GLYPH_CODE_POINTS } from '../../src/graph/common/graph-glyph.const.ts';
 import type { ProbeLabelFit } from '../../src/graph/common/graph-probe-label.type.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
@@ -51,6 +52,14 @@ type LabelCheck = {
 
 // eslint-disable-next-line no-underscore-dangle -- the page exposes this exact name on window
 const labelFitIn = (id: string): ProbeLabelFit | null => window.__tcGraphProbe?.labelFit(id) ?? null;
+
+/** The margin centres a block as wide as the label Cytoscape measured so its left edge sits one padding in, within 1 px. */
+const isBlockAtLeftEdge = (fit: ProbeLabelFit): boolean => {
+  const margin = (fit.labelWidth - (fit.width - CARD_PADDING_X)) / 2;
+  const isMeasured = fit.labelWidth > 0;
+
+  return isMeasured && Math.abs(fit.textMarginX - margin) <= 1;
+};
 
 /** The status card of a plain task: its drawn size, and the width a name wider than the minimum gives it. */
 export class GraphTaskCards {
@@ -135,6 +144,16 @@ export class GraphTaskCards {
     };
 
     await this.expectLabel(id, isBoxFit);
+  }
+
+  /** The label block of `id` starts one padding in from the card's left edge, measured at the weight the card draws; a failure prints the fit. */
+  public async expectBlockLeftEdge(id: string): Promise<void> {
+    await this.expectLabel(id, isBlockAtLeftEdge);
+  }
+
+  /** The long-named card's label block starts one padding in. */
+  public async expectLongBlockLeftEdge(): Promise<void> {
+    await this.expectBlockLeftEdge(LONG_ID);
   }
 
   private async expectLabel(id: string, check: (fit: ProbeLabelFit) => boolean): Promise<void> {
