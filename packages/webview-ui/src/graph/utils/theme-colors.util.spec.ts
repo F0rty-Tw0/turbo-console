@@ -228,6 +228,14 @@ describe('FEATURE: themeColorsOf', () => {
     expect(colors.cardFrame).toBe('rgba(216, 216, 216, 0.4)');
   });
 
+  it('GIVEN an input background with alpha WHEN the colours are read THEN the card fill is laid over the editor background', () => {
+    const translucent = { ...DARK, '--vscode-input-background': '#ffffff1a' };
+
+    const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+    expect(colors.cardFill).toBe('rgb(54, 54, 54)');
+  });
+
   it('GIVEN a value with surrounding spaces WHEN the colours are read THEN it is trimmed', () => {
     const padded = { ...DARK, '--vscode-foreground': '  #fff ' };
 
