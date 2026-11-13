@@ -129,7 +129,7 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
     it('WHEN c carries run-failed THEN its outline reads 2 wide in the failed colour and a has none', () => {
       cy.getElementById('c').addClass('run-failed');
 
-      expect(nodeOf(probe, 'c')).toMatchObject({ outlineWidth: 2, outlineColor: 'rgb(255,0,17)' });
+      expect(nodeOf(probe, 'c')).toMatchObject({ outlineWidth: 2, outlineColor: 'rgb(255,0,17)', accentColor: null });
       expect(nodeOf(probe, 'a')).toMatchObject({ outlineWidth: 0 });
     });
 

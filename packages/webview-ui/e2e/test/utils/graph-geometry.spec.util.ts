@@ -48,6 +48,7 @@ export const nodeAt = (id: string, renderedX: number, renderedY: number): ProbeN
     isCollapsed: false,
     outlineWidth: 0,
     outlineColor: '',
+    accentColor: null,
     underlayColor: '',
     underlayOpacity: 0
   };

@@ -1,5 +1,6 @@
 import type { NodeStates } from './common/graph.type.ts';
 import { expect, test } from './graph-task-projects.fixture.ts';
+import { GraphTaskCards } from './pages/graph-task-cards.po.ts';
 import { TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { THEME_DARK_STUB, THEME_HC_STUB, THEME_LIGHT_STUB } from './test/stubs/graph-theme.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
@@ -74,36 +75,39 @@ test.describe('FEATURE: graph task runs and the task panel', () => {
     });
 
     test(
-      'a runs map outlines app#build in the theme failed colour, and a later empty map clears it',
+      "a runs map draws app#build's top bar in the theme failed colour, and a later empty map clears it",
       { annotation: RUNS },
-      async ({ graphLook, graphTaskHost, graphTaskProbe }): Promise<void> => {
+      async ({ graphLook, graphTaskHost, page }): Promise<void> => {
+        const cards = new GraphTaskCards(page);
+
         await test.step('WHEN the high contrast theme applies and app#build failed', async (): Promise<void> => {
           await graphLook.applyTheme(THEME_HC_STUB);
           await graphTaskHost.sendRuns({ 'app#build': 'failed' });
         });
 
-        await test.step('THEN app#build has a 2 wide outline in the failed colour', async (): Promise<void> =>
-          graphTaskProbe.expectRunOutline('app#build', { width: 2, colour: FAILED_RGB }));
+        await test.step('THEN app#build has a top bar in the failed colour', async (): Promise<void> =>
+          cards.expectRunAccent('app#build', FAILED_RGB));
 
         await test.step('WHEN an empty runs map arrives', async (): Promise<void> => graphTaskHost.sendRuns({}));
 
-        await test.step('THEN app#build has no outline', async (): Promise<void> =>
-          graphTaskProbe.expectRunOutline('app#build', null));
+        await test.step('THEN app#build has no bar', async (): Promise<void> => cards.expectRunAccent('app#build', null));
       }
     );
 
     for (const { name, stub, stopped } of STOPPED_THEMES) {
       test(
-        `a stopped app#build is outlined in the ${name} theme description colour`,
+        `a stopped app#build has a top bar in the ${name} theme description colour`,
         { annotation: RUNS },
-        async ({ graphLook, graphTaskHost, graphTaskProbe }): Promise<void> => {
+        async ({ graphLook, graphTaskHost, page }): Promise<void> => {
+          const cards = new GraphTaskCards(page);
+
           await test.step(`WHEN the ${name} theme applies and app#build stopped`, async (): Promise<void> => {
             await graphLook.applyTheme(stub);
             await graphTaskHost.sendRuns({ 'app#build': 'stopped' });
           });
 
-          await test.step('THEN app#build has a 2 wide outline in the description colour', async (): Promise<void> =>
-            graphTaskProbe.expectRunOutline('app#build', { width: 2, colour: stopped }));
+          await test.step('THEN app#build has a top bar in the description colour', async (): Promise<void> =>
+            cards.expectRunAccent('app#build', stopped));
         }
       );
     }

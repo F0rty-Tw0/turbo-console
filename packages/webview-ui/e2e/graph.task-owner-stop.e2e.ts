@@ -1,5 +1,6 @@
 import { expect, test } from './graph-toolbar.fixture.ts';
-import { SELECTION_RING } from './test/common/graph-run-colours.const.ts';
+import { GraphTaskCards } from './pages/graph-task-cards.po.ts';
+import { RUNNING_RGB, SELECTED_BORDER_INK } from './test/common/graph-run-colours.const.ts';
 import { TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { THEME_DARK_STUB } from './test/stubs/graph-theme.stub.ts';
 import { taskSavedState } from './test/utils/graph-task-saved.spec.util.ts';
@@ -212,9 +213,11 @@ test.describe('FEATURE: Stop on a dependency that runs under another task run', 
   );
 
   test(
-    'GIVEN lib#build running under app#build in the dark theme, tapping it draws the selection ring alone',
+    'GIVEN lib#build running under app#build in the dark theme, tapping it draws the selection border and keeps the running bar',
     { annotation: D12 },
-    async ({ graphCanvas, graphLook, graphTaskHost, graphTaskRings }): Promise<void> => {
+    async ({ graphCanvas, graphLook, graphTaskHost, graphTaskRings, page }): Promise<void> => {
+      const cards = new GraphTaskCards(page);
+
       await test.step('WHEN the dark theme applies and lib#build runs under app#build', async (): Promise<void> => {
         await graphLook.applyTheme(THEME_DARK_STUB);
         await graphTaskHost.sendOwnedRuns(LIB_RUNNING, LIB_UNDER_APP);
@@ -222,8 +225,10 @@ test.describe('FEATURE: Stop on a dependency that runs under another task run', 
 
       await test.step('AND lib#build is tapped', async (): Promise<void> => graphCanvas.tapNode('lib#build'));
 
-      await test.step('THEN the selection ring alone is drawn', async (): Promise<void> =>
-        graphTaskRings.expectRings('lib#build', SELECTION_RING));
+      await test.step('THEN the selection border is drawn and the running bar stays', async (): Promise<void> => {
+        await graphTaskRings.expectRings('lib#build', SELECTED_BORDER_INK);
+        await cards.expectRunAccent('lib#build', RUNNING_RGB);
+      });
     }
   );
 });

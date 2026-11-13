@@ -7,7 +7,7 @@ import { probeFolderLinksOf, probeFoldersOf } from './graph-probe-folders.ts';
 import { labelFitOf } from './graph-probe-label.ts';
 import { drawWithoutLayers } from './graph-probe-layers.ts';
 import { edgeLinesOf, folderLinkLinesOf } from './graph-probe-lines.ts';
-import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
+import { accentColorOf, probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
 import { probeTitlesOf } from './graph-probe-titles.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
@@ -81,6 +81,7 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
     isCollapsed,
     outlineWidth: styleNumber(node, 'outline-width'),
     outlineColor: styleText(node, 'outline-color'),
+    accentColor: accentColorOf(node),
     underlayColor: styleText(node, 'underlay-color'),
     underlayOpacity: styleNumber(node, 'underlay-opacity')
   };

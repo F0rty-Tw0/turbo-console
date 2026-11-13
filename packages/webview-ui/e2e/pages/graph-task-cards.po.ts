@@ -15,6 +15,7 @@ import type { BoldRow, FontCheck } from '../test/common/graph-card-measure.type.
 import { TASK_MODE_STATE_STUB } from '../test/stubs/graph-task-mode.stub.ts';
 import { boldGlyphWidths, boldRowWidth, isFontLoaded } from '../test/utils/graph-card-measure.spec.util.ts';
 import { taskSavedState } from '../test/utils/graph-task-saved.spec.util.ts';
+import { withoutSpaces } from '../test/utils/graph-theme.spec.util.ts';
 
 /** The spec numbers written out, so a changed constant cannot move the oracle with it. */
 const MIN_WIDTH = 180;
@@ -39,6 +40,12 @@ const LONG_TASK: GraphTask = {
 /** The task-mode stub plus `LONG_TASK`, in the package `app`. */
 const LONG_STATE: GraphReady = { ...TASK_MODE_STATE_STUB, tasks: TASK_MODE_STATE_STUB.tasks.concat(LONG_TASK) };
 
+/** A card's top bar colour and run outline width, as the probe reads them. */
+type CardAccent = {
+  readonly accent: string | null;
+  readonly outlineWidth: number;
+};
+
 type CardSize = {
   readonly width: number;
   readonly height: number;
@@ -59,6 +66,12 @@ const isBlockAtLeftEdge = (fit: ProbeLabelFit): boolean => {
   const isMeasured = fit.labelWidth > 0;
 
   return isMeasured && Math.abs(fit.textMarginX - margin) <= 1;
+};
+
+const spacelessOf = (colour: string | null): string | null => {
+  if (colour === null) return null;
+
+  return withoutSpaces(colour);
 };
 
 /** The status card of a plain task: its drawn size, and the width a name wider than the minimum gives it. */
@@ -156,6 +169,13 @@ export class GraphTaskCards {
     await this.expectBlockLeftEdge(LONG_ID);
   }
 
+  /** The card `id` draws a top bar of `colour` (`rgb(r, g, b)`, spaces optional), or none for `null`, and never a run outline. */
+  public async expectRunAccent(id: string, colour: string | null): Promise<void> {
+    const expected: CardAccent = { accent: spacelessOf(colour), outlineWidth: 0 };
+
+    await expect.poll(async (): Promise<CardAccent | null> => this.accentOf(id)).toEqual(expected);
+  }
+
   private async expectLabel(id: string, check: (fit: ProbeLabelFit) => boolean): Promise<void> {
     const met = expect.objectContaining({ isMet: true });
 
@@ -168,6 +188,16 @@ export class GraphTaskCards {
     const labelCheck: LabelCheck = { isMet, fit };
 
     return labelCheck;
+  }
+
+  private async accentOf(id: string): Promise<CardAccent | null> {
+    const node = await this.nodeOf(id);
+
+    if (node === undefined) return null;
+
+    const read: CardAccent = { accent: spacelessOf(node.accentColor), outlineWidth: node.outlineWidth };
+
+    return read;
   }
 
   private async sizeOf(id: string): Promise<CardSize | null> {
