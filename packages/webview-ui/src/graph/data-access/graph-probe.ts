@@ -4,13 +4,14 @@ import { packageEdges, packageNodes } from './graph-boxes.ts';
 import { dirtyEdgeEndIdsOf } from './graph-probe-edge-ends.ts';
 import { exportLabelOf } from './graph-probe-export.ts';
 import { probeFolderLinksOf, probeFoldersOf } from './graph-probe-folders.ts';
-import { labelBoxWidthOf, labelWidthOf } from './graph-probe-label.ts';
+import { labelFitOf } from './graph-probe-label.ts';
 import { drawWithoutLayers } from './graph-probe-layers.ts';
 import { edgeLinesOf, folderLinkLinesOf } from './graph-probe-lines.ts';
 import { probeStateOf, styleNumber, styleText } from './graph-probe-state.ts';
 import { probeTitlesOf } from './graph-probe-titles.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphView } from '../common/graph-page.type.ts';
+import type { ProbeLabelFit } from '../common/graph-probe-label.type.ts';
 import type { ProbeTitle } from '../common/graph-probe-titles.type.ts';
 import type {
   GraphProbe,
@@ -81,9 +82,7 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
     outlineWidth: styleNumber(node, 'outline-width'),
     outlineColor: styleText(node, 'outline-color'),
     underlayColor: styleText(node, 'underlay-color'),
-    underlayOpacity: styleNumber(node, 'underlay-opacity'),
-    labelBoxWidth: labelBoxWidthOf(node),
-    labelWidth: labelWidthOf(node)
+    underlayOpacity: styleNumber(node, 'underlay-opacity')
   };
 
   return probeNode;
@@ -134,6 +133,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
     ...facts,
     nodes,
     edges,
+    labelFit: (id: string): ProbeLabelFit | null => labelFitOf(view.cy(), id),
     edgeLines,
     visibleIds,
     folders,

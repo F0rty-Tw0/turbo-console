@@ -1,4 +1,7 @@
-import type { NodeSingular } from 'cytoscape';
+import type { Core } from 'cytoscape';
+
+import { styleNumber } from './graph-probe-state.ts';
+import type { ProbeLabelFit } from '../common/graph-probe-label.type.ts';
 
 /** `value[key]` when `value` is an object, else `undefined`: Cytoscape's internals are untyped. */
 const fieldOf = (value: unknown, key: string): unknown => {
@@ -13,25 +16,30 @@ const fieldOf = (value: unknown, key: string): unknown => {
 const numberOr = <T>(value: unknown, fallback: T): number | T => (typeof value === 'number' ? value : fallback);
 
 /**
- * The main label box width Cytoscape caches on `node` (cytoscape 3.34 `_private.labelBounds.main.w`), read after
- * `node.boundingBox()` builds it, so the probe sees what every `boundingBox()` caller sees; `null` while there is none.
+ * The label fit of node `id`, `null` when there is none. Runs `node.boundingBox()` before it reads the internals, so
+ * the cached label box (cytoscape 3.34 `_private.labelBounds.main.w`) is what every `boundingBox()` caller sees; no
+ * other probe read runs it, so none heals a stale label box the page leaves.
  */
-export const labelBoxWidthOf = (node: Pick<NodeSingular, 'boundingBox'>): number | null => {
+export const labelFitOf = (cy: Pick<Core, 'getElementById'>, id: string): ProbeLabelFit | null => {
+  const node = cy.getElementById(id);
+  const isNone = node.empty();
+
+  if (isNone) return null;
+
   node.boundingBox();
 
   const internals: unknown = Reflect.get(node, '_private');
   const labelBounds = fieldOf(internals, 'labelBounds');
   const main = fieldOf(labelBounds, 'main');
-  const width = fieldOf(main, 'w');
-
-  return numberOr(width, null);
-};
-
-/** The label width Cytoscape measured for `node` (cytoscape 3.34 `_private.rstyle.labelWidth`); 0 while it measured none. */
-export const labelWidthOf = (node: Pick<NodeSingular, 'boundingBox'>): number => {
-  const internals: unknown = Reflect.get(node, '_private');
   const rstyle = fieldOf(internals, 'rstyle');
-  const width = fieldOf(rstyle, 'labelWidth');
+  const labelWidth = fieldOf(rstyle, 'labelWidth');
+  const labelBoxWidth = fieldOf(main, 'w');
+  const fit: ProbeLabelFit = {
+    width: node.width(),
+    labelWidth: numberOr(labelWidth, 0),
+    labelBoxWidth: numberOr(labelBoxWidth, null),
+    textMarginX: styleNumber(node, 'text-margin-x')
+  };
 
-  return numberOr(width, 0);
+  return fit;
 };

@@ -1,3 +1,4 @@
+import type { ProbeLabelFit } from './graph-probe-label.type.ts';
 import type { ProbeExport, ProbeRect, ProbeTitle } from './graph-probe-titles.type.ts';
 import type { Inspection } from './inspection.type.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
@@ -38,10 +39,6 @@ export type ProbeNode = {
   /** The affected halo under a task: 0 opaque with no `affected-<mark>` class. */
   readonly underlayColor: string;
   readonly underlayOpacity: number;
-  /** Cytoscape's cached main label box width in model px, read after `node.boundingBox()`; null while the node has no label box. */
-  readonly labelBoxWidth: number | null;
-  /** The label width Cytoscape measured in model px (`_private.rstyle.labelWidth`); 0 while it has measured none. */
-  readonly labelWidth: number;
 };
 
 export type ProbeEdge = {
@@ -113,6 +110,8 @@ export type LayoutEngine = 'elk' | 'cache' | 'fallback';
 export type GraphProbe = {
   readonly nodes: () => ProbeNode[];
   readonly edges: () => ProbeEdge[];
+  /** Node `id`'s label against its box, `null` when there is no such node; the only read that runs `node.boundingBox()`. */
+  readonly labelFit: (id: string) => ProbeLabelFit | null;
   /** Every drawn edge's line (package or task link), in the order `edges` lists them. */
   readonly edgeLines: () => ProbeEdgeLine[];
   /** Every folder link's line, in the order `folderLinks` lists them. */
