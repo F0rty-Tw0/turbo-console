@@ -16,15 +16,16 @@ import {
   ATOM_OUTCOME_CLASSES,
   ATOM_UMBRELLA_CLASS
 } from '../common/graph-atom.const.ts';
+import { TASK_CARD_CLASS } from '../common/graph-card.const.ts';
 import { TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import type { AtomCanvas } from '../common/task-canvas.type.ts';
 import { moreIdOf } from '../utils/atom-spec.util.ts';
 
 const OUTCOME_CLASSES = Object.values(ATOM_OUTCOME_CLASSES).join(' ');
 
-/** A task node's classes: `task`, and `atom-umbrella` too for an umbrella. */
+/** A task node's classes: `task` and `atom-umbrella` for an umbrella, `task` and `task-card` for a plain task. */
 export const taskClassesOf = (isUmbrella: boolean): string =>
-  isUmbrella ? `${TASK_NODE_CLASS} ${ATOM_UMBRELLA_CLASS}` : TASK_NODE_CLASS;
+  isUmbrella ? `${TASK_NODE_CLASS} ${ATOM_UMBRELLA_CLASS}` : `${TASK_NODE_CLASS} ${TASK_CARD_CLASS}`;
 
 /** Sets the `countsText` of each task in `counts` from its counts, its label staying its name; a task not drawn is skipped. */
 export const setCountLabels = (cy: Core, counts: ReadonlyMap<string, GraphAtomCounts>): void => {

@@ -20,6 +20,7 @@ import { taskControlsMock, taskDetailsMock, taskPanelMock, taskWidgetsMock } fro
 import { atomCanvasMock, taskCanvasMock } from '../mocks/graph-view.mock.ts';
 import { layoutRunsMock } from '../mocks/layout-runner.mock.ts';
 import { TASK_VIEW_STUB } from '../stubs/graph-task.stub.ts';
+import { CARD_SIZE_STUB } from '../stubs/node-size.stub.ts';
 
 const NODE_SIZE: NodeSize = { width: 80, height: 32 };
 
@@ -60,8 +61,9 @@ const taskViewMockOf = (noting: (name: string) => () => void): TaskViewMock => {
 const sizeOf = (): NodeSize => NODE_SIZE;
 
 /** Every sizer task mode takes, one px a character for the chips. */
-const SIZER_DEPS: Pick<TaskModeDeps, 'sizeOf' | 'textSizeOf' | 'boxTitleSizeOf' | 'chipMeasure' | 'glyphs'> = {
+const SIZER_DEPS: Pick<TaskModeDeps, 'sizeOf' | 'cardSizeOf' | 'textSizeOf' | 'boxTitleSizeOf' | 'chipMeasure' | 'glyphs'> = {
   sizeOf,
+  cardSizeOf: (): NodeSize => CARD_SIZE_STUB,
   textSizeOf: sizeOf,
   boxTitleSizeOf: sizeOf,
   chipMeasure: (text: string): number => text.length,

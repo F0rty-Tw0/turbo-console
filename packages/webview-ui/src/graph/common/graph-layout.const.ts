@@ -6,9 +6,9 @@ export const LAYOUT_VERSION = 3;
 /**
  * The task layout's version: it enters the task layout key only, so a change to how task boxes are laid out or sized drops
  * every saved task camera and memory entry. `LAYOUT_VERSION` also seeds the host's package-graph hash, so it cannot move
- * for a task-only change. 6 is the chip-sized umbrella width; 5 is above every value a saved task key ended with.
+ * for a task-only change. 7 is the status-card size; 6 is the chip-sized umbrella width; 5 is above every value a saved task key ended with.
  */
-export const TASK_LAYOUT_VERSION = 6;
+export const TASK_LAYOUT_VERSION = 7;
 
 /** An edge route with more bends than this is not a route: the page leaves it out of its post and the host drops it alone. */
 export const ROUTE_BENDS_MAX = 64;

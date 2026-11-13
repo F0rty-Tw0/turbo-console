@@ -5,7 +5,7 @@ import type { LayoutScreen } from './graph-layouts.type.ts';
 import type { GraphView, NodeSizer, PackageSaver, UmbrellaSizers } from './graph-page.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
-import type { TaskChipDeps, TaskChipsDeps } from './task-chip-deps.type.ts';
+import type { CardSizerDeps, TaskChipDeps, TaskChipsDeps } from './task-chip-deps.type.ts';
 import type { TaskControls, TaskControlsActions } from './task-controls.type.ts';
 import type { TaskDetails, TaskDetailsActions, TaskWidgets } from './task-details.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
@@ -123,6 +123,7 @@ export type TaskMemoryPort = {
 type TaskModeOwnDeps = {
   readonly view: TaskView;
   readonly runner: LayoutRunner;
+  /** Sizes umbrella task names; plain tasks use `cardSizeOf`. */
   readonly sizeOf: NodeSizer;
   /** Sizes plain text, the box titles. */
   readonly textSizeOf: NodeSizer;
@@ -156,7 +157,7 @@ type TaskModeOwnDeps = {
   readonly selectedPackage: () => string | null;
 };
 
-export type TaskModeDeps = TaskModeOwnDeps & TaskChipDeps & TaskChipsDeps;
+export type TaskModeDeps = TaskModeOwnDeps & TaskChipDeps & TaskChipsDeps & CardSizerDeps;
 
 /** What a task panel's open or close touches: the canvas, re-measured, and the saved open state. */
 export type PanelToggleDeps = {

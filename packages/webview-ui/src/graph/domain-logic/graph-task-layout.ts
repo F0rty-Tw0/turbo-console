@@ -147,7 +147,7 @@ export class GraphTaskLayout {
   private async layOut(request: TaskLayoutRequest, canRestore: boolean): Promise<void> {
     const titleWidths = titleWidthsOf(request, this.deps.textSizeOf, this.deps.boxTitleSizeOf, this.deps.rootLabel());
     const input = { ...request, titleWidths };
-    const graph = elkTaskGraphOf(input, this.deps.sizeOf);
+    const graph = elkTaskGraphOf(input, this.deps.cardSizeOf);
     const result = await this.deps.runner.run(request.key, graph);
     const wantedKey = this.key();
 
@@ -167,7 +167,7 @@ export class GraphTaskLayout {
    * the drawn highlight back to the flow. `titleWidths` are the ones its layout was measured with.
    */
   private place(request: TaskLayoutRequest, result: LayoutResult, titleWidths: Map<string, number>, canRestore: boolean): void {
-    const { view, screen, frames, sizeOf, flow } = this.deps;
+    const { view, screen, frames, cardSizeOf, flow } = this.deps;
     const saved = this.deps.saved();
     const isSavedCamera = canRestore && saved?.layoutKey === request.key && !saved.fitted;
     const isOpenKey = isOpenFor(saved, request.key);
@@ -179,7 +179,7 @@ export class GraphTaskLayout {
       tasks: request.tasks,
       positions: result.positions,
       boxFrames: result.boxFrames,
-      sizeOf,
+      sizeOf: cardSizeOf,
       sizes: request.sizes,
       counts,
       titleWidths,
