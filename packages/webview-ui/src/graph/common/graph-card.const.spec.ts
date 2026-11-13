@@ -31,5 +31,9 @@ describe('FEATURE: graph-card.const', () => {
 
       expect(words).toStrictEqual(expected);
     });
+
+    it('THEN the state words are frozen, so no consumer can change the card width in place', () => {
+      expect(Object.isFrozen(CARD_STATE_WORDS)).toBe(true);
+    });
   });
 });
