@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { boxTitleSizerOf, labelSizer, packageTitleSizer, slotSizer, taskSizerOf } from './label-measure.ts';
+import { boxTitleSizerOf, cardSizerOf, labelSizer, packageTitleSizer, slotSizer, taskSizerOf } from './label-measure.ts';
+import { CARD_STATE_WORDS } from '../common/graph-card.const.ts';
 import { GLYPH_CODE_POINTS, PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import type { TextMeasure } from '../common/graph-page.type.ts';
 import { nodeSizeOf } from '../utils/node-size.util.ts';
@@ -116,6 +117,60 @@ describe('FEATURE: label-measure', () => {
 
         expect(glyphMeasure).not.toHaveBeenCalled();
       });
+    });
+  });
+
+  describe('FEATURE: cardSizerOf', () => {
+    const lengthMeasureOf = (perChar: number): ReturnType<typeof vi.fn<TextMeasure>> =>
+      vi.fn<TextMeasure>((text: string): number => text.length * perChar);
+
+    it.each([
+      { glyphs: true, name: 'build', plain: 7, glyph: 9, width: 180, kills: 'short name floors at CARD_MIN_WIDTH' },
+      {
+        glyphs: true,
+        name: 'a'.repeat(40),
+        plain: 7,
+        glyph: 9,
+        width: 402,
+        kills: 'wide name uses the glyph measure of blank, space and name, plus padding'
+      },
+      { glyphs: false, name: 'a'.repeat(40), plain: 7, glyph: 9, width: 304, kills: 'no glyphs: bare name, plain bold measure' },
+      { glyphs: false, name: 'build', plain: 12, glyph: 9, width: 204, kills: 'widest state word sets the width' },
+      {
+        glyphs: true,
+        name: 'build',
+        plain: 12,
+        glyph: 9,
+        width: 204,
+        kills: 'state word measured with the plain measure, not the glyph one'
+      }
+    ])(
+      'GIVEN glyphs $glyphs, name length $name.length, P $plain, G $glyph WHEN sized THEN $width x 60 ($kills)',
+      ({ glyphs, name, plain, glyph, width }) => {
+        const size = cardSizerOf(glyphs, lengthMeasureOf(plain), lengthMeasureOf(glyph))(name);
+
+        expect(size).toStrictEqual({ width, height: 60 });
+      }
+    );
+
+    it('GIVEN no glyphs WHEN sized THEN it never measures in the glyph font', () => {
+      const boldGlyphMeasure = vi.fn<TextMeasure>((): number => {
+        throw new Error('glyph measure called');
+      });
+
+      expect(() => cardSizerOf(false, lengthMeasureOf(7), boldGlyphMeasure)('build')).not.toThrow();
+    });
+
+    it('GIVEN a built sizer WHEN it sizes two names THEN the state words were measured once, at construction', () => {
+      const boldMeasure = lengthMeasureOf(7);
+      const sizeOf = cardSizerOf(false, boldMeasure, lengthMeasureOf(9));
+
+      sizeOf('build');
+      sizeOf('test');
+
+      const stateCalls = boldMeasure.mock.calls.filter(([text]) => CARD_STATE_WORDS.includes(text));
+
+      expect(stateCalls).toHaveLength(CARD_STATE_WORDS.length);
     });
   });
 });

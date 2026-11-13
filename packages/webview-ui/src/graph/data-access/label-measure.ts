@@ -1,3 +1,4 @@
+import { CARD_HEIGHT, CARD_MIN_WIDTH, CARD_PADDING_X, CARD_STATE_WORDS } from '../common/graph-card.const.ts';
 import { GLYPH_CODE_POINTS, PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import type { NodeSizer, TextMeasure } from '../common/graph-page.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
@@ -53,4 +54,26 @@ export const boxTitleSizerOf = (glyphs: boolean, measure: TextMeasure, glyphMeas
   const sizer = glyphs ? withGlyph : plain;
 
   return sizer;
+};
+
+/** The plain task nodes' sizer: a 60 px status card at least 180 px wide, as wide as its bold row 1 (the glyph slot always reserved) or its widest state word plus padding. */
+export const cardSizerOf = (glyphs: boolean, boldMeasure: TextMeasure, boldGlyphMeasure: TextMeasure): NodeSizer => {
+  const stateWidths = CARD_STATE_WORDS.map(boldMeasure);
+  const stateWidth = Math.max(...stateWidths);
+  const rowOf = (name: string): number => {
+    const slotted = `${GLYPH_CODE_POINTS.blank} ${name}`;
+
+    if (glyphs) return boldGlyphMeasure(slotted);
+
+    return boldMeasure(name);
+  };
+  const sizeOf = (name: string): NodeSize => {
+    const textWidth = Math.max(rowOf(name), stateWidth);
+    const width = Math.max(CARD_MIN_WIDTH, textWidth + CARD_PADDING_X);
+    const size = { width, height: CARD_HEIGHT };
+
+    return size;
+  };
+
+  return sizeOf;
 };
