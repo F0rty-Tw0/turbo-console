@@ -161,7 +161,16 @@ describe('FEATURE: label-measure', () => {
       expect(() => cardSizerOf(false, lengthMeasureOf(7), boldGlyphMeasure)('build')).not.toThrow();
     });
 
-    it('GIVEN a built sizer WHEN it sizes two names THEN the state words were measured once, at construction', () => {
+    it('GIVEN a measure that throws WHEN the sizer is built THEN it does not throw until a name is sized', () => {
+      const broken = vi.fn<TextMeasure>((): number => {
+        throw new Error('measure broken');
+      });
+
+      expect(() => cardSizerOf(true, broken, broken)).not.toThrow();
+      expect(() => cardSizerOf(true, broken, broken)('build')).toThrow('measure broken');
+    });
+
+    it('GIVEN a built sizer WHEN it sizes two names THEN the state words were measured once, on the first sizing', () => {
       const boldMeasure = lengthMeasureOf(7);
       const sizeOf = cardSizerOf(false, boldMeasure, lengthMeasureOf(9));
 

@@ -56,10 +56,18 @@ export const boxTitleSizerOf = (glyphs: boolean, measure: TextMeasure, glyphMeas
   return sizer;
 };
 
-/** The plain task nodes' sizer: a 60 px status card at least 180 px wide, as wide as its bold row 1 (the glyph slot always reserved) or its widest state word plus padding. */
+/** The plain task nodes' sizer (state words measured on the first sizing, so a broken measure fails inside layout, not at page start): a 60 px status card at least 180 px wide, as wide as its bold row 1 (the glyph slot always reserved) or its widest state word plus padding. */
 export const cardSizerOf = (glyphs: boolean, boldMeasure: TextMeasure, boldGlyphMeasure: TextMeasure): NodeSizer => {
-  const stateWidths = CARD_STATE_WORDS.map(boldMeasure);
-  const stateWidth = Math.max(...stateWidths);
+  let stateWidth: number | null = null;
+  const stateWidthOf = (): number => {
+    if (stateWidth !== null) return stateWidth;
+
+    const stateWidths = CARD_STATE_WORDS.map(boldMeasure);
+
+    stateWidth = Math.max(...stateWidths);
+
+    return stateWidth;
+  };
   const rowOf = (name: string): number => {
     const slotted = `${GLYPH_CODE_POINTS.blank} ${name}`;
 
@@ -68,7 +76,7 @@ export const cardSizerOf = (glyphs: boolean, boldMeasure: TextMeasure, boldGlyph
     return boldMeasure(name);
   };
   const sizeOf = (name: string): NodeSize => {
-    const textWidth = Math.max(rowOf(name), stateWidth);
+    const textWidth = Math.max(rowOf(name), stateWidthOf());
     const width = Math.max(CARD_MIN_WIDTH, textWidth + CARD_PADDING_X);
     const size = { width, height: CARD_HEIGHT };
 
