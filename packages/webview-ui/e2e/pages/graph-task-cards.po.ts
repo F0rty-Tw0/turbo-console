@@ -42,6 +42,15 @@ type CardSize = {
   readonly height: number;
 };
 
+/** A card's cached label box against its measured label: `isFit` when the label is wider than the floor and the box holds it. */
+type LabelFit = {
+  readonly isFit: boolean;
+  readonly box: number | null;
+  readonly label: number;
+};
+
+const NO_LABEL_FIT: LabelFit = { isFit: false, box: null, label: 0 };
+
 /** The status card of a plain task: its drawn size, and the width a name wider than the minimum gives it. */
 export class GraphTaskCards {
   private readonly graphPage: GraphPage;
@@ -114,6 +123,26 @@ export class GraphTaskCards {
 
     expect(widths.codicon).toEqual(glyphs.map((): number | undefined => blankWidth));
     expect(blankWidth).not.toBe(widths.body[blankAt]);
+  }
+
+  /** The label of `id` is wider than `minLabelPx` and its cached label box is at least as wide; a failure prints both widths. */
+  public async expectLabelBoxFits(id: string, minLabelPx: number): Promise<void> {
+    const fit = expect.objectContaining({ isFit: true });
+
+    await expect.poll(async (): Promise<LabelFit> => this.labelFitOf(id, minLabelPx)).toEqual(fit);
+  }
+
+  private async labelFitOf(id: string, minLabelPx: number): Promise<LabelFit> {
+    const node = await this.nodeOf(id);
+
+    if (node === undefined) return NO_LABEL_FIT;
+
+    const box = node.labelBoxWidth;
+    const label = node.labelWidth;
+    const isFit = box !== null && label > minLabelPx && box >= label;
+    const fit: LabelFit = { isFit, box, label };
+
+    return fit;
   }
 
   private async sizeOf(id: string): Promise<CardSize | null> {
