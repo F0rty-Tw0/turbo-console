@@ -2,8 +2,11 @@ import type { RunOutline } from './common/graph.type.ts';
 import { test } from './graph-task.fixture.ts';
 import { GraphTaskCards } from './pages/graph-task-cards.po.ts';
 import type { GraphRunState } from '../src/bridge/common/graph-state.type.ts';
+import { GLYPH_CODE_POINTS } from '../src/graph/common/graph-glyph.const.ts';
 
 const SIZE = { description: 'G2-5a spec F1, AC1', type: 'requirement' };
+
+const LABEL = { description: 'G2-5a spec F2, AC2', type: 'requirement' };
 
 const MEASURE = { description: 'G2-5a spec F1, C1', type: 'requirement' };
 
@@ -31,6 +34,18 @@ const RUN_CASES: RunCase[] = [
   { state: 'stopped', outline: outlineOf('rgb(113,113,113)') },
   { state: 'failed-to-start', outline: outlineOf('rgb(248,81,73)') }
 ];
+
+/** The drawn text of `app#build` per run state: row 1 the glyph and ` build`, row 2 the word; written out, not derived from the code under test. */
+const TEXT_BY_STATE: Record<GraphRunState, string> = {
+  running: `${GLYPH_CODE_POINTS.sync} build\nRunning`,
+  continuous: `${GLYPH_CODE_POINTS.pulse} build\nContinuous`,
+  passed: `${GLYPH_CODE_POINTS.pass} build\nPassed`,
+  failed: `${GLYPH_CODE_POINTS.error} build\nFailed`,
+  stopped: `${GLYPH_CODE_POINTS['debug-stop']} build\nStopped`,
+  'failed-to-start': `${GLYPH_CODE_POINTS.error} build\nFailed to start`
+};
+
+const IDLE_TEXT = `${GLYPH_CODE_POINTS.blank} build\nNot run`;
 
 test.describe('FEATURE: graph task status cards', () => {
   test(
@@ -62,6 +77,47 @@ test.describe('FEATURE: graph task status cards', () => {
         await graphProbe.expectSelected(null);
         await cards.expectCardSize('app#build', CARD);
       });
+    }
+  );
+
+  test(
+    'GIVEN app#build open, its label is the glyph and name over the run state word, and idle again after the runs clear',
+    { annotation: LABEL },
+    async ({ graphGlyphs, graphTaskHost, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN the page is opened', async (): Promise<void> => graphGlyphs.openChosen());
+
+      await test.step('THEN app#build reads the blank glyph, build and Not run', async (): Promise<void> =>
+        graphTaskProbe.expectText('app#build', IDLE_TEXT));
+
+      for (const { state } of RUN_CASES) {
+        await test.step(`WHEN app#build is ${state} THEN its label shows that state`, async (): Promise<void> => {
+          await graphTaskHost.sendRuns({ 'app#build': state });
+          await graphTaskProbe.expectText('app#build', TEXT_BY_STATE[state]);
+        });
+      }
+
+      await test.step('WHEN the runs clear THEN the label is idle again', async (): Promise<void> => {
+        await graphTaskHost.sendRuns({});
+        await graphTaskProbe.expectText('app#build', IDLE_TEXT);
+      });
+    }
+  );
+
+  test(
+    'GIVEN codicon.ttf held, hub#build is a 180 x 60 card whose label is the bare name over Not run',
+    { annotation: LABEL },
+    async ({ graphGlyphs, graphTaskProbe, page }): Promise<void> => {
+      const cards = new GraphTaskCards(page);
+
+      await test.step('WHEN the page is opened with the font held', async (): Promise<void> =>
+        graphGlyphs.open({ isCodiconHeld: true, waitUntil: 'domcontentloaded' }));
+
+      await test.step('AND the codicon font has not arrived', async (): Promise<void> => cards.expectCodiconHeld());
+
+      await test.step('THEN hub#build reads build over Not run', async (): Promise<void> =>
+        graphTaskProbe.expectText('hub#build', 'build\nNot run'));
+
+      await test.step('AND it is 180 x 60', async (): Promise<void> => cards.expectCardSize('hub#build', CARD));
     }
   );
 
