@@ -11,8 +11,8 @@ import {
   RETRY_LABEL
 } from '../../src/graph/common/graph.const.ts';
 import { BROKEN_MEASURE, MEASURE_FIXED } from '../common/broken-measure.const.ts';
+import type { GraphOpenOptions } from '../common/graph-open.type.ts';
 import { NEXT_FRAME, PROBE_WANTED, TOOLBAR_LABELS, WORKER_STUBS } from '../common/graph.const.ts';
-import type { GraphOptions } from '../common/graph.type.ts';
 import { HOST_API_STUB } from '../common/shell.const.ts';
 import { graphDistMock } from '../test/mocks/graph-dist.mock.ts';
 import { FLAT_SAVED_STUB } from '../test/stubs/graph-saved.stub.ts';
@@ -43,7 +43,7 @@ export class GraphPage {
   }
 
   /** Opens the real graph page under the graph CSP; every option is applied before the page loads. */
-  public async open(options: GraphOptions = {}): Promise<void> {
+  public async open(options: GraphOpenOptions = {}): Promise<void> {
     await this.diagnostics.attach();
 
     if (options.viewport !== undefined) await this.page.setViewportSize(options.viewport);
@@ -61,7 +61,7 @@ export class GraphPage {
     if (options.isMeasureBroken === true) await this.page.addInitScript({ content: BROKEN_MEASURE });
 
     await this.page.addInitScript({ content: WORKER_STUBS[options.workers ?? 'real'] });
-    await new ShellNavigation(this.page).open(graphDistMock(options));
+    await new ShellNavigation(this.page).open(graphDistMock(options), options.waitUntil);
     await this.container.waitFor();
   }
 

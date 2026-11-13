@@ -1,7 +1,7 @@
 import type { Page, Request } from '@playwright/test';
 import { errors, test } from '@playwright/test';
 
-import type { RouteHandler } from '../common/playwright.type.ts';
+import type { NavigationWait, RouteHandler } from '../common/playwright.type.ts';
 import { SHELL_ORIGIN, SHELL_URL } from '../common/shell.const.ts';
 
 /**
@@ -46,9 +46,9 @@ export class ShellNavigation {
   }
 
   /** Serves every shell file with `handler`, then goes to `SHELL_URL` as `goto` does. */
-  public async open(handler: RouteHandler): Promise<void> {
+  public async open(handler: RouteHandler, waitUntil: NavigationWait = 'load'): Promise<void> {
     await this.page.route(`${SHELL_ORIGIN}/**`, handler);
-    await this.goto();
+    await this.goto(waitUntil);
   }
 
   /**
@@ -56,7 +56,7 @@ export class ShellNavigation {
    * loads is recorded as a `C84` annotation, also written to stderr since the list reporter prints no annotations, and
    * one that fails throws `C84: …` with what Chromium did with the `index.html` request on both tries.
    */
-  public async goto(): Promise<void> {
+  public async goto(waitUntil: NavigationWait = 'load'): Promise<void> {
     const onRequest = (request: Request): void => this.noteIssued(request);
     const onFinished = (request: Request): void => this.noteFinished(request);
     const onFailed = (request: Request): void => this.noteFailed(request);
@@ -66,7 +66,7 @@ export class ShellNavigation {
     this.page.on('requestfailed', onFailed);
 
     try {
-      await this.gotoWithRetry();
+      await this.gotoWithRetry(waitUntil);
     } finally {
       this.page.off('request', onRequest);
       this.page.off('requestfinished', onFinished);
@@ -74,14 +74,14 @@ export class ShellNavigation {
     }
   }
 
-  private async gotoWithRetry(): Promise<void> {
-    const firstTry = await this.tried();
+  private async gotoWithRetry(waitUntil: NavigationWait): Promise<void> {
+    const firstTry = await this.tried(waitUntil);
 
     if (firstTry === null) return;
 
     await this.cleared(firstTry);
 
-    const secondTry = await this.tried();
+    const secondTry = await this.tried(waitUntil);
 
     if (secondTry !== null) throw new Error(`C84: shell navigation stuck twice; first try ${firstTry}; retry ${secondTry}`);
 
@@ -105,8 +105,8 @@ export class ShellNavigation {
   }
 
   /** Runs one bounded `goto`; returns `null` when it loaded, else what happened, and rethrows any other failure. */
-  private async tried(): Promise<string | null> {
-    const gotoOptions = { timeout: this.tryMs };
+  private async tried(waitUntil: NavigationWait): Promise<string | null> {
+    const gotoOptions = { timeout: this.tryMs, waitUntil };
 
     this.issued = 0;
     this.finished = 0;
