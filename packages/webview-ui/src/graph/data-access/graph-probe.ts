@@ -1,7 +1,8 @@
-import type { EdgeSingular, NodeSingular } from 'cytoscape';
+import type { Core, EdgeSingular, NodeSingular } from 'cytoscape';
 
 import { packageEdges, packageNodes } from './graph-boxes.ts';
 import { dirtyEdgeEndIdsOf } from './graph-probe-edge-ends.ts';
+import { exportLabelOf } from './graph-probe-export.ts';
 import { probeFolderLinksOf, probeFoldersOf } from './graph-probe-folders.ts';
 import { drawWithoutLayers } from './graph-probe-layers.ts';
 import { edgeLinesOf, folderLinkLinesOf } from './graph-probe-lines.ts';
@@ -85,6 +86,16 @@ const probeNodeOf = (node: NodeSingular, origin: Position): ProbeNode => {
   return probeNode;
 };
 
+/** The first package edge's `line-color`, `''` when there is no edge. */
+const edgeColorOf = (cy: Core): string => {
+  const first = packageEdges(cy).first();
+  const isNone = first.empty();
+
+  if (isNone) return '';
+
+  return styleText(first, 'line-color');
+};
+
 /** Reads the drawn graph from `view` and the page facts from `facts`; empty lists while nothing is drawn. */
 export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts: ProbeFacts): GraphProbe => {
   const originOf = (): Position => {
@@ -109,14 +120,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
   const folders = (): ProbeFolder[] => probeFoldersOf(view.cy(), originOf());
   const folderLinkLines = (): ProbeEdgeLine[] => folderLinkLinesOf(view.cy(), originOf());
   const folderLinks = (): ProbeFolderLink[] => probeFolderLinksOf(view.cy(), originOf());
-  const edgeColor = (): string => {
-    const first = packageEdges(view.cy()).first();
-    const isNone = first.empty();
-
-    if (isNone) return '';
-
-    return styleText(first, 'line-color');
-  };
+  const edgeColor = (): string => edgeColorOf(view.cy());
   let renders = 0;
 
   view.cy().on('render', (): void => {
@@ -133,6 +137,7 @@ export const createGraphProbe = (view: Pick<GraphView, 'cy' | 'viewport'>, facts
     folderLinks,
     folderLinkLines,
     boxTitles: (): ProbeTitle[] => probeTitlesOf(view.cy(), originOf()),
+    exportLabel: (id: string): string => exportLabelOf(view.cy(), id),
     edgeColor,
     zoom: (): number => view.viewport().zoom,
     pan: (): Position => view.viewport().pan,
