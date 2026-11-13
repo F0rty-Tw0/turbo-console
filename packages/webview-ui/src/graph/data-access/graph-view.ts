@@ -24,6 +24,7 @@ import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
+import type { GraphFonts } from '../common/graph-card.type.ts';
 import type { FoldersView, GraphView, GraphViewHandlers, PackageRuns, Viewport } from '../common/graph-page.type.ts';
 import type { AnchorBox } from '../common/keep-clear.type.ts';
 import type { Paint } from '../common/paint.type.ts';
@@ -81,12 +82,7 @@ const paintOn = (cy: Core, folders: FoldersView, next: Paint): void => {
 };
 
 /** The page's canvas view: Cytoscape, the folder pass over it and the canvas events reported to `handlers`. */
-export const createGraphView = (
-  container: HTMLElement,
-  handlers: GraphViewHandlers,
-  fontFamily: string,
-  glyphs: boolean
-): GraphView => {
+export const createGraphView = (container: HTMLElement, handlers: GraphViewHandlers, fonts: GraphFonts): GraphView => {
   const cy = cytoscapeOn(container);
   const camera = createFittedCamera(cy, handlers);
   const folders = createFoldersView(cy);
@@ -114,7 +110,7 @@ export const createGraphView = (
     setPositions: (placed: Positions): void => placeOn(cy, folders, placed),
     setRoutes: (routes: Routes): void => placeRoutes(cy, folders, routes),
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
-    applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fontFamily, glyphs)),
+    applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fonts.family, fonts.glyphs, fonts.cards)),
     widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),
     markRowLess: (rows: RowPlan[]): void => markRowLess(cy, rows),
     exportPng: (bg: string): string => exportPngOf(cy, bg, window.devicePixelRatio),

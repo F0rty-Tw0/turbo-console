@@ -1,6 +1,7 @@
 import { REDUCED_MOTION_QUERY } from './common/flow.const.ts';
 import type { FlowControl, FlowEdgeGeometry } from './common/flow.type.ts';
 import { ATOM_CHIP_FONT_PX } from './common/graph-atom.const.ts';
+import type { CardMeasures, GraphFonts } from './common/graph-card.type.ts';
 import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from './common/graph-glyph.const.ts';
 import type { FlowFactory, GraphController, GraphView, GraphViewFactory, Viewport } from './common/graph-page.type.ts';
 import type { GraphProbe } from './common/graph-probe.type.ts';
@@ -74,7 +75,11 @@ const controllerOf = (glyphs: boolean): GraphController => {
   const boldMeasure = textMeasure(`bold ${NODE_FONT_SIZE}px ${fontFamily}`);
   const boldGlyphMeasure = textMeasure(`bold ${NODE_FONT_SIZE}px codicon, ${fontFamily}`);
   const chipMeasure = textMeasure(`${ATOM_CHIP_FONT_PX}px ${fontFamily}`);
-  const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fontFamily, glyphs);
+  const glyphCards: CardMeasures = { regular: glyphMeasure, bold: boldGlyphMeasure };
+  const plainCards: CardMeasures = { regular: measure, bold: boldMeasure };
+  const cards = glyphs ? glyphCards : plainCards;
+  const fonts: GraphFonts = { family: fontFamily, glyphs, cards };
+  const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fonts);
   const controller = createGraphController({
     bridge,
     page,
