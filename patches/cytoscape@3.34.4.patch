@@ -1,8 +1,19 @@
 diff --git a/dist/cytoscape.cjs.js b/dist/cytoscape.cjs.js
-index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..bd48b40c8e945225694cf4f2865e23b67a2178a1 100644
+index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..7ff3d4755b785577b4c7d8ca3e2ae849f93b228b 100644
 --- a/dist/cytoscape.cjs.js
 +++ b/dist/cytoscape.cjs.js
-@@ -13611,10 +13611,9 @@ var elesfn$4 = {
+@@ -11983,6 +11983,10 @@ elesfn$b.boundingBox = function (options) {
+     this.edges().forEach(isDirty);
+     this.nodes().forEach(isDirty);
+     if (styleEnabled) {
++      // patched: a data() or class change leaves rstyle.clean true, so recalculateRenderedStyle skipped the element and its label bounds were built from the old label width; unclean the style-dirty ones first
++      for (var j = 0; j < eles.length; j++) {
++        if (eles[j]._private.styleDirty) eles[j]._private.rstyle.clean = false;
++      }
+       this.recalculateRenderedStyle(useCache);
+     }
+     this.updateCompoundBounds(!useCache);
+@@ -13611,10 +13615,9 @@ var elesfn$4 = {
        if (!hasCompoundNodes) {
          return parentOpacity;
        }
@@ -16,7 +27,7 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..bd48b40c8e945225694cf4f2865e23b6
            var opacity = parent.pstyle('opacity').value;
            parentOpacity = opacity * parentOpacity;
          }
-@@ -13648,10 +13647,9 @@ var elesfn$4 = {
+@@ -13648,10 +13651,9 @@ var elesfn$4 = {
  };
  function checkCompound(ele, parentOk) {
    var _p = ele._private;
@@ -30,7 +41,7 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..bd48b40c8e945225694cf4f2865e23b6
        if (!parentOk(parent)) {
          return false;
        }
-@@ -14743,7 +14741,7 @@ elesfn$1.remove = function () {
+@@ -14743,7 +14745,7 @@ elesfn$1.remove = function () {
    var removeFromPool = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
    var self = this;
    var elesToRemove = [];
@@ -39,7 +50,7 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..bd48b40c8e945225694cf4f2865e23b6
    var cy = self._private.cy;
  
    // add connected edges
-@@ -14797,7 +14795,7 @@ elesfn$1.remove = function () {
+@@ -14797,7 +14799,7 @@ elesfn$1.remove = function () {
      pllEdge.clearTraversalCache();
    }
    var alteredParents = [];
@@ -48,7 +59,7 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..bd48b40c8e945225694cf4f2865e23b6
    function removeChildRef(parent, ele) {
      ele = ele[0];
      parent = parent[0];
-@@ -25461,8 +25459,10 @@ BRp$7.registerCalculationListeners = function () {
+@@ -25461,8 +25463,10 @@ BRp$7.registerCalculationListeners = function () {
            fn(willDraw, elesToUpdate);
          }
        }
@@ -60,7 +71,7 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..bd48b40c8e945225694cf4f2865e23b6
      }
    };
    r.flushRenderedStyleQueue = function () {
-@@ -30804,6 +30804,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
+@@ -30804,6 +30808,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
      var prevBging = _p.backgrounding;
      var totalCompleted = 0;
      for (var _i = 0; _i < image.length; _i++) {
@@ -70,10 +81,21 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..bd48b40c8e945225694cf4f2865e23b6
        if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
          totalCompleted++;
 diff --git a/dist/cytoscape.esm.mjs b/dist/cytoscape.esm.mjs
-index 98ca0ed0a971159db005a0ae80da1dac080d9ade..61e38f46b15399a4020f4e4f0c139ac7b358220d 100644
+index 98ca0ed0a971159db005a0ae80da1dac080d9ade..fc4a0670c8fcbf8fcd6ad1e0aa4ce540911991f7 100644
 --- a/dist/cytoscape.esm.mjs
 +++ b/dist/cytoscape.esm.mjs
-@@ -13609,10 +13609,9 @@ var elesfn$4 = {
+@@ -11981,6 +11981,10 @@ elesfn$b.boundingBox = function (options) {
+     this.edges().forEach(isDirty);
+     this.nodes().forEach(isDirty);
+     if (styleEnabled) {
++      // patched: a data() or class change leaves rstyle.clean true, so recalculateRenderedStyle skipped the element and its label bounds were built from the old label width; unclean the style-dirty ones first
++      for (var j = 0; j < eles.length; j++) {
++        if (eles[j]._private.styleDirty) eles[j]._private.rstyle.clean = false;
++      }
+       this.recalculateRenderedStyle(useCache);
+     }
+     this.updateCompoundBounds(!useCache);
+@@ -13609,10 +13613,9 @@ var elesfn$4 = {
        if (!hasCompoundNodes) {
          return parentOpacity;
        }
@@ -87,7 +109,7 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..61e38f46b15399a4020f4e4f0c139ac7
            var opacity = parent.pstyle('opacity').value;
            parentOpacity = opacity * parentOpacity;
          }
-@@ -13646,10 +13645,9 @@ var elesfn$4 = {
+@@ -13646,10 +13649,9 @@ var elesfn$4 = {
  };
  function checkCompound(ele, parentOk) {
    var _p = ele._private;
@@ -101,7 +123,7 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..61e38f46b15399a4020f4e4f0c139ac7
        if (!parentOk(parent)) {
          return false;
        }
-@@ -14741,7 +14739,7 @@ elesfn$1.remove = function () {
+@@ -14741,7 +14743,7 @@ elesfn$1.remove = function () {
    var removeFromPool = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
    var self = this;
    var elesToRemove = [];
@@ -110,7 +132,7 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..61e38f46b15399a4020f4e4f0c139ac7
    var cy = self._private.cy;
  
    // add connected edges
-@@ -14795,7 +14793,7 @@ elesfn$1.remove = function () {
+@@ -14795,7 +14797,7 @@ elesfn$1.remove = function () {
      pllEdge.clearTraversalCache();
    }
    var alteredParents = [];
@@ -119,7 +141,7 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..61e38f46b15399a4020f4e4f0c139ac7
    function removeChildRef(parent, ele) {
      ele = ele[0];
      parent = parent[0];
-@@ -25459,8 +25457,10 @@ BRp$7.registerCalculationListeners = function () {
+@@ -25459,8 +25461,10 @@ BRp$7.registerCalculationListeners = function () {
            fn(willDraw, elesToUpdate);
          }
        }
@@ -131,7 +153,7 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..61e38f46b15399a4020f4e4f0c139ac7
      }
    };
    r.flushRenderedStyleQueue = function () {
-@@ -30802,6 +30802,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
+@@ -30802,6 +30806,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
      var prevBging = _p.backgrounding;
      var totalCompleted = 0;
      for (var _i = 0; _i < image.length; _i++) {
@@ -141,10 +163,21 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..61e38f46b15399a4020f4e4f0c139ac7
        if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
          totalCompleted++;
 diff --git a/dist/cytoscape.umd.js b/dist/cytoscape.umd.js
-index b7d4dabff383755c8cda3021b719b2f0064e8896..f5b9c24051c63670bf1095654a1f760d90b7dfca 100644
+index b7d4dabff383755c8cda3021b719b2f0064e8896..48cb5daa379ac39a5c04a0dba58d610ae2adb5ae 100644
 --- a/dist/cytoscape.umd.js
 +++ b/dist/cytoscape.umd.js
-@@ -13615,10 +13615,9 @@
+@@ -11987,6 +11987,10 @@
+       this.edges().forEach(isDirty);
+       this.nodes().forEach(isDirty);
+       if (styleEnabled) {
++        // patched: a data() or class change leaves rstyle.clean true, so recalculateRenderedStyle skipped the element and its label bounds were built from the old label width; unclean the style-dirty ones first
++        for (var j = 0; j < eles.length; j++) {
++          if (eles[j]._private.styleDirty) eles[j]._private.rstyle.clean = false;
++        }
+         this.recalculateRenderedStyle(useCache);
+       }
+       this.updateCompoundBounds(!useCache);
+@@ -13615,10 +13619,9 @@
          if (!hasCompoundNodes) {
            return parentOpacity;
          }
@@ -158,7 +191,7 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..f5b9c24051c63670bf1095654a1f760d
              var opacity = parent.pstyle('opacity').value;
              parentOpacity = opacity * parentOpacity;
            }
-@@ -13652,10 +13651,9 @@
+@@ -13652,10 +13655,9 @@
    };
    function checkCompound(ele, parentOk) {
      var _p = ele._private;
@@ -172,7 +205,7 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..f5b9c24051c63670bf1095654a1f760d
          if (!parentOk(parent)) {
            return false;
          }
-@@ -14747,7 +14745,7 @@
+@@ -14747,7 +14749,7 @@
      var removeFromPool = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
      var self = this;
      var elesToRemove = [];
@@ -181,7 +214,7 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..f5b9c24051c63670bf1095654a1f760d
      var cy = self._private.cy;
  
      // add connected edges
-@@ -14801,7 +14799,7 @@
+@@ -14801,7 +14803,7 @@
        pllEdge.clearTraversalCache();
      }
      var alteredParents = [];
@@ -190,7 +223,7 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..f5b9c24051c63670bf1095654a1f760d
      function removeChildRef(parent, ele) {
        ele = ele[0];
        parent = parent[0];
-@@ -25465,8 +25463,10 @@ var printLayoutInfo;
+@@ -25465,8 +25467,10 @@ var printLayoutInfo;
              fn(willDraw, elesToUpdate);
            }
          }
@@ -202,7 +235,7 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..f5b9c24051c63670bf1095654a1f760d
        }
      };
      r.flushRenderedStyleQueue = function () {
-@@ -30808,6 +30808,8 @@ var printLayoutInfo;
+@@ -30808,6 +30812,8 @@ var printLayoutInfo;
        var prevBging = _p.backgrounding;
        var totalCompleted = 0;
        for (var _i = 0; _i < image.length; _i++) {
@@ -211,6 +244,21 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..f5b9c24051c63670bf1095654a1f760d
          var bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', _i);
          if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
            totalCompleted++;
+diff --git a/src/collection/dimensions/bounds.mjs b/src/collection/dimensions/bounds.mjs
+index 490e0f171d554051523595d9c7d9c92ac2ff5f11..40bacb71fc5088165a5d63981460b596cd66f66b 100644
+--- a/src/collection/dimensions/bounds.mjs
++++ b/src/collection/dimensions/bounds.mjs
+@@ -935,6 +935,10 @@ elesfn.boundingBox = function( options ){
+     this.nodes().forEach(isDirty);
+ 
+     if(styleEnabled) {
++      // patched: a data() or class change leaves rstyle.clean true, so recalculateRenderedStyle skipped the element and its label bounds were built from the old label width; unclean the style-dirty ones first
++      for (let j = 0; j < eles.length; j++) {
++        if (eles[j]._private.styleDirty) eles[j]._private.rstyle.clean = false;
++      }
+       this.recalculateRenderedStyle(useCache);
+     }
+ 
 diff --git a/src/collection/index.mjs b/src/collection/index.mjs
 index 0330661a8d2a5af043d0594a1c84782a7e193c20..fa25df6ef16015f7bb7903a869c2e087f67175a6 100644
 --- a/src/collection/index.mjs

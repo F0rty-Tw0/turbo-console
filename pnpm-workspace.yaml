@@ -55,5 +55,7 @@ patchedDependencies:
   # The rendered style flush emptied its queue after recalculating, dropping the nodes a compound bounds update re-queued
   # meanwhile, so their edges stayed dirty and every endpoint read on the u9 hover recomputed projections (+21 % hover
   # CPU); the patch takes the queue before recalculating, so they flush next time.
-  # Drop the patch once a cytoscape release fixes all four; a version bump fails install until then.
+  # boundingBox() recalculated the rendered style before it dirtied style-dirty elements, so a label changed in the same
+  # tick kept its old label bounds (a card's label box stayed narrower than its two rows); the patch unCleans them first.
+  # Drop the patch once a cytoscape release fixes all five; a version bump fails install until then.
   cytoscape@3.34.4: patches/cytoscape@3.34.4.patch

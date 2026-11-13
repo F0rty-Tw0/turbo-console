@@ -36,8 +36,6 @@ test.describe('FEATURE: graph task card label bounds', () => {
     'GIVEN one card alone in its framed box, a runs message that widens its label keeps its label box as wide as the label',
     { annotation: AC4 },
     async ({ graphHost, graphPage, graphTaskHost, graphTaskProbe, page }): Promise<void> => {
-      test.fail(true, 'F5: remove with the boundingBox patch hunk (Task 3.2)');
-
       const graphBoxTitles = new GraphBoxTitles(page);
       const cards = new GraphTaskCards(page);
 
