@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { swatchPartsOf } from './legend-swatch.util.ts';
+import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import { BOX_SWATCH, LINE_SWATCH, PILL_SWATCH } from '../common/legend-swatch.const.ts';
+import { TASK_LEGEND_ROWS } from '../common/legend-task.const.ts';
 import type { LegendHalo, LegendOutline, LegendSwatch, SvgPart } from '../common/legend.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
 import { SELECTION_COLORS_STUB, THEME_COLORS_STUB } from '../test/stubs/theme-colors.stub.ts';
@@ -206,5 +208,34 @@ describe('FEATURE: swatchPartsOf', () => {
 
       expect(pen.attrs).toMatchObject({ stroke: COLORS.background, 'stroke-width': '2', 'stroke-dasharray': '6 6' });
     });
+  });
+
+  describe('GIVEN a card swatch with an accent bar', () => {
+    const card = boxOf({ fill: 'cardFill', stroke: 'cardFrame', accentBar: 'run-failed' });
+
+    it('WHEN it is read THEN the frame rect carries the card fill and frame', () => {
+      expect(partAt(partsOf(card), 0).attrs).toMatchObject({ fill: COLORS.cardFill, stroke: COLORS.cardFrame });
+    });
+
+    it('WHEN it is read THEN a path in the failed colour follows the frame, 3 units tall inside its stroke, then the sample text', () => {
+      const parts = partsOf(card);
+
+      expect(tagsOf(parts)).toStrictEqual(['rect', 'path', 'text']);
+      expect(partAt(parts, 1).attrs).toStrictEqual({
+        d: 'M3.5 6.5 V5.625 A2.125 2.125 0 0 1 5.625 3.5 H34.375 A2.125 2.125 0 0 1 36.5 5.625 V6.5 Z',
+        fill: COLORS.runs.failed
+      });
+    });
+
+    it('WHEN accentBar is null THEN there is no path', () => {
+      expect(tagsOf(partsOf(BOX_SWATCH))).toStrictEqual(['rect', 'text']);
+    });
+  });
+
+  it('GIVEN the task legend WHEN its run rows are read THEN each is a card swatch with the bar of its own state and no outline', () => {
+    const runRows = TASK_LEGEND_ROWS.filter((row) => row.id.startsWith('run-'));
+    const looks = runRows.map((row) => [row.swatch.accentBar, row.swatch.fill, row.swatch.stroke, row.swatch.outline]);
+
+    expect(looks).toStrictEqual(RUN_STATES.map((state) => [`run-${state}`, 'cardFill', 'cardFrame', null]));
   });
 });

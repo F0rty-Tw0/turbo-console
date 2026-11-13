@@ -15,7 +15,8 @@ export const BOX_SWATCH: LegendSwatch = {
   isDimmed: false,
   isNested: false,
   hasPlate: false,
-  halo: null
+  halo: null,
+  accentBar: null
 };
 
 /** A file node: a box with corners half its 20 px height. */

@@ -1,3 +1,4 @@
+import { accentBarPartOf } from './legend-accent.util.ts';
 import { NODE_BORDER_PX, NODE_HEIGHT } from '../common/graph.const.ts';
 import type { LegendColour, LegendSwatch, SvgPart } from '../common/legend.type.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
@@ -54,6 +55,8 @@ const paletteOf = (colors: ThemeColors): Palette => {
     highlighted: colors.highlighted,
     cached: colors.cached,
     affected: colors.affected,
+    cardFill: colors.cardFill,
+    cardFrame: colors.cardFrame,
     label: colors.label,
     selectionFill,
     selectionLabel,
@@ -137,6 +140,15 @@ const innerPartOf = (swatch: LegendSwatch, palette: Palette): SvgPart => {
   return partOf('text', attrs, 'Aa');
 };
 
+/** The card's run-colour top bar, none for a swatch with no `accentBar`. */
+const accentPartsOf = (swatch: LegendSwatch, box: FrameBox, palette: Palette): SvgPart[] => {
+  if (swatch.accentBar === null) return [];
+
+  const bar = accentBarPartOf(box, swatch.strokePx, palette[swatch.accentBar]);
+
+  return [bar];
+};
+
 const boxPartsOf = (swatch: LegendSwatch, palette: Palette): SvgPart[] => {
   const box = boxOf(swatch);
   const halo = haloPartsOf(swatch, box, palette);
@@ -146,9 +158,10 @@ const boxPartsOf = (swatch: LegendSwatch, palette: Palette): SvgPart[] => {
   const fill = swatch.fill === null ? 'none' : palette[swatch.fill];
   const attrs: Attrs = { ...place, stroke: palette[swatch.stroke], 'stroke-width': String(swatch.strokePx), fill, ...dash };
   const frame = partOf('rect', attrs);
+  const accent = accentPartsOf(swatch, box, palette);
   const inner = innerPartOf(swatch, palette);
 
-  return [...halo, ...outline, frame, inner];
+  return [...halo, ...outline, frame, ...accent, inner];
 };
 
 const lineOf = (stroke: string, widthPx: number, dash: Attrs): SvgPart => {
