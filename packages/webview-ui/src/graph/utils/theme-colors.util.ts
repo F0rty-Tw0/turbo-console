@@ -40,7 +40,8 @@ const selectionOf = (fill: string, label: string, background: string): Selection
  * 3:1 against the background there. Run outlines take the Tasks tree's status colours; a cached Atomizer file takes the chart purple; the affected halo takes the git modified colour.
  * A selected node takes the list's active selection colours when the theme sets both, as high contrast themes do not;
  * the fill is read unrounded, so its alpha blends over the editor background at full precision.
- * A task card takes the input background and border, the contrast border in a high contrast theme.
+ * A task card takes the input background, laid over the editor background like the selection fill, and the input border,
+ * the contrast border in a high contrast theme.
  */
 export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
   const valueOf = (name: string, fallback: string): string => {
@@ -70,7 +71,8 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
   const selectionFill = read('--vscode-list-activeSelectionBackground').trim();
   const selectionLabel = valueOf('--vscode-list-activeSelectionForeground', '');
   const selection = selectionOf(selectionFill, selectionLabel, background);
-  const cardFill = valueOf('--vscode-input-background', background);
+  const inputFill = read('--vscode-input-background').trim() || background;
+  const cardFill = cytoscapeColourOf(opaqueColourOf(inputFill, background));
   const inputBorder = valueOf('--vscode-input-border', frame);
   const cardFrame = contrastBorder === '' ? inputBorder : contrastBorder;
   const colors: ThemeColors = {
