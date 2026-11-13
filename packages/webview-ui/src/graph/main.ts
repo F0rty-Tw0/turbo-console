@@ -11,7 +11,7 @@ import { createElk } from './data-access/elk-client.ts';
 import { breadthfirstPositions } from './data-access/fallback-layout.ts';
 import { createGraphProbe, exposeProbe } from './data-access/graph-probe.ts';
 import { createGraphView } from './data-access/graph-view.ts';
-import { boxTitleSizerOf, labelSizer, taskSizerOf, textMeasure } from './data-access/label-measure.ts';
+import { boxTitleSizerOf, cardSizerOf, labelSizer, taskSizerOf, textMeasure } from './data-access/label-measure.ts';
 import { createLayoutRunner } from './data-access/layout-runner.ts';
 import { createViewStateSaver } from './data-access/view-state-saver.ts';
 import { createGraphController } from './domain-logic/graph-controller.ts';
@@ -71,6 +71,8 @@ const createFlow: FlowFactory = (view: GraphView): FlowControl => {
 const controllerOf = (glyphs: boolean): GraphController => {
   const measure = textMeasure(`${NODE_FONT_SIZE}px ${fontFamily}`);
   const glyphMeasure = textMeasure(`${NODE_FONT_SIZE}px codicon, ${fontFamily}`);
+  const boldMeasure = textMeasure(`bold ${NODE_FONT_SIZE}px ${fontFamily}`);
+  const boldGlyphMeasure = textMeasure(`bold ${NODE_FONT_SIZE}px codicon, ${fontFamily}`);
   const chipMeasure = textMeasure(`${ATOM_CHIP_FONT_PX}px ${fontFamily}`);
   const createView: GraphViewFactory = (container, handlers) => createGraphView(container, handlers, fontFamily, glyphs);
   const controller = createGraphController({
@@ -83,6 +85,7 @@ const controllerOf = (glyphs: boolean): GraphController => {
     sizeOf: labelSizer(measure),
     taskSizeOf: taskSizerOf(glyphs, measure, glyphMeasure),
     boxTitleSizeOf: boxTitleSizerOf(glyphs, measure, glyphMeasure),
+    cardSizeOf: cardSizerOf(glyphs, boldMeasure, boldGlyphMeasure),
     chipMeasure,
     glyphs,
     measure,

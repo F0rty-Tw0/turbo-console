@@ -5,6 +5,7 @@ import { GraphHost } from './graph-host.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import { GraphPage } from './graph.po.ts';
 import { ATOM_CHIP_GLYPH_GAP_PX, ATOM_CHIP_GLYPH_PX } from '../../src/graph/common/graph-atom.const.ts';
+import { CARD_MIN_WIDTH } from '../../src/graph/common/graph-card.const.ts';
 import { CODICON_FONT, CODICON_WAIT_MS, GLYPH_CODE_POINTS, GLYPH_FALLBACK_WARNING } from '../../src/graph/common/graph-glyph.const.ts';
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 import type { GraphOptions } from '../common/graph.type.ts';
@@ -125,12 +126,13 @@ export class GraphTaskGlyphs {
     return width ?? 0;
   }
 
-  /** The plain task is wider here than on `held`, a page whose font never came; the umbrella, wide from its chip row, is wider by the two chip glyph slots. */
+  /** The plain task is a card of the minimum width here and on `held`, a page whose font never came; the umbrella, wide from its chip row, is wider here by the two chip glyph slots. */
   public async expectWidthsAgainst(held: GraphTaskGlyphs): Promise<void> {
     const here = await this.sizes();
     const there = await held.sizes();
 
-    expect(here.task).toBeGreaterThan(there.task);
+    expect(here.task).toBe(CARD_MIN_WIDTH);
+    expect(there.task).toBe(CARD_MIN_WIDTH);
     expect(here.umbrella).toBe(there.umbrella + CHIP_GLYPH_SLOTS_PX);
   }
 

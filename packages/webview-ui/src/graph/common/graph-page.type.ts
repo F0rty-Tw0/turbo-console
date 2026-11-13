@@ -13,7 +13,7 @@ import type { NodeSize } from './node-size.type.ts';
 import type { PageElements } from './page-elements.type.ts';
 import type { Paint } from './paint.type.ts';
 import type { AtomCanvas, TaskCanvas } from './task-canvas.type.ts';
-import type { TaskChipDeps } from './task-chip-deps.type.ts';
+import type { CardSizerDeps, TaskChipDeps } from './task-chip-deps.type.ts';
 import type { TaskControlsViews } from './task-controls.type.ts';
 import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
@@ -205,7 +205,7 @@ type GraphControllerOwnDeps = {
   readonly background: () => string;
 };
 
-export type GraphControllerDeps = GraphControllerOwnDeps & TaskChipDeps;
+export type GraphControllerDeps = GraphControllerOwnDeps & TaskChipDeps & CardSizerDeps;
 
 /** The graph the page shows: its hash, package names and records, its drawable edges, and its package labels. */
 export type DrawnGraph = {

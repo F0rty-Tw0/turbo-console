@@ -78,6 +78,17 @@ describe('FEATURE: GraphTaskLayout keyed by the naming bits', () => {
     });
   });
 
+  describe('GIVEN a saved camera whose layout key is the current key at layout version 6, before the status cards', () => {
+    it('WHEN the layout is shown THEN it opens once and the camera saved under the card-less sizes is not restored', async () => {
+      const layout = layoutSavedAs(keyOf(UNGROUPED).replace(/,7\]$/, ',6]'), false);
+
+      await showAndLand(layout, UNGROUPED, 0);
+
+      expect(rig.view.open).toHaveBeenCalledOnce();
+      expect(rig.view.setViewport).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a saved camera whose layout key equals the request key and was not fitted', () => {
     it('WHEN the layout is shown THEN the saved camera is restored', async () => {
       const layout = layoutSavedAs(keyOf(UNGROUPED), false);
