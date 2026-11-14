@@ -78,6 +78,32 @@ test.describe('FEATURE: graph task card clock', () => {
   );
 
   test(
+    'GIVEN app#build running for 64 s, row 2 holds 1m 4s while the page is hidden and reads 1m 9s at once when it shows again',
+    { annotation: CLOCK },
+    async ({ page, pageClock }): Promise<void> => {
+      const clock = new GraphTaskClock(page);
+
+      await test.step('WHEN runs arrive with app#build running for 64 s', async (): Promise<void> => {
+        await clock.sendRuns({ [CHOSEN]: 'running' }, { [CHOSEN]: 64_000 });
+      });
+
+      await test.step('THEN row 2 reads Running · 1m 4s', async (): Promise<void> => clock.expectRowTwo(CHOSEN, 'Running · 1m 4s'));
+
+      await test.step('WHEN the page is hidden and the page clock moves 5000 ms', async (): Promise<void> => {
+        await clock.hidePage();
+        await pageClock.tick(5000);
+      });
+
+      await test.step('THEN row 2 still reads Running · 1m 4s', async (): Promise<void> =>
+        clock.expectRowTwo(CHOSEN, 'Running · 1m 4s'));
+
+      await test.step('WHEN the page shows again, with no further tick', async (): Promise<void> => clock.showPage());
+
+      await test.step('THEN row 2 reads Running · 1m 9s', async (): Promise<void> => clock.expectRowTwo(CHOSEN, 'Running · 1m 9s'));
+    }
+  );
+
+  test(
     'GIVEN app#build continuous for 1h 2m 3s, row 2 reads Continuous · 1h 2m and 1h 3m a minute later',
     { annotation: CLOCK },
     async ({ page, pageClock }): Promise<void> => {

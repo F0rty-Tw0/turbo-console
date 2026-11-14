@@ -6,6 +6,20 @@ import type { GraphRunsMessage } from '../../src/bridge/common/graph-message.typ
 import type { TaskRuns } from '../../src/graph/common/task-details.type.ts';
 import { postReply } from '../test/utils/graph-host-state.spec.util.ts';
 
+/** Shadows both visibility getters on the document itself, so `document.hidden` reads true, then tells the page. */
+const HIDE_PAGE = `
+  Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+  Object.defineProperty(document, 'hidden', { value: true, configurable: true });
+  document.dispatchEvent(new Event('visibilitychange'));
+`;
+
+/** Drops the shadows, so the prototype getters read the real visible page again, then tells the page. */
+const SHOW_PAGE = `
+  delete document.visibilityState;
+  delete document.hidden;
+  document.dispatchEvent(new Event('visibilitychange'));
+`;
+
 /** The clock on a task card's row 2: posts clocked runs and reads the drawn row back, with no frame wait, so it is safe under a paused page clock. */
 export class GraphTaskClock {
   private readonly page: Page;
@@ -38,6 +52,14 @@ export class GraphTaskClock {
 
   public async expectRowTwo(id: string, text: string): Promise<void> {
     await expect.poll(async (): Promise<string | null> => this.rowTwoOf(id)).toBe(text);
+  }
+
+  public async hidePage(): Promise<void> {
+    await this.page.evaluate(HIDE_PAGE);
+  }
+
+  public async showPage(): Promise<void> {
+    await this.page.evaluate(SHOW_PAGE);
   }
 
   private async post(message: GraphRunsMessage): Promise<void> {
