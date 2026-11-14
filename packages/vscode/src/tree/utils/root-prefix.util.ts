@@ -58,11 +58,15 @@ export const prefixedRootTextOf = (pkg: PackageNode, rootPrefixed: boolean): str
   return rootTextOf(label);
 };
 
-/** The text the graph sizes the `//` box for: `(root) <full label>` in both scope modes; `undefined` where the root reads no prefix. */
+/**
+ * The text the graph sizes the `//` box for: `(root) ` plus the label cleaned and cut to LABEL_MAX, in both scope modes;
+ * `undefined` where the root reads no prefix. The prefix sits outside the cut, so the text is never narrower than the
+ * label shown. It is never drawn, so it may exceed LABEL_MAX.
+ */
 export const rootSizeNameOf = (pkg: PackageNode, rootPrefixed: boolean): string | undefined => {
   const label = prefixedRootLabelOf(pkg, rootPrefixed);
 
   if (label === null) return undefined;
 
-  return cleanText(`${ROOT_PREFIX}${label}`, LABEL_MAX);
+  return `${ROOT_PREFIX}${cleanText(label, LABEL_MAX)}`;
 };

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { hasOtherPackagesOf, rootSizeNameOf } from './root-prefix.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
+import { ROOT_PREFIX } from '../common/root-prefix.const.ts';
 import { PACKAGE_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 
 const ROOT: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '' };
@@ -32,11 +33,10 @@ describe('FEATURE: rootSizeNameOf', () => {
     expect(rootSizeNameOf(pkg, rootPrefixed)).toBe(expected);
   });
 
-  it('GIVEN a label longer than LABEL_MAX THEN the text keeps the prefix and fits LABEL_MAX', () => {
+  it('GIVEN a label longer than LABEL_MAX THEN the text is the prefix plus the whole cleaned label', () => {
     const long: PackageNode = { ...ROOT, label: 'a'.repeat(LABEL_MAX + 10) };
     const text = rootSizeNameOf(long, true);
 
-    expect(text?.startsWith('(root) a')).toBe(true);
-    expect(text).toHaveLength(LABEL_MAX);
+    expect(text).toBe(`${ROOT_PREFIX}${'a'.repeat(LABEL_MAX - 1)}…`);
   });
 });
