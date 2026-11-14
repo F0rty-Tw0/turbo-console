@@ -213,9 +213,6 @@ jobs:
       - name: Publish to Open VSX
         env:
           VERSION: ${{ needs.package.outputs.version }}
-          CHANNEL: ${{ needs.package.outputs.channel }}
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: |
-          flags=()
-          if [ "$CHANNEL" = 'pre-release' ]; then flags+=(--pre-release); fi
-          pnpm --filter turbo-console exec ovsx publish "$RUNNER_TEMP/release/turbo-console-$VERSION.vsix" "${flags[@]}"
+        # No --pre-release: ovsx ignores it for a prebuilt .vsix, whose manifest already carries the marker.
+        run: pnpm --filter turbo-console exec ovsx publish "$RUNNER_TEMP/release/turbo-console-$VERSION.vsix"
