@@ -4,9 +4,6 @@ import { cardClockText } from '../utils/card-clock.util.ts';
 
 const TICK_MS = 1000;
 
-/** A camera move this recent keeps the tick from writing: any restyle drops Cytoscape's texture cache for the pan. */
-const MOVING_MS = 200;
-
 const baseEntryOf = (entry: [string, number], at: number): [string, CardClockBase] => {
   const [id, elapsedMs] = entry;
   const base: CardClockBase = { elapsedMs, receivedAt: at };
@@ -32,16 +29,13 @@ const isSameClocks = (next: TaskClocks, last: TaskClocks): boolean => {
 /**
  * Keeps every clocked card's text current with one `setInterval(1000)`, armed only while a base exists. Each base is the
  * host's elapsed ms and the page time it arrived; a text is extrapolated with the page's own `now`. A hidden page's tick
- * writes nothing and `shown` catches up; a runs message writes even while hidden or moving, so an ended run never keeps a
- * clock. A tick within `MOVING_MS` of a camera move writes nothing either, so the first tick after the view settles writes
- * the whole current record.
+ * writes nothing and `shown` catches up; a runs message writes even while hidden, so an ended run never keeps a clock.
  */
 export class GraphCardClock {
   private readonly deps: CardClockDeps;
   private bases = new Map<string, CardClockBase>();
   private written: TaskClocks = {};
   private timer: number | null = null;
-  private movedAt = Number.NEGATIVE_INFINITY;
 
   public constructor(deps: CardClockDeps) {
     this.deps = deps;
@@ -56,11 +50,6 @@ export class GraphCardClock {
     this.sync();
   }
 
-  /** The camera moved: the ticks that fall within `MOVING_MS` write nothing. */
-  public moved(): void {
-    this.movedAt = this.deps.now();
-  }
-
   public shown(): void {
     const isHidden = this.deps.isHidden();
     const isIdle = isHidden || this.bases.size === 0;
@@ -71,14 +60,11 @@ export class GraphCardClock {
   }
 
   private tick(): void {
-    const at = this.deps.now();
-    const isMoving = at - this.movedAt < MOVING_MS;
     const isHidden = this.deps.isHidden();
-    const isIdle = isMoving || isHidden;
 
-    if (isIdle) return;
+    if (isHidden) return;
 
-    this.write(at);
+    this.write(this.deps.now());
   }
 
   /** Writes the texts at `at` only when they differ from the last ones written. */
