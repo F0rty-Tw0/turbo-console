@@ -51,14 +51,17 @@ describe('FEATURE: vsixProblems', () => {
     });
   });
 
-  describe('GIVEN the list without THIRD-PARTY-NOTICES.md', () => {
-    it('WHEN it is checked THEN the only problem is the missing notices', () => {
-      const files = FULL_LIST.filter((file) => file !== 'THIRD-PARTY-NOTICES.md');
+  describe('GIVEN a list without a root file', () => {
+    it.each([['LICENSE'], ['CHANGELOG.md'], ['THIRD-PARTY-NOTICES.md'], ['media/icon.png']])(
+      'WHEN %s is missing THEN the only problem names it',
+      (name) => {
+        const files = FULL_LIST.filter((file) => file !== name);
 
-      const problems = vsixProblems(files);
+        const problems = vsixProblems(files);
 
-      expect(problems).toStrictEqual(['missing THIRD-PARTY-NOTICES.md']);
-    });
+        expect(problems).toStrictEqual([`missing ${name}`]);
+      }
+    );
   });
 
   describe('GIVEN a list without codicon.ttf', () => {
