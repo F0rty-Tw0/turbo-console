@@ -8,8 +8,8 @@ import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { NO_GRAPH_PREDICTIONS, RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphFeeds, GraphPorts, RunSources, TaskFeedGate } from '../common/graph.type.ts';
 import { predictionsOf } from '../utils/graph-predictions.util.ts';
-import { launchesOf, runsTextOf } from '../utils/graph-run-clock.util.ts';
-import { runIdsOf, runsMessageOf } from '../utils/graph-tasks.util.ts';
+import { runsTextOf } from '../utils/graph-run-clock.util.ts';
+import { clockedRunsOf, runIdsOf } from '../utils/graph-tasks.util.ts';
 
 const isSinglePackageState = (state: GraphState): boolean => state.kind === 'graph' && state.singlePackage;
 
@@ -162,8 +162,8 @@ export class GraphTaskFeed {
     const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds(), wallNow: ports.wallNow() };
     const predictions = this.predictionsToPost(isForced);
     const affected = this.affectedFeed.toPost(isForced);
-    const message = runsMessageOf(root, ids, sources, predictions);
-    const runsText = runsTextOf(message, launchesOf(root, ids, sources));
+    const { message, launches } = clockedRunsOf(root, ids, sources, predictions);
+    const runsText = runsTextOf(message, launches);
     const isRepeat = !isForced && predictions === null && affected === undefined && runsText === this.lastRuns;
 
     if (isRepeat) return;

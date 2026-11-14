@@ -1,22 +1,8 @@
 import type { GraphRunsMessage } from '@turbo-console/webview-ui';
 
-import type { RunSources } from '../common/graph.type.ts';
+import type { ClockedRuns } from '../common/graph.type.ts';
 
-type Launches = Readonly<Record<string, number>>;
-
-/** Task id → `launchedAt` of its own run, for each of the `ids` whose own run is `running`; an owned run never counts. */
-export const launchesOf = (root: string, ids: string[], sources: Pick<RunSources, 'get'>): Launches => {
-  const launchOf = (id: string): [string, number][] => {
-    const own = sources.get(root, id);
-
-    if (own?.state !== 'running') return [];
-
-    return [[id, own.launchedAt]];
-  };
-  const entries = ids.flatMap(launchOf);
-
-  return Object.fromEntries(entries);
-};
+type Launches = ClockedRuns['launches'];
 
 /** `message` itself when nothing is launched, else with `elapsed`: ms since each launch at `wallNow`, never below 0. */
 export const withElapsedOf = (message: GraphRunsMessage, launches: Launches, wallNow: number): GraphRunsMessage => {

@@ -1,5 +1,12 @@
 import type { ImportScanInput, PackageImportScan } from '@turbo-console/core';
-import type { GraphHostMessage, GraphState, GraphTask, GraphWebviewMessage, LayoutGrouping } from '@turbo-console/webview-ui';
+import type {
+  GraphHostMessage,
+  GraphRunsMessage,
+  GraphState,
+  GraphTask,
+  GraphWebviewMessage,
+  LayoutGrouping
+} from '@turbo-console/webview-ui';
 
 import type { GraphLayoutCacheEntry } from './graph-cache.type.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
@@ -162,4 +169,10 @@ export type RunSources = {
   readonly recordsOf: ProgressRecords['recordsOf'];
   readonly persistentIds: ReadonlySet<string>;
   readonly wallNow: number;
+};
+
+/** A runs message and the launches its `elapsed` came from: task id → `launchedAt` of each listed id whose own run is `running`. */
+export type ClockedRuns = {
+  readonly message: GraphRunsMessage;
+  readonly launches: Readonly<Record<string, number>>;
 };

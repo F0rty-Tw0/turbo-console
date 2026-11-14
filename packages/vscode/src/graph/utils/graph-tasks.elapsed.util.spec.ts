@@ -1,7 +1,7 @@
 import type { TaskNode } from '@turbo-console/core';
 import { describe, expect, it } from 'vitest';
 
-import { runsMessageOf } from './graph-tasks.util.ts';
+import { clockedRunsOf } from './graph-tasks.util.ts';
 import type { ProgressOwner, ProgressRecord } from '../../run/common/run-progress.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
@@ -27,6 +27,14 @@ const BUILD_PASSED: RunEntry = { ...BUILD_RUNNING, state: 'passed', endedAt: 150
 const BUILD_STOPPED: RunEntry = { ...BUILD_RUNNING, state: 'stopped', endedAt: 1100 };
 const BUILD_FAILED_TO_START: RunEntry = { ...BUILD_RUNNING, state: 'failed-to-start', endedAt: 1100 };
 const BUILD_IN_A = recordOf('ui#build', 'running', 1000, A);
+const BUILD_PASSED_LINT: RunEntry = { ...BUILD_PASSED, taskId: 'ui#lint' };
+const PROTOTYPE_IDS = ['__proto__', 'constructor'];
+
+const runningEntryOf = (taskId: string): RunEntry => {
+  const entry: RunEntry = { ...BUILD_RUNNING, taskId };
+
+  return entry;
+};
 
 const sourcesOf = (entries: RunEntry[], records: ProgressRecord[], persistentIds: string[], wallNow: number): RunSources => {
   const get = (root: string, taskId: string): RunEntry | undefined =>
@@ -49,6 +57,7 @@ const DEV_OWNED_BY_A = { 'ui#dev': 'a#build' };
 const BUILD_64_S = { 'ui#build': 64_000 };
 const BUILD_0_S = { 'ui#build': 0 };
 const DEV_3723_S = { 'ui#dev': 3_723_000 };
+const BUILD_LAUNCH = { 'ui#build': 1000 };
 
 const ROWS: ElapsedRow[] = [
   {
@@ -142,7 +151,7 @@ describe('FEATURE: the elapsed key of the runs message (spec §2, D1, D3)', () =
       ({ entries, records, persistentIds, wallNow, runs, elapsed }) => {
         const sources = sourcesOf(entries, records, persistentIds, wallNow);
 
-        const message = runsMessageOf('/ws', ['ui#build', 'ui#dev'], sources);
+        const { message } = clockedRunsOf('/ws', ['ui#build', 'ui#dev'], sources);
 
         expect(message.runs).toStrictEqual(runs);
         expect(message.elapsed).toStrictEqual(elapsed);
@@ -150,7 +159,7 @@ describe('FEATURE: the elapsed key of the runs message (spec §2, D1, D3)', () =
     );
 
     it.each(ROWS.filter((row) => row.elapsed === undefined))('WHEN built over $given THEN the message has no elapsed key', (row) => {
-      const message = runsMessageOf(
+      const { message } = clockedRunsOf(
         '/ws',
         ['ui#build', 'ui#dev'],
         sourcesOf(row.entries, row.records, row.persistentIds, row.wallNow)
@@ -165,9 +174,29 @@ describe('FEATURE: the elapsed key of the runs message (spec §2, D1, D3)', () =
       const records = [recordOf('ui#dev', 'running', 1000, A)];
       const sources = sourcesOf([BUILD_RUNNING], records, ['ui#dev'], 65_000);
 
-      const message = runsMessageOf('/ws', ['ui#build', 'ui#dev'], sources);
+      const { message } = clockedRunsOf('/ws', ['ui#build', 'ui#dev'], sources);
 
       expect(message).toStrictEqual({ type: 'runs', runs: BOTH_WORDS, owners: DEV_OWNED_BY_A, elapsed: BUILD_64_S });
+    });
+
+    it('WHEN the runs are clocked THEN the launches name the own run only, with its launchedAt', () => {
+      const records = [recordOf('ui#dev', 'running', 1000, A)];
+      const sources = sourcesOf([BUILD_RUNNING, BUILD_PASSED_LINT], records, ['ui#dev'], 65_000);
+
+      const { launches } = clockedRunsOf('/ws', ['ui#build', 'ui#dev', 'ui#lint'], sources);
+
+      expect(launches).toStrictEqual(BUILD_LAUNCH);
+    });
+  });
+
+  describe('GIVEN own runs of ids named like Object.prototype members', () => {
+    it('WHEN the runs are clocked THEN each launch is an own key', () => {
+      const entries = PROTOTYPE_IDS.map(runningEntryOf);
+
+      const { launches } = clockedRunsOf('/ws', PROTOTYPE_IDS, sourcesOf(entries, [], [], 65_000));
+
+      expect(Object.keys(launches)).toStrictEqual(PROTOTYPE_IDS);
+      expect(Object.getPrototypeOf(launches)).toBe(Object.prototype);
     });
   });
 
@@ -175,7 +204,7 @@ describe('FEATURE: the elapsed key of the runs message (spec §2, D1, D3)', () =
     it('WHEN the message is built THEN elapsed does not name it', () => {
       const ghost: RunEntry = { ...BUILD_RUNNING, taskId: 'ghost#build' };
 
-      const message = runsMessageOf('/ws', ['ui#build'], sourcesOf([ghost], [], [], 65_000));
+      const { message } = clockedRunsOf('/ws', ['ui#build'], sourcesOf([ghost], [], [], 65_000));
 
       expect(message).not.toHaveProperty('elapsed');
     });
