@@ -6,7 +6,14 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { SAVED_FLAT_STUB } from '../test/stubs/graph-layouts.stub.ts';
-import { BARE_HIDDEN_STUB, BARE_LABELS_STUB, BARE_SHOWN_STUB } from '../test/stubs/scope-labels.stub.ts';
+import {
+  BARE_HIDDEN_STUB,
+  BARE_LABELS_STUB,
+  BARE_SHOWN_STUB,
+  ROOT_SIZED_HIDDEN_STUB,
+  ROOT_SIZED_SHOWN_STUB,
+  ROOT_SIZE_TEXTS_STUB
+} from '../test/stubs/scope-labels.stub.ts';
 import { settled, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
 type RelabelSide = {
@@ -54,6 +61,27 @@ describe('FEATURE: GraphPackageSide relabel', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN the root // with a sizeName drawn with scopes shown', () => {
+    beforeEach(async () => {
+      rig = rigOf();
+      rig.side.show(ROOT_SIZED_SHOWN_STUB, 1);
+      await settled();
+    });
+
+    it('WHEN first drawn THEN the view gets the root sizing text with its labels', () => {
+      const { calls } = vi.mocked(rig.view.setLabels).mock;
+
+      expect(calls.at(0)?.[1]).toStrictEqual(ROOT_SIZE_TEXTS_STUB);
+    });
+
+    it('WHEN the same hash arrives with scopes hidden THEN the relabel gets the root sizing text again', async () => {
+      rig.side.show(ROOT_SIZED_HIDDEN_STUB, 2);
+      await settled();
+
+      expect(rig.view.setLabels).toHaveBeenLastCalledWith(expect.anything(), ROOT_SIZE_TEXTS_STUB);
+    });
   });
 
   describe('GIVEN h1 drawn with scopes shown, then h1 again with scopes hidden', () => {
