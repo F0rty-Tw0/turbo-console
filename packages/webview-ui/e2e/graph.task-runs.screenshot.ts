@@ -27,6 +27,7 @@ test.describe('FEATURE: theme screenshots of task run bars', () => {
     }): Promise<void> => {
       const shots = new GraphShots(page);
       const clock = new PageClock(page);
+      const taskClock = new GraphTaskClock(page);
 
       await test.step('GIVEN a page clock that runs until the canvas has settled', async (): Promise<void> => clock.installRunning());
 
@@ -39,7 +40,7 @@ test.describe('FEATURE: theme screenshots of task run bars', () => {
         shots.sendRuns(TASK_RUNS_SHOT_STUB, TASK_RUNS_SHOT_ELAPSED));
 
       await test.step('THEN its row 2 reads Running · 1m 4s', async (): Promise<void> =>
-        new GraphTaskClock(page).expectRowTwo(TARGET_LIKE_CHOSEN_TASK, 'Running · 1m 4s'));
+        taskClock.expectRowTwo(TARGET_LIKE_CHOSEN_TASK, 'Running · 1m 4s'));
 
       await test.step(`AND the page matches task-runs-${name}.png`, async (): Promise<void> =>
         expect(page).toHaveScreenshot(`task-runs-${name}.png`));
