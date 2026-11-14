@@ -35,6 +35,8 @@ export type GraphPorts = {
   readonly showInfo: (text: string) => void;
   readonly showError: (text: string) => void;
   readonly executeCommand: (command: string, arg: unknown) => Promise<void>;
+  /** The wall clock `Date.now()`, the clock `RunEntry.launchedAt` is on. */
+  readonly wallNow: () => number;
 };
 
 type PositionsTag = { readonly type: 'positions' };
@@ -154,9 +156,10 @@ export type GraphFeeds = {
   readonly toggles: GraphToggles;
 };
 
-/** What the runs message of a graph reads: the own run of an id, the progress records that name it and the ids whose running word is `continuous`. */
+/** What the runs message of a graph reads: the own run of an id, the progress records that name it, the ids whose running word is `continuous` and the wall clock read once for the message. */
 export type RunSources = {
   readonly get: RunLookup;
   readonly recordsOf: ProgressRecords['recordsOf'];
   readonly persistentIds: ReadonlySet<string>;
+  readonly wallNow: number;
 };

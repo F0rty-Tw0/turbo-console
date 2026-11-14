@@ -52,7 +52,7 @@ const lookupOf = (...entries: RunEntry[]): RunLookup => {
 
 /** The `runs` map of the message over own runs only: no progress records and no persistent ids. */
 const runWordsOf = (root: string, ids: string[], get: RunLookup): GraphRunsMessage['runs'] => {
-  const sources: RunSources = { get, recordsOf: () => [], persistentIds: new Set() };
+  const sources: RunSources = { get, recordsOf: () => [], persistentIds: new Set(), wallNow: 0 };
   const message = runsMessageOf(root, ids, sources);
 
   return message.runs;
@@ -327,7 +327,7 @@ describe('FEATURE: graph runs words (own runs only)', () => {
   });
 
   describe('GIVEN the three-argument call', () => {
-    const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set() };
+    const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set(), wallNow: 0 };
 
     it('WHEN the message is built THEN it has no predictions key', () => {
       expect('predictions' in runsMessageOf(ROOT, LISTED, sources)).toBe(false);
@@ -336,7 +336,7 @@ describe('FEATURE: graph runs words (own runs only)', () => {
 
   describe('GIVEN a fourth predictions argument', () => {
     it('WHEN the message is built THEN it carries the argument as predictions', () => {
-      const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set() };
+      const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set(), wallNow: 0 };
 
       const message = runsMessageOf(ROOT, LISTED, sources, PREDICTED);
 
@@ -345,7 +345,7 @@ describe('FEATURE: graph runs words (own runs only)', () => {
 
     it('WHEN a#build runs under web#build THEN the message carries its owner and the predictions together', () => {
       const running = recordOf('a#build', 'running', 1000);
-      const sources: RunSources = { get: lookupOf(), recordsOf: () => [running], persistentIds: new Set() };
+      const sources: RunSources = { get: lookupOf(), recordsOf: () => [running], persistentIds: new Set(), wallNow: 0 };
       const expected: GraphRunsMessage = { type: 'runs', runs: A_RUNNING, owners: A_OWNED_BY_WEB, predictions: PREDICTED };
 
       const message = runsMessageOf(ROOT, LISTED, sources, PREDICTED);

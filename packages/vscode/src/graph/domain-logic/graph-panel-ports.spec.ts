@@ -135,4 +135,14 @@ describe('FEATURE: the ports of one graph panel', () => {
       expect(fakes.info).toHaveBeenCalledExactlyOnceWith('graph layout elk 12 ms');
     });
   });
+
+  describe('GIVEN the wall clock', () => {
+    it('WHEN wallNow is read THEN it is Date.now, the clock RunEntry.launchedAt is on', () => {
+      const dateNow = vi.spyOn(Date, 'now').mockReturnValue(123_456);
+
+      expect(ports.wallNow()).toBe(123_456);
+
+      dateNow.mockRestore();
+    });
+  });
 });

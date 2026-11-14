@@ -3,9 +3,10 @@ import { vi } from 'vitest';
 import { memoryCacheMock } from './graph-host.mock.ts';
 import type { GraphLayoutCacheEntry } from '../../common/graph-cache.type.ts';
 import type { GraphPorts } from '../../common/graph.type.ts';
+import { GRAPH_WALL_NOW } from '../common/graph-ports.const.ts';
 import { importScanOf } from '../utils/import-scan.spec.util.ts';
 
-/** Every port a spy; the caches are an in-memory map keyed by `cacheKeyOf` and seeded with `cached`, and `openDetails`, `openAt` and `writeBytes` resolve, `readText` and `pickSaveUri` give `null`, `realPath` gives its input, `scanImports` resolves an empty scan. */
+/** Every port a spy; the caches are an in-memory map keyed by `cacheKeyOf` and seeded with `cached`, and `openDetails`, `openAt` and `writeBytes` resolve, `readText` and `pickSaveUri` give `null`, `realPath` gives its input, `scanImports` resolves an empty scan, `wallNow` gives `GRAPH_WALL_NOW`. */
 export const graphPortsMock = (cached: Map<string, GraphLayoutCacheEntry> = new Map()): GraphPorts => {
   const { readCache, writeCache } = memoryCacheMock(cached);
   const openDetails = vi.fn<GraphPorts['openDetails']>().mockResolvedValue(undefined);
@@ -32,7 +33,8 @@ export const graphPortsMock = (cached: Map<string, GraphLayoutCacheEntry> = new 
     writeBytes,
     showInfo: vi.fn(),
     showError: vi.fn(),
-    executeCommand
+    executeCommand,
+    wallNow: vi.fn<GraphPorts['wallNow']>(() => GRAPH_WALL_NOW)
   };
 
   return ports;

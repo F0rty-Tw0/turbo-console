@@ -21,7 +21,7 @@ const isRefused = (request: GraphShowRequest, state: GraphState): boolean => {
 
 type TaskFeedDeps = {
   readonly root: string;
-  readonly ports: Pick<GraphPorts, 'post' | 'log'>;
+  readonly ports: Pick<GraphPorts, 'post' | 'log' | 'wallNow'>;
   readonly gate: TaskFeedGate;
   readonly feeds: GraphFeeds;
 };
@@ -158,7 +158,7 @@ export class GraphTaskFeed {
     const { root, feeds, gate, ports } = this.deps;
     const { runs, progress } = feeds;
     const recordsOf = (recordsRoot: string, taskId: string): ProgressRecord[] => progress.recordsOf(recordsRoot, taskId);
-    const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds() };
+    const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds(), wallNow: ports.wallNow() };
     const predictions = this.predictionsToPost(isForced);
     const affected = this.affectedFeed.toPost(isForced);
     const message = runsMessageOf(root, ids, sources, predictions);

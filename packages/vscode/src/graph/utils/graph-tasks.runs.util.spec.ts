@@ -59,6 +59,11 @@ const DEV_PASSED = { 'ui#dev': 'passed' };
 
 const DEV_OWNED_BY_A = { 'ui#dev': 'a#build' };
 
+/** Launched at 1000, read at the `sourcesOf` wall clock 65 000. */
+const BUILD_ELAPSED = { 'ui#build': 64_000 };
+
+const DEV_ELAPSED = { 'ui#dev': 64_000 };
+
 const LISTED_IDS = ['b#x', 'a#x', 'c#x'];
 
 const PROTOTYPE_IDS = ['__proto__', 'constructor'];
@@ -117,7 +122,7 @@ const sourcesOf = (entries: RunEntry[], records: ProgressRecord[], persistentIds
     entries.find((entry) => entry.root === root && entry.taskId === taskId);
   const recordsOf = (root: string, taskId: string): ProgressRecord[] =>
     records.filter((record) => record.owner.root === root && record.taskId === taskId);
-  const sources: RunSources = { get, recordsOf, persistentIds: new Set(persistentIds) };
+  const sources: RunSources = { get, recordsOf, persistentIds: new Set(persistentIds), wallNow: 65_000 };
 
   return sources;
 };
@@ -176,7 +181,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
 
       const message = runsMessageOf('/ws', ['ui#dev'], sources);
 
-      expect(message).toStrictEqual({ type: 'runs', runs: DEV_CONTINUOUS });
+      expect(message).toStrictEqual({ type: 'runs', runs: DEV_CONTINUOUS, elapsed: DEV_ELAPSED });
     });
 
     it('WHEN it runs under a#build THEN its word is continuous and its owner is a#build', () => {
@@ -240,7 +245,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
 
       const message = runsMessageOf('/ws', ['ui#build'], sources);
 
-      expect(message).toStrictEqual({ type: 'runs', runs: BUILD_RUNNING });
+      expect(message).toStrictEqual({ type: 'runs', runs: BUILD_RUNNING, elapsed: BUILD_ELAPSED });
     });
   });
 
@@ -259,7 +264,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
     it('WHEN the message is built for /ws THEN both are called with /ws and the id', () => {
       const get = vi.fn((): RunEntry | undefined => undefined);
       const recordsOf = vi.fn((): ProgressRecord[] => []);
-      const sources: RunSources = { get, recordsOf, persistentIds: new Set() };
+      const sources: RunSources = { get, recordsOf, persistentIds: new Set(), wallNow: 0 };
 
       runsMessageOf('/ws', ['ui#build'], sources);
 

@@ -38,7 +38,8 @@ export const graphPortsOf = (
     writeBytes: host.writeBytes,
     showInfo: host.showInfo,
     showError: host.showError,
-    executeCommand: host.executeCommand
+    executeCommand: host.executeCommand,
+    wallNow: () => Date.now()
   };
 
   return ports;
