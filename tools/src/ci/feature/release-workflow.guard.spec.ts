@@ -24,6 +24,9 @@ const CHECKOUT_BARE = [...STEPS, '          fetch-depth: 0'];
 const CHECKOUT_SAFE = [...STEPS, '          persist-credentials: false'];
 const RUN_INLINE = [...JOB, '      - run: echo ${{ github.ref_name }}'];
 const RUN_BLOCK = [...JOB, '      - run: |', '          echo "$TAG"', '          echo ${{ github.ref_name }}'];
+const RUN_INDICATOR = [...JOB, '      - run: |2', '          echo "$TAG"', '          echo ${{ github.ref_name }}'];
+const RUN_HEADER_COMMENT = [...JOB, '      - run: | # package', '          echo ${{ github.ref_name }}'];
+const RUN_PLAIN_CONTINUED = [...JOB, '      - run: echo "$TAG"', '          ${{ github.ref_name }}'];
 const RUN_SAFE = [...JOB, '      - run: |', '          echo "$TAG"', '        env:', '          TAG: ${{ github.ref_name }}'];
 const TOKEN_JOB_ENV = [...JOB, '    env:', '      VSCE_PAT: ${{ secrets.VSCE_PAT }}'];
 const TOKEN_RUN = [...JOB, '      - run: vsce publish --pat "$VSCE_PAT"'];
@@ -183,6 +186,26 @@ describe('FEATURE: Release workflow guard', () => {
       const result = injectionProblemsOf(joined(RUN_BLOCK));
 
       expect(result).toHaveLength(1);
+    });
+  });
+
+  describe('GIVEN run bodies under other block shapes', () => {
+    it('WHEN the header has an indentation indicator THEN the expression line is listed', () => {
+      const result = injectionProblemsOf(joined(RUN_INDICATOR));
+
+      expect(result).toStrictEqual(['run body holds an expression: echo ${{ github.ref_name }}']);
+    });
+
+    it('WHEN the header has a trailing comment THEN the expression line is listed', () => {
+      const result = injectionProblemsOf(joined(RUN_HEADER_COMMENT));
+
+      expect(result).toStrictEqual(['run body holds an expression: echo ${{ github.ref_name }}']);
+    });
+
+    it('WHEN a plain value continues on the next line THEN the expression line is listed', () => {
+      const result = injectionProblemsOf(joined(RUN_PLAIN_CONTINUED));
+
+      expect(result).toStrictEqual(['run body holds an expression: ${{ github.ref_name }}']);
     });
   });
 

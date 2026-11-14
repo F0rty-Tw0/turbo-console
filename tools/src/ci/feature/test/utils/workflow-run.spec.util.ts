@@ -1,13 +1,17 @@
 import { indentOf, isBlank, isCode } from './workflow-lines.spec.util.ts';
 
 const RUN = /^(\s*)(- )?run:\s*(.*)$/;
-const BLOCK_SCALAR = /^[|>][+-]?$/;
 const TOKEN = /\b(VSCE_PAT|OVSX_PAT)\b/;
 const STEP_ENV = /^ {8}env:\s*$/;
 
 const isTokenLine = (line: string): boolean => isCode(line) && TOKEN.test(line);
 
-/** The lines of every `run:` body: the inline value, or the block-scalar lines indented deeper than the key. */
+const endsBlock = (line: string, keyIndent: number): boolean => !isBlank(line) && indentOf(line) <= keyIndent;
+
+/**
+ * The lines of every `run:` body: the inline value plus every line indented deeper than the key. That covers a block
+ * scalar under any header (`|2`, `| # note`, `>-`) and a plain value continued on the next lines.
+ */
 const runBodiesOf = (lines: string[]): string[] => {
   const bodies: string[] = [];
 
@@ -19,14 +23,11 @@ const runBodiesOf = (lines: string[]): string[] => {
     const keyIndent = (match[1]?.length ?? 0) + (match[2] === undefined ? 0 : 2);
     const inline = match[3] ?? '';
     const rest = lines.slice(index + 1);
-    const end = rest.findIndex((next) => !isBlank(next) && indentOf(next) <= keyIndent);
+    const end = rest.findIndex((next) => endsBlock(next, keyIndent));
     const head = rest.slice(0, end);
     const block = end < 0 ? rest : head;
 
-    const single = [inline];
-    const body = BLOCK_SCALAR.test(inline) ? block : single;
-
-    bodies.push(...body);
+    bodies.push(inline, ...block);
   });
 
   return bodies;
