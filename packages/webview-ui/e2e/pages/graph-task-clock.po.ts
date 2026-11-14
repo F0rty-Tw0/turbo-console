@@ -50,6 +50,15 @@ export class GraphTaskClock {
     return rows[1] ?? null;
   }
 
+  /** Row 2 of `id` once it differs from `before`; the unchanged row when `timeoutMs` passes first. */
+  public async rowTwoChangedFrom(id: string, before: string | null, timeoutMs: number): Promise<string | null> {
+    const changed = expect.poll(async (): Promise<string | null> => this.rowTwoOf(id), { timeout: timeoutMs }).not.toBe(before);
+
+    await changed.catch((): void => undefined);
+
+    return this.rowTwoOf(id);
+  }
+
   public async expectRowTwo(id: string, text: string): Promise<void> {
     await expect.poll(async (): Promise<string | null> => this.rowTwoOf(id)).toBe(text);
   }
