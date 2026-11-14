@@ -3,3 +3,7 @@
 !dist/webview/**
 !package.json
 !README.md
+!LICENSE
+!CHANGELOG.md
+!THIRD-PARTY-NOTICES.md
+!media/icon.png

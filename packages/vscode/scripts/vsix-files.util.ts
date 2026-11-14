@@ -1,4 +1,4 @@
-import { REQUIRED_FILES, WEBVIEW_DIR, WEBVIEW_FILES } from '../common/vsix.const.ts';
+import { REQUIRED_FILES, WEBVIEW_DIR, WEBVIEW_FILES } from './common/vsix.const.ts';
 
 const isStrayWebviewFile = (file: string): boolean =>
   file.startsWith(WEBVIEW_DIR) && !file.endsWith('.map') && !WEBVIEW_FILES.includes(file);

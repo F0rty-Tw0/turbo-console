@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { vsixProblems } from './vsix-files.spec.util.ts';
+import { vsixProblems } from './vsix-files.util.ts';
 
 const FULL_LIST = [
   'package.json',
+  'LICENSE',
+  'CHANGELOG.md',
+  'THIRD-PARTY-NOTICES.md',
+  'media/icon.png',
   'dist/extension.cjs',
   'dist/webview/details/index.html',
   'dist/webview/details/main.js',
@@ -45,6 +49,19 @@ describe('FEATURE: vsixProblems', () => {
 
       expect(problems).toStrictEqual([]);
     });
+  });
+
+  describe('GIVEN a list without a root file', () => {
+    it.each([['LICENSE'], ['CHANGELOG.md'], ['THIRD-PARTY-NOTICES.md'], ['media/icon.png']])(
+      'WHEN %s is missing THEN the only problem names it',
+      (name) => {
+        const files = FULL_LIST.filter((file) => file !== name);
+
+        const problems = vsixProblems(files);
+
+        expect(problems).toStrictEqual([`missing ${name}`]);
+      }
+    );
   });
 
   describe('GIVEN a list without codicon.ttf', () => {

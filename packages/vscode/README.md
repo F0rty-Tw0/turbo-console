@@ -13,6 +13,9 @@ Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 - **Palette:** Run Task… picks a task and then a package. Run Turbo Task… (also the play button on an open `package.json`) runs one of that package's tasks.
 - **Common Commands view:** Run Task in All Packages…, Run Affected… and Refresh.
 - **Package and task rows:** Copy Command puts `turbo run <task> --filter=<package>` on the clipboard, quoted for your terminal's shell. Open package.json, Reveal in Explorer and Copy Path are there too.
+- **Package Details page:** Open Package Details shows a package's Turbo tasks and Scripts as cards with their cache status and run state.
+- **Package and Task Graph:** Show Package Graph and Show Task Graph… draw the dependency graphs, with run state and a live clock on task cards.
+- **Show Cache Prediction and Show Affected:** the first marks which tasks turbo would replay from cache, the second marks the packages your changes touch.
 - **Help and Feedback view:** links to the project page on GitHub, the bug tracker and the Turborepo docs.
 
 ## Good to know
@@ -22,8 +25,6 @@ Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 - Run Affected… needs a git repository, because turbo works out what changed from git.
 - `turboConsole.turboPath` is machine-scoped: set it in your user settings. A workspace's `.vscode/settings.json` cannot change which turbo binary runs.
 
-## Compatibility
+## Requirements
 
-- `engines.vscode`: `^1.139.0` (VS Code stable 1.141.0 minus two minors, checked 2026-10-11)
-- `@types/vscode`: `1.138.0` (no 1.139.x release exists; 1.138.0 is the newest that does not exceed `engines.vscode`)
-- `@types/vscode` is pinned literally (not via the catalog) because vsce 4.0.0 cannot parse `catalog:` and fails with "Failed to parse semver of @types/vscode".
+VS Code 1.139 or later. turbo 2.11.7 or a later 2.11 release, installed in the workspace (`node_modules/turbo`) or set in `turboConsole.turboPath`.

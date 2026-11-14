@@ -32,7 +32,15 @@ const REQUIRED_GRAPH_NAMES = [
 
 const REQUIRED_GRAPH_FILES = REQUIRED_GRAPH_NAMES.map((name) => `${GRAPH_DIR}${name}`);
 
-export const REQUIRED_FILES = ['dist/extension.cjs', ...REQUIRED_DETAILS_FILES, ...REQUIRED_GRAPH_FILES];
+export const REQUIRED_FILES = [
+  'dist/extension.cjs',
+  'LICENSE',
+  'CHANGELOG.md',
+  'THIRD-PARTY-NOTICES.md',
+  'media/icon.png',
+  ...REQUIRED_DETAILS_FILES,
+  ...REQUIRED_GRAPH_FILES
+];
 
 export const WEBVIEW_FILES = [
   ...REQUIRED_DETAILS_FILES,
@@ -43,4 +51,8 @@ export const WEBVIEW_FILES = [
   `${DETAILS_DIR}SIMPLE-ICONS-DISCLAIMER.md`
 ];
 
-export const VSIX_FILES_PATH = '.vsix/files.txt';
+export const VSIX_DIR = '.vsix';
+
+export const VSIX_PATH = `${VSIX_DIR}/turbo-console.vsix`;
+
+export const VSIX_FILES_PATH = `${VSIX_DIR}/files.txt`;

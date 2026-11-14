@@ -17,6 +17,10 @@
     "test": {
       "dependsOn": ["^build"]
     },
+    "turbo-console#test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/LICENSE"]
+    },
     "@turbo-console/tools#test": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.github/workflows/ci.yml", "$TURBO_ROOT$/pnpm-workspace.yaml"]
