@@ -23,7 +23,12 @@
     },
     "@turbo-console/tools#test": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.github/workflows/ci.yml", "$TURBO_ROOT$/pnpm-workspace.yaml"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.github/workflows/ci.yml",
+        "$TURBO_ROOT$/.github/workflows/release.yml",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
     },
     "contract": {
       "dependsOn": ["^build"],

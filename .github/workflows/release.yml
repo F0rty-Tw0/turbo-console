@@ -1,0 +1,221 @@
+# Packages the .vsix on a v*.*.* tag push and publishes it. A workflow_dispatch run is a dry run: it packages and uploads the
+# artifact only, with the tag guards skipped and no release or store job.
+#
+# To turn on store publishing (user steps, all outside this repo's code):
+#   1. Create the Marketplace publisher and the Open VSX namespace.
+#   2. Set "publisher" in packages/vscode/package.json to that publisher.
+#   3. Create the `store` environment with the secrets VSCE_PAT and OVSX_PAT. Set Deployment branches and tags to
+#      "Selected branches and tags" and add the tag pattern v*.*.* only (no branch pattern). A required reviewer is
+#      optional and recommended.
+#   4. Add a repo ruleset so only admins may create v* tags.
+#   5. Set the repo variables PUBLISH_MARKETPLACE and/or PUBLISH_OPENVSX to true.
+# Without the tag-only environment rule, anyone with write access could push a branch whose release.yml drops the `if:`,
+# dispatch it and read the tokens.
+#
+# The tag name, the version and the channel reach `run:` bodies only through `env:`: git allows $( ), backticks and ; in
+# tag names, so a `${{ }}` inside a `run:` body would run them as shell.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      channel: ${{ steps.release.outputs.channel }}
+
+    steps:
+      # SHA = actions/checkout@v7.0.1
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # SHA = pnpm/action-setup@v6.1.0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+
+      # SHA = actions/setup-node@v7.1.0
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Only a tag push checks the tag, master ancestry and CI; a dispatch run skips the guards.
+      - name: Guard the tag and write the notes
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IS_TAG: ${{ github.event_name == 'push' }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ "$IS_TAG" = 'true' ]; then
+            node tools/src/release/release.ts --tag "$TAG"
+          else
+            node tools/src/release/release.ts
+          fi
+
+      - name: Build
+        run: pnpm turbo run build --filter=turbo-console...
+
+      - name: Package
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+          VSCE_PRE_RELEASE: ${{ steps.release.outputs.channel == 'pre-release' && '1' || '0' }}
+        run: |
+          pnpm --filter turbo-console run package
+          mv packages/vscode/.vsix/turbo-console.vsix "turbo-console-$VERSION.vsix"
+          sha256sum "turbo-console-$VERSION.vsix" > "turbo-console-$VERSION.vsix.sha256"
+
+      # SHA = actions/upload-artifact@v7.0.2
+      - name: Upload the release files
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: release
+          path: |
+            turbo-console-*.vsix
+            turbo-console-*.vsix.sha256
+            release-notes.md
+          if-no-files-found: error
+          retention-days: 30
+
+  github-release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    # Runs no repo code: no checkout and no install, only the downloaded artifact and gh.
+    steps:
+      # SHA = actions/download-artifact@v7.0.0
+      - name: Download the release files
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: release
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.package.outputs.version }}
+          CHANNEL: ${{ needs.package.outputs.channel }}
+        run: |
+          flags=()
+          if [ "$CHANNEL" = 'pre-release' ]; then flags+=(--prerelease); fi
+          gh release create "$TAG" --verify-tag --title "Turbo Console $VERSION" --notes-file release-notes.md "${flags[@]}" \
+            "turbo-console-$VERSION.vsix" "turbo-console-$VERSION.vsix.sha256"
+
+  publish-marketplace:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && vars.PUBLISH_MARKETPLACE == 'true'
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: store
+    permissions:
+      contents: read
+
+    steps:
+      # SHA = actions/checkout@v7.0.1
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      # SHA = pnpm/action-setup@v6.1.0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+
+      # SHA = actions/setup-node@v7.1.0
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # --ignore-scripts: this job holds the store token, and it needs only the pinned vsce binary.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      # SHA = actions/download-artifact@v7.0.0
+      - name: Download the release files
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: release
+          path: ${{ runner.temp }}/release
+
+      - name: Publish to the Marketplace
+        env:
+          VERSION: ${{ needs.package.outputs.version }}
+          CHANNEL: ${{ needs.package.outputs.channel }}
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          flags=()
+          if [ "$CHANNEL" = 'pre-release' ]; then flags+=(--pre-release); fi
+          pnpm --filter turbo-console exec vsce publish --packagePath "$RUNNER_TEMP/release/turbo-console-$VERSION.vsix" "${flags[@]}"
+
+  publish-openvsx:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && vars.PUBLISH_OPENVSX == 'true'
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: store
+    permissions:
+      contents: read
+
+    steps:
+      # SHA = actions/checkout@v7.0.1
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      # SHA = pnpm/action-setup@v6.1.0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+
+      # SHA = actions/setup-node@v7.1.0
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # --ignore-scripts: this job holds the store token, and it needs only the pinned ovsx binary.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      # SHA = actions/download-artifact@v7.0.0
+      - name: Download the release files
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: release
+          path: ${{ runner.temp }}/release
+
+      - name: Publish to Open VSX
+        env:
+          VERSION: ${{ needs.package.outputs.version }}
+          CHANNEL: ${{ needs.package.outputs.channel }}
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          flags=()
+          if [ "$CHANNEL" = 'pre-release' ]; then flags+=(--pre-release); fi
+          pnpm --filter turbo-console exec ovsx publish "$RUNNER_TEMP/release/turbo-console-$VERSION.vsix" "${flags[@]}"
