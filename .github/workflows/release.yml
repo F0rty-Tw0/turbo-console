@@ -149,7 +149,8 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: .nvmrc
-          cache: pnpm
+          # No cache: a store pnpm cache could be poisoned by an earlier master CI run, and this job holds the token.
+          package-manager-cache: false
 
       # --ignore-scripts: this job holds the store token, and it needs only the pinned vsce binary.
       - name: Install dependencies
@@ -197,7 +198,8 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: .nvmrc
-          cache: pnpm
+          # No cache: a store pnpm cache could be poisoned by an earlier master CI run, and this job holds the token.
+          package-manager-cache: false
 
       # --ignore-scripts: this job holds the store token, and it needs only the pinned ovsx binary.
       - name: Install dependencies

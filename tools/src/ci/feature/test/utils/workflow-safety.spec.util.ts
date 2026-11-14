@@ -5,6 +5,9 @@ const PACKAGE_JOB = 'package';
 const NO_JOB: Job = { name: '', lines: [] };
 const STORE_JOBS = ['publish-marketplace', 'publish-openvsx'];
 const INSTALL_LINE = 'run: pnpm install --frozen-lockfile --ignore-scripts';
+const ENVIRONMENT_STORE = /^ {4}environment: store\s*$/;
+const CACHE_LINE = /^\s*cache:|uses:\s*actions\/cache(?:\/[\w-]+)?@/;
+const CACHE_OFF_LINE = 'package-manager-cache: false';
 const GUARD_STEP_ID = 'id: release';
 const GUARD_IF = `if [ "$IS_TAG" = 'true' ]; then`;
 const GUARD_TAG_RUN = 'node tools/src/release/release.ts --tag "$TAG"';
@@ -48,4 +51,23 @@ export const installProblemsOf = (workflow: string): string[] => {
   const lacking = (name: string): string[] => missingLines(name, jobNamed(workflow, name)?.lines ?? [], [INSTALL_LINE]);
 
   return STORE_JOBS.flatMap(lacking);
+};
+
+const isStoreJob = (job: Job): boolean => job.lines.some((line) => isCode(line) && ENVIRONMENT_STORE.test(line));
+
+const cacheProblemsOfJob = (job: Job): string[] => {
+  const code = codeOf(job.lines);
+  const restores = code.filter((line) => CACHE_LINE.test(line));
+  const found = restores.map((line) => `${job.name} restores a cache: ${line}`);
+
+  const missing = missingLines(job.name, job.lines, [CACHE_OFF_LINE]);
+
+  return [...found, ...missing];
+};
+
+/** A job with `environment: store` restores no cache: a poisoned pnpm store would run its vsce or ovsx binary beside the token. */
+export const cacheProblemsOf = (workflow: string): string[] => {
+  const storeJobs = jobsOf(workflow).filter(isStoreJob);
+
+  return storeJobs.flatMap(cacheProblemsOfJob);
 };

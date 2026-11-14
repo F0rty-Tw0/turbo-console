@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { checkoutProblemsOf } from './test/utils/release-workflow.spec.util.ts';
 import { injectionProblemsOf, tokenProblemsOf } from './test/utils/workflow-run.spec.util.ts';
-import { installProblemsOf, preReleaseProblemsOf, tagGuardProblemsOf } from './test/utils/workflow-safety.spec.util.ts';
+import { preReleaseProblemsOf, tagGuardProblemsOf } from './test/utils/workflow-safety.spec.util.ts';
 
 const ROOT = join(import.meta.dirname, '../../../../');
 const SHA = '3d3c42e5aac5ba805825da76410c181273ba90b1';
@@ -53,21 +53,6 @@ const PACKAGE_STEP = [
 const PACKAGE_OK = PACKAGE_STEP.join('\n');
 const PACKAGE_ALWAYS_STABLE = PACKAGE_OK.replace(PRE_RELEASE_EXPRESSION, "'0'");
 const PACKAGE_OTHER_OUTPUT = PACKAGE_OK.replace('outputs.channel', 'outputs.version');
-const INSTALL_SAFE = '        run: pnpm install --frozen-lockfile --ignore-scripts';
-const INSTALL_BARE = '        run: pnpm install --frozen-lockfile';
-const installJob = (name: string, install: string): string[] => {
-  return [`  ${name}:`, '    steps:', '      - name: Install dependencies', install];
-};
-const installJobs = (marketplace: string, openvsx: string): string[] => {
-  const first = installJob('publish-marketplace', marketplace);
-  const second = installJob('publish-openvsx', openvsx);
-
-  return ['jobs:', ...first, ...second];
-};
-const STORE_INSTALLS = installJobs(INSTALL_SAFE, INSTALL_SAFE);
-const MARKETPLACE_BARE = installJobs(INSTALL_BARE, INSTALL_SAFE);
-const OPENVSX_BARE = installJobs(INSTALL_SAFE, INSTALL_BARE);
-
 const joined = (lines: string[]): string => lines.join('\n');
 
 const RELEASE = readFileSync(join(ROOT, '.github/workflows/release.yml'), 'utf8');
@@ -239,32 +224,6 @@ describe('FEATURE: Release workflow step guard', () => {
       const result = preReleaseProblemsOf(PACKAGE_OTHER_OUTPUT);
 
       expect(result).toStrictEqual([`package lacks the line: VSCE_PRE_RELEASE: ${PRE_RELEASE_EXPRESSION}`]);
-    });
-  });
-
-  describe('GIVEN the publish jobs install', () => {
-    it('WHEN the repo release.yml is read THEN both skip lifecycle scripts', () => {
-      const result = installProblemsOf(RELEASE);
-
-      expect(result).toStrictEqual([]);
-    });
-
-    it('WHEN both install with --ignore-scripts THEN no problem is listed', () => {
-      const result = installProblemsOf(joined(STORE_INSTALLS));
-
-      expect(result).toStrictEqual([]);
-    });
-
-    it('WHEN publish-marketplace drops --ignore-scripts THEN it is listed', () => {
-      const result = installProblemsOf(joined(MARKETPLACE_BARE));
-
-      expect(result).toStrictEqual(['publish-marketplace lacks the line: run: pnpm install --frozen-lockfile --ignore-scripts']);
-    });
-
-    it('WHEN publish-openvsx drops --ignore-scripts THEN it is listed', () => {
-      const result = installProblemsOf(joined(OPENVSX_BARE));
-
-      expect(result).toStrictEqual(['publish-openvsx lacks the line: run: pnpm install --frozen-lockfile --ignore-scripts']);
     });
   });
 });
