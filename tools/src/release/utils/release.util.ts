@@ -57,3 +57,18 @@ const NOT_ANCESTOR_STATUS = 1;
 export const isNotAncestorError = (error: unknown): boolean => {
   return error instanceof Error && 'status' in error && error.status === NOT_ANCESTOR_STATUS;
 };
+
+/** Runs the ancestry check: it passing is true, git's "not an ancestor" exit is false, and any other failure is rethrown. */
+export const isOnMaster = (run: () => void): boolean => {
+  try {
+    run();
+
+    return true;
+  } catch (error) {
+    const isNotAncestor = isNotAncestorError(error);
+
+    if (isNotAncestor) return false;
+
+    throw error;
+  }
+};

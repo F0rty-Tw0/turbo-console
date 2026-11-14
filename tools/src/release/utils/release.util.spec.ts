@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { channelOf, guardProblems, isNotAncestorError, releaseNotes } from './release.util.ts';
+import { channelOf, guardProblems, isNotAncestorError, isOnMaster, releaseNotes } from './release.util.ts';
 import type { CiRun, GuardInput } from '../common/release.type.ts';
 
 const CHANGELOG = '# Changelog\n\n## 0.1.0 (pre-release)\n\n- a\n- b\n\n## 0.0.9\n\n- old\n';
@@ -159,6 +159,40 @@ describe('FEATURE: ancestry check failure', () => {
       const result = isNotAncestorError({ status: 1 });
 
       expect(result).toBe(false);
+    });
+  });
+});
+
+const failingWith = (status: number): (() => void) => {
+  const fail = (): void => {
+    throw Object.assign(new Error('Command failed'), { status });
+  };
+
+  return fail;
+};
+
+describe('FEATURE: master ancestry', () => {
+  describe('GIVEN the ancestry check passes', () => {
+    it('WHEN the commit is checked THEN it is on master', () => {
+      const result = isOnMaster(() => undefined);
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('GIVEN the ancestry check exits 1', () => {
+    it('WHEN the commit is checked THEN it is not on master', () => {
+      const result = isOnMaster(failingWith(1));
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('GIVEN the ancestry check exits 128', () => {
+    it('WHEN the commit is checked THEN the failure is rethrown', () => {
+      const check = (): boolean => isOnMaster(failingWith(128));
+
+      expect(check).toThrow('Command failed');
     });
   });
 });

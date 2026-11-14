@@ -5,7 +5,7 @@ import { parseArgs } from 'node:util';
 import { array, object, string } from 'zod';
 
 import type { GuardInput } from './common/release.type.ts';
-import { channelOf, guardProblems, isNotAncestorError, releaseNotes } from './utils/release.util.ts';
+import { channelOf, guardProblems, isOnMaster, releaseNotes } from './utils/release.util.ts';
 
 const MANIFEST_PATH = 'packages/vscode/package.json';
 const CHANGELOG_PATH = 'packages/vscode/CHANGELOG.md';
@@ -16,18 +16,10 @@ const runsSchema = array(object({ conclusion: string() }));
 
 const git = (args: string[]): string => execFileSync('git', args, { encoding: 'utf8' }).trim();
 
-const isOnMaster = (): boolean => {
-  try {
-    execFileSync('git', ['merge-base', '--is-ancestor', 'HEAD', 'origin/master'], { stdio: ['ignore', 'ignore', 'inherit'] });
+const ANCESTRY_ARGS = ['merge-base', '--is-ancestor', 'HEAD', 'origin/master'];
 
-    return true;
-  } catch (error) {
-    const isNotAncestor = isNotAncestorError(error);
-
-    if (isNotAncestor) return false;
-
-    throw error;
-  }
+const checkAncestry = (): void => {
+  execFileSync('git', ANCESTRY_ARGS, { stdio: ['ignore', 'ignore', 'inherit'] });
 };
 
 const ciRunsOf = (sha: string): GuardInput['ciRuns'] => {
@@ -47,7 +39,7 @@ if (values.tag !== undefined) {
   const input: GuardInput = {
     tag: values.tag,
     version,
-    isAncestor: isOnMaster(),
+    isAncestor: isOnMaster(checkAncestry),
     ciRuns: ciRunsOf(git(['rev-parse', 'HEAD']))
   };
   const problems = guardProblems(input);
