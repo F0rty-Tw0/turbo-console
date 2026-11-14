@@ -3,6 +3,8 @@ import type { Job } from '../common/workflow.type.ts';
 
 const PACKAGE_JOB = 'package';
 const NO_JOB: Job = { name: '', lines: [] };
+const STORE_JOBS = ['publish-marketplace', 'publish-openvsx'];
+const INSTALL_LINE = 'run: pnpm install --frozen-lockfile --ignore-scripts';
 const GUARD_STEP_ID = 'id: release';
 const GUARD_IF = `if [ "$IS_TAG" = 'true' ]; then`;
 const GUARD_TAG_RUN = 'node tools/src/release/release.ts --tag "$TAG"';
@@ -39,4 +41,11 @@ export const preReleaseProblemsOf = (workflow: string): string[] => {
   const lines = jobNamed(workflow, PACKAGE_JOB)?.lines ?? [];
 
   return missingLines(PACKAGE_JOB, lines, [PRE_RELEASE_LINE]);
+};
+
+/** A job that holds a store token installs without lifecycle scripts, so a dependency cannot run code beside the token. */
+export const installProblemsOf = (workflow: string): string[] => {
+  const lacking = (name: string): string[] => missingLines(name, jobNamed(workflow, name)?.lines ?? [], [INSTALL_LINE]);
+
+  return STORE_JOBS.flatMap(lacking);
 };
