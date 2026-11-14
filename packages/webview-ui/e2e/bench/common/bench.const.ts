@@ -16,7 +16,8 @@ type BenchRowKey =
   | 'taskAtomsPanCpu'
   | 'taskAtomsExpandedPanCpu'
   | 'taskCardsPanFit'
-  | 'taskCardsPanReadable';
+  | 'taskCardsPanReadable'
+  | 'taskCardsPanReadableClocks';
 
 const OPEN_COLD: BenchRowDef = { name: 'graph open cold target-like', gate: true, samples: 7 };
 const OPEN_CACHED: BenchRowDef = { name: 'graph open cached target-like', gate: true, samples: 7 };
@@ -33,12 +34,13 @@ const TASK_ATOMS_PAN_CPU: BenchRowDef = { name: 'graph task atoms pan cpu', gate
 const TASK_ATOMS_EXPANDED_PAN_CPU: BenchRowDef = { name: 'graph task atoms expanded pan cpu', gate: false, samples: 5 };
 const TASK_CARDS_PAN_FIT: BenchRowDef = { name: 'graph task cards pan cpu fit', gate: false, samples: 3 };
 const TASK_CARDS_PAN_READABLE: BenchRowDef = { name: 'graph task cards pan cpu readable', gate: false, samples: 3 };
+const TASK_CARDS_PAN_READABLE_CLOCKS: BenchRowDef = { name: 'graph task cards pan cpu readable clocks', gate: false, samples: 3 };
 
 /**
  * Rows of spec 3.1 in order, then the two task-mode rows, which record without gating until a CI baseline exists, then
  * the two rows of the default first open: the target-like graph with nothing saved, which opens grouped, then the two
  * task-atoms pan rows, the Atomizer umbrella collapsed and expanded, which do not gate either, then the two 240-task
- * card pan rows, which do not gate.
+ * card pan rows, which do not gate, then the clocked readable row, which does not gate either.
  * The bench job writes each as `webview-ui/<name>`.
  * The open rows time message receipt to the first render after layout; the page load is not in them.
  */
@@ -57,7 +59,8 @@ export const BENCH_ROWS: Readonly<Record<BenchRowKey, BenchRowDef>> = {
   taskAtomsPanCpu: TASK_ATOMS_PAN_CPU,
   taskAtomsExpandedPanCpu: TASK_ATOMS_EXPANDED_PAN_CPU,
   taskCardsPanFit: TASK_CARDS_PAN_FIT,
-  taskCardsPanReadable: TASK_CARDS_PAN_READABLE
+  taskCardsPanReadable: TASK_CARDS_PAN_READABLE,
+  taskCardsPanReadableClocks: TASK_CARDS_PAN_READABLE_CLOCKS
 };
 
 /** Page options of a first open: nothing saved, so the page starts from its defaults. */
