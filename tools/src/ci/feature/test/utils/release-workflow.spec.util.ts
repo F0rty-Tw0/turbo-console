@@ -1,10 +1,12 @@
 import { indentOf, isBlank, isCode, jobsOf, stepsOf } from './workflow-lines.spec.util.ts';
+import type { Job } from '../common/workflow.type.ts';
 
 const USES = /^\s*(?:- )?uses:\s*(\S+)/;
 const PINNED = /^([\w.-]+\/[\w.-]+)@[0-9a-f]{40}$/;
 const SHA_COMMENT = /^\s*# SHA = ([\w.-]+\/[\w.-]+)@v\S+/;
 const PERMISSIONS = /^permissions:\s*$/;
-const WRITE = /^\s*contents: write\s*$/;
+const WRITE_GRANT = /(?:^\s*|[{,]\s*)[\w-]+:\s*['"]?write(?:-all)?['"]?\s*(?:[,}]|$)/;
+const CONTENTS_WRITE = /^\s*contents:\s*['"]?write['"]?\s*$/;
 const GITHUB_RELEASE = 'github-release';
 
 const usesOf = (line: string): string | null => USES.exec(line)?.[1] ?? null;
@@ -63,20 +65,30 @@ const topPermissionsOf = (workflow: string): string[] => {
   return entries.map((line) => line.trim());
 };
 
+const isWriteGrant = (line: string): boolean => isCode(line) && WRITE_GRANT.test(line);
+
+const grantsWrite = (job: Job): boolean => job.lines.some(isWriteGrant);
+
+const isContentsWrite = (line: string): boolean => isCode(line) && CONTENTS_WRITE.test(line);
+
+/** Any write grant counts: `write-all`, a flow map, any scope, extra spaces or quotes. Only `github-release` may hold one. */
 export const permissionProblemsOf = (workflow: string): string[] => {
   const problems: string[] = [];
   const top = topPermissionsOf(workflow).join(', ');
   const jobs = jobsOf(workflow);
-  const writers = jobs.filter((job) => job.lines.some((line) => WRITE.test(line)));
-  const lines = workflow.split('\n');
-  const writes = lines.filter((line) => WRITE.test(line));
+  const writers = jobs.filter(grantsWrite);
+  const grants = workflow.split('\n').filter(isWriteGrant);
   const writerNames = writers.map((job) => job.name).join(', ');
+  const release = jobs.find((job) => job.name === GITHUB_RELEASE);
+  const releaseHasContents = release?.lines.some(isContentsWrite) ?? false;
 
   if (top !== 'contents: read') problems.push(`top-level permissions is not exactly contents: read: ${top}`);
 
-  if (writes.length !== 1) problems.push(`contents: write appears ${writes.length} times, expected 1`);
+  if (grants.length !== 1) problems.push(`write grants appear ${grants.length} times, expected 1`);
 
-  if (writerNames !== GITHUB_RELEASE) problems.push(`contents: write sits in: ${writerNames}`);
+  if (writerNames !== GITHUB_RELEASE) problems.push(`write grants sit in: ${writerNames}`);
+
+  if (!releaseHasContents) problems.push(`${GITHUB_RELEASE} lacks contents: write`);
 
   return problems;
 };

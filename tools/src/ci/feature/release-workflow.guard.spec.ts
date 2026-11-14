@@ -15,10 +15,18 @@ const PIN_NO_COMMENT = [`      - uses: actions/checkout@${SHA}`];
 const PIN_STALE_COMMENT = [...PINNED_STEP, '', `      - uses: actions/setup-node@${SHA}`];
 const JOB = ['jobs:', '  build:', '    steps:'];
 const STORE_JOB = ["    if: vars.PUBLISH_MARKETPLACE == 'true'", '    environment: store'];
+const RELEASE_JOB = ['  github-release:', '    permissions:', '      contents: write'];
 const PERMISSIONS_OK = ['permissions:', '  contents: read', '', ...JOB];
-const PERMISSIONS_WRITE = ['permissions:', '  contents: write', '', ...JOB];
-const WRITE_IN_PACKAGE = [...PERMISSIONS_OK, '    permissions:', '      contents: write'];
+const PERMISSIONS_GOOD = [...PERMISSIONS_OK, ...RELEASE_JOB];
+const PERMISSIONS_WRITE = ['permissions:', '  contents: write', '', ...JOB, ...RELEASE_JOB];
+const WRITE_IN_PACKAGE = [...PERMISSIONS_OK, '    permissions:', '      contents: write', ...RELEASE_JOB];
 const WRITE_TWICE = [...PERMISSIONS_OK, '  github-release:', '    permissions:', '      contents: write', '      contents: write'];
+const WRITE_ALL_IN_PACKAGE = [...PERMISSIONS_OK, '    permissions: write-all', ...RELEASE_JOB];
+const WRITE_FLOW_IN_PACKAGE = [...PERMISSIONS_OK, '    permissions: { contents: write }', ...RELEASE_JOB];
+const WRITE_SPACED_IN_PACKAGE = [...PERMISSIONS_OK, '    permissions:', '      contents:  write', ...RELEASE_JOB];
+const WRITE_OTHER_SCOPE = [...PERMISSIONS_OK, '    permissions:', '      id-token: write', ...RELEASE_JOB];
+const RELEASE_WITHOUT_WRITE = [...PERMISSIONS_OK, '  github-release:', '    permissions:', '      contents: read'];
+const RELEASE_WRITE_ALL = [...PERMISSIONS_OK, '  github-release:', '    permissions: write-all'];
 const STEPS = [...JOB, `      - uses: actions/checkout@${SHA}`, '        with:'];
 const CHECKOUT_BARE = [...STEPS, '          fetch-depth: 0'];
 const CHECKOUT_SAFE = [...STEPS, '          persist-credentials: false'];
@@ -83,22 +91,71 @@ describe('FEATURE: Release workflow guard', () => {
       expect(result).toStrictEqual([]);
     });
 
+    it('WHEN only github-release grants contents: write THEN no problem is listed', () => {
+      const result = permissionProblemsOf(joined(PERMISSIONS_GOOD));
+
+      expect(result).toStrictEqual([]);
+    });
+
     it('WHEN the top block grants write THEN it is listed', () => {
       const result = permissionProblemsOf(joined(PERMISSIONS_WRITE));
 
-      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result).toStrictEqual([
+        'top-level permissions is not exactly contents: read: contents: write',
+        'write grants appear 2 times, expected 1'
+      ]);
     });
 
     it('WHEN another job than github-release grants write THEN it is listed', () => {
       const result = permissionProblemsOf(joined(WRITE_IN_PACKAGE));
 
-      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result).toStrictEqual(['write grants appear 2 times, expected 1', 'write grants sit in: build, github-release']);
     });
 
     it('WHEN github-release grants write twice THEN it is listed', () => {
       const result = permissionProblemsOf(joined(WRITE_TWICE));
 
-      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result).toStrictEqual(['write grants appear 2 times, expected 1']);
+    });
+
+    it('WHEN github-release has no contents: write THEN it is listed', () => {
+      const result = permissionProblemsOf(joined(RELEASE_WITHOUT_WRITE));
+
+      expect(result).toStrictEqual([
+        'write grants appear 0 times, expected 1',
+        'write grants sit in: ',
+        'github-release lacks contents: write'
+      ]);
+    });
+
+    it('WHEN github-release uses write-all THEN it lacks contents: write', () => {
+      const result = permissionProblemsOf(joined(RELEASE_WRITE_ALL));
+
+      expect(result).toStrictEqual(['github-release lacks contents: write']);
+    });
+
+    it('WHEN another job uses write-all THEN it is listed', () => {
+      const result = permissionProblemsOf(joined(WRITE_ALL_IN_PACKAGE));
+
+      expect(result).toStrictEqual(['write grants appear 2 times, expected 1', 'write grants sit in: build, github-release']);
+    });
+
+    it('WHEN another job uses a flow map THEN it is listed', () => {
+      const result = permissionProblemsOf(joined(WRITE_FLOW_IN_PACKAGE));
+
+      expect(result).toStrictEqual(['write grants appear 2 times, expected 1', 'write grants sit in: build, github-release']);
+    });
+
+    it('WHEN another job writes with extra spaces THEN it is listed', () => {
+      const result = permissionProblemsOf(joined(WRITE_SPACED_IN_PACKAGE));
+
+      expect(result).toStrictEqual(['write grants appear 2 times, expected 1', 'write grants sit in: build, github-release']);
+    });
+
+    it('WHEN another job writes another scope THEN it is listed', () => {
+      const result = permissionProblemsOf(joined(WRITE_OTHER_SCOPE));
+
+      expect(result).toStrictEqual(['write grants appear 2 times, expected 1', 'write grants sit in: build, github-release']);
     });
   });
 
