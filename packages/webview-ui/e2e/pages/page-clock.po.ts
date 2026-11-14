@@ -3,8 +3,12 @@ import { expect } from '@playwright/test';
 
 import { INTERVAL_RECORDER } from '../common/shell.const.ts';
 
-/** How far ahead of the page's own `Date.now()` the pause lands, so the pause is never in the past. */
-const PAUSE_AHEAD_MS = 10;
+/**
+ * How far ahead of the page's own `Date.now()` the pause lands. A running fake clock keeps catching up with real time, and
+ * `pauseAt` throws on a time it has already passed, so the margin must outlast the round trips between the read and the
+ * pause on a slow CI worker. No card clock interval is armed before the pause, so the jump fires nothing that matters.
+ */
+const PAUSE_AHEAD_MS = 1000;
 
 /** One animation frame of the page clock. */
 const FRAME_MS = 16;
