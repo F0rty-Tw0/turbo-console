@@ -63,3 +63,4 @@ playwright-report
 .claude.json
 # TypeScript build info
 *.tsbuildinfo
+/release-notes.md
