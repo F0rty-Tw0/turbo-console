@@ -27,4 +27,16 @@ test.describe('FEATURE: graph task cards bench', () => {
 
     await test.step('THEN every sample is recorded', (): void => expectRecorded(BENCH_ROWS.taskCardsPanReadable));
   });
+
+  test('GIVEN 240 clocked running task nodes zoomed to a readable 0.8, a 2 s pan records the CPU of every sample', async ({
+    browser
+  }): Promise<void> => {
+    const measure = async (): Promise<number> => taskCardsPan(browser, true, true);
+
+    await test.step('WHEN Controls and Details are closed, it is wheeled in and panned for 2 s once per sample', async (): Promise<
+      number[]
+    > => collectSamples(BENCH_ROWS.taskCardsPanReadableClocks, measure));
+
+    await test.step('THEN every sample is recorded', (): void => expectRecorded(BENCH_ROWS.taskCardsPanReadableClocks));
+  });
 });

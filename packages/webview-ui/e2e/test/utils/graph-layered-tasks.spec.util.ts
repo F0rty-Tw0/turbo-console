@@ -69,3 +69,17 @@ export const layeredRunsOf = (ids: string[]): Record<string, GraphRunState> => {
 
   return Object.fromEntries(ids.map(entryOf));
 };
+
+/** Every one of `ids` running. */
+export const layeredRunningRunsOf = (ids: string[]): Record<string, GraphRunState> => {
+  const entryOf = (id: string): [string, GraphRunState] => [id, 'running'];
+
+  return Object.fromEntries(ids.map(entryOf));
+};
+
+/** Each of `ids` has run `61_000 + 1000 × index` ms, so every card's text differs and every tick rewrites all of them; the longest reads `Running · 5m 0s`. */
+export const layeredElapsedOf = (ids: string[]): Record<string, number> => {
+  const entryOf = (id: string, index: number): [string, number] => [id, 61_000 + 1000 * index];
+
+  return Object.fromEntries(ids.map(entryOf));
+};
