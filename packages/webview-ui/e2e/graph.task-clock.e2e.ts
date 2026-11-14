@@ -18,8 +18,8 @@ const AT_59M59S = 3_599_000;
 
 const AT_99H59M = 359_940_000;
 
-/** 1 h 2 min 3 s: the hour format drops the seconds. */
-const AT_1H2M3S = 3_723_000;
+/** 1 h 2 min 59 s: the hour format drops the seconds, and one more second rolls the minute (a short page-clock tick). */
+const AT_1H2M59S = 3_779_000;
 
 /** Wider than the word `Running` alone (about 55 px), so the box measured the clock too. */
 const CLOCKED_LABEL_PX = 70;
@@ -104,14 +104,14 @@ test.describe('FEATURE: graph task card clock', () => {
   );
 
   test(
-    'GIVEN app#build continuous for 1h 2m 3s, row 2 reads Continuous · 1h 2m and 1h 3m a minute later',
+    'GIVEN app#build continuous for 1h 2m 59s, row 2 reads Continuous · 1h 2m and 1h 3m a second later',
     { annotation: CLOCK },
     async ({ page, pageClock }): Promise<void> => {
       const clock = new GraphTaskClock(page);
       const cards = new GraphTaskCards(page);
 
-      await test.step('WHEN runs arrive with app#build continuous for 1h 2m 3s', async (): Promise<void> => {
-        await clock.sendRuns({ [CHOSEN]: 'continuous' }, { [CHOSEN]: AT_1H2M3S });
+      await test.step('WHEN runs arrive with app#build continuous for 1h 2m 59s', async (): Promise<void> => {
+        await clock.sendRuns({ [CHOSEN]: 'continuous' }, { [CHOSEN]: AT_1H2M59S });
       });
 
       await test.step('THEN row 2 reads Continuous · 1h 2m on a 180 x 60 card', async (): Promise<void> => {
@@ -119,7 +119,7 @@ test.describe('FEATURE: graph task card clock', () => {
         await cards.expectCardSize(CHOSEN, CARD);
       });
 
-      await test.step('WHEN the page clock moves a minute', async (): Promise<void> => pageClock.tick(60_000));
+      await test.step('WHEN the page clock moves one second', async (): Promise<void> => pageClock.tick(1000));
 
       await test.step('THEN row 2 reads Continuous · 1h 3m', async (): Promise<void> =>
         clock.expectRowTwo(CHOSEN, 'Continuous · 1h 3m'));
