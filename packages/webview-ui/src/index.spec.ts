@@ -75,6 +75,7 @@ type ExpectedEdge = { readonly source: string; readonly target: string };
 type ExpectedPackage = {
   readonly name: string;
   readonly bareName: string;
+  readonly sizeName?: string;
   readonly path: string;
   readonly tags: string[];
   readonly taskCount: number;
@@ -196,7 +197,7 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.TASK_COUNT_MAX).toBe(100_000);
       expect(entry.MANIFEST_FIELDS).toStrictEqual(['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']);
       expect(entry.ICON_ID_PATTERN).toBe(ICON_ID_PATTERN);
-      expect(entry.LAYOUT_VERSION).toBe(3);
+      expect(entry.LAYOUT_VERSION).toBe(4);
       expect(entry.ROUTE_BENDS_MAX).toBe(64);
       expect(entry.edgeIdOf).toBe(edgeIdOf);
       expect(entry.TOOL_ICON_PREFIX).toBe(TOOL_ICON_PREFIX);

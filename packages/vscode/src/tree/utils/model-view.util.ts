@@ -2,13 +2,13 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 
 import { folderTree } from './folder-tree.util.ts';
 import { packageMapOf } from './package-map.util.ts';
+import { hasOtherPackagesOf, prefixedRootTextOf } from './root-prefix.util.ts';
+import { restOf } from './scope-rest.util.ts';
 import { isListedTask, isLiveScript } from './script-task.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import type { FolderDir, FolderTree } from '../common/folder-tree.type.ts';
 import type { ModelView } from '../common/model-view.type.ts';
-
-const SCOPED_NAME = /^@[^/]+\/(.+)$/u;
 
 /** The text a package row and the places beside it show: its label (the single-package root), else its name. */
 export const packageTextOf = (pkg: PackageNode): string => pkg.label ?? pkg.name;
@@ -21,13 +21,6 @@ export const isShownPackage = (pkg: PackageNode, scriptsShown: boolean, liveOfRo
   const isShownTask = (task: TaskNode): boolean => isListedTask(task, scriptsShown) || isLiveScript(task, liveOfRoot);
 
   return pkg.tasks.some(isShownTask);
-};
-
-/** The name after `@scope/`, or `null` for a name with no scope (`@a/` and `@x` have none). */
-const restOf = (name: string): string | null => {
-  const match = SCOPED_NAME.exec(name);
-
-  return match?.[1] ?? null;
 };
 
 const countOf = (counts: Map<string, number>, key: string): void => {
@@ -85,12 +78,14 @@ const fellBack = (shown: PackageNode[], bare: boolean[], texts: string[]): boole
  * package's row; then it keeps its full shown text. A fallback can make a new pair (`@a/x` back to full meets `@b/@a/x`
  * reading `@a/x`), so passes repeat until none falls back: no two rows of a root read the same text, unless their full
  * shown texts already do once cleaned. The tree passes the packages it shows, the graph every package. Maps each
- * package name to the cleaned text its row reads.
+ * package name to the cleaned text its row reads. With `rootPrefixed` (the repo has packages besides the root) a labelled
+ * root reads `(root) <text>`, which is final: it never falls back.
  */
-export const bareTextsOf = (packages: PackageNode[]): Map<string, string> => {
+export const bareTextsOf = (packages: PackageNode[], rootPrefixed: boolean): Map<string, string> => {
+  const rootTexts = packages.map((pkg) => prefixedRootTextOf(pkg, rootPrefixed));
   const restTexts = packages.map(restTextOf);
-  const bare = restTexts.map((text) => text !== null);
-  const texts = packages.map((pkg, index) => restTexts[index] ?? rowTextOf(packageTextOf(pkg)));
+  const bare = restTexts.map((text, index) => text !== null && rootTexts[index] === null);
+  const texts = packages.map((pkg, index) => rootTexts[index] ?? restTexts[index] ?? rowTextOf(packageTextOf(pkg)));
   let isFalling = true;
 
   while (isFalling) isFalling = fellBack(packages, bare, texts);
@@ -148,7 +143,8 @@ export const modelViewOf = (model: WorkspaceModel, scriptsShown: boolean, liveOf
   const shown = model.packages.filter(isShown);
   const packages = packageMapOf(shown);
   const folders = folderTree(shown);
-  const bareTexts = bareTextsOf(shown);
+  const rootPrefixed = hasOtherPackagesOf(model.packages);
+  const bareTexts = bareTextsOf(shown, rootPrefixed);
   const packagesBelow = packagesBelowOf(folders);
   const counts = shown.map((pkg) => offeredCountOf(pkg, scriptsShown));
   const visibleTaskCounts = new Map(counts);

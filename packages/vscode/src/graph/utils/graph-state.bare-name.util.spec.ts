@@ -59,12 +59,38 @@ describe('FEATURE: graph package bareName', () => {
       expect(bareNamesOf(state)).toStrictEqual(['@acme/monorepo', 'web']);
     });
 
-    it('WHEN built with scopes hidden THEN the root reads monorepo', () => {
+    it('WHEN built with scopes hidden THEN the root reads (root) monorepo', () => {
       const state = graphStateOf(SCOPED_ROOT_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
-      expect(bareNamesOf(state)).toStrictEqual(['monorepo', 'web']);
+      expect(bareNamesOf(state)).toStrictEqual(['(root) monorepo', 'web']);
     });
   });
+
+  describe('GIVEN a root labelled savings beside @x/savings', () => {
+    const rootNode: PackageNode = { ...ROOT_NODE, label: 'savings' };
+    const model: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [rootNode, packageNamed('@x/savings', [TASK_NODE_STUB])] };
+
+    it('WHEN built with scopes hidden THEN the root reads (root) savings and the app reads savings', () => {
+      const state = graphStateOf(model, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+
+      expect(bareNamesOf(state)).toStrictEqual(['(root) savings', 'savings']);
+    });
+
+    it('WHEN built with scopes shown THEN the root reads savings, no prefix, and the app keeps its bare name', () => {
+      const state = graphStateOf(model, NO_LAYOUT_CACHES_STUB, SCOPES_SHOWN);
+
+      expect(bareNamesOf(state)).toStrictEqual(['savings', 'savings']);
+    });
+  });
+
+  it.each([true, false])(
+    'GIVEN a single-package root WHEN built with scopeShown %s THEN it reads its label, no prefix',
+    (scopeShown) => {
+      const state = graphStateOf(SINGLE_MODEL, NO_LAYOUT_CACHES_STUB, { ...GRAPH_SHOWN_STUB, scopeShown });
+
+      expect(bareNamesOf(state)).toStrictEqual(['single-app']);
+    }
+  );
 
   it('GIVEN @a/ui is script-only and @b/ui is a turbo package WHEN built THEN both keep their full name', () => {
     const state = graphStateOf(SAME_BARE_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);

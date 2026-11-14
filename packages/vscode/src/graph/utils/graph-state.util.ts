@@ -8,6 +8,7 @@ import { graphListingOf, persistentIdsOf, runIdsOfListing } from './graph-tasks.
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { bareTextsOf, fullTextOf } from '../../tree/utils/model-view.util.ts';
+import { hasOtherPackagesOf, rootSizeNameOf } from '../../tree/utils/root-prefix.util.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
 import { isListedTask } from '../../tree/utils/script-task.util.ts';
 import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
@@ -62,14 +63,24 @@ const bareNameOf = (node: PackageNode, bareTexts: ReadonlyMap<string, string>, s
   return bareTexts.get(node.name) ?? node.name;
 };
 
-/** The name, its bare name, the path, the tags (deduplicated and sorted) and the listed task count of a node (scripts count only while `scriptsShown`); only name, path and tags are hashed. */
-const packageOf = (node: PackageNode, bareTexts: ReadonlyMap<string, string>, shown: GraphShown): GraphPackage => {
+/** The name, its bare name, the `//` box's sizing text (the root only, while prefixed), the path, the tags (deduplicated and sorted) and the listed task count of a node (scripts count only while `scriptsShown`); only name, path and tags are hashed. */
+const packageOf = (
+  node: PackageNode,
+  bareTexts: ReadonlyMap<string, string>,
+  shown: GraphShown,
+  rootPrefixed: boolean
+): GraphPackage => {
   const tags = Array.from(new Set(node.tags)).toSorted(compareText);
   const taskCount = node.tasks.filter((task): boolean => isListedTask(task, shown.scriptsShown)).length;
   const bareName = bareNameOf(node, bareTexts, shown.scopeShown);
+  const sizeName = rootSizeNameOf(node, rootPrefixed);
   const info: GraphPackage = { name: node.name, bareName, path: node.path, tags, taskCount };
 
-  return info;
+  if (sizeName === undefined) return info;
+
+  const sized: GraphPackage = { ...info, sizeName };
+
+  return sized;
 };
 
 /** `kind` dropped, pairs deduped, sorted by source then target. */
@@ -115,8 +126,9 @@ export const shownOf = (toggles: GraphToggles): GraphShown => {
 };
 
 export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, shown: GraphShown): GraphState => {
-  const bareTexts = bareTextsOf(model.packages);
-  const packages = model.packages.map((node) => packageOf(node, bareTexts, shown)).toSorted(comparePackages);
+  const rootPrefixed = hasOtherPackagesOf(model.packages);
+  const bareTexts = bareTextsOf(model.packages, rootPrefixed);
+  const packages = model.packages.map((node) => packageOf(node, bareTexts, shown, rootPrefixed)).toSorted(comparePackages);
   const edges = edgesOf(model.edges);
   const hash = graphHashOf(packages, edges);
   const names = packageNamesOf(packages);

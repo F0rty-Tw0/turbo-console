@@ -47,7 +47,7 @@ const MUTATIONS: [Mutator, Call][] = [
   ['setPositions', (view: GraphView): void => view.setPositions({})],
   ['setRoutes', (view: GraphView): void => view.setRoutes({})],
   ['showFolders', (view: GraphView): void => view.showFolders(null, String)],
-  ['setLabels', (view: GraphView): void => view.setLabels(new Map([['@org/x', 'x']]))],
+  ['setLabels', (view: GraphView): void => view.setLabels(new Map([['@org/x', 'x']]), new Map())],
   ['setPackageRuns', (view: GraphView): void => view.setPackageRuns(new Map([['web', 'running']]))]
 ];
 
