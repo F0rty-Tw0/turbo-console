@@ -44,7 +44,7 @@ describe('FEATURE: Release workflow step guard', () => {
     it('WHEN a checkout leaves it out THEN that step is listed', () => {
       const result = checkoutProblemsOf(joined(CHECKOUT_BARE));
 
-      expect(result).toHaveLength(1);
+      expect(result).toStrictEqual([`checkout step lacks persist-credentials: false:       - uses: actions/checkout@${SHA}`]);
     });
   });
 
@@ -64,13 +64,13 @@ describe('FEATURE: Release workflow step guard', () => {
     it('WHEN an inline run holds an expression THEN it is listed', () => {
       const result = injectionProblemsOf(joined(RUN_INLINE));
 
-      expect(result).toHaveLength(1);
+      expect(result).toStrictEqual(['run body holds an expression: echo ${{ github.ref_name }}']);
     });
 
     it('WHEN a block run holds an expression THEN that line is listed', () => {
       const result = injectionProblemsOf(joined(RUN_BLOCK));
 
-      expect(result).toHaveLength(1);
+      expect(result).toStrictEqual(['run body holds an expression: echo ${{ github.ref_name }}']);
     });
   });
 
@@ -101,23 +101,28 @@ describe('FEATURE: Release workflow step guard', () => {
       expect(result).toStrictEqual([]);
     });
 
-    it('WHEN a token sits in a step env or a comment THEN no problem is listed', () => {
-      const inEnv = tokenProblemsOf(joined(TOKEN_STEP_ENV));
-      const inComment = tokenProblemsOf(joined(TOKEN_COMMENT));
+    it('WHEN a token sits in a step env THEN no problem is listed', () => {
+      const result = tokenProblemsOf(joined(TOKEN_STEP_ENV));
 
-      expect([...inEnv, ...inComment]).toStrictEqual([]);
+      expect(result).toStrictEqual([]);
+    });
+
+    it('WHEN a token is named in a comment THEN no problem is listed', () => {
+      const result = tokenProblemsOf(joined(TOKEN_COMMENT));
+
+      expect(result).toStrictEqual([]);
     });
 
     it('WHEN a token sits in a job env THEN it is listed', () => {
       const result = tokenProblemsOf(joined(TOKEN_JOB_ENV));
 
-      expect(result.length).toBeGreaterThanOrEqual(1);
+      expect(result).toStrictEqual(['token outside a step-level env: VSCE_PAT: ${{ secrets.VSCE_PAT }}']);
     });
 
     it('WHEN a token is named in a run body THEN it is listed', () => {
       const result = tokenProblemsOf(joined(TOKEN_RUN));
 
-      expect(result).toHaveLength(1);
+      expect(result).toStrictEqual(['token outside a step-level env: - run: vsce publish --pat "$VSCE_PAT"']);
     });
   });
 });

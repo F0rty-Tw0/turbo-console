@@ -50,25 +50,25 @@ describe('FEATURE: Release workflow guard', () => {
     it('WHEN a tag stands in for the SHA THEN that line is listed', () => {
       const result = usesProblemsOf(joined(PIN_UNPINNED));
 
-      expect(result).toHaveLength(1);
+      expect(result).toStrictEqual(['uses is not <owner>/<repo>@<40-hex>: actions/checkout@v7']);
     });
 
     it('WHEN the comment names another action THEN that line is listed', () => {
       const result = usesProblemsOf(joined(PIN_OTHER_NAME));
 
-      expect(result).toHaveLength(1);
+      expect(result).toStrictEqual([`uses actions/checkout@${SHA} lacks a matching "# SHA = actions/checkout@v…" comment`]);
     });
 
     it('WHEN the comment is missing THEN that line is listed', () => {
       const result = usesProblemsOf(joined(PIN_NO_COMMENT));
 
-      expect(result).toHaveLength(1);
+      expect(result).toStrictEqual([`uses actions/checkout@${SHA} lacks a matching "# SHA = actions/checkout@v…" comment`]);
     });
 
     it('WHEN only a previous step has a comment THEN the later step is listed', () => {
       const result = usesProblemsOf(joined(PIN_STALE_COMMENT));
 
-      expect(result).toHaveLength(1);
+      expect(result).toStrictEqual([`uses actions/setup-node@${SHA} lacks a matching "# SHA = actions/setup-node@v…" comment`]);
     });
   });
 
