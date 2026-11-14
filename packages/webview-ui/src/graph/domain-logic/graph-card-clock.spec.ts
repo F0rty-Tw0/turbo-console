@@ -131,6 +131,13 @@ describe('FEATURE: GraphCardClock', () => {
       expect(canvas.clocks).toHaveBeenLastCalledWith({ a: '6m 4s' });
     });
 
+    it('WHEN the page is hidden and runs drops the base THEN the clock is still cleared', () => {
+      hidden = true;
+      clock.runs(undefined, 1500);
+
+      expect(canvas.clocks).toHaveBeenLastCalledWith({});
+    });
+
     it('WHEN shown while still hidden THEN nothing is written', () => {
       canvas.clocks.mockClear();
       hidden = true;
