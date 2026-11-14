@@ -1,7 +1,7 @@
 import { test } from './graph-task.fixture.ts';
 import { THEME_HC_STUB } from './test/stubs/graph-theme.stub.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeFileIds } from './test/utils/graph-target-like-tasks.spec.util.ts';
-import type { GraphAtomCounts, GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../src/bridge/common/graph-atoms-message.type.ts';
 import { ATOM_BOX_PADDING_PX, ATOM_FILE_SIZE, ATOM_GRID_GAP_PX, ATOM_MORE_PREFIX } from '../src/graph/common/graph-atom.const.ts';
 
 const CAP_SPEC = { description: '2026-10-25-graph-atom-cap §5', type: 'requirement' };

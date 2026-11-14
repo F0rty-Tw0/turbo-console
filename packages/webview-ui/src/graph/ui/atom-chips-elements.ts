@@ -1,5 +1,5 @@
 import { graphIcon } from './graph-icon.ts';
-import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 import {
   ATOM_CHIP_BORDER_PX,
   ATOM_CHIP_FONT_PX,

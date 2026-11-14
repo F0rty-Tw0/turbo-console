@@ -3,6 +3,7 @@ import { isEdgeImports } from './edge-imports.util.ts';
 import {
   isAtomGroupList,
   isAtomStateRecord,
+  isElapsedRecord,
   isGraphTaskList,
   isOwnersRecord,
   isRunsRecord,
@@ -91,16 +92,17 @@ const isGraphState = (state: unknown): boolean => {
 };
 
 const isRunsMessage = (value: UnknownRecord): boolean => {
-  const { runs, owners } = value;
+  const { runs, owners, elapsed } = value;
   const areOwnersFit = owners === undefined || isOwnersRecord(owners);
+  const isElapsedFit = elapsed === undefined || isElapsedRecord(elapsed);
 
-  return isRunsRecord(runs) && areOwnersFit;
+  return isRunsRecord(runs) && areOwnersFit && isElapsedFit;
 };
 
 /**
  * Narrows a posted value to a `state` message, by its state's `kind` and shape down to each package's name, bare name, path, tags and
  * task count, each edge end, each task's fields, each atom group's files and the two shown flags; to an `edgeExplained` or
- * `edgeImports` message by its names and whole result; to a `runs` message by its run states and its optional owners; to a
+ * `edgeImports` message by its names and whole result; to a `runs` message by its run states, its optional owners and its optional elapsed; to a
  * `showTasks` message by its task ids; to a `showPackage` message by its package name; or to an `atoms` message by its counts
  * numbers and the four outcome words. Anything else is ignored. The payload itself comes from the extension host, which builds it.
  */

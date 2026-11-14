@@ -14,7 +14,7 @@ import { GraphTaskHost } from './graph-task-host.po.ts';
 import { GraphToolbar } from './graph-toolbar.po.ts';
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { GraphPage } from './graph.po.ts';
-import type { GraphAtomGroupState } from '../../src/bridge/common/graph-message.type.ts';
+import type { GraphAtomGroupState } from '../../src/bridge/common/graph-atoms-message.type.ts';
 import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { TaskRuns } from '../../src/graph/common/task-details.type.ts';
 import type { ShotSetup, TaskShotSetup } from '../common/graph-shots.type.ts';

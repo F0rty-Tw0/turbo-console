@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAtomCanvas } from './graph-atom-view.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
-import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomOutcome } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';

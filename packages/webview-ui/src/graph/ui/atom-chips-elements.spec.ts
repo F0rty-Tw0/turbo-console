@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildAtomChipRow } from './atom-chips-elements.ts';
-import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { layerRowsOf } from '../test/utils/atom-chips.spec.util.ts';
 

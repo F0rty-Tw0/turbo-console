@@ -1,5 +1,5 @@
 import { NODE_FONT_SIZE } from './graph.const.ts';
-import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomOutcome } from '../../bridge/common/graph-atoms-message.type.ts';
 
 /** The class of a task node that is an Atomizer umbrella; it keeps `task` and adds this one. */
 export const ATOM_UMBRELLA_CLASS = 'atom-umbrella';

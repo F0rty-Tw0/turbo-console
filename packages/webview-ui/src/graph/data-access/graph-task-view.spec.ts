@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { probeStateOf } from './graph-probe-state.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
-import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { ROOT_TASKS_TITLE } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';

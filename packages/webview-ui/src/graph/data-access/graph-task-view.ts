@@ -6,7 +6,7 @@ import { boxesOf } from './graph-task-boxes.ts';
 import { applyBoxFrames, refitBoxFrames } from './graph-task-frames.ts';
 import { markAffected, markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
 import { paintTasks } from './graph-task-paint.ts';
-import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphEdge, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { atomCountsText } from '../../bridge/utils/atom-counts-text.util.ts';
 import { NO_AFFECTED, NO_PREDICTIONS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';

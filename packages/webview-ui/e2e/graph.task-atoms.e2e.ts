@@ -2,7 +2,7 @@ import { test } from './graph-task.fixture.ts';
 import { THEME_HC_STUB } from './test/stubs/graph-theme.stub.ts';
 import { stateNamesOf } from './test/utils/graph-package.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeFileIds, targetLikeTasksState } from './test/utils/graph-target-like-tasks.spec.util.ts';
-import type { GraphAtomCounts, GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../src/bridge/common/graph-atoms-message.type.ts';
 import type { Positions } from '../src/bridge/common/graph-state.type.ts';
 import { GLYPH_CODE_POINTS } from '../src/graph/common/graph-glyph.const.ts';
 import type { ProbeNode } from '../src/graph/common/graph-probe.type.ts';

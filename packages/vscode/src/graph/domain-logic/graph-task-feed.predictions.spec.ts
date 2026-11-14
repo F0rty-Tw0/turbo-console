@@ -29,6 +29,8 @@ const HIT_A = predictionViewOf({ a: [['a#build', 'HIT']] });
 const MISS_A = predictionViewOf({ a: [['a#build', 'MISS']] });
 const LISTED_IDS = GRAPH_TASKS_STUB.map((task) => task.id);
 const A_RUNNING: GraphRunsMessage['runs'] = { 'a#build': 'running' };
+/** Launched at 1000, read at the mock wall clock 4000. */
+const A_ELAPSED: GraphRunsMessage['elapsed'] = { 'a#build': 3000 };
 
 /** A feed on `/ws` over an open gate listing `GRAPH_TASKS_STUB`, whose prediction view reads `answers.current`. */
 const feedWith = (isShown: boolean, view: PredictionLookup): PredictionFeedFixture => {
@@ -115,7 +117,7 @@ describe('FEATURE: cache prediction in the graph feed', () => {
       runs.tryStart(RUN_A_BUILD_STUB, 1000);
       vi.advanceTimersByTime(RUNS_COALESCE_MS);
 
-      const expected: GraphRunsMessage = { type: 'runs', runs: A_RUNNING };
+      const expected: GraphRunsMessage = { type: 'runs', runs: A_RUNNING, elapsed: A_ELAPSED };
 
       expect(lastRunsOf(ports)).toStrictEqual(expected);
     });

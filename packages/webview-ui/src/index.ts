@@ -25,11 +25,14 @@ export type {
 export type { GraphAffected, GraphAffectedMark } from './bridge/common/graph-affected.type.ts';
 
 export type {
-  EdgeExplainResult,
   GraphAtomCounts,
   GraphAtomGroupState,
   GraphAtomOutcome,
-  GraphAtomsMessage,
+  GraphAtomsMessage
+} from './bridge/common/graph-atoms-message.type.ts';
+
+export type {
+  EdgeExplainResult,
   GraphEdgeExplainedMessage,
   GraphHostMessage,
   GraphPrediction,

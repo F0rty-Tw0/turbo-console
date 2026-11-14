@@ -2,7 +2,7 @@ import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core'
 import type { GraphRunsMessage, GraphTask } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import { graphListingOf, graphTasksOf, runsMessageOf } from './graph-tasks.util.ts';
+import { clockedRunsOf, graphListingOf, graphTasksOf } from './graph-tasks.util.ts';
 import type { RunEntry, RunLookup } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { recordOf } from '../../run/test/utils/run-progress.spec.util.ts';
@@ -52,8 +52,8 @@ const lookupOf = (...entries: RunEntry[]): RunLookup => {
 
 /** The `runs` map of the message over own runs only: no progress records and no persistent ids. */
 const runWordsOf = (root: string, ids: string[], get: RunLookup): GraphRunsMessage['runs'] => {
-  const sources: RunSources = { get, recordsOf: () => [], persistentIds: new Set() };
-  const message = runsMessageOf(root, ids, sources);
+  const sources: RunSources = { get, recordsOf: () => [], persistentIds: new Set(), wallNow: 0 };
+  const { message } = clockedRunsOf(root, ids, sources);
 
   return message.runs;
 };
@@ -327,28 +327,30 @@ describe('FEATURE: graph runs words (own runs only)', () => {
   });
 
   describe('GIVEN the three-argument call', () => {
-    const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set() };
+    const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set(), wallNow: 0 };
 
     it('WHEN the message is built THEN it has no predictions key', () => {
-      expect('predictions' in runsMessageOf(ROOT, LISTED, sources)).toBe(false);
+      const { message } = clockedRunsOf(ROOT, LISTED, sources);
+
+      expect('predictions' in message).toBe(false);
     });
   });
 
   describe('GIVEN a fourth predictions argument', () => {
     it('WHEN the message is built THEN it carries the argument as predictions', () => {
-      const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set() };
+      const sources: RunSources = { get: lookupOf(), recordsOf: () => [], persistentIds: new Set(), wallNow: 0 };
 
-      const message = runsMessageOf(ROOT, LISTED, sources, PREDICTED);
+      const { message } = clockedRunsOf(ROOT, LISTED, sources, PREDICTED);
 
       expect(message.predictions).toStrictEqual(PREDICTED);
     });
 
     it('WHEN a#build runs under web#build THEN the message carries its owner and the predictions together', () => {
       const running = recordOf('a#build', 'running', 1000);
-      const sources: RunSources = { get: lookupOf(), recordsOf: () => [running], persistentIds: new Set() };
+      const sources: RunSources = { get: lookupOf(), recordsOf: () => [running], persistentIds: new Set(), wallNow: 0 };
       const expected: GraphRunsMessage = { type: 'runs', runs: A_RUNNING, owners: A_OWNED_BY_WEB, predictions: PREDICTED };
 
-      const message = runsMessageOf(ROOT, LISTED, sources, PREDICTED);
+      const { message } = clockedRunsOf(ROOT, LISTED, sources, PREDICTED);
 
       expect(message).toStrictEqual(expected);
     });

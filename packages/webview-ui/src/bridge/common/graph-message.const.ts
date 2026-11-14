@@ -1,6 +1,7 @@
 import type { GraphAffectedMark } from './graph-affected.type.ts';
+import type { GraphAtomOutcome } from './graph-atoms-message.type.ts';
 import type { ImportKind, ImportLimit, ImportVia } from './graph-imports.type.ts';
-import type { GraphAtomOutcome, GraphPrediction, ManifestField } from './graph-message.type.ts';
+import type { GraphPrediction, ManifestField } from './graph-message.type.ts';
 import type { GraphRunState } from './graph-state.type.ts';
 
 /** The `package.json` fields an edge is explained from, in the order their entries are listed. */

@@ -2,12 +2,13 @@ import type { AtomFile, AtomGroup, PackageNode, TaskNode, WorkspaceModel } from 
 import type { GraphAtomFile, GraphAtomGroup, GraphRunState, GraphRunsMessage, GraphState, GraphTask } from '@turbo-console/webview-ui';
 
 import { atomFoldOf } from './graph-atoms.util.ts';
+import { withElapsedOf } from './graph-run-clock.util.ts';
 import type { DisplayedRun } from '../../run/common/run-progress.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { displayRunOf } from '../../run/utils/run-display.util.ts';
 import { isRunnableTask, isVisibleTask } from '../../tree/utils/task-filter.util.ts';
 import type { AtomFold, GraphListing } from '../common/graph-atom.type.ts';
-import type { RunSources } from '../common/graph.type.ts';
+import type { ClockedRuns, RunSources } from '../common/graph.type.ts';
 
 type VisibleTask = { readonly packageName: string; readonly task: TaskNode };
 
@@ -127,18 +128,20 @@ const graphWordOf = (displayed: DisplayedRun, own: RunEntry | undefined, isPersi
 /**
  * The runs message of the listed `ids` under `root` (spec D9, D11): each id's word from its own run and the progress records
  * (`continuous` for a running persistent task, own or owned), and `owners` for the ids that run under another task's run,
- * left out when there is none. Ids no run names never appear, and an id that is not in `ids` never does. `predictions` is carried
- * as given, and the key is absent while it is `null`.
+ * left out when there is none. `elapsed` gives each id whose own run is live the ms since its launch at `sources.wallNow`, left
+ * out when there is none. Ids no run names never appear, and an id that is not in `ids` never does. `predictions` is carried as
+ * given, and the key is absent while it is `null`. `launches` holds the `launchedAt` that each `elapsed` entry counts from.
  */
-export const runsMessageOf = (
+export const clockedRunsOf = (
   root: string,
   ids: string[],
   sources: RunSources,
   predictions: NonNullable<GraphRunsMessage['predictions']> | null = null
-): GraphRunsMessage => {
-  const { get, recordsOf, persistentIds } = sources;
+): ClockedRuns => {
+  const { get, recordsOf, persistentIds, wallNow } = sources;
   const runs = new Map<string, GraphRunState>();
   const owners = new Map<string, string>();
+  const launches = new Map<string, number>();
 
   for (const id of ids) {
     const own = get(root, id);
@@ -149,6 +152,8 @@ export const runsMessageOf = (
     runs.set(id, graphWordOf(displayed, own, persistentIds.has(id)));
 
     if (displayed.owner !== null) owners.set(id, displayed.owner);
+
+    if (own?.state === 'running') launches.set(id, own.launchedAt);
   }
 
   const runsRecord = Object.fromEntries(runs);
@@ -156,10 +161,14 @@ export const runsMessageOf = (
   const ownersRecord = Object.fromEntries(owners);
   const withOwners: GraphRunsMessage = { ...plain, owners: ownersRecord };
   const owned = owners.size === 0 ? plain : withOwners;
+  const launchesRecord = Object.fromEntries(launches);
+  const clocked = withElapsedOf(owned, launchesRecord, wallNow);
+  const clockedRuns: ClockedRuns = { message: clocked, launches: launchesRecord };
 
-  if (predictions === null) return owned;
+  if (predictions === null) return clockedRuns;
 
-  const predicted: GraphRunsMessage = { ...owned, predictions };
+  const predicted: GraphRunsMessage = { ...clocked, predictions };
+  const predictedRuns: ClockedRuns = { message: predicted, launches: launchesRecord };
 
-  return predicted;
+  return predictedRuns;
 };

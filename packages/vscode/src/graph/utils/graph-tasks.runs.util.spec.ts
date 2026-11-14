@@ -1,7 +1,7 @@
 import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { persistentIdsOf, runsMessageOf } from './graph-tasks.util.ts';
+import { clockedRunsOf, persistentIdsOf } from './graph-tasks.util.ts';
 import type { ProgressOwner, ProgressRecord } from '../../run/common/run-progress.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
@@ -58,6 +58,11 @@ const DEV_CONTINUOUS = { 'ui#dev': 'continuous' };
 const DEV_PASSED = { 'ui#dev': 'passed' };
 
 const DEV_OWNED_BY_A = { 'ui#dev': 'a#build' };
+
+/** Launched at 1000, read at the `sourcesOf` wall clock 65 000. */
+const BUILD_ELAPSED = { 'ui#build': 64_000 };
+
+const DEV_ELAPSED = { 'ui#dev': 64_000 };
 
 const LISTED_IDS = ['b#x', 'a#x', 'c#x'];
 
@@ -117,7 +122,7 @@ const sourcesOf = (entries: RunEntry[], records: ProgressRecord[], persistentIds
     entries.find((entry) => entry.root === root && entry.taskId === taskId);
   const recordsOf = (root: string, taskId: string): ProgressRecord[] =>
     records.filter((record) => record.owner.root === root && record.taskId === taskId);
-  const sources: RunSources = { get, recordsOf, persistentIds: new Set(persistentIds) };
+  const sources: RunSources = { get, recordsOf, persistentIds: new Set(persistentIds), wallNow: 65_000 };
 
   return sources;
 };
@@ -151,7 +156,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
     it('WHEN no own run and no record names it THEN runs has no ui#build key and the message has no owners', () => {
       const sources = sourcesOf([], []);
 
-      const message = runsMessageOf('/ws', ['ui#build'], sources);
+      const { message } = clockedRunsOf('/ws', ['ui#build'], sources);
 
       expect(message.runs).not.toHaveProperty('ui#build');
       expect(message).not.toHaveProperty('owners');
@@ -162,7 +167,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
       ({ own, records, word, owner }) => {
         const sources = sourcesOf(ownEntriesOf(own), records);
 
-        const message = runsMessageOf('/ws', ['ui#build'], sources);
+        const { message } = clockedRunsOf('/ws', ['ui#build'], sources);
 
         expect(message.runs['ui#build']).toBe(word);
         expect(message.owners?.['ui#build']).toBe(owner);
@@ -174,15 +179,15 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
     it('WHEN its own run runs THEN its word is continuous and it has no owner', () => {
       const sources = sourcesOf([OWN_DEV_RUNNING], []);
 
-      const message = runsMessageOf('/ws', ['ui#dev'], sources);
+      const { message } = clockedRunsOf('/ws', ['ui#dev'], sources);
 
-      expect(message).toStrictEqual({ type: 'runs', runs: DEV_CONTINUOUS });
+      expect(message).toStrictEqual({ type: 'runs', runs: DEV_CONTINUOUS, elapsed: DEV_ELAPSED });
     });
 
     it('WHEN it runs under a#build THEN its word is continuous and its owner is a#build', () => {
       const sources = sourcesOf([], [RUNNING_DEV_IN_A], ['ui#dev']);
 
-      const message = runsMessageOf('/ws', ['ui#dev'], sources);
+      const { message } = clockedRunsOf('/ws', ['ui#dev'], sources);
 
       expect(message).toStrictEqual({ type: 'runs', runs: DEV_CONTINUOUS, owners: DEV_OWNED_BY_A });
     });
@@ -190,7 +195,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
     it('WHEN its own run passed THEN its word is passed', () => {
       const sources = sourcesOf([OWN_DEV_PASSED], [], ['ui#dev']);
 
-      const message = runsMessageOf('/ws', ['ui#dev'], sources);
+      const { message } = clockedRunsOf('/ws', ['ui#dev'], sources);
 
       expect(message).toStrictEqual({ type: 'runs', runs: DEV_PASSED });
     });
@@ -200,7 +205,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
     it('WHEN no id has an owner THEN the message has no owners key', () => {
       const sources = sourcesOf([OWN_PASSED_AT_1500], []);
 
-      const message = runsMessageOf('/ws', ['ui#build'], sources);
+      const { message } = clockedRunsOf('/ws', ['ui#build'], sources);
 
       expect(message).toStrictEqual({ type: 'runs', runs: BUILD_PASSED });
       expect(message).not.toHaveProperty('owners');
@@ -210,7 +215,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
       const entries = LISTED_IDS.map(passedEntryOf);
       const sources = sourcesOf(entries, []);
 
-      const message = runsMessageOf('/ws', LISTED_IDS, sources);
+      const { message } = clockedRunsOf('/ws', LISTED_IDS, sources);
 
       expect(Object.keys(message.runs)).toStrictEqual(['b#x', 'a#x', 'c#x']);
     });
@@ -221,7 +226,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
       const records = PROTOTYPE_IDS.map((id) => recordOf(id, 'running', 1000, A));
       const sources = sourcesOf([], records);
 
-      const message = runsMessageOf('/ws', PROTOTYPE_IDS, sources);
+      const { message } = clockedRunsOf('/ws', PROTOTYPE_IDS, sources);
 
       expect(Object.entries(message.owners ?? {})).toStrictEqual([
         ['__proto__', 'a#build'],
@@ -238,9 +243,9 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
       const ghostRun: RunEntry = { ...OWN_RUNNING, taskId: 'ghost#build' };
       const sources = sourcesOf([OWN_RUNNING, ghostRun], []);
 
-      const message = runsMessageOf('/ws', ['ui#build'], sources);
+      const { message } = clockedRunsOf('/ws', ['ui#build'], sources);
 
-      expect(message).toStrictEqual({ type: 'runs', runs: BUILD_RUNNING });
+      expect(message).toStrictEqual({ type: 'runs', runs: BUILD_RUNNING, elapsed: BUILD_ELAPSED });
     });
   });
 
@@ -249,7 +254,7 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
       const ghost = recordOf('ghost#build', 'running', 1000, A);
       const sources = sourcesOf([], [RUNNING_IN_A, ghost]);
 
-      const message = runsMessageOf('/ws', ['ui#build'], sources);
+      const { message } = clockedRunsOf('/ws', ['ui#build'], sources);
 
       expect(message).toStrictEqual({ type: 'runs', runs: BUILD_RUNNING, owners: BUILD_OWNED_BY_A });
     });
@@ -259,9 +264,9 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
     it('WHEN the message is built for /ws THEN both are called with /ws and the id', () => {
       const get = vi.fn((): RunEntry | undefined => undefined);
       const recordsOf = vi.fn((): ProgressRecord[] => []);
-      const sources: RunSources = { get, recordsOf, persistentIds: new Set() };
+      const sources: RunSources = { get, recordsOf, persistentIds: new Set(), wallNow: 0 };
 
-      runsMessageOf('/ws', ['ui#build'], sources);
+      clockedRunsOf('/ws', ['ui#build'], sources);
 
       expect(recordsOf.mock.calls).toStrictEqual([['/ws', 'ui#build']]);
       expect(get.mock.calls).toStrictEqual([['/ws', 'ui#build']]);

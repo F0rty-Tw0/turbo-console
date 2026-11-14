@@ -4,9 +4,8 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import type { GraphAffected } from '../../src/bridge/common/graph-affected.type.ts';
+import type { GraphAtomGroupState, GraphAtomsMessage } from '../../src/bridge/common/graph-atoms-message.type.ts';
 import type {
-  GraphAtomGroupState,
-  GraphAtomsMessage,
   GraphPrediction,
   GraphRunsMessage,
   GraphShowPackageMessage,

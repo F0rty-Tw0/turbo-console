@@ -1,7 +1,7 @@
 import type { LocationViews } from './location.type.ts';
 import type { TaskToolbarElements } from './task-toolbar.type.ts';
 import type { MenuElements, MenuItemModel } from './widget-menu.type.ts';
-import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 
 /** A rectangle in container px, as Cytoscape's `renderedBoundingBox`. */
 export type RectPx = {

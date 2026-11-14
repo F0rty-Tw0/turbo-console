@@ -8,7 +8,8 @@ import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import { NO_GRAPH_PREDICTIONS, RUNS_COALESCE_MS } from '../common/graph.const.ts';
 import type { GraphFeeds, GraphPorts, RunSources, TaskFeedGate } from '../common/graph.type.ts';
 import { predictionsOf } from '../utils/graph-predictions.util.ts';
-import { runIdsOf, runsMessageOf } from '../utils/graph-tasks.util.ts';
+import { runsTextOf } from '../utils/graph-run-clock.util.ts';
+import { clockedRunsOf, runIdsOf } from '../utils/graph-tasks.util.ts';
 
 const isSinglePackageState = (state: GraphState): boolean => state.kind === 'graph' && state.singlePackage;
 
@@ -21,7 +22,7 @@ const isRefused = (request: GraphShowRequest, state: GraphState): boolean => {
 
 type TaskFeedDeps = {
   readonly root: string;
-  readonly ports: Pick<GraphPorts, 'post' | 'log'>;
+  readonly ports: Pick<GraphPorts, 'post' | 'log' | 'wallNow'>;
   readonly gate: TaskFeedGate;
   readonly feeds: GraphFeeds;
 };
@@ -151,18 +152,18 @@ export class GraphTaskFeed {
   }
 
   /**
-   * Skips a message whose runs and owners equal the last ones sent and whose predictions and affected marks did not change, unless `isForced`, as a
-   * reloaded page needs the message again.
+   * Skips a message whose runs, owners and launches of the clocked runs equal the last ones sent and whose predictions and affected
+   * marks did not change, unless `isForced`, as a reloaded page needs the message again.
    */
   private postRuns(ids: string[], isForced: boolean): void {
     const { root, feeds, gate, ports } = this.deps;
     const { runs, progress } = feeds;
     const recordsOf = (recordsRoot: string, taskId: string): ProgressRecord[] => progress.recordsOf(recordsRoot, taskId);
-    const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds() };
+    const sources: RunSources = { get: runs.get, recordsOf, persistentIds: gate.persistentIds(), wallNow: ports.wallNow() };
     const predictions = this.predictionsToPost(isForced);
     const affected = this.affectedFeed.toPost(isForced);
-    const message = runsMessageOf(root, ids, sources, predictions);
-    const runsText = JSON.stringify([message.runs, message.owners]);
+    const { message, launches } = clockedRunsOf(root, ids, sources, predictions);
+    const runsText = runsTextOf(message, launches);
     const isRepeat = !isForced && predictions === null && affected === undefined && runsText === this.lastRuns;
 
     if (isRepeat) return;

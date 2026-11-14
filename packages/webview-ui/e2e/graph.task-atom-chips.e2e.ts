@@ -1,6 +1,6 @@
 import { test } from './graph-atom-chips.fixture.ts';
 import { TARGET_LIKE_UMBRELLA } from './test/utils/graph-target-like-tasks.spec.util.ts';
-import type { GraphAtomCounts, GraphAtomGroupState } from '../src/bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../src/bridge/common/graph-atoms-message.type.ts';
 import { GLYPH_CODE_POINTS } from '../src/graph/common/graph-glyph.const.ts';
 
 const AC1 = { description: 'G2-3b AC1', type: 'requirement' };

@@ -1,4 +1,4 @@
-import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomOutcome } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphAtomFile, GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import { ATOM_FILE_CAP, ATOM_MORE_PREFIX } from '../common/graph-atom.const.ts';
