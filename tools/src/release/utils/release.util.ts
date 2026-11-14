@@ -1,4 +1,4 @@
-import type { GuardInput } from './common/release.type.ts';
+import type { GuardInput } from '../common/release.type.ts';
 
 const HEADING_PREFIX = '## ';
 

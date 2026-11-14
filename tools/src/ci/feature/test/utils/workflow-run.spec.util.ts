@@ -6,6 +6,8 @@ const STEP_ENV = /^ {8}env:\s*$/;
 
 const isTokenLine = (line: string): boolean => isCode(line) && TOKEN.test(line);
 
+const isShallowerThan = (line: string, indent: number): boolean => !isBlank(line) && indentOf(line) < indent;
+
 const endsBlock = (line: string, keyIndent: number): boolean => !isBlank(line) && indentOf(line) <= keyIndent;
 
 /**
@@ -42,7 +44,7 @@ export const injectionProblemsOf = (workflow: string): string[] => {
 
 const isOutsideStepEnv = (lines: string[], index: number): boolean => {
   const indent = indentOf(lines[index] ?? '');
-  const parent = lines.slice(0, index).findLast((line) => !isBlank(line) && indentOf(line) < indent);
+  const parent = lines.slice(0, index).findLast((line) => isShallowerThan(line, indent));
 
   return parent === undefined || !STEP_ENV.test(parent);
 };

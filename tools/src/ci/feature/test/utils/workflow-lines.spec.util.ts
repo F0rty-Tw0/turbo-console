@@ -11,6 +11,8 @@ export const isComment = (line: string): boolean => line.trimStart().startsWith(
 
 export const isCode = (line: string): boolean => !isComment(line);
 
+export const isCodeLine = (line: string): boolean => isCode(line) && !isBlank(line);
+
 export const indentOf = (line: string): number => line.length - line.trimStart().length;
 
 const isJobsHeader = (line: string): boolean => JOBS_HEADER.test(line);

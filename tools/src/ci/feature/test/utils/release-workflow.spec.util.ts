@@ -1,4 +1,4 @@
-import { indentOf, isBlank, isCode, jobsOf, stepsOf } from './workflow-lines.spec.util.ts';
+import { indentOf, isBlank, isCode, isCodeLine, jobsOf, stepsOf } from './workflow-lines.spec.util.ts';
 import type { Job } from '../common/workflow.type.ts';
 
 const USES = /^\s*(?:- )?uses:\s*(\S+)/;
@@ -52,6 +52,8 @@ export const usesProblemsOf = (workflow: string): string[] => {
   return problems.filter((problem) => problem !== null);
 };
 
+const isTopLevelKey = (line: string): boolean => !isBlank(line) && indentOf(line) === 0;
+
 const topPermissionsOf = (workflow: string): string[] => {
   const lines = workflow.split('\n');
   const start = lines.findIndex((line) => PERMISSIONS.test(line));
@@ -59,11 +61,11 @@ const topPermissionsOf = (workflow: string): string[] => {
   if (start < 0) return [];
 
   const body = lines.slice(start + 1);
-  const end = body.findIndex((line) => !isBlank(line) && indentOf(line) === 0);
+  const end = body.findIndex(isTopLevelKey);
   const head = body.slice(0, end);
   const block = end < 0 ? body : head;
 
-  const entries = block.filter((line) => isCode(line) && !isBlank(line));
+  const entries = block.filter(isCodeLine);
 
   return entries.map((line) => line.trim());
 };
@@ -133,10 +135,18 @@ export const storeProblemsOf = (workflow: string, jobName: string, variable: str
   return problems;
 };
 
+const isCheckoutLine = (line: string): boolean => usesOf(line)?.startsWith('actions/checkout@') === true;
+
+const isCheckoutStep = (step: string[]): boolean => step.some(isCheckoutLine);
+
+const isCredentialsOffLine = (line: string): boolean => line.trim() === 'persist-credentials: false';
+
+const dropsCredentials = (step: string[]): boolean => step.some(isCredentialsOffLine);
+
 export const checkoutProblemsOf = (workflow: string): string[] => {
   const steps = jobsOf(workflow).flatMap(stepsOf);
-  const checkouts = steps.filter((step) => step.some((line) => usesOf(line)?.startsWith('actions/checkout@')));
-  const unsafe = checkouts.filter((step) => !step.some((line) => line.trim() === 'persist-credentials: false'));
+  const checkouts = steps.filter(isCheckoutStep);
+  const unsafe = checkouts.filter((step) => !dropsCredentials(step));
 
   return unsafe.map((step) => `checkout step lacks persist-credentials: false: ${step[0]}`);
 };

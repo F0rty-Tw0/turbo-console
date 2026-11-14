@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { CiRun, GuardInput } from './common/release.type.ts';
 import { channelOf, guardProblems, releaseNotes } from './release.util.ts';
+import type { CiRun, GuardInput } from '../common/release.type.ts';
 
 const CHANGELOG = '# Changelog\n\n## 0.1.0 (pre-release)\n\n- a\n- b\n\n## 0.0.9\n\n- old\n';
 

@@ -5,7 +5,7 @@ import { parseArgs } from 'node:util';
 import { array, object, string } from 'zod';
 
 import type { GuardInput } from './common/release.type.ts';
-import { channelOf, guardProblems, releaseNotes } from './release.util.ts';
+import { channelOf, guardProblems, releaseNotes } from './utils/release.util.ts';
 
 const MANIFEST_PATH = 'packages/vscode/package.json';
 const CHANGELOG_PATH = 'packages/vscode/CHANGELOG.md';
