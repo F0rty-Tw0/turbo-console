@@ -10,10 +10,12 @@ import { GraphLook } from './graph-look.po.ts';
 import { GraphPackageList } from './graph-package-list.po.ts';
 import { GraphPointer } from './graph-pointer.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
+import { GraphTaskClock } from './graph-task-clock.po.ts';
 import { GraphTaskHost } from './graph-task-host.po.ts';
 import { GraphToolbar } from './graph-toolbar.po.ts';
 import { GraphWidgetsPage } from './graph-widgets.po.ts';
 import { GraphPage } from './graph.po.ts';
+import { PageClock } from './page-clock.po.ts';
 import type { GraphAtomGroupState } from '../../src/bridge/common/graph-atoms-message.type.ts';
 import { FIT_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { TaskRuns } from '../../src/graph/common/task-details.type.ts';
@@ -26,11 +28,16 @@ import { cachedShotState } from '../test/utils/graph-shot-state.spec.util.ts';
 /** The bottom-right pixel of the 1280 x 800 viewport, where no graph, box or button sits. */
 const PARKED_MOUSE = { x: 1279, y: 799 };
 
+/** 50 frames of 16 ms (800 ms): under the 1000 ms clock interval, long enough for the canvas to draw. */
+const CLOCKED_SHOT_FRAMES = 50;
+
 /** Opens the graph page into the exact settled state a theme shot compares: every pixel a function of the state and the theme. */
 export class GraphShots {
   private readonly atoms: GraphAtoms;
+  private readonly clock: PageClock;
   private readonly controls: GraphControlsPage;
   private readonly details: GraphDetailsPage;
+  private readonly taskClock: GraphTaskClock;
   private readonly taskHost: GraphTaskHost;
   private readonly grouping: GraphGroupingPage;
   private readonly host: GraphHost;
@@ -46,6 +53,8 @@ export class GraphShots {
   public constructor(page: Page) {
     this.page = page;
     this.atoms = new GraphAtoms(page);
+    this.clock = new PageClock(page);
+    this.taskClock = new GraphTaskClock(page);
     this.taskHost = new GraphTaskHost(page);
     this.controls = new GraphControlsPage(page);
     this.details = new GraphDetailsPage(page);
@@ -112,14 +121,22 @@ export class GraphShots {
     await this.settle();
   }
 
-  /** The host's `runs` message, then the canvas settled. */
-  public async sendRuns(runs: TaskRuns): Promise<void> {
+  /** The host's `runs` message, then the canvas settled; with `elapsed` the page clock is paused, so frames are ticked instead. */
+  public async sendRuns(runs: TaskRuns, elapsed?: Readonly<Record<string, number>>): Promise<void> {
+    if (elapsed !== undefined) return this.sendClockedRuns(runs, elapsed);
+
     await this.taskHost.sendRuns(runs);
     await this.settle();
   }
 
   public async expectHeaderRows(folders: string[]): Promise<void> {
     for (const folder of folders) await expect(this.widgets.rowOf(folder)).toBeVisible();
+  }
+
+  /** Under a paused page clock no frame runs by itself: post, then tick the frames the canvas needs to draw. */
+  private async sendClockedRuns(runs: TaskRuns, elapsed: Readonly<Record<string, number>>): Promise<void> {
+    await this.taskClock.sendRuns(runs, elapsed);
+    await this.clock.tickFrames(CLOCKED_SHOT_FRAMES);
   }
 
   /** Opens the page, lays `setup.state` out with ELK, waits for the view to be saved and reopens the page from it. */
