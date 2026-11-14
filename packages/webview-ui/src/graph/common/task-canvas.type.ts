@@ -15,6 +15,9 @@ export type TaskPredictions = Readonly<Record<string, GraphPrediction>>;
 /** The affected mark of each affected task, by task id; a task not named has none. */
 export type TaskAffectedMarks = Readonly<Record<string, GraphAffectedMark>>;
 
+/** The clock text of each clocked task card, by task id; a task not named has none. */
+export type TaskClocks = Readonly<Record<string, string>>;
+
 /**
  * What task mode draws: the shown tasks, their centres, the frame of each titled-row box, the node sizer for their names,
  * the size of each umbrella that has one of its own, the counts of each umbrella, and the
@@ -68,9 +71,14 @@ export type TaskCanvas = {
    * of a node's body bounds, which a compound's size and a box frame are measured from, so a halo moves no box.
    */
   readonly affected: (next: TaskAffectedMarks) => void;
+  /**
+   * Sets the `clock` data of each plain card the record names, own keys only, and removes it from the rest; kept, so a task
+   * graph drawn again carries it. A card whose text is unchanged is not touched; an id with no card is skipped.
+   */
+  readonly clocks: (next: TaskClocks) => void;
   /** Sets the `countsText` of each umbrella in `counts` from its counts, its label staying its name; a task not drawn is skipped, no node moves. */
   readonly setCounts: (counts: ReadonlyMap<string, GraphAtomCounts>) => void;
-  /** Marks the tasks and the Atomizer file nodes again with the kept runs map, predictions and affected marks and paints the kept target again; an expand adds nodes the last mark and paint never saw. */
+  /** Marks the tasks and the Atomizer file nodes again with the kept runs map, predictions, affected marks and clocks and paints the kept target again; an expand adds nodes the last mark and paint never saw. */
   readonly remark: () => void;
 };
 
