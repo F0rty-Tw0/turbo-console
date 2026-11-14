@@ -30,9 +30,6 @@ const MIN_FIT_TASKS = 200;
 /** With Controls and Details closed, 20 cards lie wholly in view at the readable zoom. */
 const MIN_READABLE_TASKS = 20;
 
-/** The card clock writes once, on the first tick after the pan settles; this bounds the wait for it. */
-const CLOCK_SETTLE_MS = 2000;
-
 /** The start of a live card's row 2. */
 const RUNNING_ROW_START = 'Running · ';
 
@@ -72,13 +69,6 @@ const rowTwoOfFirst = async (session: BenchSession, ids: string[]): Promise<stri
   const taskClock = new GraphTaskClock(session.page);
 
   return taskClock.rowTwoOf(ids[0] ?? '');
-};
-
-/** Row 2 of the first card after the pan: the clock skips its ticks while the view moves, so it waits for the settle write. */
-const settledRowTwoOfFirst = async (session: BenchSession, ids: string[], before: string | null): Promise<string | null> => {
-  const taskClock = new GraphTaskClock(session.page);
-
-  return taskClock.rowTwoChangedFrom(ids[0] ?? '', before, CLOCK_SETTLE_MS);
 };
 
 const expectClockTicked = (before: string | null, after: string | null): void => {
@@ -129,11 +119,9 @@ const pannedCpu = async (session: BenchSession, isReadable: boolean, isClocked: 
 
   await canvas.scriptedPan(WARM_UP_FRAMES, PAN_FRAMES);
 
-  if (isClocked) {
-    const after = await settledRowTwoOfFirst(session, ids, before);
+  const after = await rowTwoOfFirst(session, ids);
 
-    expectClockTicked(before, after);
-  }
+  if (isClocked) expectClockTicked(before, after);
 
   const cpu = canvas.measuredPanCpu();
   const label = labelOf(isReadable, isClocked);
