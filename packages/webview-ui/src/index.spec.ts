@@ -101,6 +101,7 @@ type ExpectedRunsMessage = {
   readonly type: 'runs';
   readonly runs: Readonly<Record<string, GraphRunState>>;
   readonly owners?: Readonly<Record<string, string>>;
+  readonly elapsed?: Readonly<Record<string, number>>;
   readonly predictions?: Readonly<Record<string, GraphPrediction>>;
   readonly affected?: GraphAffected | null;
 };

@@ -76,6 +76,11 @@ export type GraphRunsMessage = {
    * carried it and the post is not forced, so the page keeps its marks. A reloaded or new page always gets the key.
    */
   readonly affected?: GraphAffected | null;
+  /**
+   * Task id → ms its own live run has run, at the time the host built this message; only ids whose own run is `running` or
+   * `continuous`. Absent: no clocks.
+   */
+  readonly elapsed?: Readonly<Record<string, number>>;
 };
 
 /** Asks the page to show these tasks in task mode. */

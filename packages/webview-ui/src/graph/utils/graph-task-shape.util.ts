@@ -39,6 +39,17 @@ export const isOwnersRecord = (value: unknown): boolean => {
   return isCapped && Object.values(value).every(isOwnerId);
 };
 
+const isElapsedMs = (value: unknown): boolean => typeof value === 'number' && Number.isFinite(value) && value >= 0;
+
+/** A `runs` message's `elapsed`: at most `TASK_COUNT_MAX` task ids to a finite, non-negative number of ms. */
+export const isElapsedRecord = (value: unknown): boolean => {
+  if (!isRecord(value) || Array.isArray(value)) return false;
+
+  const isCapped = Object.keys(value).length <= TASK_COUNT_MAX;
+
+  return isCapped && Object.values(value).every(isElapsedMs);
+};
+
 /** A `showTasks` message's `taskIds`: an array of strings. */
 export const isTaskIdList = isStringList;
 
