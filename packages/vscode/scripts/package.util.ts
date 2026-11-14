@@ -1,6 +1,3 @@
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
-
 import { VSIX_PATH } from './common/vsix.const.ts';
 
 /** The vsce args for `package`; `VSCE_PRE_RELEASE=1` marks the build as a Marketplace pre-release. */
@@ -19,12 +16,4 @@ export const listingFiles = (listing: string): string[] => {
   const trimmed = lines.map((line) => line.trim());
 
   return trimmed.filter((line) => line !== '');
-};
-
-/** vsce's JS entry point. Node runs it directly: the bare `vsce` name is a `.cmd` shim on Windows that `execFile` cannot spawn. */
-export const vsceBin = (): string => {
-  const require = createRequire(import.meta.url);
-  const manifestPath = require.resolve('@vscode/vsce/package.json');
-
-  return join(dirname(manifestPath), 'vsce');
 };
