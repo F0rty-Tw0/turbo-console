@@ -11,6 +11,8 @@ const CACHE_OFF_LINE = 'package-manager-cache: false';
 const GUARD_STEP_ID = 'id: release';
 const GUARD_IF = `if [ "$IS_TAG" = 'true' ]; then`;
 const GUARD_TAG_RUN = 'node tools/src/release/release.ts --tag "$TAG"';
+const STEP_CONDITION_LINE = /^(?:- )?if:/;
+const TOLERATE_FAILURE_LINE = /^(?:- )?continue-on-error:/;
 const GUARD_LINES = ["IS_TAG: ${{ github.event_name == 'push' }}", 'TAG: ${{ github.ref_name }}', GUARD_IF];
 const PRE_RELEASE_LINE = "VSCE_PRE_RELEASE: ${{ steps.release.outputs.channel == 'pre-release' && '1' || '0' }}";
 
@@ -25,7 +27,16 @@ const missingLines = (label: string, lines: string[], required: string[]): strin
   return missing.map((line) => `${label} lacks the line: ${line}`);
 };
 
-/** A tag push must run `release.ts --tag "$TAG"`, the only place the master and CI checks happen. */
+const lineProblems = (label: string, lines: string[], pattern: RegExp, reason: string): string[] => {
+  const found = codeOf(lines).filter((line) => pattern.test(line));
+
+  return found.map((line) => `${label} ${reason}: ${line}`);
+};
+
+/**
+ * A tag push must run `release.ts --tag "$TAG"`, the only place the master and CI checks happen. The guard step takes
+ * no `if:` and the package job no `continue-on-error`, so the guard cannot be skipped or fail while the job succeeds.
+ */
 export const tagGuardProblemsOf = (workflow: string): string[] => {
   const job = jobNamed(workflow, PACKAGE_JOB);
   const steps = stepsOf(job ?? NO_JOB);
@@ -33,10 +44,12 @@ export const tagGuardProblemsOf = (workflow: string): string[] => {
   const code = codeOf(step);
   const next = code[code.indexOf(GUARD_IF) + 1];
   const problems = missingLines('release guard step', step, GUARD_LINES);
+  const conditions = lineProblems('release guard step', step, STEP_CONDITION_LINE, 'has a condition');
+  const tolerated = lineProblems(PACKAGE_JOB, job?.lines ?? [], TOLERATE_FAILURE_LINE, 'tolerates a failed step');
 
   if (next !== GUARD_TAG_RUN) problems.push(`release guard step does not run right after the tag check: ${GUARD_TAG_RUN}`);
 
-  return problems;
+  return [...problems, ...conditions, ...tolerated];
 };
 
 /** The vsix is built stable or pre-release from the same channel output the release page uses. */

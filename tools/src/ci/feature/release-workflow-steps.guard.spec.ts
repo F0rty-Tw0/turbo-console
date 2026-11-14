@@ -43,6 +43,9 @@ const GUARD_OK = GUARD_STEP.join('\n');
 const GUARD_NO_TAG_FLAG = GUARD_OK.replace(' --tag "$TAG"', '');
 const GUARD_NEVER_TAG = GUARD_OK.replace("github.event_name == 'push'", "github.event_name == 'never'");
 const GUARD_NO_TAG_ENV = GUARD_OK.replace('TAG: ${{ github.ref_name }}', 'TAG: v0.0.0');
+const GUARD_STEP_TOLERATED = GUARD_OK.replace('id: release', 'id: release\n        continue-on-error: true');
+const GUARD_JOB_TOLERATED = GUARD_OK.replace('    steps:', '    continue-on-error: true\n    steps:');
+const GUARD_STEP_SKIPPED = GUARD_OK.replace('id: release', "id: release\n        if: github.event_name == 'never'");
 const PRE_RELEASE_EXPRESSION = "${{ steps.release.outputs.channel == 'pre-release' && '1' || '0' }}";
 const PACKAGE_STEP = [
   ...PACKAGE_JOB,
@@ -187,6 +190,24 @@ describe('FEATURE: Release workflow step guard', () => {
       const result = tagGuardProblemsOf(GUARD_NO_TAG_ENV);
 
       expect(result).toStrictEqual(['release guard step lacks the line: TAG: ${{ github.ref_name }}']);
+    });
+
+    it('WHEN the guard step may fail without failing the job THEN it is listed', () => {
+      const result = tagGuardProblemsOf(GUARD_STEP_TOLERATED);
+
+      expect(result).toStrictEqual(['package tolerates a failed step: continue-on-error: true']);
+    });
+
+    it('WHEN the package job may fail without failing the run THEN it is listed', () => {
+      const result = tagGuardProblemsOf(GUARD_JOB_TOLERATED);
+
+      expect(result).toStrictEqual(['package tolerates a failed step: continue-on-error: true']);
+    });
+
+    it('WHEN the guard step has an if: of its own THEN it is listed', () => {
+      const result = tagGuardProblemsOf(GUARD_STEP_SKIPPED);
+
+      expect(result).toStrictEqual(["release guard step has a condition: if: github.event_name == 'never'"]);
     });
 
     it('WHEN the guard step is missing THEN every line is listed', () => {
