@@ -1,9 +1,9 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 
-import { VSIX_DIR, VSIX_FILES_PATH } from './common/vsix.const.ts';
+import { VSIX_DIR, VSIX_FILES_PATH, VSIX_PATH } from './common/vsix.const.ts';
 import { listingFiles, packageArgs } from './package.util.ts';
 import { vsixProblems } from './vsix-files.util.ts';
 
@@ -34,6 +34,9 @@ const problems = vsixProblems(files);
 
 for (const problem of problems) console.error(problem);
 
-if (problems.length > 0) process.exit(1);
+if (problems.length > 0) {
+  rmSync(resolve(PACKAGE_ROOT, VSIX_PATH), { force: true });
+  process.exit(1);
+}
 
 console.warn(`vsix ok: ${files.length} files`);
