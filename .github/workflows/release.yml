@@ -4,13 +4,19 @@
 # To turn on store publishing (user steps, all outside this repo's code):
 #   1. Create the Marketplace publisher and the Open VSX namespace.
 #   2. Set "publisher" in packages/vscode/package.json to that publisher.
-#   3. Create the `store` environment with the secrets VSCE_PAT and OVSX_PAT. Set Deployment branches and tags to
-#      "Selected branches and tags" and add the tag pattern v*.*.* only (no branch pattern). A required reviewer is
-#      optional and recommended.
-#   4. Add a repo ruleset so only admins may create v* tags.
+#   3. Create the `store` environment first, then set the variables in step 5: GitHub creates a referenced-but-missing
+#      environment with no protection rules. Put the secrets VSCE_PAT and OVSX_PAT in that environment only, never as
+#      repo-level secrets. Set Deployment branches and tags to "Selected branches and tags" and add the tag pattern
+#      v*.*.* only (no branch pattern). A required reviewer is strongly recommended: it is the only check that does not
+#      depend on repo contents.
+#   4. Add a tag ruleset on refs/tags/v* with "Restrict creations", "Restrict updates" and "Restrict deletions"
+#      (bypass: admins only). Store publishing trusts this rule, because release.ts runs from the tagged commit.
 #   5. Set the repo variables PUBLISH_MARKETPLACE and/or PUBLISH_OPENVSX to true.
 # Without the tag-only environment rule, anyone with write access could push a branch whose release.yml drops the `if:`,
 # dispatch it and read the tokens.
+#
+# Push the tag only after the master CI push run for that commit is green. A tag pushed while CI still runs fails the
+# guard (no successful run yet): re-run the failed Release run once CI is green.
 #
 # The tag name, the version and the channel reach `run:` bodies only through `env:`: git allows $( ), backticks and ; in
 # tag names, so a `${{ }}` inside a `run:` body would run them as shell.
