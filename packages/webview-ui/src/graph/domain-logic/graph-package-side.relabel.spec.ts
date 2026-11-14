@@ -72,7 +72,7 @@ describe('FEATURE: GraphPackageSide relabel', () => {
 
     describe('WHEN nothing else happens', () => {
       it('THEN the view is relabelled with the bare names', () => {
-        expect(rig.view.setLabels).toHaveBeenLastCalledWith(BARE_LABELS_STUB);
+        expect(rig.view.setLabels).toHaveBeenLastCalledWith(BARE_LABELS_STUB, new Map());
       });
 
       it('THEN no layout runs', () => {
@@ -141,7 +141,7 @@ describe('FEATURE: GraphPackageSide relabel', () => {
       });
 
       it('THEN its nodes are labelled with the bare names', () => {
-        expect(rig.view.setLabels).toHaveBeenLastCalledWith(BARE_LABELS_STUB);
+        expect(rig.view.setLabels).toHaveBeenLastCalledWith(BARE_LABELS_STUB, new Map());
       });
     });
   });

@@ -217,12 +217,12 @@ describe('FEATURE: graph hash', () => {
   });
 
   it.each([
-    [[], [], '3f676614'],
-    [[graphPackageOf('a', 'packages/a'), graphPackageOf('b', 'packages/b')], [{ source: 'a', target: 'b' }], '1e6284e3'],
-    [[graphPackageOf('é', '')], [], '80528e4c'],
-    [[graphPackageOf('p3', 'packages/p3', ['t'])], [], '846a1174'],
-    [[graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], [], '0b8535b6'],
-    [[graphPackageOf('__proto__', '', ['constructor'])], [], 'd6969730']
+    [[], [], '1680411b'],
+    [[graphPackageOf('a', 'packages/a'), graphPackageOf('b', 'packages/b')], [{ source: 'a', target: 'b' }], '36bdd734'],
+    [[graphPackageOf('é', '')], [], 'b38d7f57'],
+    [[graphPackageOf('p3', 'packages/p3', ['t'])], [], 'bbb4f037'],
+    [[graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], [], '33b494ed'],
+    [[graphPackageOf('__proto__', '', ['constructor'])], [], '7169b5ab']
   ])('GIVEN packages %j and edges %j WHEN hashed THEN it is %s (FNV-1a over UTF-8)', (packages, edges, expected) => {
     expect(graphHashOf(packages, edges)).toBe(expected);
   });

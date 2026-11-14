@@ -109,10 +109,10 @@ export type FoldersView = {
 export type GraphView = {
   readonly setGraph: (packages: string[], edges: GraphEdge[], positions: Positions, sizeOf: NodeSizer) => void;
   /**
-   * Gives each drawn package node its label text and a box that fits it and its name, measured by the `setGraph` sizer;
-   * positions and the camera stay as they are. Before any `setGraph` it does nothing.
+   * Gives each drawn package node its label text and a box that fits it and its sizing text (`sizeTexts`, else its name),
+   * measured by the `setGraph` sizer; positions and the camera stay as they are. Before any `setGraph` it does nothing.
    */
-  readonly setLabels: (labels: ReadonlyMap<string, string>) => void;
+  readonly setLabels: (labels: ReadonlyMap<string, string>, sizeTexts: ReadonlyMap<string, string>) => void;
   /** Gives each package node and each collapsed folder node the run state of its tasks; no state clears the run classes (spec D13). */
   readonly setPackageRuns: (runs: PackageRuns) => void;
   /** Gives each package, link, box, collapsed folder and folder link its state class. */

@@ -40,10 +40,15 @@ const drawGraph = (cy: Core, nodes: ElementDefinition[], edges: GraphEdge[]): vo
  * Writes each named package node's label and its `labelledSizeOf` box; a name not drawn is skipped. Only the named nodes
  * are touched, never `cy.nodes()`, so a collapsed folder keeps its own label.
  */
-export const labelPackages = (cy: Core, labels: ReadonlyMap<string, string>, sizeOf: NodeSizer): void => {
+export const labelPackages = (
+  cy: Core,
+  labels: ReadonlyMap<string, string>,
+  sizeTexts: ReadonlyMap<string, string>,
+  sizeOf: NodeSizer
+): void => {
   const relabel = (): void => {
     for (const [name, label] of labels) {
-      const { width, height } = labelledSizeOf(name, label, sizeOf);
+      const { width, height } = labelledSizeOf(sizeTexts.get(name) ?? name, label, sizeOf);
 
       cy.getElementById(name).data({ label, width, height });
     }
@@ -61,8 +66,8 @@ export const packageWritersOf = (cy: Core): PackageWriters => {
     packageSizeOf = sizeOf;
     drawGraph(cy, nodes, edges);
   };
-  const setLabels = (labels: ReadonlyMap<string, string>): void => {
-    if (packageSizeOf !== null) labelPackages(cy, labels, packageSizeOf);
+  const setLabels = (labels: ReadonlyMap<string, string>, sizeTexts: ReadonlyMap<string, string>): void => {
+    if (packageSizeOf !== null) labelPackages(cy, labels, sizeTexts, packageSizeOf);
   };
   const writers: PackageWriters = { setGraph, setLabels };
 

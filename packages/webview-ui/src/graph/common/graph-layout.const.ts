@@ -1,7 +1,7 @@
 import type { ElkLayering, ElkOptions } from './layout.type.ts';
 
-/** The layout algorithm's version: it enters the layout hash, so a change to how routes or positions are built drops every cached layout. */
-export const LAYOUT_VERSION = 3;
+/** The layout algorithm's version: it enters the layout hash, so a change to how routes or positions are built drops every cached layout. 4 sizes the root `//` box for its prefixed name. */
+export const LAYOUT_VERSION = 4;
 
 /**
  * The task layout's version: it enters the task layout key only, so a change to how task boxes are laid out or sized drops

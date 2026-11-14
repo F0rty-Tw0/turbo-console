@@ -4,7 +4,7 @@ import { edgeIdOf } from './edge-id.util.ts';
 import { groupedElkGraphOf } from './elk-grouped-graph.util.ts';
 import { layeredOptionsOf } from './elk-options.util.ts';
 import { folderGroupsOf } from './folder-group.util.ts';
-import { labelIn, labelledSizeOf } from './package-label.util.ts';
+import { labelIn, labelledSizeOf, sizeTextsOf } from './package-label.util.ts';
 import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import { LAYERING_DEFAULT } from '../common/graph-layout.const.ts';
@@ -33,9 +33,10 @@ export const elkGraphOf = (packages: string[], edges: GraphEdge[], sizeOf: (name
   return graph;
 };
 
-/** The ELK input of the drawn graph in `mode`: flat, or one compound per folder; each package is sized for its name and its label. */
+/** The ELK input of the drawn graph in `mode`: flat, or one compound per folder; each package is sized for its sizing text (its name, or the host's `sizeName`) and its label. */
 export const layoutGraphOf = (drawn: DrawnGraph, mode: LayoutGrouping, sizeOf: (name: string) => NodeSize): ElkNode => {
-  const packageSizeOf = (name: string): NodeSize => labelledSizeOf(name, labelIn(drawn.labels, name), sizeOf);
+  const sizeTexts = sizeTextsOf(drawn.infos);
+  const packageSizeOf = (name: string): NodeSize => labelledSizeOf(sizeTexts.get(name) ?? name, labelIn(drawn.labels, name), sizeOf);
 
   if (mode === 'flat') return elkGraphOf(drawn.packages, drawn.edges, packageSizeOf);
 

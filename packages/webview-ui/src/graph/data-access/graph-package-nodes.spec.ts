@@ -7,6 +7,8 @@ import { FOLDER_NODE_CLASS } from '../common/graph.const.ts';
 import { lengthSizeOf } from '../test/utils/length-size.spec.util.ts';
 import { collapsedIdOf } from '../utils/folder-id.util.ts';
 
+const NO_SIZE_TEXTS: ReadonlyMap<string, string> = new Map();
+
 const APPS_NODE = collapsedIdOf('apps');
 
 const ROOT_DATA = { id: '//', label: '//', width: 20, height: 32 };
@@ -35,7 +37,7 @@ describe('FEATURE: labelPackages', () => {
   describe('GIVEN a drawn package node and a collapsed folder node labelled apps', () => {
     describe('WHEN the labels map @org/x to x', () => {
       beforeEach(() => {
-        labelPackages(cy, new Map([['@org/x', 'x']]), lengthSizeOf);
+        labelPackages(cy, new Map([['@org/x', 'x']]), NO_SIZE_TEXTS, lengthSizeOf);
       });
 
       it('THEN the package reads x', () => {
@@ -58,7 +60,7 @@ describe('FEATURE: labelPackages', () => {
     });
 
     it('WHEN the labels name a package not drawn THEN no node is added', () => {
-      labelPackages(cy, new Map([['ghost', 'g']]), lengthSizeOf);
+      labelPackages(cy, new Map([['ghost', 'g']]), NO_SIZE_TEXTS, lengthSizeOf);
 
       expect(cy.nodes()).toHaveLength(2);
     });
@@ -70,7 +72,7 @@ describe('FEATURE: labelPackages', () => {
     });
 
     it('WHEN the labels map // to root-fixture THEN its box is as wide as root-fixture', () => {
-      labelPackages(cy, new Map([['//', 'root-fixture']]), lengthSizeOf);
+      labelPackages(cy, new Map([['//', 'root-fixture']]), NO_SIZE_TEXTS, lengthSizeOf);
 
       const width: unknown = cy.getElementById('//').data('width');
 
@@ -96,7 +98,7 @@ describe('FEATURE: packageWritersOf', () => {
 
       writers.setGraph(['//'], [], {}, lengthSizeOf);
 
-      writers.setLabels(new Map([['//', 'root-fixture']]));
+      writers.setLabels(new Map([['//', 'root-fixture']]), NO_SIZE_TEXTS);
 
       const data: unknown = cy.getElementById('//').data();
 
@@ -107,8 +109,41 @@ describe('FEATURE: packageWritersOf', () => {
   it('GIVEN no graph drawn WHEN labels are set THEN no node is added', () => {
     const writers = packageWritersOf(cy);
 
-    writers.setLabels(new Map([['//', 'root-fixture']]));
+    writers.setLabels(new Map([['//', 'root-fixture']]), NO_SIZE_TEXTS);
 
     expect(cy.nodes()).toHaveLength(0);
+  });
+});
+
+describe('FEATURE: the root // box across setLabels', () => {
+  const sizeTexts = new Map([['//', '(root) @x/savings']]);
+
+  const rootWidthOf = (cy: Core): unknown => cy.getElementById('//').data('width');
+
+  it('GIVEN // sized for (root) @x/savings WHEN labelled (root) savings and then @x/savings THEN the width stays that of the sizing text', () => {
+    const cy = cytoscape({ headless: true });
+    const writers = packageWritersOf(cy);
+
+    writers.setGraph(['//'], [], {}, lengthSizeOf);
+    writers.setLabels(new Map([['//', '(root) savings']]), sizeTexts);
+
+    const hiddenWidth = rootWidthOf(cy);
+
+    writers.setLabels(new Map([['//', '@x/savings']]), sizeTexts);
+
+    expect(hiddenWidth).toBe(170);
+    expect(rootWidthOf(cy)).toBe(170);
+
+    cy.destroy();
+  });
+
+  it('GIVEN a package whose sizeTexts entry is absent WHEN labelled THEN it is sized as today', () => {
+    const cy = cytoscape({ headless: true, elements: [PACKAGE] });
+
+    labelPackages(cy, new Map([['@org/x', 'x']]), sizeTexts, lengthSizeOf);
+
+    expect(cy.getElementById('@org/x').data('width')).toBe(60);
+
+    cy.destroy();
   });
 });

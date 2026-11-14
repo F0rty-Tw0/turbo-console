@@ -25,9 +25,21 @@ export const labelsOf = (infos: GraphPackage[], scopeShown: boolean): ReadonlyMa
 /** The label `labels` gives the package `name`; a name it lacks reads as itself. */
 export const labelIn = (labels: ReadonlyMap<string, string>, name: string): string => labels.get(name) ?? name;
 
+/** The sizing text of each package that has one (the host sets it on a prefixed root `//`), keyed by package name. */
+export const sizeTextsOf = (infos: GraphPackage[]): ReadonlyMap<string, string> => {
+  const sizeTexts = new Map<string, string>();
+
+  for (const { name, sizeName } of infos) {
+    if (sizeName !== undefined) sizeTexts.set(name, sizeName);
+  }
+
+  return sizeTexts;
+};
+
 /**
- * The box of the package `name` drawn as `label`: the wider of the two texts' boxes. The raw name is the widest text a
- * package draws, so its box stays put when scopes are hidden; the root `//` draws its label, which is wider than `//`.
+ * The box of a package drawn as `label`: the wider of the sizing text's box and the label's. The sizing text is the raw
+ * name, the widest text a package draws, so its box stays put when scopes are hidden; the root `//` draws its label,
+ * which is wider than `//`, and sizes for the host's `sizeName` so it never resizes on a scope toggle.
  */
 export const labelledSizeOf = (name: string, label: string, sizeOf: NodeSizer): NodeSize => {
   const nameSize = sizeOf(name);

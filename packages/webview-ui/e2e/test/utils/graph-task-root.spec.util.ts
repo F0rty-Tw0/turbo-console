@@ -41,3 +41,19 @@ export const taskRootState = (scopeShown: boolean): GraphReady => {
 
   return state;
 };
+
+const ROOT_RECORD = packageOf('//', '', [], 0);
+
+/** The host's `//` package of a repo with other packages while scopes are hidden: its prefixed bare name, sized for it. */
+const PREFIXED_ROOT: GraphPackage = { ...ROOT_RECORD, bareName: '(root) savings', sizeName: '(root) savings' };
+
+/**
+ * `taskRootState(false)` as the host sends it for a repo whose root `//` is also listed as a package, labelled
+ * `savings`: the root reads `(root) savings`. Hash `7a5c0064`, so the page draws the root instead of relabelling.
+ */
+export const taskRootListedState = (): GraphReady => {
+  const hidden = taskRootState(false);
+  const state: GraphReady = { ...hidden, hash: '7a5c0064', packages: [PREFIXED_ROOT, APP] };
+
+  return state;
+};

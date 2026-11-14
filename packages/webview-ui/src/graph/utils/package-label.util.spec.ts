@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { labelIn, labelledSizeOf, labelsOf, packageLabelOf } from './package-label.util.ts';
+import { labelIn, labelledSizeOf, labelsOf, packageLabelOf, sizeTextsOf } from './package-label.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import { lengthSizeOf } from '../test/utils/length-size.spec.util.ts';
 
@@ -100,5 +100,34 @@ describe('FEATURE: labelsOf', () => {
 
       expect(labels.has('//')).toBe(false);
     });
+  });
+});
+
+describe('FEATURE: sizeTextsOf', () => {
+  it('GIVEN the root // with a sizeName beside a package without one THEN only // has a sizing text', () => {
+    const root: GraphPackage = { ...PLAIN, name: '//', bareName: '(root) savings', sizeName: '(root) savings', path: '' };
+
+    const sizeTexts = sizeTextsOf([root, PLAIN]);
+
+    expect([...sizeTexts]).toStrictEqual([['//', '(root) savings']]);
+  });
+});
+
+describe('FEATURE: the // box across scope toggles', () => {
+  it.each([
+    { given: 'savings', shown: 'savings', hidden: '(root) savings', sizeName: '(root) savings' },
+    { given: '@x/app', shown: '@x/app', hidden: '(root) app', sizeName: '(root) @x/app' }
+  ])('GIVEN a root labelled $given WHEN sized for sizeName THEN both scope modes give one box that fits the prefixed label', (row) => {
+    const shownSize = labelledSizeOf(row.sizeName, row.shown, lengthSizeOf);
+    const hiddenSize = labelledSizeOf(row.sizeName, row.hidden, lengthSizeOf);
+
+    expect(hiddenSize).toStrictEqual(shownSize);
+    expect(hiddenSize).toStrictEqual(lengthSizeOf(row.sizeName));
+  });
+
+  it('GIVEN a package with no sizeName WHEN sized from its name THEN the box is as labelledSizeOf(name, label) gives', () => {
+    const size = labelledSizeOf('@org/x', 'x', lengthSizeOf);
+
+    expect(size).toStrictEqual({ width: 60, height: 32 });
   });
 });

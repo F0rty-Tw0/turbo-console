@@ -2,7 +2,7 @@ import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
 import type { DrawnGraph, GraphView } from '../common/graph-page.type.ts';
-import { labelsOf } from '../utils/package-label.util.ts';
+import { labelsOf, sizeTextsOf } from '../utils/package-label.util.ts';
 import { taskCountsDiffer } from '../utils/task-counts.util.ts';
 import { restorePlanOf } from '../utils/view-restore.util.ts';
 
@@ -42,7 +42,7 @@ export const restoreAfterDraw = (parts: DrawParts, saved: GraphViewState | null)
 
   if (drawn === null) return;
 
-  view.setLabels(drawn.labels);
+  view.setLabels(drawn.labels, sizeTextsOf(drawn.infos));
 
   const camera = saved === opening ? null : saved;
   const plan = restorePlanOf(camera, drawn.hash);
@@ -88,6 +88,6 @@ export const refreshedDrawn = (shown: DrawnGraph, state: GraphReady): DrawnGraph
 export const relabel = (parts: RelabelParts, graph: DrawnGraph): void => {
   const { view, controls } = parts;
 
-  view.setLabels(graph.labels);
+  view.setLabels(graph.labels, sizeTextsOf(graph.infos));
   controls.relabel(graph);
 };

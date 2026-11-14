@@ -131,3 +131,15 @@ describe('FEATURE: layoutGraphOf', () => {
     });
   });
 });
+
+describe('FEATURE: layoutGraphOf sizeName', () => {
+  const sized: GraphPackage = { ...ROOT, bareName: '(root) root-fixture', sizeName: '(root) @x/root-fixture' };
+  const drawn = drawnGraphOf({ ...STATE_STUB, packages: [...STATE_STUB.packages, sized] });
+
+  it('GIVEN // with a sizeName WHEN built flat THEN its box is the width of the sizeName and web keeps its name width', () => {
+    const graph = layoutGraphOf(drawn, 'flat', lengthSizeOf);
+
+    expect(graph.children).toContainEqual({ id: '//', width: 220, height: 32 });
+    expect(graph.children).toContainEqual({ id: 'web', width: 30, height: 32 });
+  });
+});

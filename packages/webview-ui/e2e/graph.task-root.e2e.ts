@@ -1,5 +1,5 @@
 import { expect, test } from './graph-task.fixture.ts';
-import { APP_TASK_NAME, ROOT_TASK_NAME, taskRootState } from './test/utils/graph-task-root.spec.util.ts';
+import { APP_TASK_NAME, ROOT_TASK_NAME, taskRootListedState, taskRootState } from './test/utils/graph-task-root.spec.util.ts';
 import { PACKAGE_GLYPH } from '../src/graph/common/graph-glyph.const.ts';
 import { ROOT_TASKS_TITLE } from '../src/graph/common/graph-task.const.ts';
 
@@ -71,6 +71,27 @@ test.describe('FEATURE: task mode titles the workspace root', () => {
 
       await test.step('AND the root crumb is plain text, not a button', async (): Promise<void> =>
         expect(graphLocation.crumb(ROOT_TASKS_TITLE)).toHaveCount(0));
+    }
+  );
+
+  test(
+    'GIVEN the host lists the root // as (root) savings while scopes are hidden, the root task box title reads (root) savings',
+    { annotation: ROOT_TITLE },
+    async ({ graphHost, graphProbe, graphTaskHost, graphTaskProbe }): Promise<void> => {
+      await test.step('WHEN a state listing // arrives and showTasks names the root task', async (): Promise<void> => {
+        await graphHost.sendState(taskRootListedState());
+        await graphProbe.expectNodeIds(['//', '@org/app']);
+        await graphTaskHost.sendShowTasks(BOTH_TASKS);
+        await graphTaskProbe.expectTaskIds(BOTH_TASKS);
+      });
+
+      await test.step('THEN the root box reads (root) savings and the app box reads app', async (): Promise<void> => {
+        await graphTaskProbe.expectText('pkg://', `${PACKAGE_GLYPH} (root) savings`);
+        await graphTaskProbe.expectText('pkg:@org/app', `${PACKAGE_GLYPH} app`);
+      });
+
+      await test.step('AND the root title is drawn whole', async (): Promise<void> =>
+        graphTaskProbe.expectBoxTitlesUncut(['(root) savings']));
     }
   );
 });
