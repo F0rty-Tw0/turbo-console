@@ -4,6 +4,10 @@ import { vsixProblems } from './vsix-files.spec.util.ts';
 
 const FULL_LIST = [
   'package.json',
+  'LICENSE',
+  'CHANGELOG.md',
+  'THIRD-PARTY-NOTICES.md',
+  'media/icon.png',
   'dist/extension.cjs',
   'dist/webview/details/index.html',
   'dist/webview/details/main.js',
@@ -44,6 +48,16 @@ describe('FEATURE: vsixProblems', () => {
       const problems = vsixProblems(files);
 
       expect(problems).toStrictEqual([]);
+    });
+  });
+
+  describe('GIVEN the list without THIRD-PARTY-NOTICES.md', () => {
+    it('WHEN it is checked THEN the only problem is the missing notices', () => {
+      const files = FULL_LIST.filter((file) => file !== 'THIRD-PARTY-NOTICES.md');
+
+      const problems = vsixProblems(files);
+
+      expect(problems).toStrictEqual(['missing THIRD-PARTY-NOTICES.md']);
     });
   });
 

@@ -1,12 +1,32 @@
 {
   "name": "turbo-console",
   "displayName": "Turbo Console (unofficial)",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Unofficial VS Code extension for Turborepo",
   "private": true,
   "license": "MIT",
   "author": "Artiom Tofan artiomtofancv@gmail.com",
   "publisher": "turbo-console-dev",
+  "preview": true,
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/F0rty-Tw0/turbo-console"
+  },
+  "bugs": {
+    "url": "https://github.com/F0rty-Tw0/turbo-console/issues"
+  },
+  "homepage": "https://github.com/F0rty-Tw0/turbo-console#readme",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "turborepo",
+    "turbo",
+    "monorepo",
+    "tasks",
+    "task runner"
+  ],
   "type": "module",
   "engines": {
     "vscode": "^1.139.0"
