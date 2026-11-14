@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { checkoutProblemsOf } from './test/utils/release-workflow.spec.util.ts';
 import { injectionProblemsOf, tokenProblemsOf } from './test/utils/workflow-run.spec.util.ts';
+import { tagGuardProblemsOf } from './test/utils/workflow-safety.spec.util.ts';
 
 const ROOT = join(import.meta.dirname, '../../../../');
 const SHA = '3d3c42e5aac5ba805825da76410c181273ba90b1';
@@ -22,6 +23,26 @@ const TOKEN_JOB_ENV = [...JOB, '    env:', '      VSCE_PAT: ${{ secrets.VSCE_PAT
 const TOKEN_RUN = [...JOB, '      - run: vsce publish --pat "$VSCE_PAT"'];
 const TOKEN_STEP_ENV = [...JOB, '      - run: vsce publish', '        env:', '          VSCE_PAT: ${{ secrets.VSCE_PAT }}'];
 const TOKEN_COMMENT = ['# VSCE_PAT and OVSX_PAT live in the store environment.', ...JOB];
+
+const PACKAGE_JOB = ['jobs:', '  package:', '    steps:'];
+const GUARD_STEP = [
+  ...PACKAGE_JOB,
+  '      - name: Guard the tag and write the notes',
+  '        id: release',
+  '        env:',
+  "          IS_TAG: ${{ github.event_name == 'push' }}",
+  '          TAG: ${{ github.ref_name }}',
+  '        run: |',
+  `          if [ "$IS_TAG" = 'true' ]; then`,
+  '            node tools/src/release/release.ts --tag "$TAG"',
+  '          else',
+  '            node tools/src/release/release.ts',
+  '          fi'
+];
+const GUARD_OK = GUARD_STEP.join('\n');
+const GUARD_NO_TAG_FLAG = GUARD_OK.replace(' --tag "$TAG"', '');
+const GUARD_NEVER_TAG = GUARD_OK.replace("github.event_name == 'push'", "github.event_name == 'never'");
+const GUARD_NO_TAG_ENV = GUARD_OK.replace('TAG: ${{ github.ref_name }}', 'TAG: v0.0.0');
 
 const joined = (lines: string[]): string => lines.join('\n');
 
@@ -123,6 +144,51 @@ describe('FEATURE: Release workflow step guard', () => {
       const result = tokenProblemsOf(joined(TOKEN_RUN));
 
       expect(result).toStrictEqual(['token outside a step-level env: - run: vsce publish --pat "$VSCE_PAT"']);
+    });
+  });
+
+  describe('GIVEN the tag guard step', () => {
+    it('WHEN the repo release.yml is read THEN a tag push runs release.ts --tag "$TAG"', () => {
+      const result = tagGuardProblemsOf(RELEASE);
+
+      expect(result).toStrictEqual([]);
+    });
+
+    it('WHEN the step passes --tag on a tag push THEN no problem is listed', () => {
+      const result = tagGuardProblemsOf(GUARD_OK);
+
+      expect(result).toStrictEqual([]);
+    });
+
+    it('WHEN the --tag flag is dropped THEN it is listed', () => {
+      const result = tagGuardProblemsOf(GUARD_NO_TAG_FLAG);
+
+      expect(result).toStrictEqual([
+        'release guard step does not run right after the tag check: node tools/src/release/release.ts --tag "$TAG"'
+      ]);
+    });
+
+    it('WHEN IS_TAG is no longer true on a push THEN it is listed', () => {
+      const result = tagGuardProblemsOf(GUARD_NEVER_TAG);
+
+      expect(result).toStrictEqual(["release guard step lacks the line: IS_TAG: ${{ github.event_name == 'push' }}"]);
+    });
+
+    it('WHEN TAG is not the pushed ref name THEN it is listed', () => {
+      const result = tagGuardProblemsOf(GUARD_NO_TAG_ENV);
+
+      expect(result).toStrictEqual(['release guard step lacks the line: TAG: ${{ github.ref_name }}']);
+    });
+
+    it('WHEN the guard step is missing THEN every line is listed', () => {
+      const result = tagGuardProblemsOf(joined(PACKAGE_JOB));
+
+      expect(result).toStrictEqual([
+        "release guard step lacks the line: IS_TAG: ${{ github.event_name == 'push' }}",
+        'release guard step lacks the line: TAG: ${{ github.ref_name }}',
+        `release guard step lacks the line: if [ "$IS_TAG" = 'true' ]; then`,
+        'release guard step does not run right after the tag check: node tools/src/release/release.ts --tag "$TAG"'
+      ]);
     });
   });
 });
