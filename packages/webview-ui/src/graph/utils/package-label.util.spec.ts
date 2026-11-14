@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { labelIn, labelledSizeOf, labelsOf, packageLabelOf, sizeTextsOf } from './package-label.util.ts';
 import type { GraphPackage } from '../../bridge/common/graph-state.type.ts';
+import type { NodeSize } from '../common/node-size.type.ts';
 import { lengthSizeOf } from '../test/utils/length-size.spec.util.ts';
 
 const SCOPED: GraphPackage = { name: '@org/x', bareName: 'x', path: 'packages/x', tags: [], taskCount: 0 };
@@ -113,17 +114,40 @@ describe('FEATURE: sizeTextsOf', () => {
   });
 });
 
+type RootToggleRow = {
+  readonly given: string;
+  readonly shown: string;
+  readonly hidden: string;
+  readonly sizeName: string;
+};
+
+const rootInfoOf = (bareName: string, sizeName: string): GraphPackage[] => {
+  const root: GraphPackage = { ...PLAIN, name: '//', bareName, sizeName, path: '' };
+
+  return [root];
+};
+
+const rootBoxOf = (infos: GraphPackage[], scopeShown: boolean): NodeSize => {
+  const sizeTexts = sizeTextsOf(infos);
+  const labels = labelsOf(infos, scopeShown);
+
+  return labelledSizeOf(sizeTexts.get('//') ?? '//', labelIn(labels, '//'), lengthSizeOf);
+};
+
 describe('FEATURE: the // box across scope toggles', () => {
-  it.each([
+  it.each<RootToggleRow>([
     { given: 'savings', shown: 'savings', hidden: '(root) savings', sizeName: '(root) savings' },
     { given: '@x/app', shown: '@x/app', hidden: '(root) app', sizeName: '(root) @x/app' }
-  ])('GIVEN a root labelled $given WHEN sized for sizeName THEN both scope modes give one box that fits the prefixed label', (row) => {
-    const shownSize = labelledSizeOf(row.sizeName, row.shown, lengthSizeOf);
-    const hiddenSize = labelledSizeOf(row.sizeName, row.hidden, lengthSizeOf);
+  ])(
+    'GIVEN a root labelled $given WHEN sized from the host infos THEN both scope modes give one box that fits the prefixed label',
+    (row) => {
+      const shownBox = rootBoxOf(rootInfoOf(row.shown, row.sizeName), true);
+      const hiddenBox = rootBoxOf(rootInfoOf(row.hidden, row.sizeName), false);
 
-    expect(hiddenSize).toStrictEqual(shownSize);
-    expect(hiddenSize).toStrictEqual(lengthSizeOf(row.sizeName));
-  });
+      expect(hiddenBox).toStrictEqual(shownBox);
+      expect(hiddenBox).toStrictEqual(lengthSizeOf(row.sizeName));
+    }
+  );
 
   it('GIVEN a package with no sizeName WHEN sized from its name THEN the box is as labelledSizeOf(name, label) gives', () => {
     const size = labelledSizeOf('@org/x', 'x', lengthSizeOf);
