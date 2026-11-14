@@ -1,9 +1,9 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
-import { VSIX_FILES_PATH } from './common/vsix.const.ts';
+import { VSIX_DIR, VSIX_FILES_PATH } from './common/vsix.const.ts';
 import { listingFiles, packageArgs } from './package.util.ts';
 import { vsixProblems } from './vsix-files.util.ts';
 
@@ -15,17 +15,19 @@ const vsceBin = (): string => {
   return join(dirname(manifestPath), 'vsce');
 };
 
+const PACKAGE_ROOT = resolve(import.meta.dirname, '..');
+
 const vsce = vsceBin();
 
-mkdirSync('.vsix', { recursive: true });
+mkdirSync(resolve(PACKAGE_ROOT, VSIX_DIR), { recursive: true });
 
 const args = packageArgs(process.env);
 
-execFileSync(process.execPath, [vsce, ...args], { stdio: 'inherit' });
+execFileSync(process.execPath, [vsce, ...args], { cwd: PACKAGE_ROOT, stdio: 'inherit' });
 
-const listing = execFileSync(process.execPath, [vsce, 'ls', '--no-dependencies'], { encoding: 'utf8' });
+const listing = execFileSync(process.execPath, [vsce, 'ls', '--no-dependencies'], { cwd: PACKAGE_ROOT, encoding: 'utf8' });
 
-writeFileSync(VSIX_FILES_PATH, listing);
+writeFileSync(resolve(PACKAGE_ROOT, VSIX_FILES_PATH), listing);
 
 const files = listingFiles(listing);
 const problems = vsixProblems(files);

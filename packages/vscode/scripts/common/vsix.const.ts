@@ -51,7 +51,7 @@ export const WEBVIEW_FILES = [
   `${DETAILS_DIR}SIMPLE-ICONS-DISCLAIMER.md`
 ];
 
-const VSIX_DIR = '.vsix';
+export const VSIX_DIR = '.vsix';
 
 export const VSIX_PATH = `${VSIX_DIR}/turbo-console.vsix`;
 
