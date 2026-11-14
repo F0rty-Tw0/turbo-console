@@ -75,6 +75,7 @@ type ExpectedEdge = { readonly source: string; readonly target: string };
 type ExpectedPackage = {
   readonly name: string;
   readonly bareName: string;
+  readonly sizeName?: string;
   readonly path: string;
   readonly tags: string[];
   readonly taskCount: number;

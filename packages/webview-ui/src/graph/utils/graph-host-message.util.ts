@@ -27,12 +27,13 @@ const isEdge = (value: unknown): boolean => {
 const isPackage = (value: unknown): boolean => {
   if (!isRecord(value)) return false;
 
-  const { name, bareName, path, tags, taskCount } = value;
+  const { name, bareName, sizeName, path, tags, taskCount } = value;
+  const hasSizeName = sizeName === undefined || isString(sizeName);
   const hasTags = Array.isArray(tags) && tags.every(isString);
   const hasTaskCount = isCount(taskCount) && taskCount <= TASK_COUNT_MAX;
   const hasNames = isString(name) && isString(bareName) && isString(path);
 
-  return hasNames && hasTags && hasTaskCount;
+  return hasNames && hasSizeName && hasTags && hasTaskCount;
 };
 
 const hasCachesOf = (state: UnknownRecord): boolean => {

@@ -28,13 +28,31 @@ const rootTextOf = (label: string): string => {
   return cleanText(`${ROOT_PREFIX}${text}`, LABEL_MAX);
 };
 
-/** The prefixed text of the root `//` while its label exists and the repo has other packages; `null` for any other package. */
-export const prefixedRootTextOf = (pkg: PackageNode, rootPrefixed: boolean): string | null => {
+/** The label of the root `//` while the repo has other packages and the root has one; `null` for any other package. */
+const prefixedRootLabelOf = (pkg: PackageNode, rootPrefixed: boolean): string | null => {
   if (!rootPrefixed) return null;
 
   const isRoot = isRootNode(pkg);
 
-  if (!isRoot || pkg.label === null) return null;
+  if (!isRoot) return null;
 
-  return rootTextOf(pkg.label);
+  return pkg.label;
+};
+
+/** The prefixed text of the root `//` while its label exists and the repo has other packages; `null` for any other package. */
+export const prefixedRootTextOf = (pkg: PackageNode, rootPrefixed: boolean): string | null => {
+  const label = prefixedRootLabelOf(pkg, rootPrefixed);
+
+  if (label === null) return null;
+
+  return rootTextOf(label);
+};
+
+/** The text the graph sizes the `//` box for: `(root) <full label>` in both scope modes; `undefined` where the root reads no prefix. */
+export const rootSizeNameOf = (pkg: PackageNode, rootPrefixed: boolean): string | undefined => {
+  const label = prefixedRootLabelOf(pkg, rootPrefixed);
+
+  if (label === null) return undefined;
+
+  return cleanText(`${ROOT_PREFIX}${label}`, LABEL_MAX);
 };

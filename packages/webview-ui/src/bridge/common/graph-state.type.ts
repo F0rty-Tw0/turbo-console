@@ -14,6 +14,12 @@ export type GraphPackage = {
    * hidden; not part of the layout hash.
    */
   readonly bareName: string;
+  /**
+   * The text the box is sized for, instead of `name`: the host sets it on the root `//` only, and only while the root
+   * reads a `(root) ` prefix, as the prefixed full text, the same in both scope modes so a toggle never resizes the box.
+   * Not part of the layout hash.
+   */
+  readonly sizeName?: string;
   readonly path: string;
   readonly tags: string[];
   /** The package's visible tasks; not part of the layout hash. */
