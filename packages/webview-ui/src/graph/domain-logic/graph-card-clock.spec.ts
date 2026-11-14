@@ -146,5 +146,67 @@ describe('FEATURE: GraphCardClock', () => {
 
       expect(canvas.clocks).not.toHaveBeenCalled();
     });
+
+    describe('GIVEN the view moved 100 ms ago', () => {
+      beforeEach(() => {
+        canvas.clocks.mockClear();
+        t = 1900;
+        clock.moved();
+        t = 2000;
+      });
+
+      it('WHEN a tick fires THEN nothing is written', () => {
+        fire();
+
+        expect(canvas.clocks).not.toHaveBeenCalled();
+      });
+
+      it('WHEN the view keeps moving until 100 ms before the next tick THEN nothing is written', () => {
+        t = 2900;
+        clock.moved();
+        t = 3000;
+        fire();
+
+        expect(canvas.clocks).not.toHaveBeenCalled();
+      });
+
+      it('WHEN runs ends the run THEN the clock is cleared at once', () => {
+        clock.runs(undefined, 2000);
+
+        expect(canvas.clocks).toHaveBeenLastCalledWith({});
+      });
+
+      it('WHEN runs names a new base THEN its text is written at once', () => {
+        clock.runs({ a: 70_000 }, 2000);
+
+        expect(canvas.clocks).toHaveBeenLastCalledWith({ a: '1m 10s' });
+      });
+
+      it('WHEN the next tick fires after the view settled THEN the whole current record is written', () => {
+        fire();
+        t = 3000;
+        fire();
+
+        expect(canvas.clocks).toHaveBeenCalledExactlyOnceWith({ a: '1m 6s' });
+      });
+
+      it('WHEN the gesture ended and the page is hidden at the next tick THEN nothing is written', () => {
+        hidden = true;
+        t = 3000;
+        fire();
+
+        expect(canvas.clocks).not.toHaveBeenCalled();
+      });
+    });
+
+    it('WHEN the view moved exactly 200 ms ago THEN a tick writes', () => {
+      canvas.clocks.mockClear();
+      t = 1800;
+      clock.moved();
+      t = 2000;
+      fire();
+
+      expect(canvas.clocks).toHaveBeenLastCalledWith({ a: '1m 5s' });
+    });
   });
 });
