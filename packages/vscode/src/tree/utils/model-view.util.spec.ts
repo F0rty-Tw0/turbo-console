@@ -257,3 +257,76 @@ describe('FEATURE: single-package row text', () => {
     });
   });
 });
+
+type RootPrefixRow = {
+  readonly given: string;
+  readonly packages: PackageNode[];
+  readonly scopeShown: boolean;
+  readonly texts: string[];
+};
+
+const SCRIPT_ONLY_PACKAGE: PackageNode = packageOf('@x/savings', [SCRIPT_TASK]);
+
+const ROOT_PREFIX_ROWS: RootPrefixRow[] = [
+  {
+    given: 'root savings + @x/savings, scopes hidden',
+    packages: [rootOf('savings'), packageOf('@x/savings')],
+    scopeShown: false,
+    texts: ['(root) savings', 'savings']
+  },
+  {
+    given: 'root savings + @x/savings, scopes shown',
+    packages: [rootOf('savings'), packageOf('@x/savings')],
+    scopeShown: true,
+    texts: ['savings', '@x/savings']
+  },
+  { given: 'root savings only, scopes hidden', packages: [rootOf('savings')], scopeShown: false, texts: ['savings'] },
+  {
+    given: 'scoped root @x/app + web, scopes hidden',
+    packages: [rootOf('@x/app'), packageOf('web')],
+    scopeShown: false,
+    texts: ['(root) app', 'web']
+  },
+  {
+    given: 'root without a label + web, scopes hidden',
+    packages: [rootOf(null), packageOf('web')],
+    scopeShown: false,
+    texts: ['//', 'web']
+  },
+  {
+    given: 'root savings + a script-only @x/savings that the tree does not show, scopes hidden',
+    packages: [rootOf('savings'), SCRIPT_ONLY_PACKAGE],
+    scopeShown: false,
+    texts: ['(root) savings', '@x/savings']
+  },
+  {
+    given: 'root root + web, scopes hidden',
+    packages: [rootOf('root'), packageOf('web')],
+    scopeShown: false,
+    texts: ['(root)', 'web']
+  },
+  {
+    given: 'two scoped packages with the same rest, no root, scopes hidden',
+    packages: [packageOf('@a/ui'), packageOf('@b/ui')],
+    scopeShown: false,
+    texts: ['@a/ui', '@b/ui']
+  }
+];
+
+describe('FEATURE: root prefix while scopes are hidden', () => {
+  it.each(ROOT_PREFIX_ROWS)('GIVEN $given THEN the rows read $texts', ({ packages, scopeShown, texts }) => {
+    const view = modelViewWith(packages);
+    const read = packages.map((pkg) => shownTextOf(view, pkg, scopeShown));
+
+    expect(read).toStrictEqual(texts);
+  });
+
+  it('GIVEN a root label longer than LABEL_MAX + web WHEN scopes are hidden THEN the row keeps the prefix and fits LABEL_MAX', () => {
+    const pkg = rootOf('a'.repeat(LABEL_MAX + 10));
+    const view = modelViewWith([pkg, packageOf('web')]);
+    const text = shownTextOf(view, pkg, false);
+
+    expect(text.startsWith('(root) a')).toBe(true);
+    expect(text).toHaveLength(LABEL_MAX);
+  });
+});

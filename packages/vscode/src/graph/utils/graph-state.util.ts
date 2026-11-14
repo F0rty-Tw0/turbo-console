@@ -8,6 +8,7 @@ import { graphListingOf, persistentIdsOf, runIdsOfListing } from './graph-tasks.
 import type { RootState } from '../../roots/common/coordinator.type.ts';
 import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
 import { bareTextsOf, fullTextOf } from '../../tree/utils/model-view.util.ts';
+import { hasOtherPackagesOf } from '../../tree/utils/root-prefix.util.ts';
 import { binaryMessageOf, shownModelOf } from '../../tree/utils/root-rows.util.ts';
 import { isListedTask } from '../../tree/utils/script-task.util.ts';
 import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
@@ -115,7 +116,8 @@ export const shownOf = (toggles: GraphToggles): GraphShown => {
 };
 
 export const graphStateOf = (model: WorkspaceModel, caches: GraphLayoutCaches, shown: GraphShown): GraphState => {
-  const bareTexts = bareTextsOf(model.packages);
+  const rootPrefixed = hasOtherPackagesOf(model.packages);
+  const bareTexts = bareTextsOf(model.packages, rootPrefixed);
   const packages = model.packages.map((node) => packageOf(node, bareTexts, shown)).toSorted(comparePackages);
   const edges = edgesOf(model.edges);
   const hash = graphHashOf(packages, edges);
