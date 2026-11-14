@@ -11,6 +11,7 @@ import { backdateTree } from './utils/backdate.spec.util.ts';
 import { shouldRelaunch } from './utils/relaunch.spec.util.ts';
 import { TURBO_PATHS, WORKSPACES } from './utils/workspace-kinds.spec.util.ts';
 import { createRunScratch, runEach, snapshotDir, userDataDirFor } from './utils/workspace.spec.util.ts';
+import { VSIX_PATH } from '../scripts/common/vsix.const.ts';
 
 const CI_BUDGET_FACTOR = 3;
 
@@ -27,7 +28,7 @@ const NO_ARGS: string[] = [];
 const NO_KEYS: string[] = [];
 
 const packageRoot = resolve(import.meta.dirname, '..');
-const vsixPath = resolve(packageRoot, '.vsix/turbo-console.vsix');
+const vsixPath = resolve(packageRoot, VSIX_PATH);
 const extensionDevelopmentPath = resolve(import.meta.dirname, 'harness');
 const cachePath = resolve(packageRoot, '.vscode-test');
 const installOptions = { cachePath, version: VSCODE_TEST_VERSION };

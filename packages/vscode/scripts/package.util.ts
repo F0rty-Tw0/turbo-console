@@ -1,9 +1,11 @@
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
+import { VSIX_PATH } from './common/vsix.const.ts';
+
 /** The vsce args for `package`; `VSCE_PRE_RELEASE=1` marks the build as a Marketplace pre-release. */
 export const packageArgs = (env: NodeJS.ProcessEnv): string[] => {
-  const args = ['package', '--no-dependencies', '--out', '.vsix/turbo-console.vsix'];
+  const args = ['package', '--no-dependencies', '--out', VSIX_PATH];
   const isPreRelease = env['VSCE_PRE_RELEASE'] === '1';
 
   if (isPreRelease) args.push('--pre-release');

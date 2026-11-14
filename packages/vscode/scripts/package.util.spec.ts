@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention -- VSCE_PRE_RELEASE is an environment variable name */
 import { describe, expect, it } from 'vitest';
 
+import { VSIX_PATH } from './common/vsix.const.ts';
 import { listingFiles, packageArgs } from './package.util.ts';
 
-const BASE_ARGS = ['package', '--no-dependencies', '--out', '.vsix/turbo-console.vsix'];
+const BASE_ARGS = ['package', '--no-dependencies', '--out', VSIX_PATH];
 
 describe('FEATURE: packageArgs', () => {
   describe('GIVEN no VSCE_PRE_RELEASE', () => {
