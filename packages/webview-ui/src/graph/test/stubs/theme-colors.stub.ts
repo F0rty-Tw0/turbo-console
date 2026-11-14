@@ -4,4 +4,9 @@ import type { SelectionColors, ThemeColors } from '../../common/theme-colors.typ
 export const SELECTION_COLORS_STUB: SelectionColors = { fill: '#04395e', label: '#ffffff' };
 
 /** The fallback colours with the list's selection fill and label set, as a theme with a selection has them. */
-export const THEME_COLORS_STUB: ThemeColors = { ...FALLBACK_COLORS, selection: SELECTION_COLORS_STUB };
+export const THEME_COLORS_STUB: ThemeColors = {
+  ...FALLBACK_COLORS,
+  selection: SELECTION_COLORS_STUB,
+  cardFill: '#1e2a3a',
+  cardFrame: '#3a4a5a'
+};
