@@ -1,0 +1,152 @@
+import { indentOf, isBlank, isCode, isCodeLine, jobsOf, stepsOf } from './workflow-lines.spec.util.ts';
+import type { Job } from '../common/workflow.type.ts';
+
+const USES = /^\s*(?:- )?uses:\s*(\S+)/;
+const PINNED = /^([\w.-]+\/[\w.-]+)@[0-9a-f]{40}$/;
+const SHA_COMMENT = /^\s*# SHA = ([\w.-]+\/[\w.-]+)@v\S+/;
+const PERMISSIONS = /^permissions:\s*$/;
+const WRITE_GRANT = /(?:^\s*|[{,]\s*)[\w-]+:\s*['"]?write(?:-all)?['"]?\s*(?:[,}]|$)/;
+const CONTENTS_WRITE = /^\s*contents:\s*['"]?write['"]?\s*$/;
+const GITHUB_RELEASE = 'github-release';
+const TAG_GATE = "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')";
+const IF_LINE = /^ {4}if:\s*(.*?)\s*$/;
+const ENVIRONMENT_STORE = /^ {4}environment: store\s*$/;
+
+const usesOf = (line: string): string | null => USES.exec(line)?.[1] ?? null;
+
+const isUses = (line: string): boolean => usesOf(line) !== null;
+
+/** Walks up the blank-line-bounded block to the nearest `# SHA = ` comment, stopping at a previous `uses:`. */
+const shaCommentRepoAbove = (lines: string[], index: number): string | null => {
+  for (let i = index - 1; i >= 0; i -= 1) {
+    const line = lines[i] ?? '';
+    const repo = SHA_COMMENT.exec(line)?.[1];
+
+    if (repo !== undefined) return repo;
+
+    const isBlankLine = isBlank(line);
+    const isUsesLine = isUses(line);
+
+    if (isBlankLine || isUsesLine) return null;
+  }
+
+  return null;
+};
+
+const usesProblemOf = (lines: string[], index: number): string | null => {
+  const value = usesOf(lines[index] ?? '') ?? '';
+  const repo = PINNED.exec(value)?.[1];
+
+  if (repo === undefined) return `uses is not <owner>/<repo>@<40-hex>: ${value}`;
+
+  const commented = shaCommentRepoAbove(lines, index);
+
+  return commented === repo ? null : `uses ${value} lacks a matching "# SHA = ${repo}@v…" comment`;
+};
+
+export const usesProblemsOf = (workflow: string): string[] => {
+  const lines = workflow.split('\n');
+  const indexes = Array.from(lines.keys()).filter((index) => isUses(lines[index] ?? ''));
+  const problems = Array.from(indexes, (index) => usesProblemOf(lines, index));
+
+  return problems.filter((problem) => problem !== null);
+};
+
+const isTopLevelKey = (line: string): boolean => !isBlank(line) && indentOf(line) === 0;
+
+const topPermissionsOf = (workflow: string): string[] => {
+  const lines = workflow.split('\n');
+  const start = lines.findIndex((line) => PERMISSIONS.test(line));
+
+  if (start < 0) return [];
+
+  const body = lines.slice(start + 1);
+  const end = body.findIndex(isTopLevelKey);
+  const head = body.slice(0, end);
+  const block = end < 0 ? body : head;
+
+  const entries = block.filter(isCodeLine);
+
+  return entries.map((line) => line.trim());
+};
+
+const isWriteGrant = (line: string): boolean => isCode(line) && WRITE_GRANT.test(line);
+
+const grantsWrite = (job: Job): boolean => job.lines.some(isWriteGrant);
+
+const isContentsWrite = (line: string): boolean => isCode(line) && CONTENTS_WRITE.test(line);
+
+/** Any write grant counts: `write-all`, a flow map, any scope, extra spaces or quotes. Only `github-release` may hold one. */
+export const permissionProblemsOf = (workflow: string): string[] => {
+  const problems: string[] = [];
+  const top = topPermissionsOf(workflow).join(', ');
+  const jobs = jobsOf(workflow);
+  const writers = jobs.filter(grantsWrite);
+  const grants = workflow.split('\n').filter(isWriteGrant);
+  const writerNames = writers.map((job) => job.name).join(', ');
+  const release = jobs.find((job) => job.name === GITHUB_RELEASE);
+  const releaseHasContents = release?.lines.some(isContentsWrite) ?? false;
+
+  if (top !== 'contents: read') problems.push(`top-level permissions is not exactly contents: read: ${top}`);
+
+  if (grants.length !== 1) problems.push(`write grants appear ${grants.length} times, expected 1`);
+
+  if (writerNames !== GITHUB_RELEASE) problems.push(`write grants sit in: ${writerNames}`);
+
+  if (!releaseHasContents) problems.push(`${GITHUB_RELEASE} lacks contents: write`);
+
+  return problems;
+};
+
+const codeLinesOf = (job: Job | undefined): string[] => {
+  const lines = job?.lines ?? [];
+
+  return lines.filter(isCode);
+};
+
+const conditionsOf = (job: Job | undefined): string[] => {
+  const lines = codeLinesOf(job);
+
+  return lines.flatMap((line) => IF_LINE.exec(line)?.slice(1) ?? []);
+};
+
+/** The job `if:` must be exactly the tag-push gate, plus the repo variable for a store job: no `||`, no dropped clause. */
+export const gateProblemsOf = (workflow: string, jobName: string, variable: string | null): string[] => {
+  const job = jobsOf(workflow).find((candidate) => candidate.name === jobName);
+  const withVariable = `${TAG_GATE} && vars.${variable} == 'true'`;
+  const expected = variable === null ? TAG_GATE : withVariable;
+  const conditions = conditionsOf(job);
+  const isExact = conditions.length === 1 && conditions[0] === expected;
+  const mismatch = [`${jobName} if: is not exactly: ${expected}`];
+
+  if (isExact) return [];
+
+  return mismatch;
+};
+
+export const storeProblemsOf = (workflow: string, jobName: string, variable: string): string[] => {
+  const job = jobsOf(workflow).find((candidate) => candidate.name === jobName);
+  const lines = codeLinesOf(job);
+  const hasStore = lines.some((line) => ENVIRONMENT_STORE.test(line));
+  const problems = gateProblemsOf(workflow, jobName, variable);
+
+  if (!hasStore) problems.unshift(`${jobName} lacks environment: store`);
+
+  return problems;
+};
+
+const isCheckoutLine = (line: string): boolean => usesOf(line)?.startsWith('actions/checkout@') === true;
+
+const isCheckoutStep = (step: string[]): boolean => step.some(isCheckoutLine);
+
+const isCredentialsOffLine = (line: string): boolean => line.trim() === 'persist-credentials: false';
+
+const dropsCredentials = (step: string[]): boolean => step.some(isCredentialsOffLine);
+
+export const checkoutProblemsOf = (workflow: string): string[] => {
+  const steps = jobsOf(workflow).flatMap(stepsOf);
+  const checkouts = steps.filter(isCheckoutStep);
+  const unsafe = checkouts.filter((step) => !dropsCredentials(step));
+
+  return unsafe.map((step) => `checkout step lacks persist-credentials: false: ${step[0]}`);
+};

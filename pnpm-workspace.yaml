@@ -23,6 +23,7 @@ catalogs:
     eslint: '10.12.0'
     jiti: '2.7.0'
     lint-suite: '2.2.0'
+    ovsx: '1.3.0'
     prettier: '3.9.10'
     simple-icons: '16.35.0'
     svg2ttf: '6.1.0'

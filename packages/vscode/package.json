@@ -800,6 +800,7 @@
     "@types/vscode": "1.138.0",
     "@vscode/test-electron": "catalog:dev",
     "@vscode/vsce": "catalog:dev",
+    "ovsx": "catalog:dev",
     "simple-icons": "catalog:dev",
     "svg2ttf": "catalog:dev",
     "svgicons2svgfont": "catalog:dev",
