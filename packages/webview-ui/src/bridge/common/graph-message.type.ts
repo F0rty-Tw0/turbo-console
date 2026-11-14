@@ -1,4 +1,5 @@
 import type { GraphAffected } from './graph-affected.type.ts';
+import type { GraphAtomsMessage } from './graph-atoms-message.type.ts';
 import type { GraphEdgeImportsMessage, GraphOpenImportMessage, GraphScanImportsMessage } from './graph-imports.type.ts';
 import type { GraphRunState, GraphState, Positions, Routes } from './graph-state.type.ts';
 
@@ -91,28 +92,6 @@ export type GraphShowPackageMessage = {
 
 /** The one request a graph panel holds until its page can take it: the latest of either kind wins. */
 export type GraphShowRequest = GraphShowTasksMessage | GraphShowPackageMessage;
-
-/** What a file of an Atomizer group last did, or `none` when nothing is known of it. */
-export type GraphAtomOutcome = 'passed' | 'failed' | 'cached' | 'none';
-
-/** An umbrella's counts: `cached` is null until the dry run settled, `failed` null until the results settled. */
-export type GraphAtomCounts = {
-  readonly files: number;
-  readonly cached: number | null;
-  readonly failed: number | null;
-};
-
-/** The counts of one umbrella and the outcome of each of its files, by file task id. */
-export type GraphAtomGroupState = {
-  readonly counts: GraphAtomCounts;
-  readonly files: Record<string, GraphAtomOutcome>;
-};
-
-/** The state of every Atomizer group of the graph, by umbrella id. */
-export type GraphAtomsMessage = {
-  readonly type: 'atoms';
-  readonly groups: Record<string, GraphAtomGroupState>;
-};
 
 /** Host to webview. */
 export type GraphHostMessage =

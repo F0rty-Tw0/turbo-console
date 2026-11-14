@@ -1,6 +1,6 @@
 import type { Viewport } from './graph-page.type.ts';
 import type { AtomCanvas } from './task-canvas.type.ts';
-import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 
 /** Where an umbrella sits on the canvas, in model units: its centre and its body's width. */

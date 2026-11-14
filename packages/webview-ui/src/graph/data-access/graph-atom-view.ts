@@ -2,7 +2,7 @@ import type { Core, ElementDefinition, EventObjectNode, NodeSingular } from 'cyt
 
 import { atomBoxOf } from './graph-atom-box.ts';
 import { reframeBox, unframeBox } from './graph-task-frames.ts';
-import type { GraphAtomCounts, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomOutcome } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphAtomFile, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { atomCountsText } from '../../bridge/utils/atom-counts-text.util.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';

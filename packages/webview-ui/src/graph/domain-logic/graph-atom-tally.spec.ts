@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GraphAtomTally } from './graph-atom-tally.ts';
-import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
 import type { AtomPlacement } from '../common/graph-atom.type.ts';
 import { BASE, E2E_CI, LIB_CI, SIZES } from '../test/utils/graph-atom-groups.spec.util.ts';

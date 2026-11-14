@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 
 import { taskOf } from './shown-set.spec.util.ts';
-import type { GraphAtomCounts, GraphAtomGroupState } from '../../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphAtomGroup, GraphTask, Position, Positions } from '../../../bridge/common/graph-state.type.ts';
 import type { AtomGroupsDeps, AtomLayout } from '../../common/graph-atom.type.ts';
 import type { Viewport } from '../../common/graph-page.type.ts';

@@ -1,7 +1,7 @@
 import { closedPanelsSavedState } from './graph-shot-state.spec.util.ts';
 import { TARGET_LIKE_UMBRELLA, targetLikeFileIds, targetLikeTasksState } from './graph-target-like-tasks.spec.util.ts';
 import { taskViewOf } from './graph-task-saved.spec.util.ts';
-import type { GraphAtomCounts, GraphAtomGroupState } from '../../../src/bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState } from '../../../src/bridge/common/graph-atoms-message.type.ts';
 import type { GraphViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
 import type { TaskShotSetup } from '../../common/graph-shots.type.ts';
 

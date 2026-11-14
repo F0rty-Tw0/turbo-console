@@ -5,7 +5,8 @@ import type { BoxFrames } from './layout.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { TaskRuns } from './task-details.type.ts';
 import type { GraphAffectedMark } from '../../bridge/common/graph-affected.type.ts';
-import type { GraphAtomCounts, GraphAtomOutcome, GraphPrediction } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomOutcome } from '../../bridge/common/graph-atoms-message.type.ts';
+import type { GraphPrediction } from '../../bridge/common/graph-message.type.ts';
 import type { GraphTask, Positions } from '../../bridge/common/graph-state.type.ts';
 
 /** The cache prediction word of each predicted task, by task id; a task not named has none. */

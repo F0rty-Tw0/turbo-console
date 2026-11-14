@@ -2,7 +2,7 @@ import { AtomChips } from './atom-chips.ts';
 import { GraphAtomExpansion } from './graph-atom-expansion.ts';
 import { GraphAtomTally } from './graph-atom-tally.ts';
 import { GraphAtomTiming } from './graph-atom-timing.ts';
-import type { GraphAtomCounts, GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts, GraphAtomGroupState, GraphAtomOutcome } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphAtomGroup, GraphTask } from '../../bridge/common/graph-state.type.ts';
 import { ATOM_BOX_PREFIX, ATOM_MORE_PREFIX } from '../common/graph-atom.const.ts';
 import type { AtomGroupsDeps, AtomLayout, AtomPlacement } from '../common/graph-atom.type.ts';

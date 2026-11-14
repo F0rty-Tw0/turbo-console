@@ -1,4 +1,4 @@
-import type { GraphAtomCounts } from '../common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../common/graph-atoms-message.type.ts';
 
 /** The counts line of an umbrella: `<files> files`, then `<cached> cached` once the dry run settled, then `<failed> failed` when any failed. */
 export const atomCountsText = (counts: GraphAtomCounts): string => {

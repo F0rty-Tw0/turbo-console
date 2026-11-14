@@ -2,7 +2,7 @@ import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AtomChips } from './atom-chips.ts';
-import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { AtomChipBox, AtomChipsPort, AtomChipsView } from '../common/atom-chips.type.ts';
 import type { Viewport } from '../common/graph-page.type.ts';

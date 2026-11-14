@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { atomSpecOf, moreIdOf, outcomesOf } from './atom-spec.util.ts';
-import type { GraphAtomOutcome } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomOutcome } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphAtomFile, GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
 import type { AtomDrawSpec } from '../common/atom-layout.type.ts';
 import type { AtomPlacement } from '../common/graph-atom.type.ts';

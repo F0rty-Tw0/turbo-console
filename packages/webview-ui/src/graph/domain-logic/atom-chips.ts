@@ -1,4 +1,4 @@
-import type { GraphAtomCounts } from '../../bridge/common/graph-message.type.ts';
+import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 import { atomCountsText } from '../../bridge/utils/atom-counts-text.util.ts';
 import type { AtomChipRow, AtomChipsDeps } from '../common/atom-chips.type.ts';
 import type { Viewport } from '../common/graph-page.type.ts';
