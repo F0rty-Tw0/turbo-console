@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { checkoutProblemsOf } from './test/utils/release-workflow.spec.util.ts';
 import { injectionProblemsOf, tokenProblemsOf } from './test/utils/workflow-run.spec.util.ts';
-import { tagGuardProblemsOf } from './test/utils/workflow-safety.spec.util.ts';
+import { preReleaseProblemsOf, tagGuardProblemsOf } from './test/utils/workflow-safety.spec.util.ts';
 
 const ROOT = join(import.meta.dirname, '../../../../');
 const SHA = '3d3c42e5aac5ba805825da76410c181273ba90b1';
@@ -43,6 +43,16 @@ const GUARD_OK = GUARD_STEP.join('\n');
 const GUARD_NO_TAG_FLAG = GUARD_OK.replace(' --tag "$TAG"', '');
 const GUARD_NEVER_TAG = GUARD_OK.replace("github.event_name == 'push'", "github.event_name == 'never'");
 const GUARD_NO_TAG_ENV = GUARD_OK.replace('TAG: ${{ github.ref_name }}', 'TAG: v0.0.0');
+const PRE_RELEASE_EXPRESSION = "${{ steps.release.outputs.channel == 'pre-release' && '1' || '0' }}";
+const PACKAGE_STEP = [
+  ...PACKAGE_JOB,
+  '      - name: Package',
+  '        env:',
+  `          VSCE_PRE_RELEASE: ${PRE_RELEASE_EXPRESSION}`
+];
+const PACKAGE_OK = PACKAGE_STEP.join('\n');
+const PACKAGE_ALWAYS_STABLE = PACKAGE_OK.replace(PRE_RELEASE_EXPRESSION, "'0'");
+const PACKAGE_OTHER_OUTPUT = PACKAGE_OK.replace('outputs.channel', 'outputs.version');
 
 const joined = (lines: string[]): string => lines.join('\n');
 
@@ -189,6 +199,32 @@ describe('FEATURE: Release workflow step guard', () => {
         `release guard step lacks the line: if [ "$IS_TAG" = 'true' ]; then`,
         'release guard step does not run right after the tag check: node tools/src/release/release.ts --tag "$TAG"'
       ]);
+    });
+  });
+
+  describe('GIVEN the Package step', () => {
+    it('WHEN the repo release.yml is read THEN VSCE_PRE_RELEASE follows the release channel', () => {
+      const result = preReleaseProblemsOf(RELEASE);
+
+      expect(result).toStrictEqual([]);
+    });
+
+    it('WHEN the flag derives from the channel output THEN no problem is listed', () => {
+      const result = preReleaseProblemsOf(PACKAGE_OK);
+
+      expect(result).toStrictEqual([]);
+    });
+
+    it('WHEN the flag is forced to a constant THEN it is listed', () => {
+      const result = preReleaseProblemsOf(PACKAGE_ALWAYS_STABLE);
+
+      expect(result).toStrictEqual([`package lacks the line: VSCE_PRE_RELEASE: ${PRE_RELEASE_EXPRESSION}`]);
+    });
+
+    it('WHEN the flag reads another output THEN it is listed', () => {
+      const result = preReleaseProblemsOf(PACKAGE_OTHER_OUTPUT);
+
+      expect(result).toStrictEqual([`package lacks the line: VSCE_PRE_RELEASE: ${PRE_RELEASE_EXPRESSION}`]);
     });
   });
 });
