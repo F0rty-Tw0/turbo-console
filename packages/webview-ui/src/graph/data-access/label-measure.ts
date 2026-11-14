@@ -1,4 +1,4 @@
-import { CARD_HEIGHT, CARD_MIN_WIDTH, CARD_PADDING_X, CARD_STATE_WORDS } from '../common/graph-card.const.ts';
+import { CARD_CLOCK_SAMPLES, CARD_HEIGHT, CARD_MIN_WIDTH, CARD_PADDING_X, CARD_STATE_WORDS } from '../common/graph-card.const.ts';
 import { GLYPH_CODE_POINTS, PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import type { NodeSizer, TextMeasure } from '../common/graph-page.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
@@ -56,13 +56,14 @@ export const boxTitleSizerOf = (glyphs: boolean, measure: TextMeasure, glyphMeas
   return sizer;
 };
 
-/** The plain task nodes' sizer (state words measured on the first sizing, so a broken measure fails inside layout, not at page start): a 60 px status card at least 180 px wide, as wide as its bold row 1 (the glyph slot always reserved) or its widest state word plus padding. */
+/** The plain task nodes' sizer (state words and clock samples measured on the first sizing, so a broken measure fails inside layout, not at page start): a 60 px status card at least 180 px wide, as wide as its bold row 1 (the glyph slot always reserved) or its widest row 2 text plus padding. */
 export const cardSizerOf = (glyphs: boolean, boldMeasure: TextMeasure, boldGlyphMeasure: TextMeasure): NodeSizer => {
   let stateWidth: number | null = null;
   const stateWidthOf = (): number => {
     if (stateWidth !== null) return stateWidth;
 
-    const stateWidths = CARD_STATE_WORDS.map(boldMeasure);
+    const rowTexts = [...CARD_STATE_WORDS, ...CARD_CLOCK_SAMPLES];
+    const stateWidths = rowTexts.map(boldMeasure);
 
     stateWidth = Math.max(...stateWidths);
 
