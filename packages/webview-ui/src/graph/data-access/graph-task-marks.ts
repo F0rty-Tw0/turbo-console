@@ -4,8 +4,9 @@ import { setClassesAmong } from './graph-classes.ts';
 import { AFFECTED_MARKS, PREDICTION_WORDS, RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import { ATOM_FILE_CLASS } from '../common/graph-atom.const.ts';
+import { CARD_CLOCK_DATA, TASK_CARD_CLASS } from '../common/graph-card.const.ts';
 import { NO_CLASSES, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
-import type { TaskAffectedMarks, TaskPredictions } from '../common/task-canvas.type.ts';
+import type { TaskAffectedMarks, TaskClocks, TaskPredictions } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
 import { affectedClassOf } from '../utils/affected-class.util.ts';
 import { runClassOf } from '../utils/package-run.util.ts';
@@ -93,4 +94,30 @@ export const markAffected = (cy: Core, marked: TaskAffectedMarks): void => {
   };
 
   cy.batch((): void => void taskNodes(cy).forEach(markTask));
+};
+
+/** The card's text in `clocks`; an own key only, so `constructor` or `__proto__` never reads as a clock. */
+const clockOf = (clocks: TaskClocks, id: string): string | undefined => {
+  const hasClock = Object.hasOwn(clocks, id);
+
+  if (!hasClock) return undefined;
+
+  return clocks[id];
+};
+
+/** The `clock` data of each plain card in `clocks`, none on the rest; a card already right is not touched. */
+export const markClocks = (cy: Core, clocks: TaskClocks): void => {
+  const markCard = (node: NodeSingular): void => {
+    const wanted = clockOf(clocks, node.id());
+    const stored: unknown = node.data(CARD_CLOCK_DATA);
+
+    if (wanted === stored) return;
+
+    // the object form: `removeData` clears the key too but never re-runs the style mappers, so the label kept the clock
+    const next = { [CARD_CLOCK_DATA]: wanted };
+
+    node.data(next);
+  };
+
+  cy.batch((): void => void cy.nodes(`.${TASK_CARD_CLASS}`).forEach(markCard));
 };

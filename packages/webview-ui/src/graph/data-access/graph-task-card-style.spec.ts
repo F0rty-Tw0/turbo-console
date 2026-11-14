@@ -7,6 +7,8 @@ import type { CardMeasures } from '../common/graph-card.type.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const BLANK = String.fromCodePoint(0xec03);
+const SYNC = String.fromCodePoint(0xea77);
+const PASS = String.fromCodePoint(0xeba4);
 
 /** Seven px per character regular, eight bold: a block's width reads straight off its character count. */
 const MEASURES: CardMeasures = { regular: (text) => text.length * 7, bold: (text) => text.length * 8 };
@@ -74,6 +76,36 @@ describe('FEATURE: card rules in graphStyleOf', () => {
 
     it('THEN a selected one measures bold and fills the block', () => {
       expect(nodeOf('task task-card selected', true, LONG_DATA).numericStyle('text-margin-x')).toBe(0);
+    });
+  });
+
+  describe('GIVEN a card with clock data', () => {
+    const CLOCKED = { ...CARD_DATA, clock: '1m 4s' };
+
+    it('GIVEN a running card THEN row 2 reads Running · 1m 4s', () => {
+      expect(nodeOf('task task-card run-running', true, CLOCKED).style('label')).toBe(`${SYNC} build\nRunning · 1m 4s`);
+    });
+
+    it('GIVEN an ended card with stale clock data THEN row 2 is the plain word', () => {
+      expect(nodeOf('task task-card run-passed', true, CLOCKED).style('label')).toBe(`${PASS} build\nPassed`);
+    });
+
+    it('GIVEN a running card THEN the margin measures row 2 with the clock: 15 chars = 105 px, (105 - 156) / 2', () => {
+      expect(nodeOf('task task-card run-running', true, CLOCKED).numericStyle('text-margin-x')).toBe(-25.5);
+    });
+
+    it('GIVEN row 2 wider than row 1 only with the clock THEN the margin is -15, not the -43 of the bare word', () => {
+      const data = { ...CARD_DATA, clock: '1h 2m' };
+
+      expect(nodeOf('task task-card run-continuous', true, data).numericStyle('text-margin-x')).toBe(-15);
+      expect(nodeOf('task task-card run-continuous').numericStyle('text-margin-x')).toBe(-43);
+    });
+
+    it('GIVEN a long name THEN the clock never moves the margin (-21 with and without)', () => {
+      const clocked = { ...LONG_DATA, clock: '1m 4s' };
+
+      expect(nodeOf('task task-card run-running', true, clocked).numericStyle('text-margin-x')).toBe(-21);
+      expect(nodeOf('task task-card run-running', true, LONG_DATA).numericStyle('text-margin-x')).toBe(-21);
     });
   });
 

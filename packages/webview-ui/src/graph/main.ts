@@ -7,6 +7,7 @@ import type { FlowFactory, GraphController, GraphView, GraphViewFactory, Viewpor
 import type { GraphProbe } from './common/graph-probe.type.ts';
 import { NODE_FONT_SIZE, OVERLAY_MEDIA_QUERY, VIEW_STATE_DEBOUNCE_MS } from './common/graph.const.ts';
 import type { ThemeColors } from './common/theme-colors.type.ts';
+import { cardClockPorts } from './data-access/card-clock-ports.ts';
 // Imported before any module that loads Cytoscape: elk-client creates the one `tc-elk` policy as it loads.
 import { createElk } from './data-access/elk-client.ts';
 import { breadthfirstPositions } from './data-access/fallback-layout.ts';
@@ -95,6 +96,7 @@ const controllerOf = (glyphs: boolean): GraphController => {
     glyphs,
     measure,
     now,
+    clockPorts: cardClockPorts,
     build: buildControls,
     views: detailsViews,
     widgetViews,
@@ -127,12 +129,14 @@ const observePage = (controller: GraphController, legend: GraphLegend): void => 
   };
   const themeObserver = new MutationObserver(applyTheme);
   const flowSizer = new ResizeObserver((): void => fitFlowCanvas(page.flow, page.container));
+  const showClock = (): void => controller.clockShown();
 
   applyTheme();
   themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
   flowSizer.observe(page.container);
   reducedMotion.addEventListener('change', stopFlowWhenReduced);
   document.addEventListener('visibilitychange', flushWhenHidden);
+  document.addEventListener('visibilitychange', showClock);
   addEventListener('pagehide', saver.flush);
 };
 

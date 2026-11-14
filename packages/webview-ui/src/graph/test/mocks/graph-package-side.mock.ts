@@ -5,6 +5,7 @@ import { graphViewMock } from './graph-view.mock.ts';
 import { layoutRunsMock } from './layout-runner.mock.ts';
 import { mediaQueryMock } from './media-query.mock.ts';
 import type { Bridge } from '../../../bridge/common/bridge.type.ts';
+import type { CardClockPorts } from '../../common/card-clock.type.ts';
 import type { BundleDetails, PackageDetails } from '../../common/details-view.type.ts';
 import type { BundleViewModel, DetailsViews, PackageViewModel } from '../../common/details.type.ts';
 import type { GraphControllerDeps } from '../../common/graph-page.type.ts';
@@ -80,6 +81,13 @@ const TASK_DETAILS_VIEWS: TaskDetailsViews = {
   view: buildTaskDetails
 };
 
+/** Card clock ports on a visible page whose interval never fires by itself. */
+const clockPortsMock = (): CardClockPorts => {
+  const ports: CardClockPorts = { setInterval: vi.fn((): number => 1), clearInterval: vi.fn(), isHidden: (): boolean => false };
+
+  return ports;
+};
+
 /**
  * The deps of a `GraphPackageSide` over the real page and panel builders, for the spec's fake `document`, with the view
  * and the layout runner doubled and every package view recorded; the host saved nothing.
@@ -123,6 +131,7 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
     glyphs: false,
     measure: (text: string): number => text.length,
     now: (): number => 0,
+    clockPorts: clockPortsMock(),
     build: buildControls,
     views,
     widgetViews: WIDGET_VIEWS,

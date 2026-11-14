@@ -4,13 +4,13 @@ import { setCountLabels, taskClassesOf } from './graph-atom-view.ts';
 import { positionOf } from './graph-place.ts';
 import { boxesOf } from './graph-task-boxes.ts';
 import { applyBoxFrames, refitBoxFrames } from './graph-task-frames.ts';
-import { markAffected, markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
+import { markAffected, markClocks, markPredictions, markRuns, taskNodes } from './graph-task-marks.ts';
 import { paintTasks } from './graph-task-paint.ts';
 import type { GraphAtomCounts } from '../../bridge/common/graph-atoms-message.type.ts';
 import type { GraphEdge, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { atomCountsText } from '../../bridge/utils/atom-counts-text.util.ts';
 import { NO_AFFECTED, NO_PREDICTIONS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
-import type { TaskAffectedMarks, TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
+import type { TaskAffectedMarks, TaskCanvas, TaskClocks, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
 import type { TaskRuns } from '../common/task-details.type.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { taskEdgesOf } from '../utils/elk-task-graph.util.ts';
@@ -87,18 +87,31 @@ const moveTasks = (cy: Core, positions: Positions): void => {
   taskNodes(cy).positions(placeNode);
 };
 
+/** The members that read, move or clear the drawn elements and keep no state of their own. */
+const elementPartsOf = (cy: Core): Pick<TaskCanvas, 'clear' | 'setPositions' | 'positions' | 'setCounts'> => {
+  const setPositions = (positions: Positions): void => moveTasks(cy, positions);
+  const positions = (): Positions => centresOf(cy);
+  const clear = (): void => void cy.elements().remove();
+  const setCounts = (counts: ReadonlyMap<string, GraphAtomCounts>): void => setCountLabels(cy, counts);
+  const parts = { clear, setPositions, positions, setCounts };
+
+  return parts;
+};
+
 /**
  * The task graph on `cy`, the core the package graph shares; showing it removes the package graph. The last paint
- * target, runs map, predictions and affected marks are kept, so a task graph drawn again carries them.
+ * target, runs map, clocks, predictions and affected marks are kept, so a task graph drawn again carries them.
  */
 export const createTaskCanvas = (cy: Core): TaskCanvas => {
   let target: string | null = null;
   let runs: TaskRuns = {};
   let predicted: TaskPredictions = NO_PREDICTIONS;
   let marked: TaskAffectedMarks = NO_AFFECTED;
+  let clocked: TaskClocks = {};
   const remark = (): void => {
     paintTasks(cy, target);
     markRuns(cy, runs);
+    markClocks(cy, clocked);
     markPredictions(cy, predicted);
     markAffected(cy, marked);
     refitBoxFrames(cy);
@@ -132,12 +145,13 @@ export const createTaskCanvas = (cy: Core): TaskCanvas => {
     marked = next;
     markAffected(cy, next);
   };
-  const setPositions = (positions: Positions): void => moveTasks(cy, positions);
-  const positions = (): Positions => centresOf(cy);
-  const clear = (): void => void cy.elements().remove();
-  const setCounts = (counts: ReadonlyMap<string, GraphAtomCounts>): void => setCountLabels(cy, counts);
-  const marks = { paint, runStates, predictions, affected, remark };
-  const canvas: TaskCanvas = { show, clear, setPositions, positions, setCounts, ...marks };
+  const clocks = (next: TaskClocks): void => {
+    clocked = next;
+    markClocks(cy, next);
+  };
+  const parts = elementPartsOf(cy);
+  const marks = { paint, runStates, predictions, affected, clocks, remark };
+  const canvas: TaskCanvas = { show, ...parts, ...marks };
 
   return canvas;
 };

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { boxTitleSizerOf, cardSizerOf, labelSizer, packageTitleSizer, slotSizer, taskSizerOf } from './label-measure.ts';
-import { CARD_STATE_WORDS } from '../common/graph-card.const.ts';
+import { CARD_CLOCK_SAMPLES, CARD_STATE_WORDS } from '../common/graph-card.const.ts';
 import { GLYPH_CODE_POINTS, PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import type { TextMeasure } from '../common/graph-page.type.ts';
 import { nodeSizeOf } from '../utils/node-size.util.ts';
@@ -135,15 +135,16 @@ describe('FEATURE: label-measure', () => {
         kills: 'wide name uses the glyph measure of blank, space and name, plus padding'
       },
       { glyphs: false, name: 'a'.repeat(40), plain: 7, glyph: 9, width: 304, kills: 'no glyphs: bare name, plain bold measure' },
-      { glyphs: false, name: 'build', plain: 12, glyph: 9, width: 204, kills: 'widest state word sets the width' },
+      { glyphs: false, name: 'build', plain: 12, glyph: 9, width: 264, kills: 'widest clock sample sets the width' },
       {
         glyphs: true,
         name: 'build',
         plain: 12,
         glyph: 9,
-        width: 204,
-        kills: 'state word measured with the plain measure, not the glyph one'
-      }
+        width: 264,
+        kills: 'sample measured with the plain bold measure, not the glyph one'
+      },
+      { glyphs: false, name: 'build', plain: 8, glyph: 9, width: 184, kills: 'both 20-character clock samples measured' }
     ])(
       'GIVEN glyphs $glyphs, name length $name.length, P $plain, G $glyph WHEN sized THEN $width x 60 ($kills)',
       ({ glyphs, name, plain, glyph, width }) => {
@@ -180,6 +181,24 @@ describe('FEATURE: label-measure', () => {
       const stateCalls = boldMeasure.mock.calls.filter(([text]) => CARD_STATE_WORDS.includes(text));
 
       expect(stateCalls).toHaveLength(CARD_STATE_WORDS.length);
+    });
+
+    it('GIVEN a built sizer WHEN it sizes two names THEN the clock samples were measured once, on the first sizing', () => {
+      const boldMeasure = lengthMeasureOf(7);
+      const sizeOf = cardSizerOf(false, boldMeasure, lengthMeasureOf(9));
+
+      sizeOf('build');
+      sizeOf('test');
+
+      const sampleCalls = boldMeasure.mock.calls.filter(([text]) => CARD_CLOCK_SAMPLES.includes(text));
+
+      expect(sampleCalls).toHaveLength(CARD_CLOCK_SAMPLES.length);
+    });
+
+    it('GIVEN only Failed to start measures wide WHEN build is sized THEN the widest state word still sets the width', () => {
+      const keyedMeasure = vi.fn<TextMeasure>((text: string): number => (text === 'Failed to start' ? 200 : 10));
+
+      expect(cardSizerOf(false, keyedMeasure, lengthMeasureOf(9))('build')).toStrictEqual({ width: 224, height: 60 });
     });
   });
 });

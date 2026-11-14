@@ -1,3 +1,5 @@
+import { GraphCardClock } from './graph-card-clock.ts';
+import { probeFactsOf } from './graph-controller-facts.ts';
 import { GraphFrames } from './graph-frames.ts';
 import { graphLocationOf } from './graph-location.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
@@ -11,7 +13,7 @@ import { viewHandlersOf } from './graph-view-handlers.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { FlowControl } from '../common/flow.type.ts';
 import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
-import type { FilteringFacts, LayoutEngine, ProbeFacts } from '../common/graph-probe.type.ts';
+import type { ProbeFacts } from '../common/graph-probe.type.ts';
 import { NO_OWNERS } from '../common/graph-task.const.ts';
 import type { GraphLocation } from '../common/location.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
@@ -32,6 +34,7 @@ class GraphPageController {
   private readonly routing: GraphStateRouting;
   private readonly reveal: PackageReveal;
   private readonly location: GraphLocation;
+  private readonly clock: GraphCardClock;
 
   public constructor(deps: GraphControllerDeps) {
     const { bridge, page, widgetViews } = deps;
@@ -56,6 +59,7 @@ class GraphPageController {
     this.frames = frames;
     this.view = deps.createView(page.container, handlers);
     this.flow = deps.createFlow(this.view);
+    this.clock = new GraphCardClock({ canvas: this.view.tasks, now: deps.now, ...deps.clockPorts });
     this.packages = new GraphPackageSide(deps, this.view, { frames, modes, tasks, onMessage, onPlaced, onLocation });
     this.tasks = taskModeOf(deps, this.view, {
       modes,
@@ -105,6 +109,7 @@ class GraphPageController {
         this.tasks.selection.runs(message.runs, message.owners ?? NO_OWNERS);
         this.packages.runs(message.runs);
         applyRunMarks(this.view.tasks, message);
+        this.clock.runs(message.elapsed, at);
         break;
       case 'atoms':
         this.tasks.layout.atoms.states(message.groups);
@@ -113,18 +118,12 @@ class GraphPageController {
   }
 
   public facts(): ProbeFacts {
-    const { filtering, layouts } = this.packages;
-    const filteringFacts = filtering.facts();
-    const facts: ProbeFacts = {
-      firstFrameMs: (): number | null => this.frames.firstFrameMs(),
-      layoutEngine: (): LayoutEngine | null => this.engine(),
-      grouped: (): boolean => layouts.mode() === 'folders',
-      atomToggleMs: (): number | null => this.tasks.layout.atoms.toggleMs(),
-      ...filteringFacts,
-      selected: (): string | null => this.selected(filteringFacts)
-    };
+    return probeFactsOf({ frames: this.frames, packages: this.packages, tasks: this.tasks });
+  }
 
-    return facts;
+  /** The page became visible: the card clock catches up at once instead of at the next tick. */
+  public clockShown(): void {
+    this.clock.shown();
   }
 
   /** The package reveal the host's `showPackage`, the task owner button and the location bar's package crumb call. */
@@ -153,30 +152,14 @@ class GraphPageController {
 
     void this.packages.guard(async (): Promise<void> => this.packages.layouts.relayout());
   }
-
-  /** The task mode's selected task while it is on, else the package the inspection holds. */
-  private selected(filteringFacts: FilteringFacts): string | null {
-    const isTaskMode = this.tasks.isActive();
-
-    if (isTaskMode) return this.tasks.selection.selected();
-
-    return filteringFacts.selected();
-  }
-
-  private engine(): LayoutEngine | null {
-    const isTaskMode = this.tasks.isActive();
-
-    if (isTaskMode) return this.tasks.layout.engine();
-
-    return this.packages.layouts.engine();
-  }
 }
 
 /** The graph page's controller; until the first valid host state nothing runs, so the page keeps its pre-state. */
 export const createGraphController = (deps: GraphControllerDeps): GraphController => {
   const page = new GraphPageController(deps);
   const receive = (message: unknown): void => page.receive(message);
-  const controller: GraphController = { receive, view: page.view, flow: page.flow, facts: page.facts() };
+  const clockShown = (): void => page.clockShown();
+  const controller: GraphController = { receive, clockShown, view: page.view, flow: page.flow, facts: page.facts() };
 
   return controller;
 };

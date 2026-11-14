@@ -28,6 +28,7 @@ export const taskCanvasMock = (): Mocked<TaskCanvas> => {
     runStates: vi.fn<TaskCanvas['runStates']>(),
     predictions: vi.fn<TaskCanvas['predictions']>(),
     affected: vi.fn<TaskCanvas['affected']>(),
+    clocks: vi.fn<TaskCanvas['clocks']>(),
     setCounts: vi.fn<TaskCanvas['setCounts']>(),
     remark: vi.fn<TaskCanvas['remark']>()
   };

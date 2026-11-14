@@ -2,7 +2,7 @@ import type { Css, NodeSingular, StylesheetJsonBlock } from 'cytoscape';
 
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
-import { CARD_HEIGHT, CARD_LINE_HEIGHT, CARD_PADDING_X, TASK_CARD_CLASS } from '../common/graph-card.const.ts';
+import { CARD_CLOCK_DATA, CARD_HEIGHT, CARD_LINE_HEIGHT, CARD_PADDING_X, TASK_CARD_CLASS } from '../common/graph-card.const.ts';
 import type { CardMeasures } from '../common/graph-card.type.ts';
 import { RUN_CLASS_PREFIX } from '../common/graph-task.const.ts';
 import { FOCUS_TARGET_CLASS } from '../common/graph.const.ts';
@@ -22,12 +22,19 @@ const cardWidthOf = (node: NodeSingular): number => Number(node.data('width'));
 
 const cardNameOf = (node: NodeSingular): string => String(node.data('label'));
 
+/** The card's clock text, only when its node data holds a string. */
+const cardClockOf = (node: NodeSingular): string | undefined => {
+  const clock: unknown = node.data(CARD_CLOCK_DATA);
+
+  return typeof clock === 'string' ? clock : undefined;
+};
+
 /** `selected` and `focus-target` are the two classes `graph-selection-style` draws bold. */
 const isBoldOf = (node: NodeSingular): boolean => node.hasClass('selected') || node.hasClass(FOCUS_TARGET_CLASS);
 
 /** A card's label rows joined at the one newline it wraps at. */
 const labelOf = (hasGlyph: boolean): ((node: NodeSingular) => string) => {
-  const textOf = (node: NodeSingular): string => cardRowsOf(node.classes(), cardNameOf(node), hasGlyph).join('\n');
+  const textOf = (node: NodeSingular): string => cardRowsOf(node.classes(), cardNameOf(node), hasGlyph, cardClockOf(node)).join('\n');
 
   return textOf;
 };
@@ -39,7 +46,7 @@ const labelOf = (hasGlyph: boolean): ((node: NodeSingular) => string) => {
 const marginXOf = (hasGlyph: boolean, measures: CardMeasures): ((node: NodeSingular) => number) => {
   const marginOf = (node: NodeSingular): number => {
     const measure = isBoldOf(node) ? measures.bold : measures.regular;
-    const rows = cardRowsOf(node.classes(), cardNameOf(node), hasGlyph);
+    const rows = cardRowsOf(node.classes(), cardNameOf(node), hasGlyph, cardClockOf(node));
     const rowWidths = rows.map(measure);
     const blockWidth = Math.max(...rowWidths);
 
