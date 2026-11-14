@@ -12,10 +12,6 @@ type HandledInspection = {
   readonly keepClear: () => void;
 };
 
-type HandledClock = {
-  readonly moved: () => void;
-};
-
 type HandledFolders = {
   readonly toggle: (folder: string) => void;
 };
@@ -62,7 +58,6 @@ type ViewHandlerTargets = {
   readonly layouts: () => HandledLayouts;
   readonly tasks: () => HandledTasks;
   readonly flow: () => Pick<FlowControl, 'viewportChanged'>;
-  readonly clock: () => HandledClock;
 };
 
 const BACKGROUND: InspectionInput = { kind: 'background' };
@@ -100,10 +95,10 @@ const byModeOf = (tasks: () => HandledTasks): ByMode => {
 /**
  * Routes each Cytoscape event by mode: in package mode to the inspection, the folders or the layouts; in task mode a
  * drag, a camera move, a node tap, a background tap and a frame to task mode, and every other tap to nothing. Every frame
- * marks the frame clock first; every camera move clears the flow overlay first and tells the card clock.
+ * marks the frame clock first; every camera move clears the flow overlay first.
  */
 export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers => {
-  const { frames, filtering, layouts, tasks, flow, clock } = targets;
+  const { frames, filtering, layouts, tasks, flow } = targets;
   const byMode = byModeOf(tasks);
   const saveViewport = byMode(
     (): void => filtering().inspection.saveViewport(),
@@ -131,7 +126,6 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
     ),
     onViewport: (): void => {
       flow().viewportChanged();
-      clock().moved();
       saveViewport();
     },
     onRefit: byMode(

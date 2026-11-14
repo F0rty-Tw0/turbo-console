@@ -48,8 +48,7 @@ class GraphPageController {
       filtering: () => this.packages.filtering,
       layouts: () => this.packages.layouts,
       tasks: () => this.tasks,
-      flow: () => this.flow,
-      clock: () => this.clock
+      flow: () => this.flow
     });
     const tasks = packageTasksOf((): ReturnType<typeof taskModeOf> => this.tasks, deps.now);
     const onMessage = (): void => this.tasks.suspend();
