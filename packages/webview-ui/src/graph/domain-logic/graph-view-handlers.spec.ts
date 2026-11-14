@@ -23,6 +23,7 @@ describe('FEATURE: viewHandlersOf', () => {
     let tapFolder: Mock<(folder: string) => void>;
     let openDetailsOf: Mock<(name: string) => void>;
     let saveViewport: Mock<() => void>;
+    let moved: Mock<() => void>;
     let keepClearPackage: Mock<() => void>;
     let keepClearTask: Mock<() => void>;
     let toggle: Mock<(folder: string) => void>;
@@ -43,6 +44,7 @@ describe('FEATURE: viewHandlersOf', () => {
       tapFolder = vi.fn<(folder: string) => void>();
       openDetailsOf = vi.fn<(name: string) => void>();
       saveViewport = vi.fn<() => void>();
+      moved = vi.fn<() => void>();
       keepClearPackage = vi.fn<() => void>();
       keepClearTask = vi.fn<() => void>();
       toggle = vi.fn<(folder: string) => void>();
@@ -81,7 +83,16 @@ describe('FEATURE: viewHandlersOf', () => {
       };
       const flow = { viewportChanged };
 
-      handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts, tasks: () => tasks, flow: () => flow });
+      const clock = { moved };
+
+      handlers = viewHandlersOf({
+        frames,
+        filtering: () => filtering,
+        layouts: () => layouts,
+        tasks: () => tasks,
+        flow: () => flow,
+        clock: () => clock
+      });
     });
 
     it('WHEN a frame renders THEN the frame clock is marked before the filtering hears of it', () => {
@@ -148,6 +159,12 @@ describe('FEATURE: viewHandlersOf', () => {
       handlers.onViewport();
 
       expect(saveViewport).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN the viewport moves THEN the card clock hears it', () => {
+      handlers.onViewport();
+
+      expect(moved).toHaveBeenCalledOnce();
     });
 
     it('WHEN the viewport moves THEN the flow overlay is cleared', () => {
@@ -235,6 +252,12 @@ describe('FEATURE: viewHandlersOf', () => {
 
         expect(saveCamera).toHaveBeenCalledOnce();
         expect(saveViewport).not.toHaveBeenCalled();
+      });
+
+      it('WHEN the viewport moves THEN the card clock hears it', () => {
+        handlers.onViewport();
+
+        expect(moved).toHaveBeenCalledOnce();
       });
 
       it('WHEN the viewport moves THEN the flow overlay is cleared', () => {
