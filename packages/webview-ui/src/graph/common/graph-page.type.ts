@@ -1,5 +1,6 @@
 import type { Core } from 'cytoscape';
 
+import type { CardClockPorts } from './card-clock.type.ts';
 import type { ControlsElements } from './controls-elements.type.ts';
 import type { DetailsViews } from './details.type.ts';
 import type { FlowControl, FlowEdgeGeometry } from './flow.type.ts';
@@ -189,6 +190,8 @@ type GraphControllerOwnDeps = {
   /** What a collapsed folder's title is cut to fit with. */
   readonly measure: TextMeasure;
   readonly now: () => number;
+  /** The browser timers and visibility the card clock ticks with. */
+  readonly clockPorts: CardClockPorts;
   /** `buildControls`, handed in because `domain-logic` may not import `ui`. */
   readonly build: (groups: FolderGroup[], tags: string[], graph: DrawnGraph) => ControlsElements;
   /** The details view builders, handed in because `domain-logic` may not import `ui`. */
@@ -221,6 +224,8 @@ export type DrawnGraph = {
 
 export type GraphController = {
   readonly receive: (message: unknown) => void;
+  /** Called when the page becomes visible; the card clock writes the caught-up time at once. */
+  readonly clockShown: () => void;
   readonly view: GraphView;
   readonly flow: FlowControl;
   readonly facts: ProbeFacts;
