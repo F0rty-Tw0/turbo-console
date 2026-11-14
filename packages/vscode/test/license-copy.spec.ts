@@ -12,7 +12,7 @@ describe('FEATURE: the packaged LICENSE', () => {
       const packaged = readFileSync(resolve(PACKAGE_ROOT, 'LICENSE'));
       const root = readFileSync(resolve(REPO_ROOT, 'LICENSE'));
 
-      expect(packaged.equals(root)).toBe(true);
+      expect(packaged.toString('utf8')).toBe(root.toString('utf8'));
     });
   });
 });
