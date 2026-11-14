@@ -66,4 +66,23 @@ describe('FEATURE: card label', () => {
       expect(cardRowsOf(['task', 'run-passed'], 'build', false)).toStrictEqual(['build', 'Passed']);
     });
   });
+
+  describe('cardRowsOf with a clock', () => {
+    it.each([
+      [['task', 'run-running'], '1m 4s', 'Running · 1m 4s'],
+      [['task', 'run-continuous'], '1h 2m', 'Continuous · 1h 2m'],
+      [['task', 'run-passed'], '1m 4s', 'Passed'],
+      [['task', 'run-failed'], '1m 4s', 'Failed'],
+      [['task', 'run-stopped'], '1m 4s', 'Stopped'],
+      [['task', 'run-failed-to-start'], '1m 4s', 'Failed to start'],
+      [['task'], '1m 4s', 'Not run'],
+      [['task', 'run-running'], undefined, 'Running']
+    ])('GIVEN the classes %j and clock %s THEN row 2 is %s', (classes, clock, row2) => {
+      expect(cardRowsOf(classes, 'build', false, clock)[1]).toBe(row2);
+    });
+
+    it('GIVEN a live run and a clock THEN row 1 is the running glyph and the name', () => {
+      expect(cardRowsOf(['task', 'run-running'], 'build', true, '1m 4s')[0]).toBe(`${SYNC} build`);
+    });
+  });
 });
