@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { isGraphHostMessage } from './graph-host-message.util.ts';
+import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
 import type { GraphRunsMessage } from '../../bridge/common/graph-message.type.ts';
 
 /** Parsed, so `__proto__` and `constructor` arrive as own keys, as they would from a posted message. */
@@ -19,6 +20,14 @@ const runsWith = (elapsed: unknown): unknown => {
   return message;
 };
 
+const entryOf = (_: unknown, index: number): [string, number] => [`p#t${index}`, 0];
+
+const elapsedOf = (length: number): Record<string, number> => {
+  const entries = Array.from({ length }, entryOf);
+
+  return Object.fromEntries(entries);
+};
+
 describe('FEATURE: the elapsed key of a runs message', () => {
   describe('GIVEN a runs message', () => {
     it.each([
@@ -27,7 +36,8 @@ describe('FEATURE: the elapsed key of a runs message', () => {
       ['an empty elapsed', runsWith({})],
       ['a finite elapsed', TYPED],
       ['zero and a fraction', runsWith({ a: 0, b: 1.5 })],
-      ['elapsed keyed like Object.prototype members', runsWith(PROTOTYPE_NAMED)]
+      ['elapsed keyed like Object.prototype members', runsWith(PROTOTYPE_NAMED)],
+      ['exactly TASK_COUNT_MAX elapsed keys', runsWith(elapsedOf(TASK_COUNT_MAX))]
     ])('WHEN it carries %s THEN it is accepted', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);
 
@@ -42,7 +52,8 @@ describe('FEATURE: the elapsed key of a runs message', () => {
       ['a NaN value', runsWith({ a: Number.NaN })],
       ['an Infinity value', runsWith({ a: Number.POSITIVE_INFINITY })],
       ['a negative value', runsWith({ a: -1 })],
-      ['a null value', runsWith({ a: null })]
+      ['a null value', runsWith({ a: null })],
+      ['more than TASK_COUNT_MAX keys', runsWith(elapsedOf(TASK_COUNT_MAX + 1))]
     ])('WHEN its elapsed is %s THEN it is rejected', (_name, raw) => {
       const isMessage = isGraphHostMessage(raw);
 
