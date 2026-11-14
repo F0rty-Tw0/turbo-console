@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
 import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
+import { TASK_CARD_CLASS } from '../common/graph-card.const.ts';
 import { PACKAGE_RUN_CLASS, RUN_CLASS_PREFIX, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import { FOLDER_NODE_CLASS, NODE_BORDER_PX } from '../common/graph.const.ts';
 import { CANVAS_COLORS, CANVAS_FRAME_RGB, CANVAS_SELECTION_FILL_RGB } from '../test/utils/canvas-elements.spec.util.ts';
@@ -22,7 +23,7 @@ describe('FEATURE: a selected package or collapsed folder with a run state draws
   beforeEach(() => {
     const webNode = classedNodeOf('web', 'web', '');
     const appsNode = classedNodeOf('apps', 'apps', FOLDER_NODE_CLASS);
-    const taskNode = classedNodeOf(TASK_ID, 'build', TASK_NODE_CLASS);
+    const taskNode = classedNodeOf(TASK_ID, 'build', `${TASK_NODE_CLASS} ${TASK_CARD_CLASS}`);
 
     cy = cytoscape({ headless: true, styleEnabled: true, elements: [webNode, appsNode, taskNode] });
     cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', true));
@@ -71,10 +72,11 @@ describe('FEATURE: a selected package or collapsed folder with a run state draws
   });
 
   describe('GIVEN a task node web#build', () => {
-    it('WHEN it is selected with run-running THEN its outline is 0 and its border is the selected ring', () => {
+    it('WHEN it is selected with run-running THEN its outline is 0, its border is the selected ring and its bar is running', () => {
       task.addClass(`selected ${RUNNING}`);
 
       expect(ringOf(task)).toStrictEqual(SELECTED_RING);
+      expect(task.style('background-gradient-stop-colors')).toContain('rgb(255,255,0)');
     });
   });
 });

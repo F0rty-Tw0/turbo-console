@@ -21,6 +21,18 @@ export const styleNumber = (node: NodeSingular, name: string): number => {
   return typeof value === 'number' ? value : 0;
 };
 
+/** The bar colour of a task card with a run state: the first stop of its gradient, `null` for a solid fill. */
+export const accentColorOf = (node: NodeSingular): string | null => {
+  const fill = styleText(node, 'background-fill');
+  const isBar = fill === 'linear-gradient';
+
+  if (!isBar) return null;
+
+  const [bar = ''] = styleText(node, 'background-gradient-stop-colors').split(' ');
+
+  return bar;
+};
+
 /** The element's state class; a box's `dimmed-box` reads `dimmed`. */
 export const probeStateOf = (element: NodeSingular | EdgeSingular): ProbeState => {
   const isSelected = element.hasClass('selected');

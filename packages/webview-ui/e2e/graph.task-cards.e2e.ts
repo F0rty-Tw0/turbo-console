@@ -1,4 +1,3 @@
-import type { RunOutline } from './common/graph.type.ts';
 import { test } from './graph-task.fixture.ts';
 import { GraphTaskCards } from './pages/graph-task-cards.po.ts';
 import type { GraphRunState } from '../src/bridge/common/graph-state.type.ts';
@@ -13,26 +12,20 @@ const MEASURE = { description: 'G2-5a spec F1, C1', type: 'requirement' };
 /** The spec numbers written out, so a changed constant cannot move the oracle with it. */
 const CARD = { width: 180, height: 60 };
 
-/** A run state and the 2 px outline the default (light) theme stub draws for it: seeing it is how a test knows the state was applied. */
+/** A run state and the top bar the default (light) theme stub draws for it: seeing it is how a test knows the state was applied. */
 type RunCase = {
   readonly state: GraphRunState;
-  readonly outline: RunOutline;
+  readonly accent: string;
 };
 
-const outlineOf = (colour: string): RunOutline => {
-  const outline: RunOutline = { width: 2, colour };
-
-  return outline;
-};
-
-/** Neighbours differ in colour, so each outline proves its own state landed and not the one before. */
+/** Neighbours differ in colour, so each bar proves its own state landed and not the one before. */
 const RUN_CASES: RunCase[] = [
-  { state: 'running', outline: outlineOf('rgb(191,136,3)') },
-  { state: 'continuous', outline: outlineOf('rgb(56,138,52)') },
-  { state: 'failed', outline: outlineOf('rgb(241,76,76)') },
-  { state: 'passed', outline: outlineOf('rgb(56,138,52)') },
-  { state: 'stopped', outline: outlineOf('rgb(113,113,113)') },
-  { state: 'failed-to-start', outline: outlineOf('rgb(248,81,73)') }
+  { state: 'running', accent: 'rgb(191,136,3)' },
+  { state: 'continuous', accent: 'rgb(56,138,52)' },
+  { state: 'failed', accent: 'rgb(241,76,76)' },
+  { state: 'passed', accent: 'rgb(56,138,52)' },
+  { state: 'stopped', accent: 'rgb(113,113,113)' },
+  { state: 'failed-to-start', accent: 'rgb(248,81,73)' }
 ];
 
 /** The drawn text of `app#build` per run state: row 1 the glyph and ` build`, row 2 the word; written out, not derived from the code under test. */
@@ -51,17 +44,17 @@ test.describe('FEATURE: graph task status cards', () => {
   test(
     'GIVEN app#build open, it is a 180 x 60 card idle, in each run state, selected and deselected',
     { annotation: SIZE },
-    async ({ graphGlyphs, graphTaskHost, graphTaskProbe, graphProbe, graphCanvas, page }): Promise<void> => {
+    async ({ graphGlyphs, graphTaskHost, graphProbe, graphCanvas, page }): Promise<void> => {
       const cards = new GraphTaskCards(page);
 
       await test.step('WHEN the page is opened', async (): Promise<void> => graphGlyphs.openChosen());
 
       await test.step('THEN app#build is 180 x 60 idle', async (): Promise<void> => cards.expectCardSize('app#build', CARD));
 
-      for (const { state, outline } of RUN_CASES) {
+      for (const { state, accent } of RUN_CASES) {
         await test.step(`WHEN app#build is ${state} THEN it is 180 x 60`, async (): Promise<void> => {
           await graphTaskHost.sendRuns({ 'app#build': state });
-          await graphTaskProbe.expectRunOutline('app#build', outline);
+          await cards.expectRunAccent('app#build', accent);
           await cards.expectCardSize('app#build', CARD);
         });
       }

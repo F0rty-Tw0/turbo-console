@@ -1,4 +1,5 @@
 import { test } from './graph-task.fixture.ts';
+import { GraphTaskCards } from './pages/graph-task-cards.po.ts';
 import {
   CONTINUOUS_OUTLINE,
   FAILED_OUTLINE,
@@ -102,9 +103,11 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
   );
 
   test(
-    'GIVEN web#build reported while task mode shows, the task outline is unchanged and Packages then outlines web',
+    'GIVEN web#build reported while task mode shows, the task bar is unchanged and Packages then outlines web',
     { annotation: D13 },
-    async ({ graphHost, graphLook, graphPage, graphTask, graphTaskHost, graphTaskProbe }): Promise<void> => {
+    async ({ graphHost, graphLook, graphPage, graphTask, graphTaskHost, graphTaskProbe, page }): Promise<void> => {
+      const cards = new GraphTaskCards(page);
+
       await test.step('WHEN the boards open in task mode with web#build chosen', async (): Promise<void> => {
         await graphPage.open({ savedState: WEB_BUILD_TASK_SAVED });
       });
@@ -115,8 +118,8 @@ test.describe('FEATURE: run state on packages and collapsed folders', () => {
 
       await test.step('AND web#build is reported running', async (): Promise<void> => graphTaskHost.sendRuns(WEB_RUNNING_STUB));
 
-      await test.step("THEN the task web#build has the task rule's 2 wide running outline", async (): Promise<void> => {
-        await graphTaskProbe.expectRunOutline('web#build', RUNNING_OUTLINE);
+      await test.step('THEN the task web#build has a running top bar and no outline', async (): Promise<void> => {
+        await cards.expectRunAccent('web#build', RUNNING_RGB);
       });
 
       await test.step('WHEN Packages is pressed', async (): Promise<void> => graphTask.leave());

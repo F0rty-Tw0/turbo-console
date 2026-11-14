@@ -3,9 +3,19 @@ import type { GraphAffected } from '../../bridge/common/graph-affected.type.ts';
 import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewMode } from '../../bridge/common/graph-view-state.type.ts';
 
-/** A theme colour a swatch is drawn in; `run-<state>` is the outline of a task in that run state. */
+/** A theme colour a swatch is drawn in; `run-<state>` is the outline of a file or the bar of a card in that run state. */
 export type LegendColour =
-  'frame' | 'background' | 'edge' | 'selected' | 'highlighted' | 'cached' | 'selectionFill' | 'affected' | `run-${GraphRunState}`;
+  | 'frame'
+  | 'background'
+  | 'edge'
+  | 'selected'
+  | 'highlighted'
+  | 'cached'
+  | 'selectionFill'
+  | 'affected'
+  | 'cardFill'
+  | 'cardFrame'
+  | `run-${GraphRunState}`;
 
 export type LegendOutline = {
   readonly colour: LegendColour;
@@ -18,9 +28,18 @@ export type LegendHalo = {
   readonly opacity: number;
 };
 
+/** A swatch rect's left edge, top edge, width and corner radius in viewBox units, as the accent bar follows them. */
+export type AccentBox = {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly rx: number;
+};
+
 /**
  * What one swatch draws. `flow`: `stroke`/`strokePx` is the highlighted edge; `dashPx` and `outline` are the dash pen drawn over it.
  * `halo`: a box's affected halo, drawn under the outline and the frame.
+ * `accentBar`: the run colour of a card's top bar, drawn over the frame's top edge; `null` for no bar.
  */
 export type LegendSwatch = {
   readonly shape: 'box' | 'pill' | 'line' | 'flow';
@@ -36,6 +55,7 @@ export type LegendSwatch = {
   readonly isNested: boolean;
   readonly hasPlate: boolean;
   readonly halo: LegendHalo | null;
+  readonly accentBar: LegendColour | null;
 };
 
 /** Draws the legend in `colors`, with the affected rows of `affected`'s level, or none for `null`. */

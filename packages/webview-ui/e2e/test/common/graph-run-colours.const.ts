@@ -28,3 +28,9 @@ export const RUN_RING: RingColours = { drawn: RUNNING_RGB, absent: SELECTED_RGB 
 
 /** The ring of a selected node with no run state, in the dark theme: the selection ring is drawn and the run ring is not. */
 export const SELECTION_RING: RingColours = { drawn: SELECTED_RGB, absent: RUNNING_RGB };
+
+/** The ring of a selected running card, in the dark theme: its running bar is drawn and the passed colour is not. */
+export const SELECTED_BAR_INK: RingColours = { drawn: RUNNING_RGB, absent: PASSED_RGB };
+
+/** The ring of a selected running card, in the dark theme: its selection border is drawn and the passed colour is not. */
+export const SELECTED_BORDER_INK: RingColours = { drawn: SELECTED_RGB, absent: PASSED_RGB };

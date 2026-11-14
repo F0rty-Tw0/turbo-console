@@ -39,8 +39,7 @@ const FLOW_SWATCH: LegendSwatch = {
 const FLOW_TEXT = `Moving dashes: the highlighted task chain (stops after ${FLOW_IDLE_MS / 1000} s idle; off with reduced motion or over ${FLOW_EDGE_LIMIT} edges)`;
 
 const runRowOf = (state: GraphRunState): LegendRow => {
-  const outline: LegendOutline = { colour: `run-${state}`, px: OUTLINE_PX };
-  const swatch: LegendSwatch = { ...BOX_SWATCH, outline };
+  const swatch: LegendSwatch = { ...BOX_SWATCH, fill: 'cardFill', stroke: 'cardFrame', accentBar: `run-${state}` };
   const row: LegendRow = { id: `run-${state}`, text: `Task ${RUN_STATE_TEXT[state].toLowerCase()}`, swatch };
 
   return row;

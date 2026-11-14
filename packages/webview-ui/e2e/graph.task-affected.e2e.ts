@@ -1,5 +1,5 @@
-import type { RunOutline } from './common/graph.type.ts';
 import { test } from './graph-task-affected.fixture.ts';
+import { GraphTaskCards } from './pages/graph-task-cards.po.ts';
 import { GLYPH_CODE_POINTS } from '../src/graph/common/graph-glyph.const.ts';
 import { FALLBACK_COLORS } from '../src/graph/common/graph.const.ts';
 import { TASK_LEGEND_ROWS } from '../src/graph/common/legend-task.const.ts';
@@ -10,7 +10,7 @@ const MARKED = { 'app#build': 'changed', 'lib#build': 'dependency' } as const;
 const MARKS = { mode: 'task', tasks: MARKED } as const;
 const PACKAGE_MARKS = { mode: 'package', tasks: MARKED } as const;
 const TICKED = { type: 'setViewToggle', toggle: 'affected', shown: true } as const;
-const RUNNING_OUTLINE: RunOutline = { width: 2, colour: 'rgb(191,136,3)' };
+const RUNNING_ACCENT = 'rgb(191,136,3)';
 const SHOWN_WITH_TEST = ['app#build', 'ui#test'];
 const CHANGED = 0.4;
 const DEPENDENCY = 0.18;
@@ -44,17 +44,19 @@ test.describe('FEATURE: graph affected overlay', () => {
   );
 
   test(
-    'GIVEN a running app#build, the marks leave its run glyph and run outline as they were',
+    'GIVEN a running app#build, the marks leave its run glyph and run bar as they were',
     { annotation: SPEC_7 },
-    async ({ graphAffected, graphTaskHost, graphGlyphs, graphTaskProbe }): Promise<void> => {
+    async ({ graphAffected, graphTaskHost, graphGlyphs, page }): Promise<void> => {
+      const cards = new GraphTaskCards(page);
+
       await test.step('WHEN the page is opened with affectedShown true and app#build runs', async () => {
         await graphAffected.open(true);
         await graphTaskHost.sendRuns({ 'app#build': 'running' });
       });
 
-      await test.step('THEN app#build draws the sync glyph and the running outline', async () => {
+      await test.step('THEN app#build draws the sync glyph and the running bar', async () => {
         await graphGlyphs.expectFirstChar('app#build', GLYPH_CODE_POINTS.sync);
-        await graphTaskProbe.expectRunOutline('app#build', RUNNING_OUTLINE);
+        await cards.expectRunAccent('app#build', RUNNING_ACCENT);
       });
 
       await test.step('WHEN the host sends the marks with the same run', async () =>
@@ -62,9 +64,9 @@ test.describe('FEATURE: graph affected overlay', () => {
 
       await test.step('THEN app#build has its halo', async () => graphAffected.expectHalo('app#build', CHANGED));
 
-      await test.step('AND it still draws the sync glyph and the running outline', async () => {
+      await test.step('AND it still draws the sync glyph and the running bar', async () => {
         await graphGlyphs.expectFirstChar('app#build', GLYPH_CODE_POINTS.sync);
-        await graphTaskProbe.expectRunOutline('app#build', RUNNING_OUTLINE);
+        await cards.expectRunAccent('app#build', RUNNING_ACCENT);
       });
     }
   );

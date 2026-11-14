@@ -26,6 +26,8 @@ const COLOUR_OF: Record<LegendColour, string> = {
   cached: COLORS.cached,
   selectionFill: SELECTION_COLORS_STUB.fill,
   affected: COLORS.affected,
+  cardFill: COLORS.cardFill,
+  cardFrame: COLORS.cardFrame,
   'run-running': COLORS.runs.running,
   'run-continuous': COLORS.runs.continuous,
   'run-passed': COLORS.runs.passed,
@@ -203,7 +205,33 @@ const plateOf = (row: LegendRow): Expected => {
   return plate;
 };
 
-const RUN_PINS: Pin[] = RUN_STATES.map((state): Pin => [`run-${state}`, `node.run-${state}`, outlineStyleOf]);
+/** The stops of a card's gradient: its run colour twice, then the fill twice. */
+const accentStopsOf = (row: LegendRow): Expected => {
+  const bar = COLOUR_OF[row.swatch.accentBar ?? 'frame'];
+  const fill = fillOf(row);
+  const stops = { 'background-gradient-stop-colors': [bar, bar, fill, fill] };
+
+  return stops;
+};
+
+const RUN_PINS: Pin[] = RUN_STATES.map((state): Pin => [`run-${state}`, `node.task-card.run-${state}`, accentStopsOf]);
+
+const ruleStyleOf = (block: StylesheetJson[number]): Expected => {
+  if (!('style' in block)) return NO_STYLE;
+
+  const style: Expected = { ...block.style };
+
+  return style;
+};
+
+/** The merged style of every rule with `selector`: the card layout and the card colours share `node.task-card`. */
+const mergedStyleOf = (selector: string): Expected => {
+  const blocks = SHEET.filter((block) => block.selector === selector);
+  const styles = blocks.map(ruleStyleOf);
+  const merged = styles.reduce<Expected>((all, style) => Object.assign(all, style), {});
+
+  return merged;
+};
 
 const PINS: Pin[] = [
   ['package', 'node', packageOf],
@@ -293,6 +321,17 @@ describe('FEATURE: legend rows', () => {
       const style = styleOf(selector);
 
       expect(style).toMatchObject(expectedOf(row));
+    });
+  });
+
+  describe('GIVEN the run rows and the card rule', () => {
+    it.each(RUN_STATES)('THEN row run-%s fill and frame match what node.task-card draws', (state) => {
+      const row = rowOf(`run-${state}`);
+
+      expect(mergedStyleOf('node.task-card')).toMatchObject({
+        'background-color': fillOf(row),
+        'border-color': COLOUR_OF[row.swatch.stroke]
+      });
     });
   });
 

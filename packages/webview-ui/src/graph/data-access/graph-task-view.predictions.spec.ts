@@ -240,8 +240,10 @@ describe('FEATURE: task canvas predictions', () => {
       expect(label.startsWith(HISTORY)).toBe(true);
     });
 
-    it('WHEN web#build passed and is predicted cached THEN its outline is still the passed colour', () => {
-      expect(cy.getElementById('web#build').style('outline-color')).toBe('rgb(0,255,17)');
+    it('WHEN web#build passed and is predicted cached THEN its bar is still the passed colour', () => {
+      const stops = String(cy.getElementById('web#build').style('background-gradient-stop-colors'));
+
+      expect(stops.startsWith('rgb(0,255,17)')).toBe(true);
     });
   });
 

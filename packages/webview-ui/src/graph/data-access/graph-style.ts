@@ -4,7 +4,7 @@ import { BOX_TITLE } from './graph-box-title-style.ts';
 import { dimmedBoxRulesOf } from './graph-dimmed-box-style.ts';
 import { routeRulesOf } from './graph-route-style.ts';
 import { selectionRulesOf } from './graph-selection-style.ts';
-import { UNMEASURED_CARDS, cardRulesOf } from './graph-task-card-style.ts';
+import { UNMEASURED_CARDS, cardColourRulesOf, cardRulesOf, selectedCardRunRulesOf } from './graph-task-card-style.ts';
 import { taskRulesOf } from './graph-task-style.ts';
 import {
   COLLAPSED_LABEL_MAX_PX,
@@ -149,7 +149,8 @@ const nodeStyleOf = (colors: ThemeColors, fontFamily: string): Css.Node => {
  * comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font before their name, and a package
  * task box draws the package glyph before its title; the base node rule keeps `fontFamily`. A plain task's `task-card`
  * label (`cardRulesOf`, after the task rules) draws two rows and takes its margin from `measures`; umbrellas keep the
- * task rule's one row.
+ * task rule's one row. `cardColourRulesOf` follows it: the input fill and frame and a run-colour top bar in place of the run
+ * outline; `selectedCardRunRulesOf` follows the selection rules, so a selected card's bar keeps the selection fill below it.
  */
 export const graphStyleOf = (
   colors: ThemeColors,
@@ -165,6 +166,8 @@ export const graphStyleOf = (
   const glyphFamily = glyphs ? `codicon, ${fontFamily}` : null;
   const taskRules = taskRulesOf(colors, BOX_TITLE, glyphFamily);
   const cardRules = cardRulesOf(glyphFamily, measures);
+  const cardColourRules = cardColourRulesOf(colors);
+  const selectedCardRunRules = selectedCardRunRulesOf(colors);
   const selectionRules = selectionRulesOf(colors);
   const routeRules = routeRulesOf();
   const dimmedBoxRules = dimmedBoxRulesOf(colors);
@@ -175,10 +178,12 @@ export const graphStyleOf = (
     { selector: `node:parent.${EXPORTING_CLASS}`, style: BOX_TITLE },
     ...taskRules,
     ...cardRules,
+    ...cardColourRules,
     { selector: 'edge', style: edgeStyleOf(colors) },
     ...routeRules,
     ...NO_PRESS_RULES,
     ...selectionRules,
+    ...selectedCardRunRules,
     { selector: 'node.highlighted', style: highlightedNode },
     { selector: 'edge.highlighted', style: highlightedEdge },
     { selector: 'edge.selected', style: selectedEdge },
