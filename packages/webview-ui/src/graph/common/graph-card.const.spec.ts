@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  CARD_CLOCK_DATA,
+  CARD_CLOCK_SAMPLES,
   CARD_HEIGHT,
   CARD_IDLE_TEXT,
   CARD_LINE_HEIGHT,
@@ -34,6 +36,18 @@ describe('FEATURE: graph-card.const', () => {
 
     it('THEN the state words are frozen, so no consumer can change the card width in place', () => {
       expect(Object.isFrozen(CARD_STATE_WORDS)).toBe(true);
+    });
+
+    it('THEN the clock samples are the widest continuous texts under and over an hour', () => {
+      expect(CARD_CLOCK_SAMPLES).toStrictEqual(['Continuous · 59m 59s', 'Continuous · 99h 59m']);
+    });
+
+    it('THEN the clock samples are frozen, so no consumer can change the card width in place', () => {
+      expect(Object.isFrozen(CARD_CLOCK_SAMPLES)).toBe(true);
+    });
+
+    it('THEN the clock node data key is clock', () => {
+      expect(CARD_CLOCK_DATA).toBe('clock');
     });
   });
 });

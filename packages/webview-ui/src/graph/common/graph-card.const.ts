@@ -22,5 +22,11 @@ const RUN_WORDS: string[] = RUN_STATES.map((state) => RUN_STATE_TEXT[state]);
 /** Frozen: a consumer sorting or pushing in place would silently change every card width. */
 export const CARD_STATE_WORDS = Object.freeze(RUN_WORDS.concat(CARD_IDLE_TEXT));
 
+/** The widest row 2 texts a live clock draws, under and over an hour; frozen like the state words. */
+export const CARD_CLOCK_SAMPLES = Object.freeze(['Continuous · 59m 59s', 'Continuous · 99h 59m']);
+
+/** The node data key that holds a card's clock text. */
+export const CARD_CLOCK_DATA = 'clock';
+
 /** The class of a plain task node drawn as a status card. */
 export const TASK_CARD_CLASS = 'task-card';
