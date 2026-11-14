@@ -77,20 +77,21 @@ describe('FEATURE: the graph feed posts elapsed and dedupes on launches (spec §
       expect(posted[0]?.elapsed).toStrictEqual({ 'a#build': 3000 });
     });
 
-    it('WHEN it ends and the same task is relaunched at 1020 inside one coalesce window THEN a second message posts with the new elapsed', () => {
+    it('WHEN it ends, is relaunched at 1020 inside one coalesce window and the clock reads 9000 THEN a second message posts the elapsed from 9000', () => {
       const { runs, ports } = startedFeed();
 
       runs.tryStart(RUN_A_BUILD_STUB, 1000);
       vi.advanceTimersByTime(RUNS_COALESCE_MS);
       runs.processEnded(A_BUILD_DEFINITION_STUB, 0, 1010);
       runs.tryStart(RUN_A_BUILD_STUB, 1020);
+      vi.mocked(ports.wallNow).mockReturnValue(9000);
       vi.advanceTimersByTime(RUNS_COALESCE_MS);
 
       const posted = postedRunsMessagesOf(ports);
 
       expect(posted).toHaveLength(2);
       expect(posted.at(-1)?.runs).toStrictEqual({ 'a#build': 'running' });
-      expect(posted.at(-1)?.elapsed).toStrictEqual({ 'a#build': GRAPH_WALL_NOW - 1020 });
+      expect(posted.at(-1)?.elapsed).toStrictEqual({ 'a#build': 9000 - 1020 });
     });
 
     it('WHEN the run ends THEN the next message has no elapsed key', () => {
