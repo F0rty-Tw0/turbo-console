@@ -18,10 +18,20 @@ export const hasOtherPackagesOf = (packages: PackageNode[]): boolean => {
   return hasRoot && hasOther;
 };
 
+/** The part of a root label that follows the prefix: its scope's rest, or the whole label with no scope or a blank rest (`@a/` + a zero-width space). */
+const rootRestOf = (label: string): string => {
+  const rest = restOf(label);
+
+  if (rest === null) return label;
+
+  const isBlank = cleanText(rest, LABEL_MAX).trim() === '';
+
+  return isBlank ? label : rest;
+};
+
 /** The text a prefixed root reads while scopes are hidden: `(root) <rest of its label>`, or `(root)` alone for the label `root`. */
 const rootTextOf = (label: string): string => {
-  const rest = restOf(label);
-  const text = rest ?? label;
+  const text = rootRestOf(label);
 
   if (text === NO_NAME_ROOT_LABEL) return ROOT_LABEL_ONLY;
 

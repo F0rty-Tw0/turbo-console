@@ -306,6 +306,12 @@ const ROOT_PREFIX_ROWS: RootPrefixRow[] = [
     texts: ['(root)', 'web']
   },
   {
+    given: 'root @a/ + a zero-width space (a blank rest) + web, scopes hidden',
+    packages: [rootOf('@a/\u200b'), packageOf('web')],
+    scopeShown: false,
+    texts: ['(root) @a/', 'web']
+  },
+  {
     given: 'two scoped packages with the same rest, no root, scopes hidden',
     packages: [packageOf('@a/ui'), packageOf('@b/ui')],
     scopeShown: false,
