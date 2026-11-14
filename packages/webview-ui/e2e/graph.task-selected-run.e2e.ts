@@ -48,6 +48,9 @@ test.describe('FEATURE: a selected task with a run state', () => {
 
       await test.step('THEN its running bar is still there', async (): Promise<void> =>
         cards.expectRunAccent('app#build', RUNNING_RGB));
+
+      await test.step('AND the selection border is gone', async (): Promise<void> =>
+        graphTaskRings.expectRings('app#build', RUN_RING));
     }
   );
 
