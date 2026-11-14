@@ -68,6 +68,8 @@ export const installProblemsOf = (workflow: string): string[] => {
 
 const isStoreJob = (job: Job): boolean => job.lines.some((line) => isCode(line) && ENVIRONMENT_STORE.test(line));
 
+const isCacheFreeJob = (job: Job): boolean => job.name === PACKAGE_JOB || isStoreJob(job);
+
 const cacheProblemsOfJob = (job: Job): string[] => {
   const code = codeOf(job.lines);
   const restores = code.filter((line) => CACHE_LINE.test(line));
@@ -78,9 +80,12 @@ const cacheProblemsOfJob = (job: Job): string[] => {
   return [...found, ...missing];
 };
 
-/** A job with `environment: store` restores no cache: a poisoned pnpm store would run its vsce or ovsx binary beside the token. */
+/**
+ * The package job and each job with `environment: store` restore no cache: a poisoned pnpm store would run its vsce or
+ * ovsx binary beside the token, or end up in the shipped vsix.
+ */
 export const cacheProblemsOf = (workflow: string): string[] => {
-  const storeJobs = jobsOf(workflow).filter(isStoreJob);
+  const cacheFreeJobs = jobsOf(workflow).filter(isCacheFreeJob);
 
-  return storeJobs.flatMap(cacheProblemsOfJob);
+  return cacheFreeJobs.flatMap(cacheProblemsOfJob);
 };

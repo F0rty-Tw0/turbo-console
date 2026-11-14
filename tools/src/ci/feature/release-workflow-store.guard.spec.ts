@@ -39,14 +39,12 @@ const CACHE_AUTO = storeSetup('          node-version-file: .nvmrc');
 const ACTION_STEP = '      - uses: actions/cache@abc';
 const WITH_CACHE_OFF = storeSetup(CACHE_OFF);
 const CACHE_ACTION = [...WITH_CACHE_OFF, ACTION_STEP];
-const PLAIN_JOB_CACHE = [
-  'jobs:',
-  '  package:',
-  '    steps:',
-  '      - uses: actions/setup-node@x',
-  '        with:',
-  '          cache: pnpm'
-];
+const setupJob = (name: string, ...setupLines: string[]): string[] => {
+  return ['jobs:', `  ${name}:`, '    steps:', '      - uses: actions/setup-node@x', '        with:', ...setupLines];
+};
+const PLAIN_JOB_CACHE = setupJob('lint', '          cache: pnpm');
+const PACKAGE_JOB_CACHE = setupJob('package', '          cache: pnpm', CACHE_OFF);
+const PACKAGE_JOB_AUTO = setupJob('package', '          node-version-file: .nvmrc');
 
 const joined = (lines: string[]): string => lines.join('\n');
 
@@ -79,7 +77,7 @@ describe('FEATURE: Release workflow store job guard', () => {
     });
   });
 
-  describe('GIVEN a job with environment: store', () => {
+  describe('GIVEN the package job or a job with environment: store', () => {
     it('WHEN the repo release.yml is read THEN none restores a cache and each turns the setup-node cache off', () => {
       const result = cacheProblemsOf(RELEASE);
 
@@ -110,7 +108,19 @@ describe('FEATURE: Release workflow store job guard', () => {
       expect(result).toStrictEqual(['publish-openvsx restores a cache: - uses: actions/cache@abc']);
     });
 
-    it('WHEN a job without the store environment caches THEN no problem is listed', () => {
+    it('WHEN the package job sets cache: pnpm THEN it is listed', () => {
+      const result = cacheProblemsOf(joined(PACKAGE_JOB_CACHE));
+
+      expect(result).toStrictEqual(['package restores a cache: cache: pnpm']);
+    });
+
+    it('WHEN the package job leaves the automatic cache on THEN it is listed', () => {
+      const result = cacheProblemsOf(joined(PACKAGE_JOB_AUTO));
+
+      expect(result).toStrictEqual(['package lacks the line: package-manager-cache: false']);
+    });
+
+    it('WHEN a job that is neither package nor store caches THEN no problem is listed', () => {
       const result = cacheProblemsOf(joined(PLAIN_JOB_CACHE));
 
       expect(result).toStrictEqual([]);

@@ -58,7 +58,8 @@ jobs:
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version-file: .nvmrc
-          cache: pnpm
+          # No cache: this job builds the shipped vsix, and a pnpm cache from an earlier master CI run could poison it.
+          package-manager-cache: false
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
