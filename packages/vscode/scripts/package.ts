@@ -1,9 +1,9 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 
+import { VSIX_FILES_PATH } from './common/vsix.const.ts';
 import { listingFiles, packageArgs, vsceBin } from './package.util.ts';
-import { VSIX_FILES_PATH } from '../test/common/vsix.const.ts';
-import { vsixProblems } from '../test/utils/vsix-files.spec.util.ts';
+import { vsixProblems } from './vsix-files.util.ts';
 
 const vsce = vsceBin();
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { vsixProblems } from './vsix-files.spec.util.ts';
+import { vsixProblems } from './vsix-files.util.ts';
 
 const FULL_LIST = [
   'package.json',
