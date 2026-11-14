@@ -50,3 +50,10 @@ export const guardProblems = (input: GuardInput): string[] => {
 
   return problems;
 };
+
+const NOT_ANCESTOR_STATUS = 1;
+
+/** `git merge-base --is-ancestor` exits 1 for "not an ancestor"; any other failure (a missing ref exits 128) is not an answer. */
+export const isNotAncestorError = (error: unknown): boolean => {
+  return error instanceof Error && 'status' in error && error.status === NOT_ANCESTOR_STATUS;
+};

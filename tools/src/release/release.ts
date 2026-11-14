@@ -5,7 +5,7 @@ import { parseArgs } from 'node:util';
 import { array, object, string } from 'zod';
 
 import type { GuardInput } from './common/release.type.ts';
-import { channelOf, guardProblems, releaseNotes } from './utils/release.util.ts';
+import { channelOf, guardProblems, isNotAncestorError, releaseNotes } from './utils/release.util.ts';
 
 const MANIFEST_PATH = 'packages/vscode/package.json';
 const CHANGELOG_PATH = 'packages/vscode/CHANGELOG.md';
@@ -18,11 +18,15 @@ const git = (args: string[]): string => execFileSync('git', args, { encoding: 'u
 
 const isOnMaster = (): boolean => {
   try {
-    execFileSync('git', ['merge-base', '--is-ancestor', 'HEAD', 'origin/master'], { stdio: 'ignore' });
+    execFileSync('git', ['merge-base', '--is-ancestor', 'HEAD', 'origin/master'], { stdio: ['ignore', 'ignore', 'inherit'] });
 
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    const isNotAncestor = isNotAncestorError(error);
+
+    if (isNotAncestor) return false;
+
+    throw error;
   }
 };
 

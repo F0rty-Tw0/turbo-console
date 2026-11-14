@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { channelOf, guardProblems, releaseNotes } from './release.util.ts';
+import { channelOf, guardProblems, isNotAncestorError, releaseNotes } from './release.util.ts';
 import type { CiRun, GuardInput } from '../common/release.type.ts';
 
 const CHANGELOG = '# Changelog\n\n## 0.1.0 (pre-release)\n\n- a\n- b\n\n## 0.0.9\n\n- old\n';
@@ -119,6 +119,46 @@ describe('FEATURE: release guard', () => {
         'commit is not on master',
         'no successful CI push run for this commit'
       ]);
+    });
+  });
+});
+
+describe('FEATURE: ancestry check failure', () => {
+  describe('GIVEN git exited 1', () => {
+    it('WHEN the failure is read THEN it means not an ancestor', () => {
+      const error = Object.assign(new Error('Command failed'), { status: 1 });
+
+      const result = isNotAncestorError(error);
+
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('GIVEN git exited 128 because origin/master is missing', () => {
+    it('WHEN the failure is read THEN it is not an answer', () => {
+      const error = Object.assign(new Error('Command failed'), { status: 128 });
+
+      const result = isNotAncestorError(error);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('GIVEN git never started', () => {
+    it('WHEN the failure is read THEN it is not an answer', () => {
+      const error = Object.assign(new Error('spawn git ENOENT'), { status: null });
+
+      const result = isNotAncestorError(error);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('GIVEN a thrown value that is not an error', () => {
+    it('WHEN the failure is read THEN it is not an answer', () => {
+      const result = isNotAncestorError({ status: 1 });
+
+      expect(result).toBe(false);
     });
   });
 });
