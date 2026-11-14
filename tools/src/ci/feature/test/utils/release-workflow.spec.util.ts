@@ -8,6 +8,9 @@ const PERMISSIONS = /^permissions:\s*$/;
 const WRITE_GRANT = /(?:^\s*|[{,]\s*)[\w-]+:\s*['"]?write(?:-all)?['"]?\s*(?:[,}]|$)/;
 const CONTENTS_WRITE = /^\s*contents:\s*['"]?write['"]?\s*$/;
 const GITHUB_RELEASE = 'github-release';
+const TAG_GATE = "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')";
+const IF_LINE = /^ {4}if:\s*(.*?)\s*$/;
+const ENVIRONMENT_STORE = /^ {4}environment: store\s*$/;
 
 const usesOf = (line: string): string | null => USES.exec(line)?.[1] ?? null;
 
@@ -93,17 +96,39 @@ export const permissionProblemsOf = (workflow: string): string[] => {
   return problems;
 };
 
+const codeLinesOf = (job: Job | undefined): string[] => {
+  const lines = job?.lines ?? [];
+
+  return lines.filter(isCode);
+};
+
+const conditionsOf = (job: Job | undefined): string[] => {
+  const lines = codeLinesOf(job);
+
+  return lines.flatMap((line) => IF_LINE.exec(line)?.slice(1) ?? []);
+};
+
+/** The job `if:` must be exactly the tag-push gate, plus the repo variable for a store job: no `||`, no dropped clause. */
+export const gateProblemsOf = (workflow: string, jobName: string, variable: string | null): string[] => {
+  const job = jobsOf(workflow).find((candidate) => candidate.name === jobName);
+  const withVariable = `${TAG_GATE} && vars.${variable} == 'true'`;
+  const expected = variable === null ? TAG_GATE : withVariable;
+  const conditions = conditionsOf(job);
+  const isExact = conditions.length === 1 && conditions[0] === expected;
+  const mismatch = [`${jobName} if: is not exactly: ${expected}`];
+
+  if (isExact) return [];
+
+  return mismatch;
+};
+
 export const storeProblemsOf = (workflow: string, jobName: string, variable: string): string[] => {
   const job = jobsOf(workflow).find((candidate) => candidate.name === jobName);
-  const jobLines = job?.lines ?? [];
-  const lines = jobLines.filter(isCode);
-  const hasStore = lines.some((line) => /^ {4}environment: store\s*$/.test(line));
-  const hasVar = lines.some((line) => /^ {4}if:/.test(line) && line.includes(`vars.${variable} == 'true'`));
-  const problems: string[] = [];
+  const lines = codeLinesOf(job);
+  const hasStore = lines.some((line) => ENVIRONMENT_STORE.test(line));
+  const problems = gateProblemsOf(workflow, jobName, variable);
 
-  if (!hasStore) problems.push(`${jobName} lacks environment: store`);
-
-  if (!hasVar) problems.push(`${jobName} lacks an if: with vars.${variable} == 'true'`);
+  if (!hasStore) problems.unshift(`${jobName} lacks environment: store`);
 
   return problems;
 };
