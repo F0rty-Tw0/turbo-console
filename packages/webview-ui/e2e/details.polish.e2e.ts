@@ -1,6 +1,7 @@
 import { expect, test } from './details.fixture.ts';
-import { CONTINUOUS_CHIP, SCRIPT_TERMS } from './test/common/details.const.ts';
+import { CONTINUOUS_CHIP, RUNNING_ICON_COLOR, SCRIPT_TERMS } from './test/common/details.const.ts';
 import {
+  FAILED_RUN_VIEW_STUB,
   MISSING_PACKAGE_STUB,
   PACKAGE_DETAILS_STUB,
   PASSED_RUN_VIEW_STUB,
@@ -61,9 +62,11 @@ const IDLE_CONTINUOUS_CARD: TaskCard = { ...CONTINUOUS_CARD, run: IDLE_CONTINUOU
 
 const IDLE_STATE: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [TASK_CARD_STUB, IDLE_CONTINUOUS_CARD] };
 
-const PASSED_VAR = '--vscode-testing-iconPassed';
+const PASSED_ICON_COLOR = 'var(--vscode-testing-iconPassed)';
 
-const RUNNING_VAR = '--vscode-progressBar-background';
+const FAILED_ICON_COLOR = 'var(--vscode-testing-iconFailed)';
+
+const SPINNING_ICON = 'codicon codicon-sync codicon-modifier-spin';
 
 const CACHE_CASES: [CacheStatus, string][] = [
   ['HIT', 'cached: will replay'],
@@ -154,11 +157,11 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
       await test.step('AND both clocks share one interval', async (): Promise<void> => pageClock.expectIntervals(1));
 
-      await test.step('AND its pulse icon has no spin class', async (): Promise<void> =>
-        continuous.expectStatusIcon('codicon codicon-pulse', ''));
+      await test.step('AND its pulse icon has no spin class, in the running color', async (): Promise<void> =>
+        continuous.expectStatusIcon('codicon codicon-pulse', RUNNING_ICON_COLOR));
 
-      await test.step('AND the plain running icon spins', async (): Promise<void> =>
-        plain.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', ''));
+      await test.step('AND the plain running icon spins, in the running color', async (): Promise<void> =>
+        plain.expectStatusIcon(SPINNING_ICON, RUNNING_ICON_COLOR));
 
       await test.step('AND the continuous card has the one Continuous chip', async (): Promise<void> =>
         continuous.expectChips([CONTINUOUS_CHIP]));
@@ -293,28 +296,52 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
   );
 
   test(
-    'GIVEN a card whose run changes, its status color follows the run',
+    'GIVEN a card whose run changes, its status icon color follows the run and its frame stays neutral',
     { annotation: AC1 },
-    async ({ detailsPage }): Promise<void> => {
+    async ({ detailsPage, pageLayout }): Promise<void> => {
       const card = detailsPage.card('build');
+      const frame = pageLayout.card('build');
 
       await test.step('WHEN the page shows the idle card', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
 
-      await test.step('THEN the card has no status color', async (): Promise<void> => card.expectStatusColor(null));
+      await test.step('THEN the card shows no status', async (): Promise<void> => card.expectBlankStatus());
+
+      await test.step('AND the card frame is neutral', async (): Promise<void> => frame.expectNeutralFrame());
 
       await test.step('WHEN the task runs', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
 
-      await test.step('THEN the status color is the progress bar variable', async (): Promise<void> =>
-        card.expectStatusColor(RUNNING_VAR));
+      await test.step('THEN the status icon has the progress bar color', async (): Promise<void> =>
+        card.expectStatusIcon(SPINNING_ICON, RUNNING_ICON_COLOR));
+
+      await test.step('AND the status word reads running', async (): Promise<void> =>
+        expect(card.status).toHaveText(/^running · \d+s$/u));
+
+      await test.step('AND the card frame is neutral', async (): Promise<void> => frame.expectNeutralFrame());
+
+      await test.step('WHEN the task fails', async (): Promise<void> => detailsPage.sendRunState('web#build', FAILED_RUN_VIEW_STUB));
+
+      await test.step('THEN the status icon has the failed color', async (): Promise<void> =>
+        card.expectStatusIcon('codicon codicon-error', FAILED_ICON_COLOR));
+
+      await test.step('AND the status word reads failed', async (): Promise<void> => expect(card.status).toHaveText('failed'));
+
+      await test.step('AND the card frame is neutral', async (): Promise<void> => frame.expectNeutralFrame());
 
       await test.step('WHEN the task passes', async (): Promise<void> => detailsPage.sendRunState('web#build', PASSED_HIT));
 
-      await test.step('THEN the status color is the passed variable', async (): Promise<void> => card.expectStatusColor(PASSED_VAR));
+      await test.step('THEN the status icon has the passed color', async (): Promise<void> =>
+        card.expectStatusIcon('codicon codicon-pass', PASSED_ICON_COLOR));
+
+      await test.step('AND the status reads the end text', async (): Promise<void> => expect(card.status).toHaveText('3.2s · cached'));
+
+      await test.step('AND the card frame is neutral', async (): Promise<void> => frame.expectNeutralFrame());
 
       await test.step('WHEN the run goes back to idle', async (): Promise<void> =>
         detailsPage.sendRunState('web#build', RUN_VIEW_STUB));
 
-      await test.step('THEN the card has no status color again', async (): Promise<void> => card.expectStatusColor(null));
+      await test.step('THEN the card shows no status again', async (): Promise<void> => card.expectBlankStatus());
+
+      await test.step('AND the card frame is neutral', async (): Promise<void> => frame.expectNeutralFrame());
     }
   );
 
@@ -352,10 +379,11 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
   );
 
   test(
-    'GIVEN a running card, a full state keeps its status color and tooltip',
+    'GIVEN a running card, a full state keeps its status icon color and tooltip',
     { annotation: AC1 },
-    async ({ detailsPage, pageClock }): Promise<void> => {
+    async ({ detailsPage, pageClock, pageLayout }): Promise<void> => {
       const card = detailsPage.card('build');
+      const frame = pageLayout.card('build');
 
       await test.step('WHEN the page has a fake clock', async (): Promise<void> => pageClock.install());
 
@@ -363,8 +391,10 @@ test.describe('FEATURE: package details page, run clock and task kinds', () => {
 
       await test.step('AND the host posts the whole state again', async (): Promise<void> => detailsPage.sendState(RUNNING_STATE));
 
-      await test.step('THEN the status color is still the progress bar variable', async (): Promise<void> =>
-        card.expectStatusColor(RUNNING_VAR));
+      await test.step('THEN the status icon still has the progress bar color', async (): Promise<void> =>
+        card.expectStatusIcon(SPINNING_ICON, RUNNING_ICON_COLOR));
+
+      await test.step('AND the card frame is neutral', async (): Promise<void> => frame.expectNeutralFrame());
 
       await test.step('AND the run text still has its tooltip', async (): Promise<void> => card.expectRunTextTooltip('running · 0s'));
     }

@@ -30,6 +30,13 @@ export const PASSED_RUN_VIEW_STUB: RunView = {
   text: 'passed'
 };
 
+export const FAILED_RUN_VIEW_STUB: RunView = {
+  ...NOT_IDLE_RUN_VIEW,
+  iconId: 'error',
+  colorVar: '--vscode-testing-iconFailed',
+  text: 'failed'
+};
+
 export const STOPPED_RUN_VIEW_STUB: RunView = {
   ...NOT_IDLE_RUN_VIEW,
   iconId: 'debug-stop',

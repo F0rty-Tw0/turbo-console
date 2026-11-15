@@ -40,11 +40,20 @@ const readLineHeight = (element: Element): number => {
 
 const readTopBorderColor = (element: Element): string => getComputedStyle(element).borderTopColor;
 
-const readStartBorder = (element: Element): string => {
-  const { borderInlineStartWidth, borderInlineStartColor } = getComputedStyle(element);
+/** Each edge of the frame as `<width> <color>`: top, right, bottom, left. */
+const readFrameEdges = (element: Element): string[] => {
+  const style = getComputedStyle(element);
+  const edges = [
+    `${style.borderTopWidth} ${style.borderTopColor}`,
+    `${style.borderRightWidth} ${style.borderRightColor}`,
+    `${style.borderBottomWidth} ${style.borderBottomColor}`,
+    `${style.borderLeftWidth} ${style.borderLeftColor}`
+  ];
 
-  return `${borderInlineStartWidth} ${borderInlineStartColor}`;
+  return edges;
 };
+
+const readStatusColorProperty = (card: HTMLElement): string => card.style.getPropertyValue('--status-color');
 
 /** One task card's computed layout and styles, found by its exact title text like `TaskCardSection`. */
 export class CardLayout {
@@ -166,18 +175,30 @@ export class CardLayout {
     expect(textRect.height).toBeLessThanOrEqual(statusRect.height);
   }
 
-  /** The card frame's top edge has `color`; the start edge carries the status colour instead. */
+  /** The card frame's top edge has `color`; `expectNeutralFrame` checks the other three edges match it. */
   public async expectFrameColor(color: string): Promise<void> {
     const borderColor = await this.root.evaluate(readTopBorderColor);
 
     expect(borderColor).toBe(color);
   }
 
-  /** The card's start edge, as `<width> <color>`; polled, since a runState renders in a later task than its post. */
-  public async expectStartBorder(width: string, color: string): Promise<void> {
-    const startBorder = async (): Promise<string> => this.root.evaluate(readStartBorder);
+  /**
+   * The card frame is 1px on every side in one colour, and the card carries no `--status-color`: a run's colour shows on
+   * its status icon only. It reads the card as it is now, so a step that waits for the run's status comes first.
+   */
+  public async expectNeutralFrame(): Promise<void> {
+    const edges = await this.root.evaluate(readFrameEdges);
+    const statusColor = await this.root.evaluate(readStatusColorProperty);
+    const [topEdge] = edges;
 
-    await expect.poll(startBorder).toBe(`${width} ${color}`);
+    expect(topEdge).toMatch(/^1px /u);
+    expect(edges).toEqual([topEdge, topEdge, topEdge, topEdge]);
+    expect(statusColor).toBe('');
+  }
+
+  /** The status icon's computed `color`, so the theme's value for the run's colour variable. */
+  public async expectStatusIconColor(color: string): Promise<void> {
+    await expect(this.statusIcon).toHaveCSS('color', color);
   }
 
   private codePart(part: CodePart): Locator {

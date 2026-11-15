@@ -13,13 +13,9 @@ export type RunTexts = {
   readonly reset: () => void;
 };
 
-/**
- * The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. `card` is the card element,
- * which holds `--status-color`. Every card shows no status while idle.
- */
+/** The parts of a task card that `patchRun` replaces, and how to build its Run/Stop button. Every card shows no status while idle. */
 export type CardRefs = {
   readonly taskId: string;
-  readonly card: HTMLElement;
   readonly status: HTMLElement;
   readonly runSlot: HTMLElement;
   readonly runButton: RunButtonFactory;
