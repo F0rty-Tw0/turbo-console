@@ -4,6 +4,8 @@ Turbo Console is a VS Code extension for Turborepo workspaces. It lists each tur
 
 Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 
+![A build of the web package running: each task card in the task graph turns from running to passed while the terminal prints the output](https://raw.githubusercontent.com/F0rty-Tw0/turbo-console/master/packages/vscode/media/screens/run.gif)
+
 ## What it does
 
 - **Packages view:** every package with its tasks, shown as folders or as a flat list (`turboConsole.treeMode`). Folder and package rows follow your file icon theme when it has folder icons (Material Icon Theme, vscode-icons, Minimal). With theme icons, an idle tool row also takes the theme's icon for the tool's config file (such as `vitest.config.ts`) when the theme names that file. `turboConsole.icons` forces it: `theme` always uses the file icon theme, `builtin` always uses Turbo Console's own icons.
@@ -17,6 +19,20 @@ Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 - **Package and Task Graph:** Show Package Graph and Show Task Graph… draw the dependency graphs, with run state and a live clock on task cards.
 - **Show Cache Prediction and Show Affected:** the first marks which tasks turbo would replay from cache, the second marks the packages your changes touch.
 - **Help and Feedback view:** links to the project page on GitHub, the bug tracker and the Turborepo docs.
+
+## Screenshots
+
+The Packages view beside the Package Graph:
+
+![The Packages view lists apps and packages with their tasks; the Package Graph beside it draws the dependencies between them](https://raw.githubusercontent.com/F0rty-Tw0/turbo-console/master/packages/vscode/media/screens/packages-and-graph.png)
+
+The Package Details page:
+
+![The Package Details page for one package, with a card per Turbo task showing its command, cache status, inputs, outputs and dependencies](https://raw.githubusercontent.com/F0rty-Tw0/turbo-console/master/packages/vscode/media/screens/package-details.png)
+
+Show Affected, after an edit in one package:
+
+![The Packages view after Show Affected: the edited package is marked affected, its dependents are marked affected via dependency, and each task shows whether it is cached](https://raw.githubusercontent.com/F0rty-Tw0/turbo-console/master/packages/vscode/media/screens/affected.png)
 
 ## Good to know
 
