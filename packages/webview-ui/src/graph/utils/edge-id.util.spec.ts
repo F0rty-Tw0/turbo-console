@@ -28,13 +28,15 @@ describe('FEATURE: edgeIdOf', () => {
     });
   });
 
-  it.each([
+  describe.each([
     { pair: 'a>b > c and a > b>c', first: AB_C, second: A_BC },
     { pair: 'names that hold JSON quotes', first: QUOTED, second: SPLIT_QUOTE }
-  ])('GIVEN the edges $pair WHEN their ids are made THEN they differ', ({ first, second }) => {
-    const firstId = edgeIdOf(first);
-    const secondId = edgeIdOf(second);
+  ])('GIVEN the edges $pair', ({ first, second }) => {
+    it('WHEN their ids are made THEN they differ', () => {
+      const firstId = edgeIdOf(first);
+      const secondId = edgeIdOf(second);
 
-    expect(firstId).not.toBe(secondId);
+      expect(firstId).not.toBe(secondId);
+    });
   });
 });
