@@ -4,9 +4,7 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { PACKAGE_GRAPH_QUERY, loadWorkspace, packageGraphSchema, readDryRun, resolveTurbo } from '../index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { DryRunState, PackageGraph, TaskNode, TurboBinary, WorkspaceModel } from '../index.ts';
 import type { PersistentVariant } from './test/common/persistent-fixture.type.ts';
 import { writePersistentFixture } from './test/utils/persistent-fixture.spec.util.ts';

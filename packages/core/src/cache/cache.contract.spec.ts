@@ -7,9 +7,7 @@ import { PRESETS } from '@turbo-console/repo-gen';
 import type { FixtureHandle } from '@turbo-console/repo-gen';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { loadWorkspace, readCachedWorkspace, resolveTurbo } from '../index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { CachedWorkspace, TurboBinary, WorkspaceModel } from '../index.ts';
 import type { SettledRead } from './test/common/cache.type.ts';
 import { backdateTree } from './test/utils/backdate.spec.util.ts';
@@ -70,7 +68,6 @@ const binaryFor = async (fixture: FixtureHandle): Promise<TurboBinary> => {
 /** `readCachedWorkspace` from a new module graph: its memory map is empty, as after a restart. */
 const freshReader = async (): Promise<CacheReader> => {
   vi.resetModules();
-  // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
   const fresh = await import('../index.ts');
 
   return fresh.readCachedWorkspace;

@@ -3,7 +3,6 @@ import { afterAll, beforeAll, expect, it } from 'vitest';
 import type { DryRunRequest } from './common/dry-run-state.type.ts';
 import { readDryRun } from './domain-logic/read-dry-run.ts';
 import { dryRunArgs } from './utils/dry-run.util.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import type { TurboBinary } from '../binary/common/index.ts';
 import { resolveTurbo } from '../binary/domain-logic/resolve-turbo.ts';
 import { dryRunSchema } from '../shared/turbo/common/dry-run.schema.ts';

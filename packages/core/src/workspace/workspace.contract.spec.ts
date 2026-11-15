@@ -6,9 +6,7 @@ import { PRESETS } from '@turbo-console/repo-gen';
 import type { FixtureHandle, FixtureSpec } from '@turbo-console/repo-gen';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, loadWorkspace, resolveTurbo } from '../index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { TaskNode, TurboBinary, WorkspaceModel } from '../index.ts';
 import { PNPM_BY_FIELD_STUB } from './test/stubs/package-manager.stub.ts';
 import { expectedModelOf, misplacedTaskIds, projectModel } from './test/utils/manifest-model.spec.util.ts';

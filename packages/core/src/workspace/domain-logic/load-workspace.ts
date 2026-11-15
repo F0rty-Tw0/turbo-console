@@ -2,7 +2,6 @@ import * as nodePath from 'node:path';
 
 import type { ZodMiniType } from 'zod/mini';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import type { TurboBinary } from '../../binary/common/index.ts';
 import { ROOT_KEYED_FILES } from '../../cache/common/cache.const.ts';
 import type { KeyedFile, SpawnMark } from '../../cache/common/cache.type.ts';

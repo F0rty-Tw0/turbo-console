@@ -30,6 +30,14 @@ export const workspaceConfig = defineConfig([
     }
   },
   {
+    // nodenext type resolution rejects a directory import, so './index.ts' stays spelled out.
+    name: 'workspace/index-imports',
+    files: ['**/*.{ts,tsx,cts,mts}'],
+    rules: {
+      'import-x/no-useless-path-segments': ['error', { noUselessIndex: false }]
+    }
+  },
+  {
     name: 'workspace/entry-points',
     files: ['**/*.ts'],
     rules: {

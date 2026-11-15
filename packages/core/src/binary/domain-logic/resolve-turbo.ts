@@ -7,7 +7,6 @@ import { absolutePath } from '../../shared/fs/utils/input-path.util.ts';
 import { SUPPORTED_TURBO_RANGE } from '../../shared/turbo/common/turbo-version.const.ts';
 import { checkCwd } from '../../shared/turbo/data-access/check-cwd.ts';
 import { isSupportedTurboVersion } from '../../shared/turbo/utils/turbo-version.util.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import { TurboBinary } from '../common/index.ts';
 import type { ResolveTurboOptions } from '../common/turbo-binary.type.ts';
 import { overrideVersion } from '../data-access/override-turbo.ts';

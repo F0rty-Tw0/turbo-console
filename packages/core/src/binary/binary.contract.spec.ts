@@ -6,9 +6,7 @@ import { join, resolve } from 'node:path';
 import { PRESETS } from '@turbo-console/repo-gen';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, resolveTurbo } from '../index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { TurboBinary } from '../index.ts';
 import { runTurbo } from '../shared/turbo/data-access/run-turbo.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
@@ -95,7 +93,6 @@ describe('FEATURE: turbo binary resolution', () => {
 
     it('WHEN resolved twice with the dev turbo as override THEN it spawns --version once', async () => {
       vi.resetModules();
-      // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
       const fresh = await import('../index.ts');
       const options = { trusted: true, overridePath: privateTurbo() } as const;
       const manifest = await coreTurboManifest();
@@ -111,7 +108,6 @@ describe('FEATURE: turbo binary resolution', () => {
 
     it('WHEN the same override is resolved again from a missing root THEN the memo hit still rejects io naming the root', async () => {
       vi.resetModules();
-      // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
       const fresh = await import('../index.ts');
       const options = { trusted: true, overridePath: privateTurbo() } as const;
       const missingRoot = join(fixture().dir, 'no-such-dir');

@@ -7,7 +7,6 @@ import { basename, join } from 'node:path';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { loadWorkspace } from './load-workspace.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import { TurboBinary } from '../../binary/common/index.ts';
 import { growOnce } from '../../cache/test/utils/file-growth.spec.util.ts';
 import { newRoot } from '../../cache/test/utils/root-fixture.spec.util.ts';

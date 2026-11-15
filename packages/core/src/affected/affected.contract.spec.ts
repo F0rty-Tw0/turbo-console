@@ -6,9 +6,7 @@ import { PRESETS, applyEdit } from '@turbo-console/repo-gen';
 import type { FixtureHandle, FixtureSpec, Manifest, ManifestPackage } from '@turbo-console/repo-gen';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, readAffected, resolveTurbo } from '../index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { AffectedResult, TurboBinary } from '../index.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
