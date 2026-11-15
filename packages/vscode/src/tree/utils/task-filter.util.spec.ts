@@ -10,19 +10,17 @@ const taskOf = (overrides: Partial<TaskNode>): TaskNode => {
   return task;
 };
 
-describe('FEATURE: visible task', () => {
+describe('FEATURE: task filter', () => {
   describe.each([
     ['a plain task', true, taskOf({})],
     ['a script', true, taskOf({ isTurboTask: false })],
     ['a file atom task', false, taskOf({ kind: 'atom-file' })]
   ])('GIVEN %s', (_label, isVisible, task) => {
-    it(`WHEN checked THEN visible is ${isVisible}`, () => {
+    it(`WHEN checked for visible THEN visible is ${isVisible}`, () => {
       expect(isVisibleTask(task)).toBe(isVisible);
     });
   });
-});
 
-describe('FEATURE: runnable task', () => {
   describe.each([
     ['a visible turbo task', true, taskOf({})],
     ['a continuous turbo task', true, taskOf({ persistent: true })],
@@ -34,13 +32,11 @@ describe('FEATURE: runnable task', () => {
     ['a script with a whitespace-only command', false, taskOf({ isTurboTask: false, command: ' \t ' })],
     ['a file atom task', false, taskOf({ kind: 'atom-file' })]
   ])('GIVEN %s', (_label, isRunnable, task) => {
-    it(`WHEN checked THEN runnable is ${isRunnable}`, () => {
+    it(`WHEN checked for runnable THEN runnable is ${isRunnable}`, () => {
       expect(isRunnableTask(task)).toBe(isRunnable);
     });
   });
-});
 
-describe('FEATURE: offered task', () => {
   describe.each([
     ['a turbo task', false, true, taskOf({})],
     ['a turbo task', true, true, taskOf({})],
@@ -51,16 +47,16 @@ describe('FEATURE: offered task', () => {
     ['a script with a blank command', true, false, taskOf({ isTurboTask: false, command: '  ' })],
     ['a file atom task', true, false, taskOf({ kind: 'atom-file' })]
   ])('GIVEN %s and scripts shown is %s', (_label, scriptsShown, isOffered, task) => {
-    it(`WHEN checked THEN offered is ${isOffered}`, () => {
+    it(`WHEN checked for offered THEN offered is ${isOffered}`, () => {
       expect(isOfferedTask(task, scriptsShown)).toBe(isOffered);
     });
   });
-});
 
-describe('FEATURE: task order by name', () => {
-  it('WHEN names differ in case THEN the default string order puts capitals first', () => {
-    const tasks = [taskOf({ name: 'b' }), taskOf({ name: 'B' }), taskOf({ name: 'a' })];
+  describe('GIVEN tasks whose names differ in case', () => {
+    it('WHEN sorted by name THEN the default string order puts capitals first', () => {
+      const tasks = [taskOf({ name: 'b' }), taskOf({ name: 'B' }), taskOf({ name: 'a' })];
 
-    expect(tasks.toSorted(byName).map((task) => task.name)).toStrictEqual(['B', 'a', 'b']);
+      expect(tasks.toSorted(byName).map((task) => task.name)).toStrictEqual(['B', 'a', 'b']);
+    });
   });
 });
