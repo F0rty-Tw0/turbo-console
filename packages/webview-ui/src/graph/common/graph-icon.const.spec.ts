@@ -75,9 +75,11 @@ describe('FEATURE: graph icon ids', () => {
     });
   });
 
-  it('GIVEN the overlay media query WHEN it is read THEN it overlays below 960 px', () => {
-    const query = OVERLAY_MEDIA_QUERY;
+  describe('GIVEN the overlay media query', () => {
+    it('WHEN it is read THEN it overlays below 960 px', () => {
+      const query = OVERLAY_MEDIA_QUERY;
 
-    expect(query).toBe('(width < 960px)');
+      expect(query).toBe('(width < 960px)');
+    });
   });
 });

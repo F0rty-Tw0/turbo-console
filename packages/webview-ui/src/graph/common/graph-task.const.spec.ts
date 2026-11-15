@@ -31,28 +31,36 @@ import {
 } from './graph-task.const.ts';
 
 describe('FEATURE: graph task constants', () => {
-  it.each([
+  describe.each([
     ['the task cap', TASK_CAP, 300],
     ['the minimum dependents depth', MIN_TASK_DEPTH, 0],
     ['the maximum dependents depth', MAX_TASK_DEPTH, 5],
     ['the default dependents depth', DEFAULT_TASK_DEPTH, 1]
-  ])('GIVEN %s WHEN it is read THEN it is the spec value', (_label, value, expected) => {
-    expect(value).toBe(expected);
+  ])('GIVEN %s', (_label, value, expected) => {
+    it('WHEN it is read THEN it is the spec value', () => {
+      expect(value).toBe(expected);
+    });
   });
 
-  it('GIVEN the live run states WHEN they are read THEN they are running and continuous', () => {
-    expect(LIVE_RUN_STATES).toStrictEqual(['running', 'continuous']);
+  describe('GIVEN the live run states', () => {
+    it('WHEN they are read THEN they are running and continuous', () => {
+      expect(LIVE_RUN_STATES).toStrictEqual(['running', 'continuous']);
+    });
   });
 
-  it('GIVEN the prediction class prefix WHEN it is read THEN it is predict-', () => {
-    expect(PREDICTION_CLASS_PREFIX).toBe('predict-');
+  describe('GIVEN the prediction class prefix', () => {
+    it('WHEN it is read THEN it is predict-', () => {
+      expect(PREDICTION_CLASS_PREFIX).toBe('predict-');
+    });
   });
 
-  it('GIVEN the Scripts box WHEN its frame dashes are read THEN they are 2 px on, 3 px off', () => {
-    expect(SCRIPTS_BOX_DASH_PX).toStrictEqual([2, 3]);
+  describe('GIVEN the Scripts box', () => {
+    it('WHEN its frame dashes are read THEN they are 2 px on, 3 px off', () => {
+      expect(SCRIPTS_BOX_DASH_PX).toStrictEqual([2, 3]);
+    });
   });
 
-  it.each([
+  describe.each([
     ['the Packages button', PACKAGES_MODE_LABEL, 'Packages'],
     ['the Packages button hover text', PACKAGES_MODE_TITLE, 'Show the package graph'],
     ['the Tasks button', TASKS_MODE_LABEL, 'Tasks'],
@@ -77,7 +85,9 @@ describe('FEATURE: graph task constants', () => {
       EMPTY_TASKS_TEXT,
       'Choose tasks to show: select a package and pick Show tasks, use Show in task graph on the details page, or run Turbo Console: Show Task Graph…'
     ]
-  ])('GIVEN the copy of %s WHEN it is read THEN it is the spec text', (_label, text, expected) => {
-    expect(text).toBe(expected);
+  ])('GIVEN the copy of %s', (_label, text, expected) => {
+    it('WHEN it is read THEN it is the spec text', () => {
+      expect(text).toBe(expected);
+    });
   });
 });

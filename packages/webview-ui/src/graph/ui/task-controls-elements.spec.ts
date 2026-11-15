@@ -28,7 +28,7 @@ describe('FEATURE: task controls elements', () => {
     vi.unstubAllGlobals();
   });
 
-  describe('GIVEN buildTaskControls', () => {
+  describe('GIVEN the task controls built in an empty document', () => {
     it('WHEN built THEN Search tasks, Dependents depth 0-5 = 1 and the rows exist', () => {
       const els = buildTaskControls();
 

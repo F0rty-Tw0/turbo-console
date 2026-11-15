@@ -210,22 +210,18 @@ describe('FEATURE: buildControls', () => {
       expect(rest).toStrictEqual([showAll, count, list]);
     });
   });
-});
-
-describe('FEATURE: buildControls icons from the action icon table', () => {
-  beforeEach((): void => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    vi.resetModules();
-    vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
-  });
-
-  afterEach((): void => {
-    vi.doUnmock('../common/graph-icon.const.ts');
-    vi.resetModules();
-    vi.unstubAllGlobals();
-  });
 
   describe('GIVEN a table where every action draws another icon', () => {
+    beforeEach((): void => {
+      vi.resetModules();
+      vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
+    });
+
+    afterEach((): void => {
+      vi.doUnmock('../common/graph-icon.const.ts');
+      vi.resetModules();
+    });
+
     it('WHEN built THEN the row and header Focus buttons draw the table focus icon', async () => {
       const swapped = await import('./controls-elements.ts');
       const elements = swapped.buildControls(BOARDS_GROUPS_STUB, [], BOARDS_DRAWN);
