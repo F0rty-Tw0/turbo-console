@@ -5,7 +5,7 @@ import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { packageActionsDepsMock, packageActionsMock, packageInspectionActionsMock } from '../test/mocks/widget-menu.mock.ts';
 import { callCountOf } from '../test/utils/widget-menu.spec.util.ts';
 
-describe('FEATURE: packageActionsOf', () => {
+describe('FEATURE: package actions', () => {
   describe('GIVEN web is the focused package', () => {
     it('WHEN openDetails runs for web THEN only openDetailsOf is called with web', () => {
       const deps = packageActionsDepsMock('web');
@@ -88,21 +88,19 @@ describe('FEATURE: packageActionsOf', () => {
       expect(callCountOf(deps) + callCountOf(inspection)).toBe(0);
     });
   });
-});
-
-describe('FEATURE: focusingShowTasksOf', () => {
-  let container: HTMLElement;
-
-  beforeEach(() => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    container = document.createElement('div');
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
 
   describe('GIVEN a container', () => {
+    let container: HTMLElement;
+
+    beforeEach(() => {
+      vi.stubGlobal('document', fakeDocumentMock());
+      container = document.createElement('div');
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
     it('WHEN showTasks runs for docs THEN the actions show docs tasks and the container has focus', () => {
       const actions = packageActionsMock();
 
