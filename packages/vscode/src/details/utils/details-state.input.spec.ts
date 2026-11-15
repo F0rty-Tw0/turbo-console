@@ -49,7 +49,7 @@ const inputHolding = (build: TaskNode, run: RunEntry | undefined): DetailsInput 
   return input;
 };
 
-describe('FEATURE: details input clock', () => {
+describe('FEATURE: details input clock and task card kind', () => {
   describe('GIVEN the parts of a details input', () => {
     it('WHEN the input is built THEN it carries the clock reading it is given', () => {
       const base: Omit<DetailsInput, 'now'> = DETAILS_INPUT_STUB;
@@ -77,9 +77,7 @@ describe('FEATURE: details input clock', () => {
       expect([card.persistent, card.run.iconId, card.run.text]).toStrictEqual([true, 'pulse', 'continuous']);
     });
   });
-});
 
-describe('FEATURE: task card kind', () => {
   describe.each([
     ['a continuous', CONTINUOUS_BUILD, true],
     ['a one-shot', ONE_SHOT_BUILD, false]
