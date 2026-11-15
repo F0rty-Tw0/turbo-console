@@ -1,4 +1,5 @@
-import { ROOT_TASKS_TITLE } from '@turbo-console/webview-ui';
+import { ROOT_NAME } from '@turbo-console/core';
+import { ROOT_TASKS_TITLE, ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
 import type { GraphTask } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
@@ -48,6 +49,12 @@ describe('FEATURE: the Show Task Graph picker items', () => {
       const [item] = taskGraphItemsOf([ROOT_GEN], '/ws', 'My repo');
 
       expect(item?.description).toBe('My repo');
+    });
+  });
+
+  describe('GIVEN the root package name of core and of the webview', () => {
+    it('WHEN compared THEN they are the same marker: the host reads core packages and webview tasks by it', () => {
+      expect(ROOT_TASK_PACKAGE).toBe(ROOT_NAME);
     });
   });
 

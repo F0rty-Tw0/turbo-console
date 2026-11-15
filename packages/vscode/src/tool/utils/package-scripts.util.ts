@@ -1,5 +1,5 @@
+import { ROOT_NAME } from '@turbo-console/core';
 import type { PackageNode } from '@turbo-console/core';
-import { ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
 
 import type { PackageScripts, ToolMatch } from '../common/tool.type.ts';
 
@@ -13,7 +13,7 @@ export const packageScriptsOf = (pkg: PackageNode, singlePackage: boolean): Pack
     if (task.command !== null) entries.push([task.name, task.command]);
   }
 
-  const followTurbo = pkg.name !== ROOT_TASK_PACKAGE || singlePackage;
+  const followTurbo = pkg.name !== ROOT_NAME || singlePackage;
   const scripts: PackageScripts = { bodies: new Map(entries), followTurbo };
 
   return scripts;

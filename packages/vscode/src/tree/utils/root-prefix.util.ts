@@ -1,14 +1,14 @@
+import { ROOT_NAME } from '@turbo-console/core';
 import type { PackageNode } from '@turbo-console/core';
-import { ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
 
 import { restOf } from './scope-rest.util.ts';
 import { LABEL_MAX } from '../../shared/common/text.const.ts';
 import { cleanText } from '../../shared/utils/clean-text.util.ts';
 import { NO_NAME_ROOT_LABEL, ROOT_LABEL_ONLY, ROOT_PREFIX } from '../common/root-prefix.const.ts';
 
-const isRootNode = (pkg: PackageNode): boolean => pkg.name === ROOT_TASK_PACKAGE;
+const isRootNode = (pkg: PackageNode): boolean => pkg.name === ROOT_NAME;
 
-const isOtherNode = (pkg: PackageNode): boolean => pkg.name !== ROOT_TASK_PACKAGE;
+const isOtherNode = (pkg: PackageNode): boolean => pkg.name !== ROOT_NAME;
 
 /** True when the repo's full package list holds the root `//` and at least one other package. */
 export const hasOtherPackagesOf = (packages: PackageNode[]): boolean => {
