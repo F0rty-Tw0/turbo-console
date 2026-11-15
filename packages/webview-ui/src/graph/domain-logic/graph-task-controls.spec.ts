@@ -146,7 +146,7 @@ describe('FEATURE: GraphTaskControls', () => {
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
 
-    describe('AND the mode group hidden', () => {
+    describe('GIVEN the mode group is hidden', () => {
       it('WHEN task mode is left with focus on a grid cell THEN Controls takes focus', () => {
         rig.deps.page.modeGroup.hidden = true;
         checkAt(rig.elements.list, 0).focus();
