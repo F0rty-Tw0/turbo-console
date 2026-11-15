@@ -94,7 +94,7 @@ describe('FEATURE: run all guard', () => {
       expect(guard.tryAdd(KEY)).toBe(true);
     });
 
-    describe('AND the task ended and a newer launch took the key', () => {
+    describe('GIVEN the task ended and a newer launch took the key', () => {
       beforeEach(() => {
         guard.releaseOn(ENDED);
         guard.tryAdd(KEY);
