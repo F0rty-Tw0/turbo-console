@@ -20,15 +20,19 @@ describe('FEATURE: taskRulesOf task nodes in graphStyleOf', () => {
     cy.destroy();
   });
 
-  it('GIVEN a task card THEN its label is the task name over its state word, not its id', () => {
-    expect(cy.getElementById('web#build').style('label')).toBe('build\nNot run');
+  describe('GIVEN a task card', () => {
+    it('THEN its label is the task name over its state word, not its id', () => {
+      expect(cy.getElementById('web#build').style('label')).toBe('build\nNot run');
+    });
+
+    it('THEN its label wraps at its newline', () => {
+      expect(cy.getElementById('web#build').style('text-wrap')).toBe('wrap');
+    });
   });
 
-  it('GIVEN a task card THEN its label wraps at its newline', () => {
-    expect(cy.getElementById('web#build').style('text-wrap')).toBe('wrap');
-  });
-
-  it('GIVEN a task with no run class THEN it has no outline', () => {
-    expect(cy.getElementById('web#build').numericStyle('outline-width')).toBe(0);
+  describe('GIVEN a task with no run class', () => {
+    it('THEN it has no outline', () => {
+      expect(cy.getElementById('web#build').numericStyle('outline-width')).toBe(0);
+    });
   });
 });
