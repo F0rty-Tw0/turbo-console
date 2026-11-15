@@ -32,7 +32,9 @@ export const BOARDS_DRAWN: DrawnGraph = {
 
 /** The boards fixture as a folder scene; `visible` defaults to every package. */
 export const boardsSceneOf = (collapsed: string[], visible?: string[], ghosts: string[] = []): FolderScene => {
-  return folderSceneOf(BOARDS_INFOS, BOARDS_EDGES, new Set(collapsed), new Set(visible ?? BOARDS_NAMES), new Set(ghosts));
+  const sets = { collapsed: new Set(collapsed), visible: new Set(visible ?? BOARDS_NAMES), ghosts: new Set(ghosts) };
+
+  return folderSceneOf(BOARDS_INFOS, BOARDS_EDGES, sets);
 };
 
 const infoOf = (name: string, path: string): GraphPackage => {
@@ -70,7 +72,7 @@ export const sceneOf = (infos: GraphPackage[], edges: GraphEdge[], parts: SceneP
   const visible = new Set(parts.visible ?? names);
   const ghosts = new Set(parts.ghosts ?? []);
 
-  return folderSceneOf(infos, edges, collapsed, visible, ghosts);
+  return folderSceneOf(infos, edges, { collapsed, visible, ghosts });
 };
 
 /** The scene's folder links by element id, as the folders view keeps them. */

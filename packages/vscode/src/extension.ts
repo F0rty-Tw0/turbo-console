@@ -71,7 +71,7 @@ const createSession = (context: vscode.ExtensionContext, output: Output): RootsS
 /** The run, pick and run-all commands, the forwarding of turbo task events and the package.json CodeLens. */
 const registerRunCommands = (session: RootsSession, runSession: RunSession, ui: RunCommandsUi, output: Output): vscode.Disposable => {
   const register = vscode.commands.registerCommand;
-  const runs = registerRuns(runSession, ui.tree, session.store, register, showInfo);
+  const runs = registerRuns({ control: runSession, tree: ui.tree, roots: session.store, register, info: showInfo });
   const pickers = registerPickers(runSession, session.store, register, () => ui.scripts.isShown());
   const runAllPorts = editorRunAllPorts(session.store, output);
   const runAll = registerRunAll(session.store, runAllPorts, forwardRunAllEvents, register);
@@ -145,12 +145,12 @@ export const activate = async (context: vscode.ExtensionContext): Promise<TurboC
   const runSession = new RunSession(editorRunPorts(output, runDependenciesOf(session.store)), timings.runs);
   const toggles = togglesOf(context.workspaceState, output);
   const loads = sharedLoadsOf(session.store, output, toggles.prediction, toggles.affected);
-  const treeDeps = treeDepsOf(runSession.runs, timings, toggles.scripts, loads, output.error);
+  const treeDeps = treeDepsOf({ runs: runSession.runs, timings, scripts: toggles.scripts, loads, log: output.error });
   const tree = new PackagesTreeProvider(session.store, currentTreeMode(), currentIcons(), treeDeps);
   const commands = new FixedViewProvider(COMMAND_ITEMS);
   const help = new FixedViewProvider(HELP_ITEMS);
   const panels = createPanels(context, session, { runs: runSession.runs, scripts: toggles.scripts }, output);
-  const graph = createGraph(context, session, panels, output, graphFeedsOf(runSession, loads, toggles));
+  const graph = createGraph({ context, session, details: panels, output, feeds: graphFeedsOf(runSession, loads, toggles) });
   const treeVisibility = new TreeVisibility();
   const ticker = new ElapsedTicker(runSession.runs, tickerPortsOf(tree));
   const api = apiOf({ tree, commands, help, timings, session, runSession, panels, graph, visibility: treeVisibility, ticker });

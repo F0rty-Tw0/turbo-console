@@ -27,7 +27,7 @@ export const shownPartsOf = (deps: GraphInspectionDeps, next: Inspection, isRebu
   const focusedFolder = deps.focusedFolder();
   const context: DetailsContext = { drawn, visible, focus, showable, isRebuild, scene, focusedFolder };
   const canvas: CanvasShown = { inspection: next, drawn, visible, trace, candidates };
-  const status = inspectionTextOf(next, drawn.edges, trace, visible, scene);
+  const status = inspectionTextOf(next, { edges: drawn.edges, trace, visible, scene });
   const parts: ShownParts = { details, context, canvas, status };
 
   return parts;

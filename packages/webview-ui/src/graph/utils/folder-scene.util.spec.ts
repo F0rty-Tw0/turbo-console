@@ -81,7 +81,7 @@ describe('FEATURE: folderSceneOf', () => {
     const infos: GraphPackage[] = [packageOf('solo', 'solo'), packageOf('x', '(root)/x')];
 
     it('WHEN the scene is built THEN members has the two distinct keys', () => {
-      const scene = folderSceneOf(infos, [], new Set(), new Set(['solo', 'x']), new Set());
+      const scene = folderSceneOf(infos, [], { collapsed: new Set(), visible: new Set(['solo', 'x']), ghosts: new Set() });
 
       const folders = scene.members.keys();
 
@@ -94,7 +94,7 @@ describe('FEATURE: folderSceneOf', () => {
       const extra = packageOf('constructor', 'apps/constructor');
       const infos: GraphPackage[] = [...BOARDS_INFOS, extra];
 
-      const scene = folderSceneOf(infos, [], new Set(), new Set(), new Set());
+      const scene = folderSceneOf(infos, [], { collapsed: new Set(), visible: new Set(), ghosts: new Set() });
 
       expect(scene.folderOf.get('constructor')).toBe('apps');
     });

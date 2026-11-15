@@ -174,7 +174,8 @@ export class GraphPackageSide {
 
     const read = this.modes.current();
     const folders = folderKeysOf(state.packages);
-    const saved = openingStateOf(read, state.hash, folders, state.packages.length, this.modes.isGroupingSaved());
+    const isGroupingSaved = this.modes.isGroupingSaved();
+    const saved = openingStateOf(read, { hash: state.hash, folders, packageCount: state.packages.length, isGroupingSaved });
 
     this.opening = saved === read ? null : saved;
     this.drawn = drawnGraphOf(state);

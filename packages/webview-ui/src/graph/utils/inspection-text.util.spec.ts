@@ -157,7 +157,7 @@ describe('FEATURE: inspectionTextOf', () => {
       },
       { title: 'a folder has no scene', inspection: folderInspection('apps'), result: null, visible: ALL, scene: null, expected: '' }
     ] satisfies TextRow[])('WHEN $title THEN the status text is exact', ({ inspection, result, visible, scene, expected }) => {
-      const text = inspectionTextOf(inspection, E, result, visible, scene);
+      const text = inspectionTextOf(inspection, { edges: E, trace: result, visible, scene });
 
       expect(text).toBe(expected);
     });

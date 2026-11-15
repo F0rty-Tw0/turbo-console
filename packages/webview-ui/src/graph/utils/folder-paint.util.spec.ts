@@ -213,7 +213,7 @@ describe('FEATURE: folder paint', () => {
       'WHEN the inspection is $title THEN each box, collapsed node and folder link gets its state',
       (row: FolderCase) => {
         const scene = boardsSceneOf(row.collapsed);
-        const paint = paintOf(row.inspection, scene.edges, row.trace, new Set(row.lit), scene);
+        const paint = paintOf(row.inspection, { edges: scene.edges, trace: row.trace, lit: new Set(row.lit), scene });
 
         const rows = folderRowsOf(paint, scene);
 
@@ -225,7 +225,7 @@ describe('FEATURE: folder paint', () => {
       const scene = boardsSceneOf(['apps'], [CONFIG, UI]);
       const inspection: Inspection = { kind: 'package', name: CONFIG };
 
-      const paint = paintOf(inspection, scene.edges, null, new Set(), scene);
+      const paint = paintOf(inspection, { edges: scene.edges, trace: null, lit: new Set(), scene });
 
       expect(paint.boxState('apps')).toBe('normal');
       expect(paint.collapsedState('apps')).toBe('normal');
@@ -235,7 +235,7 @@ describe('FEATURE: folder paint', () => {
       const scene = boardsSceneOf(['packages'], ['web', 'docs', CONFIG], [UI, UTILS]);
       const inspection: Inspection = { kind: 'trace', start: 'web', end: UTILS };
 
-      const paint = paintOf(inspection, scene.edges, FOLDER_WEB_UTILS, new Set(), scene);
+      const paint = paintOf(inspection, { edges: scene.edges, trace: FOLDER_WEB_UTILS, lit: new Set(), scene });
 
       expect(paint.collapsedState('packages')).toBe('selected');
       expect(paint.boxState('packages')).toBe('normal');
@@ -245,7 +245,7 @@ describe('FEATURE: folder paint', () => {
       const scene = boardsSceneOf(['packages'], ['web', 'docs', CONFIG]);
       const inspection: Inspection = { kind: 'trace', start: 'web', end: UTILS };
 
-      const paint = paintOf(inspection, scene.edges, FOLDER_WEB_UTILS, new Set(), scene);
+      const paint = paintOf(inspection, { edges: scene.edges, trace: FOLDER_WEB_UTILS, lit: new Set(), scene });
 
       expect(paint.collapsedState('packages')).toBe('dimmed');
       expect(paint.boxState('packages')).toBe('dimmed');
@@ -255,7 +255,7 @@ describe('FEATURE: folder paint', () => {
       const scene = boardsSceneOf(['apps']);
       const inspection: Inspection = { kind: 'package', name: UI };
 
-      const paint = paintOf(inspection, scene.edges, null, new Set(), scene);
+      const paint = paintOf(inspection, { edges: scene.edges, trace: null, lit: new Set(), scene });
 
       expect(paint.boxState('nope')).toBe('normal');
       expect(paint.collapsedState('nope')).toBe('normal');
@@ -267,7 +267,7 @@ describe('FEATURE: folder paint', () => {
       const inspection: Inspection = { kind: 'package', name: UI };
       const link = scene.links[0] ?? UNKNOWN_LINK;
 
-      const paint = paintOf(inspection, scene.edges, null, new Set(), null);
+      const paint = paintOf(inspection, { edges: scene.edges, trace: null, lit: new Set(), scene: null });
 
       expect(paint.boxState('apps')).toBe('normal');
       expect(paint.collapsedState('apps')).toBe('normal');
@@ -278,10 +278,14 @@ describe('FEATURE: folder paint', () => {
   describe('GIVEN a folder named __proto__ holding a package named constructor', () => {
     it('WHEN that package is selected THEN its box is normal and its collapsed node selected', () => {
       const infos: GraphPackage[] = [packageOf('constructor', '__proto__/constructor')];
-      const scene = folderSceneOf(infos, [], new Set(['__proto__']), new Set(['constructor']), new Set());
+      const scene = folderSceneOf(infos, [], {
+        collapsed: new Set(['__proto__']),
+        visible: new Set(['constructor']),
+        ghosts: new Set()
+      });
       const inspection: Inspection = { kind: 'package', name: 'constructor' };
 
-      const paint = paintOf(inspection, [], null, new Set(), scene);
+      const paint = paintOf(inspection, { edges: [], trace: null, lit: new Set(), scene });
 
       expect(paint.boxState('__proto__')).toBe('normal');
       expect(paint.collapsedState('__proto__')).toBe('selected');

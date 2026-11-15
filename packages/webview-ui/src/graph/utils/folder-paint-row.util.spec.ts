@@ -168,7 +168,7 @@ describe('FEATURE: paintOf for an inspected folder', () => {
       const { nodes, links, boxes, collapsedNodes, folderLinks } = row;
       const expected: Letters = { nodes, links, boxes, collapsedNodes, folderLinks };
 
-      const paint = paintOf(inspection, row.edges, null, new Set<string>(), row.scene);
+      const paint = paintOf(inspection, { edges: row.edges, trace: null, lit: new Set<string>(), scene: row.scene });
 
       expect(lettersAt(paint, row)).toStrictEqual(expected);
     });
@@ -179,7 +179,7 @@ describe('FEATURE: paintOf for an inspected folder', () => {
       const inspection = folderInspection('apps');
       const scene = sceneOf(BOARDS_INFOS, BOARDS_EDGES, {});
 
-      const paint = paintOf(inspection, BOARDS_EDGES, null, new Set<string>(), scene);
+      const paint = paintOf(inspection, { edges: BOARDS_EDGES, trace: null, lit: new Set<string>(), scene });
 
       expect([paint.boxState('nope'), paint.collapsedState('nope')]).toStrictEqual(['normal', 'normal']);
     });
@@ -189,7 +189,7 @@ describe('FEATURE: paintOf for an inspected folder', () => {
     it('WHEN a folder is inspected THEN every state is normal', () => {
       const inspection = folderInspection('apps');
 
-      const paint = paintOf(inspection, BOARDS_EDGES, null, new Set<string>(), null);
+      const paint = paintOf(inspection, { edges: BOARDS_EDGES, trace: null, lit: new Set<string>(), scene: null });
 
       expect([paint.nodeState('web'), paint.edgeState(WEB_UI_EDGE), paint.boxState('apps')]).toStrictEqual([
         'normal',

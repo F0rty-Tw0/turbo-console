@@ -11,6 +11,14 @@ import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { BundleInspection, Inspection, TraceInspection } from '../common/inspection.type.ts';
 import type { TraceResult } from '../common/trace.type.ts';
 
+/** What the status line reads of the graph on screen: every link, the walked trace, the visible packages and the folder scene. */
+type StatusContext = {
+  readonly edges: GraphEdge[];
+  readonly trace: TraceResult | null;
+  readonly visible: ReadonlySet<string>;
+  readonly scene: FolderScene | null;
+};
+
 const packageText = (name: string, edges: GraphEdge[]): string => {
   const closure = closureOf(name, edges);
   const direct = neighboursOf(name, edges);
@@ -54,14 +62,9 @@ const bundleText = (inspection: BundleInspection, scene: FolderScene | null): st
  * The toolbar status line for an inspection (spec §4.3); `''` for none, a trace not yet walked, a folder with no scene,
  * and a bundle the scene does not draw.
  */
-export const inspectionTextOf = (
-  inspection: Inspection,
-  edges: GraphEdge[],
-  trace: TraceResult | null,
-  visible: ReadonlySet<string>,
-  scene: FolderScene | null
-  // eslint-disable-next-line max-params -- five inputs, pinned by the plan's Interfaces (Task 3.3)
-): string => {
+export const inspectionTextOf = (inspection: Inspection, context: StatusContext): string => {
+  const { edges, trace, visible, scene } = context;
+
   switch (inspection.kind) {
     case 'none':
       return '';

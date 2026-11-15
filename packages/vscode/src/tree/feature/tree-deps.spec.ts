@@ -39,7 +39,7 @@ describe('FEATURE: tree provider deps', () => {
       const timings: Timings = { ...TIMINGS_STUB, treeVisible };
       const log = vi.fn();
 
-      const deps = treeDepsOf(RUNS, timings, scripts, LOADS, log);
+      const deps = treeDepsOf({ runs: RUNS, timings, scripts, loads: LOADS, log });
 
       expect(deps).toStrictEqual({
         runs: RUNS,
@@ -55,7 +55,7 @@ describe('FEATURE: tree provider deps', () => {
     });
 
     it('WHEN setHasScripts sends true THEN the turboConsole.hasScripts context key is set to true', async () => {
-      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), LOADS, vi.fn());
+      const deps = treeDepsOf({ runs: RUNS, timings: TIMINGS_STUB, scripts: scriptsToggleMock(), loads: LOADS, log: vi.fn() });
 
       await deps.setHasScripts(true);
 
@@ -63,7 +63,7 @@ describe('FEATURE: tree provider deps', () => {
     });
 
     it('WHEN setSinglePackage sends true THEN the turboConsole.singlePackage context key is set to true', async () => {
-      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), LOADS, vi.fn());
+      const deps = treeDepsOf({ runs: RUNS, timings: TIMINGS_STUB, scripts: scriptsToggleMock(), loads: LOADS, log: vi.fn() });
 
       await deps.setSinglePackage(true);
 
@@ -76,7 +76,7 @@ describe('FEATURE: tree provider deps', () => {
       const error = new Error('setContext failed');
 
       executeCommand.mockRejectedValueOnce(error);
-      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), LOADS, vi.fn());
+      const deps = treeDepsOf({ runs: RUNS, timings: TIMINGS_STUB, scripts: scriptsToggleMock(), loads: LOADS, log: vi.fn() });
 
       await expect(deps.setHasScripts(true)).rejects.toBe(error);
     });
@@ -85,7 +85,7 @@ describe('FEATURE: tree provider deps', () => {
       const error = new Error('setContext failed');
 
       executeCommand.mockRejectedValueOnce(error);
-      const deps = treeDepsOf(RUNS, TIMINGS_STUB, scriptsToggleMock(), LOADS, vi.fn());
+      const deps = treeDepsOf({ runs: RUNS, timings: TIMINGS_STUB, scripts: scriptsToggleMock(), loads: LOADS, log: vi.fn() });
 
       await expect(deps.setSinglePackage(true)).rejects.toBe(error);
     });
