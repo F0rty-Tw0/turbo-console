@@ -33,238 +33,240 @@ const renamedPositions = (): Positions => {
   return renamed;
 };
 
-describe('FEATURE: accepted positions', () => {
-  describe('GIVEN the current hash and the exact key set', () => {
-    it('WHEN checked THEN they are returned', () => {
-      const accepted = acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB });
+describe('FEATURE: graph layout cache', () => {
+  describe('GIVEN positions posted for a graph state', () => {
+    describe('GIVEN the current hash and the exact key set', () => {
+      it('WHEN checked THEN they are returned', () => {
+        const accepted = acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB });
 
-      expect(accepted).toStrictEqual(POSITIONS_STUB);
+        expect(accepted).toStrictEqual(POSITIONS_STUB);
+      });
+    });
+
+    describe('GIVEN a hash that differs (a newer state)', () => {
+      it('WHEN checked THEN it is null', () => {
+        expect(acceptedPositions(STATE, { hash: 'ffffffff', positions: POSITIONS_STUB })).toBeNull();
+      });
+    });
+
+    describe.each<[string, GraphState]>([
+      ['loading', { kind: 'loading' }],
+      ['error', { kind: 'error', message: 'x' }]
+    ])('GIVEN a %s state', (_name, state) => {
+      it('WHEN checked THEN it is null', () => {
+        expect(acceptedPositions(state, { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB })).toBeNull();
+      });
+    });
+
+    describe('GIVEN a key outside packages', () => {
+      it('WHEN checked THEN it is null', () => {
+        const positions: Positions = { ...POSITIONS_STUB, ghost: POINT };
+
+        expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions })).toBeNull();
+      });
+    });
+
+    describe('GIVEN a package missing from the map', () => {
+      it('WHEN checked THEN it is null', () => {
+        const positions: Positions = { a: POINT, web: POINT };
+
+        expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions })).toBeNull();
+      });
+    });
+
+    describe('GIVEN one package renamed to a name outside packages (same key count)', () => {
+      it('WHEN checked THEN it is null', () => {
+        expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions: renamedPositions() })).toBeNull();
+      });
     });
   });
 
-  describe('GIVEN a hash that differs (a newer state)', () => {
-    it('WHEN checked THEN it is null', () => {
-      expect(acceptedPositions(STATE, { hash: 'ffffffff', positions: POSITIONS_STUB })).toBeNull();
+  describe('GIVEN positions keyed by package name', () => {
+    describe.each<[string, Positions, boolean]>([
+      ['the exact key set', POSITIONS_STUB, true],
+      ['an extra key', { ...POSITIONS_STUB, ghost: POINT }, false],
+      ['a missing key', { a: POINT, web: POINT }, false],
+      ['a renamed key', renamedPositions(), false]
+    ])('GIVEN %s', (_name, positions, expected) => {
+      it(`WHEN checked against the packages THEN it is ${String(expected)}`, () => {
+        expect(coversExactly(positions, GRAPH_PACKAGES_STUB)).toBe(expected);
+      });
     });
   });
 
-  describe.each<[string, GraphState]>([
-    ['loading', { kind: 'loading' }],
-    ['error', { kind: 'error', message: 'x' }]
-  ])('GIVEN a %s state', (_name, state) => {
-    it('WHEN checked THEN it is null', () => {
-      expect(acceptedPositions(state, { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB })).toBeNull();
+  describe('GIVEN a layout entry in storage', () => {
+    describe('GIVEN a valid entry', () => {
+      it('WHEN read THEN it is returned', () => {
+        const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
+
+        expect(entry).toStrictEqual({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
+      });
+    });
+
+    describe('GIVEN a point with an extra key', () => {
+      it('WHEN read THEN the key is not in the result', () => {
+        const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: 2, z: 3 }), routes: {} });
+
+        expect(entry?.positions['a']).toStrictEqual({ x: 1, y: 2 });
+      });
+    });
+
+    describe('GIVEN coordinates exactly at the limit', () => {
+      it('WHEN read THEN the entry is kept', () => {
+        const positions = withPoint('a', { x: 1e7, y: -1e7 });
+
+        expect(layoutEntryOf({ hash: GRAPH_HASH_STUB, positions, routes: {} })).not.toBeNull();
+      });
+    });
+
+    describe('GIVEN a __proto__ key from parsed JSON', () => {
+      it('WHEN read THEN it is an own key holding the point', () => {
+        const entry = layoutEntryOf(JSON.parse(PROTO_ENTRY_JSON));
+
+        expect(Object.getOwnPropertyDescriptor(entry?.positions, '__proto__')?.value).toStrictEqual({ x: 1, y: 2 });
+      });
+
+      it('WHEN read THEN the prototype of the positions is untouched', () => {
+        const entry = layoutEntryOf(JSON.parse(PROTO_ENTRY_JSON));
+
+        expect(Object.getPrototypeOf(entry?.positions)).toBe(Object.prototype);
+      });
+    });
+
+    describe.each([
+      ['undefined', undefined],
+      ['a string', 'x'],
+      ['no hash', { positions: POSITIONS_STUB, routes: {} }],
+      ['no positions', { hash: GRAPH_HASH_STUB, routes: {} }],
+      ['a hash that is not a string', { hash: 1, positions: POSITIONS_STUB, routes: {} }],
+      ['NaN x', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: NaN, y: 0 }), routes: {} }],
+      ['Infinity y', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: Infinity }), routes: {} }],
+      ['an x past 1e7', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1e7 + 1, y: 0 }), routes: {} }],
+      ['a y below -1e7', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 0, y: -1e7 - 1 }), routes: {} }],
+      ['a point missing y', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1 }), routes: {} }],
+      ['a string coordinate', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: '1', y: 0 }), routes: {} }],
+      ['a string value', { hash: GRAPH_HASH_STUB, positions: withPoint('a', 'nope'), routes: {} }],
+      ['an array map', { hash: GRAPH_HASH_STUB, positions: [1, 2, 3], routes: {} }],
+      ['a null map', { hash: GRAPH_HASH_STUB, positions: null, routes: {} }]
+    ])('GIVEN %s', (_name, raw) => {
+      it('WHEN read THEN it is null', () => {
+        expect(layoutEntryOf(raw)).toBeNull();
+      });
+    });
+
+    describe('GIVEN the routes of an entry', () => {
+      const BASE = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
+
+      it('WHEN the entry goes through JSON and is read THEN it comes back equal', () => {
+        const entry = { ...BASE, routes: ROUTES_STUB };
+
+        expect(layoutEntryOf(JSON.parse(JSON.stringify(entry)))).toStrictEqual(entry);
+      });
+
+      it('WHEN routes is an empty record THEN the entry is a hit', () => {
+        expect(layoutEntryOf({ ...BASE, routes: {} })).not.toBeNull();
+      });
+
+      it.each([
+        ['no routes key', BASE],
+        ['null routes', { ...BASE, routes: null }],
+        ['routes a list', { ...BASE, routes: [] }],
+        ['routes a string', { ...BASE, routes: 'x' }]
+      ])('WHEN the entry has %s THEN it is a miss', (_name, raw) => {
+        expect(layoutEntryOf(raw)).toBeNull();
+      });
+
+      it('WHEN one route is bad THEN the entry is a hit without that route', () => {
+        const entry = layoutEntryOf({ ...BASE, routes: BAD_ROUTES_JSON });
+
+        expect(entry?.routes).toStrictEqual(ROUTES_STUB);
+      });
     });
   });
 
-  describe('GIVEN a key outside packages', () => {
-    it('WHEN checked THEN it is null', () => {
-      const positions: Positions = { ...POSITIONS_STUB, ghost: POINT };
+  describe('GIVEN routes posted for a graph state', () => {
+    describe('GIVEN routes for every edge', () => {
+      it('WHEN accepted THEN all are kept', () => {
+        expect(acceptedRoutes(STATE, { routes: ROUTES_STUB })).toStrictEqual(ROUTES_STUB);
+      });
+    });
 
-      expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions })).toBeNull();
+    describe('GIVEN one route whose key is no edge id', () => {
+      it('WHEN accepted THEN that route alone is dropped', () => {
+        expect(acceptedRoutes(STATE, { routes: MIXED_ROUTES })).toStrictEqual(ROUTES_STUB);
+      });
+    });
+
+    describe('GIVEN only unknown keys', () => {
+      it('WHEN accepted THEN the result is {}', () => {
+        expect(acceptedRoutes(STATE, { routes: GHOST_ROUTES })).toStrictEqual({});
+      });
+    });
+
+    describe('GIVEN a loading state', () => {
+      it('WHEN accepted THEN the result is {}', () => {
+        expect(acceptedRoutes({ kind: 'loading' }, { routes: ROUTES_STUB })).toStrictEqual({});
+      });
     });
   });
 
-  describe('GIVEN a package missing from the map', () => {
-    it('WHEN checked THEN it is null', () => {
-      const positions: Positions = { a: POINT, web: POINT };
+  describe('GIVEN the routes of a post', () => {
+    const START = { x: 1, y: 2 };
+    const BEND = { x: 3, y: 4 };
+    const END = { x: 5, y: 6 };
+    const ROUTE = { start: START, bends: [BEND], end: END };
+    const BAD_ROUTE = { ...ROUTE, bends: 'nope' };
 
-      expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions })).toBeNull();
+    describe('GIVEN an empty record', () => {
+      it('WHEN read THEN it is an empty record', () => {
+        expect(parseRoutes({})).toStrictEqual({});
+      });
+    });
+
+    describe('GIVEN a good route', () => {
+      it('WHEN read THEN an equal route is returned', () => {
+        const routes = parseRoutes({ e1: ROUTE });
+
+        expect(routes).toStrictEqual({ e1: ROUTE });
+      });
+    });
+
+    describe('GIVEN a bad route beside a good one', () => {
+      it('WHEN read THEN only the bad one is dropped', () => {
+        expect(parseRoutes({ good: ROUTE, bad: BAD_ROUTE })).toStrictEqual({ good: ROUTE });
+      });
+    });
+
+    describe.each([
+      ['a Map', new Map([['e1', ROUTE]])],
+      ['a list', [ROUTE]],
+      ['null', null],
+      ['a string', 'e1'],
+      ['undefined', undefined]
+    ])('GIVEN %s', (_name, raw) => {
+      it('WHEN read THEN it is null', () => {
+        expect(parseRoutes(raw)).toBeNull();
+      });
     });
   });
 
-  describe('GIVEN one package renamed to a name outside packages (same key count)', () => {
-    it('WHEN checked THEN it is null', () => {
-      expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions: renamedPositions() })).toBeNull();
-    });
-  });
-});
-
-describe('FEATURE: exact key cover', () => {
-  describe.each<[string, Positions, boolean]>([
-    ['the exact key set', POSITIONS_STUB, true],
-    ['an extra key', { ...POSITIONS_STUB, ghost: POINT }, false],
-    ['a missing key', { a: POINT, web: POINT }, false],
-    ['a renamed key', renamedPositions(), false]
-  ])('GIVEN %s', (_name, positions, expected) => {
-    it(`WHEN checked against the packages THEN it is ${String(expected)}`, () => {
-      expect(coversExactly(positions, GRAPH_PACKAGES_STUB)).toBe(expected);
-    });
-  });
-});
-
-describe('FEATURE: layout entry read from storage', () => {
-  describe('GIVEN a valid entry', () => {
-    it('WHEN read THEN it is returned', () => {
-      const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
-
-      expect(entry).toStrictEqual({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
-    });
-  });
-
-  describe('GIVEN a point with an extra key', () => {
-    it('WHEN read THEN the key is not in the result', () => {
-      const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: 2, z: 3 }), routes: {} });
-
-      expect(entry?.positions['a']).toStrictEqual({ x: 1, y: 2 });
-    });
-  });
-
-  describe('GIVEN coordinates exactly at the limit', () => {
-    it('WHEN read THEN the entry is kept', () => {
-      const positions = withPoint('a', { x: 1e7, y: -1e7 });
-
-      expect(layoutEntryOf({ hash: GRAPH_HASH_STUB, positions, routes: {} })).not.toBeNull();
-    });
-  });
-
-  describe('GIVEN a __proto__ key from parsed JSON', () => {
-    it('WHEN read THEN it is an own key holding the point', () => {
-      const entry = layoutEntryOf(JSON.parse(PROTO_ENTRY_JSON));
-
-      expect(Object.getOwnPropertyDescriptor(entry?.positions, '__proto__')?.value).toStrictEqual({ x: 1, y: 2 });
+  describe('GIVEN a root to key the cache by', () => {
+    describe('GIVEN the flat grouping', () => {
+      it('WHEN keyed THEN it is the flat prefix and the root', () => {
+        expect(cacheKeyOf('/ws', 'flat')).toBe('turboConsole.graphLayout:/ws');
+      });
     });
 
-    it('WHEN read THEN the prototype of the positions is untouched', () => {
-      const entry = layoutEntryOf(JSON.parse(PROTO_ENTRY_JSON));
-
-      expect(Object.getPrototypeOf(entry?.positions)).toBe(Object.prototype);
-    });
-  });
-
-  describe.each([
-    ['undefined', undefined],
-    ['a string', 'x'],
-    ['no hash', { positions: POSITIONS_STUB, routes: {} }],
-    ['no positions', { hash: GRAPH_HASH_STUB, routes: {} }],
-    ['a hash that is not a string', { hash: 1, positions: POSITIONS_STUB, routes: {} }],
-    ['NaN x', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: NaN, y: 0 }), routes: {} }],
-    ['Infinity y', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: Infinity }), routes: {} }],
-    ['an x past 1e7', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1e7 + 1, y: 0 }), routes: {} }],
-    ['a y below -1e7', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 0, y: -1e7 - 1 }), routes: {} }],
-    ['a point missing y', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1 }), routes: {} }],
-    ['a string coordinate', { hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: '1', y: 0 }), routes: {} }],
-    ['a string value', { hash: GRAPH_HASH_STUB, positions: withPoint('a', 'nope'), routes: {} }],
-    ['an array map', { hash: GRAPH_HASH_STUB, positions: [1, 2, 3], routes: {} }],
-    ['a null map', { hash: GRAPH_HASH_STUB, positions: null, routes: {} }]
-  ])('GIVEN %s', (_name, raw) => {
-    it('WHEN read THEN it is null', () => {
-      expect(layoutEntryOf(raw)).toBeNull();
-    });
-  });
-
-  describe('GIVEN the routes of an entry', () => {
-    const BASE = { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB };
-
-    it('WHEN the entry goes through JSON and is read THEN it comes back equal', () => {
-      const entry = { ...BASE, routes: ROUTES_STUB };
-
-      expect(layoutEntryOf(JSON.parse(JSON.stringify(entry)))).toStrictEqual(entry);
+    describe('GIVEN the folders grouping', () => {
+      it('WHEN keyed THEN it is the folders prefix and the root', () => {
+        expect(cacheKeyOf('/ws', 'folders')).toBe('turboConsole.graphLayout.folders:/ws');
+      });
     });
 
-    it('WHEN routes is an empty record THEN the entry is a hit', () => {
-      expect(layoutEntryOf({ ...BASE, routes: {} })).not.toBeNull();
-    });
-
-    it.each([
-      ['no routes key', BASE],
-      ['null routes', { ...BASE, routes: null }],
-      ['routes a list', { ...BASE, routes: [] }],
-      ['routes a string', { ...BASE, routes: 'x' }]
-    ])('WHEN the entry has %s THEN it is a miss', (_name, raw) => {
-      expect(layoutEntryOf(raw)).toBeNull();
-    });
-
-    it('WHEN one route is bad THEN the entry is a hit without that route', () => {
-      const entry = layoutEntryOf({ ...BASE, routes: BAD_ROUTES_JSON });
-
-      expect(entry?.routes).toStrictEqual(ROUTES_STUB);
-    });
-  });
-});
-
-describe('FEATURE: accepted routes', () => {
-  describe('GIVEN routes for every edge', () => {
-    it('WHEN accepted THEN all are kept', () => {
-      expect(acceptedRoutes(STATE, { routes: ROUTES_STUB })).toStrictEqual(ROUTES_STUB);
-    });
-  });
-
-  describe('GIVEN one route whose key is no edge id', () => {
-    it('WHEN accepted THEN that route alone is dropped', () => {
-      expect(acceptedRoutes(STATE, { routes: MIXED_ROUTES })).toStrictEqual(ROUTES_STUB);
-    });
-  });
-
-  describe('GIVEN only unknown keys', () => {
-    it('WHEN accepted THEN the result is {}', () => {
-      expect(acceptedRoutes(STATE, { routes: GHOST_ROUTES })).toStrictEqual({});
-    });
-  });
-
-  describe('GIVEN a loading state', () => {
-    it('WHEN accepted THEN the result is {}', () => {
-      expect(acceptedRoutes({ kind: 'loading' }, { routes: ROUTES_STUB })).toStrictEqual({});
-    });
-  });
-});
-
-describe('FEATURE: routes read from a post', () => {
-  const START = { x: 1, y: 2 };
-  const BEND = { x: 3, y: 4 };
-  const END = { x: 5, y: 6 };
-  const ROUTE = { start: START, bends: [BEND], end: END };
-  const BAD_ROUTE = { ...ROUTE, bends: 'nope' };
-
-  describe('GIVEN an empty record', () => {
-    it('WHEN read THEN it is an empty record', () => {
-      expect(parseRoutes({})).toStrictEqual({});
-    });
-  });
-
-  describe('GIVEN a good route', () => {
-    it('WHEN read THEN an equal route is returned', () => {
-      const routes = parseRoutes({ e1: ROUTE });
-
-      expect(routes).toStrictEqual({ e1: ROUTE });
-    });
-  });
-
-  describe('GIVEN a bad route beside a good one', () => {
-    it('WHEN read THEN only the bad one is dropped', () => {
-      expect(parseRoutes({ good: ROUTE, bad: BAD_ROUTE })).toStrictEqual({ good: ROUTE });
-    });
-  });
-
-  describe.each([
-    ['a Map', new Map([['e1', ROUTE]])],
-    ['a list', [ROUTE]],
-    ['null', null],
-    ['a string', 'e1'],
-    ['undefined', undefined]
-  ])('GIVEN %s', (_name, raw) => {
-    it('WHEN read THEN it is null', () => {
-      expect(parseRoutes(raw)).toBeNull();
-    });
-  });
-});
-
-describe('FEATURE: cache key', () => {
-  describe('GIVEN the flat grouping', () => {
-    it('WHEN keyed THEN it is the flat prefix and the root', () => {
-      expect(cacheKeyOf('/ws', 'flat')).toBe('turboConsole.graphLayout:/ws');
-    });
-  });
-
-  describe('GIVEN the folders grouping', () => {
-    it('WHEN keyed THEN it is the folders prefix and the root', () => {
-      expect(cacheKeyOf('/ws', 'folders')).toBe('turboConsole.graphLayout.folders:/ws');
-    });
-  });
-
-  describe('GIVEN a root that starts like the folders prefix', () => {
-    it('WHEN keyed flat THEN it differs from the folders key of the shorter root', () => {
-      expect(cacheKeyOf('.folders:/ws', 'flat')).not.toBe(cacheKeyOf('/ws', 'folders'));
+    describe('GIVEN a root that starts like the folders prefix', () => {
+      it('WHEN keyed flat THEN it differs from the folders key of the shorter root', () => {
+        expect(cacheKeyOf('.folders:/ws', 'flat')).not.toBe(cacheKeyOf('/ws', 'folders'));
+      });
     });
   });
 });
