@@ -23,6 +23,8 @@ const FIVE_FOLDER_KEYS = ['a', 'b', 'c', 'd', 'e'];
 
 const FIVE_FOLDERS: GraphPackage[] = FIVE_FOLDER_KEYS.map(outsideOf);
 
+const NO_EDGES: GraphEdge[] = [];
+
 describe('FEATURE: folderLinesOf', () => {
   describe('GIVEN a focused folder core and links to five other folders', () => {
     const infos = [...CORE, ...FIVE_FOLDERS];
@@ -71,7 +73,7 @@ describe('FEATURE: folderLinesOf', () => {
 
   describe('GIVEN links that do not count', () => {
     it.each([
-      { title: 'no outside link', edges: [] as GraphEdge[] },
+      { title: 'no outside link', edges: NO_EDGES },
       { title: 'a link inside the focused folder', edges: [edge('k1', 'k2')] },
       { title: 'a link to an unknown package', edges: [edge('k1', 'ghost')] },
       { title: 'a link between two other folders', edges: [edge('a1', 'b1')] }
