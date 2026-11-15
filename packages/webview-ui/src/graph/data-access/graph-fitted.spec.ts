@@ -89,11 +89,11 @@ describe('FEATURE: createFittedCamera', () => {
     cy.destroy();
   });
 
-  it('GIVEN a new camera THEN it is not fitted', () => {
-    expect(camera.isFitted()).toBe(false);
-  });
-
   describe('GIVEN a new camera', () => {
+    it('THEN it is not fitted', () => {
+      expect(camera.isFitted()).toBe(false);
+    });
+
     it('WHEN fit runs THEN it is fitted before the viewport event it emits', () => {
       camera.fit();
 
@@ -203,7 +203,7 @@ describe('FEATURE: createFittedCamera', () => {
       expect(handlers.onRefit).not.toHaveBeenCalled();
     });
 
-    describe('AND a node is grabbed', () => {
+    describe('GIVEN a node is grabbed', () => {
       beforeEach(() => {
         grab('a');
       });
