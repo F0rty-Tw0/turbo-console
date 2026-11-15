@@ -10,6 +10,7 @@ import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { GhostMarks } from '../common/ghost.type.ts';
 import { NORMAL_FOLDER_PAINT } from '../common/paint.const.ts';
 import type { Paint } from '../common/paint.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS, canvasEdgeOf, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 
@@ -74,7 +75,7 @@ describe('FEATURE: setGhosts', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: ELEMENTS });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
     showOnly(cy, V1);
   });
 
@@ -150,7 +151,7 @@ describe('FEATURE: setGhosts', () => {
     it('WHEN the style is set again and everything is painted normal THEN b is still a shown ghost and d>b stays hidden', () => {
       setGhosts(cy, MARKS_B, V1);
 
-      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
       applyPaint(cy, PLAIN_PAINT);
 
       expect(visibleNodes(cy)).toContain('b');

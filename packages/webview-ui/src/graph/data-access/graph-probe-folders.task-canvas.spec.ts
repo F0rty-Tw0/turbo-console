@@ -6,6 +6,7 @@ import { probeFoldersOf } from './graph-probe-folders.ts';
 import { graphStyleOf } from './graph-style.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeFolder } from '../common/graph-probe.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
@@ -45,7 +46,7 @@ describe('FEATURE: probeFoldersOf on the task canvas', () => {
     let cy: Core;
 
     beforeEach(() => {
-      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
       cy = cytoscape({ headless: true, styleEnabled: true, elements: TASK_BOXES, style });
     });

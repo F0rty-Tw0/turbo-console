@@ -7,6 +7,7 @@ import { applyBoxFrames, refitBoxFrames, reframeBox, unframeBox } from './graph-
 import { BOX_FRAMED_CLASS, TASK_BOX_CLASS } from '../common/graph-task.const.ts';
 import { EXPORTING_CLASS } from '../common/graph.const.ts';
 import type { BoxFrame, BoxFrames } from '../common/layout.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { frameLineOf, sideErrorOf } from '../test/utils/box-frame.spec.util.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
@@ -47,7 +48,7 @@ const boxErrorOf = (cy: Core, sides: BoundingBox12): number => {
 };
 
 const coreOf = (): Core => {
-  const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+  const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
   return cytoscape({ headless: true, styleEnabled: true, layout: PRESET, elements: elementsOf(), style });
 };
@@ -108,7 +109,7 @@ describe('FEATURE: applyBoxFrames, unframeBox and reframeBox', () => {
       });
 
       it('WHEN the stylesheet is applied again THEN the box is still framed on its frame', () => {
-        const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+        const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
         cy.style(style);
 

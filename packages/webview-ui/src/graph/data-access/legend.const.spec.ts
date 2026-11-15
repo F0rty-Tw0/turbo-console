@@ -10,12 +10,13 @@ import { SCRIPTS_BOX_DASH_PX } from '../common/graph-task.const.ts';
 import { LEGEND_ROWS } from '../common/legend.const.ts';
 import type { LegendColour, LegendOutline, LegendRow } from '../common/legend.type.ts';
 import { flowPenMock } from '../test/mocks/graph-flow-pen.mock.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { SELECTION_COLORS_STUB, THEME_COLORS_STUB } from '../test/stubs/theme-colors.stub.ts';
 import { drawFlow } from '../utils/flow-draw.util.ts';
 
 const COLORS = THEME_COLORS_STUB;
 
-const SHEET: StylesheetJson = graphStyleOf(COLORS, 'sans-serif', false);
+const SHEET: StylesheetJson = graphStyleOf(COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
 const COLOUR_OF: Record<LegendColour, string> = {
   frame: COLORS.frame,

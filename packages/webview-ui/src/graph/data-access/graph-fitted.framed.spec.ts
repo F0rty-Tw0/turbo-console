@@ -6,6 +6,7 @@ import { createFittedCamera } from './graph-fitted.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { fitVisible, openViewportOf } from './graph-visibility.ts';
 import type * as visibility from './graph-visibility.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { largeGroupedElementsOf } from '../test/utils/open-scenes.spec.util.ts';
 
@@ -25,7 +26,7 @@ describe('FEATURE: createFittedCamera reads the framed set once per frame', () =
 
   beforeEach(() => {
     const layout = { name: 'preset', fit: false };
-    const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+    const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
     cy = cytoscape({ headless: true, styleEnabled: true, layout, style, elements: largeGroupedElementsOf(TARGET_LIKE_COUNT) });
     vi.spyOn(cy, 'width').mockReturnValue(2400);

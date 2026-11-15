@@ -9,6 +9,7 @@ import type { ProbeState } from '../common/graph-probe.type.ts';
 import { SELECTED_BORDER_PX } from '../common/graph.const.ts';
 import { NORMAL_FOLDER_PAINT } from '../common/paint.const.ts';
 import type { Paint } from '../common/paint.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS, CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 
@@ -73,7 +74,7 @@ describe('FEATURE: applyPaint', () => {
     });
 
     it('WHEN it is applied THEN the selected style still applies to the node', () => {
-      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
 
       applyPaint(cy, FIRST_PAINT);
 

@@ -58,7 +58,7 @@ export class RunProgressJoin implements ProgressPort {
     const join: JoinState = { owner, tail: null, isDrained: false, ended: null, isMatched: false };
 
     this.progress.begin(owner, dependenciesOf);
-    // grug: one begin per launch (key has launchedAt); a second begin replaces the join
+    // One begin per launch (key has launchedAt); a second begin replaces the join
     this.joins.set(progressKeyOf(owner), join);
   }
 

@@ -10,6 +10,7 @@ import type { GraphTask } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { REAL_ELK_TIMEOUT_MS } from '../test/common/real-elk.const.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { frameLineOf, sideErrorOf } from '../test/utils/box-frame.spec.util.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
@@ -111,7 +112,7 @@ describe('FEATURE: createTaskCanvas box frames on a real ELK layout', () => {
     beforeEach(async () => {
       const shown = new Set(TASKS.map((task) => task.id));
       const graph = elkTaskGraphOf({ tasks: TASKS, shown, sizes: new Map(), titleWidths: TITLE_WIDTHS, naming: NAMING_STUB }, SIZE_OF);
-      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
       laidOut = await new elkConstructor().layout(graph);
       cy = cytoscape({ headless: true, styleEnabled: true, layout: PRESET, style });

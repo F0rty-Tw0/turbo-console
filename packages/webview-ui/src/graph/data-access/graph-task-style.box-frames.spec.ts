@@ -3,6 +3,7 @@ import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const boxOf = (id: string, title: string): ElementDefinition => {
@@ -28,7 +29,7 @@ describe('FEATURE: taskRulesOf box frames in graphStyleOf', () => {
     const elements = [boxOf('pkg:web', 'web'), atomBox, childOf('web#e2e-ci--a.ts', 'atom:web#e2e-ci')];
 
     cy = cytoscape({ headless: true, styleEnabled: true, elements });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
   });
 
   afterEach(() => {

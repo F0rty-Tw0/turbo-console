@@ -3,6 +3,7 @@ import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
 
@@ -19,7 +20,7 @@ const ELEMENTS: ElementDefinition[] = [
 ];
 
 const umbrellaCyOf = (glyphs = false): Core => {
-  const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', glyphs);
+  const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', glyphs, CARD_MEASURES_STUB);
   const cy = cytoscape({ headless: true, styleEnabled: true, style, elements: ELEMENTS });
 
   return cy;

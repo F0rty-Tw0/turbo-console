@@ -7,6 +7,7 @@ import { graphStyleOf } from './graph-style.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import { ROW_LESS_CLASS } from '../common/graph.const.ts';
 import { boardsCyMock } from '../test/mocks/folder-boards.mock.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { collapsedIdOf } from '../utils/folder-id.util.ts';
@@ -24,7 +25,7 @@ describe('FEATURE: probeFoldersOf drawn label', () => {
 
     beforeEach(() => {
       cy = boardsCyMock();
-      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
       createFoldersView(cy).show(boardsSceneOf(['apps']), labelOf);
     });
 

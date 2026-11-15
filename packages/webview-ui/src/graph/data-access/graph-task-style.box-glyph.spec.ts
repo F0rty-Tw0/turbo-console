@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { graphStyleOf } from './graph-style.ts';
 import { PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
 import { SCRIPTS_BOX_CLASS, SCRIPTS_BOX_TITLE, TASK_BOX_CLASS, TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { folderIdOf } from '../utils/folder-id.util.ts';
 import { scriptsBoxIdOf } from '../utils/task-compound.util.ts';
@@ -35,7 +36,7 @@ const styledCyOf = (glyphs: boolean): Core => {
   ];
   const cy = cytoscape({ headless: true, styleEnabled: true, elements });
 
-  cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', glyphs));
+  cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', glyphs, CARD_MEASURES_STUB));
 
   return cy;
 };

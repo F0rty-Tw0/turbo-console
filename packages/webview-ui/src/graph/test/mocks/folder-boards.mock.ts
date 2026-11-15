@@ -8,6 +8,7 @@ import { positionOf } from '../../data-access/graph-place.ts';
 import { graphStyleOf } from '../../data-access/graph-style.ts';
 import { edgeIdOf } from '../../utils/edge-id.util.ts';
 import { BOARDS_EDGES_STUB, BOARDS_GROUPS_STUB, BOARDS_POSITIONS_STUB, BOARDS_SIZE_STUB } from '../stubs/folder-boards.stub.ts';
+import { CARD_MEASURES_STUB } from '../stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../utils/canvas-elements.spec.util.ts';
 
 const packageDefinitionOf = (name: string, positions: Positions): ElementDefinition => {
@@ -34,7 +35,7 @@ export const groupedCyMock = (groups: FolderGroup[], edges: GraphEdge[], positio
   const elements = [...nodes, ...links];
   const cy = cytoscape({ headless: true, styleEnabled: true, layout, elements });
 
-  cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+  cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
   setBoxes(cy, groups);
 
   return cy;

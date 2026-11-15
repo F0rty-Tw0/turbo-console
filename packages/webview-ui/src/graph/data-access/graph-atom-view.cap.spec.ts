@@ -11,6 +11,7 @@ import type { AtomPlacement } from '../common/graph-atom.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { AtomCanvas, TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { fileOf } from '../test/utils/atom-file.spec.util.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
@@ -85,7 +86,7 @@ describe('FEATURE: createAtomCanvas drawing the spec files and the count node', 
     const layout = { name: 'preset', fit: false };
 
     cy = cytoscape({ headless: true, styleEnabled: true, layout });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
     tasks = createTaskCanvas(cy);
     atoms = createAtomCanvas(cy);
     tasks.show(DRAWING);

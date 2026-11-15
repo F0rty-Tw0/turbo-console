@@ -6,6 +6,7 @@ import { createGraphProbe } from './graph-probe.ts';
 import { graphStyleOf } from './graph-style.ts';
 import type { GraphView, Viewport } from '../common/graph-page.type.ts';
 import type { GraphProbe, ProbeEdge, ProbeNode } from '../common/graph-probe.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { GRAPH_PROBE_STUB } from '../test/stubs/graph-probe.stub.ts';
 import { CANVAS_AFFECTED_RGB, CANVAS_COLORS, canvasEdgeOf, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 
@@ -38,7 +39,7 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: ELEMENTS });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
     cy.getElementById('b').addClass(GHOST_CLASSES);
     cy.getElementById('b').connectedEdges().addClass(GHOST_CLASSES);
 

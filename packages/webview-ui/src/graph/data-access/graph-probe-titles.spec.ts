@@ -9,6 +9,7 @@ import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ProbeRect, ProbeTitle } from '../common/graph-probe-titles.type.ts';
 import { BOX_FRAMED_CLASS, TASK_BOX_CLASS, TASK_FOLDER_CLASS, TASK_LINK_CLASS } from '../common/graph-task.const.ts';
 import type { BoxFrame, BoxFrames } from '../common/layout.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const ORIGIN: Position = { x: 0, y: 0 };
@@ -74,7 +75,7 @@ describe('FEATURE: probeTitlesOf', () => {
     let cy: Core;
 
     beforeEach(() => {
-      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
       cy = cytoscape({ headless: true, styleEnabled: true, elements: TASK_BOXES, style });
     });
@@ -134,7 +135,7 @@ describe('FEATURE: probeTitlesOf', () => {
     let cy: Core;
 
     beforeEach(() => {
-      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
       const boxData = { id: 'pkg:web', title: 'web' };
       const buildData = { ...BUILD_DATA };
       const position = { x: 100, y: 100 };
@@ -197,7 +198,7 @@ describe('FEATURE: probeTitlesOf', () => {
     let cy: Core;
 
     beforeEach(() => {
-      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
       cy = cytoscape({ headless: true, styleEnabled: true, elements: LINKED_BOXES, style });
     });

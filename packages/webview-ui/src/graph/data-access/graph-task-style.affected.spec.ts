@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { graphStyleOf } from './graph-style.ts';
 import { taskRulesOf } from './graph-task-style.ts';
 import type { GraphAffectedMark } from '../../bridge/common/graph-affected.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_AFFECTED_RGB, CANVAS_COLORS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 
 const HALO_OPACITIES: [GraphAffectedMark, number][] = [
@@ -55,7 +56,7 @@ describe('FEATURE: taskRulesOf affected halos', () => {
 
     beforeEach(() => {
       const elements = [canvasNodeOf('app#build')];
-      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
       cy = cytoscape({ headless: true, styleEnabled: true, elements, style });
     });

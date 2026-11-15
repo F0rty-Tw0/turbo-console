@@ -7,6 +7,7 @@ import { RUN_STATES } from '../../bridge/common/graph-message.const.ts';
 import { TASK_CARD_CLASS } from '../common/graph-card.const.ts';
 import { PACKAGE_RUN_CLASS, RUN_CLASS_PREFIX, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import { FOLDER_NODE_CLASS, NODE_BORDER_PX } from '../common/graph.const.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS, CANVAS_FRAME_RGB, CANVAS_SELECTION_FILL_RGB } from '../test/utils/canvas-elements.spec.util.ts';
 import { SELECTED_RING, classedNodeOf, ringOf } from '../test/utils/task-ring.spec.util.ts';
 
@@ -26,7 +27,7 @@ describe('FEATURE: a selected package or collapsed folder with a run state draws
     const taskNode = classedNodeOf(TASK_ID, 'build', `${TASK_NODE_CLASS} ${TASK_CARD_CLASS}`);
 
     cy = cytoscape({ headless: true, styleEnabled: true, elements: [webNode, appsNode, taskNode] });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', true));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', true, CARD_MEASURES_STUB));
     web = cy.getElementById('web');
     apps = cy.getElementById('apps');
     task = cy.getElementById(TASK_ID);

@@ -7,6 +7,7 @@ import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
@@ -46,7 +47,7 @@ describe('FEATURE: createTaskCanvas links in the graph stylesheet', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, layout: PRESET });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
     canvas = createTaskCanvas(cy);
     canvas.show(DRAWING);
   });

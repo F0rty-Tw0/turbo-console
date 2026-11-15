@@ -3,6 +3,7 @@ import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS, CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 
@@ -16,7 +17,7 @@ describe('FEATURE: graphStyleOf dimmed opacity', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: CANVAS_ELEMENTS });
-    cy.style(graphStyleOf(RAISED_DIM_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(RAISED_DIM_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
   });
 
   afterEach(() => {
