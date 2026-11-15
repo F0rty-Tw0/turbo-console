@@ -64,7 +64,7 @@ const SELF_TRACE_REF = { start: 'web', end: 'web' };
 
 const PROTO_TRACE_REF = { start: '__proto__', end: 'constructor' };
 
-describe('FEATURE: inspectionFieldsOf', () => {
+describe('FEATURE: inspection state', () => {
   describe('GIVEN an inspection to save', () => {
     it.each([
       { title: 'none saves nothing', inspection: NONE, expected: fieldsOf({}) },
@@ -102,15 +102,13 @@ describe('FEATURE: inspectionFieldsOf', () => {
         inspection: { kind: 'link', source: '__proto__', target: 'constructor' } satisfies Inspection,
         expected: fieldsOf({ link: PROTO_LINK_REF })
       }
-    ])('WHEN $title THEN the fields are exact', ({ inspection, expected }) => {
+    ])('WHEN $title THEN the inspection fields are exact', ({ inspection, expected }) => {
       const fields = inspectionFieldsOf(inspection);
 
       expect(fields).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: restoredInspection', () => {
   describe('GIVEN a saved state and the rebuilt graph', () => {
     it.each([
       { title: 'nothing saved gives none', saved: fieldsOf({}), edges: E, visible: ALL, expected: NONE },
@@ -203,15 +201,13 @@ describe('FEATURE: restoredInspection', () => {
         visible: new Set(['__proto__', 'constructor']),
         expected: PROTO_TRACE
       }
-    ])('WHEN $title THEN the inspection is exact', ({ saved, edges, visible, expected }) => {
+    ])('WHEN $title THEN the restored inspection is exact', ({ saved, edges, visible, expected }) => {
       const inspection = restoredInspection(saved, edges, visible, NO_FOLDERS);
 
       expect(inspection).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: restoredInspection with folders', () => {
   describe('GIVEN a saved folder and the folders that still exist', () => {
     it.each([
       {
@@ -271,7 +267,7 @@ describe('FEATURE: restoredInspection with folders', () => {
         expected: NONE
       },
       { title: 'no folder saved gives none', saved: fieldsOf({}), visible: ALL, folders: FOLDERS, expected: NONE }
-    ])('WHEN $title THEN the inspection is exact', ({ saved, visible, folders, expected }) => {
+    ])('WHEN $title THEN the restored inspection is exact', ({ saved, visible, folders, expected }) => {
       const inspection = restoredInspection(saved, E, visible, folders);
 
       expect(inspection).toStrictEqual(expected);
