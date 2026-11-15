@@ -27,9 +27,9 @@ const rowsOf = (infos: GraphPackage[], edges: GraphEdge[], collapsed: string[], 
 
 const without = (names: string[], hidden: string): string[] => names.filter((name) => name !== hidden);
 
-describe('FEATURE: folderLinksOf', () => {
+describe('FEATURE: folder links', () => {
   describe('GIVEN the boards fixture', () => {
-    it.each<[string, string[], string[], LinkRow[]]>([
+    describe.each<[string, string[], string[], LinkRow[]]>([
       ['both folders collapsed: one link, ui to utils is inside', ['apps', 'packages'], ALL, [[A, P, 3]]],
       [
         'apps collapsed: two links',
@@ -52,10 +52,14 @@ describe('FEATURE: folderLinksOf', () => {
       ['no folder collapsed: no folder links', [], ALL, []],
       ["a hidden package's links are not counted", ['apps', 'packages'], without(ALL, '@acme/ui'), [[A, P, 1]]],
       ['a link with a hidden end is dropped', ['apps'], without(ALL, 'docs'), [[A, '@acme/ui', 1]]]
-    ])('GIVEN %s WHEN folder links are built THEN they are %j', (_title, collapsed, visible, expected) => {
-      const rows = rowsOf(BOARDS_INFOS, BOARDS_EDGES, collapsed, visible);
+    ])('GIVEN %s', (_title, collapsed, visible, expected) => {
+      const shown = JSON.stringify(expected);
 
-      expect(rows).toStrictEqual(expected);
+      it(`WHEN folder links are built THEN they are ${shown}`, () => {
+        const rows = rowsOf(BOARDS_INFOS, BOARDS_EDGES, collapsed, visible);
+
+        expect(rows).toStrictEqual(expected);
+      });
     });
 
     describe('GIVEN apps collapsed', () => {
@@ -96,42 +100,42 @@ describe('FEATURE: folderLinksOf', () => {
       expect(rows).toStrictEqual([['\u0002__proto__', 'x', 1]]);
     });
   });
-});
 
-describe('FEATURE: folderLinkOf', () => {
-  describe('GIVEN the boards fixture with packages collapsed', () => {
-    it('WHEN the drawn ends are asked in order THEN it is that link of the scene', () => {
-      const scene = boardsSceneOf(['packages']);
+  describe('GIVEN a pair of drawn ends asked for its folder link', () => {
+    describe('GIVEN the boards fixture with packages collapsed', () => {
+      it('WHEN the drawn ends are asked in order THEN it is that link of the scene', () => {
+        const scene = boardsSceneOf(['packages']);
 
-      const link = folderLinkOf(scene, 'docs', P);
+        const link = folderLinkOf(scene, 'docs', P);
 
-      expect(link).toBe(scene.links[1]);
+        expect(link).toBe(scene.links[1]);
+      });
+
+      it('WHEN the drawn ends are asked reversed THEN it is null', () => {
+        const scene = boardsSceneOf(['packages']);
+
+        const link = folderLinkOf(scene, P, 'docs');
+
+        expect(link).toBeNull();
+      });
     });
 
-    it('WHEN the drawn ends are asked reversed THEN it is null', () => {
-      const scene = boardsSceneOf(['packages']);
+    describe('GIVEN the boards fixture with no folder collapsed', () => {
+      it('WHEN a pair is asked THEN it is null', () => {
+        const scene = boardsSceneOf([]);
 
-      const link = folderLinkOf(scene, P, 'docs');
+        const link = folderLinkOf(scene, 'docs', P);
 
-      expect(link).toBeNull();
+        expect(link).toBeNull();
+      });
     });
-  });
 
-  describe('GIVEN the boards fixture with no folder collapsed', () => {
-    it('WHEN a pair is asked THEN it is null', () => {
-      const scene = boardsSceneOf([]);
+    describe('GIVEN no scene', () => {
+      it('WHEN a pair is asked THEN it is null', () => {
+        const link = folderLinkOf(null, 'docs', P);
 
-      const link = folderLinkOf(scene, 'docs', P);
-
-      expect(link).toBeNull();
-    });
-  });
-
-  describe('GIVEN no scene', () => {
-    it('WHEN a pair is asked THEN it is null', () => {
-      const link = folderLinkOf(null, 'docs', P);
-
-      expect(link).toBeNull();
+        expect(link).toBeNull();
+      });
     });
   });
 });
