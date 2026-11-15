@@ -5,13 +5,17 @@ import { scriptArgsOf } from './script-args.util.ts';
 const ARGS = ['--watch', '--port=3000', './src/a.ts', '--env=dev:local'];
 
 describe('FEATURE: script argv', () => {
-  it.each([
+  describe.each([
     ['npm', ['run', 'lint', '--', ...ARGS]],
     ['pnpm', ['run', 'lint', ...ARGS]],
     ['yarn', ['run', 'lint', ...ARGS]],
     ['bun', ['run', 'lint', ...ARGS]]
-  ] as const)('GIVEN %s and four args WHEN the argv is built THEN it is %j', (manager, expected) => {
-    expect(scriptArgsOf(manager, 'lint', ARGS)).toStrictEqual(expected);
+  ] as const)('GIVEN %s and four args', (manager, expected) => {
+    const argv = JSON.stringify(expected);
+
+    it(`WHEN the argv is built THEN it is ${argv}`, () => {
+      expect(scriptArgsOf(manager, 'lint', ARGS)).toStrictEqual(expected);
+    });
   });
 
   describe.each(['npm', 'pnpm', 'yarn', 'bun'] as const)('GIVEN %s and no args', (manager) => {
