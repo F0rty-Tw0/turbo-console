@@ -68,8 +68,8 @@ describe('FEATURE: routeRulesOf task links in the graph stylesheet', () => {
       expect(styleOf(cy, 'package', 'curve-style')).toBe('bezier');
     });
 
-    it('WHEN styled THEN it keeps the compound draw order', () => {
-      expect(styleOf(cy, 'package', 'z-compound-depth')).toBe('auto');
+    it('WHEN styled THEN it is drawn under every box like a task link', () => {
+      expect(styleOf(cy, 'package', 'z-compound-depth')).toBe('bottom');
     });
   });
 });

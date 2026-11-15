@@ -98,10 +98,15 @@ const GHOST_EDGE = { 'line-style': 'dashed', 'line-dash-pattern': DASHED_LINE_PX
 
 const EDGE_ARROW = { 'target-arrow-shape': 'triangle', 'arrow-scale': 0.8, 'target-distance-from-node': 3 } as const;
 
+/**
+ * The base edge: a plain bezier from card to card, drawn under every box and card (`bottom`), so a box title or a card
+ * a line crosses draws over it; the boxes are see-through, so the line shows inside them.
+ */
 const edgeStyleOf = (colors: ThemeColors): Css.Edge => {
   const edge = {
     ...EDGE_ARROW,
     'curve-style': 'bezier',
+    'z-compound-depth': 'bottom',
     width: EDGE_WIDTH,
     'line-color': colors.edge,
     'target-arrow-color': colors.edge
@@ -140,7 +145,7 @@ const nodeStyleOf = (colors: ThemeColors, fontFamily: string): Css.Node => {
 
 /**
  * The Cytoscape stylesheet: round-rectangle nodes sized from their data, label centred, 1 px frame; bezier edges with a
- * triangle at the dependency, drawn on their ELK route while `routed` and a task link straight (`routeRulesOf`).
+ * triangle at the dependency, drawn under every box and card, and a task link straight (`routeRulesOf`).
  * `selected`, `highlighted` and `dimmed` are the classes `GraphView.paint` applies; `ghost` (dashed) is the one
  * `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
  * background; `taskRulesOf` adds the task mode rules and `selectionRulesOf` the selected border and fill and the bold focus target.

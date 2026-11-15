@@ -1,34 +1,41 @@
 import cytoscape from 'cytoscape';
-import type { Core, EdgeDataDefinition, ElementDefinition } from 'cytoscape';
+import type { Core, EdgeDataDefinition, ElementDefinition, StylesheetJsonBlock } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
-import { ROUTED_CLASS, ROUTE_RADIUS_PX } from '../common/graph-layout.const.ts';
 import { FOLDER_LINK_CLASS } from '../common/graph.const.ts';
 import { CANVAS_COLORS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
+
+const OLD_ROUTED_CLASS = 'routed';
 
 const SEGMENT_DATA = { segWeights: [0.25, 0.75], segDistances: [-40, -40], srcEnd: '0px 16px', tgtEnd: '0px -16px' };
 
 const ROUTED_DATA: EdgeDataDefinition = { id: 'routed', source: 'a', target: 'b', ...SEGMENT_DATA };
 
-const PLAIN_DATA: EdgeDataDefinition = { id: 'plain', source: 'b', target: 'c', ...SEGMENT_DATA };
+const PLAIN_DATA: EdgeDataDefinition = { id: 'plain', source: 'b', target: 'c' };
 
 const OFFSET_DATA: EdgeDataDefinition = { id: 'offset', source: 'a', target: 'c', labelDx: 24, labelDy: -3 };
 
-const ROUTED_ELEMENTS: ElementDefinition[] = [
+const ELEMENTS: ElementDefinition[] = [
   canvasNodeOf('a'),
   canvasNodeOf('b'),
   canvasNodeOf('c'),
-  { data: ROUTED_DATA, classes: ROUTED_CLASS },
+  { data: ROUTED_DATA, classes: OLD_ROUTED_CLASS },
   { data: PLAIN_DATA },
   { data: OFFSET_DATA, classes: FOLDER_LINK_CLASS }
 ];
 
-describe('FEATURE: routeRulesOf in the graph stylesheet', () => {
+const styleOf = (cy: Core, id: string, name: string): unknown => cy.getElementById(id).style(name);
+
+const selectorOf = (block: StylesheetJsonBlock): string => block.selector;
+
+const isRoutedSelector = (selector: string): boolean => selector.includes(`.${OLD_ROUTED_CLASS}`);
+
+describe('FEATURE: the base edge rule and routeRulesOf in the graph stylesheet', () => {
   let cy: Core;
 
   beforeEach(() => {
-    cy = cytoscape({ headless: true, styleEnabled: true, elements: ROUTED_ELEMENTS });
+    cy = cytoscape({ headless: true, styleEnabled: true, elements: ELEMENTS });
     cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
   });
 
@@ -36,68 +43,35 @@ describe('FEATURE: routeRulesOf in the graph stylesheet', () => {
     cy.destroy();
   });
 
-  describe('GIVEN an edge with class routed and segment data', () => {
-    it('WHEN styled THEN curve-style is round-segments', () => {
-      const curve: unknown = cy.getElementById('routed').style('curve-style');
-
-      expect(curve).toBe('round-segments');
+  describe('GIVEN a plain package edge', () => {
+    it('WHEN styled THEN curve-style is bezier', () => {
+      expect(styleOf(cy, 'plain', 'curve-style')).toBe('bezier');
     });
 
-    it('WHEN styled THEN its segment weights and distances are the data arrays', () => {
-      const edge = cy.getElementById('routed');
-
-      const segments: unknown[] = [edge.style('segment-weights'), edge.style('segment-distances')];
-
-      expect(segments).toStrictEqual(['0.25 0.75', '-40px -40px']);
+    it('WHEN styled THEN it is drawn under every box and card', () => {
+      expect(styleOf(cy, 'plain', 'z-compound-depth')).toBe('bottom');
     });
 
-    it('WHEN styled THEN its corners round by ROUTE_RADIUS_PX', () => {
-      const radii: unknown = cy.getElementById('routed').style('segment-radii');
-
-      expect(radii).toBe(`${ROUTE_RADIUS_PX}`);
-    });
-
-    it('WHEN styled THEN its segments are measured from the node centres', () => {
-      const distances: unknown = cy.getElementById('routed').style('edge-distances');
-
-      expect(distances).toBe('node-position');
-    });
-
-    it('WHEN styled THEN its ends are the data endpoints', () => {
-      const edge = cy.getElementById('routed');
-
-      const ends: unknown[] = [edge.style('source-endpoint'), edge.style('target-endpoint')];
-
-      expect(ends).toStrictEqual(['0px 16px', '0px -16px']);
-    });
-  });
-
-  describe('GIVEN the routed edge also selected', () => {
-    beforeEach(() => {
-      cy.getElementById('routed').addClass('selected');
+    it('WHEN selected THEN it stays bezier under every box and card', () => {
       cy.getElementById('plain').addClass('selected');
-    });
 
-    it('WHEN styled THEN it stays round-segments', () => {
-      const curve: unknown = cy.getElementById('routed').style('curve-style');
+      const drawn = [styleOf(cy, 'plain', 'curve-style'), styleOf(cy, 'plain', 'z-compound-depth')];
 
-      expect(curve).toBe('round-segments');
-    });
-
-    it('WHEN styled THEN it takes the selected colour a plain selected edge has', () => {
-      const selected: unknown = cy.getElementById('plain').style('line-color');
-
-      const colour: unknown = cy.getElementById('routed').style('line-color');
-
-      expect(colour).toBe(selected);
+      expect(drawn).toStrictEqual(['bezier', 'bottom']);
     });
   });
 
-  describe('GIVEN an edge with segment data but without the class', () => {
+  describe('GIVEN an edge with the old routed class and segment data', () => {
     it('WHEN styled THEN curve-style stays bezier', () => {
-      const curve: unknown = cy.getElementById('plain').style('curve-style');
+      expect(styleOf(cy, 'routed', 'curve-style')).toBe('bezier');
+    });
+  });
 
-      expect(curve).toBe('bezier');
+  describe('GIVEN the whole stylesheet', () => {
+    it('WHEN its selectors are read THEN none selects the routed class', () => {
+      const selectors = graphStyleOf(CANVAS_COLORS, 'sans-serif', false).map(selectorOf);
+
+      expect(selectors.filter(isRoutedSelector)).toStrictEqual([]);
     });
   });
 
