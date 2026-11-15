@@ -10,6 +10,14 @@ import { NORMAL_FOLDER_PAINT } from '../common/paint.const.ts';
 import type { Paint } from '../common/paint.type.ts';
 import type { TraceResult } from '../common/trace.type.ts';
 
+/** What a paint reads of the graph on screen: every link, the walked trace, the lit path candidates and the folder scene. */
+type PaintContext = {
+  readonly edges: GraphEdge[];
+  readonly trace: TraceResult | null;
+  readonly lit: ReadonlySet<string>;
+  readonly scene: FolderScene | null;
+};
+
 const paintWith = (nodeState: (name: string) => ProbeState, edgeState: (edge: GraphEdge) => ProbeState): Paint => {
   const paint: Paint = { nodeState, edgeState, ...NORMAL_FOLDER_PAINT };
 
@@ -91,14 +99,9 @@ const statePaintOf = (inspection: Inspection, edges: GraphEdge[], trace: TraceRe
  * the path candidates the picking filter leaves in the lists; it only matters while picking. A `null` scene leaves every
  * folder state `normal`.
  */
-export const paintOf = (
-  inspection: Inspection,
-  edges: GraphEdge[],
-  trace: TraceResult | null,
-  lit: ReadonlySet<string>,
-  scene: FolderScene | null
-  // eslint-disable-next-line max-params -- five inputs, pinned by the plan's Cross-phase interfaces (Task 2.2)
-): Paint => {
+export const paintOf = (inspection: Inspection, context: PaintContext): Paint => {
+  const { edges, trace, lit, scene } = context;
+
   if (inspection.kind === 'folder') return folderRowPaintOf(inspection.folder, edges, scene);
 
   if (inspection.kind === 'bundle') return bundlePaintOf(inspection.source, inspection.target, scene);

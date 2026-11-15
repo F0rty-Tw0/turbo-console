@@ -96,7 +96,7 @@ const NO_LINK_CASES: NoLinkCase[] = [
 describe('FEATURE: paintOf for an inspected bundle', () => {
   describe('GIVEN a bundle inspection over a folder scene', () => {
     it.each(CASES)('WHEN it is $title THEN every state is exact', (row) => {
-      const paint = paintOf(row.inspection, row.edges, null, new Set<string>(), row.buildScene());
+      const paint = paintOf(row.inspection, { edges: row.edges, trace: null, lit: new Set<string>(), scene: row.buildScene() });
 
       const letters = lettersAt(paint, row.edges, row.buildScene().links);
 
@@ -108,8 +108,8 @@ describe('FEATURE: paintOf for an inspected bundle', () => {
     it.each(NO_LINK_CASES)('WHEN $title THEN it paints like none', (row) => {
       const scene = row.buildScene();
       const links = scene?.links ?? [];
-      const none = paintOf(NO_INSPECTION, BOARDS_EDGES, null, new Set<string>(), scene);
-      const paint = paintOf(row.inspection, BOARDS_EDGES, null, new Set<string>(), scene);
+      const none = paintOf(NO_INSPECTION, { edges: BOARDS_EDGES, trace: null, lit: new Set<string>(), scene });
+      const paint = paintOf(row.inspection, { edges: BOARDS_EDGES, trace: null, lit: new Set<string>(), scene });
       const noneLetters = lettersAt(none, BOARDS_EDGES, links);
 
       const letters = lettersAt(paint, BOARDS_EDGES, links);
