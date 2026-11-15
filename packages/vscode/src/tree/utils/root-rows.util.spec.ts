@@ -270,10 +270,8 @@ describe('FEATURE: rows of a root', () => {
       expect(rows[0]?.folder).toBe('');
     });
   });
-});
 
-describe('FEATURE: row of a workspace folder', () => {
-  describe('GIVEN a folder of a multi-root window', () => {
+  describe('GIVEN a workspace folder of a multi-root window', () => {
     it('WHEN built with no model THEN it is an expanded root-folder row whose tooltip is its path', () => {
       const row = rootNodeRow(ROOT_FOLDER_STUB, null, 0, null);
 
