@@ -13,22 +13,20 @@ const SCRIPT: RunRequest = { ...RUN_REQUEST_STUB, task: SCRIPT_TASK };
 
 const UNSAFE_BUILD = "Turbo Console can't run a script named `build` safely.";
 
-describe('FEATURE: script body', () => {
+describe('FEATURE: run refusal', () => {
   describe.each([
     ['a command', 'tsc', true],
     ['no command', null, false],
     ['an empty command', '', false],
     ['a whitespace-only command', ' \t\n', false]
-  ])('GIVEN %s', (_label, command, hasBody) => {
-    it(`WHEN checked THEN has a body is ${command}`, () => {
+  ])('GIVEN a script with %s', (_label, command, hasBody) => {
+    it(`WHEN its body is checked THEN has a body is ${hasBody}`, () => {
       const task: TaskNode = { ...SCRIPT_TASK, command };
 
       expect(hasScriptBody(task)).toBe(hasBody);
     });
   });
-});
 
-describe('FEATURE: run refusal', () => {
   describe('GIVEN a turbo task', () => {
     it('WHEN it is plain THEN nothing refuses it', () => {
       expect(refusalOf(RUN_REQUEST_STUB)).toBeNull();
