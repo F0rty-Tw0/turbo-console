@@ -103,3 +103,5 @@ export type {
 export { loadWorkspace } from './workspace/domain-logic/load-workspace.ts';
 
 export { atomGroupsOf } from './workspace/utils/atom-groups.util.ts';
+
+export { ROOT_NAME } from './workspace/utils/turbo-task-lookup.util.ts';
