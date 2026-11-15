@@ -332,12 +332,14 @@ describe('FEATURE: opening a details panel', () => {
     });
   });
 
-  it('GIVEN a key whose root is not in the store WHEN it opens THEN no panel is built and no message shows', async () => {
-    const opened = await panels.open(NO_ROOT);
+  describe('GIVEN a key whose root is not in the store', () => {
+    it('WHEN it opens THEN no panel is built and no message shows', async () => {
+      const opened = await panels.open(NO_ROOT);
 
-    expect(opened).toBeNull();
-    expect(fakes.open).not.toHaveBeenCalled();
-    expect(fakes.info).not.toHaveBeenCalled();
+      expect(opened).toBeNull();
+      expect(fakes.open).not.toHaveBeenCalled();
+      expect(fakes.info).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN a package name with a line break and a bidi control', () => {

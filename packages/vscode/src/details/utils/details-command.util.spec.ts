@@ -69,7 +69,9 @@ describe('FEATURE: details panel commands', () => {
     });
   });
 
-  it('GIVEN showOutput WHEN mapped THEN it shows the output with no argument', () => {
-    expect(commandOf({ type: 'showOutput' }, KEY)).toStrictEqual({ command: 'turboConsole.showOutput', arg: undefined });
+  describe('GIVEN showOutput', () => {
+    it('WHEN mapped THEN it shows the output with no argument', () => {
+      expect(commandOf({ type: 'showOutput' }, KEY)).toStrictEqual({ command: 'turboConsole.showOutput', arg: undefined });
+    });
   });
 });

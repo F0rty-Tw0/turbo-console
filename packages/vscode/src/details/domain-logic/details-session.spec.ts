@@ -94,26 +94,30 @@ describe('FEATURE: details session', () => {
     });
   });
 
-  it('GIVEN a shown panel that has no state yet WHEN ready arrives THEN nothing is posted', async () => {
-    session.setVisible(true);
-    await session.receive({ type: 'ready' });
+  describe('GIVEN a shown panel that has no state yet', () => {
+    it('WHEN ready arrives THEN nothing is posted', async () => {
+      session.setVisible(true);
+      await session.receive({ type: 'ready' });
 
-    expect(ports.post).not.toHaveBeenCalled();
+      expect(ports.post).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a hidden panel whose root has loaded WHEN ready arrives THEN nothing is posted', async () => {
-    session.start();
-    await session.receive({ type: 'ready' });
+  describe('GIVEN a hidden panel whose root has loaded', () => {
+    it('WHEN ready arrives THEN nothing is posted', async () => {
+      session.start();
+      await session.receive({ type: 'ready' });
 
-    expect(ports.post).not.toHaveBeenCalled();
-  });
+      expect(ports.post).not.toHaveBeenCalled();
+    });
 
-  it('GIVEN a hidden panel whose root has loaded WHEN ready arrives before the show THEN the show posts one state', async () => {
-    session.start();
-    await session.receive({ type: 'ready' });
-    session.setVisible(true);
+    it('WHEN ready arrives before the show THEN the show posts one state', async () => {
+      session.start();
+      await session.receive({ type: 'ready' });
+      session.setVisible(true);
 
-    expect(postedPhasesOf(ports)).toStrictEqual(['loading']);
+      expect(postedPhasesOf(ports)).toStrictEqual(['loading']);
+    });
   });
 
   describe('GIVEN a shown panel whose root has loaded', () => {
@@ -268,9 +272,11 @@ describe('FEATURE: details session', () => {
     });
   });
 
-  it('GIVEN a panel never shown WHEN disposed THEN no visibility is reported', () => {
-    session.dispose();
+  describe('GIVEN a panel never shown', () => {
+    it('WHEN disposed THEN no visibility is reported', () => {
+      session.dispose();
 
-    expect(ports.setPanelVisible).not.toHaveBeenCalled();
+      expect(ports.setPanelVisible).not.toHaveBeenCalled();
+    });
   });
 });

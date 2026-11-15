@@ -317,9 +317,7 @@ describe('FEATURE: package details state', () => {
       expect(state.tasks).toStrictEqual([]);
     });
   });
-});
 
-describe('FEATURE: the package label and path in the details state', () => {
   describe('GIVEN the single-package // node', () => {
     const root: PackageNode = { ...A_PACKAGE_STUB, name: '//', path: '', label: 'single-app' };
     const model: WorkspaceModel = { ...DETAILS_MODEL_STUB, singlePackage: true, packages: [root] };

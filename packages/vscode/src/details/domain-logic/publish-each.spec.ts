@@ -15,28 +15,32 @@ const panelOf = (publish: () => void): OpenPanel => {
 };
 
 describe('FEATURE: publishing every panel', () => {
-  it('GIVEN two panels WHEN published THEN each publishes once and nothing is logged', () => {
-    const first = vi.fn();
-    const second = vi.fn();
-    const log = vi.fn();
+  describe('GIVEN two panels', () => {
+    it('WHEN published THEN each publishes once and nothing is logged', () => {
+      const first = vi.fn();
+      const second = vi.fn();
+      const log = vi.fn();
 
-    publishEach([panelOf(first), panelOf(second)], log);
+      publishEach([panelOf(first), panelOf(second)], log);
 
-    expect(first).toHaveBeenCalledOnce();
-    expect(second).toHaveBeenCalledOnce();
-    expect(log).not.toHaveBeenCalled();
+      expect(first).toHaveBeenCalledOnce();
+      expect(second).toHaveBeenCalledOnce();
+      expect(log).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a first panel that throws WHEN published THEN the second still publishes and the failure is logged', () => {
-    const broken = vi.fn(() => {
-      throw new Error('publish broke');
+  describe('GIVEN a first panel that throws', () => {
+    it('WHEN published THEN the second still publishes and the failure is logged', () => {
+      const broken = vi.fn(() => {
+        throw new Error('publish broke');
+      });
+      const second = vi.fn();
+      const log = vi.fn();
+
+      publishEach([panelOf(broken), panelOf(second)], log);
+
+      expect(second).toHaveBeenCalledOnce();
+      expect(log.mock.calls).toStrictEqual([[expect.stringContaining('publish broke')]]);
     });
-    const second = vi.fn();
-    const log = vi.fn();
-
-    publishEach([panelOf(broken), panelOf(second)], log);
-
-    expect(second).toHaveBeenCalledOnce();
-    expect(log.mock.calls).toStrictEqual([[expect.stringContaining('publish broke')]]);
   });
 });

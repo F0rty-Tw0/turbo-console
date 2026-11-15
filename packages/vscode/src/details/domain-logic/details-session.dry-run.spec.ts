@@ -271,20 +271,22 @@ describe('FEATURE: details session dry runs', () => {
     });
   });
 
-  it('GIVEN a dry run in flight WHEN it settles THEN whenIdle resolves only after it', async () => {
-    session.setVisible(true);
-    session.start();
+  describe('GIVEN a dry run in flight', () => {
+    it('WHEN it settles THEN whenIdle resolves only after it', async () => {
+      session.setVisible(true);
+      session.start();
 
-    const isIdle = settledFlag(session.whenIdle());
+      const isIdle = settledFlag(session.whenIdle());
 
-    await flushSettles();
+      await flushSettles();
 
-    const wasIdleEarly = isIdle();
+      const wasIdleEarly = isIdle();
 
-    dryRunAt(dryRuns, 0).resolve([]);
-    await flushSettles();
+      dryRunAt(dryRuns, 0).resolve([]);
+      await flushSettles();
 
-    expect(wasIdleEarly).toBe(false);
-    expect(isIdle()).toBe(true);
+      expect(wasIdleEarly).toBe(false);
+      expect(isIdle()).toBe(true);
+    });
   });
 });
