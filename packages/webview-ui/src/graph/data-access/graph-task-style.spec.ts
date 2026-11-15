@@ -49,25 +49,31 @@ describe('FEATURE: taskRulesOf task boxes in graphStyleOf', () => {
     cy.destroy();
   });
 
-  it('GIVEN a task-box THEN its title sits in the top padding band, left-aligned a padding in, cut with an ellipsis', () => {
-    expect(placementOf(cy, 'pkg:web')).toStrictEqual(TASK_BOX_PLACEMENT);
+  describe('GIVEN a task-box', () => {
+    it('THEN its title sits in the top padding band, left-aligned a padding in, cut with an ellipsis', () => {
+      expect(placementOf(cy, 'pkg:web')).toStrictEqual(TASK_BOX_PLACEMENT);
+    });
+
+    it('THEN its title is drawn in the label colour', () => {
+      expect(cy.getElementById('pkg:web').style('color')).toBe('rgb(238,238,238)');
+    });
   });
 
-  it('GIVEN a task-box THEN its title is drawn in the label colour', () => {
-    expect(cy.getElementById('pkg:web').style('color')).toBe('rgb(238,238,238)');
+  describe('GIVEN a task-box while exporting', () => {
+    it('THEN it keeps its one left-aligned title', () => {
+      cy.getElementById('pkg:web').addClass('exporting');
+
+      expect(placementOf(cy, 'pkg:web')).toStrictEqual(TASK_BOX_PLACEMENT);
+    });
   });
 
-  it('GIVEN a task-box while exporting THEN it keeps its one left-aligned title', () => {
-    cy.getElementById('pkg:web').addClass('exporting');
+  describe('GIVEN a task-box with dimmed-box', () => {
+    it('THEN its title fades to 25% with its frame', () => {
+      const box = cy.getElementById('pkg:web');
 
-    expect(placementOf(cy, 'pkg:web')).toStrictEqual(TASK_BOX_PLACEMENT);
-  });
+      box.addClass('dimmed-box');
 
-  it('GIVEN a task-box with dimmed-box THEN its title fades to 25% with its frame', () => {
-    const box = cy.getElementById('pkg:web');
-
-    box.addClass('dimmed-box');
-
-    expect([box.numericStyle('text-opacity'), box.numericStyle('border-opacity')]).toStrictEqual([0.25, 0.25]);
+      expect([box.numericStyle('text-opacity'), box.numericStyle('border-opacity')]).toStrictEqual([0.25, 0.25]);
+    });
   });
 });
