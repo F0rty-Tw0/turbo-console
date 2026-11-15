@@ -75,13 +75,16 @@ const readEntries = async (dir: string): Promise<Dirent[] | null> => {
   }
 };
 
-/** `name`'s mtime; `null` when it vanished since the listing (ENOENT). Any other stat failure is `io` naming the file. */
+/**
+ * `name`'s mtime and size; `null` when it vanished since the listing (ENOENT). Any other stat failure is `io` naming the
+ * file.
+ */
 const statFile = async (dir: string, name: string): Promise<RunSummaryFile | null> => {
   const path = join(dir, name);
 
   try {
     const stats = await stat(path);
-    const file: RunSummaryFile = { name, mtimeMs: stats.mtimeMs };
+    const file: RunSummaryFile = { name, mtimeMs: stats.mtimeMs, size: stats.size };
 
     return file;
   } catch (error) {
@@ -94,9 +97,9 @@ const statFile = async (dir: string, name: string): Promise<RunSummaryFile | nul
 };
 
 /**
- * The regular `*.json` files of `<root>/.turbo/runs` with their mtimes, in no order; symlinks are left out. `null` when
- * the directory does not exist, a path part is not a directory, or it resolves outside `root`. Any other realpath or
- * readdir failure, and a stat failure other than ENOENT, is `io`.
+ * The regular `*.json` files of `<root>/.turbo/runs` with their mtimes and sizes, in no order; symlinks are left out.
+ * `null` when the directory does not exist, a path part is not a directory, or it resolves outside `root`. Any other
+ * realpath or readdir failure, and a stat failure other than ENOENT, is `io`.
  */
 export const listRunSummaryFiles = async (root: string): Promise<RunSummaryFile[] | null> => {
   const dir = await ownRunsDir(root);

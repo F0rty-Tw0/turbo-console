@@ -11,3 +11,16 @@ export const atomResultOf = (entry: RunSummaryTask): AtomResult => {
 
   return result;
 };
+
+/** `atomResultOf` every entry of `tasks` by `taskId`, in their order; the first entry of a repeated id wins. */
+export const atomResultsOf = (tasks: RunSummaryTask[]): Map<string, AtomResult> => {
+  const results = new Map<string, AtomResult>();
+
+  for (const entry of tasks) {
+    const isKnown = results.has(entry.taskId);
+
+    if (!isKnown) results.set(entry.taskId, atomResultOf(entry));
+  }
+
+  return results;
+};
