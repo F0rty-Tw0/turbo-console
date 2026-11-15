@@ -30,7 +30,7 @@ const ALL_EXTRAS: RunExtras = {
 };
 
 describe('FEATURE: extras from the Run with Options picks', () => {
-  it.each([
+  describe.each([
     ['no picks', NONE, null],
     ['force only (force lives on the request)', FORCE_PICKS, null],
     ['only', ONLY_PICKS, ONLY_EXTRAS],
@@ -42,7 +42,11 @@ describe('FEATURE: extras from the Run with Options picks', () => {
     ['only + passThrough with no args (no passThrough key)', ONLY_EMPTY_ARGS_PICKS, ONLY_EXTRAS],
     ['concurrency given but not picked (the options decide)', UNPICKED_CONC, ONLY_EXTRAS],
     ['all five', ALL_PICKS, ALL_EXTRAS]
-  ])('GIVEN %s WHEN extras are built THEN %j', (_name, picks, expected) => {
-    expect(extrasOf(picks)).toStrictEqual(expected);
+  ])('GIVEN the picks: %s', (_name, picks, expected) => {
+    const outcome = JSON.stringify(expected);
+
+    it(`WHEN extras are built THEN they are ${outcome}`, () => {
+      expect(extrasOf(picks)).toStrictEqual(expected);
+    });
   });
 });
