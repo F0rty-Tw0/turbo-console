@@ -66,102 +66,105 @@ describe('FEATURE: exit-stall watch', () => {
       expect(onStall).not.toHaveBeenCalled();
     });
   });
-});
 
-describe('FEATURE: exit-stall watch timing', () => {
-  let stdout: PassThrough;
-  let stderr: PassThrough;
-  let onStall = vi.fn<(check: ExitStallCheck) => void>();
-  let stop = (): void => undefined;
+  describe('GIVEN exit-stall watch timing on passthrough streams under faked timers', () => {
+    let stdout: PassThrough;
+    let stderr: PassThrough;
+    let onStall = vi.fn<(check: ExitStallCheck) => void>();
+    let stop = (): void => undefined;
 
-  const watch = (options: RunTurboOptions): void => {
-    stop = watchExitStall({ stdout, stderr }, options, collectTail(stdout), onStall);
-  };
+    const watch = (options: RunTurboOptions): void => {
+      stop = watchExitStall({ stdout, stderr }, options, collectTail(stdout), onStall);
+    };
 
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
-    stdout = new PassThrough();
-    stderr = new PassThrough();
-    onStall = vi.fn<(check: ExitStallCheck) => void>();
-    watch(GUARDED);
-  });
-
-  afterEach(() => {
-    stop();
-    vi.useRealTimers();
-  });
-
-  describe('GIVEN complete JSON on stdout twice, a stall time apart', () => {
-    it('WHEN watched on win32 with a check THEN onStall gets the check exactly once', async () => {
-      stdout.write('{}');
-      await passMs(STALL_MS);
-      stdout.write('{}');
-      await passMs(STALL_MS);
-
-      expect(onStall.mock.calls).toStrictEqual([[JSON_CHECK]]);
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      stdout = new PassThrough();
+      stderr = new PassThrough();
+      onStall = vi.fn<(check: ExitStallCheck) => void>();
+      watch(GUARDED);
     });
 
-    it.each([
-      ['on linux', { ...GUARDED, platform: 'linux' }],
-      ['on win32 without a check', { ...GUARDED, exitStallCheck: undefined }]
-    ] satisfies [string, RunTurboOptions][])('WHEN watched %s THEN onStall is never called', async (_, options) => {
+    afterEach(() => {
       stop();
-      watch(options);
-      stdout.write('{}');
-      await passMs(STALL_MS);
-      stdout.write('{}');
-      await passMs(STALL_MS);
-
-      expect(onStall).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('GIVEN complete JSON on stdout', () => {
-    it('WHEN a stderr chunk comes just before the stall time THEN the wait restarts from it', async () => {
-      stdout.write('{}');
-      await passMs(STALL_MS - 10);
-      stderr.write('x');
-      await passMs(STALL_MS - 10);
-
-      expect(onStall).not.toHaveBeenCalled();
+      vi.useRealTimers();
     });
 
-    it('WHEN stop runs before the stall time THEN onStall is not called', async () => {
-      stdout.write('{}');
-      stop();
-      await passMs(STALL_MS * 2);
+    describe('GIVEN complete JSON on stdout twice, a stall time apart', () => {
+      it('WHEN watched on win32 with a check THEN onStall gets the check exactly once', async () => {
+        stdout.write('{}');
+        await passMs(STALL_MS);
+        stdout.write('{}');
+        await passMs(STALL_MS);
 
-      expect(onStall).not.toHaveBeenCalled();
+        expect(onStall.mock.calls).toStrictEqual([[JSON_CHECK]]);
+      });
+
+      it.each([
+        ['on linux', { ...GUARDED, platform: 'linux' }],
+        ['on win32 without a check', { ...GUARDED, exitStallCheck: undefined }]
+      ] satisfies [string, RunTurboOptions][])('WHEN watched %s THEN onStall is never called', async (_, options) => {
+        stop();
+        watch(options);
+        stdout.write('{}');
+        await passMs(STALL_MS);
+        stdout.write('{}');
+        await passMs(STALL_MS);
+
+        expect(onStall).not.toHaveBeenCalled();
+      });
     });
 
-    it('WHEN stop runs between the stall timer and its deferred check THEN onStall is not called', async () => {
-      stdout.write('{}');
-      vi.advanceTimersByTime(STALL_MS);
-      stop();
-      await nextImmediate();
+    describe('GIVEN complete JSON on stdout', () => {
+      it('WHEN a stderr chunk comes just before the stall time THEN the wait restarts from it', async () => {
+        stdout.write('{}');
+        await passMs(STALL_MS - 10);
+        stderr.write('x');
+        await passMs(STALL_MS - 10);
 
-      expect(onStall).not.toHaveBeenCalled();
+        expect(onStall).not.toHaveBeenCalled();
+      });
+
+      it('WHEN stop runs before the stall time THEN onStall is not called', async () => {
+        stdout.write('{}');
+        stop();
+        await passMs(STALL_MS * 2);
+
+        expect(onStall).not.toHaveBeenCalled();
+      });
+
+      it('WHEN stop runs between the stall timer and its deferred check THEN onStall is not called', async () => {
+        stdout.write('{}');
+        vi.advanceTimersByTime(STALL_MS);
+        stop();
+        await nextImmediate();
+
+        expect(onStall).not.toHaveBeenCalled();
+      });
+
+      it.each(['stdout', 'stderr'] as const)(
+        'WHEN a %s chunk precedes the deferred check THEN onStall is not called',
+        async (name) => {
+          const streams = { stdout, stderr };
+
+          stdout.write('{}');
+          vi.advanceTimersByTime(STALL_MS);
+          streams[name].write('{}');
+          await nextImmediate();
+
+          expect(onStall).not.toHaveBeenCalled();
+        }
+      );
     });
 
-    it.each(['stdout', 'stderr'] as const)('WHEN a %s chunk precedes the deferred check THEN onStall is not called', async (name) => {
-      const streams = { stdout, stderr };
+    describe('GIVEN a stopped watch', () => {
+      it('WHEN complete JSON arrives on stdout THEN onStall is not called', async () => {
+        stop();
+        stdout.write('{}');
+        await passMs(STALL_MS * 2);
 
-      stdout.write('{}');
-      vi.advanceTimersByTime(STALL_MS);
-      streams[name].write('{}');
-      await nextImmediate();
-
-      expect(onStall).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('GIVEN a stopped watch', () => {
-    it('WHEN complete JSON arrives on stdout THEN onStall is not called', async () => {
-      stop();
-      stdout.write('{}');
-      await passMs(STALL_MS * 2);
-
-      expect(onStall).not.toHaveBeenCalled();
+        expect(onStall).not.toHaveBeenCalled();
+      });
     });
   });
 });
