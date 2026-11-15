@@ -149,7 +149,7 @@ describe('FEATURE: GraphTaskDetails', () => {
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
 
-    describe('AND the mode group hidden', () => {
+    describe('GIVEN the mode group is hidden', () => {
       it('WHEN task mode is left with focus in the panel THEN Controls takes focus', () => {
         rig.deps.page.modeGroup.hidden = true;
         details.show(RUNNING);
