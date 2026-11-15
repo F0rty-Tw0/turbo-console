@@ -27,7 +27,7 @@ const childOf = (parent: Element, index: number): Element => {
   return child;
 };
 
-describe('FEATURE: buildLegend', () => {
+describe('FEATURE: legend elements', () => {
   let elements: LegendElements;
 
   beforeEach(() => {
@@ -116,81 +116,73 @@ describe('FEATURE: buildLegend', () => {
       expect(document.activeElement).toBe(elsewhere);
     });
   });
-});
 
-describe('FEATURE: renderLegend', () => {
-  let elements: LegendElements;
-
-  beforeEach(() => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    elements = buildLegend();
-    renderLegend(elements, FALLBACK_COLORS, null);
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  const termsOf = (mode: GraphViewMode): (string | undefined)[] => {
-    const rows = Array.from(elements.legendLists[mode].children);
-
-    return rows.map((row): string | undefined => row.children[0]?.textContent);
-  };
-
-  it.each(['packages', 'tasks'] as const)('WHEN the %s list is read THEN it holds one row per legend row', (mode) => {
-    const texts = LEGEND_ROWS[mode].map((row): string => row.text);
-
-    expect(termsOf(mode)).toStrictEqual(texts);
-  });
-
-  it('WHEN a row is read THEN it is a legend-row of the term, then the swatch hidden from assistive tech', () => {
-    const row = childOf(elements.legendLists.packages, 0);
-    const term = childOf(row, 0);
-    const swatch = childOf(row, 1);
-    const svg = childOf(swatch, 0);
-
-    expect([row.className, term.tagName, swatch.tagName]).toStrictEqual(['legend-row', 'DT', 'DD']);
-    expect([svg.getAttribute('viewBox'), svg.getAttribute('aria-hidden')]).toStrictEqual(['0 0 40 20', 'true']);
-  });
-
-  it.each([
-    ['dimmed', FALLBACK_COLORS.dimmedOpacity],
-    ['package', 1]
-  ])('WHEN the %s row is read THEN its svg root has opacity %s', (rowId, opacity) => {
-    const index = LEGEND_ROWS.packages.findIndex((row): boolean => row.id === rowId);
-    const row = childOf(elements.legendLists.packages, index);
-    const svg = childOf(childOf(row, 1), 0);
-
-    expect(svg.getAttribute('opacity')).toBe(String(opacity));
-  });
-
-  it('WHEN it renders again THEN the rows are replaced, not added', () => {
-    renderLegend(elements, FALLBACK_COLORS, null);
-
-    expect(elements.legendLists.packages.children).toHaveLength(LEGEND_ROWS.packages.length);
-  });
-
-  describe('GIVEN the task affected level', () => {
+  describe('GIVEN the legend rendered with no affected level', () => {
     beforeEach(() => {
-      renderLegend(elements, FALLBACK_COLORS, 'task');
+      renderLegend(elements, FALLBACK_COLORS, null);
     });
 
-    it('THEN the tasks list is the static rows, then the two affected rows', () => {
-      const texts = LEGEND_ROWS.tasks.map((row): string => row.text);
+    const termsOf = (mode: GraphViewMode): (string | undefined)[] => {
+      const rows = Array.from(elements.legendLists[mode].children);
 
-      expect(termsOf('tasks')).toStrictEqual([...texts, AFFECTED_CHANGED_TEXT, AFFECTED_DEPENDENCY_TEXT]);
+      return rows.map((row): string | undefined => row.children[0]?.textContent);
+    };
+
+    it.each(['packages', 'tasks'] as const)('WHEN the %s list is read THEN it holds one row per legend row', (mode) => {
+      const texts = LEGEND_ROWS[mode].map((row): string => row.text);
+
+      expect(termsOf(mode)).toStrictEqual(texts);
     });
 
-    it('THEN the packages list is the static rows', () => {
-      const texts = LEGEND_ROWS.packages.map((row): string => row.text);
+    it('WHEN a row is read THEN it is a legend-row of the term, then the swatch hidden from assistive tech', () => {
+      const row = childOf(elements.legendLists.packages, 0);
+      const term = childOf(row, 0);
+      const swatch = childOf(row, 1);
+      const svg = childOf(swatch, 0);
 
-      expect(termsOf('packages')).toStrictEqual(texts);
+      expect([row.className, term.tagName, swatch.tagName]).toStrictEqual(['legend-row', 'DT', 'DD']);
+      expect([svg.getAttribute('viewBox'), svg.getAttribute('aria-hidden')]).toStrictEqual(['0 0 40 20', 'true']);
     });
 
-    it('WHEN it renders again with no level THEN the tasks list is the static rows only', () => {
+    it.each([
+      ['dimmed', FALLBACK_COLORS.dimmedOpacity],
+      ['package', 1]
+    ])('WHEN the %s row is read THEN its svg root has opacity %s', (rowId, opacity) => {
+      const index = LEGEND_ROWS.packages.findIndex((row): boolean => row.id === rowId);
+      const row = childOf(elements.legendLists.packages, index);
+      const svg = childOf(childOf(row, 1), 0);
+
+      expect(svg.getAttribute('opacity')).toBe(String(opacity));
+    });
+
+    it('WHEN it renders again THEN the rows are replaced, not added', () => {
       renderLegend(elements, FALLBACK_COLORS, null);
 
-      expect(elements.legendLists.tasks.children).toHaveLength(LEGEND_ROWS.tasks.length);
+      expect(elements.legendLists.packages.children).toHaveLength(LEGEND_ROWS.packages.length);
+    });
+
+    describe('GIVEN the task affected level', () => {
+      beforeEach(() => {
+        renderLegend(elements, FALLBACK_COLORS, 'task');
+      });
+
+      it('THEN the tasks list is the static rows, then the two affected rows', () => {
+        const texts = LEGEND_ROWS.tasks.map((row): string => row.text);
+
+        expect(termsOf('tasks')).toStrictEqual([...texts, AFFECTED_CHANGED_TEXT, AFFECTED_DEPENDENCY_TEXT]);
+      });
+
+      it('THEN the packages list is the static rows', () => {
+        const texts = LEGEND_ROWS.packages.map((row): string => row.text);
+
+        expect(termsOf('packages')).toStrictEqual(texts);
+      });
+
+      it('WHEN it renders again with no level THEN the tasks list is the static rows only', () => {
+        renderLegend(elements, FALLBACK_COLORS, null);
+
+        expect(elements.legendLists.tasks.children).toHaveLength(LEGEND_ROWS.tasks.length);
+      });
     });
   });
 });
