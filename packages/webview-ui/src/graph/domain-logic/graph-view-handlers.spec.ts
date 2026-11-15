@@ -169,7 +169,7 @@ describe('FEATURE: viewHandlersOf', () => {
       expect(hoverTask).not.toHaveBeenCalled();
     });
 
-    describe('AND task mode is active', () => {
+    describe('GIVEN task mode is active', () => {
       beforeEach(() => {
         isTaskMode = true;
       });
