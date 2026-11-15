@@ -66,22 +66,20 @@ describe('FEATURE: packageView', () => {
       expect(view.exclude.getAttribute('aria-disabled')).toBe('true');
     });
   });
-});
-
-describe('FEATURE: packageView icons from the action icon table', () => {
-  beforeEach((): void => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    vi.resetModules();
-    vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
-  });
-
-  afterEach((): void => {
-    vi.doUnmock('../common/graph-icon.const.ts');
-    vi.resetModules();
-    vi.unstubAllGlobals();
-  });
 
   describe('GIVEN a table where every action draws another icon', () => {
+    beforeEach((): void => {
+      vi.stubGlobal('document', fakeDocumentMock());
+      vi.resetModules();
+      vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
+    });
+
+    afterEach((): void => {
+      vi.doUnmock('../common/graph-icon.const.ts');
+      vi.resetModules();
+      vi.unstubAllGlobals();
+    });
+
     it.each([
       {
         title: 'an unfocused package',
