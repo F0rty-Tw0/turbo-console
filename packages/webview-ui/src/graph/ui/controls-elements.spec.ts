@@ -213,7 +213,6 @@ describe('FEATURE: buildControls', () => {
 
   describe('GIVEN a table where every action draws another icon', () => {
     beforeEach((): void => {
-      vi.stubGlobal('document', fakeDocumentMock());
       vi.resetModules();
       vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
     });
@@ -221,7 +220,6 @@ describe('FEATURE: buildControls', () => {
     afterEach((): void => {
       vi.doUnmock('../common/graph-icon.const.ts');
       vi.resetModules();
-      vi.unstubAllGlobals();
     });
 
     it('WHEN built THEN the row and header Focus buttons draw the table focus icon', async () => {
