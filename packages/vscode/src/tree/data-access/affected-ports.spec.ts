@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { editorAffectedPorts } from './affected-ports.ts';
-import type { RootEntry, RootState } from '../../roots/common/coordinator.type.ts';
+import type { RootEntry, RootState, Roots } from '../../roots/common/coordinator.type.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { rootsMock } from '../../roots/test/mocks/roots.mock.ts';
 import { TURBO_BINARY_STUB } from '../../roots/test/stubs/root.stub.ts';
@@ -35,7 +35,7 @@ const envOf = (base: string | undefined, head: string | undefined): NodeJS.Proce
 
 describe('FEATURE: editor affected ports', () => {
   let output: Output;
-  let roots: ReturnType<typeof rootsMock>;
+  let roots: Roots;
 
   beforeEach(() => {
     const entry: RootEntry = { state: LOADED_STATE, coordinator: coordinatorMock() };

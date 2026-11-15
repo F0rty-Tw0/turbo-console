@@ -1,9 +1,9 @@
-import type { Page, Route } from '@playwright/test';
+import type { Route } from '@playwright/test';
 
 import type { ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
 
-/** A role name `getByRole` accepts. */
-export type AriaRoleName = Parameters<Page['getByRole']>[0];
+/** The roles a focus check names; Playwright exports no type for the role names `toHaveRole` accepts. */
+export type AriaRoleName = 'checkbox' | 'heading';
 
 export type RouteHandler = (route: Route) => Promise<void>;
 

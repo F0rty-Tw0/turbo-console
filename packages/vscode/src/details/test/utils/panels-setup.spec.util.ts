@@ -4,8 +4,7 @@ import type { MockedFunction } from 'vitest';
 import type { Coordinator, RootEntry, Roots } from '../../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../../roots/common/root.type.ts';
 import type { DetailsApi } from '../../../shared/common/api.type.ts';
-import type { PanelHost } from '../../common/panel.type.ts';
-import type { HostFakes } from '../common/panel-fakes.type.ts';
+import type { DryRunCall, HostFakes } from '../common/panel-fakes.type.ts';
 
 export const OTHER_FOLDER: RootFolder = { root: '/other', name: 'other' };
 
@@ -44,7 +43,7 @@ export const receiveTimes = async (api: DetailsApi, message: unknown, count: num
 export const lastSentOf = (fakes: HostFakes): unknown => fakes.views[0]?.send.mock.calls.at(-1)?.[0];
 
 /** The arguments of the first dry run, or none when it never ran. */
-export const dryRunCallOf = (fakes: HostFakes): Parameters<PanelHost['dryRun']> | [] => fakes.dryRun.mock.calls[0] ?? [];
+export const dryRunCallOf = (fakes: HostFakes): DryRunCall | [] => fakes.dryRun.mock.calls[0] ?? [];
 
 /** The spy behind `root`'s `coordinator.ensureLoaded`. */
 export const ensureLoadedOf = (roots: Roots, root: string): MockedFunction<Coordinator['ensureLoaded']> => {

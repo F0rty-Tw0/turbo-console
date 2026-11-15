@@ -2,6 +2,7 @@ import type { FlowControl } from '../common/flow.type.ts';
 import type { FrameClock } from '../common/frame-clock.type.ts';
 import type { GraphDrag, GraphViewHandlers } from '../common/graph-page.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
+import type { HandledTasks } from '../common/page-task-mode.type.ts';
 
 type HandledInspection = {
   readonly tap: (input: InspectionInput) => void;
@@ -24,31 +25,6 @@ type HandledFiltering = {
 
 type HandledLayouts = {
   readonly dragged: (drag: GraphDrag) => void;
-};
-
-type HandledSelection = {
-  readonly tapNode: (id: string) => void;
-  readonly clear: () => void;
-  readonly rendered: () => void;
-  readonly keepClear: () => void;
-  readonly hover: (id: string | null) => void;
-};
-
-type HandledAtoms = {
-  readonly toggle: (nodeId: string) => void;
-  readonly rendered: () => void;
-};
-
-type HandledLayout = {
-  readonly atoms: HandledAtoms;
-  readonly dragged: () => void;
-};
-
-type HandledTasks = {
-  readonly isActive: () => boolean;
-  readonly selection: HandledSelection;
-  readonly layout: HandledLayout;
-  readonly saveCamera: () => void;
 };
 
 /** What the view's events reach; the targets are read per event, since the view is built before them. */

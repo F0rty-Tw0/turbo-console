@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 import { registerDetails } from './register-details.ts';
 import type { CommandRegistry } from '../../run/common/run.type.ts';
@@ -11,7 +12,7 @@ const MANIFEST = '/ws/packages/a/package.json';
 type Registered = {
   readonly register: CommandRegistry;
   readonly run: (arg: unknown) => unknown;
-  readonly unregister: ReturnType<typeof vi.fn>;
+  readonly unregister: Mock;
 };
 
 const registrationMock = (): Registered => {

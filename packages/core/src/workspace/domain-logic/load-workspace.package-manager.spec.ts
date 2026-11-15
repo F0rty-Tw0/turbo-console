@@ -29,6 +29,9 @@ const turbo = vi.hoisted(() => {
 
 type Recorded<TArgs extends unknown[], TResult> = (...args: TArgs) => Promise<TResult>;
 
+/** The arguments of `readSmallFile`, which declares no type for them. */
+type ReadSmallFileArgs = [path: string, maxBytes?: number, flags?: number];
+
 const spy = vi.hoisted(() => {
   const calls: string[] = [];
   const state = { calls };
@@ -86,7 +89,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 vi.mock('../../shared/fs/data-access/small-file.ts', async (importOriginal) => {
   const real = await importOriginal<typeof smallFile>();
 
-  const readSmallFile = async (...args: Parameters<typeof real.readSmallFile>): Promise<string | null> => {
+  const readSmallFile = async (...args: ReadSmallFileArgs): Promise<string | null> => {
     if (args[0] === gate.path) await gate.onRead();
 
     return real.readSmallFile(...args);

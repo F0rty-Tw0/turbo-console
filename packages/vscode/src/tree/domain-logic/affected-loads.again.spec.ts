@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AffectedLoads } from './affected-loads.ts';
+import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import type { AffectedHarness, AffectedState } from '../test/common/affected-load.type.ts';
 import { OTHER_ROOT, ROOT } from '../test/common/atom-load.const.ts';
 import { ID_A, PKG_A, PKG_B } from '../test/common/prediction-load.const.ts';
@@ -17,7 +18,7 @@ const SETTLED: [AffectedState, boolean][] = [
   ['failed', false]
 ];
 
-const NEW_MODEL = (): ReturnType<typeof changeOf> => changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_A, PKG_B]));
+const NEW_MODEL = (): RootChange => changeOf(buildModelOf([PKG_A]), buildModelOf([PKG_A, PKG_B]));
 
 describe('FEATURE: affected loads asking again', () => {
   let h: AffectedHarness;

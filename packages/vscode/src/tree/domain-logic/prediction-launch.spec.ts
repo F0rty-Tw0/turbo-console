@@ -5,14 +5,13 @@ import { PredictionLaunch } from './prediction-launch.ts';
 import type {
   PredictionBatchPort,
   PredictionEntry,
-  PredictionListener,
   PredictionTicket,
   PredictionView,
   PredictionWaitPort
 } from '../common/prediction.type.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
 import { ID_A, NOW_0, PKG_A, PKG_B } from '../test/common/prediction-load.const.ts';
-import type { PredictionHarness } from '../test/common/prediction-load.type.ts';
+import type { PredictionHarness, PredictionListenerCall } from '../test/common/prediction-load.type.ts';
 import { dryRunAt, dryStateOf, flush } from '../test/utils/atom-load.spec.util.ts';
 import { entryAt, predictionTicketOf, seedEntry } from '../test/utils/prediction-entry.spec.util.ts';
 import { predictionHarness } from '../test/utils/prediction-load.spec.util.ts';
@@ -66,7 +65,7 @@ describe('FEATURE: prediction launch', () => {
     });
   });
 
-  describe.each<[string, PredictionView | null, Parameters<PredictionListener>[]]>([
+  describe.each<[string, PredictionView | null, PredictionListenerCall[]]>([
     ['no answer', null, []],
     ['an answer', HIT_VIEW, [[ROOT, new Set([PKG_A])]]]
   ])('GIVEN an entry with %s on a live ticket', (_given, view, announced) => {
@@ -105,7 +104,7 @@ describe('FEATURE: prediction launch', () => {
     });
   });
 
-  describe.each<[string, PredictionView | null, Parameters<PredictionListener>[]]>([
+  describe.each<[string, PredictionView | null, PredictionListenerCall[]]>([
     ['no answer', null, []],
     ['an answer', HIT_VIEW, [[ROOT, new Set([PKG_A])]]]
   ])('GIVEN a package with %s that the model no longer holds', (_given, view, announced) => {

@@ -16,6 +16,7 @@ import type {
   TaskPanelAsides
 } from '../common/graph-task.type.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
+import type { PageTaskMode } from '../common/page-task-mode.type.ts';
 import type { TaskControls, TaskControlsActions } from '../common/task-controls.type.ts';
 import type { TaskDetails, TaskDetailsActions, TaskWidgets } from '../common/task-details.type.ts';
 
@@ -29,7 +30,7 @@ export const onTaskKey = (event: Pick<KeyboardEvent, 'key' | 'repeat'>, mode: Ta
 };
 
 /** Task mode over the real view (never the parked one) and the runner the package graph shares; Tasks turns it on, Packages off. */
-export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: TaskModeHooks): GraphTaskMode => {
+export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: TaskModeHooks): PageTaskMode => {
   const { runner, bridge, page, taskViews, taskDetailsViews, widgetViews, overlay } = deps;
   const elements = taskDetailsViews.panel();
   const aside = elements.panel;
@@ -82,7 +83,7 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
 };
 
 /** Show tasks from the package graph: task mode on every task of the package, offered only for a package with one. */
-export const packageTasksOf = (mode: () => GraphTaskMode, now: () => number): PackageTasks => {
+export const packageTasksOf = (mode: () => PageTaskMode, now: () => number): PackageTasks => {
   const onShowTasks = (name: string): void => {
     const taskIds = mode().packageTaskIds(name);
 

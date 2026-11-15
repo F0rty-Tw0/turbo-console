@@ -1,4 +1,3 @@
-import type { DryRunState } from '@turbo-console/core';
 import { vi } from 'vitest';
 
 import type { ViewFake } from '../../../shared/test/common/panel-fakes.type.ts';
@@ -19,7 +18,7 @@ export const hostMock = (): HostFakes => {
 
     return fake.view;
   });
-  const dryRun = vi.fn<(...args: Parameters<PanelHost['dryRun']>) => Promise<DryRunState[]>>().mockResolvedValue([]);
+  const dryRun = vi.fn<PanelHost['dryRun']>().mockResolvedValue([]);
   const execute = vi.fn<PanelHost['execute']>().mockResolvedValue(undefined);
   const info = vi.fn<PanelHost['info']>();
   const error = vi.fn<PanelHost['error']>();

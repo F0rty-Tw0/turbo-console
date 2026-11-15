@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 import { cardSizerOf } from './label-measure.ts';
 import { CARD_CLOCK_SAMPLES, CARD_STATE_WORDS } from '../common/graph-card.const.ts';
 import type { TextMeasure } from '../common/graph-page.type.ts';
 
 describe('FEATURE: cardSizerOf', () => {
-  const lengthMeasureOf = (perChar: number): ReturnType<typeof vi.fn<TextMeasure>> =>
-    vi.fn<TextMeasure>((text: string): number => text.length * perChar);
+  const lengthMeasureOf = (perChar: number): Mock<TextMeasure> => vi.fn<TextMeasure>((text: string): number => text.length * perChar);
 
   describe.each([
     { glyphs: true, name: 'build', plain: 7, glyph: 9, width: 180, kills: 'short name floors at CARD_MIN_WIDTH' },

@@ -35,7 +35,7 @@ type FactTaskSelection = {
 };
 
 /** What the probe facts read of task mode. */
-type FactTasks = {
+export type FactTasks = {
   readonly isActive: () => boolean;
   readonly layout: FactTaskLayout;
   readonly selection: FactTaskSelection;

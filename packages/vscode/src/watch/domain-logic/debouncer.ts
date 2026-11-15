@@ -1,5 +1,5 @@
 type Pending = {
-  readonly timer: ReturnType<typeof setTimeout>;
+  readonly timer: NodeJS.Timeout;
   readonly flushed: PromiseWithResolvers<undefined>;
 };
 

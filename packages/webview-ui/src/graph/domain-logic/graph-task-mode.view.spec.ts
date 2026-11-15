@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { MockInstance } from 'vitest';
 
 import { GraphTaskMode } from './graph-task-mode.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphReady, GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewMode, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
+import type { TaskModes } from '../common/graph-task.type.ts';
 import type { TaskControlsActions, TaskViewChecks } from '../common/task-controls.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import {
@@ -135,7 +137,7 @@ describe('FEATURE: GraphTaskMode View checkboxes', () => {
     });
 
     describe('WHEN Show scripts is ticked', () => {
-      let saves: ReturnType<typeof vi.spyOn>;
+      let saves: MockInstance<TaskModes['saveTask']>;
 
       beforeEach((): void => {
         saves = vi.spyOn(rig.modes, 'saveTask');

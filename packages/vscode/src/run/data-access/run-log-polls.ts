@@ -1,6 +1,6 @@
 import { RUN_LOG_POLL_MS } from '../common/run-log-tail.const.ts';
 
-type RunLogPoll = ReturnType<typeof setInterval>;
+type RunLogPoll = NodeJS.Timeout;
 
 /**
  * One repeating timer per root: FSEvents reports a write to the log file turbo keeps open only on close, so the folder
