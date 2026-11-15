@@ -69,7 +69,6 @@ describe('FEATURE: packageView', () => {
 
   describe('GIVEN a table where every action draws another icon', () => {
     beforeEach((): void => {
-      vi.stubGlobal('document', fakeDocumentMock());
       vi.resetModules();
       vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
     });
@@ -77,7 +76,6 @@ describe('FEATURE: packageView', () => {
     afterEach((): void => {
       vi.doUnmock('../common/graph-icon.const.ts');
       vi.resetModules();
-      vi.unstubAllGlobals();
     });
 
     it.each([
