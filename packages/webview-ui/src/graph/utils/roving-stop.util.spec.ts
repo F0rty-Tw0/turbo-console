@@ -14,7 +14,7 @@ const STOP_CASES: StopCase[] = [
   { name: 'nothing shows', preferred: 'second', shown: [], expected: 'missing' }
 ];
 
-describe('FEATURE: stopOf', () => {
+describe('FEATURE: roving stop', () => {
   describe.each(STOP_CASES)('GIVEN $name', ({ preferred, shown, expected }) => {
     it(`WHEN the stop is read THEN it is ${expected}`, () => {
       const stop = stopOf(preferred, shown, 'missing');
@@ -22,9 +22,7 @@ describe('FEATURE: stopOf', () => {
       expect(stop).toBe(expected);
     });
   });
-});
 
-describe('FEATURE: kindIn', () => {
   const buttons = { first: new EventTarget(), second: new EventTarget(), missing: null };
 
   describe('GIVEN the second button', () => {

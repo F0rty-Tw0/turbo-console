@@ -16,8 +16,8 @@ const actionsMock = (): TaskMenuActions => {
   return actions;
 };
 
-describe('FEATURE: taskMenuOf', () => {
-  it.each([
+describe('FEATURE: task menu model', () => {
+  describe.each([
     { title: 'a runnable task, idle', task: GRAPH_TASK_STUB, state: null, expected: ['Run', 'Run without cache'] },
     { title: 'a runnable task that passed', task: GRAPH_TASK_STUB, state: 'passed', expected: ['Run', 'Run without cache'] },
     { title: 'a runnable task, running', task: GRAPH_TASK_STUB, state: 'running', expected: ['Run', 'Run without cache', 'Stop'] },
@@ -29,10 +29,12 @@ describe('FEATURE: taskMenuOf', () => {
     },
     { title: 'a task that is not runnable, idle', task: NOT_RUNNABLE, state: null, expected: [] },
     { title: 'a task that is not runnable, running', task: NOT_RUNNABLE, state: 'running', expected: ['Stop'] }
-  ] as const)('GIVEN $title WHEN its menu is listed THEN it reads $expected', ({ task, state, expected }) => {
-    const labels = labelsOf(taskMenuOf(task, state, null, actionsMock()));
+  ] as const)('GIVEN $title', ({ task, state, expected }) => {
+    it(`WHEN its menu is listed THEN it reads ${JSON.stringify(expected)}`, () => {
+      const labels = labelsOf(taskMenuOf(task, state, null, actionsMock()));
 
-    expect(labels).toStrictEqual(expected);
+      expect(labels).toStrictEqual(expected);
+    });
   });
 
   describe('GIVEN a runnable task a#build, running', () => {
@@ -76,20 +78,17 @@ describe('FEATURE: taskMenuOf', () => {
       expect(actions.act).toHaveBeenCalledExactlyOnceWith('a#build', 'stop');
     });
   });
-});
-
-describe('FEATURE: task menu icons from the action icon table', () => {
-  beforeEach((): void => {
-    vi.resetModules();
-    vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
-  });
-
-  afterEach((): void => {
-    vi.doUnmock('../common/graph-icon.const.ts');
-    vi.resetModules();
-  });
 
   describe('GIVEN a table where every action draws another icon', () => {
+    beforeEach((): void => {
+      vi.resetModules();
+      vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
+    });
+
+    afterEach((): void => {
+      vi.doUnmock('../common/graph-icon.const.ts');
+      vi.resetModules();
+    });
     it('WHEN a running task menu is built THEN its icons follow the table', async () => {
       const swapped = await import('./task-menu-model.util.ts');
       const model = swapped.taskMenuOf(GRAPH_TASK_STUB, 'running', null, actionsMock());

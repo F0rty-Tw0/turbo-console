@@ -4,8 +4,8 @@ import { sashDragWidthOf, sashKeyWidthOf } from './sash-input.util.ts';
 
 const MAX_PX = 580;
 
-describe('FEATURE: sashKeyWidthOf', () => {
-  it.each([
+describe('FEATURE: sash input', () => {
+  describe.each([
     ['controls', 'ArrowRight', 260, 276],
     ['controls', 'ArrowLeft', 260, 244],
     ['details', 'ArrowLeft', 280, 296],
@@ -18,29 +18,35 @@ describe('FEATURE: sashKeyWidthOf', () => {
     ['details', 'ArrowDown', 280, null],
     ['details', 'Enter', 280, null],
     ['controls', 'Tab', 260, null]
-  ] as const)('GIVEN the %s sash WHEN %s at %i THEN %j', (side, key, current, expected) => {
-    const width = sashKeyWidthOf(side, key, current, MAX_PX);
+  ] as const)('GIVEN the %s sash', (side, key, current, expected) => {
+    it(`WHEN ${key} at ${current} THEN ${JSON.stringify(expected)}`, () => {
+      const width = sashKeyWidthOf(side, key, current, MAX_PX);
 
-    expect(width).toBe(expected);
-  });
-});
-
-describe('FEATURE: sashDragWidthOf', () => {
-  it('GIVEN a pointer 300px right of the body edge WHEN the Controls width is read THEN it is 300', () => {
-    const width = sashDragWidthOf('controls', 400, { left: 100, right: 1280 });
-
-    expect(width).toBe(300);
+      expect(width).toBe(expected);
+    });
   });
 
-  it('GIVEN a pointer 380px left of the body edge WHEN the Details width is read THEN it is 380', () => {
-    const width = sashDragWidthOf('details', 900, { left: 0, right: 1280 });
+  describe('GIVEN a pointer 300px right of the body edge', () => {
+    it('WHEN the Controls width is read THEN it is 300', () => {
+      const width = sashDragWidthOf('controls', 400, { left: 100, right: 1280 });
 
-    expect(width).toBe(380);
+      expect(width).toBe(300);
+    });
   });
 
-  it('GIVEN a pointer between pixels WHEN the width is read THEN it is rounded', () => {
-    const width = sashDragWidthOf('controls', 300.6, { left: 0, right: 1280 });
+  describe('GIVEN a pointer 380px left of the body edge', () => {
+    it('WHEN the Details width is read THEN it is 380', () => {
+      const width = sashDragWidthOf('details', 900, { left: 0, right: 1280 });
 
-    expect(width).toBe(301);
+      expect(width).toBe(380);
+    });
+  });
+
+  describe('GIVEN a pointer between pixels', () => {
+    it('WHEN the width is read THEN it is rounded', () => {
+      const width = sashDragWidthOf('controls', 300.6, { left: 0, right: 1280 });
+
+      expect(width).toBe(301);
+    });
   });
 });

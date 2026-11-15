@@ -32,7 +32,7 @@ const WEB_FORWARD: TraceCandidate[] = [
 
 const WEB_CANDIDATES: TraceCandidates = { forward: WEB_FORWARD, backward: [], none: ['docs'] };
 
-describe('FEATURE: selectedOf', () => {
+describe('FEATURE: inspection parts', () => {
   describe('GIVEN an inspection', () => {
     it.each([
       { title: 'nothing is inspected', inspection: NO_INSPECTION, expected: null },
@@ -47,11 +47,9 @@ describe('FEATURE: selectedOf', () => {
       expect(name).toBe(expected);
     });
   });
-});
 
-describe('FEATURE: shownOf', () => {
   describe('GIVEN the drawn edges and the visible packages', () => {
-    it('WHEN a trace shows THEN it carries its walked path', () => {
+    it('WHEN a trace shows THEN the shown inspection carries its walked path', () => {
       const expected: ShownInspection = { kind: 'trace', start: 'web', end: 'core', trace: WEB_TRACE };
 
       const shown = shownOf(trace('web', 'core'), E, ALL);
@@ -59,7 +57,7 @@ describe('FEATURE: shownOf', () => {
       expect(shown).toStrictEqual(expected);
     });
 
-    it('WHEN an end is being picked THEN it carries the candidates found from its start', () => {
+    it('WHEN an end is being picked THEN the shown inspection carries the candidates found from its start', () => {
       const expected: ShownInspection = { kind: 'picking', start: 'web', isNudged: false, candidates: WEB_CANDIDATES };
 
       const shown = shownOf(pick('web', false), E, ALL);
@@ -67,7 +65,7 @@ describe('FEATURE: shownOf', () => {
       expect(shown).toStrictEqual(expected);
     });
 
-    it('WHEN a package shows THEN it is the inspection itself', () => {
+    it('WHEN a package shows THEN the shown inspection is the inspection itself', () => {
       const inspection = pkg('web');
 
       const shown = shownOf(inspection, E, ALL);
@@ -75,7 +73,7 @@ describe('FEATURE: shownOf', () => {
       expect(shown).toBe(inspection);
     });
 
-    it('WHEN a bundle shows THEN it is the inspection itself', () => {
+    it('WHEN a bundle shows THEN the shown inspection is the inspection itself', () => {
       const inspection = bundle('docs', collapsedIdOf('packages'));
 
       const shown = shownOf(inspection, E, ALL);
@@ -83,9 +81,7 @@ describe('FEATURE: shownOf', () => {
       expect(shown).toBe(inspection);
     });
   });
-});
 
-describe('FEATURE: litOf', () => {
   describe('GIVEN the package records', () => {
     it.each([
       { title: 'not picking', candidates: null, filter: '', expected: [] },

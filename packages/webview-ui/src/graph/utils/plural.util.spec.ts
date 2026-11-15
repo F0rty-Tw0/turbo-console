@@ -15,9 +15,11 @@ describe('FEATURE: pluralOf', () => {
     });
   });
 
-  it('GIVEN an irregular plural WHEN the count is 1 THEN the singular is used', () => {
-    const text = pluralOf(1, 'dependency', 'dependencies');
+  describe('GIVEN an irregular plural', () => {
+    it('WHEN the count is 1 THEN the singular is used', () => {
+      const text = pluralOf(1, 'dependency', 'dependencies');
 
-    expect(text).toBe('1 dependency');
+      expect(text).toBe('1 dependency');
+    });
   });
 });

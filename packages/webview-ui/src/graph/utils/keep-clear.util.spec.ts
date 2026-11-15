@@ -30,7 +30,7 @@ const boxOf = (x1: number, x2: number): AnchorBox => {
 
 const FOLDER: Inspection = { kind: 'folder', folder: 'apps' };
 
-describe('FEATURE: keepClearPanOf', () => {
+describe('FEATURE: keep clear', () => {
   describe('GIVEN an anchor box, the container width and the overlay edge', () => {
     it.each([
       { title: 'clear of the overlay', x1: 100, x2: 200, containerWidth: 800, overlayLeft: 520, expected: 0 },
@@ -68,9 +68,7 @@ describe('FEATURE: keepClearPanOf', () => {
       expect(pan).toBe(expected);
     });
   });
-});
 
-describe('FEATURE: anchorsOf', () => {
   describe('GIVEN an inspection', () => {
     it.each<[string, Inspection, string[]]>([
       ['none', { kind: 'none' }, []],
@@ -92,9 +90,7 @@ describe('FEATURE: anchorsOf', () => {
       expect(anchors).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: keepClearNamesOf', () => {
   describe('GIVEN an inspection and the ghost nodes drawn for it', () => {
     it.each<KeepClearNamesRow>([
       { title: 'a trace with one ghost', inspection: TRACE, ghostNodes: ['core'], expected: ['web', 'base', 'core'] },
@@ -132,9 +128,7 @@ describe('FEATURE: keepClearNamesOf', () => {
       expect(names).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: joinedBoxOf', () => {
   describe('GIVEN an anchor box and a button box', () => {
     it.each<[string, AnchorBox | null, AnchorBox | null, AnchorBox | null]>([
       ['both set: the union span', boxOf(10, 50), boxOf(48, 72), boxOf(10, 72)],

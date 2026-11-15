@@ -44,58 +44,6 @@ const planOf = (isUpdate: boolean, reask: LinkInspection | null): SameHashPlan =
   return plan;
 };
 
-describe('FEATURE: focusInputOf', () => {
-  describe('GIVEN a list Focus toggle', () => {
-    it.each([
-      { title: 'no inspection and a new focus', current: NO_INSPECTION, name: 'web', expected: sel('web', 'focus') },
-      { title: 'a package and a new focus', current: pkg('web'), name: 'ui', expected: sel('ui', 'focus') },
-      { title: 'a link and a new focus', current: link('a', 'b'), name: 'a', expected: sel('a', 'focus') },
-      { title: 'a trace and a new focus', current: trace('s', 'e'), name: 'x', expected: sel('x', 'focus') },
-      { title: 'picking and a new focus', current: pick('web', false), name: 'ui', expected: null },
-      { title: 'a package and a cleared focus', current: pkg('web'), name: null, expected: null },
-      { title: 'picking and a cleared focus', current: pick('web', false), name: null, expected: null }
-    ])('WHEN $title THEN the input is exact', ({ current, name, expected }) => {
-      const input = focusInputOf(current, name);
-
-      expect(input).toStrictEqual(expected);
-    });
-  });
-});
-
-describe('FEATURE: shouldPan', () => {
-  describe('GIVEN an input and the inspection it led to', () => {
-    it.each([
-      { title: 'a list select of a package', input: sel('ui', 'list'), next: pkg('ui'), expected: true },
-      { title: 'a list Focus select of a package', input: sel('ui', 'focus'), next: pkg('ui'), expected: false },
-      { title: 'a panel select of a package', input: sel('ui', 'panel'), next: pkg('ui'), expected: true },
-      { title: 'a canvas select of a package', input: sel('ui', 'canvas'), next: pkg('ui'), expected: false },
-      { title: 'a list select that ends a trace', input: sel('ui', 'list'), next: trace('web', 'ui'), expected: false },
-      { title: 'a list select while picking', input: sel('web', 'list'), next: pick('web', false), expected: false },
-      { title: 'a candidate pick', input: PICK_UI, next: trace('web', 'ui'), expected: false },
-      {
-        title: 'a link tap',
-        input: TAP_AB,
-        next: link('a', 'b'),
-        expected: false
-      },
-      {
-        title: 'an explain',
-        input: EXPLAIN_AB,
-        next: link('a', 'b'),
-        expected: false
-      },
-      { title: 'a swap of ends', input: SWAP_ENDS, next: trace('ui', 'web'), expected: false },
-      { title: 'a cancel', input: CANCEL, next: pkg('web'), expected: false },
-      { title: 'a clear of the trace', input: CLEAR_TRACE, next: pkg('web'), expected: false },
-      { title: 'an Escape in the panel', input: PANEL_ESCAPE, next: pkg('web'), expected: false }
-    ] satisfies PanRow[])('WHEN $title THEN the answer is $expected', ({ input, next, expected }) => {
-      const isPan = shouldPan(input, next);
-
-      expect(isPan).toBe(expected);
-    });
-  });
-});
-
 const WEB = pkg('web');
 
 const PICKING_WEB = pick('web', false);
@@ -123,7 +71,55 @@ type InputPlanRow = {
   readonly expected: InputPlan;
 };
 
-describe('FEATURE: inputPlanOf', () => {
+describe('FEATURE: inspection flow', () => {
+  describe('GIVEN a list Focus toggle', () => {
+    it.each([
+      { title: 'no inspection and a new focus', current: NO_INSPECTION, name: 'web', expected: sel('web', 'focus') },
+      { title: 'a package and a new focus', current: pkg('web'), name: 'ui', expected: sel('ui', 'focus') },
+      { title: 'a link and a new focus', current: link('a', 'b'), name: 'a', expected: sel('a', 'focus') },
+      { title: 'a trace and a new focus', current: trace('s', 'e'), name: 'x', expected: sel('x', 'focus') },
+      { title: 'picking and a new focus', current: pick('web', false), name: 'ui', expected: null },
+      { title: 'a package and a cleared focus', current: pkg('web'), name: null, expected: null },
+      { title: 'picking and a cleared focus', current: pick('web', false), name: null, expected: null }
+    ])('WHEN $title THEN the focus input is exact', ({ current, name, expected }) => {
+      const input = focusInputOf(current, name);
+
+      expect(input).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN an input and the inspection it led to', () => {
+    it.each([
+      { title: 'a list select of a package', input: sel('ui', 'list'), next: pkg('ui'), expected: true },
+      { title: 'a list Focus select of a package', input: sel('ui', 'focus'), next: pkg('ui'), expected: false },
+      { title: 'a panel select of a package', input: sel('ui', 'panel'), next: pkg('ui'), expected: true },
+      { title: 'a canvas select of a package', input: sel('ui', 'canvas'), next: pkg('ui'), expected: false },
+      { title: 'a list select that ends a trace', input: sel('ui', 'list'), next: trace('web', 'ui'), expected: false },
+      { title: 'a list select while picking', input: sel('web', 'list'), next: pick('web', false), expected: false },
+      { title: 'a candidate pick', input: PICK_UI, next: trace('web', 'ui'), expected: false },
+      {
+        title: 'a link tap',
+        input: TAP_AB,
+        next: link('a', 'b'),
+        expected: false
+      },
+      {
+        title: 'an explain',
+        input: EXPLAIN_AB,
+        next: link('a', 'b'),
+        expected: false
+      },
+      { title: 'a swap of ends', input: SWAP_ENDS, next: trace('ui', 'web'), expected: false },
+      { title: 'a cancel', input: CANCEL, next: pkg('web'), expected: false },
+      { title: 'a clear of the trace', input: CLEAR_TRACE, next: pkg('web'), expected: false },
+      { title: 'an Escape in the panel', input: PANEL_ESCAPE, next: pkg('web'), expected: false }
+    ] satisfies PanRow[])('WHEN $title THEN the pan answer is $expected', ({ input, next, expected }) => {
+      const isPan = shouldPan(input, next);
+
+      expect(isPan).toBe(expected);
+    });
+  });
+
   describe('GIVEN the inspection and an input', () => {
     it.each([
       { title: 'a list select of another package', current: WEB, input: sel('ui', 'list'), expected: planFor(pkg('ui'), 'ui', true) },
@@ -159,7 +155,7 @@ describe('FEATURE: inputPlanOf', () => {
         input: TAP_BUNDLE,
         expected: planFor(bundle('docs', collapsedIdOf('packages')), null, true)
       }
-    ] satisfies InputPlanRow[])('WHEN $title THEN the plan is exact', ({ current, input, expected }) => {
+    ] satisfies InputPlanRow[])('WHEN $title THEN the input plan is exact', ({ current, input, expected }) => {
       const plan = inputPlanOf(current, input);
 
       expect(plan).toStrictEqual(expected);
@@ -177,9 +173,7 @@ describe('FEATURE: inputPlanOf', () => {
       expect(plan.isKeepClear).toBe(false);
     });
   });
-});
 
-describe('FEATURE: sameHashPlanOf', () => {
   describe('GIVEN a same-hash state', () => {
     it.each([
       { title: 'no inspection with changed counts', current: NO_INSPECTION, isChanged: true, expected: planOf(false, null) },
@@ -195,7 +189,7 @@ describe('FEATURE: sameHashPlanOf', () => {
         isChanged: true,
         expected: planOf(false, null)
       }
-    ])('WHEN $title THEN the plan is exact', ({ current, isChanged, expected }) => {
+    ])('WHEN $title THEN the same-hash plan is exact', ({ current, isChanged, expected }) => {
       const plan = sameHashPlanOf(current, isChanged);
 
       expect(plan).toStrictEqual(expected);

@@ -117,32 +117,38 @@ describe('FEATURE: widgetPlanOf', () => {
     });
   });
 
-  it('GIVEN the box apps at zoom 0.49, where its row would be under half size WHEN planned THEN it gets no row', () => {
-    const boxes = new Map([['apps', APPS]]);
+  describe('GIVEN the box apps at zoom 0.49, where its row would be under half size', () => {
+    it('WHEN planned THEN it gets no row', () => {
+      const boxes = new Map([['apps', APPS]]);
 
-    const plan = widgetPlanOf(inputOf({ boxes, zoom: 0.49 }));
+      const plan = widgetPlanOf(inputOf({ boxes, zoom: 0.49 }));
 
-    expect(plan.rows).toStrictEqual([]);
+      expect(plan.rows).toStrictEqual([]);
+    });
   });
 
-  it('GIVEN a collapsed node 180 by 56 px WHEN planned THEN it gets a collapsed row 8 px below its top', () => {
-    const collapsed = new Map([['apps', folderOf(100, 100, 280, 156)]]);
+  describe('GIVEN a collapsed node 180 by 56 px', () => {
+    it('WHEN planned THEN it gets a collapsed row 8 px below its top', () => {
+      const collapsed = new Map([['apps', folderOf(100, 100, 280, 156)]]);
 
-    const plan = widgetPlanOf(inputOf({ collapsed }));
-    const placement = { y: 108 };
+      const plan = widgetPlanOf(inputOf({ collapsed }));
+      const placement = { y: 108 };
 
-    expect(plan.rows[0]).toMatchObject({ folder: 'apps', kind: 'collapsed', placement });
+      expect(plan.rows[0]).toMatchObject({ folder: 'apps', kind: 'collapsed', placement });
+    });
   });
 
-  it('GIVEN the folder keys __proto__ and the root folder WHEN planned THEN both get a row under their own key', () => {
-    const boxes = new Map([
-      ['__proto__', APPS],
-      ['', PACKAGES]
-    ]);
+  describe('GIVEN the folder keys __proto__ and the root folder', () => {
+    it('WHEN planned THEN both get a row under their own key', () => {
+      const boxes = new Map([
+        ['__proto__', APPS],
+        ['', PACKAGES]
+      ]);
 
-    const plan = widgetPlanOf(inputOf({ boxes }));
+      const plan = widgetPlanOf(inputOf({ boxes }));
 
-    expect(foldersOf(plan.rows)).toStrictEqual(['__proto__', '']);
+      expect(foldersOf(plan.rows)).toStrictEqual(['__proto__', '']);
+    });
   });
 
   describe('GIVEN a selected package drawn at {120, 80, 200, 110}', () => {
@@ -221,9 +227,11 @@ describe('FEATURE: widgetPlanOf', () => {
     });
   });
 
-  it('GIVEN no selected package WHEN grouped THEN there is no node toolbar', () => {
-    const plan = widgetPlanOf(inputOf({}));
+  describe('GIVEN no selected package', () => {
+    it('WHEN grouped THEN there is no node toolbar', () => {
+      const plan = widgetPlanOf(inputOf({}));
 
-    expect(plan.nodeToolbar).toBeNull();
+      expect(plan.nodeToolbar).toBeNull();
+    });
   });
 });

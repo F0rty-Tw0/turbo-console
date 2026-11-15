@@ -31,39 +31,6 @@ const SHOWN_CASES: ShownCase[] = [
   { name: 'tasks, grouped, compact', isFocus: false, hasTasks: true, hasFolder: true, isCompact: true, expected: NONE }
 ];
 
-describe('FEATURE: packageToolbarShownOf', () => {
-  it.each(SHOWN_CASES)('GIVEN $name THEN the shown buttons match', ({ isFocus, hasTasks, hasFolder, isCompact, expected }) => {
-    const shown = packageToolbarShownOf(stateOf(isFocus, hasTasks), hasFolder, isCompact);
-
-    expect(shown).toStrictEqual(expected);
-  });
-});
-
-describe('FEATURE: packageToolbarCountOf', () => {
-  it.each([
-    { name: 'flat, no tasks', hasTasks: false, hasFolder: false, expected: 3 },
-    { name: 'flat, tasks', hasTasks: true, hasFolder: false, expected: 4 },
-    { name: 'grouped, no tasks', hasTasks: false, hasFolder: true, expected: 4 },
-    { name: 'grouped, tasks', hasTasks: true, hasFolder: true, expected: 5 }
-  ])('GIVEN $name THEN the toolbar has $expected buttons, the "…" included', ({ hasTasks, hasFolder, expected }) => {
-    const count = packageToolbarCountOf(stateOf(false, hasTasks), hasFolder);
-
-    expect(count).toBe(expected);
-  });
-});
-
-describe('FEATURE: toolbarShownKindsOf', () => {
-  it.each([
-    { name: 'grouped with tasks', shown: GROUPED_TASKS, expected: ['focus', 'startTrace', 'showTasks', 'collapse', 'ellipsis'] },
-    { name: 'flat without tasks', shown: FLAT_PLAIN, expected: ['focus', 'startTrace', 'ellipsis'] },
-    { name: 'compact', shown: NONE, expected: ['ellipsis'] }
-  ])('GIVEN $name THEN the shown kinds are $expected in DOM order', ({ shown, expected }) => {
-    const kinds = toolbarShownKindsOf(shown);
-
-    expect(kinds).toStrictEqual(expected);
-  });
-});
-
 type StopCase = {
   readonly name: string;
   readonly preferred: PackageToolbarKind;
@@ -80,10 +47,53 @@ const STOP_CASES: StopCase[] = [
   { name: 'nothing shows', preferred: 'focus', shown: [], expected: 'ellipsis' }
 ];
 
-describe('FEATURE: toolbarStopOf', () => {
-  it.each(STOP_CASES)('GIVEN $name THEN the stop is $expected', ({ preferred, shown, expected }) => {
-    const stop = toolbarStopOf(preferred, shown);
+describe('FEATURE: package toolbar', () => {
+  describe('GIVEN a package menu state, a folder flag and a compact flag', () => {
+    describe.each(SHOWN_CASES)('GIVEN $name', ({ isFocus, hasTasks, hasFolder, isCompact, expected }) => {
+      it('THEN the shown buttons match', () => {
+        const shown = packageToolbarShownOf(stateOf(isFocus, hasTasks), hasFolder, isCompact);
 
-    expect(stop).toBe(expected);
+        expect(shown).toStrictEqual(expected);
+      });
+    });
+  });
+
+  describe('GIVEN a package menu state and a folder flag', () => {
+    describe.each([
+      { name: 'flat, no tasks', hasTasks: false, hasFolder: false, expected: 3 },
+      { name: 'flat, tasks', hasTasks: true, hasFolder: false, expected: 4 },
+      { name: 'grouped, no tasks', hasTasks: false, hasFolder: true, expected: 4 },
+      { name: 'grouped, tasks', hasTasks: true, hasFolder: true, expected: 5 }
+    ])('GIVEN $name', ({ hasTasks, hasFolder, expected }) => {
+      it(`THEN the toolbar has ${expected} buttons, the "…" included`, () => {
+        const count = packageToolbarCountOf(stateOf(false, hasTasks), hasFolder);
+
+        expect(count).toBe(expected);
+      });
+    });
+  });
+
+  describe('GIVEN a set of shown toolbar buttons', () => {
+    describe.each([
+      { name: 'grouped with tasks', shown: GROUPED_TASKS, expected: ['focus', 'startTrace', 'showTasks', 'collapse', 'ellipsis'] },
+      { name: 'flat without tasks', shown: FLAT_PLAIN, expected: ['focus', 'startTrace', 'ellipsis'] },
+      { name: 'compact', shown: NONE, expected: ['ellipsis'] }
+    ])('GIVEN $name', ({ shown, expected }) => {
+      it(`THEN the shown kinds are ${JSON.stringify(expected)} in DOM order`, () => {
+        const kinds = toolbarShownKindsOf(shown);
+
+        expect(kinds).toStrictEqual(expected);
+      });
+    });
+  });
+
+  describe('GIVEN a preferred stop and the shown kinds', () => {
+    describe.each(STOP_CASES)('GIVEN $name', ({ preferred, shown, expected }) => {
+      it(`THEN the stop is ${expected}`, () => {
+        const stop = toolbarStopOf(preferred, shown);
+
+        expect(stop).toBe(expected);
+      });
+    });
   });
 });

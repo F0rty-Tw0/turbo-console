@@ -35,23 +35,25 @@ const ROWS: Row[] = [
   ['200 beats the cap and the sum', DEFAULT_PANEL_WIDTHS, 500, false, null, { controls: 200, details: 200 }]
 ];
 
-describe('FEATURE: clampedWidthsOf', () => {
-  it.each(ROWS)('GIVEN %s WHEN clamped THEN the drawn pair', (_title, ...row: Case) => {
-    const [preferred, body, isOverlay, dragged, expected] = row;
-    const drawn = clampedWidthsOf(preferred, body, isOverlay, dragged);
+describe('FEATURE: panel widths', () => {
+  describe.each(ROWS)('GIVEN %s', (_title, ...row: Case) => {
+    it('WHEN clamped THEN the drawn pair', () => {
+      const [preferred, body, isOverlay, dragged, expected] = row;
+      const drawn = clampedWidthsOf(preferred, body, isOverlay, dragged);
 
-    expect(drawn).toStrictEqual(expected);
+      expect(drawn).toStrictEqual(expected);
+    });
   });
-});
 
-describe('FEATURE: maxWidthOf', () => {
-  it.each([
+  describe.each([
     ['controls', 1200, false, 580],
     ['details', 1200, false, 580],
     ['details', 800, true, 400]
-  ] as const)('GIVEN the %s side at body %i overlay %s WHEN maxWidthOf THEN %i', (side, body, isOverlay, max) => {
-    const widest = maxWidthOf(side, DEFAULT_PANEL_WIDTHS, body, isOverlay);
+  ] as const)('GIVEN the %s side at body %i overlay %s', (side, body, isOverlay, max) => {
+    it(`WHEN the max width is read THEN it is ${max}`, () => {
+      const widest = maxWidthOf(side, DEFAULT_PANEL_WIDTHS, body, isOverlay);
 
-    expect(widest).toBe(max);
+      expect(widest).toBe(max);
+    });
   });
 });

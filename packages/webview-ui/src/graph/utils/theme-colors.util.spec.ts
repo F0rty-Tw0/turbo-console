@@ -90,70 +90,84 @@ describe('FEATURE: themeColorsOf', () => {
     });
   });
 
-  it('GIVEN no git modified colour WHEN the colours are read THEN affected is the fallback', () => {
-    const noGit = { ...DARK, [GIT_VARIABLE]: '' };
+  describe('GIVEN no git modified colour', () => {
+    it('WHEN the colours are read THEN affected is the fallback', () => {
+      const noGit = { ...DARK, [GIT_VARIABLE]: '' };
 
-    const colors = themeColorsOf(cssVariableReaderMock(noGit));
+      const colors = themeColorsOf(cssVariableReaderMock(noGit));
 
-    expect(colors.affected).toBe(FALLBACK_COLORS.affected);
+      expect(colors.affected).toBe(FALLBACK_COLORS.affected);
+    });
   });
 
-  it('GIVEN a high contrast theme WHEN the colours are read THEN the contrast border is the frame', () => {
-    const highContrast = { ...DARK, '--vscode-contrastBorder': '#6fc3df' };
+  describe('GIVEN a high contrast theme', () => {
+    it('WHEN the colours are read THEN the contrast border is the frame', () => {
+      const highContrast = { ...DARK, '--vscode-contrastBorder': '#6fc3df' };
 
-    const colors = themeColorsOf(cssVariableReaderMock(highContrast));
+      const colors = themeColorsOf(cssVariableReaderMock(highContrast));
 
-    expect(colors.frame).toBe('#6fc3df');
+      expect(colors.frame).toBe('#6fc3df');
+    });
   });
 
-  it('GIVEN no contrast border WHEN the colours are read THEN dimmed elements keep 0.25', () => {
-    const colors = themeColorsOf(cssVariableReaderMock(DARK));
+  describe('GIVEN no contrast border', () => {
+    it('WHEN the colours are read THEN dimmed elements keep 0.25', () => {
+      const colors = themeColorsOf(cssVariableReaderMock(DARK));
 
-    expect(colors.dimmedOpacity).toBe(0.25);
+      expect(colors.dimmedOpacity).toBe(0.25);
+    });
   });
 
-  it('GIVEN the high contrast stub WHEN the colours are read THEN dimmed elements rise to 0.55, where the frame reads 3.3:1', () => {
-    const colors = themeColorsOf(cssVariableReaderMock(HC_STUB));
+  describe('GIVEN the high contrast stub', () => {
+    it('WHEN the colours are read THEN dimmed elements rise to 0.55, where the frame reads 3.3:1', () => {
+      const colors = themeColorsOf(cssVariableReaderMock(HC_STUB));
 
-    expect(colors.dimmedOpacity).toBe(0.55);
+      expect(colors.dimmedOpacity).toBe(0.55);
+    });
   });
 
-  it('GIVEN a blank contrast border WHEN the colours are read THEN panel-border is the frame', () => {
-    const blankBorder = { ...DARK, '--vscode-contrastBorder': '   ' };
+  describe('GIVEN a blank contrast border', () => {
+    it('WHEN the colours are read THEN panel-border is the frame', () => {
+      const blankBorder = { ...DARK, '--vscode-contrastBorder': '   ' };
 
-    const colors = themeColorsOf(cssVariableReaderMock(blankBorder));
+      const colors = themeColorsOf(cssVariableReaderMock(blankBorder));
 
-    expect(colors.frame).toBe('#2b2b2b');
+      expect(colors.frame).toBe('#2b2b2b');
+    });
   });
 
-  it('GIVEN every variable blank WHEN the colours are read THEN they are the fallback colours', () => {
-    const colors = themeColorsOf(cssVariableReaderMock({}));
-
-    expect(colors).toStrictEqual(FALLBACK_COLORS);
-  });
-
-  it.each([
+  describe.each([
     ['#9d9d9d80', 'rgba(157, 157, 157, 0.5)'],
     ['#ccc8', 'rgba(204, 204, 204, 0.53)']
-  ])('GIVEN the stopped colour %s with alpha WHEN the colours are read THEN it reads as %s, which Cytoscape parses', (hex, rgba) => {
-    const translucent = { ...DARK, '--vscode-descriptionForeground': hex };
+  ])('GIVEN the stopped colour %s with alpha', (hex, rgba) => {
+    it(`WHEN the colours are read THEN it reads as ${rgba}, which Cytoscape parses`, () => {
+      const translucent = { ...DARK, '--vscode-descriptionForeground': hex };
 
-    const colors = themeColorsOf(cssVariableReaderMock(translucent));
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
-    expect(colors.runs.stopped).toBe(rgba);
+      expect(colors.runs.stopped).toBe(rgba);
+    });
   });
 
-  it('GIVEN every variable blank WHEN the colours are read THEN continuous is the Light Modern charts green', () => {
-    const colors = themeColorsOf(cssVariableReaderMock({}));
+  describe('GIVEN every variable blank', () => {
+    it('WHEN the colours are read THEN they are the fallback colours', () => {
+      const colors = themeColorsOf(cssVariableReaderMock({}));
 
-    expect(colors.runs.continuous).toBe('#388a34');
-  });
+      expect(colors).toStrictEqual(FALLBACK_COLORS);
+    });
 
-  it('GIVEN every variable blank WHEN the colours are read THEN stopped is the description fallback, as the edge is', () => {
-    const colors = themeColorsOf(cssVariableReaderMock({}));
+    it('WHEN the colours are read THEN continuous is the Light Modern charts green', () => {
+      const colors = themeColorsOf(cssVariableReaderMock({}));
 
-    expect(colors.runs.stopped).toBe('#717171');
-    expect(colors.runs.stopped).toBe(colors.edge);
+      expect(colors.runs.continuous).toBe('#388a34');
+    });
+
+    it('WHEN the colours are read THEN stopped is the description fallback, as the edge is', () => {
+      const colors = themeColorsOf(cssVariableReaderMock({}));
+
+      expect(colors.runs.stopped).toBe('#717171');
+      expect(colors.runs.stopped).toBe(colors.edge);
+    });
   });
 
   /** `descriptionForeground` is `transparent(foreground, 0.7)` in both high contrast themes, which set none. contrastRatioOf ignores alpha, so each is blended over its background first. Source: https://github.com/microsoft/vscode/blob/8d97209dc20dfbd60430243dbeac80149f87087a/src/vs/platform/theme/common/colors/baseColors.ts */
@@ -161,7 +175,7 @@ describe('FEATURE: themeColorsOf', () => {
   const HC_LIGHT_DESCRIPTION = '#696969'; // foreground #292929: 0.7 * 41 + 0.3 * 255 = 105 over white
 
   /** Values from the VS Code 1.141 theme-defaults themes (descriptionForeground on editor.background, following `include`); High Contrast and High Contrast Light set neither descriptionForeground nor, for the latter, editor.background, so they take the baseColors defaults. */
-  it.each([
+  describe.each([
     ['Light Modern', '#3b3b3b', '#ffffff'],
     ['Dark Modern', '#9d9d9d', '#1f1f1f'],
     ['High Contrast', HC_DESCRIPTION, '#000000'],
@@ -169,8 +183,10 @@ describe('FEATURE: themeColorsOf', () => {
     ['Dark 2026', '#8c8c8c', '#121314'],
     ['Light 2026', '#606060', '#ffffff'],
     ['fallback (Light+ default)', '#717171', '#ffffff']
-  ])('GIVEN %s, stopped (descriptionForeground) on the editor background is at least 3:1', (_, foreground, background) => {
-    expect(contrastRatioOf(foreground, background)).toBeGreaterThanOrEqual(3);
+  ])('GIVEN %s', (_, foreground, background) => {
+    it('THEN stopped (descriptionForeground) on the editor background is at least 3:1', () => {
+      expect(contrastRatioOf(foreground, background)).toBeGreaterThanOrEqual(3);
+    });
   });
 
   describe('GIVEN a selection fill with alpha', () => {
@@ -187,60 +203,74 @@ describe('FEATURE: themeColorsOf', () => {
     });
   });
 
-  it.each([
+  describe.each([
     ['the fill', '--vscode-list-activeSelectionBackground'],
     ['the label', '--vscode-list-activeSelectionForeground']
-  ])('GIVEN only %s of the selection blank WHEN the colours are read THEN there is no selection colour', (_, name) => {
-    const halfSet = { ...DARK, [name]: '' };
+  ])('GIVEN only %s of the selection blank', (_, name) => {
+    it('WHEN the colours are read THEN there is no selection colour', () => {
+      const halfSet = { ...DARK, [name]: '' };
 
-    const colors = themeColorsOf(cssVariableReaderMock(halfSet));
+      const colors = themeColorsOf(cssVariableReaderMock(halfSet));
 
-    expect(colors.selection).toBeNull();
+      expect(colors.selection).toBeNull();
+    });
   });
 
-  it('GIVEN both selection colours blank WHEN the colours are read THEN there is no selection colour', () => {
-    const colors = themeColorsOf(cssVariableReaderMock(HC_STUB_UNSELECTED));
+  describe('GIVEN both selection colours blank', () => {
+    it('WHEN the colours are read THEN there is no selection colour', () => {
+      const colors = themeColorsOf(cssVariableReaderMock(HC_STUB_UNSELECTED));
 
-    expect(colors.selection).toBeNull();
+      expect(colors.selection).toBeNull();
+    });
   });
 
-  it('GIVEN blank input variables WHEN the colours are read THEN the card takes the editor background and the panel border', () => {
-    const blank = { ...DARK, '--vscode-input-background': '', '--vscode-input-border': '' };
+  describe('GIVEN blank input variables', () => {
+    it('WHEN the colours are read THEN the card takes the editor background and the panel border', () => {
+      const blank = { ...DARK, '--vscode-input-background': '', '--vscode-input-border': '' };
 
-    const colors = themeColorsOf(cssVariableReaderMock(blank));
+      const colors = themeColorsOf(cssVariableReaderMock(blank));
 
-    expect([colors.cardFill, colors.cardFrame]).toStrictEqual(['#1f1f1f', '#2b2b2b']);
+      expect([colors.cardFill, colors.cardFrame]).toStrictEqual(['#1f1f1f', '#2b2b2b']);
+    });
   });
 
-  it('GIVEN a contrast border and a different input border WHEN the colours are read THEN the card frame is the contrast border', () => {
-    const highContrast = { ...DARK, '--vscode-contrastBorder': '#6fc3df' };
+  describe('GIVEN a contrast border and a different input border', () => {
+    it('WHEN the colours are read THEN the card frame is the contrast border', () => {
+      const highContrast = { ...DARK, '--vscode-contrastBorder': '#6fc3df' };
 
-    const colors = themeColorsOf(cssVariableReaderMock(highContrast));
+      const colors = themeColorsOf(cssVariableReaderMock(highContrast));
 
-    expect(colors.cardFrame).toBe('#6fc3df');
+      expect(colors.cardFrame).toBe('#6fc3df');
+    });
   });
 
-  it('GIVEN an input border with alpha WHEN the colours are read THEN the card frame reads as the rgba Cytoscape parses', () => {
-    const translucent = { ...DARK, '--vscode-input-border': '#d8d8d866' };
+  describe('GIVEN an input border with alpha', () => {
+    it('WHEN the colours are read THEN the card frame reads as the rgba Cytoscape parses', () => {
+      const translucent = { ...DARK, '--vscode-input-border': '#d8d8d866' };
 
-    const colors = themeColorsOf(cssVariableReaderMock(translucent));
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
-    expect(colors.cardFrame).toBe('rgba(216, 216, 216, 0.4)');
+      expect(colors.cardFrame).toBe('rgba(216, 216, 216, 0.4)');
+    });
   });
 
-  it('GIVEN an input background with alpha WHEN the colours are read THEN the card fill is laid over the editor background', () => {
-    const translucent = { ...DARK, '--vscode-input-background': '#ffffff1a' };
+  describe('GIVEN an input background with alpha', () => {
+    it('WHEN the colours are read THEN the card fill is laid over the editor background', () => {
+      const translucent = { ...DARK, '--vscode-input-background': '#ffffff1a' };
 
-    const colors = themeColorsOf(cssVariableReaderMock(translucent));
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
-    expect(colors.cardFill).toBe('rgb(54, 54, 54)');
+      expect(colors.cardFill).toBe('rgb(54, 54, 54)');
+    });
   });
 
-  it('GIVEN a value with surrounding spaces WHEN the colours are read THEN it is trimmed', () => {
-    const padded = { ...DARK, '--vscode-foreground': '  #fff ' };
+  describe('GIVEN a value with surrounding spaces', () => {
+    it('WHEN the colours are read THEN it is trimmed', () => {
+      const padded = { ...DARK, '--vscode-foreground': '  #fff ' };
 
-    const colors = themeColorsOf(cssVariableReaderMock(padded));
+      const colors = themeColorsOf(cssVariableReaderMock(padded));
 
-    expect(colors.label).toBe('#fff');
+      expect(colors.label).toBe('#fff');
+    });
   });
 });

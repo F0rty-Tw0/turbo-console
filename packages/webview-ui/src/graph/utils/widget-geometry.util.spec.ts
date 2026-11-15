@@ -43,7 +43,7 @@ const FIT_ZOOM = 0.658;
 /** A collapsed node `COLLAPSED_NODE_WIDTH` px wide in graph px, as drawn at `zoom`. */
 const collapsedAt = (zoom: number): FolderRect => folderOf(rectOf(100, 50, 100 + COLLAPSED_NODE_WIDTH * zoom, 50 + 56 * zoom));
 
-describe('FEATURE: rowPlacementOf', () => {
+describe('FEATURE: widget geometry', () => {
   describe('GIVEN a folder box 300 px wide', () => {
     it.each([
       { kind: 'box' as const, expected: BOX_ROW },
@@ -153,9 +153,7 @@ describe('FEATURE: rowPlacementOf', () => {
       expect(placement).toStrictEqual(BOX_ROW);
     });
   });
-});
 
-describe('FEATURE: buttonRectsOf', () => {
   describe('GIVEN the row placed at x 108, y 54, 284 px wide', () => {
     it('WHEN the buttons are placed THEN the chevron starts the row and the ellipsis ends it', () => {
       const expected: RowButtonRects = {
@@ -184,28 +182,26 @@ describe('FEATURE: buttonRectsOf', () => {
       expect(rects).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: isNodeToolbarCompact', () => {
-  it.each([
+  describe.each([
     { zoom: 0.49, expected: true },
     { zoom: 0.5, expected: false }
-  ])('GIVEN zoom $zoom THEN compact is $expected', ({ zoom, expected }) => {
-    expect(isNodeToolbarCompact(zoom)).toBe(expected);
+  ])('GIVEN zoom $zoom', ({ zoom, expected }) => {
+    it(`THEN the node toolbar compact flag is ${expected}`, () => {
+      expect(isNodeToolbarCompact(zoom)).toBe(expected);
+    });
   });
-});
 
-describe('FEATURE: nodeToolbarCountAt', () => {
-  it.each([
+  describe.each([
     { zoom: 0.49, fullCount: 4, expected: 1 },
     { zoom: 0.5, fullCount: 4, expected: 4 },
     { zoom: 1, fullCount: 2, expected: 2 }
-  ])('GIVEN zoom $zoom and a full toolbar of $fullCount THEN it shows $expected', ({ zoom, fullCount, expected }) => {
-    expect(nodeToolbarCountAt(zoom, fullCount)).toBe(expected);
+  ])('GIVEN zoom $zoom and a full toolbar of $fullCount', ({ zoom, fullCount, expected }) => {
+    it(`THEN it shows ${expected}`, () => {
+      expect(nodeToolbarCountAt(zoom, fullCount)).toBe(expected);
+    });
   });
-});
 
-describe('FEATURE: nodeToolbarRectOf', () => {
   describe('GIVEN the node 100, 100 to 180, 132', () => {
     const node = rectOf(100, 100, 180, 132);
 
@@ -265,9 +261,7 @@ describe('FEATURE: nodeToolbarRectOf', () => {
       expect(rect).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: rowRectOf', () => {
   describe('GIVEN a placed row', () => {
     const full: RowPlacement = { x: 108, y: 54, width: 284, scale: 1 };
     const half: RowPlacement = { x: 100, y: 50, width: 200, scale: 0.5 };
@@ -281,9 +275,7 @@ describe('FEATURE: rowRectOf', () => {
       expect(rect).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: isWidgetShown', () => {
   describe('GIVEN a layer 800 x 600 with no overlay', () => {
     it.each([
       { title: 'inside', rect: rectOf(100, 100, 124, 124), expected: true },
@@ -311,50 +303,54 @@ describe('FEATURE: isWidgetShown', () => {
       expect(isShown).toBe(expected);
     });
   });
-});
 
-describe('FEATURE: overlayLeftOf', () => {
   const container = { offsetLeft: 40 };
 
-  it.each([
-    { title: 'overlays the canvas', isOverlay: true, hidden: false, expected: 260 },
-    { title: 'docks beside the canvas', isOverlay: false, hidden: false, expected: null },
-    { title: 'is closed', isOverlay: true, hidden: true, expected: null }
-  ])('GIVEN a panel at 300 WHEN it $title THEN its left edge in container px is $expected', ({ isOverlay, hidden, expected }) => {
-    const panel = { offsetLeft: 300, hidden };
+  describe('GIVEN a panel at 300', () => {
+    it.each([
+      { title: 'overlays the canvas', isOverlay: true, hidden: false, expected: 260 },
+      { title: 'docks beside the canvas', isOverlay: false, hidden: false, expected: null },
+      { title: 'is closed', isOverlay: true, hidden: true, expected: null }
+    ])('WHEN it $title THEN its left edge in container px is $expected', ({ isOverlay, hidden, expected }) => {
+      const panel = { offsetLeft: 300, hidden };
 
-    expect(overlayLeftOf(panel, container, isOverlay)).toBe(expected);
+      expect(overlayLeftOf(panel, container, isOverlay)).toBe(expected);
+    });
   });
 
-  it('GIVEN no panel WHEN the overlay layout is on THEN there is no edge', () => {
-    expect(overlayLeftOf(null, container, true)).toBeNull();
-  });
-});
-
-describe('FEATURE: ellipsisSlotOf', () => {
-  it('GIVEN a toolbar of several buttons WHEN the slot is taken THEN it is the last button width', () => {
-    expect(ellipsisSlotOf(rectOf(72, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+  describe('GIVEN no panel', () => {
+    it('WHEN the overlay layout is on THEN there is no edge', () => {
+      expect(overlayLeftOf(null, container, true)).toBeNull();
+    });
   });
 
-  it('GIVEN a one-button toolbar WHEN the slot is taken THEN it is the toolbar itself', () => {
-    expect(ellipsisSlotOf(rectOf(156, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+  describe('GIVEN a toolbar of several buttons', () => {
+    it('WHEN the slot is taken THEN it is the last button width', () => {
+      expect(ellipsisSlotOf(rectOf(72, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+    });
   });
-});
 
-describe('FEATURE: shownNodeToolbarOf', () => {
+  describe('GIVEN a one-button toolbar', () => {
+    it('WHEN the slot is taken THEN it is the toolbar itself', () => {
+      expect(ellipsisSlotOf(rectOf(156, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+    });
+  });
+
   const bounds: LayerBounds = { width: 400, height: 300, overlayLeft: null };
 
-  it.each([
-    { title: 'inside the layer', node: rectOf(100, 50, 180, 80), rows: [], expected: rectOf(156, 22, 180, 46) },
-    { title: 'outside the layer', node: rectOf(500, 50, 580, 80), rows: [], expected: null },
-    { title: 'below the layer', node: rectOf(100, 310, 180, 340), rows: [], expected: null },
-    {
-      title: 'at the layer bottom with a header row above it, so its toolbar flips out of the layer',
-      node: rectOf(100, 290, 180, 320),
-      rows: [rectOf(100, 260, 400, 288)],
-      expected: null
-    }
-  ])('GIVEN one button WHEN the node is $title THEN the toolbar rect is $expected', ({ node, rows, expected }): void => {
-    expect(shownNodeToolbarOf(node, 1, rows, bounds)).toStrictEqual(expected);
+  describe('GIVEN one button', () => {
+    it.each([
+      { title: 'inside the layer', node: rectOf(100, 50, 180, 80), rows: [], expected: rectOf(156, 22, 180, 46) },
+      { title: 'outside the layer', node: rectOf(500, 50, 580, 80), rows: [], expected: null },
+      { title: 'below the layer', node: rectOf(100, 310, 180, 340), rows: [], expected: null },
+      {
+        title: 'at the layer bottom with a header row above it, so its toolbar flips out of the layer',
+        node: rectOf(100, 290, 180, 320),
+        rows: [rectOf(100, 260, 400, 288)],
+        expected: null
+      }
+    ])('WHEN the node is $title THEN the toolbar rect is $expected', ({ node, rows, expected }): void => {
+      expect(shownNodeToolbarOf(node, 1, rows, bounds)).toStrictEqual(expected);
+    });
   });
 });

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isMenuOpenKey, menuIndexOf, toolbarIndexOf } from './menu-keys.util.ts';
 
-describe('FEATURE: menuIndexOf', () => {
+describe('FEATURE: menu keys', () => {
   describe('GIVEN a menu of 4 items', () => {
     it.each([
       { key: 'ArrowDown', from: 0, expected: 1 },
@@ -26,28 +26,28 @@ describe('FEATURE: menuIndexOf', () => {
     });
   });
 
-  it('GIVEN a menu with no items WHEN ArrowDown is pressed THEN it moves nothing', () => {
-    const next = menuIndexOf('ArrowDown', -1, 0);
+  describe('GIVEN a menu with no items', () => {
+    it('WHEN ArrowDown is pressed THEN it moves nothing', () => {
+      const next = menuIndexOf('ArrowDown', -1, 0);
 
-    expect(next).toBeNull();
+      expect(next).toBeNull();
+    });
   });
-});
 
-describe('FEATURE: isMenuOpenKey', () => {
-  it.each([
+  describe.each([
     { key: 'F10', isShift: true, expected: true },
     { key: 'ContextMenu', isShift: false, expected: true },
     { key: 'ContextMenu', isShift: true, expected: true },
     { key: 'F10', isShift: false, expected: false },
     { key: 'Enter', isShift: true, expected: false }
-  ])('GIVEN $key with Shift $isShift WHEN it is read THEN it opens a menu: $expected', ({ key, isShift, expected }) => {
-    const isOpen = isMenuOpenKey(key, isShift);
+  ])('GIVEN $key with Shift $isShift', ({ key, isShift, expected }) => {
+    it(`WHEN it is read THEN it opens a menu: ${expected}`, () => {
+      const isOpen = isMenuOpenKey(key, isShift);
 
-    expect(isOpen).toBe(expected);
+      expect(isOpen).toBe(expected);
+    });
   });
-});
 
-describe('FEATURE: toolbarIndexOf', () => {
   describe('GIVEN a toolbar of 4 buttons', () => {
     it.each([
       { key: 'ArrowRight', from: 0, expected: 1 },
@@ -71,9 +71,11 @@ describe('FEATURE: toolbarIndexOf', () => {
     });
   });
 
-  it('GIVEN a toolbar with no buttons WHEN ArrowRight is pressed THEN it moves nothing', () => {
-    const next = toolbarIndexOf('ArrowRight', -1, 0);
+  describe('GIVEN a toolbar with no buttons', () => {
+    it('WHEN ArrowRight is pressed THEN it moves nothing', () => {
+      const next = toolbarIndexOf('ArrowRight', -1, 0);
 
-    expect(next).toBeNull();
+      expect(next).toBeNull();
+    });
   });
 });
