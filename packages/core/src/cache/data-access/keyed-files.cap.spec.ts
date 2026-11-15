@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { hashKeyedFiles } from './keyed-files.ts';
+import type { OpenArgs } from '../../shared/fs/test/common/open-args.type.ts';
 import type * as cacheConst from '../common/cache.const.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
 
@@ -35,7 +36,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   const real = await importOriginal<typeof fsPromises>();
 
   /** A handle opened on `statLie.path` reports `statLie.size` from every stat, as a file whose stat size lies would. */
-  const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
+  const open = async (...args: OpenArgs): Promise<fsPromises.FileHandle> => {
     const handle = await real.open(...args);
     const openedPath = String(args[0]);
     const isLying = openedPath === statLie.path;

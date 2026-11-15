@@ -16,6 +16,7 @@ import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView } from
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
 import { NO_OWNERS } from '../common/graph-task.const.ts';
 import type { GraphLocation } from '../common/location.type.ts';
+import type { PageTaskMode } from '../common/page-task-mode.type.ts';
 import { isGraphHostMessage } from '../utils/graph-host-message.util.ts';
 import { hasSavedGrouping, readGraphViewState } from '../utils/graph-view-state.util.ts';
 
@@ -30,7 +31,7 @@ class GraphPageController {
   private readonly deps: GraphControllerDeps;
   private readonly frames: GraphFrames;
   private readonly packages: GraphPackageSide;
-  private readonly tasks: ReturnType<typeof taskModeOf>;
+  private readonly tasks: PageTaskMode;
   private readonly routing: GraphStateRouting;
   private readonly reveal: PackageReveal;
   private readonly location: GraphLocation;
@@ -50,7 +51,7 @@ class GraphPageController {
       tasks: () => this.tasks,
       flow: () => this.flow
     });
-    const tasks = packageTasksOf((): ReturnType<typeof taskModeOf> => this.tasks, deps.now);
+    const tasks = packageTasksOf((): PageTaskMode => this.tasks, deps.now);
     const onMessage = (): void => this.tasks.suspend();
     const onPlaced = (): void => this.reveal.placed();
     const onLocation = (): void => this.location.update();

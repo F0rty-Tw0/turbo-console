@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AffectedLoads } from './affected-loads.ts';
+import type { RootChange } from '../../roots/common/coordinator.type.ts';
 import type { AffectedView } from '../common/affected.type.ts';
 import type { AffectedHarness } from '../test/common/affected-load.type.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
@@ -11,7 +12,7 @@ import { flush } from '../test/utils/atom-load.spec.util.ts';
 import { changeOf } from '../test/utils/prediction-load.spec.util.ts';
 import { buildModelOf } from '../test/utils/prediction-model.spec.util.ts';
 
-const NEW_MODEL = (): ReturnType<typeof changeOf> => changeOf(buildModelOf([PKG_B]), buildModelOf([PKG_B]));
+const NEW_MODEL = (): RootChange => changeOf(buildModelOf([PKG_B]), buildModelOf([PKG_B]));
 
 const loadedViewOf = (store: AffectedLoads): AffectedView => {
   const view = store.view(ROOT);

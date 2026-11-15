@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 
 import { boxTitleSizerOf, labelSizer, packageTitleSizer, slotSizer, taskSizerOf } from './label-measure.ts';
 import { GLYPH_CODE_POINTS, PACKAGE_GLYPH } from '../common/graph-glyph.const.ts';
@@ -8,9 +9,9 @@ import { nodeSizeOf } from '../utils/node-size.util.ts';
 const MEASURED_WIDTH = 40;
 const GLYPH_MEASURED_WIDTH = 90;
 
-const measureOf = (): ReturnType<typeof vi.fn<TextMeasure>> => vi.fn<TextMeasure>((): number => MEASURED_WIDTH);
+const measureOf = (): Mock<TextMeasure> => vi.fn<TextMeasure>((): number => MEASURED_WIDTH);
 
-const glyphMeasureOf = (): ReturnType<typeof vi.fn<TextMeasure>> => vi.fn<TextMeasure>((): number => GLYPH_MEASURED_WIDTH);
+const glyphMeasureOf = (): Mock<TextMeasure> => vi.fn<TextMeasure>((): number => GLYPH_MEASURED_WIDTH);
 
 describe('FEATURE: label-measure', () => {
   describe('GIVEN a measure that records its text and returns 40', () => {

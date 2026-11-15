@@ -75,7 +75,7 @@ type LocationPackages = {
 };
 
 /** Task mode as the bar reads it: the facts of the shown tasks, and the way back to package mode. */
-type LocationTasks = {
+export type LocationTasks = {
   readonly locationFacts: () => LocationFacts;
   readonly leave: () => void;
 };

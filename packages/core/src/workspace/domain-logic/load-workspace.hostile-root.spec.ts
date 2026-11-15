@@ -11,6 +11,7 @@ import { TurboBinary } from '../../binary/common/index.ts';
 import { growOnce } from '../../cache/test/utils/file-growth.spec.util.ts';
 import { newRoot } from '../../cache/test/utils/root-fixture.spec.util.ts';
 import type { TurboException } from '../../shared/errors/common/turbo.exception.ts';
+import type { OpenArgs } from '../../shared/fs/test/common/open-args.type.ts';
 import type { TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import { graphPackage, packageGraph } from '../test/utils/graph.spec.util.ts';
 
@@ -48,7 +49,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   const real = await importOriginal<typeof fsPromises>();
 
   /** Each handle runs `reads.beforeRead` with its path before every read, so a case can grow or hold a root file mid-hash. */
-  const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
+  const open = async (...args: OpenArgs): Promise<fsPromises.FileHandle> => {
     const handle = await real.open(...args);
     const read = handle.read.bind(handle);
     const hookedRead = async (...readArgs: unknown[]): Promise<unknown> => {

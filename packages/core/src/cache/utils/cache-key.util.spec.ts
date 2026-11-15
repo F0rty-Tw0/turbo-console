@@ -12,6 +12,7 @@ import {
   isKeyedPath,
   keyedPathsOf
 } from './cache-key.util.ts';
+import type { GraphPackage } from '../../shared/turbo/common/turbo.type.ts';
 import { graphPackage } from '../../workspace/test/utils/graph.spec.util.ts';
 import {
   MISSING_DIGEST,
@@ -75,7 +76,7 @@ const withDigestChanged = (index: number): KeyedFile[] => {
 };
 
 const keyedPathsOfDirs = (dirs: string[]): string[] => {
-  const toPackage = (dir: string, index: number): ReturnType<typeof graphPackage> => graphPackage(`pkg-${index}`, dir, [], []);
+  const toPackage = (dir: string, index: number): GraphPackage => graphPackage(`pkg-${index}`, dir, [], []);
   const packages = dirs.map(toPackage);
 
   return keyedPathsOf(packages);

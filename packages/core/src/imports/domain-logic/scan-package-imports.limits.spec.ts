@@ -7,6 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { scanPackageImports } from './scan-package-imports.ts';
+import type { OpenArgs } from '../../shared/fs/test/common/open-args.type.ts';
 import type { ImportScanInput, PackageImportScan } from '../common/import-scan.type.ts';
 import { ImportFileCache } from '../data-access/import-file-cache.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
@@ -28,7 +29,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   const real = await importOriginal<typeof fsPromises>();
 
   /** Lists each opened path, runs `reads.beforeOpen` first, and counts opens still unclosed in `reads.maxInFlight`. */
-  const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
+  const open = async (...args: OpenArgs): Promise<fsPromises.FileHandle> => {
     reads.opened.push(String(args[0]));
     reads.inFlight += 1;
     reads.maxInFlight = Math.max(reads.maxInFlight, reads.inFlight);

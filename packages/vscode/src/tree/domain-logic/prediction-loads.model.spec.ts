@@ -1,15 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PredictionLoads } from './prediction-loads.ts';
-import type { PredictionListener } from '../common/prediction.type.ts';
 import { ROOT } from '../test/common/atom-load.const.ts';
 import { ID_A, PKG_A, PKG_B, PKG_C, PREDICTION_STATES, RESTARTABLE_STATES } from '../test/common/prediction-load.const.ts';
-import type { PredictionHarness, PredictionState } from '../test/common/prediction-load.type.ts';
+import type { PredictionHarness, PredictionListenerCall, PredictionState } from '../test/common/prediction-load.type.ts';
 import { dryRunAt, dryStateOf, flush } from '../test/utils/atom-load.spec.util.ts';
 import { changeOf, predictionHarness, toState } from '../test/utils/prediction-load.spec.util.ts';
 import { buildModelOf, predictionModelOf, turboTaskOf } from '../test/utils/prediction-model.spec.util.ts';
 
-const GONE: [PredictionState, Parameters<PredictionListener>[]][] = [
+const GONE: [PredictionState, PredictionListenerCall[]][] = [
   ['loading', []],
   ['loaded', [[ROOT, new Set([PKG_A])]]],
   ['failed', []]

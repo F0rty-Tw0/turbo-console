@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { readTsconfigPaths } from './tsconfig-chain.ts';
+import type { OpenArgs } from '../../shared/fs/test/common/open-args.type.ts';
 import type { TsconfigPaths } from '../common/import-scan.type.ts';
 import { writeImportTree } from '../test/utils/import-tree.spec.util.ts';
 import { openedNamesOf } from '../test/utils/opened-names.spec.util.ts';
@@ -21,7 +22,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   const real = await importOriginal<typeof fsPromises>();
 
   /** Lists each opened path before the real open. */
-  const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
+  const open = async (...args: OpenArgs): Promise<fsPromises.FileHandle> => {
     reads.opened.push(String(args[0]));
 
     return real.open(...args);

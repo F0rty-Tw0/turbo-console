@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { GraphTaskLayout } from './graph-task-layout.ts';
 import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphAtomGroup } from '../../bridge/common/graph-state.type.ts';
-import type { ViewStateSaver } from '../common/graph-page.type.ts';
+import type { UmbrellaSizers, ViewStateSaver } from '../common/graph-page.type.ts';
 import type { TaskLayoutRequest } from '../common/graph-task.type.ts';
 import type { TaskModeRig } from '../test/common/graph-task-mode.type.ts';
 import { NAMING_STUB, TASK_CHAIN_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -68,7 +68,7 @@ describe('FEATURE: GraphTaskLayout sizes plain tasks as status cards', () => {
   });
 
   describe('GIVEN api#build is an umbrella beside the plain web#build', () => {
-    const sizers = (): Parameters<typeof umbrellaSizeOf>[0] => {
+    const sizers = (): UmbrellaSizers => {
       const own = { name: rig.deps.sizeOf, chips: rig.deps.chipMeasure, glyphs: rig.deps.glyphs };
 
       return own;

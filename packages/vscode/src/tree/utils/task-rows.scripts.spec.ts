@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { scriptRows } from './script-rows.util.ts';
 import { taskRowOf, taskRows } from './task-rows.util.ts';
 import type { LiveIds } from '../../run/common/run.type.ts';
+import type { RowContext } from '../common/tree-node.type.ts';
 import type { IconSpec, RowScope, TreeRow } from '../common/tree-row.type.ts';
 import { PACKAGE_NODE_STUB, ROW_SCOPE_STUB, TASK_NODE_STUB } from '../test/stubs/workspace-model.stub.ts';
 import { liveIdsOf } from '../test/utils/live-ids.spec.util.ts';
@@ -29,7 +30,7 @@ const SHOWN = rowContextOf('list', undefined, false, { scriptsShown: true, live:
 
 const HIDDEN = rowContextOf('list');
 
-const hiddenWithLive = (root: string, ...ids: string[]): ReturnType<typeof rowContextOf> => {
+const hiddenWithLive = (root: string, ...ids: string[]): RowContext => {
   const live = liveIdsOf(root, ...ids);
 
   return rowContextOf('list', undefined, false, { scriptsShown: false, live });

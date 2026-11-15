@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import { PackagesTree } from './packages-tree.ts';
+import type { Coordinator } from '../../roots/common/coordinator.type.ts';
 import type { RootFolder } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
@@ -152,7 +153,7 @@ describe('FEATURE: packages tree affected feed', () => {
       const pending = new Promise<void>((resolve) => {
         release = resolve;
       });
-      const pendingCoordinator = (): ReturnType<typeof coordinatorMock> => {
+      const pendingCoordinator = (): Coordinator => {
         const coordinator = coordinatorMock();
 
         vi.mocked(coordinator.firstChildren).mockReturnValue(pending);

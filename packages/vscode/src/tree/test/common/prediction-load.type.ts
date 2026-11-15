@@ -10,6 +10,9 @@ type PredictionEmitter = {
   readonly emit: PredictionListener;
 };
 
+/** The arguments of one `PredictionListener` call. */
+export type PredictionListenerCall = [root: string, packageNames: ReadonlySet<string>];
+
 /** A `SharedPrediction` whose members are spies, plus its emitter. */
 export type SharedPredictionFake = SharedPrediction & PredictionEmitter;
 

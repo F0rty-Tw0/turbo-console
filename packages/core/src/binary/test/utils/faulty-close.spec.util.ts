@@ -1,5 +1,6 @@
 import type { FileHandle, open } from 'node:fs/promises';
 
+import type { OpenArgs } from '../../../shared/fs/test/common/open-args.type.ts';
 import type { CloseFault } from '../common/fake-turbo.type.ts';
 
 /**
@@ -7,7 +8,7 @@ import type { CloseFault } from '../common/fake-turbo.type.ts';
  * with a path-less error, as a `FileHandle` close failure does.
  */
 export const faultyCloseOpen = (real: typeof open, fault: CloseFault): typeof open => {
-  const wrapper = async (...args: Parameters<typeof open>): Promise<FileHandle> => {
+  const wrapper = async (...args: OpenArgs): Promise<FileHandle> => {
     const handle = await real(...args);
 
     if (!fault.failNext) return handle;

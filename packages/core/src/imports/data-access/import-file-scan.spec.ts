@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { scanFile } from './import-file-scan.ts';
+import type { OpenArgs } from '../../shared/fs/test/common/open-args.type.ts';
 import type { CachedFile, SourceImport } from '../common/import-scan.type.ts';
 import type { FileOutcome, WalkedFile } from '../common/import-walk.type.ts';
 import { DATE_LATER } from '../test/common/scan-dates.const.ts';
@@ -25,7 +26,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   const real = await importOriginal<typeof fsPromises>();
 
   /** Runs `reads.beforeOpen` before the real open. */
-  const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
+  const open = async (...args: OpenArgs): Promise<fsPromises.FileHandle> => {
     await reads.beforeOpen(String(args[0]));
 
     return real.open(...args);

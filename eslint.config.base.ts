@@ -2,6 +2,8 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 
 const ACQUIRE_VS_CODE_API_MESSAGE = 'Only src/bridge/ may touch acquireVsCodeApi; go through the bridge.';
 
+const DERIVED_TYPE_MESSAGE = 'Name the type: import the one the function or library declares, or export an alias.';
+
 export const workspaceConfig = defineConfig([
   globalIgnores(
     [
@@ -35,6 +37,25 @@ export const workspaceConfig = defineConfig([
     files: ['**/*.{ts,tsx,cts,mts}'],
     rules: {
       'import-x/no-useless-path-segments': ['error', { noUselessIndex: false }]
+    }
+  },
+  {
+    // A type derived from a value has no name and changes when the value does.
+    name: 'workspace/derived-types',
+    files: ['**/*.{ts,tsx,cts,mts}'],
+    rules: {
+      '@typescript-eslint/no-restricted-types': [
+        'error',
+        {
+          types: {
+            ReturnType: DERIVED_TYPE_MESSAGE,
+            Parameters: DERIVED_TYPE_MESSAGE,
+            ConstructorParameters: DERIVED_TYPE_MESSAGE,
+            InstanceType: DERIVED_TYPE_MESSAGE,
+            ThisParameterType: DERIVED_TYPE_MESSAGE
+          }
+        }
+      ]
     }
   },
   {

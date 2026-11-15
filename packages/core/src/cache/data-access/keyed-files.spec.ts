@@ -9,6 +9,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { hashKeyedFiles } from './keyed-files.ts';
+import type { OpenArgs } from '../../shared/fs/test/common/open-args.type.ts';
 import type { KeyedFile } from '../common/cache.type.ts';
 import { growOnce } from '../test/utils/file-growth.spec.util.ts';
 
@@ -30,7 +31,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
    * pre-open stat, and each handle runs `reads.beforeRead` with its path before every read, so a case can edit the file
    * mid-hash.
    */
-  const open = async (...args: Parameters<typeof real.open>): Promise<fsPromises.FileHandle> => {
+  const open = async (...args: OpenArgs): Promise<fsPromises.FileHandle> => {
     reads.opened.push(String(args[0]));
     await reads.beforeOpen(String(args[0]));
 
