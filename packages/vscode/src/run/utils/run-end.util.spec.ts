@@ -70,23 +70,27 @@ describe('FEATURE: end state of a script run', () => {
 });
 
 describe('FEATURE: matched end', () => {
-  it.each<[RunState, number | undefined, boolean]>([
+  describe.each<[RunState, number | undefined, boolean]>([
     ['passed', 0, true],
     ['failed', 1, true],
     ['failed', undefined, false],
     ['stopped', 1, false],
     ['stopped', undefined, false]
-  ])('GIVEN a %s run with exit code %s WHEN asked THEN a summary match follows: %s', (state, exitCode, expected) => {
-    expect(isMatchedEnd(state, exitCode, true)).toBe(expected);
+  ])('GIVEN a %s run with exit code %s', (state, exitCode, expected) => {
+    it(`WHEN asked THEN a summary match follows: ${expected}`, () => {
+      expect(isMatchedEnd(state, exitCode, true)).toBe(expected);
+    });
   });
 
-  it.each<[RunState, number | undefined]>([
+  describe.each<[RunState, number | undefined]>([
     ['passed', 0],
     ['failed', 1],
     ['failed', 127],
     ['stopped', 130]
-  ])('GIVEN a %s script run with exit code %s WHEN asked THEN no summary match follows', (state, exitCode) => {
-    expect(isMatchedEnd(state, exitCode, false)).toBe(false);
+  ])('GIVEN a %s script run with exit code %s', (state, exitCode) => {
+    it('WHEN asked THEN no summary match follows', () => {
+      expect(isMatchedEnd(state, exitCode, false)).toBe(false);
+    });
   });
 });
 

@@ -12,24 +12,30 @@ const rule = (n: number, arg: string): SplitArgsError => {
 };
 
 describe('FEATURE: split the Extra arguments text', () => {
-  it('GIVEN the four-arg text WHEN split THEN four args', () => {
-    expect(splitArgs('--watch --port=3000 ./src/a.ts --env=dev:local')).toStrictEqual({
-      args: ['--watch', '--port=3000', './src/a.ts', '--env=dev:local']
+  describe('GIVEN the four-arg text', () => {
+    it('WHEN split THEN four args', () => {
+      expect(splitArgs('--watch --port=3000 ./src/a.ts --env=dev:local')).toStrictEqual({
+        args: ['--watch', '--port=3000', './src/a.ts', '--env=dev:local']
+      });
     });
   });
 
-  it.each([[''], ['   '], ['\t\n \r\n']])('GIVEN blank text %j WHEN split THEN no args', (text) => {
-    expect(splitArgs(text)).toStrictEqual({ args: [] });
+  describe.each([[''], ['   '], ['\t\n \r\n']])('GIVEN blank text %j', (text) => {
+    it('WHEN split THEN no args', () => {
+      expect(splitArgs(text)).toStrictEqual({ args: [] });
+    });
   });
 
-  it.each([['--watch\t--port=3000'], ['--watch --port=3000\n'], ['--watch\r\n--port=3000'], ['  --watch   --port=3000  ']])(
-    'GIVEN %j WHEN split THEN exactly two args and no empty one',
+  describe.each([['--watch\t--port=3000'], ['--watch --port=3000\n'], ['--watch\r\n--port=3000'], ['  --watch   --port=3000  ']])(
+    'GIVEN %j',
     (text) => {
-      expect(splitArgs(text)).toStrictEqual({ args: ['--watch', '--port=3000'] });
+      it('WHEN split THEN exactly two args and no empty one', () => {
+        expect(splitArgs(text)).toStrictEqual({ args: ['--watch', '--port=3000'] });
+      });
     }
   );
 
-  it.each([
+  describe.each([
     ['--name="a b"', 1, '--name="a'],
     ['$HOME', 1, '$HOME'],
     ['a,b', 1, 'a,b'],
@@ -38,7 +44,9 @@ describe('FEATURE: split the Extra arguments text', () => {
     ["it's", 1, "it's"],
     ['--ok --bad$ --worse$', 2, '--bad$'],
     ['ok ="x"', 2, '="x"']
-  ])('GIVEN %j WHEN split THEN the first failing arg is named at its 1-based position', (text, n, arg) => {
-    expect(splitArgs(text)).toStrictEqual(rule(n, arg));
+  ])('GIVEN %j', (text, n, arg) => {
+    it('WHEN split THEN the first failing arg is named at its 1-based position', () => {
+      expect(splitArgs(text)).toStrictEqual(rule(n, arg));
+    });
   });
 });

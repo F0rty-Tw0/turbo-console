@@ -14,15 +14,17 @@ const SCRIPT: RunRequest = { ...RUN_REQUEST_STUB, task: SCRIPT_TASK };
 const UNSAFE_BUILD = "Turbo Console can't run a script named `build` safely.";
 
 describe('FEATURE: script body', () => {
-  it.each([
+  describe.each([
     ['a command', 'tsc', true],
     ['no command', null, false],
     ['an empty command', '', false],
     ['a whitespace-only command', ' \t\n', false]
-  ])('GIVEN %s WHEN checked THEN has a body is %s', (_label, command, hasBody) => {
-    const task: TaskNode = { ...SCRIPT_TASK, command };
+  ])('GIVEN %s', (_label, command, hasBody) => {
+    it(`WHEN checked THEN has a body is ${command}`, () => {
+      const task: TaskNode = { ...SCRIPT_TASK, command };
 
-    expect(hasScriptBody(task)).toBe(hasBody);
+      expect(hasScriptBody(task)).toBe(hasBody);
+    });
   });
 });
 

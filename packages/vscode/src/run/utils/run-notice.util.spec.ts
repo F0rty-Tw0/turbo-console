@@ -11,20 +11,24 @@ describe('FEATURE: the failed to start notice', () => {
     showOutput = vi.fn<() => void>();
   });
 
-  it('GIVEN a failed start of turbo WHEN the notice shows THEN it says turbo could not start and offers the output', () => {
-    const showError = vi.fn<ShowError>().mockResolvedValue(undefined);
+  describe('GIVEN a failed start of turbo', () => {
+    it('WHEN the notice shows THEN it says turbo could not start and offers the output', () => {
+      const showError = vi.fn<ShowError>().mockResolvedValue(undefined);
 
-    failedToStartNotice(showError, showOutput)('turbo');
+      failedToStartNotice(showError, showOutput)('turbo');
 
-    expect(showError).toHaveBeenCalledExactlyOnceWith("Couldn't start turbo.", 'Show Output');
+      expect(showError).toHaveBeenCalledExactlyOnceWith("Couldn't start turbo.", 'Show Output');
+    });
   });
 
-  it('GIVEN a failed start of a script WHEN the notice shows THEN it names the package manager', () => {
-    const showError = vi.fn<ShowError>().mockResolvedValue(undefined);
+  describe('GIVEN a failed start of a script', () => {
+    it('WHEN the notice shows THEN it names the package manager', () => {
+      const showError = vi.fn<ShowError>().mockResolvedValue(undefined);
 
-    failedToStartNotice(showError, showOutput)('pnpm');
+      failedToStartNotice(showError, showOutput)('pnpm');
 
-    expect(showError).toHaveBeenCalledExactlyOnceWith("Couldn't start pnpm.", 'Show Output');
+      expect(showError).toHaveBeenCalledExactlyOnceWith("Couldn't start pnpm.", 'Show Output');
+    });
   });
 
   describe('GIVEN the notice is showing', () => {
