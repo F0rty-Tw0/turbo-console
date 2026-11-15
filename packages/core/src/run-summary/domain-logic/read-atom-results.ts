@@ -21,7 +21,8 @@ const collect = (found: ReadonlyMap<string, AtomResult>, fileIds: ReadonlySet<st
  * `pastRunFiles` does.
  *
  * A summary is read once and its results kept while its mtime and size are unchanged (`readCachedAtomResults`), so a
- * call over unchanged files reads none; a call that lists files drops what is kept of the files no longer among them.
+ * call over unchanged files reads none and calls that overlap share each read; a call that lists files drops what is
+ * kept of the files no longer among them.
  */
 export const readAtomResults = async (root: string, fileIds: ReadonlySet<string>): Promise<Map<string, AtomResult>> => {
   const results = new Map<string, AtomResult>();
