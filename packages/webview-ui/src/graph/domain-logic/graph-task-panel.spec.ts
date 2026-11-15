@@ -1,11 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mocked } from 'vitest';
 
-import { saveDetailsToggle, taskPanelOf } from './graph-task-panel.ts';
+import { taskPanelOf } from './graph-task-panel.ts';
 import { NOTICE_TEXT_DELAY_MS, PACKAGE_NOTICE_MS, UNKNOWN_TASKS_TEXT } from '../common/graph-task.const.ts';
 import type { TaskPanel, TaskPanelActions, TaskPanelAsides, TaskScreenElements } from '../common/graph-task.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { taskWidgetsMock } from '../test/mocks/graph-task-mode.mock.ts';
 import { droppedTasksText, showEveryTextOf, tasksHiddenText } from '../utils/task-text.util.ts';
 
 type PanelRig = {
@@ -93,96 +92,6 @@ const writesOf = <K extends 'textContent' | 'hidden'>(element: HTMLElement, key:
   return writes;
 };
 
-describe('FEATURE: taskPanelOf notice', () => {
-  let panel: TaskPanel;
-  let notice: HTMLElement;
-  let status: HTMLElement;
-
-  beforeEach(() => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    vi.useFakeTimers();
-    ({ panel, notice, status } = rigOf());
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
-  });
-
-  describe('GIVEN package mode', () => {
-    beforeEach(() => {
-      panel.notice(UNKNOWN_TASKS_TEXT);
-    });
-
-    it('WHEN the unknown tasks notice shows THEN it is shown without text yet', () => {
-      expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: false, text: '' });
-    });
-
-    it('WHEN just under the text delay passes THEN it still has no text', () => {
-      vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS - 1);
-
-      expect(notice.textContent).toBe('');
-    });
-
-    it('WHEN the text delay passes THEN it reads that text', () => {
-      vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS);
-
-      expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: false, text: UNKNOWN_TASKS_TEXT });
-    });
-
-    it('WHEN it is hidden before the text delay passes THEN no text is written later', () => {
-      panel.notice(null);
-      vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS);
-
-      expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: true, text: '' });
-    });
-
-    it('WHEN a newer notice shows before the text delay passes THEN it reads the newer text at once and the older never lands', () => {
-      panel.notice(droppedTasksText(1));
-      const textAtOnce = notice.textContent;
-
-      vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS);
-
-      expect({ textAtOnce, text: notice.textContent }).toStrictEqual({ textAtOnce: droppedTasksText(1), text: droppedTasksText(1) });
-    });
-
-    it('WHEN just under the notice time passes THEN it still shows', () => {
-      vi.advanceTimersByTime(PACKAGE_NOTICE_MS - 1);
-
-      expect(notice.hidden).toBe(false);
-    });
-
-    it('WHEN the notice time passes THEN it is hidden and empty', () => {
-      vi.advanceTimersByTime(PACKAGE_NOTICE_MS);
-
-      expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: true, text: '' });
-    });
-
-    it('WHEN task mode then shows its own notice THEN the earlier time leaves it showing', () => {
-      panel.enter();
-      panel.notice(droppedTasksText(1));
-      vi.advanceTimersByTime(PACKAGE_NOTICE_MS);
-
-      expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: false, text: droppedTasksText(1) });
-    });
-  });
-
-  it('GIVEN task mode WHEN a notice shows and the notice time passes THEN it still shows', () => {
-    panel.enter();
-    panel.notice(UNKNOWN_TASKS_TEXT);
-    vi.advanceTimersByTime(PACKAGE_NOTICE_MS);
-
-    expect(notice.hidden).toBe(false);
-  });
-
-  it('GIVEN the status line names the selected package WHEN task mode is entered THEN the status line empties', () => {
-    status.textContent = 'web · 1 dependency';
-    panel.enter();
-
-    expect(status.textContent).toBe('');
-  });
-});
-
 /** The `aria-pressed` of Packages, then Tasks. */
 const pressedOf = (rig: PanelRig): (string | null)[] => {
   const buttons = [rig.packagesMode, rig.taskMode];
@@ -191,33 +100,7 @@ const pressedOf = (rig: PanelRig): (string | null)[] => {
   return pressed;
 };
 
-describe('FEATURE: taskPanelOf mode buttons', () => {
-  let rig: PanelRig;
-
-  beforeEach(() => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    rig = rigOf();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('GIVEN package mode WHEN task mode is entered THEN Tasks is pressed and Packages is not', () => {
-    rig.panel.enter();
-
-    expect(pressedOf(rig)).toStrictEqual(['false', 'true']);
-  });
-
-  it('GIVEN task mode WHEN it is exited THEN Packages is pressed and Tasks is not', () => {
-    rig.panel.enter();
-    rig.panel.exit();
-
-    expect(pressedOf(rig)).toStrictEqual(['true', 'false']);
-  });
-});
-
-describe('FEATURE: taskPanelOf Details bar', () => {
+describe('FEATURE: taskPanelOf', () => {
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
   });
@@ -226,64 +109,180 @@ describe('FEATURE: taskPanelOf Details bar', () => {
     vi.unstubAllGlobals();
   });
 
-  describe('GIVEN package mode with the summary naming web', () => {
+  describe('GIVEN a fresh panel with its notice on fake timers', () => {
+    let panel: TaskPanel;
+    let notice: HTMLElement;
+    let status: HTMLElement;
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      ({ panel, notice, status } = rigOf());
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    describe('GIVEN package mode', () => {
+      beforeEach(() => {
+        panel.notice(UNKNOWN_TASKS_TEXT);
+      });
+
+      it('WHEN the unknown tasks notice shows THEN it is shown without text yet', () => {
+        expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: false, text: '' });
+      });
+
+      it('WHEN just under the text delay passes THEN it still has no text', () => {
+        vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS - 1);
+
+        expect(notice.textContent).toBe('');
+      });
+
+      it('WHEN the text delay passes THEN it reads that text', () => {
+        vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS);
+
+        expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: false, text: UNKNOWN_TASKS_TEXT });
+      });
+
+      it('WHEN it is hidden before the text delay passes THEN no text is written later', () => {
+        panel.notice(null);
+        vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS);
+
+        expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: true, text: '' });
+      });
+
+      it('WHEN a newer notice shows before the text delay passes THEN it reads the newer text at once and the older never lands', () => {
+        panel.notice(droppedTasksText(1));
+        const textAtOnce = notice.textContent;
+
+        vi.advanceTimersByTime(NOTICE_TEXT_DELAY_MS);
+
+        expect({ textAtOnce, text: notice.textContent }).toStrictEqual({ textAtOnce: droppedTasksText(1), text: droppedTasksText(1) });
+      });
+
+      it('WHEN just under the notice time passes THEN it still shows', () => {
+        vi.advanceTimersByTime(PACKAGE_NOTICE_MS - 1);
+
+        expect(notice.hidden).toBe(false);
+      });
+
+      it('WHEN the notice time passes THEN it is hidden and empty', () => {
+        vi.advanceTimersByTime(PACKAGE_NOTICE_MS);
+
+        expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: true, text: '' });
+      });
+
+      it('WHEN task mode then shows its own notice THEN the earlier time leaves it showing', () => {
+        panel.enter();
+        panel.notice(droppedTasksText(1));
+        vi.advanceTimersByTime(PACKAGE_NOTICE_MS);
+
+        expect({ hidden: notice.hidden, text: notice.textContent }).toStrictEqual({ hidden: false, text: droppedTasksText(1) });
+      });
+    });
+
+    describe('GIVEN task mode', () => {
+      it('WHEN a notice shows and the notice time passes THEN it still shows', () => {
+        panel.enter();
+        panel.notice(UNKNOWN_TASKS_TEXT);
+        vi.advanceTimersByTime(PACKAGE_NOTICE_MS);
+
+        expect(notice.hidden).toBe(false);
+      });
+    });
+
+    describe('GIVEN the status line names the selected package', () => {
+      it('WHEN task mode is entered THEN the status line empties', () => {
+        status.textContent = 'web · 1 dependency';
+        panel.enter();
+
+        expect(status.textContent).toBe('');
+      });
+    });
+  });
+
+  describe('GIVEN a fresh panel with its mode buttons', () => {
     let rig: PanelRig;
 
     beforeEach(() => {
       rig = rigOf();
-      rig.detailsSummary.textContent = 'web · 1 dependency';
     });
 
-    it('WHEN task mode is entered THEN the bar is the first child of the task aside', () => {
-      rig.panel.enter();
+    describe('GIVEN package mode', () => {
+      it('WHEN task mode is entered THEN Tasks is pressed and Packages is not', () => {
+        rig.panel.enter();
 
-      expect(rig.taskAside.children[0]).toBe(rig.detailsBar);
+        expect(pressedOf(rig)).toStrictEqual(['false', 'true']);
+      });
     });
 
-    it('WHEN task mode is entered THEN the summary empties', () => {
-      rig.panel.enter();
+    describe('GIVEN task mode', () => {
+      it('WHEN it is exited THEN Packages is pressed and Tasks is not', () => {
+        rig.panel.enter();
+        rig.panel.exit();
 
-      expect(rig.detailsSummary.textContent).toBe('');
+        expect(pressedOf(rig)).toStrictEqual(['true', 'false']);
+      });
     });
   });
 
-  it('GIVEN task mode and a package aside WHEN task mode is left THEN the bar is the first child of the package aside', () => {
-    const packageAside = document.createElement('aside');
-    const rig = rigOf(packageAside);
+  describe('GIVEN the Details bar of a panel', () => {
+    describe('GIVEN package mode with the summary naming web', () => {
+      let rig: PanelRig;
 
-    packageAside.append(document.createElement('div'));
-    rig.panel.enter();
-    rig.panel.exit();
+      beforeEach(() => {
+        rig = rigOf();
+        rig.detailsSummary.textContent = 'web · 1 dependency';
+      });
 
-    expect(packageAside.children[0]).toBe(rig.detailsBar);
-  });
+      it('WHEN task mode is entered THEN the bar is the first child of the task aside', () => {
+        rig.panel.enter();
 
-  it('GIVEN task mode and no package aside yet WHEN task mode is left THEN the bar stays in the task aside', () => {
-    const rig = rigOf();
+        expect(rig.taskAside.children[0]).toBe(rig.detailsBar);
+      });
 
-    rig.panel.enter();
-    rig.panel.exit();
+      it('WHEN task mode is entered THEN the summary empties', () => {
+        rig.panel.enter();
 
-    expect(rig.taskAside.children[0]).toBe(rig.detailsBar);
-  });
-});
+        expect(rig.detailsSummary.textContent).toBe('');
+      });
+    });
 
-describe('FEATURE: taskPanelOf banner', () => {
-  let panel: TaskPanel;
-  let banner: HTMLElement;
-  let bannerText: HTMLElement;
+    describe('GIVEN task mode and a package aside', () => {
+      it('WHEN task mode is left THEN the bar is the first child of the package aside', () => {
+        const packageAside = document.createElement('aside');
+        const rig = rigOf(packageAside);
 
-  beforeEach(() => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    ({ panel, banner, bannerText } = rigOf());
-    panel.show({ isEmpty: false, hiddenCount: 2, knownCount: 4 });
-  });
+        packageAside.append(document.createElement('div'));
+        rig.panel.enter();
+        rig.panel.exit();
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
+        expect(packageAside.children[0]).toBe(rig.detailsBar);
+      });
+    });
+
+    describe('GIVEN task mode and no package aside yet', () => {
+      it('WHEN task mode is left THEN the bar stays in the task aside', () => {
+        const rig = rigOf();
+
+        rig.panel.enter();
+        rig.panel.exit();
+
+        expect(rig.taskAside.children[0]).toBe(rig.detailsBar);
+      });
+    });
   });
 
   describe('GIVEN the banner shows 2 tasks hidden', () => {
+    let panel: TaskPanel;
+    let banner: HTMLElement;
+    let bannerText: HTMLElement;
+
+    beforeEach(() => {
+      ({ panel, banner, bannerText } = rigOf());
+      panel.show({ isEmpty: false, hiddenCount: 2, knownCount: 4 });
+    });
+
     it('WHEN the same count shows again THEN its status text is not written again', () => {
       const writes = writesOf(bannerText, 'textContent');
 
@@ -316,79 +315,56 @@ describe('FEATURE: taskPanelOf banner', () => {
       expect(writes).toStrictEqual([true]);
     });
   });
-});
 
-describe('FEATURE: taskPanelOf prompt', () => {
-  let rig: PanelRig;
+  describe('GIVEN a fresh panel with its prompt', () => {
+    let rig: PanelRig;
 
-  beforeEach(() => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    rig = rigOf();
-  });
+    beforeEach(() => {
+      rig = rigOf();
+    });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+    describe.each([
+      { knownCount: 0, isEveryHidden: true, isSlowHidden: true },
+      { knownCount: 4, isEveryHidden: false, isSlowHidden: true },
+      { knownCount: 300, isEveryHidden: false, isSlowHidden: true },
+      { knownCount: 301, isEveryHidden: false, isSlowHidden: false }
+    ])('GIVEN $knownCount known tasks', ({ knownCount, isEveryHidden, isSlowHidden }) => {
+      it(`WHEN the prompt shows THEN Show every task hidden is ${String(isEveryHidden)} and the slow line hidden is ${String(isSlowHidden)}`, () => {
+        rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount });
 
-  it.each([
-    { knownCount: 0, isEveryHidden: true, isSlowHidden: true },
-    { knownCount: 4, isEveryHidden: false, isSlowHidden: true },
-    { knownCount: 300, isEveryHidden: false, isSlowHidden: true },
-    { knownCount: 301, isEveryHidden: false, isSlowHidden: false }
-  ])(
-    'GIVEN $knownCount known tasks WHEN the prompt shows THEN Show every task hidden is $isEveryHidden and the slow line hidden is $isSlowHidden',
-    ({ knownCount, isEveryHidden, isSlowHidden }) => {
-      rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount });
-
-      expect([rig.showEvery.hidden, rig.slow.hidden]).toStrictEqual([isEveryHidden, isSlowHidden]);
-    }
-  );
-
-  it('GIVEN 4 known tasks WHEN the prompt shows THEN Show every task reads and is titled with the count', () => {
-    rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount: 4 });
-
-    expect([rig.showEvery.textContent, rig.showEvery.title]).toStrictEqual([showEveryTextOf(4), showEveryTextOf(4)]);
-  });
-
-  it('GIVEN the prompt WHEN Show every task is clicked THEN onShowEvery gets the click time and the canvas takes focus', () => {
-    const click = new Event('click');
-
-    rig.showEvery.dispatchEvent(click);
-
-    expect(rig.actions.onShowEvery).toHaveBeenCalledExactlyOnceWith(click.timeStamp);
-    expect(document.activeElement).toBe(rig.container);
-  });
-
-  describe('GIVEN a new shown set', () => {
-    it('WHEN the panel shows it THEN onShown fires once, after the prompt is written', () => {
-      rig.actions.onShown.mockImplementation((): void => {
-        expect(rig.showEvery.textContent).toBe(showEveryTextOf(4));
+        expect([rig.showEvery.hidden, rig.slow.hidden]).toStrictEqual([isEveryHidden, isSlowHidden]);
       });
+    });
 
-      rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount: 4 });
+    describe('GIVEN 4 known tasks', () => {
+      it('WHEN the prompt shows THEN Show every task reads and is titled with the count', () => {
+        rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount: 4 });
 
-      expect(rig.actions.onShown).toHaveBeenCalledOnce();
+        expect([rig.showEvery.textContent, rig.showEvery.title]).toStrictEqual([showEveryTextOf(4), showEveryTextOf(4)]);
+      });
+    });
+
+    describe('GIVEN the prompt', () => {
+      it('WHEN Show every task is clicked THEN onShowEvery gets the click time and the canvas takes focus', () => {
+        const click = new Event('click');
+
+        rig.showEvery.dispatchEvent(click);
+
+        expect(rig.actions.onShowEvery).toHaveBeenCalledExactlyOnceWith(click.timeStamp);
+        expect(document.activeElement).toBe(rig.container);
+      });
+    });
+
+    describe('GIVEN a new shown set', () => {
+      it('WHEN the panel shows it THEN onShown fires once, after the prompt is written', () => {
+        rig.actions.onShown.mockImplementation((): void => {
+          expect(rig.showEvery.textContent).toBe(showEveryTextOf(4));
+        });
+
+        rig.panel.show({ isEmpty: true, hiddenCount: 0, knownCount: 4 });
+
+        expect(rig.actions.onShown).toHaveBeenCalledOnce();
+      });
     });
   });
-});
-
-describe('FEATURE: saveDetailsToggle', () => {
-  it.each([
-    { detailsOpen: true, keeps: 1 },
-    { detailsOpen: false, keeps: 0 }
-  ])(
-    'WHEN the task Details panel turns open $detailsOpen THEN it re-measures, saves and keeps clear $keeps times',
-    ({ detailsOpen, keeps }) => {
-      const view = { resize: vi.fn() };
-      const modes = { savePanels: vi.fn() };
-      const deps = { view, modes };
-      const widgets = taskWidgetsMock();
-
-      saveDetailsToggle(deps, widgets, detailsOpen);
-
-      expect(deps.view.resize).toHaveBeenCalledOnce();
-      expect(deps.modes.savePanels).toHaveBeenCalledExactlyOnceWith({ detailsOpen });
-      expect(widgets.keepClear).toHaveBeenCalledTimes(keeps);
-    }
-  );
 });
