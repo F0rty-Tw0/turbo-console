@@ -31,50 +31,60 @@ const taskCountsOf = (state: GraphState): number[] => {
 };
 
 describe('FEATURE: graph state toggles', () => {
-  it.each([
+  describe.each([
     [false, false],
     [true, false],
     [false, true],
     [true, true]
-  ])('GIVEN scopeShown %s and scriptsShown %s WHEN the state is built THEN it carries both as given', (scopeShown, scriptsShown) => {
-    const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, {
-      scopeShown,
-      scriptsShown,
-      predictionShown: false,
-      affectedShown: false
+  ])('GIVEN scopeShown %s and scriptsShown %s', (scopeShown, scriptsShown) => {
+    it('WHEN the state is built THEN it carries both as given', () => {
+      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, {
+        scopeShown,
+        scriptsShown,
+        predictionShown: false,
+        affectedShown: false
+      });
+
+      expect(state).toMatchObject({ kind: 'graph', scopeShown, scriptsShown });
     });
-
-    expect(state).toMatchObject({ kind: 'graph', scopeShown, scriptsShown });
   });
 
-  it.each([[false], [true]])('GIVEN predictionShown %s WHEN the state is built THEN it carries it', (predictionShown) => {
-    const shown = { ...GRAPH_SHOWN_STUB, predictionShown };
-    const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, shown);
+  describe.each([[false], [true]])('GIVEN predictionShown %s', (predictionShown) => {
+    it('WHEN the state is built THEN it carries it', () => {
+      const shown = { ...GRAPH_SHOWN_STUB, predictionShown };
+      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, shown);
 
-    expect(state).toMatchObject({ kind: 'graph', predictionShown });
+      expect(state).toMatchObject({ kind: 'graph', predictionShown });
+    });
   });
 
-  it.each([[false], [true]])('GIVEN affectedShown %s WHEN the state is built THEN it carries it', (affectedShown) => {
-    const shown = { ...GRAPH_SHOWN_STUB, affectedShown };
-    const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, shown);
+  describe.each([[false], [true]])('GIVEN affectedShown %s', (affectedShown) => {
+    it('WHEN the state is built THEN it carries it', () => {
+      const shown = { ...GRAPH_SHOWN_STUB, affectedShown };
+      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, shown);
 
-    expect(state).toMatchObject({ kind: 'graph', affectedShown });
+      expect(state).toMatchObject({ kind: 'graph', affectedShown });
+    });
   });
 
-  it('GIVEN a loaded root WHEN built through graphStateOfRoot THEN the toggles pass through', () => {
-    const root = { ...ROOT_STATE_STUB, model: GRAPH_MODEL_STUB };
-    const shown: GraphShown = { scopeShown: true, scriptsShown: false, predictionShown: false, affectedShown: false };
+  describe('GIVEN a loaded root', () => {
+    it('WHEN built through graphStateOfRoot THEN the toggles pass through', () => {
+      const root = { ...ROOT_STATE_STUB, model: GRAPH_MODEL_STUB };
+      const shown: GraphShown = { scopeShown: true, scriptsShown: false, predictionShown: false, affectedShown: false };
 
-    const state = graphStateOfRoot(root, NO_LAYOUT_CACHES_STUB, shown);
+      const state = graphStateOfRoot(root, NO_LAYOUT_CACHES_STUB, shown);
 
-    expect(state).toMatchObject({ kind: 'graph', scopeShown: true, scriptsShown: false });
+      expect(state).toMatchObject({ kind: 'graph', scopeShown: true, scriptsShown: false });
+    });
   });
 
-  it('GIVEN toggles of every value WHEN built THEN hash, positions and tasks are the same', () => {
-    const hidden = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
-    const shown = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, BOTH);
+  describe('GIVEN toggles of every value', () => {
+    it('WHEN built THEN hash, positions and tasks are the same', () => {
+      const hidden = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+      const shown = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, BOTH);
 
-    expect({ ...shown, ...GRAPH_SHOWN_STUB }).toStrictEqual(hidden);
+      expect({ ...shown, ...GRAPH_SHOWN_STUB }).toStrictEqual(hidden);
+    });
   });
 
   describe('GIVEN a script-only package', () => {

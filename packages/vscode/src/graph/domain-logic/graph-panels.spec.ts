@@ -101,15 +101,17 @@ describe('FEATURE: graph panel registry', () => {
       expect(viewAt(fakes, 0).send).toHaveBeenCalledTimes(2);
     });
 
-    it('GIVEN panels built with scope shown WHEN the page sends ready THEN the posted state carries scopeShown true', () => {
-      const scopedGraph: GraphReady = { ...GRAPH_STATE_STUB, scopeShown: true };
-      const scopedState: GraphHostMessage = { type: 'state', state: scopedGraph };
-      const scoped = panelsWith(togglesOf(true));
+    describe('GIVEN panels built with scope shown', () => {
+      it('WHEN the page sends ready THEN the posted state carries scopeShown true', () => {
+        const scopedGraph: GraphReady = { ...GRAPH_STATE_STUB, scopeShown: true };
+        const scopedState: GraphHostMessage = { type: 'state', state: scopedGraph };
+        const scoped = panelsWith(togglesOf(true));
 
-      scoped.open('/ws');
-      viewAt(fakes, 0).message(READY);
+        scoped.open('/ws');
+        viewAt(fakes, 0).message(READY);
 
-      expect(scoped.api().posted('/ws')[0]).toStrictEqual(scopedState);
+        expect(scoped.api().posted('/ws')[0]).toStrictEqual(scopedState);
+      });
     });
 
     it('WHEN the page sends ready more than the cap THEN only the last POSTED_MAX messages are kept', () => {

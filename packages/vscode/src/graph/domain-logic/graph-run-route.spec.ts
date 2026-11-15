@@ -150,114 +150,114 @@ describe('FEATURE: routing a graph run request to the run commands', () => {
       expect(ports.executeCommand).not.toHaveBeenCalled();
     });
   });
-});
 
-const LINT_TASK: RunRequest['task'] = { ...TASK_NODE_STUB, id: '//#lint' };
+  describe('GIVEN an owner the graph does not list (spec D15)', () => {
+    const LINT_TASK: RunRequest['task'] = { ...TASK_NODE_STUB, id: '//#lint' };
 
-/** A made-up entry whose package differs from its id prefix (a real id always starts with its package), so a package taken from the id shows. */
-const LINT_REQUEST: RunRequest = { ...RUN_REQUEST_STUB, packageName: 'fixture-root', task: LINT_TASK };
+    /** A made-up entry whose package differs from its id prefix (a real id always starts with its package), so a package taken from the id shows. */
+    const LINT_REQUEST: RunRequest = { ...RUN_REQUEST_STUB, packageName: 'fixture-root', task: LINT_TASK };
 
-const STOP_LINT: GraphRunRequest = { type: 'stopTask', taskId: '//#lint' };
+    const STOP_LINT: GraphRunRequest = { type: 'stopTask', taskId: '//#lint' };
 
-const RUN_LINT: GraphRunRequest = { type: 'runTask', taskId: '//#lint', noCache: false };
+    const RUN_LINT: GraphRunRequest = { type: 'runTask', taskId: '//#lint', noCache: false };
 
-const LINT_ROW = { kind: 'task', root: '/ws', key: '//#lint', packageName: 'fixture-root' };
+    const LINT_ROW = { kind: 'task', root: '/ws', key: '//#lint', packageName: 'fixture-root' };
 
-const runningStoreOf = (request: RunRequest): RunStore => {
-  const store = new RunStore();
+    const runningStoreOf = (request: RunRequest): RunStore => {
+      const store = new RunStore();
 
-  store.tryStart(request, 1000);
+      store.tryStart(request, 1000);
 
-  return store;
-};
+      return store;
+    };
 
-const endedStoreOf = (state: 'passed' | 'stopped'): RunStore => {
-  const store = runningStoreOf(LINT_REQUEST);
-  const definition: RunDefinition = { root: LINT_REQUEST.root, id: LINT_REQUEST.task.id };
+    const endedStoreOf = (state: 'passed' | 'stopped'): RunStore => {
+      const store = runningStoreOf(LINT_REQUEST);
+      const definition: RunDefinition = { root: LINT_REQUEST.root, id: LINT_REQUEST.task.id };
 
-  if (state === 'stopped') store.requestStop(definition);
+      if (state === 'stopped') store.requestStop(definition);
 
-  store.processEnded(definition, state === 'passed' ? 0 : 1, 2000);
+      store.processEnded(definition, state === 'passed' ? 0 : 1, 2000);
 
-  return store;
-};
+      return store;
+    };
 
-const emptyStoreOf = (): RunStore => new RunStore();
+    const emptyStoreOf = (): RunStore => new RunStore();
 
-const passedStoreOf = (): RunStore => endedStoreOf('passed');
+    const passedStoreOf = (): RunStore => endedStoreOf('passed');
 
-const stoppedStoreOf = (): RunStore => endedStoreOf('stopped');
+    const stoppedStoreOf = (): RunStore => endedStoreOf('stopped');
 
-describe('FEATURE: Stop on an owner the graph does not list (spec D15)', () => {
-  describe('GIVEN an unlisted //#lint with a running entry of package fixture-root WHEN stopTask //#lint is routed', () => {
-    it('THEN true is returned', async () => {
-      const context = contextOf(GRAPH_STATE_STUB, graphPortsMock(), runningStoreOf(LINT_REQUEST));
+    describe('GIVEN an unlisted //#lint with a running entry of package fixture-root WHEN stopTask //#lint is routed', () => {
+      it('THEN true is returned', async () => {
+        const context = contextOf(GRAPH_STATE_STUB, graphPortsMock(), runningStoreOf(LINT_REQUEST));
 
-      const isHandled = await routeRun(STOP_LINT, context);
+        const isHandled = await routeRun(STOP_LINT, context);
 
-      expect(isHandled).toBe(true);
+        expect(isHandled).toBe(true);
+      });
+
+      it('THEN turboConsole.stopTask gets the entry row', async () => {
+        const ports = graphPortsMock();
+
+        await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, ports, runningStoreOf(LINT_REQUEST)));
+
+        expect(ports.executeCommand).toHaveBeenCalledExactlyOnceWith('turboConsole.stopTask', LINT_ROW);
+      });
     });
 
-    it('THEN turboConsole.stopTask gets the entry row', async () => {
-      const ports = graphPortsMock();
+    describe.each<[string, () => RunStore]>([
+      ['no entry', emptyStoreOf],
+      ['a passed entry', passedStoreOf],
+      ['a stopped entry', stoppedStoreOf]
+    ])('GIVEN an unlisted id with %s WHEN stopTask is routed', (_label, storeOf) => {
+      it('THEN false is returned', async () => {
+        const isHandled = await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, graphPortsMock(), storeOf()));
 
-      await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, ports, runningStoreOf(LINT_REQUEST)));
+        expect(isHandled).toBe(false);
+      });
 
-      expect(ports.executeCommand).toHaveBeenCalledExactlyOnceWith('turboConsole.stopTask', LINT_ROW);
-    });
-  });
+      it('THEN no command runs', async () => {
+        const ports = graphPortsMock();
 
-  describe.each<[string, () => RunStore]>([
-    ['no entry', emptyStoreOf],
-    ['a passed entry', passedStoreOf],
-    ['a stopped entry', stoppedStoreOf]
-  ])('GIVEN an unlisted id with %s WHEN stopTask is routed', (_label, storeOf) => {
-    it('THEN false is returned', async () => {
-      const isHandled = await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, graphPortsMock(), storeOf()));
+        await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, ports, storeOf()));
 
-      expect(isHandled).toBe(false);
-    });
-
-    it('THEN no command runs', async () => {
-      const ports = graphPortsMock();
-
-      await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, ports, storeOf()));
-
-      expect(ports.executeCommand).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('GIVEN an unlisted id with a running entry WHEN runTask is routed', () => {
-    it('THEN false is returned', async () => {
-      const isHandled = await routeRun(RUN_LINT, contextOf(GRAPH_STATE_STUB, graphPortsMock(), runningStoreOf(LINT_REQUEST)));
-
-      expect(isHandled).toBe(false);
+        expect(ports.executeCommand).not.toHaveBeenCalled();
+      });
     });
 
-    it('THEN no command runs', async () => {
-      const ports = graphPortsMock();
+    describe('GIVEN an unlisted id with a running entry WHEN runTask is routed', () => {
+      it('THEN false is returned', async () => {
+        const isHandled = await routeRun(RUN_LINT, contextOf(GRAPH_STATE_STUB, graphPortsMock(), runningStoreOf(LINT_REQUEST)));
 
-      await routeRun(RUN_LINT, contextOf(GRAPH_STATE_STUB, ports, runningStoreOf(LINT_REQUEST)));
+        expect(isHandled).toBe(false);
+      });
 
-      expect(ports.executeCommand).not.toHaveBeenCalled();
-    });
-  });
+      it('THEN no command runs', async () => {
+        const ports = graphPortsMock();
 
-  describe('GIVEN a running entry under another root WHEN stopTask is routed for /ws', () => {
-    const otherRoot: RunRequest = { ...LINT_REQUEST, root: '/other' };
+        await routeRun(RUN_LINT, contextOf(GRAPH_STATE_STUB, ports, runningStoreOf(LINT_REQUEST)));
 
-    it('THEN false is returned', async () => {
-      const isHandled = await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, graphPortsMock(), runningStoreOf(otherRoot)));
-
-      expect(isHandled).toBe(false);
+        expect(ports.executeCommand).not.toHaveBeenCalled();
+      });
     });
 
-    it('THEN no command runs', async () => {
-      const ports = graphPortsMock();
+    describe('GIVEN a running entry under another root WHEN stopTask is routed for /ws', () => {
+      const otherRoot: RunRequest = { ...LINT_REQUEST, root: '/other' };
 
-      await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, ports, runningStoreOf(otherRoot)));
+      it('THEN false is returned', async () => {
+        const isHandled = await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, graphPortsMock(), runningStoreOf(otherRoot)));
 
-      expect(ports.executeCommand).not.toHaveBeenCalled();
+        expect(isHandled).toBe(false);
+      });
+
+      it('THEN no command runs', async () => {
+        const ports = graphPortsMock();
+
+        await routeRun(STOP_LINT, contextOf(GRAPH_STATE_STUB, ports, runningStoreOf(otherRoot)));
+
+        expect(ports.executeCommand).not.toHaveBeenCalled();
+      });
     });
   });
 });

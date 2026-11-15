@@ -80,7 +80,7 @@ const A_OWNED_BY_WEB: GraphRunsMessage['owners'] = { 'a#build': 'web#build' };
 
 const taskNamed = (tasks: GraphTask[], id: string): GraphTask | undefined => tasks.find((task) => task.id === id);
 
-describe('FEATURE: graph task list', () => {
+describe('FEATURE: graph task list, atom groups and runs words', () => {
   describe('GIVEN a package with a turbo task, two scripts and an atom-file task', () => {
     const tasks = graphTasksOf(modelOf(packageOf('p', P_TASKS)));
 
@@ -141,9 +141,7 @@ describe('FEATURE: graph task list', () => {
       expect(tasks[0]?.dependencies).toStrictEqual([]);
     });
   });
-});
 
-describe('FEATURE: graph listing of atom groups', () => {
   describe('GIVEN a model with one Atomizer group', () => {
     const listing = graphListingOf(GRAPH_ATOM_MODEL_STUB);
 
@@ -234,9 +232,7 @@ describe('FEATURE: graph listing of atom groups', () => {
       expect(taskNamed(listing.tasks, outside.id)?.dependencies).toStrictEqual([UMBRELLA_ID]);
     });
   });
-});
 
-describe('FEATURE: graph runs words (own runs only)', () => {
   describe('GIVEN a run of a file of a listed group', () => {
     it('WHEN the map is built over the run ids THEN it holds that state by file id', () => {
       const get = lookupOf(runOf(ROOT, FILE_A, 'passed'));

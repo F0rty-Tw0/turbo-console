@@ -67,7 +67,7 @@ const withPrediction = (state: GraphState, prediction: PredictionFake): RequestC
   return withFake;
 };
 
-describe('FEATURE: graph request messages', () => {
+describe('FEATURE: graph requests', () => {
   describe('GIVEN a message type', () => {
     it.each([[RELOAD], [OPEN_WEB], [RUN_A_BUILD], [STOP_A_BUILD], [SHOWN_UMBRELLAS], [SHOWN_PACKAGES], [SET_SCOPE]])(
       'WHEN it is %j THEN it is a request',
@@ -83,9 +83,7 @@ describe('FEATURE: graph request messages', () => {
       }
     );
   });
-});
 
-describe('FEATURE: graph request handling', () => {
   describe('GIVEN a reload on an error state', () => {
     it('WHEN it is handled THEN the coordinator is asked to refresh', async () => {
       const context = contextOf(ERROR_STATE);
@@ -202,170 +200,170 @@ describe('FEATURE: graph request handling', () => {
       expect(isHandled).toBe(false);
     });
   });
-});
 
-describe('FEATURE: graph setViewToggle request', () => {
-  describe('GIVEN a setViewToggle for scope', () => {
-    it('WHEN it is handled THEN the scope toggle is set to the given value', async () => {
-      const context = contextOf(GRAPH_STATE_STUB);
+  describe('GIVEN a setViewToggle request', () => {
+    describe('GIVEN a setViewToggle for scope', () => {
+      it('WHEN it is handled THEN the scope toggle is set to the given value', async () => {
+        const context = contextOf(GRAPH_STATE_STUB);
 
-      await requestHandledOf(SET_SCOPE, context);
+        await requestHandledOf(SET_SCOPE, context);
 
-      expect(context.feeds.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
+        expect(context.feeds.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
+      });
+
+      it('WHEN it is handled THEN the scripts toggle is not set', async () => {
+        const context = contextOf(GRAPH_STATE_STUB);
+
+        await requestHandledOf(SET_SCOPE, context);
+
+        expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
+      });
+
+      it('WHEN it is handled THEN true is returned', async () => {
+        const isHandled = await requestHandledOf(SET_SCOPE, contextOf(GRAPH_STATE_STUB));
+
+        expect(isHandled).toBe(true);
+      });
     });
 
-    it('WHEN it is handled THEN the scripts toggle is not set', async () => {
-      const context = contextOf(GRAPH_STATE_STUB);
+    describe('GIVEN a setViewToggle for prediction', () => {
+      it('WHEN it is handled THEN only the prediction toggle is set', async () => {
+        const context = contextOf(GRAPH_STATE_STUB);
 
-      await requestHandledOf(SET_SCOPE, context);
+        await requestHandledOf(SET_PREDICTION, context);
 
-      expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
+        expect(context.feeds.toggles.prediction.set).toHaveBeenCalledExactlyOnceWith(true);
+        expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
+        expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
+      });
     });
 
-    it('WHEN it is handled THEN true is returned', async () => {
-      const isHandled = await requestHandledOf(SET_SCOPE, contextOf(GRAPH_STATE_STUB));
+    describe('GIVEN a setViewToggle for affected', () => {
+      it('WHEN it is handled THEN only the affected toggle is set', async () => {
+        const context = contextOf(GRAPH_STATE_STUB);
 
-      expect(isHandled).toBe(true);
-    });
-  });
+        await requestHandledOf(SET_AFFECTED, context);
 
-  describe('GIVEN a setViewToggle for prediction', () => {
-    it('WHEN it is handled THEN only the prediction toggle is set', async () => {
-      const context = contextOf(GRAPH_STATE_STUB);
-
-      await requestHandledOf(SET_PREDICTION, context);
-
-      expect(context.feeds.toggles.prediction.set).toHaveBeenCalledExactlyOnceWith(true);
-      expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
-      expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('GIVEN a setViewToggle for affected', () => {
-    it('WHEN it is handled THEN only the affected toggle is set', async () => {
-      const context = contextOf(GRAPH_STATE_STUB);
-
-      await requestHandledOf(SET_AFFECTED, context);
-
-      expect(context.feeds.toggles.affected.set).toHaveBeenCalledExactlyOnceWith(true);
-      expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
-      expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
-      expect(context.feeds.toggles.prediction.set).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('GIVEN a setViewToggle for scripts', () => {
-    it('WHEN it is handled THEN the scripts toggle is set to the given value', async () => {
-      const context = contextOf(GRAPH_STATE_STUB);
-
-      await requestHandledOf(SET_SCRIPTS, context);
-
-      expect(context.feeds.toggles.scripts.set).toHaveBeenCalledExactlyOnceWith(true);
+        expect(context.feeds.toggles.affected.set).toHaveBeenCalledExactlyOnceWith(true);
+        expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
+        expect(context.feeds.toggles.scripts.set).not.toHaveBeenCalled();
+        expect(context.feeds.toggles.prediction.set).not.toHaveBeenCalled();
+      });
     });
 
-    it('WHEN it is handled THEN the scope toggle is not set', async () => {
-      const context = contextOf(GRAPH_STATE_STUB);
+    describe('GIVEN a setViewToggle for scripts', () => {
+      it('WHEN it is handled THEN the scripts toggle is set to the given value', async () => {
+        const context = contextOf(GRAPH_STATE_STUB);
 
-      await requestHandledOf(SET_SCRIPTS, context);
+        await requestHandledOf(SET_SCRIPTS, context);
 
-      expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
-    });
-  });
+        expect(context.feeds.toggles.scripts.set).toHaveBeenCalledExactlyOnceWith(true);
+      });
 
-  describe('GIVEN a state that is not a graph', () => {
-    it('WHEN a setViewToggle is handled THEN the toggle is still set', async () => {
-      const context = contextOf(LOADING_STATE);
+      it('WHEN it is handled THEN the scope toggle is not set', async () => {
+        const context = contextOf(GRAPH_STATE_STUB);
 
-      await requestHandledOf(SET_SCOPE, context);
+        await requestHandledOf(SET_SCRIPTS, context);
 
-      expect(context.feeds.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
-    });
-
-    it('WHEN a setViewToggle is handled THEN true is returned', async () => {
-      const isHandled = await requestHandledOf(SET_SCOPE, contextOf(LOADING_STATE));
-
-      expect(isHandled).toBe(true);
-    });
-  });
-
-  describe('GIVEN a toggle whose set rejects', () => {
-    it('WHEN a setViewToggle is handled THEN true is returned and nothing is thrown', async () => {
-      const toggles = togglesOf();
-      const context = contextOf(GRAPH_STATE_STUB, SHARED_ATOMS_STUB, toggles);
-
-      toggles.scope.set.mockRejectedValueOnce(new Error('boom'));
-
-      const isHandled = await requestHandledOf(SET_SCOPE, context);
-
-      expect(isHandled).toBe(true);
-    });
-  });
-});
-
-describe('FEATURE: graph shownTaskPackages request', () => {
-  describe('GIVEN a graph state', () => {
-    it('WHEN it names listed, unknown and repeated packages THEN packageShown(root, name) runs once per listed package', async () => {
-      const fake = predictionFake(() => null);
-
-      await requestHandledOf(SHOWN_PACKAGES, withPrediction(GRAPH_STATE_STUB, fake));
-
-      expect(fake.packageShown.mock.calls).toStrictEqual([
-        ['/ws', 'a'],
-        ['/ws', 'web']
-      ]);
+        expect(context.feeds.toggles.scope.set).not.toHaveBeenCalled();
+      });
     });
 
-    it('WHEN it names only unknown packages THEN nothing is requested and the message is handled', async () => {
-      const fake = predictionFake(() => null);
-      const unknown: GraphRequestMessage = { type: 'shownTaskPackages', packageNames: ['gone'] };
-      const isHandled = await requestHandledOf(unknown, withPrediction(GRAPH_STATE_STUB, fake));
+    describe('GIVEN a state that is not a graph', () => {
+      it('WHEN a setViewToggle is handled THEN the toggle is still set', async () => {
+        const context = contextOf(LOADING_STATE);
 
-      expect(fake.packageShown).not.toHaveBeenCalled();
-      expect(isHandled).toBe(true);
+        await requestHandledOf(SET_SCOPE, context);
+
+        expect(context.feeds.toggles.scope.set).toHaveBeenCalledExactlyOnceWith(true);
+      });
+
+      it('WHEN a setViewToggle is handled THEN true is returned', async () => {
+        const isHandled = await requestHandledOf(SET_SCOPE, contextOf(LOADING_STATE));
+
+        expect(isHandled).toBe(true);
+      });
+    });
+
+    describe('GIVEN a toggle whose set rejects', () => {
+      it('WHEN a setViewToggle is handled THEN true is returned and nothing is thrown', async () => {
+        const toggles = togglesOf();
+        const context = contextOf(GRAPH_STATE_STUB, SHARED_ATOMS_STUB, toggles);
+
+        toggles.scope.set.mockRejectedValueOnce(new Error('boom'));
+
+        const isHandled = await requestHandledOf(SET_SCOPE, context);
+
+        expect(isHandled).toBe(true);
+      });
     });
   });
 
-  describe.each([[LOADING_STATE], [ERROR_STATE]])('GIVEN a state that is not a graph (%j)', (state) => {
-    it('WHEN it names a package THEN it is not handled and nothing is requested', async () => {
-      const fake = predictionFake(() => null);
-      const isHandled = await requestHandledOf(SHOWN_PACKAGES, withPrediction(state, fake));
+  describe('GIVEN a shownTaskPackages request', () => {
+    describe('GIVEN a graph state', () => {
+      it('WHEN it names listed, unknown and repeated packages THEN packageShown(root, name) runs once per listed package', async () => {
+        const fake = predictionFake(() => null);
 
-      expect(isHandled).toBe(false);
-      expect(fake.packageShown).not.toHaveBeenCalled();
+        await requestHandledOf(SHOWN_PACKAGES, withPrediction(GRAPH_STATE_STUB, fake));
+
+        expect(fake.packageShown.mock.calls).toStrictEqual([
+          ['/ws', 'a'],
+          ['/ws', 'web']
+        ]);
+      });
+
+      it('WHEN it names only unknown packages THEN nothing is requested and the message is handled', async () => {
+        const fake = predictionFake(() => null);
+        const unknown: GraphRequestMessage = { type: 'shownTaskPackages', packageNames: ['gone'] };
+        const isHandled = await requestHandledOf(unknown, withPrediction(GRAPH_STATE_STUB, fake));
+
+        expect(fake.packageShown).not.toHaveBeenCalled();
+        expect(isHandled).toBe(true);
+      });
+    });
+
+    describe.each([[LOADING_STATE], [ERROR_STATE]])('GIVEN a state that is not a graph (%j)', (state) => {
+      it('WHEN it names a package THEN it is not handled and nothing is requested', async () => {
+        const fake = predictionFake(() => null);
+        const isHandled = await requestHandledOf(SHOWN_PACKAGES, withPrediction(state, fake));
+
+        expect(isHandled).toBe(false);
+        expect(fake.packageShown).not.toHaveBeenCalled();
+      });
     });
   });
-});
 
-describe('FEATURE: graph shownUmbrellas request', () => {
-  describe('GIVEN a graph state with two umbrellas of one package', () => {
-    it('WHEN it names both, a file, a listed build and an unknown id THEN childrenRequested(root, package) runs once', async () => {
-      const { atoms, childrenRequested } = atomsFake(() => GRAPH_ATOM_UNLOADED_VIEW_STUB);
+  describe('GIVEN a shownUmbrellas request', () => {
+    describe('GIVEN a graph state with two umbrellas of one package', () => {
+      it('WHEN it names both, a file, a listed build and an unknown id THEN childrenRequested(root, package) runs once', async () => {
+        const { atoms, childrenRequested } = atomsFake(() => GRAPH_ATOM_UNLOADED_VIEW_STUB);
 
-      await requestHandledOf(SHOWN_UMBRELLAS, contextOf(TWO_GROUP_STATE, atoms));
+        await requestHandledOf(SHOWN_UMBRELLAS, contextOf(TWO_GROUP_STATE, atoms));
 
-      expect(childrenRequested).toHaveBeenCalledExactlyOnceWith('/ws', '@fx/e2e');
+        expect(childrenRequested).toHaveBeenCalledExactlyOnceWith('/ws', '@fx/e2e');
+      });
+
+      it('WHEN it names both THEN the message is handled', async () => {
+        const isHandled = await requestHandledOf(SHOWN_UMBRELLAS, contextOf(TWO_GROUP_STATE));
+
+        expect(isHandled).toBe(true);
+      });
+
+      it('WHEN it names only unknown ids THEN nothing is requested', async () => {
+        const { atoms, childrenRequested } = atomsFake(() => GRAPH_ATOM_UNLOADED_VIEW_STUB);
+
+        await requestHandledOf({ type: 'shownUmbrellas', ids: ['gone#nothing'] }, contextOf(TWO_GROUP_STATE, atoms));
+
+        expect(childrenRequested).not.toHaveBeenCalled();
+      });
     });
 
-    it('WHEN it names both THEN the message is handled', async () => {
-      const isHandled = await requestHandledOf(SHOWN_UMBRELLAS, contextOf(TWO_GROUP_STATE));
+    describe('GIVEN a state that is not a graph', () => {
+      it('WHEN it names an umbrella THEN the message is not handled', async () => {
+        const isHandled = await requestHandledOf(SHOWN_UMBRELLAS, contextOf(LOADING_STATE));
 
-      expect(isHandled).toBe(true);
-    });
-
-    it('WHEN it names only unknown ids THEN nothing is requested', async () => {
-      const { atoms, childrenRequested } = atomsFake(() => GRAPH_ATOM_UNLOADED_VIEW_STUB);
-
-      await requestHandledOf({ type: 'shownUmbrellas', ids: ['gone#nothing'] }, contextOf(TWO_GROUP_STATE, atoms));
-
-      expect(childrenRequested).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('GIVEN a state that is not a graph', () => {
-    it('WHEN it names an umbrella THEN the message is not handled', async () => {
-      const isHandled = await requestHandledOf(SHOWN_UMBRELLAS, contextOf(LOADING_STATE));
-
-      expect(isHandled).toBe(false);
+        expect(isHandled).toBe(false);
+      });
     });
   });
 });

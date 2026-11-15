@@ -15,20 +15,26 @@ const stateOf = (fields: Partial<RootState>): RootState => {
 };
 
 describe('FEATURE: tasks of a root', () => {
-  it('GIVEN a loaded root WHEN tasksOfRoot runs THEN it lists the tasks graphStateOfRoot lists', () => {
-    const root = stateOf({ model: GRAPH_MODEL_STUB });
-    const state = graphStateOfRoot(root, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
-    const listed = state.kind === 'graph' ? state.tasks : NO_TASKS;
+  describe('GIVEN a loaded root', () => {
+    it('WHEN tasksOfRoot runs THEN it lists the tasks graphStateOfRoot lists', () => {
+      const root = stateOf({ model: GRAPH_MODEL_STUB });
+      const state = graphStateOfRoot(root, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+      const listed = state.kind === 'graph' ? state.tasks : NO_TASKS;
 
-    expect(listed.length).toBeGreaterThan(0);
-    expect(tasksOfRoot(root)).toStrictEqual(listed);
+      expect(listed.length).toBeGreaterThan(0);
+      expect(tasksOfRoot(root)).toStrictEqual(listed);
+    });
   });
 
-  it('GIVEN no root state WHEN tasksOfRoot runs THEN it is empty', () => {
-    expect(tasksOfRoot(undefined)).toStrictEqual([]);
+  describe('GIVEN no root state', () => {
+    it('WHEN tasksOfRoot runs THEN it is empty', () => {
+      expect(tasksOfRoot(undefined)).toStrictEqual([]);
+    });
   });
 
-  it('GIVEN a root without a model WHEN tasksOfRoot runs THEN it is empty', () => {
-    expect(tasksOfRoot(stateOf({ model: null }))).toStrictEqual([]);
+  describe('GIVEN a root without a model', () => {
+    it('WHEN tasksOfRoot runs THEN it is empty', () => {
+      expect(tasksOfRoot(stateOf({ model: null }))).toStrictEqual([]);
+    });
   });
 });

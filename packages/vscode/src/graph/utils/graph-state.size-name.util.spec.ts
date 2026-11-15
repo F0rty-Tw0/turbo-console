@@ -51,19 +51,25 @@ describe('FEATURE: graph package sizeName', () => {
     });
   });
 
-  it('GIVEN a root labelled root beside web WHEN built THEN the root sizes for (root) root', () => {
-    const labelled: PackageNode = { ...ROOT_NODE, label: 'root' };
+  describe('GIVEN a root labelled root beside web', () => {
+    it('WHEN built THEN the root sizes for (root) root', () => {
+      const labelled: PackageNode = { ...ROOT_NODE, label: 'root' };
 
-    expect(sizeNamesOf(modelOf([labelled, WEB_NODE]), GRAPH_SHOWN_STUB)).toStrictEqual(['(root) root', undefined]);
+      expect(sizeNamesOf(modelOf([labelled, WEB_NODE]), GRAPH_SHOWN_STUB)).toStrictEqual(['(root) root', undefined]);
+    });
   });
 
-  it('GIVEN a root-only single-package model WHEN built THEN no package carries a sizeName', () => {
-    expect(sizeNamesOf(modelOf([ROOT_NODE], true), GRAPH_SHOWN_STUB)).toStrictEqual([undefined]);
+  describe('GIVEN a root-only single-package model', () => {
+    it('WHEN built THEN no package carries a sizeName', () => {
+      expect(sizeNamesOf(modelOf([ROOT_NODE], true), GRAPH_SHOWN_STUB)).toStrictEqual([undefined]);
+    });
   });
 
-  it('GIVEN a root with no label beside web WHEN built THEN no package carries a sizeName', () => {
-    const unlabelled: PackageNode = { ...ROOT_NODE, label: null };
+  describe('GIVEN a root with no label beside web', () => {
+    it('WHEN built THEN no package carries a sizeName', () => {
+      const unlabelled: PackageNode = { ...ROOT_NODE, label: null };
 
-    expect(sizeNamesOf(modelOf([unlabelled, WEB_NODE]), GRAPH_SHOWN_STUB)).toStrictEqual([undefined, undefined]);
+      expect(sizeNamesOf(modelOf([unlabelled, WEB_NODE]), GRAPH_SHOWN_STUB)).toStrictEqual([undefined, undefined]);
+    });
   });
 });

@@ -8,23 +8,27 @@ import { graphListingOf } from '../utils/graph-tasks.util.ts';
 const NEXT_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB };
 
 describe('FEATURE: graph listing memo', () => {
-  it('GIVEN a model WHEN its listing is read THEN it equals graphListingOf of it', () => {
-    const memo = new GraphListingMemo();
+  describe('GIVEN a model', () => {
+    it('WHEN its listing is read THEN it equals graphListingOf of it', () => {
+      const memo = new GraphListingMemo();
 
-    expect(memo.of(GRAPH_MODEL_STUB)).toStrictEqual(graphListingOf(GRAPH_MODEL_STUB));
+      expect(memo.of(GRAPH_MODEL_STUB)).toStrictEqual(graphListingOf(GRAPH_MODEL_STUB));
+    });
   });
 
-  it('GIVEN a listing read WHEN the same model is read again THEN the same listing object comes back', () => {
-    const memo = new GraphListingMemo();
-    const first = memo.of(GRAPH_MODEL_STUB);
+  describe('GIVEN a listing read', () => {
+    it('WHEN the same model is read again THEN the same listing object comes back', () => {
+      const memo = new GraphListingMemo();
+      const first = memo.of(GRAPH_MODEL_STUB);
 
-    expect(memo.of(GRAPH_MODEL_STUB)).toBe(first);
-  });
+      expect(memo.of(GRAPH_MODEL_STUB)).toBe(first);
+    });
 
-  it('GIVEN a listing read WHEN a replaced model is read THEN a new listing is built', () => {
-    const memo = new GraphListingMemo();
-    const first = memo.of(GRAPH_MODEL_STUB);
+    it('WHEN a replaced model is read THEN a new listing is built', () => {
+      const memo = new GraphListingMemo();
+      const first = memo.of(GRAPH_MODEL_STUB);
 
-    expect(memo.of(NEXT_MODEL)).not.toBe(first);
+      expect(memo.of(NEXT_MODEL)).not.toBe(first);
+    });
   });
 });

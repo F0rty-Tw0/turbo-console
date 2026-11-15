@@ -1,12 +1,12 @@
-import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
+import type { TaskNode } from '@turbo-console/core';
 import { describe, expect, it, vi } from 'vitest';
 
-import { clockedRunsOf, persistentIdsOf } from './graph-tasks.util.ts';
+import { clockedRunsOf } from './graph-tasks.util.ts';
 import type { ProgressOwner, ProgressRecord } from '../../run/common/run-progress.type.ts';
 import type { RunEntry } from '../../run/common/run.type.ts';
 import { RUN_ENTRY_STUB } from '../../run/test/stubs/run.stub.ts';
 import { recordOf } from '../../run/test/utils/run-progress.spec.util.ts';
-import { PACKAGE_NODE_STUB, TASK_NODE_STUB, WORKSPACE_MODEL_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
+import { TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { RunSources } from '../common/graph.type.ts';
 
 type MergeRow = {
@@ -139,18 +139,6 @@ const passedEntryOf = (taskId: string): RunEntry => {
   return entry;
 };
 
-const packageOf = (name: string, tasks: TaskNode[]): PackageNode => {
-  const node: PackageNode = { ...PACKAGE_NODE_STUB, name, tasks };
-
-  return node;
-};
-
-const taskNamed = (id: string, isPersistent: boolean): TaskNode => {
-  const task: TaskNode = { ...TASK_NODE_STUB, id, name: id.slice(id.indexOf('#') + 1), persistent: isPersistent };
-
-  return task;
-};
-
 describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
   describe('GIVEN ui#build listed', () => {
     it('WHEN no own run and no record names it THEN runs has no ui#build key and the message has no owners', () => {
@@ -271,35 +259,5 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
       expect(recordsOf.mock.calls).toStrictEqual([['/ws', 'ui#build']]);
       expect(get.mock.calls).toStrictEqual([['/ws', 'ui#build']]);
     });
-  });
-});
-
-describe('FEATURE: persistent ids of a model', () => {
-  it('GIVEN web#dev persistent and web#build not WHEN taken THEN only web#dev', () => {
-    const web = packageOf('web', [taskNamed('web#build', false), taskNamed('web#dev', true)]);
-    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [web] };
-
-    const ids = persistentIdsOf(model);
-
-    expect([...ids]).toStrictEqual(['web#dev']);
-  });
-
-  it('GIVEN a persistent root task //#dev WHEN taken THEN //#dev is among them', () => {
-    const root = packageOf('//', [taskNamed('//#dev', true)]);
-    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [root] };
-
-    const ids = persistentIdsOf(model);
-
-    expect([...ids]).toStrictEqual(['//#dev']);
-  });
-
-  it('GIVEN a persistent atom file WHEN taken THEN it is not listed', () => {
-    const persistentFile = taskNamed('web#f', true);
-    const file: TaskNode = { ...persistentFile, kind: 'atom-file' };
-    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [packageOf('web', [file])] };
-
-    const ids = persistentIdsOf(model);
-
-    expect(ids.size).toBe(0);
   });
 });

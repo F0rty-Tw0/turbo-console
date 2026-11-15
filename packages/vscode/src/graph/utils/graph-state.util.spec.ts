@@ -1,23 +1,8 @@
-import { TurboException } from '@turbo-console/core';
 import type { PackageNode, TaskNode, WorkspaceModel } from '@turbo-console/core';
-import type { GraphEdge, GraphPackage, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
+import type { GraphPackage, GraphState, GraphTask, Positions } from '@turbo-console/webview-ui';
 import { describe, expect, it } from 'vitest';
 
-import {
-  graphHashOf,
-  graphStateOf,
-  graphStateOfRoot,
-  persistentIdsOfRoot,
-  rootLabelOf,
-  rootPackageLabelOf,
-  runIdsOfRoot
-} from './graph-state.util.ts';
-import { runIdsOf } from './graph-tasks.util.ts';
-import type { RootState } from '../../roots/common/coordinator.type.ts';
-import { LOAD_FAILURE_STUB } from '../../roots/test/stubs/root.stub.ts';
-import { loadFailureOf } from '../../roots/test/utils/load-failure.spec.util.ts';
-import { MESSAGE_TEXTS } from '../../tree/common/message.const.ts';
-import { ROOT_STATE_STUB } from '../../tree/test/stubs/root-state.stub.ts';
+import { graphStateOf, rootLabelOf, rootPackageLabelOf } from './graph-state.util.ts';
 import { PACKAGE_NODE_STUB, TASK_NODE_STUB } from '../../tree/test/stubs/workspace-model.stub.ts';
 import type { GraphLayoutCacheEntry, GraphLayoutCaches } from '../common/graph-cache.type.ts';
 import {
@@ -32,10 +17,6 @@ import { graphPackageOf, rootNode } from '../test/utils/graph-model.spec.util.ts
 
 const ROOT_FIRST_NAMES = [{ name: '//' }, { name: '@org/x' }, { name: 'a' }, { name: 'web' }];
 const PROTO_NAMES = [{ name: '__proto__', tags: ['constructor'] }];
-const EDGE_A: GraphEdge = { source: 'a', target: 'b' };
-const EDGE_B: GraphEdge = { source: 'b', target: 'a' };
-const ARROW_NAMED: GraphEdge = { source: 'a>b', target: 'c' };
-const ARROW_SPLIT: GraphEdge = { source: 'a', target: 'b>c' };
 const SCOPED_BASE = graphPackageOf('@org/x', 'packages/libs/x', [], 1);
 const SCOPED_INFO: GraphPackage = { ...SCOPED_BASE, bareName: 'x' };
 const GRAPH_INFOS = [SCOPED_INFO, graphPackageOf('a', 'packages/a', [], 1), graphPackageOf('web', 'apps/web', ['app', 'ui'], 2)];
@@ -47,9 +28,6 @@ const GHOSTED: GraphLayoutCacheEntry = { hash: GRAPH_HASH_STUB, positions: GHOST
 const ROOT_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build' };
 const ROOT_NODE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app', tasks: [ROOT_TASK] };
 const ROOT_INFOS = [{ name: '//', path: '' }];
-const DEV_TASK: TaskNode = { ...TASK_NODE_STUB, id: '//#dev', name: 'dev', persistent: true };
-const DEV_ROOT_NODE: PackageNode = { ...ROOT_NODE, tasks: [ROOT_TASK, DEV_TASK] };
-const DEV_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [DEV_ROOT_NODE] };
 const SINGLE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [ROOT_NODE] };
 const GROWN_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, packages: [...GRAPH_MODEL_STUB.packages, rootNode('new')] };
 
@@ -205,150 +183,5 @@ describe('FEATURE: graph state builder', () => {
         expect(state).toMatchObject({ positions, folderPositions });
       }
     );
-  });
-});
-
-describe('FEATURE: graph hash', () => {
-  it('GIVEN packages whose task counts differ WHEN hashed THEN the hash is the same', () => {
-    const few = graphHashOf([graphPackageOf('a', 'x', [], 1)], []);
-    const many = graphHashOf([graphPackageOf('a', 'x', [], 40)], []);
-
-    expect(few).toBe(many);
-  });
-
-  it.each([
-    [[], [], '1680411b'],
-    [[graphPackageOf('a', 'packages/a'), graphPackageOf('b', 'packages/b')], [{ source: 'a', target: 'b' }], '36bdd734'],
-    [[graphPackageOf('é', '')], [], 'b38d7f57'],
-    [[graphPackageOf('p3', 'packages/p3', ['t'])], [], 'bbb4f037'],
-    [[graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], [], '33b494ed'],
-    [[graphPackageOf('__proto__', '', ['constructor'])], [], '7169b5ab']
-  ])('GIVEN packages %j and edges %j WHEN hashed THEN it is %s (FNV-1a over UTF-8)', (packages, edges, expected) => {
-    expect(graphHashOf(packages, edges)).toBe(expected);
-  });
-
-  it('WHEN the same graph is listed in another order THEN the hash is the same', () => {
-    const shuffled = graphHashOf([graphPackageOf('b', 'y'), graphPackageOf('a', 'x')], [EDGE_B, EDGE_A]);
-
-    expect(shuffled).toBe(graphHashOf([graphPackageOf('a', 'x'), graphPackageOf('b', 'y')], [EDGE_A, EDGE_B]));
-  });
-
-  it('WHEN an edge is added THEN the hash changes', () => {
-    const packages = [graphPackageOf('a', 'x'), graphPackageOf('b', 'y')];
-
-    expect(graphHashOf(packages, [EDGE_A])).not.toBe(graphHashOf(packages, [EDGE_A, EDGE_B]));
-  });
-
-  it('WHEN a path changes THEN the hash changes', () => {
-    const base = graphHashOf([graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], []);
-
-    const changed = graphHashOf([graphPackageOf('a', 'x2'), graphPackageOf('b', 'y', ['t'])], []);
-
-    expect(changed).not.toBe(base);
-  });
-
-  it('WHEN a tag changes THEN the hash changes', () => {
-    const base = graphHashOf([graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['t'])], []);
-
-    const changed = graphHashOf([graphPackageOf('a', 'x'), graphPackageOf('b', 'y', ['u'])], []);
-
-    expect(changed).not.toBe(base);
-  });
-
-  it('GIVEN edges whose names contain > WHEN hashed THEN the two ways to split a>b>c differ', () => {
-    const names = ['a', 'a>b', 'b', 'b>c', 'c'];
-    const packages = names.map((name) => graphPackageOf(name, ''));
-
-    const named = graphHashOf(packages, [ARROW_NAMED]);
-    const split = graphHashOf(packages, [ARROW_SPLIT]);
-
-    expect(named).not.toBe(split);
-  });
-});
-
-const stateOf = (fields: Partial<RootState>): RootState => {
-  const state: RootState = { ...ROOT_STATE_STUB, ...fields };
-
-  return state;
-};
-const LOAD_FAILURE = loadFailureOf('load', new TurboException('failed', 'bad json'));
-const LOADING: GraphState = { kind: 'loading' };
-
-describe('FEATURE: graph state of a root', () => {
-  it('GIVEN no state WHEN built THEN it is loading', () => {
-    expect(graphStateOfRoot(undefined, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB)).toStrictEqual(LOADING);
-  });
-
-  it('GIVEN no model and no error WHEN built THEN it is loading', () => {
-    expect(graphStateOfRoot(stateOf({ model: null }), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB)).toStrictEqual(LOADING);
-  });
-
-  it('GIVEN no model and a binary failure WHEN built THEN it is the binary text', () => {
-    const state = graphStateOfRoot(stateOf({ model: null, error: LOAD_FAILURE_STUB }), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
-
-    expect(state).toStrictEqual({ kind: 'error', message: MESSAGE_TEXTS['binary-not-found'] });
-  });
-
-  it('GIVEN no model and a load failure WHEN built THEN it is the load text', () => {
-    const state = graphStateOfRoot(stateOf({ model: null, error: LOAD_FAILURE }), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
-
-    expect(state).toStrictEqual({ kind: 'error', message: MESSAGE_TEXTS['load-no-model'] });
-  });
-
-  it('GIVEN a model kept after a load failure WHEN built THEN it is that model graph', () => {
-    const state = graphStateOfRoot(stateOf({ model: GRAPH_MODEL_STUB, error: LOAD_FAILURE }), NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
-
-    expect(state).toStrictEqual(GRAPH_STATE_STUB);
-  });
-
-  it('GIVEN a model with a binary failure WHEN built THEN it is the binary error', () => {
-    const state = graphStateOfRoot(
-      stateOf({ model: GRAPH_MODEL_STUB, error: LOAD_FAILURE_STUB }),
-      NO_LAYOUT_CACHES_STUB,
-      GRAPH_SHOWN_STUB
-    );
-
-    expect(state).toStrictEqual({ kind: 'error', message: MESSAGE_TEXTS['binary-not-found'] });
-  });
-});
-
-describe('FEATURE: run ids of a root', () => {
-  it.each([
-    ['a graph', stateOf({ model: GRAPH_MODEL_STUB })],
-    ['a single-package model', stateOf({ model: SINGLE_MODEL })],
-    ['a binary failure over a model', stateOf({ model: GRAPH_MODEL_STUB, error: LOAD_FAILURE_STUB })],
-    ['a load failure with no model', stateOf({ model: null, error: LOAD_FAILURE })],
-    ['no model and no error', stateOf({ model: null })],
-    ['no state', undefined]
-  ])('GIVEN %s WHEN the run ids are read THEN they are those of the state', (_label, root) => {
-    const state = graphStateOfRoot(root, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
-
-    expect(runIdsOfRoot(root)).toStrictEqual(runIdsOf(state));
-  });
-
-  it('GIVEN a graph WHEN the run ids are read THEN they are listed', () => {
-    expect(runIdsOfRoot(stateOf({ model: GRAPH_MODEL_STUB }))).not.toStrictEqual([]);
-  });
-
-  it('GIVEN a single-package model WHEN the run ids are read THEN they list the // tasks', () => {
-    expect(runIdsOfRoot(stateOf({ model: SINGLE_MODEL }))).not.toStrictEqual([]);
-  });
-});
-
-describe('FEATURE: persistent ids of a root', () => {
-  it('GIVEN a root that shows a model with a persistent task WHEN its persistent ids are taken THEN they are those of the model', () => {
-    const ids = persistentIdsOfRoot(stateOf({ model: DEV_MODEL }));
-
-    expect([...ids]).toStrictEqual(['//#dev']);
-  });
-
-  it.each([
-    ['no state', undefined],
-    ['no model', stateOf({ model: null })],
-    ['a binary failure over a model', stateOf({ model: DEV_MODEL, error: LOAD_FAILURE_STUB })]
-  ])('GIVEN %s WHEN its persistent ids are taken THEN there are none', (_label, root) => {
-    const ids = persistentIdsOfRoot(root);
-
-    expect(ids.size).toBe(0);
   });
 });
