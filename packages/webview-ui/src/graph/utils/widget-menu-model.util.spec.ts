@@ -38,8 +38,8 @@ const SHOW_NONE: ShowFolderState = { checked: 'false', isDisabled: false };
 
 const SHOW_LOCKED: ShowFolderState = { checked: 'true', isDisabled: true };
 
-describe('FEATURE: folderMenuOf', () => {
-  it.each([
+describe('FEATURE: widget menu model', () => {
+  describe.each([
     {
       title: 'expanded, not the focus, all shown',
       state: folderStateOf(),
@@ -64,12 +64,14 @@ describe('FEATURE: folderMenuOf', () => {
       labels: ['Collapse', 'Focus folder', '---', 'Show all in folder'],
       icons: ['fold', 'target', '---', 'eye']
     }
-  ])('GIVEN a folder $title WHEN it is listed THEN it reads $labels with the icons $icons', ({ state, labels, icons }) => {
-    const model = folderMenuOf('apps', state, folderActionsMock());
+  ])('GIVEN a folder $title', ({ state, labels, icons }) => {
+    it(`WHEN it is listed THEN it reads ${JSON.stringify(labels)} with the icons ${JSON.stringify(icons)}`, () => {
+      const model = folderMenuOf('apps', state, folderActionsMock());
 
-    const listed = [labelsOf(model), iconsOf(model)];
+      const listed = [labelsOf(model), iconsOf(model)];
 
-    expect(listed).toStrictEqual([labels, icons]);
+      expect(listed).toStrictEqual([labels, icons]);
+    });
   });
 
   describe('GIVEN a folder whose group checkbox is free', () => {
@@ -112,9 +114,7 @@ describe('FEATURE: folderMenuOf', () => {
       expect(actions[action]).toHaveBeenCalledWith(...args);
     });
   });
-});
 
-describe('FEATURE: packageMenuOf', () => {
   describe('GIVEN a package with a visible task, not the focus', () => {
     const model = packageMenuOf('web', packageStateOf({ hasTasks: true }), packageActionsMock());
 
@@ -165,17 +165,19 @@ describe('FEATURE: packageMenuOf', () => {
     });
   });
 
-  it.each([
+  describe.each([
     { title: 'no visible task', hasTasks: false, expected: ['View Package Details', 'Focus', 'Start trace', '---', 'Exclude'] },
     {
       title: 'a visible task',
       hasTasks: true,
       expected: ['View Package Details', 'Focus', 'Start trace', 'Show tasks', '---', 'Exclude']
     }
-  ])('GIVEN a package with $title WHEN it is listed THEN it reads $expected', ({ hasTasks, expected }) => {
-    const labels = labelsOf(packageMenuOf('web', packageStateOf({ hasTasks }), packageActionsMock()));
+  ])('GIVEN a package with $title', ({ hasTasks, expected }) => {
+    it(`WHEN it is listed THEN it reads ${JSON.stringify(expected)}`, () => {
+      const labels = labelsOf(packageMenuOf('web', packageStateOf({ hasTasks }), packageActionsMock()));
 
-    expect(labels).toStrictEqual(expected);
+      expect(labels).toStrictEqual(expected);
+    });
   });
 
   describe.each(['web', 'constructor', '__proto__'])('GIVEN the package %j', (name) => {
@@ -196,9 +198,7 @@ describe('FEATURE: packageMenuOf', () => {
       expect(actions[action]).toHaveBeenCalledWith(...args);
     });
   });
-});
 
-describe('FEATURE: folderMenuStateOf', () => {
   describe('GIVEN the boards scene with packages collapsed', () => {
     const scene = boardsSceneOf(['packages']);
 
@@ -242,9 +242,7 @@ describe('FEATURE: folderMenuStateOf', () => {
       expect(state).toStrictEqual(folderStateOf({ show: SHOW_ALL }));
     });
   });
-});
 
-describe('FEATURE: packageMenuStateOf', () => {
   describe('GIVEN every boards package visible', () => {
     it.each([
       { title: 'web ticked, no focus', name: 'web', hidden: [], focus: null, expected: packageStateOf() },
@@ -265,10 +263,8 @@ describe('FEATURE: packageMenuStateOf', () => {
       expect(state).toStrictEqual(packageStateOf({ hasTasks: true }));
     });
   });
-});
 
-describe('FEATURE: menuTargetOf', () => {
-  it.each([
+  describe.each([
     { title: 'a folder', inspection: folderInspection('apps'), expected: APPS_TARGET },
     { title: 'a package', inspection: pkg('web'), expected: WEB_TARGET },
     { title: 'a link', inspection: link('web', 'docs'), expected: null },
@@ -276,25 +272,24 @@ describe('FEATURE: menuTargetOf', () => {
     { title: 'a trace', inspection: trace('web', 'docs'), expected: null },
     { title: 'a bundle', inspection: bundle('web', collapsedIdOf('packages')), expected: null },
     { title: 'nothing', inspection: NO_INSPECTION, expected: null }
-  ])('GIVEN $title inspected WHEN its menu target is read THEN it is $expected', ({ inspection, expected }) => {
-    const target = menuTargetOf(inspection);
+  ])('GIVEN $title inspected', ({ inspection, expected }) => {
+    it(`WHEN its menu target is read THEN it is ${JSON.stringify(expected)}`, () => {
+      const target = menuTargetOf(inspection);
 
-    expect(target).toStrictEqual(expected);
-  });
-});
-
-describe('FEATURE: menu icons from the action icon table', () => {
-  beforeEach((): void => {
-    vi.resetModules();
-    vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
-  });
-
-  afterEach((): void => {
-    vi.doUnmock('../common/graph-icon.const.ts');
-    vi.resetModules();
+      expect(target).toStrictEqual(expected);
+    });
   });
 
   describe('GIVEN a table where every action draws another icon', () => {
+    beforeEach((): void => {
+      vi.resetModules();
+      vi.doMock('../common/graph-icon.const.ts', (): object => graphIconConstMock(SWAPPED));
+    });
+
+    afterEach((): void => {
+      vi.doUnmock('../common/graph-icon.const.ts');
+      vi.resetModules();
+    });
     it.each([
       {
         title: 'with a visible task, not the focus',
