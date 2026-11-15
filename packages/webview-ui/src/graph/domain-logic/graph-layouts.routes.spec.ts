@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { GraphLayouts } from './graph-layouts.ts';
-import type { GraphWebviewMessage } from '../../bridge/common/graph-message.type.ts';
+import type { GraphWebviewMessage, LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { EdgeRoute, GraphReady, Routes } from '../../bridge/common/graph-state.type.ts';
 import { ROUTE_BENDS_MAX } from '../common/graph-layout.const.ts';
 import type { GraphDrag } from '../common/graph-page.type.ts';
@@ -54,8 +54,10 @@ const routedResultOf = (routes: Routes): LayoutResult => {
   return result;
 };
 
-const dragPostOf = (routes: Routes): GraphWebviewMessage => {
-  const post: GraphWebviewMessage = { type: 'positions', hash: 'h1', positions: DRAGGED_POSITIONS_STUB, routes, grouping: 'flat' };
+const UNTOUCHED_DRAG: GraphDrag = { positions: DRAGGED_POSITIONS_STUB, touched: [] };
+
+const dragPostOf = (routes: Routes, grouping: LayoutGrouping = 'flat'): GraphWebviewMessage => {
+  const post: GraphWebviewMessage = { type: 'positions', hash: 'h1', positions: DRAGGED_POSITIONS_STUB, routes, grouping };
 
   return post;
 };
@@ -69,112 +71,109 @@ describe('FEATURE: GraphLayouts routes', () => {
     void layouts.show(state, saved);
   };
 
+  const lastPost = (): unknown => rig.posts().at(-1);
+
   beforeEach((): void => {
     rig = layoutsRigOf();
     layouts = new GraphLayouts(rig.deps);
   });
 
   describe('GIVEN GraphReady routes for both modes', () => {
-    it('WHEN shown flat from the cache THEN setRoutes gets the flat routes after setGraph', () => {
+    it('WHEN shown flat from the cache THEN the folder links are re-labelled once, after setGraph', () => {
       open(ROUTED_BOTH);
 
-      expect(rig.view.setRoutes).toHaveBeenCalledExactlyOnceWith(FLAT_ROUTES);
-      expect(rig.view.setGraph).toHaveBeenCalledBefore(rig.view.setRoutes);
+      expect(rig.view.relinkFolders).toHaveBeenCalledOnce();
+      expect(rig.view.setGraph).toHaveBeenCalledBefore(rig.view.relinkFolders);
     });
 
-    it('WHEN shown grouped from the cache THEN setRoutes gets the folder routes after setGrouping', () => {
+    it('WHEN shown grouped from the cache THEN the folder links are re-labelled once, after setGrouping', () => {
       open(ROUTED_BOTH, SAVED_GROUPED_STUB);
 
-      expect(rig.view.setRoutes).toHaveBeenCalledExactlyOnceWith(FOLDER_ROUTES);
-      expect(rig.view.setGrouping).toHaveBeenCalledBefore(rig.view.setRoutes);
+      expect(rig.view.relinkFolders).toHaveBeenCalledOnce();
+      expect(rig.view.setGrouping).toHaveBeenCalledBefore(rig.view.relinkFolders);
     });
 
-    it('WHEN switched to grouped THEN setRoutes gets the folder routes after setPositions', () => {
+    it('WHEN switched to grouped THEN the folder links are re-labelled once, after setPositions', () => {
       open(ROUTED_BOTH);
-      rig.view.setRoutes.mockClear();
+      rig.view.relinkFolders.mockClear();
 
       void layouts.switchTo('folders');
 
-      expect(rig.view.setRoutes).toHaveBeenCalledExactlyOnceWith(FOLDER_ROUTES);
-      expect(rig.view.setPositions).toHaveBeenCalledBefore(rig.view.setRoutes);
-    });
-  });
-
-  describe('GIVEN GraphReady routes null beside cached positions', () => {
-    it('WHEN shown THEN setRoutes gets {}', () => {
-      open(STATE_STUB);
-
-      expect(rig.view.setRoutes).toHaveBeenCalledExactlyOnceWith({});
+      expect(rig.view.relinkFolders).toHaveBeenCalledOnce();
+      expect(rig.view.setPositions).toHaveBeenCalledBefore(rig.view.relinkFolders);
     });
   });
 
   describe('GIVEN no layout cached', () => {
-    it('WHEN an ELK result with routes lands THEN setRoutes gets result.routes', async () => {
+    it('WHEN an ELK result with routes lands THEN the folder links are re-labelled once', async () => {
       open(UNCACHED);
       await rig.runs.settle(0, routedResultOf(FLAT_ROUTES));
 
-      expect(rig.view.setRoutes).toHaveBeenCalledExactlyOnceWith(FLAT_ROUTES);
+      expect(rig.view.relinkFolders).toHaveBeenCalledOnce();
     });
   });
 
   describe('GIVEN flat drawn from the cache with routes for web>ui and ui>core', () => {
     beforeEach((): void => {
       open(ROUTED_BOTH);
-      rig.view.setRoutes.mockClear();
+      rig.view.relinkFolders.mockClear();
     });
 
-    it('WHEN dragged with ui>core touched THEN setRoutes gets only web>ui and the post carries only web>ui', () => {
+    it('WHEN dragged with ui>core touched THEN the folder links are re-labelled once', () => {
       layouts.dragged(UI_CORE_DRAG);
 
-      expect(rig.view.setRoutes).toHaveBeenCalledExactlyOnceWith(WEB_UI_ONLY);
+      expect(rig.view.relinkFolders).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN dragged with ui>core touched THEN the post carries only web>ui', () => {
+      layouts.dragged(UI_CORE_DRAG);
+
       expect(rig.posts()).toStrictEqual([dragPostOf(WEB_UI_ONLY)]);
     });
 
-    it('WHEN Re-layout lands after the drag THEN every edge is routed again', async () => {
+    it('WHEN Re-layout lands after the drag THEN the next drag posts every route again', async () => {
       layouts.dragged(UI_CORE_DRAG);
 
       void layouts.relayout();
       await rig.runs.settle(0, routedResultOf(FLAT_ROUTES));
+      layouts.dragged(UNTOUCHED_DRAG);
 
-      expect(rig.view.setRoutes).toHaveBeenLastCalledWith(FLAT_ROUTES);
+      expect(lastPost()).toStrictEqual(dragPostOf(FLAT_ROUTES));
     });
 
-    it('WHEN task mode is left and the package graph is redrawn THEN setRoutes gets only web>ui again', async () => {
+    it('WHEN task mode is left and the package graph is redrawn THEN the next drag still posts only web>ui', async () => {
       layouts.dragged(UI_CORE_DRAG);
-      rig.view.setRoutes.mockClear();
 
       await layouts.redraw(SAVED_FLAT_STUB);
+      layouts.dragged(UNTOUCHED_DRAG);
 
-      expect(rig.view.setRoutes).toHaveBeenCalledExactlyOnceWith(WEB_UI_ONLY);
+      expect(lastPost()).toStrictEqual(dragPostOf(WEB_UI_ONLY));
     });
   });
 
   describe('GIVEN flat drawn with a web>ui route over ROUTE_BENDS_MAX', () => {
-    it('WHEN dragged with ui>core touched THEN that route is drawn but not posted', () => {
+    it('WHEN dragged with ui>core touched THEN that route is not posted', () => {
       const long: Routes = { [WEB_UI]: LONG_ROUTE, [UI_CORE]: UI_CORE_ROUTE };
-      const drawnLong: Routes = { [WEB_UI]: LONG_ROUTE };
       const state: GraphReady = { ...STATE_STUB, routes: long };
 
       open(state);
       layouts.dragged(UI_CORE_DRAG);
 
-      expect(rig.view.setRoutes).toHaveBeenLastCalledWith(drawnLong);
       expect(rig.posts()).toStrictEqual([dragPostOf({})]);
     });
   });
 
   describe('GIVEN grouped drawn from the cache and dragged with ui>core touched', () => {
-    it('WHEN switched to flat and back THEN folders still lacks the dragged route', () => {
+    it('WHEN switched to flat and back THEN the next drag posts folders still lacking the dragged route', () => {
       const foldersLeft: Routes = { [WEB_UI]: UI_CORE_ROUTE };
 
       open(ROUTED_BOTH, SAVED_GROUPED_STUB);
       layouts.dragged(UI_CORE_DRAG);
       void layouts.switchTo('flat');
-      rig.view.setRoutes.mockClear();
-
       void layouts.switchTo('folders');
+      layouts.dragged(UNTOUCHED_DRAG);
 
-      expect(rig.view.setRoutes).toHaveBeenCalledExactlyOnceWith(foldersLeft);
+      expect(lastPost()).toStrictEqual(dragPostOf(foldersLeft, 'folders'));
     });
   });
 });

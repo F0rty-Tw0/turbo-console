@@ -4,9 +4,8 @@ import { boxRectOf } from './graph-folders.spec.util.ts';
 import { foreignBoxHitsOf } from './graph-foreign-boxes.spec.util.ts';
 import { lineSegmentsOf } from './graph-geometry.spec.util.ts';
 import { crossesBox, shrunkBy, throughNodeCountOf } from './graph-lines.spec.util.ts';
-import type { ProbeEdgeLine, ProbeFolder, ProbeFolderLink } from '../../../src/graph/common/graph-probe.type.ts';
-import { edgeIdOf } from '../../../src/graph/utils/edge-id.util.ts';
-import type { FolderLinkCounts, LinkAndLine, LinkEndOnFolder, LinkRead, RoutedLink } from '../../common/graph-folder-links.type.ts';
+import type { ProbeFolder, ProbeFolderLink } from '../../../src/graph/common/graph-probe.type.ts';
+import type { FolderLinkCounts, LinkAndLine, LinkEndOnFolder, LinkRead } from '../../common/graph-folder-links.type.ts';
 import type { LinkEnds } from '../../common/playwright.type.ts';
 
 /** How far inside a node's box a link must reach to count as passing through it, in page px. */
@@ -38,8 +37,6 @@ export const readLinks = (): LinkRead => {
 
   return read;
 };
-
-const isDrawnRouted = (line: ProbeEdgeLine): boolean => line.isDrawn && line.isRouted;
 
 const isLabelDrawn = (link: ProbeFolderLink): boolean => link.isDrawn && link.labelBox.width > 0 && link.labelBox.height > 0;
 
@@ -116,7 +113,6 @@ export const countsOf = (read: LinkRead): FolderLinkCounts => {
   const drawn = read.links.filter((link): boolean => link.isDrawn);
   const counts: FolderLinkCounts = {
     drawn: drawn.length,
-    routed: read.lines.filter(isDrawnRouted).length,
     throughNodes: throughNodeCountOf(read.lines, read.nodes, read.zoom, THROUGH_INSET_PX),
     foreignBoxes: foreignBoxHitsOf(read.lines, read.folders, read.zoom),
     labelsOnLine: pairs.filter(isLabelOnLine).length,
@@ -126,39 +122,15 @@ export const countsOf = (read: LinkRead): FolderLinkCounts => {
   return counts;
 };
 
-const routedLinkOf = (line: ProbeEdgeLine): RoutedLink => {
-  const link: RoutedLink = { id: edgeIdOf(line), source: line.source, target: line.target };
-
-  return link;
-};
-
-const idOf = (link: RoutedLink): string => link.id;
-
-const byId = (first: RoutedLink, second: RoutedLink): number => first.id.localeCompare(second.id);
-
-/** The drawn folder links that run on a route, by id order. */
-export const routedLinksOf = (read: LinkRead): RoutedLink[] => {
-  const routed = read.lines.filter(isDrawnRouted);
-  const links = routed.map(routedLinkOf);
-
-  return links.toSorted(byId);
-};
-
-/** The first routed link's end that is a package node, by name order; throws when no routed link ends on a package. */
-export const routedPackageEndOf = (read: LinkRead): string => {
+/** The first drawn link's end that is a package node, by name order; throws when no drawn link ends on a package. */
+export const packageEndOf = (read: LinkRead): string => {
   const names = new Set(read.nodes.map((node): string => node.id));
-  const ends = routedLinksOf(read).flatMap((link): string[] => [link.source, link.target]);
+  const drawn = read.lines.filter((line): boolean => line.isDrawn);
+  const ends = drawn.flatMap((line): string[] => [line.source, line.target]);
   const isPackage = (id: string): boolean => names.has(id);
   const end = ends.toSorted().find(isPackage);
 
-  if (end === undefined) throw new Error('graph e2e: no routed folder link ends on a package');
+  if (end === undefined) throw new Error('graph e2e: no drawn folder link ends on a package');
 
   return end;
-};
-
-/** The ids of the links of `before` that do not end on `dragged`. */
-export const idsNotEndingOn = (before: RoutedLink[], dragged: string): string[] => {
-  const isKept = (link: RoutedLink): boolean => link.source !== dragged && link.target !== dragged;
-
-  return before.filter(isKept).map(idOf);
 };

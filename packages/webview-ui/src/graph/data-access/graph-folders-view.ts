@@ -3,10 +3,8 @@ import type { Core, EdgeSingular, NodeSingular, SingularElementArgument } from '
 import { packageEdges } from './graph-boxes.ts';
 import { setClassesAmong } from './graph-classes.ts';
 import { centreOf, syncCollapsedNodes, syncFolderLinks } from './graph-folder-elements.ts';
-import { emptyDrawnLinks, labelFolderLinks, routeFolderLinks } from './graph-folder-routes.ts';
+import { emptyDrawnLinks, labelFolderLinks, markFolderLinks } from './graph-folder-routes.ts';
 import { markFolderRuns } from './graph-run-marks.ts';
-import type { Routes } from '../../bridge/common/graph-state.type.ts';
-import type { FolderRouting } from '../common/folder-link-route.type.ts';
 import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
 import type { FoldersView, PackageRuns } from '../common/graph-page.type.ts';
 import type { ProbeState } from '../common/graph-probe.type.ts';
@@ -130,7 +128,6 @@ const recentreNodes = (cy: Core, members: ReadonlyMap<string, string[]>): void =
 export const createFoldersView = (cy: Core): FoldersView => {
   const links = new Map<string, FolderLink>();
   let members: ReadonlyMap<string, string[]> = new Map();
-  let routes: Routes = {};
   let drawn = emptyDrawnLinks();
   let lastPaint: Paint | null = null;
   let lastRuns: PackageRuns = new Map();
@@ -143,13 +140,9 @@ export const createFoldersView = (cy: Core): FoldersView => {
     lastPaint = next;
     paintFolders(cy, links, next);
   };
-  const routeLinks = (): void => {
-    const routing: FolderRouting = { members, routes, drawn };
-
-    routeFolderLinks(cy, links, routing);
-  };
+  const markLinks = (): void => markFolderLinks(cy, links, drawn);
   const labelLinks = (): void => labelFolderLinks(cy, drawn);
-  /** A toggle moves no package and changes no route, so `show` re-draws only the links it added or whose inputs changed. */
+  /** A toggle moves no package, so `show` re-labels only the links it added or whose inputs changed. */
   const show = (scene: FolderScene | null, labelOf: LabelOf): void => {
     cy.batch((): void => {
       const wanted = passClassesOf(cy, scene);
@@ -159,29 +152,28 @@ export const createFoldersView = (cy: Core): FoldersView => {
       syncFolderLinks(cy, scene, links);
       members = scene?.members ?? new Map();
       markFolderRuns(cy, members, lastRuns);
-      routeLinks();
+      markLinks();
     });
 
     if (lastPaint !== null) paint(lastPaint);
 
     labelLinks();
   };
-  /** Packages moved, so every link is re-drawn: a collapsed box can change while its centre stays put. */
+  /** Packages moved, so every link end may have moved: every link is re-labelled. */
   const recentre = (): void => {
     drawn = emptyDrawnLinks();
     cy.batch((): void => {
       recentreNodes(cy, members);
-      routeLinks();
+      markLinks();
     });
     labelLinks();
   };
-  const setRoutes = (next: Routes): void => {
-    routes = next;
+  const relinkFolders = (): void => {
     drawn = emptyDrawnLinks();
-    cy.batch(routeLinks);
+    cy.batch(markLinks);
     labelLinks();
   };
-  const view: FoldersView = { show, paint, recentre, setRoutes, markRuns };
+  const view: FoldersView = { show, paint, recentre, relinkFolders, markRuns };
 
   return view;
 };

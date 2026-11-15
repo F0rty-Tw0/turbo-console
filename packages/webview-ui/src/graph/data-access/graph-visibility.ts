@@ -18,8 +18,8 @@ export const showOnly = (cy: Core, visible: ReadonlySet<string>): void => {
 
 /**
  * What a fit frames: the visible packages, a trace's ghosts included so they stay on screen, their folder boxes, whose
- * frames reach past the packages by the box padding, the drawn collapsed folders, and the visible edges, whose routes
- * bend past the nodes.
+ * frames reach past the packages by the box padding, the drawn collapsed folders, and the visible edges, whose bows
+ * can reach past the nodes.
  */
 export const framedOf = (cy: Core): Collection => {
   const shown = packageNodes(cy).filter(':visible');

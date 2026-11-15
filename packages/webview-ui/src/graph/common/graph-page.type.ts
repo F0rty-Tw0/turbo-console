@@ -20,7 +20,7 @@ import type { TaskDetailsViews } from './task-details.type.ts';
 import type { ThemeColors } from './theme-colors.type.ts';
 import type { RowPlan, WidgetRects, WidgetViews } from './widget.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
-import type { GraphEdge, GraphPackage, GraphRunState, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { GraphEdge, GraphPackage, GraphRunState, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState, PackageViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** The controls fields of the saved view state: `GraphControls` keeps all but `collapsed`, which `GraphFiltering` adds; the selection's saves carry them along. */
@@ -92,15 +92,15 @@ export type GraphViewHandlers = {
 export type FoldersView = {
   /**
    * Hides collapsed and unshown boxes and the package links a collapsed folder replaces, then draws collapsed nodes and
-   * folder links, routing only the links it adds or whose ends, count or first member changed; `null` removes them.
+   * folder links, re-labelling only the links it adds or whose ends or count changed; `null` removes them.
    */
   readonly show: (scene: FolderScene | null, labelOf: (folder: string) => string) => void;
   /** Classes boxes, collapsed nodes and folder links; `show` re-applies the last paint to what it draws. */
   readonly paint: (paint: Paint) => void;
-  /** Moves each collapsed node to the centre of all its packages, hidden ones included, and re-routes every folder link. */
+  /** Moves each collapsed node to the centre of all its packages, hidden ones included, and re-labels every folder link. */
   readonly recentre: () => void;
-  /** Keeps the routes the folder links follow and re-draws them all: `GraphView.setRoutes` calls it after it straightens every edge. */
-  readonly setRoutes: (routes: Routes) => void;
+  /** Re-labels every folder link on its line as drawn now: after a layout, a reopen or a drag moved its ends. */
+  readonly relinkFolders: () => void;
   /** Keeps the run states the collapsed nodes show and marks them now; `show` re-marks the nodes it draws (spec D13). */
   readonly markRuns: (runs: PackageRuns) => void;
 };
@@ -149,8 +149,8 @@ export type GraphView = {
   readonly setGrouping: (groups: FolderGroup[] | null) => void;
   /** Places the packages, then re-centres the collapsed folders on them. */
   readonly setPositions: (positions: Positions) => void;
-  /** Draws each edge that has a route on it and every other edge straight; call after `setPositions`, the segments follow the centres. */
-  readonly setRoutes: (routes: Routes) => void;
+  /** Re-labels every folder link (`FoldersView.relinkFolders`); call after `setPositions`, the labels follow the lines. */
+  readonly relinkFolders: () => void;
   /** The folder pass (`FoldersView.show`); call after every `setVisible` and `setGhosts`. */
   readonly showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string) => void;
   readonly applyTheme: (colors: ThemeColors) => void;

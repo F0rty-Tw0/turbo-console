@@ -44,7 +44,8 @@ const probeEdgeOf = (edge: EdgeSingular): ProbeEdge => {
     isGhost: edge.hasClass(GHOST_CLASS),
     isDrawn: edge.visible(),
     lineStyle: styleText(edge, 'line-style'),
-    curveStyle: styleText(edge, 'curve-style')
+    curveStyle: styleText(edge, 'curve-style'),
+    zCompoundDepth: styleText(edge, 'z-compound-depth')
   };
 
   return probeEdge;

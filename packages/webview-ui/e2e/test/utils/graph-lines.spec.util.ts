@@ -38,7 +38,7 @@ const NOWHERE: ViewportPoint = { x: 0, y: 0 };
 export const lineThrough = (source: string, target: string, points: ViewportPoint[]): ProbeEdgeLine => {
   const [from = NOWHERE, to = from] = points;
   const midpoint: ViewportPoint = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
-  const line: ProbeEdgeLine = { source, target, isRouted: points.length > 2, isDrawn: true, points, midpoint };
+  const line: ProbeEdgeLine = { source, target, isDrawn: true, points, midpoint };
 
   return line;
 };
@@ -58,13 +58,6 @@ export const lineMidpointOf = (lines: ProbeEdgeLine[], source: string, target: s
   const line = lineOf(lines, source, target);
 
   return line.midpoint;
-};
-
-/** `line` lies wholly inside `container`, bends included; a line that is not drawn has no point to fall outside. */
-export const isLineInside = (line: ProbeEdgeLine, container: ElementRect): boolean => {
-  const isPointInside = (point: ViewportPoint): boolean => isInside(pointBoxOf(point), container);
-
-  return line.points.every(isPointInside);
 };
 
 const clipAgainst = (clip: Clip, side: BoxSide): Clip => {

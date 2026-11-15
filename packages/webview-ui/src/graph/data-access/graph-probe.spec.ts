@@ -112,10 +112,10 @@ describe('FEATURE: createGraphProbe ghost facts', () => {
       expect(edge).toMatchObject({ isGhost: true, isDrawn: true, lineStyle: 'dashed' });
     });
 
-    it('WHEN the edges are read THEN a to c is a drawn solid bezier link', () => {
+    it('WHEN the edges are read THEN a to c is a drawn solid bezier link in the compound draw order', () => {
       const edge = edgeOf(probe, 'a', 'c');
 
-      expect(edge).toMatchObject({ isGhost: false, isDrawn: true, lineStyle: 'solid', curveStyle: 'bezier' });
+      expect(edge).toMatchObject({ isDrawn: true, lineStyle: 'solid', curveStyle: 'bezier', zCompoundDepth: 'auto' });
     });
 
     it('WHEN b gets a display none bypass THEN a to b is not drawn', () => {

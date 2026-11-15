@@ -98,6 +98,8 @@ const probeFolderLinkOf = (edge: EdgeSingular, origin: Position): ProbeFolderLin
     count,
     isDrawn: edge.visible(),
     state: probeStateOf(edge),
+    curveStyle: styleText(edge, 'curve-style'),
+    zCompoundDepth: styleText(edge, 'z-compound-depth'),
     labelBox: labelBoxOf(edge, origin)
   };
 

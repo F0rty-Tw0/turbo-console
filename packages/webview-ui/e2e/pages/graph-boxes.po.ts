@@ -10,8 +10,7 @@ import { GRAPH_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { ElementRect, ViewportPoint } from '../common/playwright.type.ts';
 import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { boxRectOf, findFolder, holdsCentre, membershipFaultsOf, overlapFaultsOf } from '../test/utils/graph-folders.spec.util.ts';
-import { freeSpotOf } from '../test/utils/graph-geometry.spec.util.ts';
-import { readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
+import { freeGrabbableSpotOn } from '../test/utils/graph-grab.spec.util.ts';
 import { sortedNames } from '../test/utils/graph-package.spec.util.ts';
 
 const ZOOM_IN_NOTCH = -100;
@@ -75,14 +74,16 @@ export class GraphBoxesPage {
     });
   }
 
-  /** The first grid point of the container that no box covers and no drawn line passes near. */
-  public async freeSpot(): Promise<ViewportPoint> {
+  /**
+   * The first grid point of the container that no box covers and no drawn line passes near, with the graph canvas on top
+   * there and `travel` px right and down of it, so a pan of that far can be dragged back from where it ends.
+   */
+  public async freeSpot(travel = 0): Promise<ViewportPoint> {
     const container = await this.container.evaluate(readRect);
     const folders = await this.folders();
     const rects = folders.map(boxRectOf);
-    const lines = await readEdgeLines(this.page);
 
-    return freeSpotOf(container, rects, lines);
+    return freeGrabbableSpotOn(this.page, container, rects, travel);
   }
 
   public async expectFolderKeys(keys: string[]): Promise<void> {

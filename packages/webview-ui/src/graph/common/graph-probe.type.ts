@@ -51,19 +51,20 @@ export type ProbeEdge = {
   /** Cytoscape's `visible()`: false with a hidden end or a `display: none` bypass. */
   readonly isDrawn: boolean;
   readonly lineStyle: string;
-  /** Cytoscape's `curve-style`: `round-segments` for a package edge on its ELK route, `straight` for a task link, else `bezier`. */
+  /** Cytoscape's `curve-style`: `straight` for a task link, else `bezier`. */
   readonly curveStyle: string;
+  /** Cytoscape's `z-compound-depth`: `bottom` for a task link (under every box), else `auto` (over every folder box). */
+  readonly zCompoundDepth: string;
 };
 
 /**
  * One drawn edge's line (a package edge or a task link) in page CSS pixels, the frame of `ProbeNode.renderedX`: `points` run from the source end
- * through the bends (a routed edge's segment points, else its control points) to the target end, `[]` while the edge
+ * through its control points to the target end, `[]` while the edge
  * is not drawn; `midpoint` lies on that path (the origin while the edge is not drawn).
  */
 export type ProbeEdgeLine = {
   readonly source: string;
   readonly target: string;
-  readonly isRouted: boolean;
   readonly isDrawn: boolean;
   readonly points: Position[];
   readonly midpoint: Position;
@@ -101,6 +102,9 @@ export type ProbeFolderLink = {
   /** Cytoscape's `visible()`. */
   readonly isDrawn: boolean;
   readonly state: ProbeState;
+  /** Cytoscape's `curve-style` and `z-compound-depth`, read as on `ProbeEdge`. */
+  readonly curveStyle: string;
+  readonly zCompoundDepth: string;
   /** The `<n> links` label's box, background included; width and height 0 while the link is not drawn (left and top then equal the container origin). */
   readonly labelBox: ProbeRect;
 };

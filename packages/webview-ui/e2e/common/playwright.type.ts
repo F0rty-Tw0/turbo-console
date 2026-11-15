@@ -22,6 +22,12 @@ export type ViewportPoint = {
   readonly y: number;
 };
 
+/** Spots to try in order, and how far right and down a drag from one carries the camera. */
+export type GrabSearch = {
+  readonly spots: ViewportPoint[];
+  readonly travel: number;
+};
+
 /** Where the two ends of a link are drawn, as viewport points. */
 export type LinkEnds = {
   readonly from: ViewportPoint;

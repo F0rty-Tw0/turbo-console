@@ -6,7 +6,6 @@ import { flowEdgesOf } from './graph-flow-edges.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { FlowEdgeGeometry, FlowEdgeReader, FlowEdgeSource } from '../common/flow.type.ts';
-import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -46,9 +45,7 @@ const centredEdgeOf = (edge: EdgeSingular): FlowEdgeSource => {
   const centred: FlowEdgeSource = {
     sourceEndpoint: (): Position => edge.source().position(),
     targetEndpoint: (): Position => edge.target().position(),
-    controlPoints: (): undefined => undefined,
-    segmentPoints: (): undefined => undefined,
-    hasClass: (): boolean => false
+    controlPoints: (): undefined => undefined
   };
 
   return centred;
@@ -67,24 +64,10 @@ const edgeOf = (source?: Position, target?: Position, controlPoints?: Position[]
   const edge: FlowEdgeSource = {
     sourceEndpoint: (): Position | undefined => source,
     targetEndpoint: (): Position | undefined => target,
-    controlPoints: (): Position[] | undefined => controlPoints,
-    segmentPoints: (): Position[] | undefined => undefined,
-    hasClass: (): boolean => false
+    controlPoints: (): Position[] | undefined => controlPoints
   };
 
   return edge;
-};
-
-/** A routed edge: it answers `hasClass('routed')` and its bends through `segmentPoints()`, its `controlPoints()` being a decoy. */
-const routedEdgeOf = (segmentPoints: Position[], decoy: Position[]): FlowEdgeSource => {
-  const plain = edgeOf(SOURCE, TARGET, decoy);
-  const routed: FlowEdgeSource = {
-    ...plain,
-    segmentPoints: (): Position[] => segmentPoints,
-    hasClass: (name: string): boolean => name === ROUTED_CLASS
-  };
-
-  return routed;
 };
 
 /** A core whose `.task-link.highlighted` selector matches `lit` and every other selector `others`; `asked` records each selector. */
@@ -102,7 +85,7 @@ const coreOf = (lit: FlowEdgeSource[], others: FlowEdgeSource[], asked: string[]
 describe('FEATURE: flowEdgesOf', () => {
   it('GIVEN a highlighted curved edge WHEN read THEN it keeps its endpoints and control point', () => {
     const cy = coreOf([edgeOf(SOURCE, TARGET, [BEND])], [], []);
-    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [BEND], isPolyline: false };
+    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [BEND] };
 
     const edges = flowEdgesOf(cy);
 
@@ -111,25 +94,7 @@ describe('FEATURE: flowEdgesOf', () => {
 
   it('GIVEN a highlighted edge whose controlPoints() is undefined WHEN read THEN it has no control points', () => {
     const cy = coreOf([edgeOf(SOURCE, TARGET)], [], []);
-    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [], isPolyline: false };
-
-    const edges = flowEdgesOf(cy);
-
-    expect(edges).toStrictEqual([expected]);
-  });
-
-  it('GIVEN a routed edge WHEN read THEN controlPoints are its segmentPoints and isPolyline is true', () => {
-    const cy = coreOf([routedEdgeOf([BEND], [SOURCE, TARGET])], [], []);
-    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [BEND], isPolyline: true };
-
-    const edges = flowEdgesOf(cy);
-
-    expect(edges).toStrictEqual([expected]);
-  });
-
-  it('GIVEN an unrouted edge WHEN read THEN controlPoints are its controlPoints and isPolyline is false', () => {
-    const cy = coreOf([edgeOf(SOURCE, TARGET, [BEND])], [], []);
-    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [BEND], isPolyline: false };
+    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [] };
 
     const edges = flowEdgesOf(cy);
 
@@ -183,7 +148,7 @@ describe('FEATURE: flowEdgesOf', () => {
     });
 
     it('WHEN the task graph is drawn with web#build painted THEN only its link to api#build is read', () => {
-      const expected: FlowEdgeGeometry = { source: WEB_AT, target: API_AT, controlPoints: [], isPolyline: false };
+      const expected: FlowEdgeGeometry = { source: WEB_AT, target: API_AT, controlPoints: [] };
 
       tasks.paint('web#build');
       tasks.show(DRAWING);

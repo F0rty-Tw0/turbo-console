@@ -1,42 +1,19 @@
 import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { emptyDrawnLinks, routeFolderLinks } from './graph-folder-routes.ts';
+import { emptyDrawnLinks, markFolderLinks } from './graph-folder-routes.ts';
 import { createFoldersView } from './graph-folders-view.ts';
-import type { EdgeRoute, GraphEdge, Position, Routes } from '../../bridge/common/graph-state.type.ts';
-import type { FolderRouting } from '../common/folder-link-route.type.ts';
+import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
+import type { DrawnLinks } from '../common/folder-link-route.type.ts';
 import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
-import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import type { FoldersView } from '../common/graph-page.type.ts';
 import { groupedCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { containerAtMock } from '../test/mocks/folder-boxes.mock.ts';
 import { THREE_POSITIONS_STUB } from '../test/stubs/folder-boards.stub.ts';
 import { THREE, THREE_EDGES, THREE_GROUPS, folderLinksByIdOf, sceneOf } from '../test/utils/folder-boards.spec.util.ts';
-import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { collapsedIdOf, folderLinkIdOf } from '../utils/folder-id.util.ts';
 
-type ViewAction = (view: FoldersView) => void;
-
 const labelOf = (folder: string): string => folder;
-
-const routeOf = (start: Position, bend: Position, end: Position): EdgeRoute => {
-  const routed: EdgeRoute = { start, bends: [bend], end };
-
-  return routed;
-};
-
-const A_TO_B = routeOf({ x: 0, y: 16 }, { x: -150, y: 150 }, { x: 0, y: 284 });
-
-const B_TO_C = routeOf({ x: 50, y: 284 }, { x: 250, y: 150 }, { x: 120, y: 16 });
-
-const B_TO_D = routeOf({ x: 50, y: 300 }, { x: 150, y: 400 }, { x: 250, y: 300 });
-
-/** The f1 box is x -82..202, y -48..48; the f3 box x 218..382, y 252..348. Each route keeps its one bend outside them. */
-const THREE_RECORD: Routes = {
-  [edgeIdOf({ source: 'a', target: 'b' })]: A_TO_B,
-  [edgeIdOf({ source: 'b', target: 'c' })]: B_TO_C,
-  [edgeIdOf({ source: 'b', target: 'd' })]: B_TO_D
-};
 
 const F1 = collapsedIdOf('f1');
 
@@ -58,11 +35,6 @@ const WITHOUT_C: string[] = ['a', 'b', 'd'];
 /** `THREE_EDGES` plus c → b and b → a, so f1 → b and its reverse b → f1 each have a member per f1 package. */
 const BACK_EDGES: GraphEdge[] = [...THREE_EDGES, { source: 'c', target: 'b' }, { source: 'b', target: 'a' }];
 
-const C_TO_B = routeOf({ x: 120, y: 16 }, { x: 250, y: 150 }, { x: 0, y: 284 });
-
-/** `THREE_RECORD` plus a route for c → b, which keeps its one bend outside the f1 box. */
-const BACK_RECORD: Routes = { ...THREE_RECORD, [edgeIdOf({ source: 'c', target: 'b' })]: C_TO_B };
-
 const threeSceneOf = (collapsed: string[], visible: string[] = ALL_NAMES): FolderScene => {
   return sceneOf(THREE, THREE_EDGES, { collapsed, visible });
 };
@@ -79,108 +51,79 @@ const linksAmong = (scene: FolderScene, ids: string[]): Map<string, FolderLink> 
 
 const backSceneOf = (visible: string[]): FolderScene => sceneOf(THREE, BACK_EDGES, { collapsed: ['f1'], visible });
 
-/** A `data()` call that writes a route: a count or label write carries no segment weights. */
-const isRouteWrite = (args: unknown[]): boolean => {
-  const [data] = args;
-  const isObject = typeof data === 'object' && data !== null;
-
-  return isObject && 'segWeights' in data;
-};
-
-const recentre: ViewAction = (view) => view.recentre();
-
-const setSameRoutes: ViewAction = (view) => view.setRoutes(THREE_RECORD);
-
-describe('FEATURE: a folder toggle re-draws only the folder links it changed', () => {
+describe('FEATURE: a folder toggle re-labels only the folder links it changed', () => {
   let cy: Core;
   let folders: FoldersView;
+  let drawn: DrawnLinks;
 
-  /** Watches `data()` on each link of `ids`; reads the number of route writes. */
-  const watchRouteWrites = (ids: string[]): (() => number) => {
-    const spies = ids.map((id) => vi.spyOn(cy.getElementById(id), 'data'));
-    const writesOf = (spy: (typeof spies)[number]): number => spy.mock.calls.filter(isRouteWrite).length;
-
-    return (): number => spies.map(writesOf).reduce((sum, count) => sum + count, 0);
+  /** Marks the links of `scene` against `drawn` on a Cytoscape that can measure labels, with the earlier marks cleared. */
+  const markScene = (scene: FolderScene): void => {
+    vi.spyOn(cy, 'container').mockReturnValueOnce(containerAtMock(0, 0));
+    markFolderLinks(cy, folderLinksByIdOf(scene), drawn);
   };
-  const watchKept = (): (() => number) => watchRouteWrites(KEPT_LINK_IDS);
+
+  /** Shows `scene`, then reads which of its links wait for a new label since the last mark. */
+  const pendingAfter = (scene: FolderScene): string[] => {
+    drawn.unlabelled.clear();
+    folders.show(scene, labelOf);
+    markScene(scene);
+    const pending = [...drawn.unlabelled];
+
+    return pending.map((edge) => edge.id());
+  };
 
   beforeEach(() => {
+    const scene = threeSceneOf(['f1']);
+
     cy = groupedCyMock(THREE_GROUPS, THREE_EDGES, THREE_POSITIONS_STUB);
     folders = createFoldersView(cy);
-    folders.setRoutes(THREE_RECORD);
-    folders.show(threeSceneOf(['f1']), labelOf);
+    drawn = emptyDrawnLinks();
+    folders.show(scene, labelOf);
+    markScene(scene);
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     cy.destroy();
   });
 
-  describe('GIVEN f1 collapsed with its two links routed', () => {
-    describe('WHEN f3 collapses too', () => {
-      it('THEN the two kept links are not written again', () => {
-        const writes = watchKept();
-
-        folders.show(threeSceneOf(['f1', 'f3']), labelOf);
-
-        expect(writes()).toBe(0);
-      });
-
-      it('THEN its new link is routed', () => {
-        folders.show(threeSceneOf(['f1', 'f3']), labelOf);
-
-        expect(cy.getElementById(B_TO_F3).hasClass(ROUTED_CLASS)).toBe(true);
-      });
+  describe('GIVEN f1 collapsed with its two links marked', () => {
+    it('WHEN f3 collapses too THEN only its new link waits for a label', () => {
+      expect(pendingAfter(threeSceneOf(['f1', 'f3']))).toStrictEqual([B_TO_F3]);
     });
 
-    it('WHEN f1 expands and collapses again THEN its re-added links are routed', () => {
+    it('WHEN f1 expands and collapses again THEN its re-added links wait for a label', () => {
       folders.show(threeSceneOf([]), labelOf);
-      folders.show(threeSceneOf(['f1']), labelOf);
-      const routed = KEPT_LINK_IDS.map((id) => cy.getElementById(id).hasClass(ROUTED_CLASS));
 
-      expect(routed).toStrictEqual([true, true]);
+      expect(pendingAfter(threeSceneOf(['f1']))).toStrictEqual(KEPT_LINK_IDS);
     });
 
-    it.each([
-      ['the folders recentre', recentre],
-      ['folders.setRoutes brings the same record', setSameRoutes]
-    ])('WHEN %s THEN both kept links are written again', (_, act) => {
-      const writes = watchKept();
-
-      act(folders);
-
-      expect(writes()).toBe(2);
+    it('WHEN the same scene is marked again THEN no link waits for a label', () => {
+      expect(pendingAfter(threeSceneOf(['f1']))).toStrictEqual([]);
     });
   });
 
   describe('GIVEN f1 collapsed with c filtered out, so the reverse link b → f1 is not drawn', () => {
     beforeEach(() => {
-      folders.show(threeSceneOf(['f1'], WITHOUT_C), labelOf);
+      pendingAfter(threeSceneOf(['f1'], WITHOUT_C));
     });
 
-    it('WHEN the filter brings c back, and with it b → f1, THEN f1 → b is written again', () => {
-      const writes = watchRouteWrites([F1_TO_B]);
-
-      folders.show(threeSceneOf(['f1']), labelOf);
-
-      expect(writes()).toBe(1);
+    it('WHEN the filter brings c back, and with it b → f1, THEN f1 → b waits for a label again', () => {
+      expect(pendingAfter(threeSceneOf(['f1']))).toContain(F1_TO_B);
     });
   });
 
   describe('GIVEN f1 collapsed with a member of f1 → b and of b → f1 per f1 package', () => {
-    beforeEach(() => {
-      folders.setRoutes(BACK_RECORD);
+    it('WHEN c is filtered out, so the count drops THEN f1 → b waits for a label again', () => {
+      pendingAfter(backSceneOf(ALL_NAMES));
+
+      expect(pendingAfter(backSceneOf(WITHOUT_C))).toContain(F1_TO_B);
     });
 
-    it.each([
-      ['c is filtered out, so the count drops and a → b stays first', ALL_NAMES, WITHOUT_C],
-      ['the filter swaps a for c, so the count stays and c → b becomes first', WITHOUT_C, WITHOUT_A]
-    ])('WHEN %s THEN f1 → b is written again', (_, before, after) => {
-      folders.show(backSceneOf(before), labelOf);
-      const writes = watchRouteWrites([F1_TO_B]);
+    it('WHEN the filter swaps a for c, so the count and the ends stay THEN no link waits for a label', () => {
+      pendingAfter(backSceneOf(WITHOUT_C));
 
-      folders.show(backSceneOf(after), labelOf);
-
-      expect(writes()).toBe(1);
+      expect(pendingAfter(backSceneOf(WITHOUT_A))).toStrictEqual([]);
     });
   });
 
@@ -192,21 +135,15 @@ describe('FEATURE: a folder toggle re-draws only the folder links it changed', (
       vi.spyOn(cy, 'container').mockReturnValue(containerAtMock(0, 0));
     });
 
-    afterEach(() => {
-      // destroy() tears down a renderer whenever a container is set, and the stub has none.
-      vi.restoreAllMocks();
-    });
-
     it.each([
       ['f1 → b (its reverse b → f1 drawn)', [F1_TO_B], [F1_TO_B, B_TO_F1]],
       ['b → f3 (no reverse)', [B_TO_F3], [B_TO_F3]]
-    ])('WHEN only %s is routed afresh THEN it and any drawn reverse wait for a new label', (_, routed, expected) => {
-      const links = linksAmong(scene, routed);
-      const drawn = emptyDrawnLinks();
-      const routing: FolderRouting = { members: scene.members, routes: THREE_RECORD, drawn };
+    ])('WHEN only %s is marked afresh THEN it and any drawn reverse wait for a new label', (_, marked, expected) => {
+      const links = linksAmong(scene, marked);
+      const fresh = emptyDrawnLinks();
 
-      routeFolderLinks(cy, links, routing);
-      const unlabelled = [...drawn.unlabelled];
+      markFolderLinks(cy, links, fresh);
+      const unlabelled = [...fresh.unlabelled];
       const pending = unlabelled.map((edge) => edge.id());
 
       expect(pending).toStrictEqual(expected);

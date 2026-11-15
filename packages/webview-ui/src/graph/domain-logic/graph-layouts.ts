@@ -179,7 +179,7 @@ export class GraphLayouts {
     if (mode !== this.onScreen) view.setGrouping(groups);
 
     view.setPositions(positions);
-    view.setRoutes(this.snapshots.routesOf(mode));
+    view.relinkFolders();
     this.deps.screen.showNotice(this.noticeOf(mode));
     this.onScreen = mode;
     this.deps.onPlaced(mode);
@@ -197,7 +197,7 @@ export class GraphLayouts {
 
     if (groups !== null) view.setGrouping(groups);
 
-    view.setRoutes(this.snapshots.routesOf(mode));
+    view.relinkFolders();
     this.hasDrawn = true;
     this.deps.onDrawn(this.saved);
     this.deps.onPlaced(mode);

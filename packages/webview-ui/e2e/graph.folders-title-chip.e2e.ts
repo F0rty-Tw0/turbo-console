@@ -5,7 +5,7 @@ import { GraphTitleChip } from './pages/graph-title-chip.po.ts';
 import { THEME_DARK_STUB, THEME_HC_STUB, THEME_LIGHT_STUB } from './test/stubs/graph-theme.stub.ts';
 import { U0_STATE_STUB } from './test/stubs/graph-u0.stub.ts';
 import { channelGapOf, rgbOfHex } from './test/utils/graph-title-chip.spec.util.ts';
-import { ALL_EDGE_IDS, GROUPED_SAVED } from './test/utils/graph-u0-routes.spec.util.ts';
+import { GROUPED_SAVED } from './test/utils/graph-u0-routes.spec.util.ts';
 
 type TitleChipFixtures = {
   readonly graphTitleChip: GraphTitleChip;
@@ -23,7 +23,7 @@ const THEMES = [
   { name: 'high-contrast', theme: THEME_HC_STUB }
 ] as const;
 
-/** The U0 folder whose title text a package line crosses (Task 4.1 measured three crossings of its text). */
+/** The U0 folder whose title text a plain package line crosses. */
 const PACKAGES = 'packages';
 
 /** How far a channel of the chip pixel may sit from the editor background, for anti-aliasing. */
@@ -36,13 +36,12 @@ test.describe('FEATURE: the folder title chip', () => {
     test(
       `GIVEN the ${name} theme and a line under a folder title's text THEN the title's second pixel row shows the editor background, not the line`,
       { annotation: CHIP },
-      async ({ graphCanvas, graphHost, graphLook, graphPage, graphProbe, graphRoutes, graphTitleChip }): Promise<void> => {
+      async ({ graphCanvas, graphHost, graphLook, graphPage, graphProbe, graphTitleChip }): Promise<void> => {
         await test.step('GIVEN the U0 workspace grouped in the theme, laid out and framed', async (): Promise<void> => {
           await graphPage.open({ savedState: GROUPED_SAVED });
           await graphLook.applyTheme(theme);
           await graphHost.sendState(U0_STATE_STUB);
           await graphProbe.expectLayoutEngine('elk');
-          await graphRoutes.expectEveryLineRouted(ALL_EDGE_IDS.length);
           await graphPage.pressButton('Fit');
           await graphCanvas.expectAllNodesInView();
         });
