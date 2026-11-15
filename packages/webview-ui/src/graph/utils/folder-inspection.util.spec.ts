@@ -38,7 +38,7 @@ const THREE_PATH = pathOf(['a', 'b', 'c']);
 
 const PROTO_INFOS = [{ name: 'a', bareName: 'a', path: '__proto__/a', tags: [], taskCount: 0 }];
 
-describe('FEATURE: foldersToExpandOf', () => {
+describe('FEATURE: folder inspection', () => {
   describe('GIVEN an inspection and the collapsed folders', () => {
     it.each([
       { title: 'none', inspection: NO_INSPECTION, trace: null, scene: boardsOf(['apps', 'packages']), expected: [] },
@@ -108,9 +108,7 @@ describe('FEATURE: foldersToExpandOf', () => {
       expect(folders).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: collapsedInspectionOf', () => {
   describe('GIVEN the inspection and the folder just collapsed', () => {
     it.each([
       {
@@ -172,7 +170,7 @@ describe('FEATURE: collapsedInspectionOf', () => {
       },
       { title: 'none', current: NO_INSPECTION, folder: 'apps', scene: boardsOf(['apps']), expected: NO_INSPECTION },
       { title: 'an unknown folder', current: pkg('web'), folder: 'zzz', scene: boardsOf([]), expected: pkg('web') }
-    ])('WHEN the inspection is $title THEN the result is exact', ({ current, folder, scene, expected }) => {
+    ])('WHEN the inspection is $title THEN the collapsed inspection is exact', ({ current, folder, scene, expected }) => {
       const next = collapsedInspectionOf(current, folder, scene);
 
       expect(next).toStrictEqual(expected);
@@ -188,9 +186,7 @@ describe('FEATURE: collapsedInspectionOf', () => {
       expect(next).toBe(current);
     });
   });
-});
 
-describe('FEATURE: shownFoldersOf', () => {
   describe('GIVEN a scene and the visible packages', () => {
     const ROOT_INFOS = [
       { name: 'root-a', bareName: 'root-a', path: 'root-a', tags: [], taskCount: 0 },
