@@ -18,10 +18,11 @@ const byPackageOf = (tasks: GraphTask[]): Map<string, GraphTask[]> => {
 
 /**
  * The prediction word of every listed task whose package the store answered, keyed by task id. The view is read once per
- * package, in the order the packages first appear in `tasks`; a task the view does not name is left out.
+ * package, in the order the packages first appear in `tasks`; a task the view does not name is left out. The record is built
+ * with `Object.fromEntries`, which defines own keys, so a task id such as `__proto__` stays a key of it.
  */
 export const predictionsOf = (root: string, tasks: GraphTask[], view: PredictionLookup): Readonly<Record<string, GraphPrediction>> => {
-  const predictions: Record<string, GraphPrediction> = {};
+  const predictions: [string, GraphPrediction][] = [];
 
   for (const [packageName, group] of byPackageOf(tasks)) {
     const answer = view(root, packageName);
@@ -31,9 +32,9 @@ export const predictionsOf = (root: string, tasks: GraphTask[], view: Prediction
     for (const task of group) {
       const cache = answer.tasks.get(task.id);
 
-      if (cache !== undefined) predictions[task.id] = PREDICTION_WORDS_BY_CACHE[cache];
+      if (cache !== undefined) predictions.push([task.id, PREDICTION_WORDS_BY_CACHE[cache]]);
     }
   }
 
-  return predictions;
+  return Object.fromEntries(predictions);
 };
