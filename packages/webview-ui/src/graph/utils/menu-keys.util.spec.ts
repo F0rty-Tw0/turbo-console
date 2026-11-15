@@ -26,10 +26,12 @@ describe('FEATURE: menuIndexOf', () => {
     });
   });
 
-  it('GIVEN a menu with no items WHEN ArrowDown is pressed THEN it moves nothing', () => {
-    const next = menuIndexOf('ArrowDown', -1, 0);
+  describe('GIVEN a menu with no items', () => {
+    it('WHEN ArrowDown is pressed THEN it moves nothing', () => {
+      const next = menuIndexOf('ArrowDown', -1, 0);
 
-    expect(next).toBeNull();
+      expect(next).toBeNull();
+    });
   });
 });
 
@@ -71,9 +73,11 @@ describe('FEATURE: toolbarIndexOf', () => {
     });
   });
 
-  it('GIVEN a toolbar with no buttons WHEN ArrowRight is pressed THEN it moves nothing', () => {
-    const next = toolbarIndexOf('ArrowRight', -1, 0);
+  describe('GIVEN a toolbar with no buttons', () => {
+    it('WHEN ArrowRight is pressed THEN it moves nothing', () => {
+      const next = toolbarIndexOf('ArrowRight', -1, 0);
 
-    expect(next).toBeNull();
+      expect(next).toBeNull();
+    });
   });
 });

@@ -28,13 +28,15 @@ describe('FEATURE: vector maths', () => {
     });
   });
 
-  it.each([
-    [2, { x: 6, y: -8 }],
-    [-1, { x: -3, y: 4 }],
-    [0.5, { x: 1.5, y: -2 }]
-  ])('GIVEN the vector (3, -4) WHEN it is scaled by %d THEN it is %j', (factor, expected) => {
-    const scaled = scaledOf(FIRST, factor);
+  describe('GIVEN the vector (3, -4)', () => {
+    it.each([
+      [2, { x: 6, y: -8 }],
+      [-1, { x: -3, y: 4 }],
+      [0.5, { x: 1.5, y: -2 }]
+    ])('WHEN it is scaled by %d THEN it is %j', (factor, expected) => {
+      const scaled = scaledOf(FIRST, factor);
 
-    expect(scaled).toStrictEqual(expected);
+      expect(scaled).toStrictEqual(expected);
+    });
   });
 });

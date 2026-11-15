@@ -18,14 +18,16 @@ const DIAMOND: GraphTask[] = [
 
 describe('FEATURE: shownSetOf', () => {
   describe('GIVEN a diamond with dependents', () => {
-    it.each([
-      [0, ['a#build', 'b#build', 'c#build', 'd#build']],
-      [1, ['a#build', 'b#build', 'c#build', 'd#build', 'e#build', 'g#test']],
-      [2, ['a#build', 'b#build', 'c#build', 'd#build', 'e#build', 'f#build', 'g#test']]
-    ])('GIVEN a#build chosen WHEN depth is %i THEN the chain and that many dependent hops show', (depth, ids) => {
-      const shown = shownSetOf(inputOf(DIAMOND, { chosen: ['a#build'], depth, capLifted: false }));
+    describe('GIVEN a#build chosen', () => {
+      it.each([
+        [0, ['a#build', 'b#build', 'c#build', 'd#build']],
+        [1, ['a#build', 'b#build', 'c#build', 'd#build', 'e#build', 'g#test']],
+        [2, ['a#build', 'b#build', 'c#build', 'd#build', 'e#build', 'f#build', 'g#test']]
+      ])('WHEN depth is %i THEN the chain and that many dependent hops show', (depth, ids) => {
+        const shown = shownSetOf(inputOf(DIAMOND, { chosen: ['a#build'], depth, capLifted: false }));
 
-      expect(shown).toStrictEqual({ ids, hiddenCount: 0, droppedIds: [] });
+        expect(shown).toStrictEqual({ ids, hiddenCount: 0, droppedIds: [] });
+      });
     });
 
     it('WHEN an unknown id is chosen too THEN it is dropped and the rest still shows', () => {

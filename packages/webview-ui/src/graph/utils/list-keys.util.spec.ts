@@ -60,49 +60,63 @@ describe('FEATURE: entryCellOf', () => {
     });
   });
 
-  it('GIVEN no lines WHEN a cell was remembered THEN the list has no entry', () => {
-    const cell = entryCellOf([], at(0, 'check'));
+  describe('GIVEN no lines', () => {
+    it('WHEN a cell was remembered THEN the list has no entry', () => {
+      const cell = entryCellOf([], at(0, 'check'));
 
-    expect(cell).toBeNull();
+      expect(cell).toBeNull();
+    });
   });
 });
 
 describe('FEATURE: enterActionOf', () => {
-  it('GIVEN nothing selected WHEN Enter is on web THEN it selects', () => {
-    const action = enterActionOf(null, 'web');
+  describe('GIVEN nothing selected', () => {
+    it('WHEN Enter is on web THEN it selects', () => {
+      const action = enterActionOf(null, 'web');
 
-    expect(action).toBe('select');
+      expect(action).toBe('select');
+    });
   });
 
-  it('GIVEN api selected WHEN Enter is on web THEN it selects', () => {
-    const action = enterActionOf('api', 'web');
+  describe('GIVEN api selected', () => {
+    it('WHEN Enter is on web THEN it selects', () => {
+      const action = enterActionOf('api', 'web');
 
-    expect(action).toBe('select');
+      expect(action).toBe('select');
+    });
   });
 
-  it('GIVEN web selected WHEN Enter is on web THEN it opens the details', () => {
-    const action = enterActionOf('web', 'web');
+  describe('GIVEN web selected', () => {
+    it('WHEN Enter is on web THEN it opens the details', () => {
+      const action = enterActionOf('web', 'web');
 
-    expect(action).toBe('details');
+      expect(action).toBe('details');
+    });
   });
 });
 
 describe('FEATURE: firstSelectableOf', () => {
-  it('GIVEN b and c visible WHEN the order is a, b, c THEN it is b', () => {
-    const name = firstSelectableOf(['a', 'b', 'c'], new Set(['c', 'b']));
+  describe('GIVEN b and c visible', () => {
+    it('WHEN the order is a, b, c THEN it is b', () => {
+      const name = firstSelectableOf(['a', 'b', 'c'], new Set(['c', 'b']));
 
-    expect(name).toBe('b');
+      expect(name).toBe('b');
+    });
   });
 
-  it('GIVEN nothing visible WHEN the order has a THEN there is none', () => {
-    const name = firstSelectableOf(['a'], new Set());
+  describe('GIVEN nothing visible', () => {
+    it('WHEN the order has a THEN there is none', () => {
+      const name = firstSelectableOf(['a'], new Set());
 
-    expect(name).toBeNull();
+      expect(name).toBeNull();
+    });
   });
 
-  it('GIVEN __proto__ visible WHEN the order is __proto__ THEN it is __proto__', () => {
-    const name = firstSelectableOf(['__proto__'], new Set(['__proto__']));
+  describe('GIVEN __proto__ visible', () => {
+    it('WHEN the order is __proto__ THEN it is __proto__', () => {
+      const name = firstSelectableOf(['__proto__'], new Set(['__proto__']));
 
-    expect(name).toBe('__proto__');
+      expect(name).toBe('__proto__');
+    });
   });
 });

@@ -36,11 +36,13 @@ const ROWS: Row[] = [
 ];
 
 describe('FEATURE: clampedWidthsOf', () => {
-  it.each(ROWS)('GIVEN %s WHEN clamped THEN the drawn pair', (_title, ...row: Case) => {
-    const [preferred, body, isOverlay, dragged, expected] = row;
-    const drawn = clampedWidthsOf(preferred, body, isOverlay, dragged);
+  describe.each(ROWS)('GIVEN %s', (_title, ...row: Case) => {
+    it('WHEN clamped THEN the drawn pair', () => {
+      const [preferred, body, isOverlay, dragged, expected] = row;
+      const drawn = clampedWidthsOf(preferred, body, isOverlay, dragged);
 
-    expect(drawn).toStrictEqual(expected);
+      expect(drawn).toStrictEqual(expected);
+    });
   });
 });
 

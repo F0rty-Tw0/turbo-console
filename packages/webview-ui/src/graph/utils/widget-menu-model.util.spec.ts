@@ -72,14 +72,16 @@ describe('FEATURE: folderMenuOf', () => {
     expect(listed).toStrictEqual([labels, icons]);
   });
 
-  it.each([
-    { label: 'Collapse', state: folderStateOf() },
-    { label: 'Exclude folder', state: folderStateOf() },
-    { label: 'Show all in folder', state: folderStateOf({ show: SHOW_SOME }) }
-  ])('GIVEN a folder whose group checkbox is free WHEN $label is read THEN it is enabled', ({ label, state }) => {
-    const item = itemLabelled(folderMenuOf('apps', state, folderActionsMock()), label);
+  describe('GIVEN a folder whose group checkbox is free', () => {
+    it.each([
+      { label: 'Collapse', state: folderStateOf() },
+      { label: 'Exclude folder', state: folderStateOf() },
+      { label: 'Show all in folder', state: folderStateOf({ show: SHOW_SOME }) }
+    ])('WHEN $label is read THEN it is enabled', ({ label, state }) => {
+      const item = itemLabelled(folderMenuOf('apps', state, folderActionsMock()), label);
 
-    expect(item.isDisabled).toBe(false);
+      expect(item.isDisabled).toBe(false);
+    });
   });
 
   describe('GIVEN a folder whose group checkbox is locked', () => {
@@ -233,10 +235,12 @@ describe('FEATURE: folderMenuStateOf', () => {
     });
   });
 
-  it('GIVEN no scene WHEN apps is read THEN it is expanded with no packages to show', () => {
-    const state = folderMenuStateOf('apps', null, menuFiltersOf([], null));
+  describe('GIVEN no scene', () => {
+    it('WHEN apps is read THEN it is expanded with no packages to show', () => {
+      const state = folderMenuStateOf('apps', null, menuFiltersOf([], null));
 
-    expect(state).toStrictEqual(folderStateOf({ show: SHOW_ALL }));
+      expect(state).toStrictEqual(folderStateOf({ show: SHOW_ALL }));
+    });
   });
 });
 

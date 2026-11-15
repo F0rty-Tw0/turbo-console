@@ -81,13 +81,15 @@ describe('FEATURE: restoredFilters', () => {
     });
   });
 
-  it('GIVEN names that are object keys WHEN restored THEN they are kept as set members', () => {
-    const constructorFocus: GraphFocus = { kind: 'package', name: 'constructor' };
+  describe('GIVEN names that are object keys', () => {
+    it('WHEN restored THEN they are kept as set members', () => {
+      const constructorFocus: GraphFocus = { kind: 'package', name: 'constructor' };
 
-    const restored = restoredFilters({ ...STATE, hidden: ['__proto__'], focus: constructorFocus }, GRAPH);
+      const restored = restoredFilters({ ...STATE, hidden: ['__proto__'], focus: constructorFocus }, GRAPH);
 
-    expect(restored.filters.hidden).toStrictEqual(new Set(['__proto__']));
-    expect(restored.filters.focus).toStrictEqual(constructorFocus);
+      expect(restored.filters.hidden).toStrictEqual(new Set(['__proto__']));
+      expect(restored.filters.focus).toStrictEqual(constructorFocus);
+    });
   });
 });
 
@@ -106,37 +108,45 @@ describe('FEATURE: restoredFilters focus', () => {
     expect(restored.filters.focus).toStrictEqual(expected);
   });
 
-  it('GIVEN a saved depth WHEN restored THEN the filters carry it', () => {
-    const restored = restoredFilters({ ...STATE, depth: 4 }, GRAPH);
+  describe('GIVEN a saved depth', () => {
+    it('WHEN restored THEN the filters carry it', () => {
+      const restored = restoredFilters({ ...STATE, depth: 4 }, GRAPH);
 
-    expect(restored.filters.depth).toBe(4);
+      expect(restored.filters.depth).toBe(4);
+    });
   });
 
-  it('GIVEN an old saved focus string and depth WHEN read and restored THEN it is a package focus at that depth', () => {
-    const saved = readGraphViewState({ ...STATE, focus: 'web', depth: 2 });
-    const state = saved ?? STATE;
+  describe('GIVEN an old saved focus string and depth', () => {
+    it('WHEN read and restored THEN it is a package focus at that depth', () => {
+      const saved = readGraphViewState({ ...STATE, focus: 'web', depth: 2 });
+      const state = saved ?? STATE;
 
-    const restored = restoredFilters(state, GRAPH);
+      const restored = restoredFilters(state, GRAPH);
 
-    expect(restored.filters.focus).toStrictEqual({ kind: 'package', name: 'web' });
-    expect(restored.filters.depth).toBe(2);
+      expect(restored.filters.focus).toStrictEqual({ kind: 'package', name: 'web' });
+      expect(restored.filters.depth).toBe(2);
+    });
   });
 
-  it('GIVEN a folder focus WHEN restored THEN its hidden names are kept', () => {
-    const restored = restoredFilters({ ...STATE, focus: APPS_FOCUS }, GRAPH);
+  describe('GIVEN a folder focus', () => {
+    it('WHEN restored THEN its hidden names are kept', () => {
+      const restored = restoredFilters({ ...STATE, focus: APPS_FOCUS }, GRAPH);
 
-    expect(restored.filters.hidden).toStrictEqual(new Set(['web']));
+      expect(restored.filters.hidden).toStrictEqual(new Set(['web']));
+    });
   });
 });
 
 describe('FEATURE: restoredFilters grouping', () => {
-  it.each([
+  describe.each([
     ['a grouped saved state', true],
     ['an ungrouped saved state', false]
-  ])('GIVEN %s WHEN restored THEN isGrouped follows it', (_name, grouped) => {
-    const restored = restoredFilters({ ...STATE, grouped }, GRAPH);
+  ])('GIVEN %s', (_name, grouped) => {
+    it('WHEN restored THEN isGrouped follows it', () => {
+      const restored = restoredFilters({ ...STATE, grouped }, GRAPH);
 
-    expect(restored.isGrouped).toBe(grouped);
+      expect(restored.isGrouped).toBe(grouped);
+    });
   });
 
   it.each([
@@ -150,39 +160,45 @@ describe('FEATURE: restoredFilters grouping', () => {
 });
 
 describe('FEATURE: controlsFieldsOf', () => {
-  it.each([
+  describe.each([
     ['grouped', true],
     ['ungrouped', false]
-  ])('GIVEN a %s panel WHEN saved THEN grouped follows it', (_name, isGrouped) => {
-    const filters: GraphFilters = { hidden: new Set(), focus: null, depth: 1, tags: new Set() };
+  ])('GIVEN a %s panel', (_name, isGrouped) => {
+    it('WHEN saved THEN grouped follows it', () => {
+      const filters: GraphFilters = { hidden: new Set(), focus: null, depth: 1, tags: new Set() };
 
-    const fields = controlsFieldsOf(filters, '', true, isGrouped);
+      const fields = controlsFieldsOf(filters, '', true, isGrouped);
 
-    expect(fields.grouped).toBe(isGrouped);
-  });
-
-  it('GIVEN hidden names, a focus and tags WHEN saved THEN the fields list them and carry the focus and depth', () => {
-    const focus: GraphFocus = { kind: 'package', name: 'web' };
-    const filters: GraphFilters = { hidden: new Set(['api']), focus, depth: 2, tags: new Set(['ui']) };
-
-    const fields = controlsFieldsOf(filters, 'we', false, true);
-
-    expect(fields).toStrictEqual({
-      controlsOpen: false,
-      search: 'we',
-      depth: 2,
-      hidden: ['api'],
-      focus,
-      tags: ['ui'],
-      grouped: true
+      expect(fields.grouped).toBe(isGrouped);
     });
   });
 
-  it('GIVEN no focus WHEN saved THEN the focus is null', () => {
-    const filters: GraphFilters = { hidden: new Set(), focus: null, depth: 1, tags: new Set() };
+  describe('GIVEN hidden names, a focus and tags', () => {
+    it('WHEN saved THEN the fields list them and carry the focus and depth', () => {
+      const focus: GraphFocus = { kind: 'package', name: 'web' };
+      const filters: GraphFilters = { hidden: new Set(['api']), focus, depth: 2, tags: new Set(['ui']) };
 
-    const fields = controlsFieldsOf(filters, '', true, false);
+      const fields = controlsFieldsOf(filters, 'we', false, true);
 
-    expect(fields.focus).toBeNull();
+      expect(fields).toStrictEqual({
+        controlsOpen: false,
+        search: 'we',
+        depth: 2,
+        hidden: ['api'],
+        focus,
+        tags: ['ui'],
+        grouped: true
+      });
+    });
+  });
+
+  describe('GIVEN no focus', () => {
+    it('WHEN saved THEN the focus is null', () => {
+      const filters: GraphFilters = { hidden: new Set(), focus: null, depth: 1, tags: new Set() };
+
+      const fields = controlsFieldsOf(filters, '', true, false);
+
+      expect(fields.focus).toBeNull();
+    });
   });
 });

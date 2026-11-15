@@ -13,20 +13,24 @@ const planOf = (flags: Pick<RowPlan, 'isChevronShown' | 'isFocusShown' | 'isElli
 };
 
 describe('FEATURE: shownKindsOf', () => {
-  it('GIVEN every button shown WHEN the kinds are read THEN they follow the DOM order', () => {
-    const plan = planOf({ isChevronShown: true, isFocusShown: true, isEllipsisShown: true });
+  describe('GIVEN every button shown', () => {
+    it('WHEN the kinds are read THEN they follow the DOM order', () => {
+      const plan = planOf({ isChevronShown: true, isFocusShown: true, isEllipsisShown: true });
 
-    const kinds = shownKindsOf(plan);
+      const kinds = shownKindsOf(plan);
 
-    expect(kinds).toStrictEqual(['chevron', 'title', 'focus', 'ellipsis']);
+      expect(kinds).toStrictEqual(['chevron', 'title', 'focus', 'ellipsis']);
+    });
   });
 
-  it('GIVEN the chevron and Focus folder hidden WHEN the kinds are read THEN the title and "…" remain', () => {
-    const plan = planOf({ isChevronShown: false, isFocusShown: false, isEllipsisShown: true });
+  describe('GIVEN the chevron and Focus folder hidden', () => {
+    it('WHEN the kinds are read THEN the title and "…" remain', () => {
+      const plan = planOf({ isChevronShown: false, isFocusShown: false, isEllipsisShown: true });
 
-    const kinds = shownKindsOf(plan);
+      const kinds = shownKindsOf(plan);
 
-    expect(kinds).toStrictEqual(['title', 'ellipsis']);
+      expect(kinds).toStrictEqual(['title', 'ellipsis']);
+    });
   });
 });
 
@@ -46,25 +50,31 @@ describe('FEATURE: rowStopOf', () => {
     }
   );
 
-  it('GIVEN no button shown WHEN the stop is read THEN it is the title', () => {
-    const stop = rowStopOf('chevron', []);
+  describe('GIVEN no button shown', () => {
+    it('WHEN the stop is read THEN it is the title', () => {
+      const stop = rowStopOf('chevron', []);
 
-    expect(stop).toBe('title');
+      expect(stop).toBe('title');
+    });
   });
 });
 
 describe('FEATURE: kindOf', () => {
   const elements = { chevron: new EventTarget(), title: new EventTarget(), focus: new EventTarget(), ellipsis: new EventTarget() };
 
-  it('GIVEN the Focus folder button WHEN its kind is read THEN it is focus', () => {
-    const kind = kindOf(elements, elements.focus);
+  describe('GIVEN the Focus folder button', () => {
+    it('WHEN its kind is read THEN it is focus', () => {
+      const kind = kindOf(elements, elements.focus);
 
-    expect(kind).toBe('focus');
+      expect(kind).toBe('focus');
+    });
   });
 
-  it('GIVEN a foreign target WHEN its kind is read THEN it is undefined', () => {
-    const kind = kindOf(elements, new EventTarget());
+  describe('GIVEN a foreign target', () => {
+    it('WHEN its kind is read THEN it is undefined', () => {
+      const kind = kindOf(elements, new EventTarget());
 
-    expect(kind).toBeUndefined();
+      expect(kind).toBeUndefined();
+    });
   });
 });

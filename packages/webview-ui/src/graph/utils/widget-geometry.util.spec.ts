@@ -316,45 +316,55 @@ describe('FEATURE: isWidgetShown', () => {
 describe('FEATURE: overlayLeftOf', () => {
   const container = { offsetLeft: 40 };
 
-  it.each([
-    { title: 'overlays the canvas', isOverlay: true, hidden: false, expected: 260 },
-    { title: 'docks beside the canvas', isOverlay: false, hidden: false, expected: null },
-    { title: 'is closed', isOverlay: true, hidden: true, expected: null }
-  ])('GIVEN a panel at 300 WHEN it $title THEN its left edge in container px is $expected', ({ isOverlay, hidden, expected }) => {
-    const panel = { offsetLeft: 300, hidden };
+  describe('GIVEN a panel at 300', () => {
+    it.each([
+      { title: 'overlays the canvas', isOverlay: true, hidden: false, expected: 260 },
+      { title: 'docks beside the canvas', isOverlay: false, hidden: false, expected: null },
+      { title: 'is closed', isOverlay: true, hidden: true, expected: null }
+    ])('WHEN it $title THEN its left edge in container px is $expected', ({ isOverlay, hidden, expected }) => {
+      const panel = { offsetLeft: 300, hidden };
 
-    expect(overlayLeftOf(panel, container, isOverlay)).toBe(expected);
+      expect(overlayLeftOf(panel, container, isOverlay)).toBe(expected);
+    });
   });
 
-  it('GIVEN no panel WHEN the overlay layout is on THEN there is no edge', () => {
-    expect(overlayLeftOf(null, container, true)).toBeNull();
+  describe('GIVEN no panel', () => {
+    it('WHEN the overlay layout is on THEN there is no edge', () => {
+      expect(overlayLeftOf(null, container, true)).toBeNull();
+    });
   });
 });
 
 describe('FEATURE: ellipsisSlotOf', () => {
-  it('GIVEN a toolbar of several buttons WHEN the slot is taken THEN it is the last button width', () => {
-    expect(ellipsisSlotOf(rectOf(72, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+  describe('GIVEN a toolbar of several buttons', () => {
+    it('WHEN the slot is taken THEN it is the last button width', () => {
+      expect(ellipsisSlotOf(rectOf(72, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+    });
   });
 
-  it('GIVEN a one-button toolbar WHEN the slot is taken THEN it is the toolbar itself', () => {
-    expect(ellipsisSlotOf(rectOf(156, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+  describe('GIVEN a one-button toolbar', () => {
+    it('WHEN the slot is taken THEN it is the toolbar itself', () => {
+      expect(ellipsisSlotOf(rectOf(156, 72, 180, 96))).toStrictEqual(rectOf(156, 72, 180, 96));
+    });
   });
 });
 
 describe('FEATURE: shownNodeToolbarOf', () => {
   const bounds: LayerBounds = { width: 400, height: 300, overlayLeft: null };
 
-  it.each([
-    { title: 'inside the layer', node: rectOf(100, 50, 180, 80), rows: [], expected: rectOf(156, 22, 180, 46) },
-    { title: 'outside the layer', node: rectOf(500, 50, 580, 80), rows: [], expected: null },
-    { title: 'below the layer', node: rectOf(100, 310, 180, 340), rows: [], expected: null },
-    {
-      title: 'at the layer bottom with a header row above it, so its toolbar flips out of the layer',
-      node: rectOf(100, 290, 180, 320),
-      rows: [rectOf(100, 260, 400, 288)],
-      expected: null
-    }
-  ])('GIVEN one button WHEN the node is $title THEN the toolbar rect is $expected', ({ node, rows, expected }): void => {
-    expect(shownNodeToolbarOf(node, 1, rows, bounds)).toStrictEqual(expected);
+  describe('GIVEN one button', () => {
+    it.each([
+      { title: 'inside the layer', node: rectOf(100, 50, 180, 80), rows: [], expected: rectOf(156, 22, 180, 46) },
+      { title: 'outside the layer', node: rectOf(500, 50, 580, 80), rows: [], expected: null },
+      { title: 'below the layer', node: rectOf(100, 310, 180, 340), rows: [], expected: null },
+      {
+        title: 'at the layer bottom with a header row above it, so its toolbar flips out of the layer',
+        node: rectOf(100, 290, 180, 320),
+        rows: [rectOf(100, 260, 400, 288)],
+        expected: null
+      }
+    ])('WHEN the node is $title THEN the toolbar rect is $expected', ({ node, rows, expected }): void => {
+      expect(shownNodeToolbarOf(node, 1, rows, bounds)).toStrictEqual(expected);
+    });
   });
 });

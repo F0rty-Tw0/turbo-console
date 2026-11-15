@@ -38,8 +38,10 @@ describe('FEATURE: nodeStateOf and edgeStateOf', () => {
     });
   });
 
-  it('GIVEN no selection WHEN a node or an edge is read THEN it is normal', () => {
-    expect(nodeStateOf('app', null, null)).toBe('normal');
-    expect(edgeStateOf(APP_TO_CORE, null, null)).toBe('normal');
+  describe('GIVEN no selection', () => {
+    it('WHEN a node or an edge is read THEN it is normal', () => {
+      expect(nodeStateOf('app', null, null)).toBe('normal');
+      expect(edgeStateOf(APP_TO_CORE, null, null)).toBe('normal');
+    });
   });
 });

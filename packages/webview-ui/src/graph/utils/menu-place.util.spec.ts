@@ -133,11 +133,13 @@ describe('FEATURE: targetRectOf', () => {
     });
   });
 
-  it('GIVEN no drawn selected package WHEN a package is looked up THEN there is no rect', () => {
-    const rects: WidgetRects = { ...RECTS, selected: null };
+  describe('GIVEN no drawn selected package', () => {
+    it('WHEN a package is looked up THEN there is no rect', () => {
+      const rects: WidgetRects = { ...RECTS, selected: null };
 
-    const rect = targetRectOf(rects, packageTarget('web'));
+      const rect = targetRectOf(rects, packageTarget('web'));
 
-    expect(rect).toBeNull();
+      expect(rect).toBeNull();
+    });
   });
 });

@@ -226,27 +226,35 @@ describe('FEATURE: task runs', () => {
     });
   });
 
-  it('GIVEN a continuous task WHEN Stop is asked THEN stopTask is the message', () => {
-    const message = runMessageOf(CONTINUOUS, 'stop');
+  describe('GIVEN a continuous task', () => {
+    it('WHEN Stop is asked THEN stopTask is the message', () => {
+      const message = runMessageOf(CONTINUOUS, 'stop');
 
-    expect(message).toStrictEqual({ type: 'stopTask', taskId: 'a#build' });
+      expect(message).toStrictEqual({ type: 'stopTask', taskId: 'a#build' });
+    });
   });
 
-  it('GIVEN a passed task WHEN Stop is asked THEN there is no message', () => {
-    const message = runMessageOf(PASSED, 'stop');
+  describe('GIVEN a passed task', () => {
+    it('WHEN Stop is asked THEN there is no message', () => {
+      const message = runMessageOf(PASSED, 'stop');
 
-    expect(message).toBeNull();
+      expect(message).toBeNull();
+    });
   });
 
-  it('GIVEN a task that is not runnable WHEN Run without cache is asked THEN there is no message', () => {
-    const message = runMessageOf(NOT_RUNNABLE, 'runNoCache');
+  describe('GIVEN a task that is not runnable', () => {
+    it('WHEN Run without cache is asked THEN there is no message', () => {
+      const message = runMessageOf(NOT_RUNNABLE, 'runNoCache');
 
-    expect(message).toBeNull();
+      expect(message).toBeNull();
+    });
   });
 
-  it('GIVEN no task shown WHEN Run is asked THEN there is no message', () => {
-    const message = runMessageOf(null, 'run');
+  describe('GIVEN no task shown', () => {
+    it('WHEN Run is asked THEN there is no message', () => {
+      const message = runMessageOf(null, 'run');
 
-    expect(message).toBeNull();
+      expect(message).toBeNull();
+    });
   });
 });

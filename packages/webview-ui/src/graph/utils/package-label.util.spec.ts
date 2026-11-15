@@ -72,16 +72,20 @@ describe('FEATURE: labelIn', () => {
 });
 
 describe('FEATURE: labelledSizeOf', () => {
-  it('GIVEN the root // labelled root-fixture WHEN sized THEN the box fits the label', () => {
-    const size = labelledSizeOf('//', 'root-fixture', lengthSizeOf);
+  describe('GIVEN the root // labelled root-fixture', () => {
+    it('WHEN sized THEN the box fits the label', () => {
+      const size = labelledSizeOf('//', 'root-fixture', lengthSizeOf);
 
-    expect(size).toStrictEqual({ width: 120, height: 32 });
+      expect(size).toStrictEqual({ width: 120, height: 32 });
+    });
   });
 
-  it('GIVEN @org/x labelled x with scopes hidden WHEN sized THEN the box keeps the width of the name', () => {
-    const size = labelledSizeOf('@org/x', 'x', lengthSizeOf);
+  describe('GIVEN @org/x labelled x with scopes hidden', () => {
+    it('WHEN sized THEN the box keeps the width of the name', () => {
+      const size = labelledSizeOf('@org/x', 'x', lengthSizeOf);
 
-    expect(size).toStrictEqual({ width: 60, height: 32 });
+      expect(size).toStrictEqual({ width: 60, height: 32 });
+    });
   });
 });
 
@@ -149,9 +153,11 @@ describe('FEATURE: the // box across scope toggles', () => {
     }
   );
 
-  it('GIVEN a package with no sizeName WHEN sized from its name THEN the box is as labelledSizeOf(name, label) gives', () => {
-    const size = labelledSizeOf('@org/x', 'x', lengthSizeOf);
+  describe('GIVEN a package with no sizeName', () => {
+    it('WHEN sized from its name THEN the box is as labelledSizeOf(name, label) gives', () => {
+      const size = labelledSizeOf('@org/x', 'x', lengthSizeOf);
 
-    expect(size).toStrictEqual({ width: 60, height: 32 });
+      expect(size).toStrictEqual({ width: 60, height: 32 });
+    });
   });
 });

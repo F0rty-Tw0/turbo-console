@@ -31,35 +31,43 @@ const SAVED: GraphViewState = {
 };
 
 describe('FEATURE: restorePlanOf', () => {
-  it('GIVEN no saved state WHEN a graph is placed THEN it opens', () => {
-    const expected: RestorePlan = { kind: 'open' };
+  describe('GIVEN no saved state', () => {
+    it('WHEN a graph is placed THEN it opens', () => {
+      const expected: RestorePlan = { kind: 'open' };
 
-    const plan = restorePlanOf(null, 'h1');
+      const plan = restorePlanOf(null, 'h1');
 
-    expect(plan).toStrictEqual(expected);
+      expect(plan).toStrictEqual(expected);
+    });
   });
 
-  it('GIVEN a saved state for the same hash WHEN a graph is placed THEN the camera is restored', () => {
-    const expected: RestorePlan = { kind: 'restore', zoom: 1.5, pan: PAN };
+  describe('GIVEN a saved state for the same hash', () => {
+    it('WHEN a graph is placed THEN the camera is restored', () => {
+      const expected: RestorePlan = { kind: 'restore', zoom: 1.5, pan: PAN };
 
-    const plan = restorePlanOf(SAVED, 'h1');
+      const plan = restorePlanOf(SAVED, 'h1');
 
-    expect(plan).toStrictEqual(expected);
+      expect(plan).toStrictEqual(expected);
+    });
   });
 
-  it('GIVEN a same-hash save that was fitted WHEN a graph is placed THEN it is fitted again', () => {
-    const expected: RestorePlan = { kind: 'fit' };
+  describe('GIVEN a same-hash save that was fitted', () => {
+    it('WHEN a graph is placed THEN it is fitted again', () => {
+      const expected: RestorePlan = { kind: 'fit' };
 
-    const plan = restorePlanOf({ ...SAVED, fitted: true }, 'h1');
+      const plan = restorePlanOf({ ...SAVED, fitted: true }, 'h1');
 
-    expect(plan).toStrictEqual(expected);
+      expect(plan).toStrictEqual(expected);
+    });
   });
 
-  it('GIVEN a saved state for another hash WHEN a graph is placed THEN it opens', () => {
-    const expected: RestorePlan = { kind: 'open' };
+  describe('GIVEN a saved state for another hash', () => {
+    it('WHEN a graph is placed THEN it opens', () => {
+      const expected: RestorePlan = { kind: 'open' };
 
-    const plan = restorePlanOf(SAVED, 'h2');
+      const plan = restorePlanOf(SAVED, 'h2');
 
-    expect(plan).toStrictEqual(expected);
+      expect(plan).toStrictEqual(expected);
+    });
   });
 });

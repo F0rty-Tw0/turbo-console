@@ -166,10 +166,12 @@ describe('FEATURE: swatchPartsOf', () => {
     });
   });
 
-  it('GIVEN a pill swatch WHEN it is read THEN the rect is 10 high with 5 px corners', () => {
-    const rect = partAt(partsOf(PILL_SWATCH), 0);
+  describe('GIVEN a pill swatch', () => {
+    it('WHEN it is read THEN the rect is 10 high with 5 px corners', () => {
+      const rect = partAt(partsOf(PILL_SWATCH), 0);
 
-    expect(rect.attrs).toMatchObject({ y: '5', height: '10', rx: '5' });
+      expect(rect.attrs).toMatchObject({ y: '5', height: '10', rx: '5' });
+    });
   });
 
   describe('GIVEN a line swatch', () => {
@@ -232,10 +234,12 @@ describe('FEATURE: swatchPartsOf', () => {
     });
   });
 
-  it('GIVEN the task legend WHEN its run rows are read THEN each is a card swatch with the bar of its own state and no outline', () => {
-    const runRows = TASK_LEGEND_ROWS.filter((row) => row.id.startsWith('run-'));
-    const looks = runRows.map((row) => [row.swatch.accentBar, row.swatch.fill, row.swatch.stroke, row.swatch.outline]);
+  describe('GIVEN the task legend', () => {
+    it('WHEN its run rows are read THEN each is a card swatch with the bar of its own state and no outline', () => {
+      const runRows = TASK_LEGEND_ROWS.filter((row) => row.id.startsWith('run-'));
+      const looks = runRows.map((row) => [row.swatch.accentBar, row.swatch.fill, row.swatch.stroke, row.swatch.outline]);
 
-    expect(looks).toStrictEqual(RUN_STATES.map((state) => [`run-${state}`, 'cardFill', 'cardFrame', null]));
+      expect(looks).toStrictEqual(RUN_STATES.map((state) => [`run-${state}`, 'cardFill', 'cardFrame', null]));
+    });
   });
 });
