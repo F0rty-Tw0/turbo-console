@@ -40,19 +40,23 @@ describe('FEATURE: editor icon theme ports', () => {
     });
   });
 
-  it('GIVEN installed extensions WHEN they are read THEN extensions() is a copy of them', () => {
-    const extensions = editorIconThemePorts().extensions();
+  describe('GIVEN installed extensions', () => {
+    it('WHEN they are read THEN extensions() is a copy of them', () => {
+      const extensions = editorIconThemePorts().extensions();
 
-    expect(extensions).toStrictEqual(editor.all);
-    expect(extensions).not.toBe(editor.all);
+      expect(extensions).toStrictEqual(editor.all);
+      expect(extensions).not.toBe(editor.all);
+    });
   });
 
-  it('GIVEN a file on disk WHEN its size and bytes are read THEN size() is the byte count read() returns', async () => {
-    const ports = editorIconThemePorts();
+  describe('GIVEN a file on disk', () => {
+    it('WHEN its size and bytes are read THEN size() is the byte count read() returns', async () => {
+      const ports = editorIconThemePorts();
 
-    const size = await ports.size(import.meta.filename);
-    const bytes = await ports.read(import.meta.filename);
+      const size = await ports.size(import.meta.filename);
+      const bytes = await ports.read(import.meta.filename);
 
-    expect(size).toBe(bytes.byteLength);
+      expect(size).toBe(bytes.byteLength);
+    });
   });
 });

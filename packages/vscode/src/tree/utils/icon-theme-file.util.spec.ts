@@ -52,13 +52,15 @@ describe('FEATURE: icon theme file', () => {
     });
   });
 
-  it('GIVEN theme-a in the second extension WHEN it is looked up THEN themeFileOf is the file in that extension', () => {
-    const first: ThemeExtension = { extensionPath: '/ext/other', packageJSON: manifestOf('theme-z', 'z.json') };
-    const extensions = [first, extensionOf('a.json', '/ext/second')];
+  describe('GIVEN theme-a in the second extension', () => {
+    it('WHEN it is looked up THEN themeFileOf is the file in that extension', () => {
+      const first: ThemeExtension = { extensionPath: '/ext/other', packageJSON: manifestOf('theme-z', 'z.json') };
+      const extensions = [first, extensionOf('a.json', '/ext/second')];
 
-    const file = themeFileOf(extensions, 'theme-a');
+      const file = themeFileOf(extensions, 'theme-a');
 
-    expect(file).toBe(resolve('/ext/second', 'a.json'));
+      expect(file).toBe(resolve('/ext/second', 'a.json'));
+    });
   });
 
   describe('GIVEN a parsed theme file', () => {

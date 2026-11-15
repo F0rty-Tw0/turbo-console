@@ -4,10 +4,12 @@ import { TreeVisibility } from './tree-visibility.ts';
 import { describedViewOf, visibleViewFake } from '../test/utils/ticker-fakes.spec.util.ts';
 
 describe('FEATURE: tree visibility', () => {
-  it('GIVEN no view was bound (untrusted workspace) WHEN it is read THEN it is false', () => {
-    const visibility = new TreeVisibility();
+  describe('GIVEN no view was bound (untrusted workspace)', () => {
+    it('WHEN it is read THEN it is false', () => {
+      const visibility = new TreeVisibility();
 
-    expect(visibility.read()).toBe(false);
+      expect(visibility.read()).toBe(false);
+    });
   });
 
   describe('GIVEN a bound view', () => {

@@ -55,6 +55,14 @@ const APP_TEST: RunEntry = { ...APP_BUILD, taskId: 'app#test' };
 
 const countsOf = (entries: RunEntry[]): RunningCounts => runningCountsOf('/ws', VIEW, contextOf(entries));
 
+/** A context whose `live` answers `held` as the run store does: the same Set object until the running ids change. */
+const contextHolding = (held: ReadonlySet<string>, entries: RunEntry[]): RowContext => {
+  const runs: RunLookup = (root, taskId) => entries.find((entry) => entry.root === root && entry.taskId === taskId);
+  const live: LiveIds = () => held;
+
+  return rowContextOf('folders', runs, false, { scriptsShown: false, live });
+};
+
 describe('FEATURE: running counts of package and folder rows', () => {
   describe('GIVEN two runs of package app at packages/app', () => {
     const counts = countsOf([APP_BUILD, APP_TEST]);
@@ -111,17 +119,7 @@ describe('FEATURE: running counts of package and folder rows', () => {
       expect(counts.dirs.size).toBe(0);
     });
   });
-});
 
-/** A context whose `live` answers `held` as the run store does: the same Set object until the running ids change. */
-const contextHolding = (held: ReadonlySet<string>, entries: RunEntry[]): RowContext => {
-  const runs: RunLookup = (root, taskId) => entries.find((entry) => entry.root === root && entry.taskId === taskId);
-  const live: LiveIds = () => held;
-
-  return rowContextOf('folders', runs, false, { scriptsShown: false, live });
-};
-
-describe('FEATURE: running counts memoized per view and live set', () => {
   const HELD = new Set([APP_BUILD.taskId]);
   const context = contextHolding(HELD, [APP_BUILD]);
 
@@ -154,31 +152,31 @@ describe('FEATURE: running counts memoized per view and live set', () => {
       expect(second).not.toBe(first);
     });
   });
-});
 
-describe('FEATURE: running suffix of a row description', () => {
-  it.each([
-    ['packages/app', 2, 'packages/app · 2 running'],
-    ['', 2, '2 running'],
-    ['x', 0, 'x'],
-    ['', 0, '']
-  ])('GIVEN %j and %i runs WHEN suffixed THEN it reads %j', (description, count, expected) => {
-    const text = withRunningSuffix(description, count);
+  describe('GIVEN a row description and a running count', () => {
+    it.each([
+      ['packages/app', 2, 'packages/app · 2 running'],
+      ['', 2, '2 running'],
+      ['x', 0, 'x'],
+      ['', 0, '']
+    ])('WHEN %j is suffixed with %i runs THEN it reads %j', (description, count, expected) => {
+      const text = withRunningSuffix(description, count);
 
-    expect(text).toBe(expected);
+      expect(text).toBe(expected);
+    });
   });
-});
 
-describe('FEATURE: folders above a package path', () => {
-  it.each([
-    ['packages/apps/web', ['packages', 'packages/apps']],
-    ['packages\\win', ['packages']],
-    ['./a//b', ['a']],
-    ['top', []],
-    ['', []]
-  ])('GIVEN the path %j WHEN split THEN the folders are %j', (path, expected) => {
-    const dirs = parentDirsOf(path);
+  describe('GIVEN a package path', () => {
+    it.each([
+      ['packages/apps/web', ['packages', 'packages/apps']],
+      ['packages\\win', ['packages']],
+      ['./a//b', ['a']],
+      ['top', []],
+      ['', []]
+    ])('WHEN %j is split THEN the folders above it are %j', (path, expected) => {
+      const dirs = parentDirsOf(path);
 
-    expect(dirs).toStrictEqual(expected);
+      expect(dirs).toStrictEqual(expected);
+    });
   });
 });

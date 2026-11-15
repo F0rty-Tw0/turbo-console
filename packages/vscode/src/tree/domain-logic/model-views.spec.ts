@@ -175,61 +175,75 @@ describe('FEATURE: model views per model', () => {
       expect(resolver).toHaveBeenCalledTimes(2);
     });
 
-    it('GIVEN a package whose commands read no scripts WHEN their tools are asked for THEN its tasks are never read', () => {
-      let reads = 0;
-      const counted: PackageNode = {
-        ...PKG,
-        get tasks(): TaskNode[] {
-          reads += 1;
+    describe('GIVEN a package whose commands read no scripts', () => {
+      it('WHEN their tools are asked for THEN its tasks are never read', () => {
+        let reads = 0;
+        const counted: PackageNode = {
+          ...PKG,
+          get tasks(): TaskNode[] {
+            reads += 1;
 
-          return PKG.tasks;
-        }
-      };
+            return PKG.tasks;
+          }
+        };
 
-      views.toolOf(counted, false, VITEST_COMMAND);
-      views.toolOf(counted, false, NO_TOOL_COMMAND);
+        views.toolOf(counted, false, VITEST_COMMAND);
+        views.toolOf(counted, false, NO_TOOL_COMMAND);
 
-      expect(reads).toBe(0);
+        expect(reads).toBe(0);
+      });
     });
 
-    it('GIVEN test:app edited from vitest to jest (a new package object) WHEN test is asked for THEN it is Jest', () => {
-      const before = views.toolOf(pkgWith({ test: DELEGATING_COMMAND, 'test:app': 'vitest' }), false, DELEGATING_COMMAND);
-      const after = views.toolOf(pkgWith({ test: DELEGATING_COMMAND, 'test:app': 'jest' }), false, DELEGATING_COMMAND);
+    describe('GIVEN test:app edited from vitest to jest (a new package object)', () => {
+      it('WHEN test is asked for THEN it is Jest', () => {
+        const before = views.toolOf(pkgWith({ test: DELEGATING_COMMAND, 'test:app': 'vitest' }), false, DELEGATING_COMMAND);
+        const after = views.toolOf(pkgWith({ test: DELEGATING_COMMAND, 'test:app': 'jest' }), false, DELEGATING_COMMAND);
 
-      expect([before?.tool.id, after?.tool.id]).toStrictEqual(['vitest', 'jest']);
+        expect([before?.tool.id, after?.tool.id]).toStrictEqual(['vitest', 'jest']);
+      });
     });
 
-    it('GIVEN two roots whose // packages differ in t WHEN npm run t is asked for in each THEN each reads its own scripts', () => {
-      const first = views.toolOf(rootPkgWith({ t: 'vitest' }), true, 'npm run t');
-      const second = views.toolOf(rootPkgWith({ t: 'jest' }), true, 'npm run t');
+    describe('GIVEN two roots whose // packages differ in t', () => {
+      it('WHEN npm run t is asked for in each THEN each reads its own scripts', () => {
+        const first = views.toolOf(rootPkgWith({ t: 'vitest' }), true, 'npm run t');
+        const second = views.toolOf(rootPkgWith({ t: 'jest' }), true, 'npm run t');
 
-      expect([first?.tool.id, second?.tool.id]).toStrictEqual(['vitest', 'jest']);
+        expect([first?.tool.id, second?.tool.id]).toStrictEqual(['vitest', 'jest']);
+      });
     });
 
-    it('GIVEN two packages with different t bodies WHEN npm run t is asked for in each THEN each row has its own tool', () => {
-      const first = views.toolOf(pkgWith({ t: 'vitest' }), false, 'npm run t');
-      const second = views.toolOf(pkgWith({ t: 'eslint .' }), false, 'npm run t');
+    describe('GIVEN two packages with different t bodies', () => {
+      it('WHEN npm run t is asked for in each THEN each row has its own tool', () => {
+        const first = views.toolOf(pkgWith({ t: 'vitest' }), false, 'npm run t');
+        const second = views.toolOf(pkgWith({ t: 'eslint .' }), false, 'npm run t');
 
-      expect([first?.tool.id, second?.tool.id]).toStrictEqual(['vitest', 'eslint']);
+        expect([first?.tool.id, second?.tool.id]).toStrictEqual(['vitest', 'eslint']);
+      });
     });
 
-    it('GIVEN a monorepo // WHEN turbo run test is asked for THEN it does not follow the test script', () => {
-      const match = views.toolOf(rootPkgWith({ test: 'vitest' }), false, 'turbo run test');
+    describe('GIVEN a monorepo //', () => {
+      it('WHEN turbo run test is asked for THEN it does not follow the test script', () => {
+        const match = views.toolOf(rootPkgWith({ test: 'vitest' }), false, 'turbo run test');
 
-      expect(match).toBeNull();
+        expect(match).toBeNull();
+      });
     });
 
-    it('GIVEN a monorepo // asked for turbo run test first WHEN another package is asked for it THEN it still follows its test script', () => {
-      const root = views.toolOf(rootPkgWith({ test: 'vitest' }), false, 'turbo run test');
-      const web = views.toolOf(pkgWith({ test: 'vitest' }), false, 'turbo run test');
+    describe('GIVEN a monorepo // asked for turbo run test first', () => {
+      it('WHEN another package is asked for it THEN it still follows its test script', () => {
+        const root = views.toolOf(rootPkgWith({ test: 'vitest' }), false, 'turbo run test');
+        const web = views.toolOf(pkgWith({ test: 'vitest' }), false, 'turbo run test');
 
-      expect([root, web?.tool.id]).toStrictEqual([null, 'vitest']);
+        expect([root, web?.tool.id]).toStrictEqual([null, 'vitest']);
+      });
     });
 
-    it('GIVEN a single-package // WHEN turbo run test is asked for THEN it follows the test script', () => {
-      const match = views.toolOf(rootPkgWith({ test: 'vitest' }), true, 'turbo run test');
+    describe('GIVEN a single-package //', () => {
+      it('WHEN turbo run test is asked for THEN it follows the test script', () => {
+        const match = views.toolOf(rootPkgWith({ test: 'vitest' }), true, 'turbo run test');
 
-      expect([match?.tool.id, match?.via]).toStrictEqual(['vitest', ['test']]);
+        expect([match?.tool.id, match?.via]).toStrictEqual(['vitest', ['test']]);
+      });
     });
 
     it('WHEN no command is asked for THEN there is no tool', () => {

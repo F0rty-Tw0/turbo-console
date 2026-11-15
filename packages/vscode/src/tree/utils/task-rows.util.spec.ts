@@ -188,9 +188,7 @@ describe('FEATURE: task rows of a package', () => {
       expect(row).toMatchObject({ label: 'build', description: '', icon: IDLE_ICON, contextValue: 'turboScript' });
     });
   });
-});
 
-describe('FEATURE: one task row by id', () => {
   describe('GIVEN a package with a file atom task a#lint:file and tasks a#lint and a#build', () => {
     const pkg = packageWith([
       taskOf({ id: 'a#lint', name: 'lint', kind: 'atom-umbrella' }),

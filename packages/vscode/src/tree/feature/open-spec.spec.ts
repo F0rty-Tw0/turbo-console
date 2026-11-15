@@ -93,16 +93,18 @@ describe('FEATURE: Open Spec command', () => {
     registered = registerOpenSpec(roots, ports, register);
   });
 
-  it('GIVEN Open Spec WHEN it is registered THEN only its own command is registered', () => {
-    const names = commands.keys();
+  describe('GIVEN Open Spec', () => {
+    it('WHEN it is registered THEN only its own command is registered', () => {
+      const names = commands.keys();
 
-    expect([...names]).toStrictEqual([OPEN_SPEC_COMMAND]);
-  });
+      expect([...names]).toStrictEqual([OPEN_SPEC_COMMAND]);
+    });
 
-  it('GIVEN Open Spec WHEN it is disposed THEN its command is unregistered', () => {
-    registered.dispose();
+    it('WHEN it is disposed THEN its command is unregistered', () => {
+      registered.dispose();
 
-    expect(unregister).toHaveBeenCalledTimes(1);
+      expect(unregister).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('GIVEN a root loaded with the spec files a.spec.ts and "b fails.spec.ts"', () => {

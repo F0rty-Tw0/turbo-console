@@ -16,13 +16,15 @@ describe('FEATURE: ticker ports', () => {
     vi.useRealTimers();
   });
 
-  it('GIVEN a tree WHEN the running tasks fire THEN the tree refreshes them all in one call', () => {
-    const { fire } = tickerPortsOf(tree);
-    const running: RunningTasks = new Map([['/ws', new Set(['a#dev', 'b#dev'])]]);
+  describe('GIVEN a tree', () => {
+    it('WHEN the running tasks fire THEN the tree refreshes them all in one call', () => {
+      const { fire } = tickerPortsOf(tree);
+      const running: RunningTasks = new Map([['/ws', new Set(['a#dev', 'b#dev'])]]);
 
-    fire(running);
+      fire(running);
 
-    expect(vi.mocked(tree.refreshTasks)).toHaveBeenCalledExactlyOnceWith(running);
+      expect(vi.mocked(tree.refreshTasks)).toHaveBeenCalledExactlyOnceWith(running);
+    });
   });
 
   describe('GIVEN an interval armed with every', () => {

@@ -165,10 +165,8 @@ describe('FEATURE: every row of a root', () => {
       expect(sortedIds(rows)).toStrictEqual(['msg:/ws\0loading']);
     });
   });
-});
 
-describe('FEATURE: every row of a root holding Atomizer groups', () => {
-  describe('GIVEN package e2e with a group of three files', () => {
+  describe('GIVEN package e2e with an Atomizer group of three files', () => {
     const state: RootState = { ...ROOT_STATE_STUB, model: ATOM_MODEL_STUB };
 
     it('WHEN listed THEN each file row is there', () => {

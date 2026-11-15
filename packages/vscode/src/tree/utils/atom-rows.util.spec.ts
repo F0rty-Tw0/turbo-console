@@ -65,8 +65,8 @@ const umbrellaRunOf = (overrides: Partial<RunEntry>): RunLookup => {
   return (_root, taskId) => (taskId === entry.taskId ? entry : undefined);
 };
 
-describe('FEATURE: atom umbrella row', () => {
-  describe('GIVEN neither the dry run nor the results settled', () => {
+describe('FEATURE: atom rows', () => {
+  describe('GIVEN an umbrella with neither the dry run nor the results settled', () => {
     it('WHEN the row is built THEN it reads only the file count and is collapsed', () => {
       const row = umbrellaRow(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, ATOM_GROUP_STUB, atomContextOf(ATOM_VIEW_STUB));
 
@@ -81,7 +81,7 @@ describe('FEATURE: atom umbrella row', () => {
     });
   });
 
-  describe('GIVEN only the dry run settled', () => {
+  describe('GIVEN an umbrella with only the dry run settled', () => {
     it('WHEN one file is a HIT THEN the cached count follows the file count', () => {
       const description = descriptionOf({ dryRun: dryRunOf('HIT', 'MISS', 'MISS') });
 
@@ -101,7 +101,7 @@ describe('FEATURE: atom umbrella row', () => {
     });
   });
 
-  describe('GIVEN only the results settled', () => {
+  describe('GIVEN an umbrella with only the results settled', () => {
     it('WHEN one file failed THEN the failed count follows the file count and no cached part shows', () => {
       const description = descriptionOf({ results: resultsOf(PASSED, FAILED, PASSED) });
 
@@ -115,7 +115,7 @@ describe('FEATURE: atom umbrella row', () => {
     });
   });
 
-  describe('GIVEN both parts settled', () => {
+  describe('GIVEN an umbrella with both parts settled', () => {
     const settled: Partial<AtomView> = { dryRun: dryRunOf('HIT', 'MISS', 'HIT'), results: resultsOf(PASSED, FAILED, PASSED) };
 
     it('WHEN the umbrella is idle THEN cached and failed counts both show', () => {
@@ -164,9 +164,7 @@ describe('FEATURE: atom umbrella row', () => {
       expect(row.tooltip.some(isPrediction)).toBe(false);
     });
   });
-});
 
-describe('FEATURE: atom file rows of a package', () => {
   describe('GIVEN a group of three files', () => {
     it('WHEN its file rows are built THEN there is one row per file in group order', () => {
       const rows = fileRowsOf(ROW_SCOPE_STUB, E2E_PACKAGE_STUB, ATOM_GROUP_STUB, atomContextOf(ATOM_VIEW_STUB));

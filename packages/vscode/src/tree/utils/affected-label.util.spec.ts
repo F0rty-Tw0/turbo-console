@@ -29,7 +29,7 @@ const labelOf = (shown: boolean, reads: ReadonlyMap<string, Read>): string => {
 };
 
 describe('FEATURE: affectedLabelOf', () => {
-  it.each<[string, string, boolean, Record<string, Read>]>([
+  describe.each<[string, string, boolean, Record<string, Read>]>([
     ['the toggle is off and the root failed', '', false, { '/a': FAILED }],
     ['there are no roots', '', true, {}],
     ['every root is absent', '', true, { '/a': ABSENT }],
@@ -51,7 +51,9 @@ describe('FEATURE: affectedLabelOf', () => {
       { '/a': LOADING_PACKAGE, '/b': LOADED_TASK }
     ],
     ['one loaded and one absent', 'affected: task level', true, { '/a': LOADED_TASK, '/b': ABSENT }]
-  ])('GIVEN %s WHEN the label is read THEN it reads "%s"', (_name, expected, shown, reads) => {
-    expect(labelOf(shown, new Map(Object.entries(reads)))).toBe(expected);
+  ])('GIVEN %s', (_name, expected, shown, reads) => {
+    it(`WHEN the label is read THEN it reads "${expected}"`, () => {
+      expect(labelOf(shown, new Map(Object.entries(reads)))).toBe(expected);
+    });
   });
 });

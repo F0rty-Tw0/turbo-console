@@ -74,23 +74,6 @@ const rowOf = (kind: RowKind, tooltip: string[]): TreeRow => {
   return row;
 };
 
-describe('FEATURE: tree item tooltip', () => {
-  describe.each(MARKDOWN_KINDS)('GIVEN a %s row with tooltip lines', (kind) => {
-    it('WHEN built THEN the tooltip is markdown reading the lines, so VS Code keeps label and description as its aria label', () => {
-      const { tooltip } = toTreeItem(rowOf(kind, TOOLTIP_LINES), ICONS_STATE_STUB);
-
-      expect(tooltip).toBeInstanceOf(vscode.MarkdownString);
-      expect(tooltip).toHaveProperty('value', TOOLTIP_MARKDOWN);
-    });
-  });
-
-  describe('GIVEN a row with no tooltip lines', () => {
-    it('WHEN built THEN the tooltip stays unset', () => {
-      expect(toTreeItem(rowOf('pkg', []), ICONS_STATE_STUB).tooltip).toBeUndefined();
-    });
-  });
-});
-
 const FOLDER = 'packages/libs';
 
 const ROW_KINDS: RowKind[] = ['root', 'dir', 'pkg', 'scripts', 'task', 'msg'];
@@ -123,7 +106,22 @@ const toolRowOf = (themeFiles: string[]): TreeRow => {
   return row;
 };
 
-describe('FEATURE: tree item theme file icons', () => {
+describe('FEATURE: tree item', () => {
+  describe.each(MARKDOWN_KINDS)('GIVEN a %s row with tooltip lines', (kind) => {
+    it('WHEN built THEN the tooltip is markdown reading the lines, so VS Code keeps label and description as its aria label', () => {
+      const { tooltip } = toTreeItem(rowOf(kind, TOOLTIP_LINES), ICONS_STATE_STUB);
+
+      expect(tooltip).toBeInstanceOf(vscode.MarkdownString);
+      expect(tooltip).toHaveProperty('value', TOOLTIP_MARKDOWN);
+    });
+  });
+
+  describe('GIVEN a row with no tooltip lines', () => {
+    it('WHEN built THEN the tooltip stays unset', () => {
+      expect(toTreeItem(rowOf('pkg', []), ICONS_STATE_STUB).tooltip).toBeUndefined();
+    });
+  });
+
   describe('GIVEN an idle tool row naming two config files', () => {
     const row = toolRowOf(['vitest.config.ts', 'vitest.config.js']);
 
@@ -185,9 +183,7 @@ describe('FEATURE: tree item theme file icons', () => {
       expect(item.iconPath).toBe(vscode.ThemeIcon.Folder);
     });
   });
-});
 
-describe('FEATURE: tree item icons', () => {
   describe.each<RowKind>(['dir', 'pkg'])('GIVEN a %s row with a folder', (kind) => {
     it('WHEN built in theme mode THEN the icon is the theme folder over that directory', () => {
       const item = toTreeItem(folderRowOf(kind), THEME_ICONS_STATE);
