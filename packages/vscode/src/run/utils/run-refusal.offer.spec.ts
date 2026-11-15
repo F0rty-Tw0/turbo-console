@@ -40,11 +40,13 @@ const requestFor = (pkg: PackageNode, task: TaskNode): RunRequest => {
 };
 
 describe('FEATURE: an offered task is a runnable task (spec 1c-b §4.1)', () => {
-  it.each(PACKAGES)('GIVEN the in-root package $name WHEN scripts are shown THEN no offered task is refused', (pkg) => {
-    const offered = pkg.tasks.filter((task) => isOfferedTask(task, true));
-    const refusals = offered.map((task) => refusalOf(requestFor(pkg, task)));
+  describe.each(PACKAGES)('GIVEN the in-root package $name', (pkg) => {
+    it('WHEN scripts are shown THEN no offered task is refused', () => {
+      const offered = pkg.tasks.filter((task) => isOfferedTask(task, true));
+      const refusals = offered.map((task) => refusalOf(requestFor(pkg, task)));
 
-    expect(offered.map((task) => task.name)).toStrictEqual(['build', 'no-command-turbo', 'lint']);
-    expect(refusals).toStrictEqual([null, null, null]);
+      expect(offered.map((task) => task.name)).toStrictEqual(['build', 'no-command-turbo', 'lint']);
+      expect(refusals).toStrictEqual([null, null, null]);
+    });
   });
 });

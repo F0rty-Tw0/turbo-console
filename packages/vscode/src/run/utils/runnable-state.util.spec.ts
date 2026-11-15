@@ -52,32 +52,38 @@ describe('FEATURE: the runnable state of a task root', () => {
     roots = { get, all: (): RootEntry[] => [], onDidChange };
   });
 
-  it('GIVEN the root is absent WHEN its state is read THEN it is undefined', async () => {
-    isPresent = false;
+  describe('GIVEN the root is absent', () => {
+    it('WHEN its state is read THEN it is undefined', async () => {
+      isPresent = false;
 
-    const state = await runnableStateOf(roots, TARGET);
+      const state = await runnableStateOf(roots, TARGET);
 
-    expect(state).toBeUndefined();
+      expect(state).toBeUndefined();
+    });
   });
 
-  it('GIVEN a root with a binary WHEN its state is read THEN it holds the binary and the load is not awaited', async () => {
-    binary = TURBO_BINARY_STUB;
+  describe('GIVEN a root with a binary', () => {
+    it('WHEN its state is read THEN it holds the binary and the load is not awaited', async () => {
+      binary = TURBO_BINARY_STUB;
 
-    const state = await runnableStateOf(roots, TARGET);
+      const state = await runnableStateOf(roots, TARGET);
 
-    expect(state?.binary).toBe(TURBO_BINARY_STUB);
-    expect(coordinator.whenSettled).not.toHaveBeenCalled();
+      expect(state?.binary).toBe(TURBO_BINARY_STUB);
+      expect(coordinator.whenSettled).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a root without a binary and a load that never settles WHEN the binary is published THEN it resolves with it', async () => {
-    vi.mocked(coordinator.whenSettled).mockReturnValue(new Promise(() => undefined));
+  describe('GIVEN a root without a binary and a load that never settles', () => {
+    it('WHEN the binary is published THEN it resolves with it', async () => {
+      vi.mocked(coordinator.whenSettled).mockReturnValue(new Promise(() => undefined));
 
-    const reading = runnableStateOf(roots, TARGET);
+      const reading = runnableStateOf(roots, TARGET);
 
-    publish(TURBO_BINARY_STUB);
+      publish(TURBO_BINARY_STUB);
 
-    const state = await reading;
+      const state = await reading;
 
-    expect(state?.binary).toBe(TURBO_BINARY_STUB);
+      expect(state?.binary).toBe(TURBO_BINARY_STUB);
+    });
   });
 });

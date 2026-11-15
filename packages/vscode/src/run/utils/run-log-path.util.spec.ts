@@ -26,14 +26,16 @@ describe('FEATURE: the log path of one run (spec D1, D16)', () => {
     });
   });
 
-  it.each([
+  describe.each([
     ['another launch time', 1700000000001, 'ab12cd34'],
     ['another id (two windows, same millisecond)', 1700000000000, 'ffffffff']
-  ])('GIVEN two runs of one task with %s WHEN their paths are built THEN the paths differ', (_title, launchedAt, id) => {
-    const first = runLogPathOf('/ws', 1700000000000, 'ab12cd34');
+  ])('GIVEN two runs of one task with %s', (_title, launchedAt, id) => {
+    it('WHEN their paths are built THEN the paths differ', () => {
+      const first = runLogPathOf('/ws', 1700000000000, 'ab12cd34');
 
-    const second = runLogPathOf('/ws', launchedAt, id);
+      const second = runLogPathOf('/ws', launchedAt, id);
 
-    expect(second).not.toStrictEqual(first);
+      expect(second).not.toStrictEqual(first);
+    });
   });
 });

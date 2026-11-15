@@ -33,7 +33,7 @@ const REFUSED_NAMES = [
   '.hidden'
 ];
 
-describe('FEATURE: script name allowlist', () => {
+describe('FEATURE: script name', () => {
   describe('GIVEN a name of allowlisted characters', () => {
     it.each(SAFE_NAMES)('WHEN %j is checked THEN it is safe', (name) => {
       expect(isSafeScriptName(name)).toBe(true);
@@ -76,9 +76,7 @@ describe('FEATURE: script name allowlist', () => {
       expect(quoted).toStrictEqual(passing);
     });
   });
-});
 
-describe('FEATURE: script command', () => {
   describe('GIVEN a safe name', () => {
     it.each([
       ['npm', 'npm run lint'],

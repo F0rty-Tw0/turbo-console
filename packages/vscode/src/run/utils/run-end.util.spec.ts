@@ -7,7 +7,7 @@ import { RUN_ENTRY_STUB } from '../test/stubs/run.stub.ts';
 
 const ENDED: RunEntry = { ...RUN_ENTRY_STUB, state: 'failed', endedAt: 4000, exitCode: 1 };
 
-describe('FEATURE: end state of a run', () => {
+describe('FEATURE: run end', () => {
   describe.each([false, true])('GIVEN the user pressed Stop on a task whose persistent flag is %s', (persistent) => {
     it.each([1, 0, 129, undefined])('WHEN the process ends with exit code %s THEN the run is stopped', (exitCode) => {
       expect(endStateOf(true, exitCode, persistent, true)).toBe('stopped');
@@ -41,9 +41,7 @@ describe('FEATURE: end state of a run', () => {
       expect(endStateOf(false, exitCode, true, true)).toBe('failed');
     });
   });
-});
 
-describe('FEATURE: end state of a script run', () => {
   describe('GIVEN a script and no Stop', () => {
     it('WHEN the process ends with exit code 0 THEN the run passed', () => {
       expect(endStateOf(false, 0, false, false)).toBe('passed');
@@ -67,32 +65,32 @@ describe('FEATURE: end state of a script run', () => {
       expect(endStateOf(true, exitCode, false, false)).toBe('stopped');
     });
   });
-});
 
-describe('FEATURE: matched end', () => {
-  it.each<[RunState, number | undefined, boolean]>([
+  describe.each<[RunState, number | undefined, boolean]>([
     ['passed', 0, true],
     ['failed', 1, true],
     ['failed', undefined, false],
     ['stopped', 1, false],
     ['stopped', undefined, false]
-  ])('GIVEN a %s run with exit code %s WHEN asked THEN a summary match follows: %s', (state, exitCode, expected) => {
-    expect(isMatchedEnd(state, exitCode, true)).toBe(expected);
+  ])('GIVEN a %s run with exit code %s', (state, exitCode, expected) => {
+    it(`WHEN its end is checked for a match THEN a summary match follows: ${expected}`, () => {
+      expect(isMatchedEnd(state, exitCode, true)).toBe(expected);
+    });
   });
 
-  it.each<[RunState, number | undefined]>([
+  describe.each<[RunState, number | undefined]>([
     ['passed', 0],
     ['failed', 1],
     ['failed', 127],
     ['stopped', 130]
-  ])('GIVEN a %s script run with exit code %s WHEN asked THEN no summary match follows', (state, exitCode) => {
-    expect(isMatchedEnd(state, exitCode, false)).toBe(false);
+  ])('GIVEN a %s script run with exit code %s', (state, exitCode) => {
+    it('WHEN its end is checked for a match THEN no summary match follows', () => {
+      expect(isMatchedEnd(state, exitCode, false)).toBe(false);
+    });
   });
-});
 
-describe('FEATURE: run to match of an entry', () => {
   describe('GIVEN an entry with an end time and an exit code', () => {
-    it('WHEN read THEN it carries the task, package, process window and exit code', () => {
+    it('WHEN its run to match is read THEN it carries the task, package, process window and exit code', () => {
       const expected: RunToMatch = {
         task: ENDED.task,
         packageName: 'a',

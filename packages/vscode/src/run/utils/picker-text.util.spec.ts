@@ -21,32 +21,44 @@ const packageOf = (tasks: TaskNode[]): PackageNode => {
 describe('FEATURE: text of a package with no task to pick', () => {
   const scripts = [scriptNamed('lint'), scriptNamed('fmt'), scriptNamed('a b')];
 
-  it('GIVEN scripts are hidden and 2 are offered, 1 refused WHEN asked THEN the hint counts 2', () => {
-    expect(emptyTasksText(packageOf(scripts), false)).toBe(hiddenScriptsText(2));
+  describe('GIVEN scripts are hidden and 2 are offered, 1 refused', () => {
+    it('WHEN asked THEN the hint counts 2', () => {
+      expect(emptyTasksText(packageOf(scripts), false)).toBe(hiddenScriptsText(2));
+    });
   });
 
-  it('GIVEN scripts are hidden and a script has no command, another a blank one WHEN asked THEN neither is counted', () => {
-    const empty = scriptNamed('empty', null);
-    const blank = scriptNamed('blank', '  ');
+  describe('GIVEN scripts are hidden and a script has no command, another a blank one', () => {
+    it('WHEN asked THEN neither is counted', () => {
+      const empty = scriptNamed('empty', null);
+      const blank = scriptNamed('blank', '  ');
 
-    expect(emptyTasksText(packageOf([...scripts, empty, blank]), false)).toBe(hiddenScriptsText(2));
+      expect(emptyTasksText(packageOf([...scripts, empty, blank]), false)).toBe(hiddenScriptsText(2));
+    });
   });
 
-  it('GIVEN scripts are hidden and every script has no body WHEN asked THEN the plain text shows', () => {
-    const empty = scriptNamed('empty', null);
+  describe('GIVEN scripts are hidden and every script has no body', () => {
+    it('WHEN asked THEN the plain text shows', () => {
+      const empty = scriptNamed('empty', null);
 
-    expect(emptyTasksText(packageOf([empty]), false)).toBe(NO_PACKAGE_TASKS_TEXT);
+      expect(emptyTasksText(packageOf([empty]), false)).toBe(NO_PACKAGE_TASKS_TEXT);
+    });
   });
 
-  it('GIVEN scripts are hidden and every script is refused WHEN asked THEN the plain text shows', () => {
-    expect(emptyTasksText(packageOf([scriptNamed('a b')]), false)).toBe(NO_PACKAGE_TASKS_TEXT);
+  describe('GIVEN scripts are hidden and every script is refused', () => {
+    it('WHEN asked THEN the plain text shows', () => {
+      expect(emptyTasksText(packageOf([scriptNamed('a b')]), false)).toBe(NO_PACKAGE_TASKS_TEXT);
+    });
   });
 
-  it('GIVEN scripts are hidden and the package has no script WHEN asked THEN the plain text shows', () => {
-    expect(emptyTasksText(packageOf([]), false)).toBe(NO_PACKAGE_TASKS_TEXT);
+  describe('GIVEN scripts are hidden and the package has no script', () => {
+    it('WHEN asked THEN the plain text shows', () => {
+      expect(emptyTasksText(packageOf([]), false)).toBe(NO_PACKAGE_TASKS_TEXT);
+    });
   });
 
-  it('GIVEN scripts are shown WHEN asked THEN the plain text shows, whatever the scripts', () => {
-    expect(emptyTasksText(packageOf(scripts), true)).toBe(NO_PACKAGE_TASKS_TEXT);
+  describe('GIVEN scripts are shown', () => {
+    it('WHEN asked THEN the plain text shows, whatever the scripts', () => {
+      expect(emptyTasksText(packageOf(scripts), true)).toBe(NO_PACKAGE_TASKS_TEXT);
+    });
   });
 });
