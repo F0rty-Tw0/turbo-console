@@ -84,7 +84,7 @@ describe('FEATURE: node toolbar place', () => {
     });
   });
 
-  describe('GIVEN a toolbar root not yet placed', () => {
+  describe('GIVEN a toolbar root built hidden beside a container', () => {
     let root: HTMLElement;
     let focus: HTMLButtonElement;
     let container: HTMLElement;
