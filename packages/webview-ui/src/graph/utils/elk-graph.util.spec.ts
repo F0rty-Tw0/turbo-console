@@ -33,119 +33,121 @@ const idsOf = (elements: ElkNode[] | ElkEdge[] | undefined): string[] => {
   return listed.map(idOf);
 };
 
-describe('FEATURE: elkGraphOf', () => {
-  describe('GIVEN two packages and one edge app > core', () => {
-    const graph = elkGraphOf(['app', 'core'], [APP_CORE], sizeOf);
+describe('FEATURE: ELK graph', () => {
+  describe('GIVEN packages and edges built into an ELK graph', () => {
+    describe('GIVEN two packages and one edge app > core', () => {
+      const graph = elkGraphOf(['app', 'core'], [APP_CORE], sizeOf);
 
-    it('THEN the root carries the layered, top-down, network-simplex, thorough, root-coordinate options', () => {
-      expect(graph.layoutOptions).toStrictEqual({
-        'elk.algorithm': 'layered',
-        'elk.direction': 'DOWN',
-        'elk.layered.thoroughness': '7',
-        'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
-        'elk.layered.nodePlacement.strategy': 'SIMPLE',
-        'elk.edgeRouting': 'POLYLINE',
-        'elk.json.edgeCoords': 'ROOT'
+      it('THEN the root carries the layered, top-down, network-simplex, thorough, root-coordinate options', () => {
+        expect(graph.layoutOptions).toStrictEqual({
+          'elk.algorithm': 'layered',
+          'elk.direction': 'DOWN',
+          'elk.layered.thoroughness': '7',
+          'elk.layered.layering.strategy': 'NETWORK_SIMPLEX',
+          'elk.layered.nodePlacement.strategy': 'SIMPLE',
+          'elk.edgeRouting': 'POLYLINE',
+          'elk.json.edgeCoords': 'ROOT'
+        });
+      });
+
+      it('THEN each package is a sized child in package order', () => {
+        expect(graph.children).toStrictEqual([
+          { id: 'app', width: 100, height: 32 },
+          { id: 'core', width: 100, height: 32 }
+        ]);
+      });
+
+      it('THEN the edge runs from the dependent to the dependency', () => {
+        expect(graph.edges).toStrictEqual([{ id: edgeIdOf(APP_CORE), sources: ['app'], targets: ['core'] }]);
       });
     });
 
-    it('THEN each package is a sized child in package order', () => {
-      expect(graph.children).toStrictEqual([
-        { id: 'app', width: 100, height: 32 },
-        { id: 'core', width: 100, height: 32 }
-      ]);
+    describe('GIVEN packages a, b and a>b, and one edge a > b', () => {
+      const graph = elkGraphOf(['a', 'b', 'a>b'], [A_B], sizeOf);
+
+      it('THEN there are 3 children and 1 edge', () => {
+        expect(graph.children).toHaveLength(3);
+        expect(graph.edges).toHaveLength(1);
+      });
+
+      it('THEN the edge id is no child id', () => {
+        const childIds = idsOf(graph.children);
+        const [edgeId] = idsOf(graph.edges);
+
+        expect(childIds).not.toContain(edgeId);
+      });
     });
 
-    it('THEN the edge runs from the dependent to the dependency', () => {
-      expect(graph.edges).toStrictEqual([{ id: edgeIdOf(APP_CORE), sources: ['app'], targets: ['core'] }]);
-    });
-  });
+    describe('GIVEN the edges a>b > c and a > b>c', () => {
+      it('WHEN built THEN their ids differ', () => {
+        const graph = elkGraphOf(['a', 'a>b', 'b>c', 'c'], [AB_C, A_BC], sizeOf);
 
-  describe('GIVEN packages a, b and a>b, and one edge a > b', () => {
-    const graph = elkGraphOf(['a', 'b', 'a>b'], [A_B], sizeOf);
+        const edgeIds = new Set(idsOf(graph.edges));
 
-    it('THEN there are 3 children and 1 edge', () => {
-      expect(graph.children).toHaveLength(3);
-      expect(graph.edges).toHaveLength(1);
+        expect(edgeIds.size).toBe(2);
+      });
     });
 
-    it('THEN the edge id is no child id', () => {
-      const childIds = idsOf(graph.children);
-      const [edgeId] = idsOf(graph.edges);
+    describe('GIVEN no packages', () => {
+      it('WHEN built THEN children and edges are empty arrays', () => {
+        const graph = elkGraphOf([], [], sizeOf);
 
-      expect(childIds).not.toContain(edgeId);
-    });
-  });
-
-  describe('GIVEN the edges a>b > c and a > b>c', () => {
-    it('WHEN built THEN their ids differ', () => {
-      const graph = elkGraphOf(['a', 'a>b', 'b>c', 'c'], [AB_C, A_BC], sizeOf);
-
-      const edgeIds = new Set(idsOf(graph.edges));
-
-      expect(edgeIds.size).toBe(2);
+        expect(graph).toMatchObject({ id: 'root', children: [], edges: [] });
+      });
     });
   });
 
-  describe('GIVEN no packages', () => {
-    it('WHEN built THEN children and edges are empty arrays', () => {
-      const graph = elkGraphOf([], [], sizeOf);
+  describe('GIVEN a drawn graph built into a layout graph', () => {
+    describe('GIVEN the drawn graph of web in apps, ui and core in packages', () => {
+      const drawn = drawnGraphOf(STATE_STUB);
 
-      expect(graph).toMatchObject({ id: 'root', children: [], edges: [] });
+      it('WHEN built flat THEN it is the flat ELK input', () => {
+        const graph = layoutGraphOf(drawn, 'flat', sizeOf);
+
+        expect(graph).toStrictEqual(elkGraphOf(drawn.packages, drawn.edges, sizeOf));
+      });
+
+      it('WHEN built grouped THEN it is the grouped ELK input of its folders', () => {
+        const groups = folderGroupsOf(drawn.infos);
+
+        const graph = layoutGraphOf(drawn, 'folders', sizeOf);
+
+        expect(graph).toStrictEqual(groupedElkGraphOf(groups, drawn.edges, sizeOf));
+      });
+    });
+
+    describe('GIVEN the root // labelled root-fixture beside web, and a sizer 10 px per character', () => {
+      const packages: GraphPackage[] = [...STATE_STUB.packages, ROOT];
+      const drawn = drawnGraphOf({ ...STATE_STUB, packages });
+
+      it('WHEN built flat THEN // is as wide as its label and web as its name', () => {
+        const graph = layoutGraphOf(drawn, 'flat', lengthSizeOf);
+
+        expect(graph.children).toContainEqual({ id: '//', width: 120, height: 32 });
+        expect(graph.children).toContainEqual({ id: 'web', width: 30, height: 32 });
+      });
+
+      it('WHEN built grouped THEN // is as wide as its label', () => {
+        const graph = layoutGraphOf(drawn, 'folders', lengthSizeOf);
+
+        const leaves = JSON.stringify(graph);
+
+        expect(leaves).toContain('{"id":"//","width":120,"height":32}');
+      });
     });
   });
-});
 
-describe('FEATURE: layoutGraphOf', () => {
-  describe('GIVEN the drawn graph of web in apps, ui and core in packages', () => {
-    const drawn = drawnGraphOf(STATE_STUB);
+  describe('GIVEN a drawn graph whose root package has a sizeName, built into a layout graph', () => {
+    const sized: GraphPackage = { ...ROOT, bareName: '(root) root-fixture', sizeName: '(root) @x/root-fixture' };
+    const drawn = drawnGraphOf({ ...STATE_STUB, packages: [...STATE_STUB.packages, sized] });
 
-    it('WHEN built flat THEN it is the flat ELK input', () => {
-      const graph = layoutGraphOf(drawn, 'flat', sizeOf);
+    describe('GIVEN // with a sizeName', () => {
+      it('WHEN built flat THEN its box is the width of the sizeName and web keeps its name width', () => {
+        const graph = layoutGraphOf(drawn, 'flat', lengthSizeOf);
 
-      expect(graph).toStrictEqual(elkGraphOf(drawn.packages, drawn.edges, sizeOf));
-    });
-
-    it('WHEN built grouped THEN it is the grouped ELK input of its folders', () => {
-      const groups = folderGroupsOf(drawn.infos);
-
-      const graph = layoutGraphOf(drawn, 'folders', sizeOf);
-
-      expect(graph).toStrictEqual(groupedElkGraphOf(groups, drawn.edges, sizeOf));
-    });
-  });
-
-  describe('GIVEN the root // labelled root-fixture beside web, and a sizer 10 px per character', () => {
-    const packages: GraphPackage[] = [...STATE_STUB.packages, ROOT];
-    const drawn = drawnGraphOf({ ...STATE_STUB, packages });
-
-    it('WHEN built flat THEN // is as wide as its label and web as its name', () => {
-      const graph = layoutGraphOf(drawn, 'flat', lengthSizeOf);
-
-      expect(graph.children).toContainEqual({ id: '//', width: 120, height: 32 });
-      expect(graph.children).toContainEqual({ id: 'web', width: 30, height: 32 });
-    });
-
-    it('WHEN built grouped THEN // is as wide as its label', () => {
-      const graph = layoutGraphOf(drawn, 'folders', lengthSizeOf);
-
-      const leaves = JSON.stringify(graph);
-
-      expect(leaves).toContain('{"id":"//","width":120,"height":32}');
-    });
-  });
-});
-
-describe('FEATURE: layoutGraphOf sizeName', () => {
-  const sized: GraphPackage = { ...ROOT, bareName: '(root) root-fixture', sizeName: '(root) @x/root-fixture' };
-  const drawn = drawnGraphOf({ ...STATE_STUB, packages: [...STATE_STUB.packages, sized] });
-
-  describe('GIVEN // with a sizeName', () => {
-    it('WHEN built flat THEN its box is the width of the sizeName and web keeps its name width', () => {
-      const graph = layoutGraphOf(drawn, 'flat', lengthSizeOf);
-
-      expect(graph.children).toContainEqual({ id: '//', width: 220, height: 32 });
-      expect(graph.children).toContainEqual({ id: 'web', width: 30, height: 32 });
+        expect(graph.children).toContainEqual({ id: '//', width: 220, height: 32 });
+        expect(graph.children).toContainEqual({ id: 'web', width: 30, height: 32 });
+      });
     });
   });
 });
