@@ -34,91 +34,93 @@ const SORTED_TASKS: AffectedTask[] = [
   { id: 'web#test', reason: 'TaskFileChanged', detail: null }
 ];
 
-describe('FEATURE: affected tasks result', () => {
-  describe('GIVEN turbo lists affected tasks out of id order', () => {
-    const json = affectedJson([WEB_TEST, UI_BUILD, WEB_BUILD]);
+describe('FEATURE: affected util', () => {
+  describe('GIVEN turbo affected tasks output for an affected tasks result', () => {
+    describe('GIVEN turbo lists affected tasks out of id order', () => {
+      const json = affectedJson([WEB_TEST, UI_BUILD, WEB_BUILD]);
 
-    it('WHEN converted THEN tasks are sorted by id, each with its reason typename', () => {
-      const result = toAffectedResult(json, 'task');
+      it('WHEN converted THEN tasks are sorted by id, each with its reason typename', () => {
+        const result = toAffectedResult(json, 'task');
 
-      expect(result.tasks).toStrictEqual(SORTED_TASKS);
+        expect(result.tasks).toStrictEqual(SORTED_TASKS);
+      });
+
+      it('WHEN converted in package mode THEN the mode is kept', () => {
+        const result = toAffectedResult(json, 'package');
+
+        expect(result.mode).toBe('package');
+      });
     });
 
-    it('WHEN converted in package mode THEN the mode is kept', () => {
-      const result = toAffectedResult(json, 'package');
+    describe('GIVEN turbo lists a task whose reason carries a filePath', () => {
+      it('WHEN converted THEN the task carries it as detail and reason stays the bare typename', () => {
+        const reason = { ...FILE_CHANGED, filePath: 'apps/web/src/a.ts' };
+        const item: ChangedTask = { fullName: 'web#build', reason };
 
-      expect(result.mode).toBe('package');
+        const result = toAffectedResult(affectedJson([item]), 'task');
+
+        expect(result.tasks).toStrictEqual([{ id: 'web#build', reason: 'TaskFileChanged', detail: 'apps/web/src/a.ts' }]);
+      });
     });
-  });
 
-  describe('GIVEN turbo lists a task whose reason carries a filePath', () => {
-    it('WHEN converted THEN the task carries it as detail and reason stays the bare typename', () => {
-      const reason = { ...FILE_CHANGED, filePath: 'apps/web/src/a.ts' };
-      const item: ChangedTask = { fullName: 'web#build', reason };
+    describe('GIVEN turbo lists no affected task', () => {
+      it('WHEN converted THEN tasks are empty', () => {
+        const result = toAffectedResult(affectedJson([]), 'task');
 
-      const result = toAffectedResult(affectedJson([item]), 'task');
-
-      expect(result.tasks).toStrictEqual([{ id: 'web#build', reason: 'TaskFileChanged', detail: 'apps/web/src/a.ts' }]);
-    });
-  });
-
-  describe('GIVEN turbo lists no affected task', () => {
-    it('WHEN converted THEN tasks are empty', () => {
-      const result = toAffectedResult(affectedJson([]), 'task');
-
-      expect(result).toStrictEqual({ mode: 'task', tasks: [] });
-    });
-  });
-});
-
-describe('FEATURE: affected query variables', () => {
-  describe('GIVEN both refs', () => {
-    it('WHEN turned into variables THEN both are passed', () => {
-      const variables = affectedVariables({ base: 'HEAD~1', head: 'HEAD' });
-
-      expect(variables).toStrictEqual({ base: 'HEAD~1', head: 'HEAD' });
+        expect(result).toStrictEqual({ mode: 'task', tasks: [] });
+      });
     });
   });
 
-  describe('GIVEN only base', () => {
-    it('WHEN turned into variables THEN only base is passed', () => {
-      const variables = affectedVariables({ base: 'main', head: undefined });
+  describe('GIVEN options for the affected query variables', () => {
+    describe('GIVEN both refs', () => {
+      it('WHEN turned into variables THEN both are passed', () => {
+        const variables = affectedVariables({ base: 'HEAD~1', head: 'HEAD' });
 
-      expect(variables).toStrictEqual({ base: 'main' });
-    });
-  });
-
-  describe('GIVEN only head', () => {
-    it('WHEN turned into variables THEN only head is passed', () => {
-      const variables = affectedVariables({ head: 'HEAD' });
-
-      expect(variables).toStrictEqual({ head: 'HEAD' });
-    });
-  });
-
-  describe('GIVEN no ref, only a signal', () => {
-    it('WHEN turned into variables THEN there are none, so no -V file is written', () => {
-      const variables = affectedVariables({ signal: AbortSignal.abort() });
-
-      expect(variables).toBeUndefined();
-    });
-  });
-
-  describe('GIVEN git refs of every common shape', () => {
-    it.each(['HEAD~1', 'origin/main', 'v1.2.3', 'abc123^'])('WHEN %s is the base THEN it is passed as it is', (ref) => {
-      const variables = affectedVariables({ base: ref });
-
-      expect(variables).toStrictEqual({ base: ref });
-    });
-  });
-
-  describe('GIVEN a ref turbo could misread', () => {
-    it('WHEN a base starting with - is turned into variables THEN it throws invalid-argument', () => {
-      expect(() => affectedVariables({ base: '-x' })).toThrow(expect.objectContaining(INVALID_ARGUMENT));
+        expect(variables).toStrictEqual({ base: 'HEAD~1', head: 'HEAD' });
+      });
     });
 
-    it('WHEN a head holding a control character is turned into variables THEN it throws invalid-argument', () => {
-      expect(() => affectedVariables({ base: 'HEAD~1', head: 'HEAD\n' })).toThrow(expect.objectContaining(INVALID_ARGUMENT));
+    describe('GIVEN only base', () => {
+      it('WHEN turned into variables THEN only base is passed', () => {
+        const variables = affectedVariables({ base: 'main', head: undefined });
+
+        expect(variables).toStrictEqual({ base: 'main' });
+      });
+    });
+
+    describe('GIVEN only head', () => {
+      it('WHEN turned into variables THEN only head is passed', () => {
+        const variables = affectedVariables({ head: 'HEAD' });
+
+        expect(variables).toStrictEqual({ head: 'HEAD' });
+      });
+    });
+
+    describe('GIVEN no ref, only a signal', () => {
+      it('WHEN turned into variables THEN there are none, so no -V file is written', () => {
+        const variables = affectedVariables({ signal: AbortSignal.abort() });
+
+        expect(variables).toBeUndefined();
+      });
+    });
+
+    describe('GIVEN git refs of every common shape', () => {
+      it.each(['HEAD~1', 'origin/main', 'v1.2.3', 'abc123^'])('WHEN %s is the base THEN it is passed as it is', (ref) => {
+        const variables = affectedVariables({ base: ref });
+
+        expect(variables).toStrictEqual({ base: ref });
+      });
+    });
+
+    describe('GIVEN a ref turbo could misread', () => {
+      it('WHEN a base starting with - is turned into variables THEN it throws invalid-argument', () => {
+        expect(() => affectedVariables({ base: '-x' })).toThrow(expect.objectContaining(INVALID_ARGUMENT));
+      });
+
+      it('WHEN a head holding a control character is turned into variables THEN it throws invalid-argument', () => {
+        expect(() => affectedVariables({ base: 'HEAD~1', head: 'HEAD\n' })).toThrow(expect.objectContaining(INVALID_ARGUMENT));
+      });
     });
   });
 });
