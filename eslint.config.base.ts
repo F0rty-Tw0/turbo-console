@@ -67,6 +67,25 @@ export const workspaceConfig = defineConfig([
     }
   },
   {
+    // Spec shape: one root describe with every hook inside it, describes start FEATURE: / GIVEN / WHEN, cases start WHEN
+    // or THEN. Lint cannot check that the root is the FEATURE one, nor a title built with ${} or +.
+    name: 'workspace/spec-tree',
+    files: ['**/*.spec.ts'],
+    rules: {
+      'vitest/valid-title': [
+        'error',
+        {
+          mustMatch: {
+            describe: ['^(FEATURE: |GIVEN |WHEN )', 'describe titles start with "FEATURE: ", "GIVEN " or "WHEN "'],
+            it: ['^(WHEN |THEN )', 'it titles start with "WHEN " or "THEN "'],
+            test: ['^(WHEN |THEN )', 'test titles start with "WHEN " or "THEN "']
+          }
+        }
+      ],
+      'vitest/require-top-level-describe': ['error', { maxNumberOfTopLevelDescribes: 1 }]
+    }
+  },
+  {
     name: 'workspace/entry-points',
     files: ['**/*.ts'],
     rules: {
