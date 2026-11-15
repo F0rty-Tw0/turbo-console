@@ -1,5 +1,5 @@
+import { ROOT_NAME } from '@turbo-console/core';
 import type { PackageNode, TurboErrorKind, WorkspaceModel } from '@turbo-console/core';
-import { ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
 
 import { dirRows, packageRow } from './dir-rows.util.ts';
 import { packageList } from './folder-tree.util.ts';
@@ -61,7 +61,7 @@ const listRowsOf = (root: string, view: ModelView, inputs: RowInputs): TreeRow[]
 
 /** A monorepo whose workspace globs match no package: turbo lists its root `//` alone. */
 const isRootOnly = (model: WorkspaceModel): boolean => {
-  const isRoot = (pkg: PackageNode): boolean => pkg.name === ROOT_TASK_PACKAGE;
+  const isRoot = (pkg: PackageNode): boolean => pkg.name === ROOT_NAME;
 
   return !model.singlePackage && model.packages.every(isRoot);
 };

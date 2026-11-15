@@ -1,5 +1,6 @@
+import { ROOT_NAME } from '@turbo-console/core';
 import type { PackageEdge, PackageNode, WorkspaceModel } from '@turbo-console/core';
-import { LAYOUT_VERSION, ROOT_TASK_PACKAGE } from '@turbo-console/webview-ui';
+import { LAYOUT_VERSION } from '@turbo-console/webview-ui';
 import type { GraphEdge, GraphPackage, GraphState, GraphTask } from '@turbo-console/webview-ui';
 
 import { coversExactly } from './graph-cache.util.ts';
@@ -56,7 +57,7 @@ export const graphHashOf = (packages: GraphPackage[], edges: GraphEdge[]): strin
 
 /** The bare text of a node; the root `//` reads its full label while scopes are shown, the text of its tree row. */
 const bareNameOf = (node: PackageNode, bareTexts: ReadonlyMap<string, string>, scopeShown: boolean): string => {
-  const isRootShown = scopeShown && node.name === ROOT_TASK_PACKAGE;
+  const isRootShown = scopeShown && node.name === ROOT_NAME;
 
   if (isRootShown) return fullTextOf(node);
 
@@ -101,7 +102,7 @@ const cachedEntryOf = (cache: GraphLayoutCacheEntry | null, hash: string, packag
 
 /** The `//` package's label in either mode; `null` when the model has no `//` package or it has no label. */
 export const rootPackageLabelOf = (model: WorkspaceModel): string | null => {
-  const root = model.packages.find((node) => node.name === ROOT_TASK_PACKAGE);
+  const root = model.packages.find((node) => node.name === ROOT_NAME);
 
   return root?.label ?? null;
 };
