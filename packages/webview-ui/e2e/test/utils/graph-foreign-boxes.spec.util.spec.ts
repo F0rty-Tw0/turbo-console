@@ -41,7 +41,7 @@ const FOLDED: ProbeFolder = { ...FOREIGN_ON_DOWN, isCollapsed: true };
 const HIDDEN_BOX: ProbeFolder = { ...FOREIGN_ON_DOWN, isVisible: false };
 
 describe('FEATURE: foreignBoxHitsOf', () => {
-  it.each([
+  describe.each([
     {
       title: 'a line through the title band and body of a box with neither end',
       line: DOWN,
@@ -63,9 +63,11 @@ describe('FEATURE: foreignBoxHitsOf', () => {
     { title: 'a collapsed box on the line', line: DOWN, folders: [FOLDED], zoom: ZOOM, hits: 0 },
     { title: 'a hidden box on the line', line: DOWN, folders: [HIDDEN_BOX], zoom: ZOOM, hits: 0 },
     { title: 'a line that is not drawn', line: HIDDEN, folders: [FOREIGN_ON_DOWN], zoom: ZOOM, hits: 0 }
-  ])('GIVEN $title WHEN foreign box hits are counted THEN there are $hits', ({ line, folders, zoom, hits }) => {
-    const count = foreignBoxHitsOf([line], folders, zoom);
+  ])('GIVEN $title', ({ line, folders, zoom, hits }) => {
+    it(`WHEN foreign box hits are counted THEN there are ${hits}`, () => {
+      const count = foreignBoxHitsOf([line], folders, zoom);
 
-    expect(count).toBe(hits);
+      expect(count).toBe(hits);
+    });
   });
 });
