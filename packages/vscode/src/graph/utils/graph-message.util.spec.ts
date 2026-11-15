@@ -249,42 +249,42 @@ describe('FEATURE: graph webview message validation', () => {
       expect(parseGraphMessage(positionsWith(5000))).not.toBeNull();
     });
   });
-});
 
-describe('FEATURE: dropped graph message log text', () => {
-  describe('GIVEN a small message', () => {
-    it('WHEN logged THEN the text is its JSON', () => {
-      expect(droppedGraphText({ type: 'nope' })).toBe('{"type":"nope"}');
+  describe('GIVEN a dropped message', () => {
+    describe('GIVEN a small message', () => {
+      it('WHEN logged THEN the text is its JSON', () => {
+        expect(droppedGraphText({ type: 'nope' })).toBe('{"type":"nope"}');
+      });
     });
-  });
 
-  describe('GIVEN a positions record past 5000 keys', () => {
-    it('WHEN logged THEN the text is only its size', () => {
-      expect(droppedGraphText(positionsWith(5001))).toBe('positions with 5001 keys');
+    describe('GIVEN a positions record past 5000 keys', () => {
+      it('WHEN logged THEN the text is only its size', () => {
+        expect(droppedGraphText(positionsWith(5001))).toBe('positions with 5001 keys');
+      });
     });
-  });
 
-  describe('GIVEN an exportImage with a string png', () => {
-    it('WHEN logged THEN the text is only its character count', () => {
-      expect(droppedGraphText({ type: 'exportImage', png: 'data:image/png;base64,AAAA' })).toBe('exportImage with 26 chars');
+    describe('GIVEN an exportImage with a string png', () => {
+      it('WHEN logged THEN the text is only its character count', () => {
+        expect(droppedGraphText({ type: 'exportImage', png: 'data:image/png;base64,AAAA' })).toBe('exportImage with 26 chars');
+      });
     });
-  });
 
-  describe('GIVEN an exportImage with a numeric png', () => {
-    it('WHEN logged THEN the text is its JSON', () => {
-      expect(droppedGraphText({ type: 'exportImage', png: 7 })).toBe('{"type":"exportImage","png":7}');
+    describe('GIVEN an exportImage with a numeric png', () => {
+      it('WHEN logged THEN the text is its JSON', () => {
+        expect(droppedGraphText({ type: 'exportImage', png: 7 })).toBe('{"type":"exportImage","png":7}');
+      });
     });
-  });
 
-  describe('GIVEN another type with a string png', () => {
-    it('WHEN logged THEN the text is its JSON', () => {
-      expect(droppedGraphText({ type: 'nope', png: 'AAAA' })).toBe('{"type":"nope","png":"AAAA"}');
+    describe('GIVEN another type with a string png', () => {
+      it('WHEN logged THEN the text is its JSON', () => {
+        expect(droppedGraphText({ type: 'nope', png: 'AAAA' })).toBe('{"type":"nope","png":"AAAA"}');
+      });
     });
-  });
 
-  describe('GIVEN a throwing positions getter', () => {
-    it('WHEN logged THEN the text is the unprintable marker', () => {
-      expect(droppedGraphText(THROWING_POSITIONS)).toBe(UNPRINTABLE_MESSAGE);
+    describe('GIVEN a throwing positions getter', () => {
+      it('WHEN logged THEN the text is the unprintable marker', () => {
+        expect(droppedGraphText(THROWING_POSITIONS)).toBe(UNPRINTABLE_MESSAGE);
+      });
     });
   });
 });
