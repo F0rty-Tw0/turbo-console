@@ -1,14 +1,12 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
-import { GraphFoldersPage } from './graph-folders.po.ts';
 import { GraphGroupingPage } from './graph-grouping.po.ts';
 import { GraphHost } from './graph-host.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { GraphReady } from '../../src/bridge/common/graph-state.type.ts';
-import type { ProbeEdge, ProbeEdgeLine, ProbeFolderLink } from '../../src/graph/common/graph-probe.type.ts';
+import type { ProbeEdge, ProbeEdgeLine } from '../../src/graph/common/graph-probe.type.ts';
 import { isInside, readRect } from '../test/utils/element-rect.spec.util.ts';
-import { foreignBoxHitsOf, readFolders } from '../test/utils/graph-foreign-boxes.spec.util.ts';
 import { nodeBoxOf } from '../test/utils/graph-geometry.spec.util.ts';
 import { readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
 import { positionsPosted, readPosted } from '../test/utils/graph-posted.spec.util.ts';
@@ -18,22 +16,12 @@ const STRAIGHT_POINTS = 2;
 
 const STRAIGHT_CURVE = 'straight';
 
-/** How every package edge and folder link draws: a plain bezier under every box and card. */
-const PLAIN_LINE = 'bezier bottom';
-
-type DrawnStyle = Pick<ProbeEdge, 'curveStyle' | 'zCompoundDepth'>;
-
 const isDrawnStraight = (line: ProbeEdgeLine): boolean => line.isDrawn && line.points.length === STRAIGHT_POINTS;
 
 const curveStyleOf = (edge: ProbeEdge): string => edge.curveStyle;
 
-const drawnStyleOf = (edge: DrawnStyle): string => `${edge.curveStyle} ${edge.zCompoundDepth}`;
-
-const isDrawn = (edge: ProbeEdge | ProbeFolderLink): boolean => edge.isDrawn;
-
-/** The edge routes the page posts, how it draws its lines, and the reopens that serve a posted layout back from the cache. */
+/** The edge routes the page posts, the straight task lines, and the reopens that serve a posted layout back from the cache. */
 export class GraphRoutes {
-  private readonly folders: GraphFoldersPage;
   private readonly grouping: GraphGroupingPage;
   private readonly host: GraphHost;
   private readonly page: Page;
@@ -41,7 +29,6 @@ export class GraphRoutes {
 
   public constructor(page: Page) {
     this.page = page;
-    this.folders = new GraphFoldersPage(page);
     this.grouping = new GraphGroupingPage(page);
     this.host = new GraphHost(page);
     this.probe = new GraphProbePage(page);
@@ -58,16 +45,6 @@ export class GraphRoutes {
 
     await expect.poll(async (): Promise<string[]> => this.curveStyles()).toStrictEqual(straight);
     await expect.poll(async (): Promise<number[]> => this.lineAndStraightCounts()).toStrictEqual([count, count]);
-  }
-
-  /** The page draws at least one package edge and one folder link, and every one is `curve-style: bezier` and `z-compound-depth: bottom`. */
-  public async expectEveryLinePlain(): Promise<void> {
-    await expect.poll(async (): Promise<string[][]> => this.drawnStyles()).toStrictEqual([[PLAIN_LINE], [PLAIN_LINE]]);
-  }
-
-  /** At least one drawn line crosses the title band or the body of a drawn folder box that holds neither of its ends. */
-  public async expectSomeLineThroughForeignBoxes(): Promise<void> {
-    await expect.poll(async (): Promise<number> => this.foreignBoxHitCount()).toBeGreaterThan(0);
   }
 
   /** The package's box lies wholly inside the `container`, so a drag that follows grabs a node the user can see. */
@@ -114,31 +91,12 @@ export class GraphRoutes {
     return edges.map(curveStyleOf);
   }
 
-  /** The distinct drawn styles of the drawn package edges, then of the drawn folder links. */
-  private async drawnStyles(): Promise<string[][]> {
-    const edges = await this.probe.edges();
-    const links = await this.folders.folderLinks();
-    const edgeStyles = new Set(edges.filter(isDrawn).map(drawnStyleOf));
-    const linkStyles = new Set(links.filter(isDrawn).map(drawnStyleOf));
-    const styles = [[...edgeStyles], [...linkStyles]];
-
-    return styles;
-  }
-
   private async lineAndStraightCounts(): Promise<number[]> {
     const lines = await readEdgeLines(this.page);
     const straight = lines.filter(isDrawnStraight);
     const counts = [lines.length, straight.length];
 
     return counts;
-  }
-
-  private async foreignBoxHitCount(): Promise<number> {
-    const lines = await readEdgeLines(this.page);
-    const folders = await readFolders(this.page);
-    const zoom = await this.probe.zoom();
-
-    return foreignBoxHitsOf(lines, folders, zoom);
   }
 
   private async postedRouteIds(): Promise<string[]> {

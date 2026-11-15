@@ -1,9 +1,10 @@
 import type { FolderLinkFacts } from './common/graph-folders.type.ts';
 import { test } from './graph-task.fixture.ts';
 import { collapsedSavedState, ghostFolderState, placedBoardsState } from './test/utils/graph-folder-states.spec.util.ts';
-import { folderInspection } from './test/utils/graph-inspection.spec.util.ts';
+import { bundleInspection } from './test/utils/graph-inspection.spec.util.ts';
 import { groupedSavedState } from './test/utils/graph-saved-state.spec.util.ts';
 import { FIT_LABEL } from '../src/graph/common/graph.const.ts';
+import { collapsedIdOf } from '../src/graph/utils/folder-id.util.ts';
 
 const C6 = { description: 'M4-4 C6', type: 'requirement' };
 
@@ -107,7 +108,7 @@ test.describe('FEATURE: folder rules', () => {
   );
 
   test(
-    'GIVEN a folder link crossing a box, tapping it over the box inspects the box, which draws over every line',
+    'GIVEN a folder link crossing a box, tapping it over the box inspects the bundle, not the box',
     { annotation: C6 },
     async ({ graphCanvas, graphDetails, graphHost, graphPage, graphProbe, graphWidgetInput }): Promise<void> => {
       const opened = collapsedSavedState(BOARDS.hash, ['apps']);
@@ -128,8 +129,13 @@ test.describe('FEATURE: folder rules', () => {
       await test.step('WHEN the apps to utils link is tapped over the packages box, just below the packages header row', async (): Promise<void> =>
         graphWidgetInput.tapLinkBelowRow('apps', '@acme/utils', 'packages'));
 
-      await test.step('THEN the packages box is inspected, not the bundle', async (): Promise<void> =>
-        graphDetails.expectInspection(folderInspection('packages')));
+      await test.step('THEN nothing is selected', async (): Promise<void> => graphProbe.expectSelected(null));
+
+      await test.step('AND the bundle is inspected', async (): Promise<void> =>
+        graphDetails.expectInspection(bundleInspection(collapsedIdOf('apps'), '@acme/utils')));
+
+      await test.step('AND the status line counts its link', async (): Promise<void> =>
+        graphPage.expectStatus('1 link: apps → @acme/utils'));
     }
   );
 });

@@ -53,7 +53,7 @@ export type ProbeEdge = {
   readonly lineStyle: string;
   /** Cytoscape's `curve-style`: `straight` for a task link, else `bezier`. */
   readonly curveStyle: string;
-  /** Cytoscape's `z-compound-depth`: `bottom`, under every box and card. */
+  /** Cytoscape's `z-compound-depth`: `bottom` for a task link (under every box), else `auto` (over every folder box). */
   readonly zCompoundDepth: string;
 };
 

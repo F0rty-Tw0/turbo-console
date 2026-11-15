@@ -4,10 +4,11 @@ import { TASK_LINK_CLASS } from '../common/graph-task.const.ts';
 import { FOLDER_LINK_CLASS } from '../common/graph.const.ts';
 
 /**
- * A task link is one straight line from its task to its dependency, whatever bends ELK routed it on. Like every edge
- * it is drawn under every box, so a box title crossed by the line draws over it on its backdrop (`taskRulesOf`).
+ * A task link is one straight line from its task to its dependency, whatever bends ELK routed it on. It is drawn under
+ * every box (`bottom`), so a box title crossed by the line draws over it on its backdrop (`taskRulesOf`); the boxes
+ * are see-through, so the line shows inside them.
  */
-const TASK_LINK = { 'curve-style': 'straight' } as const;
+const TASK_LINK = { 'curve-style': 'straight', 'z-compound-depth': 'bottom' } as const;
 
 /** A link out of an open umbrella leaves the bottom of its box, by the offset `umbrellaLinkEndsOf` writes, past its files. */
 const OPEN_UMBRELLA_LINK = { 'source-endpoint': 'data(srcEnd)' } as const;
@@ -16,8 +17,8 @@ const OPEN_UMBRELLA_LINK = { 'source-endpoint': 'data(srcEnd)' } as const;
 const LABEL_OFFSET: Record<string, string> = { 'text-margin-x': 'data(labelDx)', 'text-margin-y': 'data(labelDy)' };
 
 /**
- * A task link drawn straight and a folder link's label offset. Spread after the base `edge` rule so its `curve-style`
- * wins; the selected, highlighted and ghost rules set colour, width and dash only, so they still apply on top.
+ * A task link drawn straight under every box and a folder link's label offset. Spread after the base `edge` rule so
+ * its `curve-style` wins; the selected, highlighted and ghost rules set colour, width and dash only, so they still apply on top.
  */
 export const routeRulesOf = (): StylesheetJson => {
   const rules: StylesheetJson = [

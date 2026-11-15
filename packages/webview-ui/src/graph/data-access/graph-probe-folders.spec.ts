@@ -77,10 +77,10 @@ describe('FEATURE: probeFolderLinksOf label box', () => {
       expect(moved).toStrictEqual({ ...atCorner, left: atCorner.left + 10, top: atCorner.top + 20 });
     });
 
-    it('WHEN the folder links are probed THEN each reads a bezier drawn under every box and card', () => {
+    it('WHEN the folder links are probed THEN each reads a bezier in the compound draw order', () => {
       const [first] = probeFolderLinksOf(cy, ORIGIN);
 
-      expect(first).toMatchObject({ curveStyle: 'bezier', zCompoundDepth: 'bottom' });
+      expect(first).toMatchObject({ curveStyle: 'bezier', zCompoundDepth: 'auto' });
     });
   });
 });

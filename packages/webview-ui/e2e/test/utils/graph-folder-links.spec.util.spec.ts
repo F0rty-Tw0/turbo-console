@@ -28,7 +28,7 @@ const linkOf = (source: string, target: string, labelBox: ProbeRect = SIZED): Pr
     isDrawn: true,
     state: 'normal',
     curveStyle: 'bezier',
-    zCompoundDepth: 'bottom',
+    zCompoundDepth: 'auto',
     labelBox
   };
 

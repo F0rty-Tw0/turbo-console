@@ -3,6 +3,7 @@ import type { Core, EdgeDataDefinition, ElementDefinition, StylesheetJsonBlock }
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { TASK_LINK_CLASS } from '../common/graph-task.const.ts';
 import { FOLDER_LINK_CLASS } from '../common/graph.const.ts';
 import { CANVAS_COLORS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 
@@ -31,6 +32,18 @@ const selectorOf = (block: StylesheetJsonBlock): string => block.selector;
 
 const isRoutedSelector = (selector: string): boolean => selector.includes(`.${OLD_ROUTED_CLASS}`);
 
+const cssOf = (block: StylesheetJsonBlock): object => ('style' in block ? block.style : block.css);
+
+const depthOf = (block: StylesheetJsonBlock): unknown => {
+  const properties = new Map<string, unknown>(Object.entries(cssOf(block)));
+
+  return properties.get('z-compound-depth');
+};
+
+const setsDepth = (block: StylesheetJsonBlock): boolean => depthOf(block) !== undefined;
+
+const depthRuleOf = (block: StylesheetJsonBlock): string => `${block.selector} ${String(depthOf(block))}`;
+
 describe('FEATURE: the base edge rule and routeRulesOf in the graph stylesheet', () => {
   let cy: Core;
 
@@ -48,16 +61,24 @@ describe('FEATURE: the base edge rule and routeRulesOf in the graph stylesheet',
       expect(styleOf(cy, 'plain', 'curve-style')).toBe('bezier');
     });
 
-    it('WHEN styled THEN it is drawn under every box and card', () => {
-      expect(styleOf(cy, 'plain', 'z-compound-depth')).toBe('bottom');
+    it('WHEN styled THEN it keeps the compound draw order, over every folder box', () => {
+      expect(styleOf(cy, 'plain', 'z-compound-depth')).toBe('auto');
     });
 
-    it('WHEN selected THEN it stays bezier under every box and card', () => {
+    it('WHEN selected THEN it stays a bezier in the compound draw order', () => {
       cy.getElementById('plain').addClass('selected');
 
       const drawn = [styleOf(cy, 'plain', 'curve-style'), styleOf(cy, 'plain', 'z-compound-depth')];
 
-      expect(drawn).toStrictEqual(['bezier', 'bottom']);
+      expect(drawn).toStrictEqual(['bezier', 'auto']);
+    });
+  });
+
+  describe('GIVEN a folder link', () => {
+    it('WHEN styled THEN it is a bezier in the compound draw order', () => {
+      const drawn = [styleOf(cy, 'offset', 'curve-style'), styleOf(cy, 'offset', 'z-compound-depth')];
+
+      expect(drawn).toStrictEqual(['bezier', 'auto']);
     });
   });
 
@@ -72,6 +93,12 @@ describe('FEATURE: the base edge rule and routeRulesOf in the graph stylesheet',
       const selectors = graphStyleOf(CANVAS_COLORS, 'sans-serif', false).map(selectorOf);
 
       expect(selectors.filter(isRoutedSelector)).toStrictEqual([]);
+    });
+
+    it('WHEN its rules are read THEN only the task link rule sets z-compound-depth, to bottom', () => {
+      const depthRules = graphStyleOf(CANVAS_COLORS, 'sans-serif', false).filter(setsDepth).map(depthRuleOf);
+
+      expect(depthRules).toStrictEqual([`edge.${TASK_LINK_CLASS} bottom`]);
     });
   });
 

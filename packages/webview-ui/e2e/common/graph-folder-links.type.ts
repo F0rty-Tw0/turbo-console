@@ -22,6 +22,16 @@ export type LinkEndOnFolder = {
   readonly box: ElementRect;
 };
 
+/** Whether the page draws folder links now: none while every folder is expanded. */
+export type FolderLinksShown = 'some' | 'none';
+
+/** A folder state the plain-edge checks run in: the folders collapsed from the list, and whether folder links show. */
+export type PlainEdgeState = {
+  readonly name: string;
+  readonly collapsed: string[];
+  readonly shown: FolderLinksShown;
+};
+
 /** The drawn folder links counted against each oracle; every count but `drawn` is a failure count. */
 export type FolderLinkCounts = {
   readonly drawn: number;

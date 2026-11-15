@@ -214,14 +214,8 @@ describe('FEATURE: probeTitlesOf', () => {
       expect(firstTitleOf(cy, ORIGIN).linesOver).toStrictEqual([]);
     });
 
-    it('WHEN the link is a package edge THEN it is drawn under the box too, so no line is over the title', () => {
+    it('WHEN the link is a package edge THEN it is drawn after the box, over the title', () => {
       cy.edges().removeClass(TASK_LINK_CLASS);
-
-      expect(firstTitleOf(cy, ORIGIN).linesOver).toStrictEqual([]);
-    });
-
-    it('WHEN the link is drawn in compound order THEN it is drawn after the box, over the title', () => {
-      cy.edges().style('z-compound-depth', 'auto');
 
       expect(firstTitleOf(cy, ORIGIN).linesOver).toStrictEqual([{ source: 'web#build', target: 'api#build' }]);
     });
