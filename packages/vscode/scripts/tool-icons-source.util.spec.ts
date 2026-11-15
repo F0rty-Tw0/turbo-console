@@ -7,8 +7,27 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { shapeReasonOf, usedIconsOf, versionOf } from './tool-icons-source.util.ts';
 
 const REASON = 'svg must be one path in a viewBox="0 0 24 24"';
+const VALID = { title: 'Vitest', slug: 'vitest', source: 'https://vitest.dev' };
+const BAD_SOURCE = { title: 'Other', slug: 'other', source: 'not a url' };
 
-describe('FEATURE: shapeReasonOf', () => {
+describe('FEATURE: tool icons source', () => {
+  const scratchDirs: string[] = [];
+
+  afterEach(async () => {
+    const dirs = scratchDirs.splice(0);
+
+    await Promise.all(dirs.map(async (dir) => rm(dir, { recursive: true, force: true })));
+  });
+
+  const rootWith = async (manifest: object): Promise<string> => {
+    const dir = await mkdtemp(join(tmpdir(), 'tc-icons-source-'));
+
+    scratchDirs.push(dir);
+    await writeFile(join(dir, 'package.json'), JSON.stringify(manifest));
+
+    return dir;
+  };
+
   describe('GIVEN an svg with one path in a 0 0 24 24 viewBox', () => {
     it('WHEN its shape is checked THEN there is no reason', () => {
       const svg = '<svg viewBox="0 0 24 24"><path d="M0 0h24v24z"/></svg>';
@@ -40,25 +59,6 @@ describe('FEATURE: shapeReasonOf', () => {
       expect(shapeReasonOf(svg)).toBe(REASON);
     });
   });
-});
-
-describe('FEATURE: versionOf', () => {
-  const scratchDirs: string[] = [];
-
-  afterEach(async () => {
-    const dirs = scratchDirs.splice(0);
-
-    await Promise.all(dirs.map(async (dir) => rm(dir, { recursive: true, force: true })));
-  });
-
-  const rootWith = async (manifest: object): Promise<string> => {
-    const dir = await mkdtemp(join(tmpdir(), 'tc-icons-source-'));
-
-    scratchDirs.push(dir);
-    await writeFile(join(dir, 'package.json'), JSON.stringify(manifest));
-
-    return dir;
-  };
 
   describe('GIVEN a package.json with a version', () => {
     it('WHEN its version is read THEN that version is returned', async () => {
@@ -75,12 +75,7 @@ describe('FEATURE: versionOf', () => {
       await expect(versionOf(root)).rejects.toThrow(/expected string, received undefined/);
     });
   });
-});
 
-const VALID = { title: 'Vitest', slug: 'vitest', source: 'https://vitest.dev' };
-const BAD_SOURCE = { title: 'Other', slug: 'other', source: 'not a url' };
-
-describe('FEATURE: usedIconsOf', () => {
   describe('GIVEN a valid entry for a used slug', () => {
     it('WHEN the used icons are read THEN the entry is returned by slug', () => {
       const icons = usedIconsOf([VALID], ['vitest']);
