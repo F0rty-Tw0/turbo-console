@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isMenuOpenKey, menuIndexOf, toolbarIndexOf } from './menu-keys.util.ts';
 
-describe('FEATURE: menuIndexOf', () => {
+describe('FEATURE: menu keys', () => {
   describe('GIVEN a menu of 4 items', () => {
     it.each([
       { key: 'ArrowDown', from: 0, expected: 1 },
@@ -33,23 +33,21 @@ describe('FEATURE: menuIndexOf', () => {
       expect(next).toBeNull();
     });
   });
-});
 
-describe('FEATURE: isMenuOpenKey', () => {
-  it.each([
+  describe.each([
     { key: 'F10', isShift: true, expected: true },
     { key: 'ContextMenu', isShift: false, expected: true },
     { key: 'ContextMenu', isShift: true, expected: true },
     { key: 'F10', isShift: false, expected: false },
     { key: 'Enter', isShift: true, expected: false }
-  ])('GIVEN $key with Shift $isShift WHEN it is read THEN it opens a menu: $expected', ({ key, isShift, expected }) => {
-    const isOpen = isMenuOpenKey(key, isShift);
+  ])('GIVEN $key with Shift $isShift', ({ key, isShift, expected }) => {
+    it(`WHEN it is read THEN it opens a menu: ${expected}`, () => {
+      const isOpen = isMenuOpenKey(key, isShift);
 
-    expect(isOpen).toBe(expected);
+      expect(isOpen).toBe(expected);
+    });
   });
-});
 
-describe('FEATURE: toolbarIndexOf', () => {
   describe('GIVEN a toolbar of 4 buttons', () => {
     it.each([
       { key: 'ArrowRight', from: 0, expected: 1 },
