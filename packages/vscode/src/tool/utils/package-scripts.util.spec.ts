@@ -56,15 +56,13 @@ describe('FEATURE: package scripts', () => {
       expect(scripts.followTurbo).toBe(expected);
     });
   });
-});
 
-describe('FEATURE: tool title', () => {
   describe.each<[string[], string]>([
     [[], 'Vitest'],
     [['test:app'], 'Vitest (via test:app)'],
     [['a', 'b'], 'Vitest (via a → b)']
-  ])('GIVEN the via %j', (via, expected) => {
-    it(`WHEN the title is built THEN it is ${expected}`, () => {
+  ])('GIVEN a Vitest match via %j', (via, expected) => {
+    it(`WHEN the tool title is built THEN it is ${expected}`, () => {
       const title = toolTitleOf(matchOf(via));
 
       expect(title).toBe(expected);
