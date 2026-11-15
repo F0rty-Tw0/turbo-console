@@ -34,8 +34,10 @@ describe('FEATURE: taskRulesOf glyph labels in graphStyleOf with glyphs on', () 
     cy.destroy();
   });
 
-  it('GIVEN a task node with no state THEN its label is the blank slot, a space and its name', () => {
-    expect(labelOf('web#build')).toBe('\uec03 build');
+  describe('GIVEN a task node with no state', () => {
+    it('THEN its label is the blank slot, a space and its name', () => {
+      expect(labelOf('web#build')).toBe('\uec03 build');
+    });
   });
 
   describe('GIVEN a task node', () => {
@@ -53,30 +55,38 @@ describe('FEATURE: taskRulesOf glyph labels in graphStyleOf with glyphs on', () 
       expect(labelOf('web#build')).toBe('\uead7 build');
       expect(node.data('width')).toBe(width);
     });
+
+    it('THEN its font list puts codicon before the body font', () => {
+      expect(cy.getElementById('web#build').style('font-family')).toBe('codicon, sans-serif');
+    });
   });
 
-  it('GIVEN an umbrella node THEN the glyph leads its name', () => {
-    expect(labelOf('web#lint')).toBe('\uec03 lint');
+  describe('GIVEN an umbrella node', () => {
+    it('THEN the glyph leads its name', () => {
+      expect(labelOf('web#lint')).toBe('\uec03 lint');
+    });
   });
 
-  it('GIVEN a cached file that is running THEN its label starts with the sync glyph, not history', () => {
-    expect(labelOf('web#build--a.ts')).toBe('\uea77 a.ts');
+  describe('GIVEN a cached file that is running', () => {
+    it('THEN its label starts with the sync glyph, not history', () => {
+      expect(labelOf('web#build--a.ts')).toBe('\uea77 a.ts');
+    });
   });
 
-  it('GIVEN a task node THEN its font list puts codicon before the body font', () => {
-    expect(cy.getElementById('web#build').style('font-family')).toBe('codicon, sans-serif');
+  describe('GIVEN an atom-more node', () => {
+    it('THEN its label is its data label', () => {
+      expect(labelOf('web#build--more')).toBe('+3 more');
+    });
+
+    it('THEN its font list has no codicon', () => {
+      expect(cy.getElementById('web#build--more').style('font-family')).not.toContain('codicon');
+    });
   });
 
-  it('GIVEN an atom-more node THEN its label is its data label', () => {
-    expect(labelOf('web#build--more')).toBe('+3 more');
-  });
-
-  it('GIVEN an atom-more node THEN its font list has no codicon', () => {
-    expect(cy.getElementById('web#build--more').style('font-family')).not.toContain('codicon');
-  });
-
-  it('GIVEN a package node with no task class THEN its font is the body font', () => {
-    expect(cy.getElementById('pkg:web').style('font-family')).toBe('sans-serif');
+  describe('GIVEN a package node with no task class', () => {
+    it('THEN its font is the body font', () => {
+      expect(cy.getElementById('pkg:web').style('font-family')).toBe('sans-serif');
+    });
   });
 
   describe('GIVEN a passed task', () => {
