@@ -62,7 +62,7 @@ export class GraphFolders {
 
     const ghostSet = new Set(ghosts());
 
-    return folderSceneOf(graph.infos, graph.edges, this.collapsedSet, visible(), ghostSet);
+    return folderSceneOf(graph.infos, graph.edges, { collapsed: this.collapsedSet, visible: visible(), ghosts: ghostSet });
   }
 
   /** Collapses or expands a folder of the drawn graph; ignored while a mode switch waits or for an unknown folder. */

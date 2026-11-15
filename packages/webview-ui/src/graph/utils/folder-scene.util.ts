@@ -3,6 +3,13 @@ import { folderLinksOf } from './folder-links.util.ts';
 import type { GraphEdge, GraphPackage } from '../../bridge/common/graph-state.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 
+/** The sets a scene is built over: the folders asked to collapse, known to the graph or not, the visible packages and the ghosts. */
+type FolderSceneSets = {
+  readonly collapsed: ReadonlySet<string>;
+  readonly visible: ReadonlySet<string>;
+  readonly ghosts: ReadonlySet<string>;
+};
+
 const isDrawn = (name: string, visible: ReadonlySet<string>, ghosts: ReadonlySet<string>): boolean => {
   const isVisible = visible.has(name);
   const isGhost = ghosts.has(name);
@@ -24,14 +31,8 @@ const shownOf = (members: ReadonlyMap<string, string[]>, visible: ReadonlySet<st
 };
 
 /** What the folder pass draws: each package's folder, the members per folder, the shown folders and the folder links. */
-export const folderSceneOf = (
-  infos: GraphPackage[],
-  edges: GraphEdge[],
-  collapsed: ReadonlySet<string>,
-  visible: ReadonlySet<string>,
-  ghosts: ReadonlySet<string>
-  // eslint-disable-next-line max-params -- five inputs, pinned by the plan's Cross-phase interfaces (Task 2.1)
-): FolderScene => {
+export const folderSceneOf = (infos: GraphPackage[], edges: GraphEdge[], sets: FolderSceneSets): FolderScene => {
+  const { collapsed, visible, ghosts } = sets;
   const folderByName = new Map<string, string>();
   const members = new Map<string, string[]>();
 

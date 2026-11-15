@@ -278,7 +278,11 @@ describe('FEATURE: folder paint', () => {
   describe('GIVEN a folder named __proto__ holding a package named constructor', () => {
     it('WHEN that package is selected THEN its box is normal and its collapsed node selected', () => {
       const infos: GraphPackage[] = [packageOf('constructor', '__proto__/constructor')];
-      const scene = folderSceneOf(infos, [], new Set(['__proto__']), new Set(['constructor']), new Set());
+      const scene = folderSceneOf(infos, [], {
+        collapsed: new Set(['__proto__']),
+        visible: new Set(['constructor']),
+        ghosts: new Set()
+      });
       const inspection: Inspection = { kind: 'package', name: 'constructor' };
 
       const paint = paintOf(inspection, [], null, new Set(), scene);

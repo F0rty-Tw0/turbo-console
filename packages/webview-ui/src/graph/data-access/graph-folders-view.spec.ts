@@ -300,8 +300,8 @@ describe('FEATURE: createFoldersView', () => {
 
     it('WHEN __proto__ is collapsed THEN its box hides and its collapsed node links to x', () => {
       const infos = PROTO_GROUPS_STUB.flatMap((group) => group.packages);
-      const names = new Set(['constructor', 'x']);
-      const scene = folderSceneOf(infos, PROTO_EDGES_STUB, new Set(['__proto__']), names, new Set());
+      const visible = new Set(['constructor', 'x']);
+      const scene = folderSceneOf(infos, PROTO_EDGES_STUB, { collapsed: new Set(['__proto__']), visible, ghosts: new Set() });
 
       view.show(scene, labelOf);
 
