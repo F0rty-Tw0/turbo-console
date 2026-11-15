@@ -49,30 +49,34 @@ describe('FEATURE: taskRulesOf Scripts boxes in graphStyleOf', () => {
     cy.destroy();
   });
 
-  it('GIVEN a task-scripts box THEN its frame is dashed', () => {
-    const borderStyle: unknown = scripts.style('border-style');
+  describe('GIVEN a task-scripts box', () => {
+    it('THEN its frame is dashed', () => {
+      const borderStyle: unknown = scripts.style('border-style');
 
-    expect(borderStyle).toBe('dashed');
+      expect(borderStyle).toBe('dashed');
+    });
+
+    it('THEN its dashes are the Scripts pattern, apart from the package box dashes', () => {
+      const dashes: unknown[] = [
+        scripts.numericStyle('border-dash-pattern'),
+        cy.getElementById('pkg:web').numericStyle('border-dash-pattern')
+      ];
+
+      expect(dashes).toStrictEqual([SCRIPTS_BOX_DASH_PX, [4, 4]]);
+    });
+
+    it('THEN its title is placed as a package box title, Scripts in place of the name', () => {
+      const placement = titlePlacementOf(scripts);
+
+      expect(placement).toStrictEqual(['Scripts', 'top', 22.5, 'left-inside', -32, 'ellipsis']);
+    });
   });
 
-  it('GIVEN a task-scripts box THEN its dashes are the Scripts pattern, apart from the package box dashes', () => {
-    const dashes: unknown[] = [
-      scripts.numericStyle('border-dash-pattern'),
-      cy.getElementById('pkg:web').numericStyle('border-dash-pattern')
-    ];
+  describe('GIVEN a task-scripts box under a title wider than its script', () => {
+    it('THEN it is as wide as its title', () => {
+      const width = scripts.width();
 
-    expect(dashes).toStrictEqual([SCRIPTS_BOX_DASH_PX, [4, 4]]);
-  });
-
-  it('GIVEN a task-scripts box under a title wider than its script THEN it is as wide as its title', () => {
-    const width = scripts.width();
-
-    expect(width).toBe(200);
-  });
-
-  it('GIVEN a task-scripts box THEN its title is placed as a package box title, Scripts in place of the name', () => {
-    const placement = titlePlacementOf(scripts);
-
-    expect(placement).toStrictEqual(['Scripts', 'top', 22.5, 'left-inside', -32, 'ellipsis']);
+      expect(width).toBe(200);
+    });
   });
 });
