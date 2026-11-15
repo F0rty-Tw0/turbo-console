@@ -10,9 +10,5 @@ const compareNewest = (left: RunSummaryFile, right: RunSummaryFile): number => {
   return compareText(right.name, left.name);
 };
 
-/** File names by mtime descending, then name descending. */
-export const newestFirst = (files: RunSummaryFile[]): string[] => {
-  const sorted = files.toSorted(compareNewest);
-
-  return sorted.map((file) => file.name);
-};
+/** `files` by mtime descending, then name descending. */
+export const newestFirst = (files: RunSummaryFile[]): RunSummaryFile[] => files.toSorted(compareNewest);

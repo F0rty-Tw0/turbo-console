@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { atomResultOf } from './atom-result.util.ts';
+import { atomResultOf, atomResultsOf } from './atom-result.util.ts';
+import type { RunSummaryTask } from '../../shared/turbo/common/turbo.type.ts';
+import type { AtomResult } from '../common/atom-result.type.ts';
 import { entryWith } from '../test/utils/atom-entry.spec.util.ts';
 
 describe('FEATURE: atom result of a task entry', () => {
@@ -43,6 +45,30 @@ describe('FEATURE: atom result of a task entry', () => {
       const entry = entryWith('MISS', { endTime: Infinity });
 
       expect(atomResultOf(entry)).toMatchObject({ durationMs: null });
+    });
+  });
+
+  describe('GIVEN the entries of two tasks, the first task listed again last', () => {
+    it('WHEN mapped THEN each id has the result of its first entry, in the order listed', () => {
+      const first = entryWith('MISS', { exitCode: 1 });
+      const hit = entryWith('HIT', {});
+      const other: RunSummaryTask = { ...hit, taskId: 'pkg#other' };
+      const repeat = entryWith('MISS', { exitCode: 0 });
+      const failed: AtomResult = { outcome: 'failed', durationMs: 500, endedAt: 1500 };
+      const cached: AtomResult = { outcome: 'cached', durationMs: 500, endedAt: 1500 };
+
+      const results = atomResultsOf([first, other, repeat]);
+
+      expect([...results]).toStrictEqual([
+        ['pkg#file', failed],
+        ['pkg#other', cached]
+      ]);
+    });
+  });
+
+  describe('GIVEN no entry', () => {
+    it('WHEN mapped THEN the map is empty', () => {
+      expect(atomResultsOf([])).toStrictEqual(new Map());
     });
   });
 });
