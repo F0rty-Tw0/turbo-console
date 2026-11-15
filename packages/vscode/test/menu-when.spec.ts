@@ -209,24 +209,28 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     });
   });
 
-  it.each([
+  describe.each([
     [true, ['turboConsole.openPackageGraph']],
     [false, []]
-  ])('GIVEN the extension active is %s WHEN the command palette is read THEN Show Package Graph shows as %j', (active, expected) => {
-    const keys = { 'turboConsole.active': active };
-    const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('PackageGraph') && whenMatches(entry.when, keys));
+  ])('GIVEN the extension active is %s', (active, expected) => {
+    it(`WHEN the command palette is read THEN Show Package Graph shows as ${JSON.stringify(expected)}`, () => {
+      const keys = { 'turboConsole.active': active };
+      const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('PackageGraph') && whenMatches(entry.when, keys));
 
-    expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+      expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+    });
   });
 
-  it.each([
+  describe.each([
     [true, ['turboConsole.showAllTaskGraphs navigation@5']],
     [false, ['turboConsole.openPackageGraph navigation@4', 'turboConsole.showAllTaskGraphs navigation@5']]
-  ])('GIVEN singlePackage is %s WHEN the view title is read THEN the graph icons are %j', (singlePackage, expected) => {
-    const keys = { view: TREE_VIEW, [SINGLE_PACKAGE_KEY]: singlePackage };
-    const graphs = shownIn(MENUS['view/title'], keys).filter((placement) => placement.includes('Graph'));
+  ])('GIVEN singlePackage is %s', (singlePackage, expected) => {
+    it(`WHEN the view title is read THEN the graph icons are ${JSON.stringify(expected)}`, () => {
+      const keys = { view: TREE_VIEW, [SINGLE_PACKAGE_KEY]: singlePackage };
+      const graphs = shownIn(MENUS['view/title'], keys).filter((placement) => placement.includes('Graph'));
 
-    expect(graphs).toStrictEqual(expected.toSorted());
+      expect(graphs).toStrictEqual(expected.toSorted());
+    });
   });
 
   describe('GIVEN the window is single-package and the extension active', () => {
@@ -238,24 +242,28 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     });
   });
 
-  it.each([
+  describe.each([
     [true, ['turboConsole.showTaskGraph']],
     [false, []]
-  ])('GIVEN the extension active is %s WHEN the command palette is read THEN Show Task Graph shows as %j', (active, expected) => {
-    const keys = { 'turboConsole.active': active };
-    const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('TaskGraph') && whenMatches(entry.when, keys));
+  ])('GIVEN the extension active is %s', (active, expected) => {
+    it(`WHEN the command palette is read THEN Show Task Graph shows as ${JSON.stringify(expected)}`, () => {
+      const keys = { 'turboConsole.active': active };
+      const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('TaskGraph') && whenMatches(entry.when, keys));
 
-    expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+      expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+    });
   });
 
-  it.each([
+  describe.each([
     [true, ['turboConsole.showAllTaskGraphs']],
     [false, []]
-  ])('GIVEN the extension active is %s WHEN the command palette is read THEN Show All Task Graphs shows as %j', (active, expected) => {
-    const keys = { 'turboConsole.active': active };
-    const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('AllTaskGraphs') && whenMatches(entry.when, keys));
+  ])('GIVEN the extension active is %s', (active, expected) => {
+    it(`WHEN the command palette is read THEN Show All Task Graphs shows as ${JSON.stringify(expected)}`, () => {
+      const keys = { 'turboConsole.active': active };
+      const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('AllTaskGraphs') && whenMatches(entry.when, keys));
 
-    expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+      expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+    });
   });
 
   describe.each([
