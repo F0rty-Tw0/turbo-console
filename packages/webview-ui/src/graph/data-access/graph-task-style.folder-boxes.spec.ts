@@ -49,27 +49,31 @@ describe('FEATURE: taskRulesOf folder boxes in graphStyleOf', () => {
     cy.destroy();
   });
 
-  it('GIVEN a task-folder box THEN its frame is solid, as a package-mode folder box', () => {
-    const borderStyle: unknown = folder.style('border-style');
+  describe('GIVEN a task-folder box', () => {
+    it('THEN its frame is solid, as a package-mode folder box', () => {
+      const borderStyle: unknown = folder.style('border-style');
 
-    expect(borderStyle).toBe('solid');
+      expect(borderStyle).toBe('solid');
+    });
+
+    it('THEN its corners are the 8 px of a folder box', () => {
+      const radius: unknown = folder.numericStyle('corner-radius');
+
+      expect(radius).toBe(8);
+    });
+
+    it('THEN its title is drawn on the canvas, placed as a package box title', () => {
+      const placement = titlePlacementOf(folder);
+
+      expect(placement).toStrictEqual(['apps', 'top', 22.5, 'left-inside', -32, 'ellipsis']);
+    });
   });
 
-  it('GIVEN a task-folder box THEN its corners are the 8 px of a folder box', () => {
-    const radius: unknown = folder.numericStyle('corner-radius');
+  describe('GIVEN a task-folder box under a title wider than its package', () => {
+    it('THEN it is as wide as its title', () => {
+      const width = folder.width();
 
-    expect(radius).toBe(8);
-  });
-
-  it('GIVEN a task-folder box under a title wider than its package THEN it is as wide as its title', () => {
-    const width = folder.width();
-
-    expect(width).toBe(300);
-  });
-
-  it('GIVEN a task-folder box THEN its title is drawn on the canvas, placed as a package box title', () => {
-    const placement = titlePlacementOf(folder);
-
-    expect(placement).toStrictEqual(['apps', 'top', 22.5, 'left-inside', -32, 'ellipsis']);
+      expect(width).toBe(300);
+    });
   });
 });
