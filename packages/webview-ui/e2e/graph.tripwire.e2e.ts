@@ -41,6 +41,9 @@ const HUB_DEPENDENTS = LARGE_PACKAGE_COUNT - 1;
 /** After Fit and the zoom to 120 px boxes, 9 of the 30 boxes of `largeState()` overlap the canvas; 6 leaves slack. */
 const BOXES_IN_VIEW = 6;
 
+/** Frames of each scripted pan; it drags 1 px right and down per frame, so it carries the camera this many px. */
+const PAN_FRAMES = 120;
+
 /**
  * The grouped cold open reads about 1.3 s pinned and 0.9-1.6 s on Ubuntu. Windows gets 3 s (see `IS_WINDOWS_RUNNER`),
  * and so does macOS: its runners read 0.67-1.74 s over 36 runs on 2026-11-06 and crossed 2000 ms once (2092.6, run
@@ -121,7 +124,7 @@ test.describe('FEATURE: graph tripwires', () => {
     await test.step('THEN the layout has finished', async (): Promise<void> => graphProbe.expectLayoutEngine('elk'));
 
     await test.step('WHEN the graph is panned three times for 2 s, each after a 500 ms warm-up from the same camera', async (): Promise<void> =>
-      graphPanCpu.scriptedPans(30, 120));
+      graphPanCpu.scriptedPans(30, PAN_FRAMES));
 
     await test.step('THEN the median pan used under 1500 ms of CPU and its median costliest step was under 50 ms', (): void =>
       graphPanCpu.expectPanCpuUnder(1500, 50));
@@ -205,9 +208,9 @@ test.describe('FEATURE: graph tripwires', () => {
       graphWidgets.expectNoHeaderButtonShown());
 
     await test.step('AND it is panned three times for 2 s from a spot no box covers, each after a 500 ms warm-up from the same camera', async (): Promise<void> => {
-      const spot = await graphGrouping.freeSpot();
+      const spot = await graphGrouping.freeSpot(PAN_FRAMES);
 
-      await graphPanCpu.scriptedPans(30, 120, spot);
+      await graphPanCpu.scriptedPans(30, PAN_FRAMES, spot);
     });
 
     await test.step('THEN the median pan stayed under its CPU and step budgets', (): void =>
@@ -268,9 +271,9 @@ test.describe('FEATURE: graph tripwires', () => {
     });
 
     await test.step('WHEN it is panned three times for 2 s from a spot no box covers, each after a 500 ms warm-up from the same camera', async (): Promise<void> => {
-      const spot = await graphGrouping.freeSpot();
+      const spot = await graphGrouping.freeSpot(PAN_FRAMES);
 
-      await graphPanCpu.scriptedPans(30, 120, spot);
+      await graphPanCpu.scriptedPans(30, PAN_FRAMES, spot);
     });
 
     await test.step('THEN the median pan stayed under its CPU and step budgets', (): void =>

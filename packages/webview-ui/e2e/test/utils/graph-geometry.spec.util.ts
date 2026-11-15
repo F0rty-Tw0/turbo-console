@@ -166,10 +166,10 @@ const stepsOf = (start: number, limit: number): number[] => {
 };
 
 /**
- * The first point of a 20 px grid over the container, 2 px in from each edge, that no box rect (grown by 2 px) holds
- * and that is farther than `EDGE_CLEARANCE_PX` from every drawn line; throws when none does.
+ * Every point of a 20 px grid over the container, 2 px in from each edge, row by row, that no box rect (grown by 2 px)
+ * holds and that is farther than `EDGE_CLEARANCE_PX` from every drawn line.
  */
-export const freeSpotOf = (container: ElementRect, boxes: ElementRect[], lines: ProbeEdgeLine[]): ViewportPoint => {
+export const freeSpotsOf = (container: ElementRect, boxes: ElementRect[], lines: ProbeEdgeLine[]): ViewportPoint[] => {
   const rows = stepsOf(container.top + GRID_EDGE_INSET, container.top + container.height - GRID_EDGE_INSET);
   const columns = stepsOf(container.left + GRID_EDGE_INSET, container.left + container.width - GRID_EDGE_INSET);
   const pointAt = (y: number, x: number): ViewportPoint => {
@@ -183,7 +183,13 @@ export const freeSpotOf = (container: ElementRect, boxes: ElementRect[], lines: 
 
     return isOutsideBoxes && isClearOfLines(point, lines);
   };
-  const spot = points.find(isFree);
+
+  return points.filter(isFree);
+};
+
+/** The first of `freeSpotsOf`; throws when there is none. */
+export const freeSpotOf = (container: ElementRect, boxes: ElementRect[], lines: ProbeEdgeLine[]): ViewportPoint => {
+  const [spot] = freeSpotsOf(container, boxes, lines);
 
   if (spot === undefined) throw new Error('graph e2e: every grid point of the container lies inside a folder box or on a line');
 
