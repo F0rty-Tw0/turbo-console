@@ -96,9 +96,11 @@ describe('FEATURE: createViewStateSaver', () => {
     });
   });
 
-  it('GIVEN nothing pending WHEN it is flushed THEN nothing is saved', () => {
-    saver.flush();
+  describe('GIVEN nothing pending', () => {
+    it('WHEN it is flushed THEN nothing is saved', () => {
+      saver.flush();
 
-    expect(save).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    });
   });
 });

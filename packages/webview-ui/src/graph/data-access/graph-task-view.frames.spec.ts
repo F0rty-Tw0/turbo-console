@@ -138,12 +138,12 @@ describe('FEATURE: createTaskCanvas box frames on a real ELK layout', () => {
 
     // A 5 px border on a#build reaches 2 px past its 1 px one, as a run outline does in a browser, where Cytoscape counts
     // outlines in a box's size; each canvas call that changes task classes writes the frame data again.
-    describe('WHEN a#build draws a 5 px border', () => {
+    describe('GIVEN a#build draws a 5 px border', () => {
       beforeEach(() => {
         cy.getElementById('a#build').style('border-width', 5);
       });
 
-      it.each(RECLASS_ROWS)('AND $name THEN pkg:a is drawn on its ELK box, within 1 px of each side', ({ act }) => {
+      it.each(RECLASS_ROWS)('WHEN $name THEN pkg:a is drawn on its ELK box, within 1 px of each side', ({ act }) => {
         act(canvas);
 
         const drawn = frameLineOf(cy.getElementById('pkg:a'));

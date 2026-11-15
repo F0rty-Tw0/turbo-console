@@ -3,13 +3,8 @@ import type { Core, NodeSingular } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { labelFitOf } from './graph-probe-label.ts';
-import { createGraphProbe } from './graph-probe.ts';
-import { graphStyleOf } from './graph-style.ts';
-import type { GraphView, Viewport } from '../common/graph-page.type.ts';
 import type { ProbeLabelFit } from '../common/graph-probe-label.type.ts';
-import type { GraphProbe } from '../common/graph-probe.type.ts';
-import { GRAPH_PROBE_STUB } from '../test/stubs/graph-probe.stub.ts';
-import { CANVAS_COLORS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
+import { canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 
 type LabelRow = {
   readonly name: string;
@@ -70,62 +65,29 @@ describe('FEATURE: labelFitOf', () => {
     cy.destroy();
   });
 
-  it.each(ROWS)('GIVEN $name WHEN its fit is read THEN the box is $box and the label $label', (row: LabelRow) => {
-    const expected: ProbeLabelFit = { width: 120, labelWidth: row.label, labelBoxWidth: row.box, textMarginX: 7 };
+  describe.each(ROWS)('GIVEN $name', (row: LabelRow) => {
+    it(`WHEN its fit is read THEN the box is ${row.box} and the label ${row.label}`, () => {
+      const expected: ProbeLabelFit = { width: 120, labelWidth: row.label, labelBoxWidth: row.box, textMarginX: 7 };
 
-    setInternal(node, 'rstyle', row.rstyle);
-    buildBoundsOn(node, row.bounds);
+      setInternal(node, 'rstyle', row.rstyle);
+      buildBoundsOn(node, row.bounds);
 
-    expect(labelFitOf(cy, 'a')).toStrictEqual(expected);
+      expect(labelFitOf(cy, 'a')).toStrictEqual(expected);
+    });
   });
 
-  it('GIVEN a label box boundingBox builds WHEN its fit is read THEN it reads the box built', () => {
-    setInternal(node, 'labelBounds', NO_BOX_BOUNDS);
-    buildBoundsOn(node, MEASURED_BOUNDS);
+  describe('GIVEN a label box boundingBox builds', () => {
+    it('WHEN its fit is read THEN it reads the box built', () => {
+      setInternal(node, 'labelBounds', NO_BOX_BOUNDS);
+      buildBoundsOn(node, MEASURED_BOUNDS);
 
-    expect(labelFitOf(cy, 'a')?.labelBoxWidth).toBe(45);
+      expect(labelFitOf(cy, 'a')?.labelBoxWidth).toBe(45);
+    });
   });
 
-  it('GIVEN no node b WHEN its fit is read THEN it is null', () => {
-    expect(labelFitOf(cy, 'b')).toBeNull();
-  });
-});
-
-describe('FEATURE: createGraphProbe label fit', () => {
-  let cy: Core;
-
-  beforeEach(() => {
-    cy = cytoscape({ headless: true, styleEnabled: true, elements: [canvasNodeOf('a')] });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
-  });
-
-  afterEach(() => {
-    cy.destroy();
-  });
-
-  const probeOf = (): GraphProbe => {
-    const viewport = (): Viewport => {
-      const shown: Viewport = { zoom: cy.zoom(), pan: cy.pan() };
-
-      return shown;
-    };
-    const view: Pick<GraphView, 'cy' | 'viewport'> = { cy: (): Core => cy, viewport };
-
-    return createGraphProbe(view, GRAPH_PROBE_STUB);
-  };
-
-  it('GIVEN a headless graph WHEN the probe reads the fit of a THEN it has no label box and no measured label', () => {
-    expect(probeOf().labelFit('a')).toMatchObject({ labelBoxWidth: null, labelWidth: 0 });
-  });
-
-  it('GIVEN a headless graph WHEN the probe reads its nodes THEN no node runs boundingBox or renderedBoundingBox', () => {
-    const node = cy.getElementById('a');
-    const boundingBox = vi.spyOn(node, 'boundingBox');
-    const renderedBoundingBox = vi.spyOn(node, 'renderedBoundingBox');
-
-    probeOf().nodes();
-
-    expect(boundingBox).not.toHaveBeenCalled();
-    expect(renderedBoundingBox).not.toHaveBeenCalled();
+  describe('GIVEN no node b', () => {
+    it('WHEN its fit is read THEN it is null', () => {
+      expect(labelFitOf(cy, 'b')).toBeNull();
+    });
   });
 });

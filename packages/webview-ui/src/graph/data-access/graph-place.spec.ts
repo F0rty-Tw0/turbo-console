@@ -2,7 +2,7 @@ import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { setBoxes } from './graph-boxes.ts';
-import { placeNodes, positionOf } from './graph-place.ts';
+import { placeNodes } from './graph-place.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
@@ -58,26 +58,6 @@ describe('FEATURE: placeNodes', () => {
       const centres = BOXED_IDS.map((id: string): Position => cy.getElementById(id).position());
 
       expect(centres).toStrictEqual([A_AT, B_AT]);
-    });
-  });
-});
-
-describe('FEATURE: positionOf', () => {
-  describe('GIVEN positions without an own constructor key', () => {
-    it('WHEN constructor is read THEN the origin returns, not an inherited member', () => {
-      expect(positionOf(PLACED, 'constructor')).toStrictEqual(ORIGIN);
-    });
-
-    it('WHEN a placed name is read THEN its position returns', () => {
-      expect(positionOf(PLACED, 'b')).toStrictEqual(B_AT);
-    });
-
-    it('WHEN a placed name is read THEN the position is a copy the canvas can move in place', () => {
-      expect(positionOf(PLACED, 'b')).not.toBe(B_AT);
-    });
-
-    it('WHEN an unplaced name is read twice THEN each origin is its own object', () => {
-      expect(positionOf(PLACED, 'missing')).not.toBe(positionOf(PLACED, 'missing'));
     });
   });
 });

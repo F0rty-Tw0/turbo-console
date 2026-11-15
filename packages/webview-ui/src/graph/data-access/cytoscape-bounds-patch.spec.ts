@@ -46,20 +46,24 @@ describe('FEATURE: the cytoscape boundingBox patch', () => {
     cy.destroy();
   });
 
-  it('GIVEN a node with a clean rendered style WHEN its class changes and boundingBox runs THEN the rendered style is dirty again', () => {
-    setClean(node, true);
-    node.addClass('changed');
-    node.boundingBox();
+  describe('GIVEN a node with a clean rendered style', () => {
+    it('WHEN its class changes and boundingBox runs THEN the rendered style is dirty again', () => {
+      setClean(node, true);
+      node.addClass('changed');
+      node.boundingBox();
 
-    expect(isClean(node)).toBe(false);
+      expect(isClean(node)).toBe(false);
+    });
   });
 
-  it('GIVEN a node whose style is not dirty WHEN boundingBox runs THEN its rendered style stays clean', () => {
-    node.boundingBox();
-    setClean(node, true);
-    // The slow path: a clean single node otherwise takes the fast path (bounds.mjs:913) and never reaches the patched loop.
-    node.boundingBox(SLOW_PATH);
+  describe('GIVEN a node whose style is not dirty', () => {
+    it('WHEN boundingBox runs THEN its rendered style stays clean', () => {
+      node.boundingBox();
+      setClean(node, true);
+      // The slow path: a clean single node otherwise takes the fast path (bounds.mjs:913) and never reaches the patched loop.
+      node.boundingBox(SLOW_PATH);
 
-    expect(isClean(node)).toBe(true);
+      expect(isClean(node)).toBe(true);
+    });
   });
 });

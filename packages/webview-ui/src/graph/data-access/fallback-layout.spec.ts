@@ -112,9 +112,11 @@ describe('FEATURE: breadthfirstPositions', () => {
     });
   });
 
-  it('GIVEN no children WHEN laid out THEN there are no positions', () => {
-    const positions = breadthfirstPositions({ id: 'root' });
+  describe('GIVEN no children', () => {
+    it('WHEN laid out THEN there are no positions', () => {
+      const positions = breadthfirstPositions({ id: 'root' });
 
-    expect(positions).toStrictEqual({});
+      expect(positions).toStrictEqual({});
+    });
   });
 });
