@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
 import { FOLDER_NODE_CLASS } from '../common/graph.const.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS, CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 
@@ -26,7 +27,7 @@ describe('FEATURE: graphStyleOf corners and arrows', () => {
     const elements = [...CANVAS_ELEMENTS, FOLDER_BOX, FOLDER_CHILD];
 
     cy = cytoscape({ headless: true, styleEnabled: true, elements });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
   });
 
   afterEach(() => {
@@ -80,7 +81,7 @@ describe('FEATURE: graphStyleOf corners and arrows', () => {
       const node = cy.getElementById('a');
       const edge = cy.getElementById(AB);
 
-      cy.style(graphStyleOf(THEMED_COLORS, 'sans-serif', false));
+      cy.style(graphStyleOf(THEMED_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
       node.addClass('selected');
       edge.addClass('selected');
 

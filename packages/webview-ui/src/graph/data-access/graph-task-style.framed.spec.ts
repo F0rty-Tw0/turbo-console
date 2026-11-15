@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
 import { BOX_FRAMED_CLASS, TASK_BOX_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 /** Frame data as `applyBoxFrames` writes it. */
@@ -26,7 +27,7 @@ const boxOf = (classes: string): NodeSingular => {
   const position = { x: 0, y: 0 };
   const box: ElementDefinition = { data: boxData, classes };
   const child: ElementDefinition = { data: childData, classes: TASK_NODE_CLASS, position };
-  const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+  const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
   const cy = cytoscape({ headless: true, styleEnabled: true, style, elements: [box, child] });
 
   return cy.getElementById('pkg:web');

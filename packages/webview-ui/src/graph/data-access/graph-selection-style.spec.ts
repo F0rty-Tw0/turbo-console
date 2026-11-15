@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { graphStyleOf } from './graph-style.ts';
 import { PACKAGE_RUN_CLASS, RUN_CLASS_PREFIX } from '../common/graph-task.const.ts';
 import { FOCUS_TARGET_CLASS, FOLDER_NODE_CLASS, NODE_BORDER_PX } from '../common/graph.const.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import {
   CANVAS_COLORS,
   CANVAS_ELEMENTS,
@@ -26,7 +27,7 @@ describe('FEATURE: graphStyleOf selected fill and focus target', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: ELEMENTS });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
     node = cy.getElementById('a').move({ parent: 'apps' }).first();
   });
 
@@ -73,7 +74,7 @@ describe('FEATURE: graphStyleOf selected fill and focus target', () => {
     it('WHEN a package is selected THEN it keeps the editor fill and is bold', () => {
       const noSelection = { ...CANVAS_COLORS, selection: null };
 
-      cy.style(graphStyleOf(noSelection, 'sans-serif', false));
+      cy.style(graphStyleOf(noSelection, 'sans-serif', false, CARD_MEASURES_STUB));
       node.addClass('selected');
 
       expect([node.style('background-color'), node.style('font-weight')]).toStrictEqual([EDITOR_FILL, 'bold']);

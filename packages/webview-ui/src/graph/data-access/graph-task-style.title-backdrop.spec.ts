@@ -7,6 +7,7 @@ import { ATOM_BOX_CLASS } from '../common/graph-atom.const.ts';
 import { SCRIPTS_BOX_CLASS, TASK_BOX_CLASS, TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
 import { DIMMED_BOX_CLASS } from '../common/graph.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const ORIGIN = { x: 0, y: 0 };
@@ -46,7 +47,7 @@ const LIGHT_COLORS: ThemeColors = { ...CANVAS_COLORS, background: '#fff' };
 const HIGH_CONTRAST_COLORS: ThemeColors = { ...CANVAS_COLORS, background: '#000' };
 
 const cyOf = (colors: ThemeColors): Core => {
-  const style = graphStyleOf(colors, 'sans-serif', false);
+  const style = graphStyleOf(colors, 'sans-serif', false, CARD_MEASURES_STUB);
 
   return cytoscape({ headless: true, styleEnabled: true, elements: ELEMENTS, style });
 };

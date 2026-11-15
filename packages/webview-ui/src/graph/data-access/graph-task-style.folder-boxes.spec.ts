@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
 import { TASK_BOX_CLASS, TASK_FOLDER_CLASS, TASK_NODE_CLASS } from '../common/graph-task.const.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const ORIGIN = { x: 0, y: 0 };
@@ -39,7 +40,7 @@ describe('FEATURE: taskRulesOf folder boxes in graphStyleOf', () => {
   let folder: NodeSingular;
 
   beforeEach(() => {
-    const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+    const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
     cy = cytoscape({ headless: true, styleEnabled: true, style, elements: FOLDER_ELEMENTS });
     folder = cy.getElementById('folder-apps');

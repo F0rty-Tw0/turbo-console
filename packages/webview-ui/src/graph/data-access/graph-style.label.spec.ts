@@ -3,6 +3,7 @@ import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS, CANVAS_ELEMENTS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 
 describe('FEATURE: graphStyleOf package label', () => {
@@ -10,7 +11,7 @@ describe('FEATURE: graphStyleOf package label', () => {
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: CANVAS_ELEMENTS });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
   });
 
   afterEach(() => {

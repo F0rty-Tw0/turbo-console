@@ -11,6 +11,7 @@ import type { GraphTask, Position, Positions } from '../../bridge/common/graph-s
 import { BOX_FRAMED_CLASS, NO_PREDICTIONS } from '../common/graph-task.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing, TaskPredictions } from '../common/task-canvas.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { taskOf } from '../test/utils/shown-set.spec.util.ts';
@@ -225,7 +226,7 @@ describe('FEATURE: task canvas predictions', () => {
   describe('GIVEN a styled canvas with glyphs', () => {
     beforeEach(() => {
       const layout = { name: 'preset', fit: false };
-      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', true);
+      const style = graphStyleOf(CANVAS_COLORS, 'sans-serif', true, CARD_MEASURES_STUB);
 
       cy = cytoscape({ headless: true, styleEnabled: true, style, layout });
       canvas = createTaskCanvas(cy);

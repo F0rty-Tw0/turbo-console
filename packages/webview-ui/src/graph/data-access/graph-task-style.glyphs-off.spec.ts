@@ -3,6 +3,7 @@ import type { ElementDefinition } from 'cytoscape';
 import { describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const glyphElementOf = (id: string, label: string, classes: string): ElementDefinition => {
@@ -18,7 +19,7 @@ describe('FEATURE: taskRulesOf labels in graphStyleOf with glyphs off', () => {
       const elements = [glyphElementOf('web#build', 'build', 'task run-running'), glyphElementOf('web#a', 'a.ts', 'atom-file')];
       const cy = cytoscape({ headless: true, styleEnabled: true, elements });
 
-      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
 
       expect(cy.getElementById('web#build').style('label')).toBe('build');
       expect(cy.getElementById('web#a').style('label')).toBe('a.ts');

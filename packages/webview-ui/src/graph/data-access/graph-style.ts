@@ -4,8 +4,9 @@ import { BOX_TITLE } from './graph-box-title-style.ts';
 import { dimmedBoxRulesOf } from './graph-dimmed-box-style.ts';
 import { routeRulesOf } from './graph-route-style.ts';
 import { selectionRulesOf } from './graph-selection-style.ts';
-import { UNMEASURED_CARDS, cardColourRulesOf, cardRulesOf, selectedCardRunRulesOf } from './graph-task-card-style.ts';
+import { cardColourRulesOf, cardRulesOf, selectedCardRunRulesOf } from './graph-task-card-style.ts';
 import { taskRulesOf } from './graph-task-style.ts';
+import type { CardMeasures } from '../common/graph-card.type.ts';
 import {
   COLLAPSED_LABEL_MAX_PX,
   DASHED_BORDER_PX,
@@ -157,12 +158,7 @@ const nodeStyleOf = (colors: ThemeColors, fontFamily: string): Css.Node => {
  * task rule's one row. `cardColourRulesOf` follows it: the input fill and frame and a run-colour top bar in place of the run
  * outline; `selectedCardRunRulesOf` follows the selection rules, so a selected card's bar keeps the selection fill below it.
  */
-export const graphStyleOf = (
-  colors: ThemeColors,
-  fontFamily: string,
-  glyphs: boolean,
-  measures = UNMEASURED_CARDS
-): StylesheetJson => {
+export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: boolean, measures: CardMeasures): StylesheetJson => {
   const node = nodeStyleOf(colors, fontFamily);
   const highlightedNode = { 'border-width': NODE_BORDER_PX, 'border-color': colors.highlighted };
   const highlightedEdge = emphasisEdgeOf(HIGHLIGHTED_EDGE_WIDTH, colors.highlighted);

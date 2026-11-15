@@ -3,6 +3,7 @@ import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const glyphElementOf = (id: string, label: string, classes: string): ElementDefinition => {
@@ -27,7 +28,7 @@ describe('FEATURE: taskRulesOf glyph labels in graphStyleOf with glyphs on', () 
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: GLYPH_ELEMENTS });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', true));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', true, CARD_MEASURES_STUB));
   });
 
   afterEach(() => {
@@ -94,7 +95,7 @@ describe('FEATURE: taskRulesOf glyph labels in graphStyleOf with glyphs on', () 
       const node = cy.getElementById('web#build');
 
       node.addClass('run-passed');
-      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', true));
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', true, CARD_MEASURES_STUB));
 
       expect(labelOf('web#build')).toBe('\ueba4 build');
       expect(node.data('width')).toBe(80);

@@ -3,6 +3,7 @@ import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS, CANVAS_ELEMENTS } from '../test/utils/canvas-elements.spec.util.ts';
 import { coreStyleOf } from '../test/utils/graph-stylesheet.spec.util.ts';
 import { press } from '../test/utils/press.spec.util.ts';
@@ -16,7 +17,7 @@ describe('FEATURE: graphStyleOf press feedback', () => {
 
     beforeEach(() => {
       cy = cytoscape({ headless: true, styleEnabled: true, elements: CANVAS_ELEMENTS });
-      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
     });
 
     afterEach(() => {
@@ -42,7 +43,7 @@ describe('FEATURE: graphStyleOf press feedback', () => {
 
   describe('GIVEN the page stylesheet', () => {
     it('WHEN its core rule is read THEN it draws no press circle on the background', () => {
-      const stylesheet = graphStyleOf(CANVAS_COLORS, 'sans-serif', false);
+      const stylesheet = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB);
 
       const style = coreStyleOf(stylesheet);
 

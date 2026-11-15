@@ -15,9 +15,6 @@ const CARD_ACCENT_PX = 3;
 /** Where the bar ends and the card fill starts down the gradient, in percent of the card's height. */
 const ACCENT_STOP_PERCENT = (CARD_ACCENT_PX * 100) / CARD_HEIGHT;
 
-// grug: default for specs; the page always passes real measures
-export const UNMEASURED_CARDS: CardMeasures = { regular: () => 0, bold: () => 0 };
-
 const cardWidthOf = (node: NodeSingular): number => Number(node.data('width'));
 
 const cardNameOf = (node: NodeSingular): string => String(node.data('label'));

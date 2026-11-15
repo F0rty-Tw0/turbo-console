@@ -8,6 +8,7 @@ import type { GraphRunState } from '../../bridge/common/graph-state.type.ts';
 import { TASK_CARD_CLASS } from '../common/graph-card.const.ts';
 import { TASK_NODE_CLASS } from '../common/graph-task.const.ts';
 import type { ThemeColors } from '../common/theme-colors.type.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import {
   CANVAS_CARD_FILL_RGB,
   CANVAS_CARD_FRAME_RGB,
@@ -56,7 +57,7 @@ describe('FEATURE: card colour rules in graphStyleOf', () => {
     const webPackage = classedNodeOf('web', 'web', '');
 
     cy = cytoscape({ headless: true, styleEnabled: true, elements: [card, umbrella, webPackage] });
-    cy.style(graphStyleOf(colors, 'sans-serif', false));
+    cy.style(graphStyleOf(colors, 'sans-serif', false, CARD_MEASURES_STUB));
   };
 
   const cardOf = (): NodeSingular => cy.getElementById('web#build');

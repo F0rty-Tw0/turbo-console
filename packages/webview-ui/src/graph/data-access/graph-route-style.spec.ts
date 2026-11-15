@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { graphStyleOf } from './graph-style.ts';
 import { TASK_LINK_CLASS } from '../common/graph-task.const.ts';
 import { FOLDER_LINK_CLASS } from '../common/graph.const.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 
 const OLD_ROUTED_CLASS = 'routed';
@@ -49,7 +50,7 @@ describe('FEATURE: the base edge rule and routeRulesOf in the graph stylesheet',
 
   beforeEach(() => {
     cy = cytoscape({ headless: true, styleEnabled: true, elements: ELEMENTS });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
   });
 
   afterEach(() => {
@@ -90,13 +91,13 @@ describe('FEATURE: the base edge rule and routeRulesOf in the graph stylesheet',
 
   describe('GIVEN the whole stylesheet', () => {
     it('WHEN its selectors are read THEN none selects the routed class', () => {
-      const selectors = graphStyleOf(CANVAS_COLORS, 'sans-serif', false).map(selectorOf);
+      const selectors = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB).map(selectorOf);
 
       expect(selectors.filter(isRoutedSelector)).toStrictEqual([]);
     });
 
     it('WHEN its rules are read THEN only the task link rule sets z-compound-depth, to bottom', () => {
-      const depthRules = graphStyleOf(CANVAS_COLORS, 'sans-serif', false).filter(setsDepth).map(depthRuleOf);
+      const depthRules = graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB).filter(setsDepth).map(depthRuleOf);
 
       expect(depthRules).toStrictEqual([`edge.${TASK_LINK_CLASS} bottom`]);
     });

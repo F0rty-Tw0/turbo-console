@@ -12,6 +12,7 @@ import type { ThemeColors } from '../common/theme-colors.type.ts';
 import { boardsCyMock } from '../test/mocks/folder-boards.mock.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB } from '../test/stubs/folder-boxes.stub.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_RUN_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 import { boardsSceneOf } from '../test/utils/folder-boards.spec.util.ts';
 import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
@@ -132,7 +133,7 @@ describe('FEATURE: graph visibility', () => {
 
     it('WHEN a is shown and the style and node classes are reapplied THEN only a is visible', () => {
       showOnly(cy, new Set(['a']));
-      cy.style(graphStyleOf(COLORS, 'sans-serif', false));
+      cy.style(graphStyleOf(COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
       cy.nodes().forEach((node: NodeSingular): void => void node.classes(['normal']));
 
       expect(visibleIds(cy)).toStrictEqual(['a']);
@@ -326,7 +327,7 @@ describe('FEATURE: graph visibility', () => {
 
       cy.destroy();
       cy = cytoscape({ headless: true, styleEnabled: true, layout, elements });
-      cy.style(graphStyleOf(COLORS, 'sans-serif', false));
+      cy.style(graphStyleOf(COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
       setBoxes(cy, [groupOf('apps', ['a', 'b']), groupOf('docs', ['c'])]);
       // A compound's extent is computed lazily: read with c shown, it keeps c's place once c is hidden, as a drawn box does.
       cy.nodes().boundingBox();

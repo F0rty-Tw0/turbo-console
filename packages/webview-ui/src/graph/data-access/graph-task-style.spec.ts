@@ -3,6 +3,7 @@ import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const TASK_BOX_PLACEMENT = ['web', 'top', 22.5, 'left-inside', -32, 'ellipsis'];
@@ -42,7 +43,7 @@ describe('FEATURE: taskRulesOf task boxes in graphStyleOf', () => {
     const elements = [boxOf('pkg:web', 'web'), childOf('web#build', 'pkg:web')];
 
     cy = cytoscape({ headless: true, styleEnabled: true, elements });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
   });
 
   afterEach(() => {

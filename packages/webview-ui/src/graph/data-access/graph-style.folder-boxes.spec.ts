@@ -3,6 +3,7 @@ import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
+import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { CANVAS_COLORS } from '../test/utils/canvas-elements.spec.util.ts';
 
 const FOLDER_BOX_DATA = { id: 'folder:apps', title: 'apps' };
@@ -20,7 +21,7 @@ describe('FEATURE: graphStyleOf folder boxes', () => {
     const elements = [FOLDER_BOX, FOLDER_CHILD];
 
     cy = cytoscape({ headless: true, styleEnabled: true, elements });
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false));
+    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', false, CARD_MEASURES_STUB));
   });
 
   afterEach(() => {
