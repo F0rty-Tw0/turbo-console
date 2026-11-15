@@ -45,7 +45,7 @@ const PROTO = candidatesOf(['__proto__:1'], [], []);
 const PROTO_PACKAGES = [packageOf('__proto__', 'packages/proto')];
 const EMPTY = candidatesOf([], [], []);
 
-describe('FEATURE: filteredCandidatesOf', () => {
+describe('FEATURE: candidate filter', () => {
   describe('GIVEN candidates and a filter', () => {
     it.each([
       {
@@ -106,35 +106,35 @@ describe('FEATURE: filteredCandidatesOf', () => {
       expect(filtered.none).toStrictEqual(row.none);
     });
   });
-});
 
-describe('FEATURE: firstCandidateOf', () => {
-  describe.each([
-    ['forward has one', R1, 'forms'],
-    ['only backward has one', candidatesOf([], ['app:1'], []), 'app'],
-    ['only none has one', candidatesOf([], [], ['docs']), 'docs'],
-    ['nothing at all', EMPTY, null]
-  ])('GIVEN %s', (_title, candidates, first) => {
-    it('WHEN the first is asked THEN the name or null is exact', () => {
-      const name = firstCandidateOf(candidates);
+  describe('GIVEN candidates whose first name is asked', () => {
+    describe.each([
+      ['forward has one', R1, 'forms'],
+      ['only backward has one', candidatesOf([], ['app:1'], []), 'app'],
+      ['only none has one', candidatesOf([], [], ['docs']), 'docs'],
+      ['nothing at all', EMPTY, null]
+    ])('GIVEN %s', (_title, candidates, first) => {
+      it('WHEN the first is asked THEN the name or null is exact', () => {
+        const name = firstCandidateOf(candidates);
 
-      expect(name).toBe(first);
+        expect(name).toBe(first);
+      });
     });
   });
-});
 
-describe('FEATURE: litCandidatesOf', () => {
-  describe.each([
-    ['forward and backward', R1, ['app', 'core', 'forms', 'shell', 'ui']],
-    ['only none', candidatesOf([], [], ['docs']), []],
-    ['nothing at all', EMPTY, []]
-  ])('GIVEN %s', (_title, candidates, lit) => {
-    it('WHEN the lit names are asked THEN they are exact', () => {
-      const names = litCandidatesOf(candidates);
-      const listed = [...names];
-      const sorted = listed.sort();
+  describe('GIVEN candidates whose lit names are asked', () => {
+    describe.each([
+      ['forward and backward', R1, ['app', 'core', 'forms', 'shell', 'ui']],
+      ['only none', candidatesOf([], [], ['docs']), []],
+      ['nothing at all', EMPTY, []]
+    ])('GIVEN %s', (_title, candidates, lit) => {
+      it('WHEN the lit names are asked THEN they are exact', () => {
+        const names = litCandidatesOf(candidates);
+        const listed = [...names];
+        const sorted = listed.sort();
 
-      expect(sorted).toStrictEqual(lit);
+        expect(sorted).toStrictEqual(lit);
+      });
     });
   });
 });
