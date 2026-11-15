@@ -6,10 +6,10 @@ import type { GraphTask } from '../../../src/bridge/common/graph-state.type.ts';
 const dependenciesOf = (tasks: GraphTask[], id: string): string[] | undefined =>
   tasks.find((task): boolean => task.id === id)?.dependencies;
 
-describe('FEATURE: repoGenLikeTasksState', () => {
-  const state = repoGenLikeTasksState();
+describe('FEATURE: graph box titles states', () => {
+  describe('GIVEN the repo-gen-like tasks state', () => {
+    const state = repoGenLikeTasksState();
 
-  describe('GIVEN the state', () => {
     it('WHEN its parts are counted THEN it has 300 packages, 280 builds and an edge per task dependency', () => {
       const dependencyCount = state.tasks.flatMap((task): string[] => task.dependencies).length;
 
@@ -30,10 +30,8 @@ describe('FEATURE: repoGenLikeTasksState', () => {
       expect([atoms?.path, atoms?.bareName]).toStrictEqual(['tools/atoms-01', 'atoms-01']);
     });
   });
-});
 
-describe('FEATURE: buildOnlyStretchState', () => {
-  describe('GIVEN the state', () => {
+  describe('GIVEN the build-only stretch state', () => {
     it('WHEN its tasks are read THEN they are the 300 builds and no Atomizer group is left', () => {
       const state = buildOnlyStretchState();
       const names = new Set(state.tasks.map((task): string => task.name));
