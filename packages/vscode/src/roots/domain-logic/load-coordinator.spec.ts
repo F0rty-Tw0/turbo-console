@@ -151,17 +151,19 @@ describe('FEATURE: load coordinator', () => {
     });
   });
 
-  it('GIVEN a show that came in during an earlier load WHEN a later hidden load is aborted THEN no follow-up starts', async () => {
-    coordinator.show();
-    coordinator.show();
-    runAt(deferred, 0).settle(LOADED_MODEL_STUB);
-    await flushSettles();
-    coordinator.request('refresh');
-    coordinator.request('watch');
-    runAt(deferred, 1).settle(ABORTED);
-    await flushSettles();
+  describe('GIVEN a show that came in during an earlier load', () => {
+    it('WHEN a later hidden load is aborted THEN no follow-up starts', async () => {
+      coordinator.show();
+      coordinator.show();
+      runAt(deferred, 0).settle(LOADED_MODEL_STUB);
+      await flushSettles();
+      coordinator.request('refresh');
+      coordinator.request('watch');
+      runAt(deferred, 1).settle(ABORTED);
+      await flushSettles();
 
-    expect(deferred.runs).toHaveLength(2);
+      expect(deferred.runs).toHaveLength(2);
+    });
   });
 
   describe('GIVEN a root whose binary failed and whose retry load is in flight', () => {
@@ -246,15 +248,17 @@ describe('FEATURE: load coordinator', () => {
     });
   });
 
-  it('GIVEN a full load WHEN it settles with a model THEN its record has no cache freshness', async () => {
-    coordinator.request('refresh');
+  describe('GIVEN a full load', () => {
+    it('WHEN it settles with a model THEN its record has no cache freshness', async () => {
+      coordinator.request('refresh');
 
-    const record = vi.mocked(deferred.ports.record).mock.calls[0]?.[0];
+      const record = vi.mocked(deferred.ports.record).mock.calls[0]?.[0];
 
-    runAt(deferred, 0).settle(LOADED_MODEL_STUB);
-    await flushSettles();
+      runAt(deferred, 0).settle(LOADED_MODEL_STUB);
+      await flushSettles();
 
-    expect(record).toMatchObject({ mode: 'full', outcome: 'model', cacheFresh: null });
+      expect(record).toMatchObject({ mode: 'full', outcome: 'model', cacheFresh: null });
+    });
   });
 
   describe('GIVEN a never-loaded root and first children are asked for', () => {
@@ -322,23 +326,25 @@ describe('FEATURE: load coordinator', () => {
     });
   });
 
-  it('GIVEN a load whose settle starts a follow-up load WHEN waiting for settled THEN it waits for the follow-up too', async () => {
-    coordinator.show();
-    coordinator.request('watch');
-    coordinator.show();
+  describe('GIVEN a load whose settle starts a follow-up load', () => {
+    it('WHEN waiting for settled THEN it waits for the follow-up too', async () => {
+      coordinator.show();
+      coordinator.request('watch');
+      coordinator.show();
 
-    const isSettled = settledFlag(coordinator.whenSettled());
+      const isSettled = settledFlag(coordinator.whenSettled());
 
-    runAt(deferred, 0).settle(ABORTED);
-    await flushSettles();
+      runAt(deferred, 0).settle(ABORTED);
+      await flushSettles();
 
-    const wasSettledEarly = isSettled();
+      const wasSettledEarly = isSettled();
 
-    runAt(deferred, 1).settle(LOADED_MODEL_STUB);
-    await flushSettles();
+      runAt(deferred, 1).settle(LOADED_MODEL_STUB);
+      await flushSettles();
 
-    expect(wasSettledEarly).toBe(false);
-    expect(isSettled()).toBe(true);
+      expect(wasSettledEarly).toBe(false);
+      expect(isSettled()).toBe(true);
+    });
   });
 
   describe('GIVEN a stale root disposed while its load is in flight and the view then shown', () => {

@@ -6,24 +6,30 @@ import type { LoadFailure } from '../common/root.type.ts';
 import { LOAD_FAILURE_STUB } from '../test/stubs/root.stub.ts';
 
 describe('FEATURE: error key of a load failure', () => {
-  it('GIVEN a binary not-found failure WHEN keyed THEN the key is binary:not-found', () => {
-    const key = errorKeyOf(LOAD_FAILURE_STUB);
+  describe('GIVEN a binary not-found failure', () => {
+    it('WHEN keyed THEN the key is binary:not-found', () => {
+      const key = errorKeyOf(LOAD_FAILURE_STUB);
 
-    expect(key).toBe('binary:not-found');
+      expect(key).toBe('binary:not-found');
+    });
   });
 
-  it('GIVEN a failed load WHEN keyed THEN the key is load:failed', () => {
-    const error = new TurboException('failed', 'turbo exited 1');
-    const failure: LoadFailure = { ...LOAD_FAILURE_STUB, stage: 'load', error };
+  describe('GIVEN a failed load', () => {
+    it('WHEN keyed THEN the key is load:failed', () => {
+      const error = new TurboException('failed', 'turbo exited 1');
+      const failure: LoadFailure = { ...LOAD_FAILURE_STUB, stage: 'load', error };
 
-    const key = errorKeyOf(failure);
+      const key = errorKeyOf(failure);
 
-    expect(key).toBe('load:failed');
+      expect(key).toBe('load:failed');
+    });
   });
 
-  it('GIVEN no failure WHEN keyed THEN the key is null', () => {
-    const key = errorKeyOf(null);
+  describe('GIVEN no failure', () => {
+    it('WHEN keyed THEN the key is null', () => {
+      const key = errorKeyOf(null);
 
-    expect(key).toBeNull();
+      expect(key).toBeNull();
+    });
   });
 });

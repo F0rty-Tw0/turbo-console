@@ -89,40 +89,46 @@ describe('FEATURE: settling a root load', () => {
     });
   });
 
-  it('GIVEN a show during a load superseded by a visible request WHEN a hidden request aborts the newer load THEN no follow-up starts', async () => {
-    coordinator.show();
-    coordinator.show();
-    deferred.setVisible(true);
-    coordinator.request('watch');
-    deferred.setVisible(false);
-    coordinator.request('watch');
-    runAt(deferred, 0).settle(ABORTED);
-    runAt(deferred, 1).settle(ABORTED);
-    await flushSettles();
+  describe('GIVEN a show during a load superseded by a visible request', () => {
+    it('WHEN a hidden request aborts the newer load THEN no follow-up starts', async () => {
+      coordinator.show();
+      coordinator.show();
+      deferred.setVisible(true);
+      coordinator.request('watch');
+      deferred.setVisible(false);
+      coordinator.request('watch');
+      runAt(deferred, 0).settle(ABORTED);
+      runAt(deferred, 1).settle(ABORTED);
+      await flushSettles();
 
-    expect(deferred.runs).toHaveLength(2);
+      expect(deferred.runs).toHaveLength(2);
+    });
   });
 
-  it('GIVEN a hidden request aborts a load WHEN the view turns visible without show before it settles THEN one full load follows', async () => {
-    coordinator.show();
-    coordinator.request('watch');
-    deferred.setVisible(true);
-    runAt(deferred, 0).settle(ABORTED);
-    await flushSettles();
+  describe('GIVEN a hidden request aborts a load', () => {
+    it('WHEN the view turns visible without show before it settles THEN one full load follows', async () => {
+      coordinator.show();
+      coordinator.request('watch');
+      deferred.setVisible(true);
+      runAt(deferred, 0).settle(ABORTED);
+      await flushSettles();
 
-    expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first', 'full']);
+      expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first', 'full']);
+    });
   });
 
-  it('GIVEN a cache-first load that publishes a stale cache WHEN it settles with a model THEN its record reads no fresh cache', async () => {
-    coordinator.show();
+  describe('GIVEN a cache-first load that publishes a stale cache', () => {
+    it('WHEN it settles with a model THEN its record reads no fresh cache', async () => {
+      coordinator.show();
 
-    const record = vi.mocked(deferred.ports.record).mock.calls[0]?.[0];
+      const record = vi.mocked(deferred.ports.record).mock.calls[0]?.[0];
 
-    runAt(deferred, 0).publish(STALE_CACHED);
-    runAt(deferred, 0).settle(LOADED_MODEL_STUB);
-    await flushSettles();
+      runAt(deferred, 0).publish(STALE_CACHED);
+      runAt(deferred, 0).settle(LOADED_MODEL_STUB);
+      await flushSettles();
 
-    expect(record).toMatchObject({ outcome: 'model', cacheFresh: false });
+      expect(record).toMatchObject({ outcome: 'model', cacheFresh: false });
+    });
   });
 
   describe('GIVEN a cache-first load that publishes a cache before its freshness check', () => {
@@ -280,13 +286,15 @@ describe('FEATURE: settling a root load', () => {
     });
   });
 
-  it('GIVEN a loaded root and a hidden view WHEN a setting request comes in THEN it is stale and no load starts', async () => {
-    coordinator.show();
-    runAt(deferred, 0).settle(LOADED_MODEL_STUB);
-    await flushSettles();
-    coordinator.request('setting');
+  describe('GIVEN a loaded root and a hidden view', () => {
+    it('WHEN a setting request comes in THEN it is stale and no load starts', async () => {
+      coordinator.show();
+      runAt(deferred, 0).settle(LOADED_MODEL_STUB);
+      await flushSettles();
+      coordinator.request('setting');
 
-    expect(coordinator.isStale()).toBe(true);
-    expect(deferred.runs).toHaveLength(1);
+      expect(coordinator.isStale()).toBe(true);
+      expect(deferred.runs).toHaveLength(1);
+    });
   });
 });

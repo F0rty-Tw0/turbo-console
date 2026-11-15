@@ -38,9 +38,11 @@ describe('FEATURE: a cache read raced against a failing resolve', () => {
     });
   });
 
-  it('GIVEN a read that rejects WHEN the resolve succeeds THEN it rejects with the read error', async () => {
-    const raced = readUnlessFailed(Promise.reject(new Error('boom')), Promise.resolve(BOUND));
+  describe('GIVEN a read that rejects', () => {
+    it('WHEN the resolve succeeds THEN it rejects with the read error', async () => {
+      const raced = readUnlessFailed(Promise.reject(new Error('boom')), Promise.resolve(BOUND));
 
-    await expect(raced).rejects.toThrow('boom');
+      await expect(raced).rejects.toThrow('boom');
+    });
   });
 });

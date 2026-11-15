@@ -21,21 +21,25 @@ const messageAt = (index: number): RunStateMessage => {
 };
 
 describe('FEATURE: the posted messages kept per panel', () => {
-  it('GIVEN fewer than the cap WHEN a message is recorded THEN all are kept in order', () => {
-    const posted: HostMessage[] = [messageAt(0)];
+  describe('GIVEN fewer than the cap', () => {
+    it('WHEN a message is recorded THEN all are kept in order', () => {
+      const posted: HostMessage[] = [messageAt(0)];
 
-    recordPosted(posted, messageAt(1));
+      recordPosted(posted, messageAt(1));
 
-    expect(posted).toStrictEqual([messageAt(0), messageAt(1)]);
+      expect(posted).toStrictEqual([messageAt(0), messageAt(1)]);
+    });
   });
 
-  it('GIVEN the cap is full WHEN one more is recorded THEN the oldest drops and the cap holds', () => {
-    const posted: HostMessage[] = Array.from({ length: POSTED_MAX }, (_, index) => messageAt(index));
+  describe('GIVEN the cap is full', () => {
+    it('WHEN one more is recorded THEN the oldest drops and the cap holds', () => {
+      const posted: HostMessage[] = Array.from({ length: POSTED_MAX }, (_, index) => messageAt(index));
 
-    recordPosted(posted, messageAt(POSTED_MAX));
+      recordPosted(posted, messageAt(POSTED_MAX));
 
-    expect(posted).toHaveLength(POSTED_MAX);
-    expect(posted[0]).toStrictEqual(messageAt(1));
-    expect(posted.at(-1)).toStrictEqual(messageAt(POSTED_MAX));
+      expect(posted).toHaveLength(POSTED_MAX);
+      expect(posted[0]).toStrictEqual(messageAt(1));
+      expect(posted.at(-1)).toStrictEqual(messageAt(POSTED_MAX));
+    });
   });
 });

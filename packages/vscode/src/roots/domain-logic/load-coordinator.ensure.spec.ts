@@ -31,10 +31,12 @@ describe('FEATURE: ensure a root is loaded', () => {
     coordinator = new LoadCoordinator(deferred.ports);
   });
 
-  it('GIVEN a never-loaded root WHEN ensured THEN one cache-first load runs', () => {
-    void coordinator.ensureLoaded();
+  describe('GIVEN a never-loaded root', () => {
+    it('WHEN ensured THEN one cache-first load runs', () => {
+      void coordinator.ensureLoaded();
 
-    expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first']);
+      expect(deferred.runs.map((run) => run.mode)).toStrictEqual(['cache-first']);
+    });
   });
 
   describe('GIVEN a root with a fresh model', () => {

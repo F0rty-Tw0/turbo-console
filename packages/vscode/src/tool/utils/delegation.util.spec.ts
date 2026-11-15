@@ -97,17 +97,21 @@ describe('FEATURE: delegation parser', () => {
     });
   });
 
-  it('GIVEN the turbo built-in commands WHEN a script has the same name THEN the shorthand is not followed', () => {
-    const names = [...TURBO_BUILTINS];
+  describe('GIVEN the turbo built-in commands', () => {
+    it('WHEN a script has the same name THEN the shorthand is not followed', () => {
+      const names = [...TURBO_BUILTINS];
 
-    const followed = names.filter((name) => delegationOf(['turbo', name], 0, scriptsOf({ [name]: 'vitest' })) !== null);
+      const followed = names.filter((name) => delegationOf(['turbo', name], 0, scriptsOf({ [name]: 'vitest' })) !== null);
 
-    expect(followed).toStrictEqual([]);
+      expect(followed).toStrictEqual([]);
+    });
   });
 
-  it('GIVEN pnpm and a script named like a command pnpm 11+ no longer owns WHEN the delegation is read THEN the script is followed', () => {
-    const names = REPLACED_BUILTINS.map((name) => delegationOf(['pnpm', name], 0, scriptsOf({ [name]: 'vitest' })));
+  describe('GIVEN pnpm and a script named like a command pnpm 11+ no longer owns', () => {
+    it('WHEN the delegation is read THEN the script is followed', () => {
+      const names = REPLACED_BUILTINS.map((name) => delegationOf(['pnpm', name], 0, scriptsOf({ [name]: 'vitest' })));
 
-    expect(names).toStrictEqual(REPLACED_BUILTINS);
+      expect(names).toStrictEqual(REPLACED_BUILTINS);
+    });
   });
 });
