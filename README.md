@@ -4,6 +4,10 @@ A VS Code extension for Turborepo workspaces: browse packages and tasks, see the
 
 Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 
+![A build of the web package running: each task card in the task graph turns from running to passed while the terminal prints the output](packages/vscode/media/screens/run.gif)
+
+What it does, with more screenshots: [packages/vscode/README.md](packages/vscode/README.md).
+
 `.vscode/settings.json` pins the editor to TypeScript 6 (`node_modules/typescript`): typescript-eslint and editors run on TS 6, while builds and typecheck use TS 7.
 
 ## Developer notes
