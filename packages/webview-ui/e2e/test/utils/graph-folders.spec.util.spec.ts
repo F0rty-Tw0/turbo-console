@@ -14,19 +14,19 @@ const IN_VIEW: ProbeFolder = folderAt('a', ['x'], [100, 100], [100, 100]);
 /** Spans x 950-1050, y 50-150: right of the canvas. */
 const OUT_OF_VIEW: ProbeFolder = folderAt('b', ['y'], [1000, 100], [100, 100]);
 
-describe('FEATURE: outOfViewOf', () => {
-  it.each([
+describe('FEATURE: graph folders', () => {
+  describe.each([
     { title: 'a folder not drawn yet', folders: [], keys: ['a'], outOfView: ['a'] },
     { title: 'a drawn folder inside the canvas', folders: [IN_VIEW], keys: ['a'], outOfView: [] },
     { title: 'a drawn folder off the canvas', folders: [IN_VIEW, OUT_OF_VIEW], keys: ['a', 'b'], outOfView: ['b'] }
-  ])('GIVEN $title WHEN listed THEN it returns $outOfView', ({ folders, keys, outOfView }): void => {
-    const listed = outOfViewOf(CANVAS, folders, keys);
+  ])('GIVEN $title', ({ folders, keys, outOfView }): void => {
+    it('WHEN the folders out of view are listed THEN it returns the expected keys', (): void => {
+      const listed = outOfViewOf(CANVAS, folders, keys);
 
-    expect(listed).toStrictEqual(outOfView);
+      expect(listed).toStrictEqual(outOfView);
+    });
   });
-});
 
-describe('FEATURE: findFolder', () => {
   describe('GIVEN no box with the key', () => {
     it('WHEN found THEN it returns undefined', (): void => {
       const found = findFolder([IN_VIEW], 'b');
