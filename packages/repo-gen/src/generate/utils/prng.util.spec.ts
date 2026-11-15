@@ -44,10 +44,8 @@ describe('FEATURE: seeded PRNG', () => {
       expect(value).toBe(0.6270739405881613);
     });
   });
-});
 
-describe('FEATURE: random pick without replacement', () => {
-  describe('GIVEN ten items', () => {
+  describe('GIVEN ten items for a random pick without replacement', () => {
     const items = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
 
     it('WHEN four are picked THEN four distinct items from the input come back', () => {

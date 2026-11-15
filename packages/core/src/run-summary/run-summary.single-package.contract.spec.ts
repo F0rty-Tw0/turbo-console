@@ -17,79 +17,81 @@ const TURBO = devTurboPath();
 
 const BUILD: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build', command: null };
 
-describe('FEATURE: a run in a single-package repo against turbo 2.11.7', () => {
-  let repo: SinglePackageRepo | undefined;
-  let dir = '';
-  let launchedAt = 0;
-  let endedAt = 0;
-  let result: TurboResult;
-  let summary: RunSummary | null = null;
+describe('FEATURE: runs in a single-package repo against turbo 2.11.7', () => {
+  describe('GIVEN a run of the build task', () => {
+    let repo: SinglePackageRepo | undefined;
+    let dir = '';
+    let launchedAt = 0;
+    let endedAt = 0;
+    let result: TurboResult;
+    let summary: RunSummary | null = null;
 
-  beforeAll(async () => {
-    repo = await singlePackageRepo('run-summary-single-');
-    dir = repo.dir;
-    const args = turboRunArgs(BUILD, '//', { force: false }, true).slice(1);
+    beforeAll(async () => {
+      repo = await singlePackageRepo('run-summary-single-');
+      dir = repo.dir;
+      const args = turboRunArgs(BUILD, '//', { force: false }, true).slice(1);
 
-    launchedAt = Date.now();
-    result = await runTurbo(TURBO, args, dir);
-    endedAt = Date.now();
-    summary = await readNewestRunSummary(dir);
-  });
-
-  afterAll(async () => {
-    await repo?.dispose();
-  });
-
-  describe('GIVEN an uncommitted single-package repo built once', () => {
-    it('THEN turbo exits 0 and the summary command is exactly turbo run build --filter=//', () => {
-      expect(result.exitCode).toBe(0);
-      expect(summary?.execution.command).toBe('turbo run build --filter=//');
+      launchedAt = Date.now();
+      result = await runTurbo(TURBO, args, dir);
+      endedAt = Date.now();
+      summary = await readNewestRunSummary(dir);
     });
 
-    it('THEN the summary says monorepo false and its task id was rewritten to //#build', () => {
-      expect(summary?.monorepo).toBe(false);
-      expect(summary?.tasks.map((task) => task.taskId)).toStrictEqual(['//#build']);
+    afterAll(async () => {
+      await repo?.dispose();
     });
 
-    it('THEN matchRunTasks finds the run of //#build with a cache status', async () => {
-      const run: RunToMatch = { task: BUILD, packageName: '//', launchedAt, endedAt, exitCode: result.exitCode };
+    describe('GIVEN an uncommitted single-package repo built once', () => {
+      it('THEN turbo exits 0 and the summary command is exactly turbo run build --filter=//', () => {
+        expect(result.exitCode).toBe(0);
+        expect(summary?.execution.command).toBe('turbo run build --filter=//');
+      });
 
-      const tasksMatch = await matchRunTasks(dir, run);
+      it('THEN the summary says monorepo false and its task id was rewritten to //#build', () => {
+        expect(summary?.monorepo).toBe(false);
+        expect(summary?.tasks.map((task) => task.taskId)).toStrictEqual(['//#build']);
+      });
 
-      expect(runMatchOf(tasksMatch)).toMatchObject({ cache: 'MISS' });
+      it('THEN matchRunTasks finds the run of //#build with a cache status', async () => {
+        const run: RunToMatch = { task: BUILD, packageName: '//', launchedAt, endedAt, exitCode: result.exitCode };
+
+        const tasksMatch = await matchRunTasks(dir, run);
+
+        expect(runMatchOf(tasksMatch)).toMatchObject({ cache: 'MISS' });
+      });
     });
   });
-});
 
-describe('FEATURE: a run-all in a single-package repo against turbo 2.11.7', () => {
-  let repo: SinglePackageRepo | undefined;
-  let dir = '';
-  let result: TurboResult;
-  let summary: RunSummary | null = null;
+  describe('GIVEN a run-all of build', () => {
+    let repo: SinglePackageRepo | undefined;
+    let dir = '';
+    let result: TurboResult;
+    let summary: RunSummary | null = null;
 
-  beforeAll(async () => {
-    repo = await singlePackageRepo('run-all-single-');
-    dir = repo.dir;
-    const runAllArgs = turboRunAllArgs('build', { affected: false }, true).slice(1);
-    const args = [...runAllArgs, '--summarize'];
+    beforeAll(async () => {
+      repo = await singlePackageRepo('run-all-single-');
+      dir = repo.dir;
+      const runAllArgs = turboRunAllArgs('build', { affected: false }, true).slice(1);
+      const args = [...runAllArgs, '--summarize'];
 
-    result = await runTurbo(TURBO, args, dir);
-    summary = await readNewestRunSummary(dir);
-  });
-
-  afterAll(async () => {
-    await repo?.dispose();
-  });
-
-  describe('GIVEN an uncommitted single-package repo built once with turboRunAllArgs and --single-package', () => {
-    it('THEN turbo exits 0 and the summary command is exactly turbo run build', () => {
-      expect(result.exitCode).toBe(0);
-      expect(summary?.execution.command).toBe('turbo run build');
+      result = await runTurbo(TURBO, args, dir);
+      summary = await readNewestRunSummary(dir);
     });
 
-    it('THEN the summary says monorepo false and lists //#build', () => {
-      expect(summary?.monorepo).toBe(false);
-      expect(summary?.tasks.map((task) => task.taskId)).toStrictEqual(['//#build']);
+    afterAll(async () => {
+      await repo?.dispose();
+    });
+
+    describe('GIVEN an uncommitted single-package repo built once with turboRunAllArgs and --single-package', () => {
+      it('THEN turbo exits 0 and the summary command is exactly turbo run build', () => {
+        expect(result.exitCode).toBe(0);
+        expect(summary?.execution.command).toBe('turbo run build');
+      });
+
+      it('THEN the summary says monorepo false and lists //#build', () => {
+        expect(summary?.monorepo).toBe(false);
+        expect(summary?.tasks.map((task) => task.taskId)).toStrictEqual(['//#build']);
+      });
     });
   });
 });
