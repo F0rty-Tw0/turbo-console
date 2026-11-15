@@ -7,9 +7,7 @@ import { PRESETS } from '@turbo-console/repo-gen';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { array, object, string } from 'zod/mini';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { loadWorkspace, readDryRun, resolveTurbo } from '../index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { CachedWorkspace, TaskNode, TurboBinary, WorkspaceModel } from '../index.ts';
 import {
   writeEdgesFixture,
@@ -83,7 +81,6 @@ const binaryFor = async (root: string): Promise<TurboBinary> => {
 /** `readCachedWorkspace` from a new module graph: its memory map is empty, as after a restart. */
 const freshReader = async (): Promise<CacheReader> => {
   vi.resetModules();
-  // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
   const fresh = await import('../index.ts');
 
   return fresh.readCachedWorkspace;

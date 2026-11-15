@@ -1,9 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import {
-  IMPORT_SITES_MAX
-  // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
-} from './index.ts';
+import { IMPORT_SITES_MAX } from './index.ts';
 import type {
   EdgeImportsResult,
   GraphEdgeImportsMessage,
@@ -12,7 +9,6 @@ import type {
   ImportLimit,
   ImportSite,
   ImportVia
-  // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 } from './index.ts';
 
 type ExpectedSite = {

@@ -1,4 +1,3 @@
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import type { TurboBinary } from '../../binary/common/index.ts';
 import { toTurboException } from '../../shared/errors/utils/turbo-error.util.ts';
 import { dryRunSchema } from '../../shared/turbo/common/dry-run.schema.ts';

@@ -27,8 +27,14 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/.github/workflows/ci.yml",
         "$TURBO_ROOT$/.github/workflows/release.yml",
-        "$TURBO_ROOT$/pnpm-workspace.yaml"
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/packages/webview-ui/playwright.screenshot.config.ts",
+        "$TURBO_ROOT$/packages/webview-ui/package.json"
       ]
+    },
+    "@turbo-console/repo-gen#test": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/package.json"]
     },
     "contract": {
       "dependsOn": ["^build"],
@@ -44,8 +50,7 @@
     },
     "bench": {
       "dependsOn": ["build"],
-      "cache": false,
-      "outputs": [".bench/**"]
+      "cache": false
     }
   }
 }

@@ -6,7 +6,6 @@ import { dirname, join } from 'node:path';
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, resolveTurbo } from '../index.ts';
 import type { CloseFault } from './test/common/fake-turbo.type.ts';
 import { TURBO_MANIFEST, installPlatformBinary, manifestPathOf, workspaceAt } from './test/utils/fake-turbo.spec.util.ts';

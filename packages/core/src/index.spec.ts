@@ -2,7 +2,6 @@ import { PACKAGE_NAME as REPO_GEN } from '@turbo-console/repo-gen';
 import { PACKAGE_NAME as TOOLS } from '@turbo-console/tools';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 import { PACKAGE_NAME } from './index.ts';
 import type {
   AffectedResult,
@@ -44,7 +43,6 @@ import type {
   TurboErrorKind,
   TurboVersionRange,
   WorkspaceModel
-  // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 } from './index.ts';
 
 /**
@@ -106,7 +104,6 @@ describe('FEATURE: core package entry', () => {
     });
 
     it('WHEN its exports are listed THEN they are exactly the public API, and every public type is exported', async () => {
-      // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
       const entry = await import('./index.ts');
 
       const names = Object.keys(entry).toSorted();
