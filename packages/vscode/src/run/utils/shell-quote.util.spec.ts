@@ -69,154 +69,153 @@ const CMD_QUOTED: Quoted[] = [
 const LEADING_ARGS = ['=build', '@scope/pkg'];
 
 describe('FEATURE: shell quoting', () => {
-  describe('shellKindOf', () => {
-    describe.each<[string, ShellKind]>([
-      ['/usr/bin/zsh', 'posix'],
-      ['/bin/bash', 'posix'],
-      ['/usr/bin/fish', 'posix'],
-      ['C:\\Program Files\\PowerShell\\7\\pwsh.exe', 'pwsh'],
-      ['C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', 'pwsh'],
-      ['PWSH', 'pwsh'],
-      ['/usr/bin/pwsh-preview', 'pwsh'],
-      ['/usr/bin/pwsh-lts', 'pwsh'],
-      ['/usr/local/bin/pwsh7', 'pwsh'],
-      ['C:\\Program Files\\PowerShell\\7-preview\\powershell-preview.exe', 'pwsh'],
-      ['/usr/bin/pwshell-not', 'posix'],
-      ['/usr/bin/powershellx', 'posix'],
-      ['/usr/bin/pwsh-wrapper.sh', 'posix'],
-      ['C:\\Windows\\System32\\cmd.exe', 'cmd'],
-      ['cmd', 'cmd'],
-      ['/opt/weird/shell', 'posix'],
-      ['', 'posix']
-    ])('GIVEN the shell path %j', (shellPath, kind) => {
-      it(`WHEN its kind is read THEN it is ${kind}`, () => {
-        const found = shellKindOf(shellPath);
+  describe.each<[string, ShellKind]>([
+    ['/usr/bin/zsh', 'posix'],
+    ['/bin/bash', 'posix'],
+    ['/usr/bin/fish', 'posix'],
+    ['C:\\Program Files\\PowerShell\\7\\pwsh.exe', 'pwsh'],
+    ['C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe', 'pwsh'],
+    ['PWSH', 'pwsh'],
+    ['/usr/bin/pwsh-preview', 'pwsh'],
+    ['/usr/bin/pwsh-lts', 'pwsh'],
+    ['/usr/local/bin/pwsh7', 'pwsh'],
+    ['C:\\Program Files\\PowerShell\\7-preview\\powershell-preview.exe', 'pwsh'],
+    ['/usr/bin/pwshell-not', 'posix'],
+    ['/usr/bin/powershellx', 'posix'],
+    ['/usr/bin/pwsh-wrapper.sh', 'posix'],
+    ['C:\\Windows\\System32\\cmd.exe', 'cmd'],
+    ['cmd', 'cmd'],
+    ['/opt/weird/shell', 'posix'],
+    ['', 'posix']
+  ])('GIVEN the shell path %j', (shellPath, kind) => {
+    it(`WHEN its kind is read THEN it is ${kind}`, () => {
+      const found = shellKindOf(shellPath);
 
-        expect(found).toBe(kind);
-      });
+      expect(found).toBe(kind);
     });
   });
 
-  describe('quoteArg', () => {
-    describe.each<ShellKind>(['posix', 'pwsh', 'cmd'])('GIVEN the %s shell', (kind) => {
-      it.each(BARE_ARGS)('WHEN %j is quoted THEN it stays bare', (arg) => {
-        const quoted = quoteArg(arg, kind);
+  describe.each<ShellKind>(['posix', 'pwsh', 'cmd'])('GIVEN the %s shell', (kind) => {
+    it.each(BARE_ARGS)('WHEN %j is quoted THEN it stays bare', (arg) => {
+      const quoted = quoteArg(arg, kind);
 
-        expect(quoted).toBe(arg);
-      });
-    });
-
-    describe('GIVEN the posix shell', () => {
-      it.each(POSIX_QUOTED)('WHEN %j is quoted THEN it is %j', (arg, expected) => {
-        const quoted = quoteArg(arg, 'posix');
-
-        expect(quoted).toBe(expected);
-      });
-    });
-
-    describe('GIVEN the pwsh shell', () => {
-      it.each(PWSH_QUOTED)('WHEN %j is quoted THEN it is %j', (arg, expected) => {
-        const quoted = quoteArg(arg, 'pwsh');
-
-        expect(quoted).toBe(expected);
-      });
-    });
-
-    describe('GIVEN the cmd shell', () => {
-      it.each(CMD_QUOTED)('WHEN %j is quoted THEN it is %j', (arg, expected) => {
-        const quoted = quoteArg(arg, 'cmd');
-
-        expect(quoted).toBe(expected);
-      });
-    });
-
-    describe.each<[ShellKind, string]>([
-      ['posix', "'"],
-      ['pwsh', "'"],
-      ['cmd', '"']
-    ])('GIVEN the %s shell', (kind, quote) => {
-      it.each(LEADING_ARGS)('WHEN %j starts with = or @ THEN it is quoted', (arg) => {
-        const quoted = quoteArg(arg, kind);
-
-        expect(quoted).toBe(`${quote}${arg}${quote}`);
-      });
+      expect(quoted).toBe(arg);
     });
   });
 
-  describe('copyText', () => {
-    describe.each<[ShellKind, string]>([
-      ['posix', "turbo run build '--filter=@org/x y'"],
-      ['pwsh', "turbo run build '--filter=@org/x y'"],
-      ['cmd', 'turbo run build "--filter=@org/x y"']
-    ])('GIVEN the %s shell', (kind, expected) => {
-      it('WHEN a package name holds a space THEN the filter is quoted', () => {
-        const text = copyText(TASK_NODE_STUB, '@org/x y', kind);
+  describe('GIVEN the posix shell', () => {
+    it.each(POSIX_QUOTED)('WHEN %j is quoted THEN it is %j', (arg, expected) => {
+      const quoted = quoteArg(arg, 'posix');
 
-        expect(text).toBe(expected);
-      });
+      expect(quoted).toBe(expected);
     });
+  });
 
-    describe.each<[ShellKind, string]>([
-      ['posix', "turbo run 'e2e-ci--tests/b fails.spec.ts' --filter=@fx/e2e"],
-      ['pwsh', "turbo run 'e2e-ci--tests/b fails.spec.ts' --filter=@fx/e2e"],
-      ['cmd', 'turbo run "e2e-ci--tests/b fails.spec.ts" --filter=@fx/e2e']
-    ])('GIVEN the %s shell', (kind, expected) => {
-      it('WHEN a file task name holds a space THEN the name is quoted', () => {
-        const task = { ...TASK_NODE_STUB, name: 'e2e-ci--tests/b fails.spec.ts' };
+  describe('GIVEN the pwsh shell', () => {
+    it.each(PWSH_QUOTED)('WHEN %j is quoted THEN it is %j', (arg, expected) => {
+      const quoted = quoteArg(arg, 'pwsh');
 
-        expect(copyText(task, '@fx/e2e', kind)).toBe(expected);
-      });
+      expect(quoted).toBe(expected);
     });
+  });
 
-    describe('GIVEN singlePackage', () => {
-      it.each<ShellKind>(['posix', 'pwsh', 'cmd'])('WHEN copied for %s THEN --single-package ends the command', (kind) => {
+  describe('GIVEN the cmd shell', () => {
+    it.each(CMD_QUOTED)('WHEN %j is quoted THEN it is %j', (arg, expected) => {
+      const quoted = quoteArg(arg, 'cmd');
+
+      expect(quoted).toBe(expected);
+    });
+  });
+
+  describe.each<[ShellKind, string]>([
+    ['posix', "'"],
+    ['pwsh', "'"],
+    ['cmd', '"']
+  ])('GIVEN the %s shell and an argument starting with = or @', (kind, quote) => {
+    it.each(LEADING_ARGS)('WHEN %j is quoted THEN it is wrapped in quotes', (arg) => {
+      const quoted = quoteArg(arg, kind);
+
+      expect(quoted).toBe(`${quote}${arg}${quote}`);
+    });
+  });
+
+  describe.each<[ShellKind, string]>([
+    ['posix', "turbo run build '--filter=@org/x y'"],
+    ['pwsh', "turbo run build '--filter=@org/x y'"],
+    ['cmd', 'turbo run build "--filter=@org/x y"']
+  ])('GIVEN the %s shell and a package name holding a space', (kind, expected) => {
+    it('WHEN the command is copied THEN the filter is quoted', () => {
+      const text = copyText(TASK_NODE_STUB, '@org/x y', kind);
+
+      expect(text).toBe(expected);
+    });
+  });
+
+  describe.each<[ShellKind, string]>([
+    ['posix', "turbo run 'e2e-ci--tests/b fails.spec.ts' --filter=@fx/e2e"],
+    ['pwsh', "turbo run 'e2e-ci--tests/b fails.spec.ts' --filter=@fx/e2e"],
+    ['cmd', 'turbo run "e2e-ci--tests/b fails.spec.ts" --filter=@fx/e2e']
+  ])('GIVEN the %s shell and a file task name holding a space', (kind, expected) => {
+    it('WHEN the command is copied THEN the name is quoted', () => {
+      const task = { ...TASK_NODE_STUB, name: 'e2e-ci--tests/b fails.spec.ts' };
+
+      expect(copyText(task, '@fx/e2e', kind)).toBe(expected);
+    });
+  });
+
+  describe('GIVEN singlePackage', () => {
+    it.each<ShellKind>(['posix', 'pwsh', 'cmd'])(
+      'WHEN the command is copied for %s THEN --single-package ends the command',
+      (kind) => {
         expect(copyText(TASK_NODE_STUB, '//', kind, true)).toBe('turbo run build --filter=// --single-package');
-      });
+      }
+    );
+  });
+
+  describe('GIVEN a monorepo', () => {
+    it('WHEN the command is copied THEN the command is unchanged', () => {
+      expect(copyText(TASK_NODE_STUB, 'a', 'posix')).toBe('turbo run build --filter=a');
     });
+  });
 
-    describe('GIVEN a monorepo', () => {
-      it('WHEN copied THEN the command is unchanged', () => {
-        expect(copyText(TASK_NODE_STUB, 'a', 'posix')).toBe('turbo run build --filter=a');
-      });
+  describe('GIVEN a plain package', () => {
+    it('WHEN the command is copied THEN every argument stays bare', () => {
+      const text = copyText(TASK_NODE_STUB, '@scope/pkg', 'posix');
+
+      expect(text).toBe('turbo run build --filter=@scope/pkg');
     });
+  });
 
-    describe('GIVEN a plain package', () => {
-      it('WHEN copied THEN every argument stays bare', () => {
-        const text = copyText(TASK_NODE_STUB, '@scope/pkg', 'posix');
+  describe('GIVEN a task name with $ and ! for posix', () => {
+    it('WHEN the command is copied THEN the name is single quoted', () => {
+      const task = { ...TASK_NODE_STUB, name: 'dep$loy!x' };
 
-        expect(text).toBe('turbo run build --filter=@scope/pkg');
-      });
+      const text = copyText(task, 'a', 'posix');
+
+      expect(text).toBe("turbo run 'dep$loy!x' --filter=a");
     });
+  });
 
-    describe('GIVEN a task name with $ and ! for posix', () => {
-      it('WHEN copied THEN the name is single quoted', () => {
-        const task = { ...TASK_NODE_STUB, name: 'dep$loy!x' };
-
-        const text = copyText(task, 'a', 'posix');
-
-        expect(text).toBe("turbo run 'dep$loy!x' --filter=a");
-      });
-    });
-
-    it.each<[ShellKind, string]>([
-      ['cmd', 'a%b'],
-      ['cmd', 'a!b'],
-      ['pwsh', 'a\\']
-    ])('GIVEN the %s shell WHEN the task name is %j THEN nothing can be copied', (kind, name) => {
+  describe.each<[ShellKind, string]>([
+    ['cmd', 'a%b'],
+    ['cmd', 'a!b'],
+    ['pwsh', 'a\\']
+  ])('GIVEN the %s shell and the task name %j', (kind, name) => {
+    it('WHEN the command is copied THEN nothing can be copied', () => {
       const task = { ...TASK_NODE_STUB, name };
 
       const text = copyText(task, 'a', kind);
 
       expect(text).toBeNull();
     });
+  });
 
-    describe('GIVEN the package a*', () => {
-      it('WHEN copied THEN it throws invalid-argument', () => {
-        const copy = (): string | null => copyText(TASK_NODE_STUB, 'a*', 'posix');
+  describe('GIVEN the package a*', () => {
+    it('WHEN the command is copied THEN it throws invalid-argument', () => {
+      const copy = (): string | null => copyText(TASK_NODE_STUB, 'a*', 'posix');
 
-        expect(copy).toThrow(TurboException);
-        expect(copy).toThrow(expect.objectContaining({ kind: 'invalid-argument' }));
-      });
+      expect(copy).toThrow(TurboException);
+      expect(copy).toThrow(expect.objectContaining({ kind: 'invalid-argument' }));
     });
   });
 });
