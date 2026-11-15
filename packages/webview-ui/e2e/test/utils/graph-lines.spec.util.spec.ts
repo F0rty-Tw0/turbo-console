@@ -35,7 +35,7 @@ const FROM_PAST_BORDER: ProbeEdgeLine = lineThrough('mid', 'b', [{ x: 100, y: 11
 const FROM_BELOW: ProbeEdgeLine = lineThrough('mid', 'b', [{ x: 100, y: 236 }, FAR_END]);
 const FROM_OTHER_NODE: ProbeEdgeLine = lineThrough('a', 'b', [BORDER_START, FAR_END]);
 
-describe('FEATURE: lineOf', () => {
+describe('FEATURE: graph lines', () => {
   describe('GIVEN drawn lines', () => {
     it('WHEN one is looked up by its ends THEN that line is returned', () => {
       const found = lineOf([HIDDEN_LINE, LINE], 'a', 'b');
@@ -57,41 +57,41 @@ describe('FEATURE: lineOf', () => {
       expect(midpoint).toStrictEqual({ x: 100, y: 100 });
     });
   });
-});
 
-describe('FEATURE: throughNodeCountOf', () => {
-  it.each([
+  describe.each([
     { title: 'a drawn node on the line', nodes: [MIDDLE_NODE], expected: 1 },
     { title: 'a node hidden by a filter on the line', nodes: [FILTERED_NODE], expected: 0 },
     { title: 'a node inside a collapsed folder on the line', nodes: [FOLDED_NODE], expected: 0 }
-  ])('GIVEN $title WHEN lines through nodes are counted THEN there are $expected', ({ nodes, expected }) => {
-    const count = throughNodeCountOf([LINE], nodes, ZOOM, NO_INSET);
+  ])('GIVEN $title', ({ nodes, expected }) => {
+    it(`WHEN lines through nodes are counted THEN there are ${expected}`, () => {
+      const count = throughNodeCountOf([LINE], nodes, ZOOM, NO_INSET);
 
-    expect(count).toBe(expected);
+      expect(count).toBe(expected);
+    });
   });
-});
 
-describe('FEATURE: startsOnNodeCountOf', () => {
-  it.each([
+  describe.each([
     { title: 'a line out of the node from its border', line: FROM_BORDER, expected: 1 },
     { title: 'a line out of the node from just past its border', line: FROM_PAST_BORDER, expected: 1 },
     { title: 'a line out of the node from 120 px below it', line: FROM_BELOW, expected: 0 },
     { title: 'a line out of another node from the border', line: FROM_OTHER_NODE, expected: 0 }
-  ])('GIVEN $title WHEN lines starting on the node are counted THEN there are $expected', ({ line, expected }) => {
-    const count = startsOnNodeCountOf([line], MIDDLE_NODE, ZOOM, START_SLACK_PX);
+  ])('GIVEN $title', ({ line, expected }) => {
+    it(`WHEN lines starting on the node are counted THEN there are ${expected}`, () => {
+      const count = startsOnNodeCountOf([line], MIDDLE_NODE, ZOOM, START_SLACK_PX);
 
-    expect(count).toBe(expected);
+      expect(count).toBe(expected);
+    });
   });
-});
 
-describe('FEATURE: midpointsUnderCountOf', () => {
-  it.each([
+  describe.each([
     { title: 'a drawn node under the midpoint', nodes: [MIDDLE_NODE], expected: 1 },
     { title: 'a node hidden by a filter under the midpoint', nodes: [FILTERED_NODE], expected: 0 },
     { title: 'a node inside a collapsed folder under the midpoint', nodes: [FOLDED_NODE], expected: 0 }
-  ])('GIVEN $title WHEN midpoints under nodes are counted THEN there are $expected', ({ nodes, expected }) => {
-    const count = midpointsUnderCountOf([LINE, HIDDEN_LINE], nodes, ZOOM);
+  ])('GIVEN $title', ({ nodes, expected }) => {
+    it(`WHEN midpoints under nodes are counted THEN there are ${expected}`, () => {
+      const count = midpointsUnderCountOf([LINE, HIDDEN_LINE], nodes, ZOOM);
 
-    expect(count).toBe(expected);
+      expect(count).toBe(expected);
+    });
   });
 });
