@@ -40,16 +40,20 @@ const bareNamesOf = (state: GraphState): string[] => {
 };
 
 describe('FEATURE: graph package bareName', () => {
-  it('GIVEN scoped and unscoped packages WHEN the state is built THEN a scope is stripped and the rest keep their name', () => {
-    const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+  describe('GIVEN scoped and unscoped packages', () => {
+    it('WHEN the state is built THEN a scope is stripped and the rest keep their name', () => {
+      const state = graphStateOf(GRAPH_MODEL_STUB, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
-    expect(bareNamesOf(state)).toStrictEqual(['x', 'a', 'web']);
+      expect(bareNamesOf(state)).toStrictEqual(['x', 'a', 'web']);
+    });
   });
 
-  it('GIVEN a single-package root labelled single-app WHEN built THEN bareName is the label', () => {
-    const state = graphStateOf(SINGLE_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+  describe('GIVEN a single-package root labelled single-app', () => {
+    it('WHEN built THEN bareName is the label', () => {
+      const state = graphStateOf(SINGLE_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
 
-    expect(bareNamesOf(state)).toStrictEqual(['single-app']);
+      expect(bareNamesOf(state)).toStrictEqual(['single-app']);
+    });
   });
 
   describe('GIVEN a monorepo root labelled @acme/monorepo beside @acme/web', () => {
@@ -83,23 +87,24 @@ describe('FEATURE: graph package bareName', () => {
     });
   });
 
-  it.each([true, false])(
-    'GIVEN a single-package root WHEN built with scopeShown %s THEN it reads its label, no prefix',
-    (scopeShown) => {
+  describe('GIVEN a single-package root', () => {
+    it.each([true, false])('WHEN built with scopeShown %s THEN it reads its label, no prefix', (scopeShown) => {
       const state = graphStateOf(SINGLE_MODEL, NO_LAYOUT_CACHES_STUB, { ...GRAPH_SHOWN_STUB, scopeShown });
 
       expect(bareNamesOf(state)).toStrictEqual(['single-app']);
-    }
-  );
-
-  it('GIVEN @a/ui is script-only and @b/ui is a turbo package WHEN built THEN both keep their full name', () => {
-    const state = graphStateOf(SAME_BARE_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
-
-    expect(bareNamesOf(state)).toStrictEqual(['@a/ui', '@b/ui']);
+    });
   });
 
-  it('GIVEN @a/ui is script-only and @b/ui is a turbo package WHEN the tree is built with scripts hidden THEN @b/ui reads ui', () => {
-    expect(modelViewOf(SAME_BARE_MODEL, false, new Set()).bareTexts.get('@b/ui')).toBe('ui');
+  describe('GIVEN @a/ui is script-only and @b/ui is a turbo package', () => {
+    it('WHEN built THEN both keep their full name', () => {
+      const state = graphStateOf(SAME_BARE_MODEL, NO_LAYOUT_CACHES_STUB, GRAPH_SHOWN_STUB);
+
+      expect(bareNamesOf(state)).toStrictEqual(['@a/ui', '@b/ui']);
+    });
+
+    it('WHEN the tree is built with scripts hidden THEN @b/ui reads ui', () => {
+      expect(modelViewOf(SAME_BARE_MODEL, false, new Set()).bareTexts.get('@b/ui')).toBe('ui');
+    });
   });
 
   it('WHEN the model is built with the same packages THEN the hash does not mention bareName', () => {

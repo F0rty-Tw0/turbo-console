@@ -96,24 +96,38 @@ describe('FEATURE: the Show Package Graph command', () => {
     expect(registered.ids).toStrictEqual([COMMAND, TASK_COMMAND, ALL_TASKS_COMMAND, FOCUS_COMMAND]);
   });
 
-  it('GIVEN a resolvable root WHEN the command runs THEN that root opens', async () => {
-    const panels = openerMock();
-    const registered = registrationMock();
+  describe('GIVEN a resolvable root', () => {
+    it('WHEN the command runs THEN that root opens', async () => {
+      const panels = openerMock();
+      const registered = registrationMock();
 
-    registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
-    await registered.run();
+      registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
+      await registered.run();
 
-    expect(panels.open).toHaveBeenCalledExactlyOnceWith('/ws');
+      expect(panels.open).toHaveBeenCalledExactlyOnceWith('/ws');
+    });
+
+    it('WHEN Show All Task Graphs runs THEN that root opens', async () => {
+      const panels = openerMock();
+      const registered = registrationMock();
+
+      registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
+      await registered.runAllTasks();
+
+      expect(panels.open).toHaveBeenCalledExactlyOnceWith('/ws');
+    });
   });
 
-  it('GIVEN two roots and a cancelled pick WHEN the command runs THEN nothing opens', async () => {
-    const panels = openerMock();
-    const registered = registrationMock();
+  describe('GIVEN two roots and a cancelled pick', () => {
+    it('WHEN the command runs THEN nothing opens', async () => {
+      const panels = openerMock();
+      const registered = registrationMock();
 
-    registerGraph(panels, storeOf([ROOT_FOLDER_STUB, OTHER_FOLDER]), portsOf(undefined), registered.register);
-    await registered.run();
+      registerGraph(panels, storeOf([ROOT_FOLDER_STUB, OTHER_FOLDER]), portsOf(undefined), registered.register);
+      await registered.run();
 
-    expect(panels.open).not.toHaveBeenCalled();
+      expect(panels.open).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN a panel that cannot be opened', () => {
@@ -141,44 +155,40 @@ describe('FEATURE: the Show Package Graph command', () => {
     });
   });
 
-  it('GIVEN a task row WHEN Show Task Graph runs THEN that root opens', async () => {
-    const panels = openerMock();
-    const registered = registrationMock();
+  describe('GIVEN a task row', () => {
+    it('WHEN Show Task Graph runs THEN that root opens', async () => {
+      const panels = openerMock();
+      const registered = registrationMock();
 
-    registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
-    await registered.runTaskGraph(TASK_ROW);
+      registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
+      await registered.runTaskGraph(TASK_ROW);
 
-    expect(panels.open).toHaveBeenCalledExactlyOnceWith('/ws');
+      expect(panels.open).toHaveBeenCalledExactlyOnceWith('/ws');
+    });
   });
 
-  it('GIVEN a package row WHEN Focus on Graph runs THEN that root opens', () => {
-    const panels = openerMock();
-    const registered = registrationMock();
+  describe('GIVEN a package row', () => {
+    it('WHEN Focus on Graph runs THEN that root opens', () => {
+      const panels = openerMock();
+      const registered = registrationMock();
 
-    registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
-    registered.runFocus(PACKAGE_ROW);
+      registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
+      registered.runFocus(PACKAGE_ROW);
 
-    expect(panels.open).toHaveBeenCalledExactlyOnceWith('/ws');
+      expect(panels.open).toHaveBeenCalledExactlyOnceWith('/ws');
+    });
   });
 
-  it('GIVEN a resolvable root WHEN Show All Task Graphs runs THEN that root opens', async () => {
-    const panels = openerMock();
-    const registered = registrationMock();
+  describe('GIVEN it is registered', () => {
+    it('WHEN it is disposed THEN every command is removed and the panels are disposed', () => {
+      const panels = openerMock();
+      const registered = registrationMock();
+      const graph = registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
 
-    registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
-    await registered.runAllTasks();
+      graph.dispose();
 
-    expect(panels.open).toHaveBeenCalledExactlyOnceWith('/ws');
-  });
-
-  it('GIVEN it is registered WHEN it is disposed THEN every command is removed and the panels are disposed', () => {
-    const panels = openerMock();
-    const registered = registrationMock();
-    const graph = registerGraph(panels, storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
-
-    graph.dispose();
-
-    expect(registered.unregister).toHaveBeenCalledTimes(4);
-    expect(panels.dispose).toHaveBeenCalledOnce();
+      expect(registered.unregister).toHaveBeenCalledTimes(4);
+      expect(panels.dispose).toHaveBeenCalledOnce();
+    });
   });
 });

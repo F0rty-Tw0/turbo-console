@@ -10,7 +10,7 @@ const PACKAGE_PATH = 'packages/a';
 const A = join(IMPORT_ROOT, 'packages', 'a');
 
 describe('FEATURE: import file path rules', () => {
-  it.each([
+  describe.each([
     ['src/a.ts', join(A, 'src', 'a.ts')],
     ['a.tsx', join(A, 'a.tsx')],
     ['a.mts', join(A, 'a.mts')],
@@ -22,19 +22,23 @@ describe('FEATURE: import file path rules', () => {
     ['./src/a.ts', join(A, 'src', 'a.ts')],
     ['src/..x.ts', join(A, 'src', '..x.ts')],
     ['src/a b.ts', join(A, 'src', 'a b.ts')]
-  ])('GIVEN %j WHEN checked THEN it opens %s', (file, expected) => {
-    const absolute = importFileOf(IMPORT_ROOT, PACKAGE_PATH, file);
+  ])('GIVEN %j', (file, expected) => {
+    it(`WHEN checked THEN it opens ${expected}`, () => {
+      const absolute = importFileOf(IMPORT_ROOT, PACKAGE_PATH, file);
 
-    expect(absolute).toBe(expected);
+      expect(absolute).toBe(expected);
+    });
   });
 
-  it('GIVEN the root package (packagePath "") and src/a.ts WHEN checked THEN it is join(ROOT, "src", "a.ts")', () => {
-    const absolute = importFileOf(IMPORT_ROOT, '', 'src/a.ts');
+  describe('GIVEN the root package (packagePath "") and src/a.ts', () => {
+    it('WHEN checked THEN it is join(ROOT, "src", "a.ts")', () => {
+      const absolute = importFileOf(IMPORT_ROOT, '', 'src/a.ts');
 
-    expect(absolute).toBe(join(IMPORT_ROOT, 'src', 'a.ts'));
+      expect(absolute).toBe(join(IMPORT_ROOT, 'src', 'a.ts'));
+    });
   });
 
-  it.each([
+  describe.each([
     [''],
     ['src/a.d.ts'],
     ['src/a.d.mts'],
@@ -58,9 +62,11 @@ describe('FEATURE: import file path rules', () => {
     ['src/a\n.ts'],
     ['src/a\t.ts'],
     ['src/a\u001f.ts']
-  ])('GIVEN %j WHEN checked THEN it is null', (file) => {
-    const absolute = importFileOf(IMPORT_ROOT, PACKAGE_PATH, file);
+  ])('GIVEN %j', (file) => {
+    it('WHEN checked THEN it is null', () => {
+      const absolute = importFileOf(IMPORT_ROOT, PACKAGE_PATH, file);
 
-    expect(absolute).toBeNull();
+      expect(absolute).toBeNull();
+    });
   });
 });

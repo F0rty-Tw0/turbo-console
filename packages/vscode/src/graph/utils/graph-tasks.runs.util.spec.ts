@@ -275,31 +275,37 @@ describe('FEATURE: the runs message of a graph (spec D9, D11, §5.2)', () => {
 });
 
 describe('FEATURE: persistent ids of a model', () => {
-  it('GIVEN web#dev persistent and web#build not WHEN taken THEN only web#dev', () => {
-    const web = packageOf('web', [taskNamed('web#build', false), taskNamed('web#dev', true)]);
-    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [web] };
+  describe('GIVEN web#dev persistent and web#build not', () => {
+    it('WHEN taken THEN only web#dev', () => {
+      const web = packageOf('web', [taskNamed('web#build', false), taskNamed('web#dev', true)]);
+      const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [web] };
 
-    const ids = persistentIdsOf(model);
+      const ids = persistentIdsOf(model);
 
-    expect([...ids]).toStrictEqual(['web#dev']);
+      expect([...ids]).toStrictEqual(['web#dev']);
+    });
   });
 
-  it('GIVEN a persistent root task //#dev WHEN taken THEN //#dev is among them', () => {
-    const root = packageOf('//', [taskNamed('//#dev', true)]);
-    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [root] };
+  describe('GIVEN a persistent root task //#dev', () => {
+    it('WHEN taken THEN //#dev is among them', () => {
+      const root = packageOf('//', [taskNamed('//#dev', true)]);
+      const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [root] };
 
-    const ids = persistentIdsOf(model);
+      const ids = persistentIdsOf(model);
 
-    expect([...ids]).toStrictEqual(['//#dev']);
+      expect([...ids]).toStrictEqual(['//#dev']);
+    });
   });
 
-  it('GIVEN a persistent atom file WHEN taken THEN it is not listed', () => {
-    const persistentFile = taskNamed('web#f', true);
-    const file: TaskNode = { ...persistentFile, kind: 'atom-file' };
-    const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [packageOf('web', [file])] };
+  describe('GIVEN a persistent atom file', () => {
+    it('WHEN taken THEN it is not listed', () => {
+      const persistentFile = taskNamed('web#f', true);
+      const file: TaskNode = { ...persistentFile, kind: 'atom-file' };
+      const model: WorkspaceModel = { ...WORKSPACE_MODEL_STUB, packages: [packageOf('web', [file])] };
 
-    const ids = persistentIdsOf(model);
+      const ids = persistentIdsOf(model);
 
-    expect(ids.size).toBe(0);
+      expect(ids.size).toBe(0);
+    });
   });
 });

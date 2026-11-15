@@ -64,38 +64,44 @@ describe('FEATURE: graph session prediction', () => {
     vi.useRealTimers();
   });
 
-  it('GIVEN the toggle on and a ready page WHEN two prediction changes post twice THEN the task listing is not built again', async () => {
-    vi.useFakeTimers();
+  describe('GIVEN the toggle on and a ready page', () => {
+    it('WHEN two prediction changes post twice THEN the task listing is not built again', async () => {
+      vi.useFakeTimers();
 
-    const { session, fake } = predictionSession();
+      const { session, fake } = predictionSession();
 
-    await session.receive({ type: 'ready' });
-    listingSpy.mockClear();
-    fake.changed('/ws');
-    vi.advanceTimersByTime(RUNS_COALESCE_MS);
-    fake.changed('/ws');
-    vi.advanceTimersByTime(RUNS_COALESCE_MS);
+      await session.receive({ type: 'ready' });
+      listingSpy.mockClear();
+      fake.changed('/ws');
+      vi.advanceTimersByTime(RUNS_COALESCE_MS);
+      fake.changed('/ws');
+      vi.advanceTimersByTime(RUNS_COALESCE_MS);
 
-    expect(listingSpy).not.toHaveBeenCalled();
+      expect(listingSpy).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN the prediction toggle on and an answer WHEN the page is ready THEN the first runs message carries it', async () => {
-    const { session, ports } = predictionSession();
+  describe('GIVEN the prediction toggle on and an answer', () => {
+    it('WHEN the page is ready THEN the first runs message carries it', async () => {
+      const { session, ports } = predictionSession();
 
-    await session.receive({ type: 'ready' });
+      await session.receive({ type: 'ready' });
 
-    expect(postedRunsMessagesOf(ports).at(0)?.predictions).toStrictEqual({ 'a#build': 'cached' });
+      expect(postedRunsMessagesOf(ports).at(0)?.predictions).toStrictEqual({ 'a#build': 'cached' });
+    });
   });
 
-  it('GIVEN predictions on the page WHEN the toggle turns off THEN one more runs message follows, carrying {}', async () => {
-    const { session, ports, toggles } = predictionSession();
+  describe('GIVEN predictions on the page', () => {
+    it('WHEN the toggle turns off THEN one more runs message follows, carrying {}', async () => {
+      const { session, ports, toggles } = predictionSession();
 
-    await session.receive({ type: 'ready' });
-    await toggles.prediction.set(false);
+      await session.receive({ type: 'ready' });
+      await toggles.prediction.set(false);
 
-    const runs = postedRunsMessagesOf(ports);
-    const predictions = runs.map((message) => message.predictions);
+      const runs = postedRunsMessagesOf(ports);
+      const predictions = runs.map((message) => message.predictions);
 
-    expect(predictions).toStrictEqual([{ 'a#build': 'cached' }, {}]);
+      expect(predictions).toStrictEqual([{ 'a#build': 'cached' }, {}]);
+    });
   });
 });

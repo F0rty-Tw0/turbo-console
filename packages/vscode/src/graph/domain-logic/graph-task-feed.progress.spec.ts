@@ -215,12 +215,14 @@ describe('FEATURE: run progress in the graph feed (spec D11)', () => {
     });
   });
 
-  it('GIVEN a running persistent a#build under web#build WHEN posted THEN its word is continuous', () => {
-    const { ports, fake } = startedFeed(new Set(['a#build']));
+  describe('GIVEN a running persistent a#build under web#build', () => {
+    it('WHEN posted THEN its word is continuous', () => {
+      const { ports, fake } = startedFeed(new Set(['a#build']));
 
-    fake.changed('/ws');
-    vi.advanceTimersByTime(50);
+      fake.changed('/ws');
+      vi.advanceTimersByTime(50);
 
-    expect(postedRunsMessagesOf(ports).at(-1)?.runs).toStrictEqual({ 'a#build': 'continuous' });
+      expect(postedRunsMessagesOf(ports).at(-1)?.runs).toStrictEqual({ 'a#build': 'continuous' });
+    });
   });
 });

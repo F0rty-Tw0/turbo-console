@@ -34,68 +34,88 @@ const renamedPositions = (): Positions => {
 };
 
 describe('FEATURE: accepted positions', () => {
-  it('GIVEN the current hash and the exact key set WHEN checked THEN they are returned', () => {
-    const accepted = acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB });
+  describe('GIVEN the current hash and the exact key set', () => {
+    it('WHEN checked THEN they are returned', () => {
+      const accepted = acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB });
 
-    expect(accepted).toStrictEqual(POSITIONS_STUB);
+      expect(accepted).toStrictEqual(POSITIONS_STUB);
+    });
   });
 
-  it('GIVEN a hash that differs (a newer state) WHEN checked THEN it is null', () => {
-    expect(acceptedPositions(STATE, { hash: 'ffffffff', positions: POSITIONS_STUB })).toBeNull();
+  describe('GIVEN a hash that differs (a newer state)', () => {
+    it('WHEN checked THEN it is null', () => {
+      expect(acceptedPositions(STATE, { hash: 'ffffffff', positions: POSITIONS_STUB })).toBeNull();
+    });
   });
 
-  it.each<[string, GraphState]>([
+  describe.each<[string, GraphState]>([
     ['loading', { kind: 'loading' }],
     ['error', { kind: 'error', message: 'x' }]
-  ])('GIVEN a %s state WHEN checked THEN it is null', (_name, state) => {
-    expect(acceptedPositions(state, { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB })).toBeNull();
+  ])('GIVEN a %s state', (_name, state) => {
+    it('WHEN checked THEN it is null', () => {
+      expect(acceptedPositions(state, { hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB })).toBeNull();
+    });
   });
 
-  it('GIVEN a key outside packages WHEN checked THEN it is null', () => {
-    const positions: Positions = { ...POSITIONS_STUB, ghost: POINT };
+  describe('GIVEN a key outside packages', () => {
+    it('WHEN checked THEN it is null', () => {
+      const positions: Positions = { ...POSITIONS_STUB, ghost: POINT };
 
-    expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions })).toBeNull();
+      expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions })).toBeNull();
+    });
   });
 
-  it('GIVEN a package missing from the map WHEN checked THEN it is null', () => {
-    const positions: Positions = { a: POINT, web: POINT };
+  describe('GIVEN a package missing from the map', () => {
+    it('WHEN checked THEN it is null', () => {
+      const positions: Positions = { a: POINT, web: POINT };
 
-    expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions })).toBeNull();
+      expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions })).toBeNull();
+    });
   });
 
-  it('GIVEN one package renamed to a name outside packages (same key count) WHEN checked THEN it is null', () => {
-    expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions: renamedPositions() })).toBeNull();
+  describe('GIVEN one package renamed to a name outside packages (same key count)', () => {
+    it('WHEN checked THEN it is null', () => {
+      expect(acceptedPositions(STATE, { hash: GRAPH_HASH_STUB, positions: renamedPositions() })).toBeNull();
+    });
   });
 });
 
 describe('FEATURE: exact key cover', () => {
-  it.each<[string, Positions, boolean]>([
+  describe.each<[string, Positions, boolean]>([
     ['the exact key set', POSITIONS_STUB, true],
     ['an extra key', { ...POSITIONS_STUB, ghost: POINT }, false],
     ['a missing key', { a: POINT, web: POINT }, false],
     ['a renamed key', renamedPositions(), false]
-  ])('GIVEN %s WHEN checked against the packages THEN it is %s', (_name, positions, expected) => {
-    expect(coversExactly(positions, GRAPH_PACKAGES_STUB)).toBe(expected);
+  ])('GIVEN %s', (_name, positions, expected) => {
+    it(`WHEN checked against the packages THEN it is ${String(expected)}`, () => {
+      expect(coversExactly(positions, GRAPH_PACKAGES_STUB)).toBe(expected);
+    });
   });
 });
 
 describe('FEATURE: layout entry read from storage', () => {
-  it('GIVEN a valid entry WHEN read THEN it is returned', () => {
-    const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
+  describe('GIVEN a valid entry', () => {
+    it('WHEN read THEN it is returned', () => {
+      const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
 
-    expect(entry).toStrictEqual({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
+      expect(entry).toStrictEqual({ hash: GRAPH_HASH_STUB, positions: POSITIONS_STUB, routes: {} });
+    });
   });
 
-  it('GIVEN a point with an extra key WHEN read THEN the key is not in the result', () => {
-    const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: 2, z: 3 }), routes: {} });
+  describe('GIVEN a point with an extra key', () => {
+    it('WHEN read THEN the key is not in the result', () => {
+      const entry = layoutEntryOf({ hash: GRAPH_HASH_STUB, positions: withPoint('a', { x: 1, y: 2, z: 3 }), routes: {} });
 
-    expect(entry?.positions['a']).toStrictEqual({ x: 1, y: 2 });
+      expect(entry?.positions['a']).toStrictEqual({ x: 1, y: 2 });
+    });
   });
 
-  it('GIVEN coordinates exactly at the limit WHEN read THEN the entry is kept', () => {
-    const positions = withPoint('a', { x: 1e7, y: -1e7 });
+  describe('GIVEN coordinates exactly at the limit', () => {
+    it('WHEN read THEN the entry is kept', () => {
+      const positions = withPoint('a', { x: 1e7, y: -1e7 });
 
-    expect(layoutEntryOf({ hash: GRAPH_HASH_STUB, positions, routes: {} })).not.toBeNull();
+      expect(layoutEntryOf({ hash: GRAPH_HASH_STUB, positions, routes: {} })).not.toBeNull();
+    });
   });
 
   describe('GIVEN a __proto__ key from parsed JSON', () => {
@@ -112,7 +132,7 @@ describe('FEATURE: layout entry read from storage', () => {
     });
   });
 
-  it.each([
+  describe.each([
     ['undefined', undefined],
     ['a string', 'x'],
     ['no hash', { positions: POSITIONS_STUB, routes: {} }],
@@ -127,8 +147,10 @@ describe('FEATURE: layout entry read from storage', () => {
     ['a string value', { hash: GRAPH_HASH_STUB, positions: withPoint('a', 'nope'), routes: {} }],
     ['an array map', { hash: GRAPH_HASH_STUB, positions: [1, 2, 3], routes: {} }],
     ['a null map', { hash: GRAPH_HASH_STUB, positions: null, routes: {} }]
-  ])('GIVEN %s WHEN read THEN it is null', (_name, raw) => {
-    expect(layoutEntryOf(raw)).toBeNull();
+  ])('GIVEN %s', (_name, raw) => {
+    it('WHEN read THEN it is null', () => {
+      expect(layoutEntryOf(raw)).toBeNull();
+    });
   });
 
   describe('GIVEN the routes of an entry', () => {
@@ -162,20 +184,28 @@ describe('FEATURE: layout entry read from storage', () => {
 });
 
 describe('FEATURE: accepted routes', () => {
-  it('GIVEN routes for every edge WHEN accepted THEN all are kept', () => {
-    expect(acceptedRoutes(STATE, { routes: ROUTES_STUB })).toStrictEqual(ROUTES_STUB);
+  describe('GIVEN routes for every edge', () => {
+    it('WHEN accepted THEN all are kept', () => {
+      expect(acceptedRoutes(STATE, { routes: ROUTES_STUB })).toStrictEqual(ROUTES_STUB);
+    });
   });
 
-  it('GIVEN one route whose key is no edge id WHEN accepted THEN that route alone is dropped', () => {
-    expect(acceptedRoutes(STATE, { routes: MIXED_ROUTES })).toStrictEqual(ROUTES_STUB);
+  describe('GIVEN one route whose key is no edge id', () => {
+    it('WHEN accepted THEN that route alone is dropped', () => {
+      expect(acceptedRoutes(STATE, { routes: MIXED_ROUTES })).toStrictEqual(ROUTES_STUB);
+    });
   });
 
-  it('GIVEN only unknown keys WHEN accepted THEN the result is {}', () => {
-    expect(acceptedRoutes(STATE, { routes: GHOST_ROUTES })).toStrictEqual({});
+  describe('GIVEN only unknown keys', () => {
+    it('WHEN accepted THEN the result is {}', () => {
+      expect(acceptedRoutes(STATE, { routes: GHOST_ROUTES })).toStrictEqual({});
+    });
   });
 
-  it('GIVEN a loading state WHEN accepted THEN the result is {}', () => {
-    expect(acceptedRoutes({ kind: 'loading' }, { routes: ROUTES_STUB })).toStrictEqual({});
+  describe('GIVEN a loading state', () => {
+    it('WHEN accepted THEN the result is {}', () => {
+      expect(acceptedRoutes({ kind: 'loading' }, { routes: ROUTES_STUB })).toStrictEqual({});
+    });
   });
 });
 
@@ -186,41 +216,55 @@ describe('FEATURE: routes read from a post', () => {
   const ROUTE = { start: START, bends: [BEND], end: END };
   const BAD_ROUTE = { ...ROUTE, bends: 'nope' };
 
-  it('GIVEN an empty record WHEN read THEN it is an empty record', () => {
-    expect(parseRoutes({})).toStrictEqual({});
+  describe('GIVEN an empty record', () => {
+    it('WHEN read THEN it is an empty record', () => {
+      expect(parseRoutes({})).toStrictEqual({});
+    });
   });
 
-  it('GIVEN a good route WHEN read THEN an equal route is returned', () => {
-    const routes = parseRoutes({ e1: ROUTE });
+  describe('GIVEN a good route', () => {
+    it('WHEN read THEN an equal route is returned', () => {
+      const routes = parseRoutes({ e1: ROUTE });
 
-    expect(routes).toStrictEqual({ e1: ROUTE });
+      expect(routes).toStrictEqual({ e1: ROUTE });
+    });
   });
 
-  it('GIVEN a bad route beside a good one WHEN read THEN only the bad one is dropped', () => {
-    expect(parseRoutes({ good: ROUTE, bad: BAD_ROUTE })).toStrictEqual({ good: ROUTE });
+  describe('GIVEN a bad route beside a good one', () => {
+    it('WHEN read THEN only the bad one is dropped', () => {
+      expect(parseRoutes({ good: ROUTE, bad: BAD_ROUTE })).toStrictEqual({ good: ROUTE });
+    });
   });
 
-  it.each([
+  describe.each([
     ['a Map', new Map([['e1', ROUTE]])],
     ['a list', [ROUTE]],
     ['null', null],
     ['a string', 'e1'],
     ['undefined', undefined]
-  ])('GIVEN %s WHEN read THEN it is null', (_name, raw) => {
-    expect(parseRoutes(raw)).toBeNull();
+  ])('GIVEN %s', (_name, raw) => {
+    it('WHEN read THEN it is null', () => {
+      expect(parseRoutes(raw)).toBeNull();
+    });
   });
 });
 
 describe('FEATURE: cache key', () => {
-  it('GIVEN the flat grouping WHEN keyed THEN it is the flat prefix and the root', () => {
-    expect(cacheKeyOf('/ws', 'flat')).toBe('turboConsole.graphLayout:/ws');
+  describe('GIVEN the flat grouping', () => {
+    it('WHEN keyed THEN it is the flat prefix and the root', () => {
+      expect(cacheKeyOf('/ws', 'flat')).toBe('turboConsole.graphLayout:/ws');
+    });
   });
 
-  it('GIVEN the folders grouping WHEN keyed THEN it is the folders prefix and the root', () => {
-    expect(cacheKeyOf('/ws', 'folders')).toBe('turboConsole.graphLayout.folders:/ws');
+  describe('GIVEN the folders grouping', () => {
+    it('WHEN keyed THEN it is the folders prefix and the root', () => {
+      expect(cacheKeyOf('/ws', 'folders')).toBe('turboConsole.graphLayout.folders:/ws');
+    });
   });
 
-  it('GIVEN a root that starts like the folders prefix WHEN keyed flat THEN it differs from the folders key of the shorter root', () => {
-    expect(cacheKeyOf('.folders:/ws', 'flat')).not.toBe(cacheKeyOf('/ws', 'folders'));
+  describe('GIVEN a root that starts like the folders prefix', () => {
+    it('WHEN keyed flat THEN it differs from the folders key of the shorter root', () => {
+      expect(cacheKeyOf('.folders:/ws', 'flat')).not.toBe(cacheKeyOf('/ws', 'folders'));
+    });
   });
 });

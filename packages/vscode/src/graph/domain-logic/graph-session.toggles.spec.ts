@@ -36,22 +36,26 @@ const shownSession = (isScopeShown = true): ShownSession => {
 };
 
 describe('FEATURE: graph session toggles', () => {
-  it('GIVEN scope shown and scripts hidden WHEN the page is ready THEN the posted state carries scopeShown true and scriptsShown false', async () => {
-    const { session, ports } = shownSession();
+  describe('GIVEN scope shown and scripts hidden', () => {
+    it('WHEN the page is ready THEN the posted state carries scopeShown true and scriptsShown false', async () => {
+      const { session, ports } = shownSession();
 
-    await session.receive({ type: 'ready' });
+      await session.receive({ type: 'ready' });
 
-    expect(postedStatesOf(ports).at(-1)).toMatchObject({ kind: 'graph', scopeShown: true, scriptsShown: false });
+      expect(postedStatesOf(ports).at(-1)).toMatchObject({ kind: 'graph', scopeShown: true, scriptsShown: false });
+    });
   });
 
-  it('GIVEN the scripts toggle turns on after the first ready WHEN the page is ready again THEN the state carries scriptsShown true', async () => {
-    const { session, ports, toggles } = shownSession();
+  describe('GIVEN the scripts toggle turns on after the first ready', () => {
+    it('WHEN the page is ready again THEN the state carries scriptsShown true', async () => {
+      const { session, ports, toggles } = shownSession();
 
-    await session.receive({ type: 'ready' });
-    await toggles.scripts.set(true);
-    await session.receive({ type: 'ready' });
+      await session.receive({ type: 'ready' });
+      await toggles.scripts.set(true);
+      await session.receive({ type: 'ready' });
 
-    expect(postedStatesOf(ports).at(-1)).toMatchObject({ scriptsShown: true });
+      expect(postedStatesOf(ports).at(-1)).toMatchObject({ scriptsShown: true });
+    });
   });
 
   describe('GIVEN a ready, shown session with scope hidden', () => {

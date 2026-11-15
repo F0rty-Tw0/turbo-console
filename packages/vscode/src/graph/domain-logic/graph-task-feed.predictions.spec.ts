@@ -70,29 +70,35 @@ describe('FEATURE: cache prediction in the graph feed', () => {
     vi.useRealTimers();
   });
 
-  it('GIVEN the toggle on and an answer WHEN the state is flushed THEN the runs message carries predictions', () => {
-    const { feed, ports } = feedWith(true, HIT_A);
+  describe('GIVEN the toggle on and an answer', () => {
+    it('WHEN the state is flushed THEN the runs message carries predictions', () => {
+      const { feed, ports } = feedWith(true, HIT_A);
 
-    feed.flush(GRAPH_STATE_STUB);
+      feed.flush(GRAPH_STATE_STUB);
 
-    expect(lastRunsOf(ports)?.predictions).toStrictEqual({ 'a#build': 'cached' });
+      expect(lastRunsOf(ports)?.predictions).toStrictEqual({ 'a#build': 'cached' });
+    });
   });
 
-  it('GIVEN the toggle on and no answer WHEN the state is flushed THEN predictions is {}', () => {
-    const { feed, ports } = feedWith(true, () => null);
+  describe('GIVEN the toggle on and no answer', () => {
+    it('WHEN the state is flushed THEN predictions is {}', () => {
+      const { feed, ports } = feedWith(true, () => null);
 
-    feed.flush(GRAPH_STATE_STUB);
+      feed.flush(GRAPH_STATE_STUB);
 
-    expect(lastRunsOf(ports)?.predictions).toStrictEqual({});
+      expect(lastRunsOf(ports)?.predictions).toStrictEqual({});
+    });
   });
 
-  it('GIVEN the toggle off and an answer WHEN the state is flushed THEN the runs message carries {}, which clears every mark', () => {
-    const { feed, ports } = feedWith(false, HIT_A);
-    const expected: GraphRunsMessage = { type: 'runs', runs: {}, predictions: {}, affected: null };
+  describe('GIVEN the toggle off and an answer', () => {
+    it('WHEN the state is flushed THEN the runs message carries {}, which clears every mark', () => {
+      const { feed, ports } = feedWith(false, HIT_A);
+      const expected: GraphRunsMessage = { type: 'runs', runs: {}, predictions: {}, affected: null };
 
-    feed.flush(GRAPH_STATE_STUB);
+      feed.flush(GRAPH_STATE_STUB);
 
-    expect(lastRunsOf(ports)).toStrictEqual(expected);
+      expect(lastRunsOf(ports)).toStrictEqual(expected);
+    });
   });
 
   it('WHEN the store reports a change of this root THEN one runs message with the new predictions follows the coalesce window', () => {

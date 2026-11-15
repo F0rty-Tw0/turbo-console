@@ -164,17 +164,19 @@ describe('FEATURE: the graph wiring', () => {
       expect(graph.api.panels()).toHaveLength(1);
     });
 
-    it('GIVEN feeds with scope shown WHEN Show All Task Graphs runs and the page is ready THEN the posted state carries scopeShown true', async () => {
-      const feeds = feedsWithToggles(new RunStore(), togglesOf(true));
-      const scoped = createGraph({ context: contextOf(page), session, details, output, feeds });
+    describe('GIVEN feeds with scope shown', () => {
+      it('WHEN Show All Task Graphs runs and the page is ready THEN the posted state carries scopeShown true', async () => {
+        const feeds = feedsWithToggles(new RunStore(), togglesOf(true));
+        const scoped = createGraph({ context: contextOf(page), session, details, output, feeds });
 
-      scoped.register();
-      await callbackOf(ALL_TASKS_COMMAND)(undefined);
-      await scoped.api.receive('/ws', { type: 'ready' });
+        scoped.register();
+        await callbackOf(ALL_TASKS_COMMAND)(undefined);
+        await scoped.api.receive('/ws', { type: 'ready' });
 
-      const shown = { scopeShown: true };
+        const shown = { scopeShown: true };
 
-      expect(scoped.api.posted('/ws')[0]).toMatchObject({ type: 'state', state: shown });
+        expect(scoped.api.posted('/ws')[0]).toMatchObject({ type: 'state', state: shown });
+      });
     });
 
     it("WHEN the page sends setViewToggle scope true THEN this feeds object's scope toggle is set to true", async () => {
