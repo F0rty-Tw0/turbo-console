@@ -33,7 +33,9 @@ describe('FEATURE: taskRulesOf corners in graphStyleOf', () => {
     cy.destroy();
   });
 
-  it.each(CORNER_RADII)('GIVEN a node classed "%s" THEN its corners are %d px round', (classes, radius) => {
-    expect(cy.getElementById(classes).numericStyle('corner-radius')).toBe(radius);
+  describe.each(CORNER_RADII)('GIVEN a node classed "%s"', (classes, radius) => {
+    it(`THEN its corners are ${radius} px round`, () => {
+      expect(cy.getElementById(classes).numericStyle('corner-radius')).toBe(radius);
+    });
   });
 });
