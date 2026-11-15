@@ -2,7 +2,9 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import type { FolderLinkCounts, LinkRead } from '../common/graph-folder-links.type.ts';
+import type { ViewportPoint } from '../common/playwright.type.ts';
 import { countsOf, isReady, packageEndOf, readLinks } from '../test/utils/graph-folder-links.spec.util.ts';
+import { labelTurnDragOf } from '../test/utils/graph-label-turn.spec.util.ts';
 
 /** The folder links the page draws, read one probe snapshot at a time. */
 export class GraphFolderLinks {
@@ -35,6 +37,11 @@ export class GraphFolderLinks {
   /** The first drawn link's end that is a package; throws when no drawn link ends on one. */
   public async packageEnd(): Promise<string> {
     return packageEndOf(await this.read());
+  }
+
+  /** The drag of the package `id` that would leave its first link's label on the turned line unless the labels are placed again (`labelTurnDragOf`). */
+  public async labelTurnDrag(id: string): Promise<ViewportPoint> {
+    return labelTurnDragOf(await this.read(), id);
   }
 
   private async countOf(key: keyof FolderLinkCounts): Promise<number> {

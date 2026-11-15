@@ -159,7 +159,7 @@ export const createFoldersView = (cy: Core): FoldersView => {
 
     labelLinks();
   };
-  /** Packages moved, so every link is re-labelled: a package edge's bow can change while the collapsed centres stay put. */
+  /** Packages moved, so every link end may have moved: every link is re-labelled. */
   const recentre = (): void => {
     drawn = emptyDrawnLinks();
     cy.batch((): void => {

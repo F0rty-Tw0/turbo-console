@@ -24,11 +24,6 @@ const U0_FOLDERS = ['apps', 'packages', 'libs/data', 'libs/ui', 'tools', 'servic
 
 const APPS = 'apps';
 
-/** The drag of the package a link reaches, in page px. */
-const DRAG_DX = 40;
-
-const DRAG_DY = 30;
-
 const pairKeyOf = (first: string, second: string): string => {
   const ends = [first, second];
   const sorted = ends.toSorted();
@@ -114,7 +109,7 @@ test.describe('FEATURE: folder links keep their labels off their lines and their
     });
   });
 
-  test('GIVEN apps collapsed WHEN a package outside it that one apps link reaches is dragged THEN the labels are placed again, off their lines', async ({
+  test('GIVEN apps collapsed WHEN a package outside it that one apps link reaches is dragged to turn that link through its old label spot THEN the labels are placed again, off their lines', async ({
     graphCanvas,
     graphFolderLinks,
     graphFolders,
@@ -141,9 +136,15 @@ test.describe('FEATURE: folder links keep their labels off their lines and their
     await test.step('AND the package one apps link reaches is in view', async (): Promise<void> =>
       graphRoutes.expectNodeInView(dragged, graphCanvas.container));
 
-    await test.step('AND it is dragged by 40 px right and 30 px down', async (): Promise<void> =>
-      graphCanvas.dragNode(dragged, DRAG_DX, DRAG_DY));
+    await test.step('AND it is dragged so its link turns to run through where the link label sits now', async (): Promise<void> => {
+      const drag = await graphFolderLinks.labelTurnDrag(dragged);
+
+      await graphCanvas.dragNode(dragged, drag.x, drag.y);
+    });
 
     await test.step('THEN no label sits on its own line', async (): Promise<void> => graphFolderLinks.expectLabelsOffTheirLines());
+
+    await test.step('AND each collapsed end lies on its node border', async (): Promise<void> =>
+      graphFolderLinks.expectCollapsedEndsOnBorder());
   });
 });
