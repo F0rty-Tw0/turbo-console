@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { lineAt, linesOf, positionAt } from './text-line.util.ts';
 
-describe('FEATURE: lineAt', () => {
+describe('FEATURE: text lines', () => {
   describe('GIVEN a text with line breaks', () => {
     it.each([
       ['offset 0', 'a\nb', 0, 0],
@@ -17,25 +17,7 @@ describe('FEATURE: lineAt', () => {
 
       expect(line).toBe(expected);
     });
-  });
 
-  describe('GIVEN a text whose lines are listed by lineAt and linesOf', () => {
-    const LINES = ['a', '', 'bcd', 'e'];
-
-    it.each([['\n'], ['\r\n'], ['\r']])('WHEN the break is %j THEN every line start maps to its own index in both', (eol) => {
-      const text = LINES.join(eol);
-      const starts = LINES.map((_line, i): number => LINES.slice(0, i).reduce((sum, row): number => sum + row.length + eol.length, 0));
-      const found = starts.map((start): number => lineAt(text, start));
-      const rows = linesOf(text);
-
-      expect(found).toStrictEqual([0, 1, 2, 3]);
-      expect(rows).toStrictEqual(LINES);
-    });
-  });
-});
-
-describe('FEATURE: linesOf', () => {
-  describe('GIVEN a text with line breaks', () => {
     it.each([
       ['one line', 'abc', ['abc']],
       ['LF', 'a\nb', ['a', 'b']],
@@ -52,11 +34,7 @@ describe('FEATURE: linesOf', () => {
 
       expect(lines).toStrictEqual(expected);
     });
-  });
-});
 
-describe('FEATURE: positionAt', () => {
-  describe('GIVEN a text with line breaks', () => {
     it.each([
       ['offset 0', 'ab\ncd', 0, { line: 0, character: 0 }],
       ['inside the first line', 'ab\ncd', 1, { line: 0, character: 1 }],
@@ -70,6 +48,20 @@ describe('FEATURE: positionAt', () => {
       const position = positionAt(text, offset);
 
       expect(position).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN a text whose lines are listed by lineAt and linesOf', () => {
+    const LINES = ['a', '', 'bcd', 'e'];
+
+    it.each([['\n'], ['\r\n'], ['\r']])('WHEN the break is %j THEN every line start maps to its own index in both', (eol) => {
+      const text = LINES.join(eol);
+      const starts = LINES.map((_line, i): number => LINES.slice(0, i).reduce((sum, row): number => sum + row.length + eol.length, 0));
+      const found = starts.map((start): number => lineAt(text, start));
+      const rows = linesOf(text);
+
+      expect(found).toStrictEqual([0, 1, 2, 3]);
+      expect(rows).toStrictEqual(LINES);
     });
   });
 });

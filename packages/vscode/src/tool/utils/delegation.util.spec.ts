@@ -14,7 +14,7 @@ const REPLACED_BUILTINS = ['clean', 'purge', 'setup', 'deploy', 'rebuild', 'rb']
 
 describe('FEATURE: delegation parser', () => {
   // `start` is the candidate index: 2 for the `npx` row (its wrapper tokens are skipped by the caller), else 0.
-  it.each<[string, Record<string, string>, boolean, string | null]>([
+  describe.each<[string, Record<string, string>, boolean, string | null]>([
     ['npm run test:app', { 'test:app': 'vitest' }, true, 'test:app'],
     ['npm run-script lint', { lint: 'eslint .' }, true, 'lint'],
     ['pnpm test:app', { 'test:app': 'vitest run' }, true, 'test:app'],
@@ -74,9 +74,8 @@ describe('FEATURE: delegation parser', () => {
     ['turbo run test -- a b', { test: 'vitest' }, true, 'test'],
     ['npx --workspace=web turbo run test', { test: 'vitest' }, true, null],
     ['npx turbo run test', { test: 'vitest' }, true, 'test']
-  ])(
-    'GIVEN the tokens of %j and scripts %j (followTurbo %s) WHEN the delegation is read THEN it is %j',
-    (command, bodies, followTurbo, expected) => {
+  ])('GIVEN the tokens of %j and scripts %j (followTurbo %s)', (command, bodies, followTurbo, expected) => {
+    it(`WHEN the delegation is read THEN it is ${JSON.stringify(expected)}`, () => {
       const tokens = tokensOf(command);
       const turboIndex = tokens.indexOf('turbo');
       const start = tokens[0] === 'npx' ? turboIndex : 0;
@@ -84,8 +83,8 @@ describe('FEATURE: delegation parser', () => {
       const name = delegationOf(tokens, start, scriptsOf(bodies, followTurbo));
 
       expect(name).toBe(expected);
-    }
-  );
+    });
+  });
 
   describe.each([...BUILTINS_BY_MANAGER])('GIVEN the %s built-in commands', (manager, builtins) => {
     it('WHEN a script has the same name THEN the built-in wins and nothing is followed', () => {
@@ -97,17 +96,21 @@ describe('FEATURE: delegation parser', () => {
     });
   });
 
-  it('GIVEN the turbo built-in commands WHEN a script has the same name THEN the shorthand is not followed', () => {
-    const names = [...TURBO_BUILTINS];
+  describe('GIVEN the turbo built-in commands', () => {
+    it('WHEN a script has the same name THEN the shorthand is not followed', () => {
+      const names = [...TURBO_BUILTINS];
 
-    const followed = names.filter((name) => delegationOf(['turbo', name], 0, scriptsOf({ [name]: 'vitest' })) !== null);
+      const followed = names.filter((name) => delegationOf(['turbo', name], 0, scriptsOf({ [name]: 'vitest' })) !== null);
 
-    expect(followed).toStrictEqual([]);
+      expect(followed).toStrictEqual([]);
+    });
   });
 
-  it('GIVEN pnpm and a script named like a command pnpm 11+ no longer owns WHEN the delegation is read THEN the script is followed', () => {
-    const names = REPLACED_BUILTINS.map((name) => delegationOf(['pnpm', name], 0, scriptsOf({ [name]: 'vitest' })));
+  describe('GIVEN pnpm and a script named like a command pnpm 11+ no longer owns', () => {
+    it('WHEN the delegation is read THEN the script is followed', () => {
+      const names = REPLACED_BUILTINS.map((name) => delegationOf(['pnpm', name], 0, scriptsOf({ [name]: 'vitest' })));
 
-    expect(names).toStrictEqual(REPLACED_BUILTINS);
+      expect(names).toStrictEqual(REPLACED_BUILTINS);
+    });
   });
 });

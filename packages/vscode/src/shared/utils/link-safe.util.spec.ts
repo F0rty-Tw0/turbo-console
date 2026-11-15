@@ -22,10 +22,9 @@ describe('FEATURE: toast text', () => {
     );
   });
 
-  it.each(['plain', '[label] alone', '(parens)'])(
-    'GIVEN text with no label and target pair (%j) WHEN it is made toast text THEN it is unchanged',
-    (text) => {
+  describe.each(['plain', '[label] alone', '(parens)'])('GIVEN text with no label and target pair (%j)', (text) => {
+    it('WHEN it is made toast text THEN it is unchanged', () => {
       expect(toastText(text, MAX)).toBe(text);
-    }
-  );
+    });
+  });
 });

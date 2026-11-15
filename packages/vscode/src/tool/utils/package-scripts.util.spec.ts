@@ -29,39 +29,43 @@ const matchOf = (via: string[]): ToolMatch => {
 };
 
 describe('FEATURE: package scripts', () => {
-  it('GIVEN tasks with and without a command WHEN the scripts are built THEN only commands are kept by name', () => {
-    const pkg = packageOf('web', [taskOf('lint', 'eslint .'), taskOf('plain', null), taskOf('test', 'vitest')]);
+  describe('GIVEN tasks with and without a command', () => {
+    it('WHEN the scripts are built THEN only commands are kept by name', () => {
+      const pkg = packageOf('web', [taskOf('lint', 'eslint .'), taskOf('plain', null), taskOf('test', 'vitest')]);
 
-    const scripts = packageScriptsOf(pkg, false);
+      const scripts = packageScriptsOf(pkg, false);
 
-    expect(Array.from(scripts.bodies)).toStrictEqual([
-      ['lint', 'eslint .'],
-      ['test', 'vitest']
-    ]);
+      expect(Array.from(scripts.bodies)).toStrictEqual([
+        ['lint', 'eslint .'],
+        ['test', 'vitest']
+      ]);
+    });
   });
 
-  it.each<[string, boolean, boolean]>([
+  describe.each<[string, boolean, boolean]>([
     ['//', false, false],
     ['//', true, true],
     ['web', false, true],
     ['web', true, true]
-  ])('GIVEN package %j and singlePackage %s WHEN the scripts are built THEN followTurbo is %s', (name, singlePackage, expected) => {
-    const pkg = packageOf(name, []);
+  ])('GIVEN package %j and singlePackage %s', (name, singlePackage, expected) => {
+    it(`WHEN the scripts are built THEN followTurbo is ${expected}`, () => {
+      const pkg = packageOf(name, []);
 
-    const scripts = packageScriptsOf(pkg, singlePackage);
+      const scripts = packageScriptsOf(pkg, singlePackage);
 
-    expect(scripts.followTurbo).toBe(expected);
+      expect(scripts.followTurbo).toBe(expected);
+    });
   });
-});
 
-describe('FEATURE: tool title', () => {
-  it.each<[string[], string]>([
+  describe.each<[string[], string]>([
     [[], 'Vitest'],
     [['test:app'], 'Vitest (via test:app)'],
     [['a', 'b'], 'Vitest (via a → b)']
-  ])('GIVEN the via %j WHEN the title is built THEN it is %s', (via, expected) => {
-    const title = toolTitleOf(matchOf(via));
+  ])('GIVEN a Vitest match via %j', (via, expected) => {
+    it(`WHEN the tool title is built THEN it is ${expected}`, () => {
+      const title = toolTitleOf(matchOf(via));
 
-    expect(title).toBe(expected);
+      expect(title).toBe(expected);
+    });
   });
 });

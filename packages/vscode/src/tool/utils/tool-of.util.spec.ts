@@ -131,7 +131,7 @@ const runAllIn = (bodies: Record<string, string>): (ToolMatch | null)[] => {
 };
 
 describe('FEATURE: tool detection', () => {
-  it.each<[string, string]>([
+  describe.each<[string, string]>([
     ['vitest run', 'vitest'],
     ['vitest', 'vitest'],
     ['VITEST', 'vitest'],
@@ -159,13 +159,15 @@ describe('FEATURE: tool detection', () => {
     ['-- vitest', 'vitest'],
     ['vitest.exe', 'vitest'],
     ['node_modules/.bin/vitest.js', 'vitest']
-  ])('GIVEN the command %j WHEN its tool is read THEN it is %s', (command, id) => {
-    const found = idOf(command);
+  ])('GIVEN the command %j', (command, id) => {
+    it(`WHEN its tool is read THEN it is ${id}`, () => {
+      const found = idOf(command);
 
-    expect(found).toBe(id);
+      expect(found).toBe(id);
+    });
   });
 
-  it.each<[string | null]>([
+  describe.each<[string | null]>([
     ['pnpm run build'],
     ['yarn build'],
     ['dotenv -e .env -- vitest'],
@@ -177,13 +179,15 @@ describe('FEATURE: tool detection', () => {
     [null],
     [''],
     ['   ']
-  ])('GIVEN the command %j WHEN its tool is read THEN there is none', (command) => {
-    const found = resolveTool(command, NO_SCRIPTS_STUB);
+  ])('GIVEN the command %j', (command) => {
+    it('WHEN its tool is read THEN there is none', () => {
+      const found = resolveTool(command, NO_SCRIPTS_STUB);
 
-    expect(found).toBeNull();
+      expect(found).toBeNull();
+    });
   });
 
-  it.each<[string, Record<string, string>, boolean, Outcome]>([
+  describe.each<[string, Record<string, string>, boolean, Outcome]>([
     ['npm run test:app', { 'test:app': 'vitest' }, true, ['vitest', ['test:app']]],
     ['pnpm deploy', { deploy: 'docker compose up' }, true, ['docker', ['deploy']]],
     ['turbo run test', { test: 'vitest' }, false, [null, []]],
@@ -205,10 +209,12 @@ describe('FEATURE: tool detection', () => {
     ['npm run a', { a: 'npm run a; vitest' }, true, ['vitest', ['a']]],
     ['npm run a', { a: 'npm run b', b: 'npm run a || vitest' }, true, ['vitest', ['a', 'b']]],
     ['npx --workspace=web turbo run test', { test: 'vitest' }, true, [null, []]]
-  ])('GIVEN %j with scripts %j (followTurbo %s) WHEN its tool is resolved THEN it is %j', (command, bodies, followTurbo, expected) => {
-    const outcome = outcomeOf(command, scriptsOf(bodies, followTurbo));
+  ])('GIVEN %j with scripts %j (followTurbo %s)', (command, bodies, followTurbo, expected) => {
+    it(`WHEN its tool is resolved THEN it is ${JSON.stringify(expected)}`, () => {
+      const outcome = outcomeOf(command, scriptsOf(bodies, followTurbo));
 
-    expect(outcome).toStrictEqual(expected);
+      expect(outcome).toStrictEqual(expected);
+    });
   });
 
   describe('GIVEN 14 scripts that each run all the others and none reach a tool', () => {
@@ -279,22 +285,24 @@ describe('FEATURE: tool detection', () => {
       expect(rows.some((match) => match.via.length === MAX_VIA)).toBe(true);
     });
   });
-});
 
-describe('FEATURE: tool icon id', () => {
-  it('GIVEN a tool with a glyph WHEN its icon id is read THEN it is the prefix plus the id', () => {
-    const rows = TOOLS.filter((tool) => tool.id === 'vitest');
+  describe('GIVEN a tool with a glyph', () => {
+    it('WHEN its icon id is read THEN it is the prefix plus the id', () => {
+      const rows = TOOLS.filter((tool) => tool.id === 'vitest');
 
-    const iconIds = rows.map((tool) => toolIconIdOf(tool));
+      const iconIds = rows.map((tool) => toolIconIdOf(tool));
 
-    expect(iconIds).toStrictEqual(['turbo-console-vitest']);
+      expect(iconIds).toStrictEqual(['turbo-console-vitest']);
+    });
   });
 
-  it('GIVEN a tool without a glyph WHEN its icon id is read THEN it is null', () => {
-    const rows = TOOLS.filter((tool) => tool.id === 'playwright');
+  describe('GIVEN a tool without a glyph', () => {
+    it('WHEN its icon id is read THEN it is null', () => {
+      const rows = TOOLS.filter((tool) => tool.id === 'playwright');
 
-    const iconIds = rows.map((tool) => toolIconIdOf(tool));
+      const iconIds = rows.map((tool) => toolIconIdOf(tool));
 
-    expect(iconIds).toStrictEqual([null]);
+      expect(iconIds).toStrictEqual([null]);
+    });
   });
 });

@@ -115,11 +115,11 @@ const failureOf = async (row: ToolSpec): Promise<[unknown, string[]]> => {
   return [failure, files];
 };
 
-afterEach(async () => {
-  await Promise.all(scratchDirs.splice(0).map(async (dir) => rm(dir, { recursive: true, force: true })));
-});
+describe('FEATURE: tool icons', () => {
+  afterEach(async () => {
+    await Promise.all(scratchDirs.splice(0).map(async (dir) => rm(dir, { recursive: true, force: true })));
+  });
 
-describe('FEATURE: buildToolIcons', () => {
   describe('GIVEN the real tool table', () => {
     it('WHEN it builds THEN the directory holds exactly the five files', async () => {
       const dir = await builtDir();
@@ -272,9 +272,7 @@ describe('FEATURE: buildToolIcons', () => {
       expect(files).toStrictEqual(['sentinel']);
     });
   });
-});
 
-describe('FEATURE: paddedSvg', () => {
   describe('GIVEN the real vitest svg', () => {
     it('WHEN it is padded THEN only the viewBox widens by the padding on every side', () => {
       const size = 24 + 2 * GLYPH_PADDING;
