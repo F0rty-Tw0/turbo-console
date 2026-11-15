@@ -135,11 +135,13 @@ const ROWS: OffsetRow[] = [
 
 describe('FEATURE: labelOffsetOf', () => {
   describe('GIVEN a label 40 x 16 and a gap of 4', () => {
-    it.each(ROWS)('GIVEN $name WHEN the label offset is computed THEN it is the hand-computed offset', (row) => {
-      const offset = labelOffsetOf(row.points.map(pointOf), pointOf(row.anchor), SIZE);
+    describe.each(ROWS)('GIVEN $name', (row) => {
+      it('WHEN the label offset is computed THEN it is the hand-computed offset', () => {
+        const offset = labelOffsetOf(row.points.map(pointOf), pointOf(row.anchor), SIZE);
 
-      expect(offset.x).toBeCloseTo(row.x, 6);
-      expect(offset.y).toBeCloseTo(row.y, 6);
+        expect(offset.x).toBeCloseTo(row.x, 6);
+        expect(offset.y).toBeCloseTo(row.y, 6);
+      });
     });
   });
 });
