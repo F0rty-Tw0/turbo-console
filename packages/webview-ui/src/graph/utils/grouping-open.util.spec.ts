@@ -49,13 +49,13 @@ const CASES: OpenCase[] = [
 describe('FEATURE: openingStateOf', () => {
   describe('GIVEN the folders of a graph', () => {
     it.each(CASES)('WHEN it has $title THEN the opening state is as expected', ({ saved, count, isGroupingSaved, expected }) => {
-      const state = openingStateOf(saved, 'h', FOLDERS, count, isGroupingSaved);
+      const state = openingStateOf(saved, { hash: 'h', folders: FOLDERS, packageCount: count, isGroupingSaved });
 
       expect(state).toStrictEqual(expected);
     });
 
     it('WHEN a flat saved state opens a graph of 301 packages THEN it is the same object', () => {
-      const state = openingStateOf(SAVED_FLAT, 'h', FOLDERS, 301, true);
+      const state = openingStateOf(SAVED_FLAT, { hash: 'h', folders: FOLDERS, packageCount: 301, isGroupingSaved: true });
 
       expect(state).toBe(SAVED_FLAT);
     });
@@ -63,7 +63,7 @@ describe('FEATURE: openingStateOf', () => {
     it('WHEN nothing is saved THEN every other field equals a fresh state of the hash', () => {
       const fresh = freshViewStateOf('other');
 
-      const state = openingStateOf(null, 'other', FOLDERS, 301, false);
+      const state = openingStateOf(null, { hash: 'other', folders: FOLDERS, packageCount: 301, isGroupingSaved: false });
 
       expect(state).toStrictEqual({ ...fresh, grouped: true, collapsed: FOLDERS });
     });
