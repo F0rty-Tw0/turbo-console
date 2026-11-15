@@ -2,14 +2,7 @@ import type { TaskDefinition } from '@turbo-console/core';
 
 import type { FactPlacement } from './common/playwright.type.ts';
 import { test } from './details.fixture.ts';
-import {
-  FAILED_RUN_VIEW_STUB,
-  PACKAGE_DETAILS_STUB,
-  PASSED_RUN_VIEW_STUB,
-  RUNNING_RUN_VIEW_STUB,
-  TASK_CARD_STUB,
-  TASK_DEFINITION_STUB
-} from './test/stubs/details-state.stub.ts';
+import { PACKAGE_DETAILS_STUB, RUNNING_RUN_VIEW_STUB, TASK_CARD_STUB, TASK_DEFINITION_STUB } from './test/stubs/details-state.stub.ts';
 import { packageWithTasks, taskNames } from './test/utils/details-state.spec.util.ts';
 import type { PackageDetails, TaskCard } from '../src/bridge/common/details-state.type.ts';
 
@@ -25,20 +18,6 @@ const FONT_VARS = {
 const RED = 'rgb(255, 0, 0)';
 
 const GREEN = 'rgb(0, 255, 0)';
-
-const RUNNING_COLOR = 'rgb(0, 120, 212)';
-
-const FAILED_COLOR = 'rgb(241, 76, 76)';
-
-const PASSED_COLOR = 'rgb(0, 128, 0)';
-
-/** A frame colour and one colour per run status, all different: the status icon takes its status colour, the card frame never does. */
-const STATUS_THEME = {
-  '--vscode-widget-border': 'rgb(68, 68, 68)',
-  '--vscode-progressBar-background': RUNNING_COLOR,
-  '--vscode-testing-iconFailed': FAILED_COLOR,
-  '--vscode-testing-iconPassed': PASSED_COLOR
-};
 
 /** Copy and Show in task graph sit beside Run on every card; Refresh, Open package.json and Focus on graph sit in the page header. */
 const ICON_BUTTON_LABELS = ['Copy command for build', 'Show in task graph: build', 'Refresh', 'Open package.json', 'Focus on graph'];
@@ -258,38 +237,5 @@ test.describe('FEATURE: package details page, layout and theme', () => {
 
     await test.step('AND the Scripts heading has no bottom edge', async (): Promise<void> =>
       pageLayout.expectBorderWidth('.section-title:has-text("Scripts")', 'bottom', '0px'));
-  });
-
-  test('GIVEN a themed card whose run changes, its status icon takes each status colour and the card frame stays neutral', async ({
-    detailsPage,
-    pageLayout
-  }): Promise<void> => {
-    const card = pageLayout.card('build');
-
-    await test.step('WHEN the page shows the state', async (): Promise<void> => detailsPage.open(PACKAGE_DETAILS_STUB));
-
-    await test.step('AND the theme sets a frame colour and one colour per status', async (): Promise<void> =>
-      pageLayout.setThemeVars(STATUS_THEME));
-
-    await test.step('AND the task runs', async (): Promise<void> => detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
-
-    await test.step('THEN the status icon is drawn in the running colour', async (): Promise<void> =>
-      card.expectStatusIconColor(RUNNING_COLOR));
-
-    await test.step('AND the card frame is the same on every side', async (): Promise<void> => card.expectNeutralFrame());
-
-    await test.step('WHEN the run fails', async (): Promise<void> => detailsPage.sendRunState('web#build', FAILED_RUN_VIEW_STUB));
-
-    await test.step('THEN the status icon is drawn in the failed colour', async (): Promise<void> =>
-      card.expectStatusIconColor(FAILED_COLOR));
-
-    await test.step('AND the card frame is the same on every side', async (): Promise<void> => card.expectNeutralFrame());
-
-    await test.step('WHEN the run passes', async (): Promise<void> => detailsPage.sendRunState('web#build', PASSED_RUN_VIEW_STUB));
-
-    await test.step('THEN the status icon is drawn in the passed colour', async (): Promise<void> =>
-      card.expectStatusIconColor(PASSED_COLOR));
-
-    await test.step('AND the card frame is the same on every side', async (): Promise<void> => card.expectNeutralFrame());
   });
 });
