@@ -35,27 +35,31 @@ describe('FEATURE: taskRulesOf box frames in graphStyleOf', () => {
     cy.destroy();
   });
 
-  it('GIVEN a task-box THEN its frame is dashed', () => {
-    const box = cy.getElementById('pkg:web');
+  describe('GIVEN a task-box', () => {
+    it('THEN its frame is dashed', () => {
+      const box = cy.getElementById('pkg:web');
 
-    const borderStyle: unknown = box.style('border-style');
+      const borderStyle: unknown = box.style('border-style');
 
-    expect(borderStyle).toBe('dashed');
+      expect(borderStyle).toBe('dashed');
+    });
+
+    it('THEN its dashes are 4 px on, 4 px off', () => {
+      const box = cy.getElementById('pkg:web');
+
+      const dashPattern: unknown = box.numericStyle('border-dash-pattern');
+
+      expect(dashPattern).toStrictEqual([4, 4]);
+    });
   });
 
-  it('GIVEN a task-box THEN its dashes are 4 px on, 4 px off', () => {
-    const box = cy.getElementById('pkg:web');
+  describe('GIVEN an atom-box', () => {
+    it('THEN its frame stays solid', () => {
+      const box = cy.getElementById('atom:web#e2e-ci');
 
-    const dashPattern: unknown = box.numericStyle('border-dash-pattern');
+      const borderStyle: unknown = box.style('border-style');
 
-    expect(dashPattern).toStrictEqual([4, 4]);
-  });
-
-  it('GIVEN an atom-box THEN its frame stays solid', () => {
-    const box = cy.getElementById('atom:web#e2e-ci');
-
-    const borderStyle: unknown = box.style('border-style');
-
-    expect(borderStyle).toBe('solid');
+      expect(borderStyle).toBe('solid');
+    });
   });
 });
