@@ -95,148 +95,150 @@ const describeTask = (configs: TurboConfigFile[], packagePath: string, id: strin
   return descriptionOf(byDir, packagePath, id, taskName);
 };
 
-describe('FEATURE: task descriptions (rule 5)', () => {
-  describe('GIVEN a package config and root keys that all describe build', () => {
-    it('WHEN the package task is described THEN the package config wins', () => {
-      const description = describeTask([HUB, ROOT], 'packages/hub', '@fx/hub#build', 'build');
+describe('FEATURE: task description util', () => {
+  describe('GIVEN turbo configs for task descriptions (rule 5)', () => {
+    describe('GIVEN a package config and root keys that all describe build', () => {
+      it('WHEN the package task is described THEN the package config wins', () => {
+        const description = describeTask([HUB, ROOT], 'packages/hub', '@fx/hub#build', 'build');
 
-      expect(description).toBe('from the package');
+        expect(description).toBe('from the package');
+      });
+
+      it('WHEN another package runs build THEN it gets the root bare key, not the hub package config', () => {
+        const description = describeTask([HUB, ROOT], 'packages/other', '@fx/other#build', 'build');
+
+        expect(description).toBe('from root task');
+      });
     });
 
-    it('WHEN another package runs build THEN it gets the root bare key, not the hub package config', () => {
-      const description = describeTask([HUB, ROOT], 'packages/other', '@fx/other#build', 'build');
+    describe('GIVEN a package config and a package path turbo reports unnormalized', () => {
+      it('WHEN the package task is described THEN the package config is still found', () => {
+        const description = describeTask([HUB, ROOT], './packages/hub/', '@fx/hub#build', 'build');
 
-      expect(description).toBe('from root task');
-    });
-  });
-
-  describe('GIVEN a package config and a package path turbo reports unnormalized', () => {
-    it('WHEN the package task is described THEN the package config is still found', () => {
-      const description = describeTask([HUB, ROOT], './packages/hub/', '@fx/hub#build', 'build');
-
-      expect(description).toBe('from the package');
-    });
-  });
-
-  describe('GIVEN root keys pkg#task and task only', () => {
-    it('WHEN the task is described THEN root pkg#task wins over root task', () => {
-      const description = describeTask([ROOT], 'packages/hub', '@fx/hub#build', 'build');
-
-      expect(description).toBe('from root pkg#task');
-    });
-  });
-
-  describe('GIVEN only a root bare task key', () => {
-    it('WHEN the task is described THEN the bare key is used', () => {
-      const description = describeTask([BARE_ROOT], 'packages/hub', '@fx/hub#build', 'build');
-
-      expect(description).toBe('from root task');
-    });
-  });
-
-  describe('GIVEN no config describes the task', () => {
-    it('WHEN the task is described THEN the description is null', () => {
-      const description = describeTask([HUB, ROOT], 'packages/hub', '@fx/hub#test', 'test');
-
-      expect(description).toBeNull();
-    });
-  });
-
-  describe('GIVEN a package config that failed to parse', () => {
-    it('WHEN its task is described THEN it contributes nothing and the root key is used', () => {
-      const description = describeTask([HUB_ERROR, BARE_ROOT], 'packages/hub', '@fx/hub#build', 'build');
-
-      expect(description).toBe('from root task');
-    });
-  });
-
-  describe('GIVEN @fx/e2e-1 whose config is reached only through a non-root extends', () => {
-    it('WHEN its task is described THEN the extended config contributes nothing', () => {
-      const description = describeTask([ATOMS], 'apps/e2e-1', '@fx/e2e-1#e2e-ci', 'e2e-ci');
-
-      expect(description).toBeNull();
-    });
-  });
-
-  describe('GIVEN empty configs and tasks named after Object.prototype members', () => {
-    it('WHEN constructor is described through the root config THEN the description is null', () => {
-      const description = describeTask([EMPTY_ROOT], 'packages/hub', '@fx/hub#constructor', 'constructor');
-
-      expect(description).toBeNull();
+        expect(description).toBe('from the package');
+      });
     });
 
-    it('WHEN toString is described through the package config THEN the description is null', () => {
-      const description = describeTask([EMPTY_HUB], 'packages/hub', '@fx/hub#toString', 'toString');
+    describe('GIVEN root keys pkg#task and task only', () => {
+      it('WHEN the task is described THEN root pkg#task wins over root task', () => {
+        const description = describeTask([ROOT], 'packages/hub', '@fx/hub#build', 'build');
 
-      expect(description).toBeNull();
+        expect(description).toBe('from root pkg#task');
+      });
     });
-  });
 
-  describe('GIVEN a package whose name holds a #', () => {
-    it('WHEN its task is described THEN the package config is looked up by the name after `<package>#`', () => {
-      const description = describeTask([HUB, ROOT], 'packages/hub', 'p#hub#build', 'build');
+    describe('GIVEN only a root bare task key', () => {
+      it('WHEN the task is described THEN the bare key is used', () => {
+        const description = describeTask([BARE_ROOT], 'packages/hub', '@fx/hub#build', 'build');
 
-      expect(description).toBe('from the package');
+        expect(description).toBe('from root task');
+      });
     });
-  });
-});
 
-describe('FEATURE: root task descriptions', () => {
-  describe('GIVEN a root config with both fmt and //#fmt', () => {
-    const configs = okConfigsByDir([MONOREPO_ROOT]);
+    describe('GIVEN no config describes the task', () => {
+      it('WHEN the task is described THEN the description is null', () => {
+        const description = describeTask([HUB, ROOT], 'packages/hub', '@fx/hub#test', 'test');
 
-    it('WHEN //#fmt is described THEN the qualified key wins over the bare one', () => {
-      const description = rootDescriptionOf(configs, '//#fmt');
+        expect(description).toBeNull();
+      });
+    });
 
-      expect(description).toBe('Root');
+    describe('GIVEN a package config that failed to parse', () => {
+      it('WHEN its task is described THEN it contributes nothing and the root key is used', () => {
+        const description = describeTask([HUB_ERROR, BARE_ROOT], 'packages/hub', '@fx/hub#build', 'build');
+
+        expect(description).toBe('from root task');
+      });
+    });
+
+    describe('GIVEN @fx/e2e-1 whose config is reached only through a non-root extends', () => {
+      it('WHEN its task is described THEN the extended config contributes nothing', () => {
+        const description = describeTask([ATOMS], 'apps/e2e-1', '@fx/e2e-1#e2e-ci', 'e2e-ci');
+
+        expect(description).toBeNull();
+      });
+    });
+
+    describe('GIVEN empty configs and tasks named after Object.prototype members', () => {
+      it('WHEN constructor is described through the root config THEN the description is null', () => {
+        const description = describeTask([EMPTY_ROOT], 'packages/hub', '@fx/hub#constructor', 'constructor');
+
+        expect(description).toBeNull();
+      });
+
+      it('WHEN toString is described through the package config THEN the description is null', () => {
+        const description = describeTask([EMPTY_HUB], 'packages/hub', '@fx/hub#toString', 'toString');
+
+        expect(description).toBeNull();
+      });
+    });
+
+    describe('GIVEN a package whose name holds a #', () => {
+      it('WHEN its task is described THEN the package config is looked up by the name after `<package>#`', () => {
+        const description = describeTask([HUB, ROOT], 'packages/hub', 'p#hub#build', 'build');
+
+        expect(description).toBe('from the package');
+      });
     });
   });
 
-  describe('GIVEN a root config with only the bare build key', () => {
-    it('WHEN //#build is described THEN the bare key does not apply to the root and the description is null', () => {
-      const description = rootDescriptionOf(okConfigsByDir([BARE_ROOT]), '//#build');
+  describe('GIVEN configs by directory for root task descriptions', () => {
+    describe('GIVEN a root config with both fmt and //#fmt', () => {
+      const configs = okConfigsByDir([MONOREPO_ROOT]);
 
-      expect(description).toBeNull();
+      it('WHEN //#fmt is described THEN the qualified key wins over the bare one', () => {
+        const description = rootDescriptionOf(configs, '//#fmt');
+
+        expect(description).toBe('Root');
+      });
+    });
+
+    describe('GIVEN a root config with only the bare build key', () => {
+      it('WHEN //#build is described THEN the bare key does not apply to the root and the description is null', () => {
+        const description = rootDescriptionOf(okConfigsByDir([BARE_ROOT]), '//#build');
+
+        expect(description).toBeNull();
+      });
+    });
+
+    describe('GIVEN no root config', () => {
+      it('WHEN //#fmt is described THEN the description is null', () => {
+        const description = rootDescriptionOf(new Map(), '//#fmt');
+
+        expect(description).toBeNull();
+      });
     });
   });
 
-  describe('GIVEN no root config', () => {
-    it('WHEN //#fmt is described THEN the description is null', () => {
-      const description = rootDescriptionOf(new Map(), '//#fmt');
+  describe('GIVEN a root config lookup for the affected mode', () => {
+    describe('GIVEN a parsed root config', () => {
+      it('WHEN affectedUsingTaskInputs is true THEN the mode is task', () => {
+        const mode = affectedModeOf(TASK_MODE_ROOT);
 
-      expect(description).toBeNull();
-    });
-  });
-});
+        expect(mode).toBe('task');
+      });
 
-describe('FEATURE: affected mode', () => {
-  describe('GIVEN a parsed root config', () => {
-    it('WHEN affectedUsingTaskInputs is true THEN the mode is task', () => {
-      const mode = affectedModeOf(TASK_MODE_ROOT);
+      it('WHEN affectedUsingTaskInputs is false THEN the mode is package', () => {
+        const mode = affectedModeOf(ROOT);
 
-      expect(mode).toBe('task');
+        expect(mode).toBe('package');
+      });
     });
 
-    it('WHEN affectedUsingTaskInputs is false THEN the mode is package', () => {
-      const mode = affectedModeOf(ROOT);
+    describe('GIVEN a root config that failed to parse', () => {
+      it('WHEN the mode is read THEN it is package', () => {
+        const mode = affectedModeOf(ROOT_ERROR);
 
-      expect(mode).toBe('package');
+        expect(mode).toBe('package');
+      });
     });
-  });
 
-  describe('GIVEN a root config that failed to parse', () => {
-    it('WHEN the mode is read THEN it is package', () => {
-      const mode = affectedModeOf(ROOT_ERROR);
+    describe('GIVEN no root config', () => {
+      it('WHEN the mode is read THEN it is package', () => {
+        const mode = affectedModeOf(null);
 
-      expect(mode).toBe('package');
-    });
-  });
-
-  describe('GIVEN no root config', () => {
-    it('WHEN the mode is read THEN it is package', () => {
-      const mode = affectedModeOf(null);
-
-      expect(mode).toBe('package');
+        expect(mode).toBe('package');
+      });
     });
   });
 });
