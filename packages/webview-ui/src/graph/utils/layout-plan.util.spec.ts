@@ -45,51 +45,50 @@ const PROGRESS_CASES: ProgressCase[] = [
   ['flat', 'Laying out the graph…']
 ];
 
-describe('FEATURE: arrivalOf', () => {
-  it.each(ARRIVAL_CASES)(
-    'GIVEN a $resultHash result, the drawn hash $drawnHash, a $runMode run and the $mode mode WHEN it arrives THEN it is $expected',
+describe('FEATURE: layout plan', () => {
+  describe.each(ARRIVAL_CASES)(
+    'GIVEN a $resultHash result, the drawn hash $drawnHash, a $runMode run and the $mode mode',
     ({ resultHash, drawnHash, runMode, mode, expected }) => {
-      const arrival = arrivalOf(resultHash, drawnHash, runMode, mode);
+      it(`WHEN it arrives THEN the arrival is ${expected}`, () => {
+        const arrival = arrivalOf(resultHash, drawnHash, runMode, mode);
 
-      expect(arrival).toBe(expected);
+        expect(arrival).toBe(expected);
+      });
     }
   );
-});
 
-describe('FEATURE: switchPlanOf', () => {
-  it.each(SWITCH_CASES)(
-    'GIVEN a switch to %j with %j on screen and a snapshot %j WHEN planned THEN it is %j',
-    (next, drawnMode, hasSnapshot, expected) => {
+  describe.each(SWITCH_CASES)('GIVEN a switch to %j with %j on screen and a snapshot %j', (next, drawnMode, hasSnapshot, expected) => {
+    it(`WHEN planned THEN the switch plan is ${JSON.stringify(expected)}`, () => {
       const plan = switchPlanOf(next, drawnMode, hasSnapshot);
 
       expect(plan).toBe(expected);
-    }
-  );
-});
-
-describe('FEATURE: engineNoticeOf', () => {
-  it.each(ENGINE_CASES)('GIVEN the engine %j on screen WHEN its notice is chosen THEN it is %j', (engine, expected) => {
-    const notice = engineNoticeOf(engine);
-
-    expect(notice).toStrictEqual(expected);
+    });
   });
-});
 
-describe('FEATURE: progressNoticeOf', () => {
-  it.each(PROGRESS_CASES)('GIVEN a switch to %j WHEN its progress is shown THEN the text is %j', (mode, text) => {
-    const notice = progressNoticeOf(mode);
+  describe.each(ENGINE_CASES)('GIVEN the engine %j on screen', (engine, expected) => {
+    it(`WHEN its notice is chosen THEN the engine notice is ${JSON.stringify(expected)}`, () => {
+      const notice = engineNoticeOf(engine);
 
-    expect(notice).toStrictEqual({ kind: 'progress', text });
+      expect(notice).toStrictEqual(expected);
+    });
   });
-});
 
-describe('FEATURE: groupingOf', () => {
-  it.each<[boolean, LayoutGrouping]>([
+  describe.each(PROGRESS_CASES)('GIVEN a switch to %j', (mode, text) => {
+    it(`WHEN its progress is shown THEN the text is ${JSON.stringify(text)}`, () => {
+      const notice = progressNoticeOf(mode);
+
+      expect(notice).toStrictEqual({ kind: 'progress', text });
+    });
+  });
+
+  describe.each<[boolean, LayoutGrouping]>([
     [true, 'folders'],
     [false, 'flat']
-  ])('GIVEN the checkbox is %j WHEN its mode is asked THEN it is %j', (isGrouped, mode) => {
-    const grouping = groupingOf(isGrouped);
+  ])('GIVEN the checkbox is %j', (isGrouped, mode) => {
+    it(`WHEN its mode is asked THEN the grouping is ${JSON.stringify(mode)}`, () => {
+      const grouping = groupingOf(isGrouped);
 
-    expect(grouping).toBe(mode);
+      expect(grouping).toBe(mode);
+    });
   });
 });
