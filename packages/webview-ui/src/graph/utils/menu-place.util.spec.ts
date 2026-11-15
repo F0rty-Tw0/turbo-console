@@ -22,20 +22,53 @@ const pointOf = (x: number, y: number): Point => {
   return point;
 };
 
-describe('FEATURE: uncoveredAreaOf', () => {
+const BOX = rectOf(10, 20, 300, 200);
+
+const NODE = rectOf(400, 20, 580, 76);
+
+const SELECTED = rectOf(40, 60, 120, 90);
+
+const BOX_FOLDER: FolderRect = { rect: BOX, width: 290 };
+
+const NODE_FOLDER: FolderRect = { rect: NODE, width: 180 };
+
+const RECTS: WidgetRects = {
+  boxes: new Map([
+    ['apps', BOX_FOLDER],
+    ['__proto__', BOX_FOLDER]
+  ]),
+  collapsed: new Map([
+    ['packages', NODE_FOLDER],
+    ['', NODE_FOLDER]
+  ]),
+  selected: SELECTED,
+  zoom: 1
+};
+
+const folderTarget = (folder: string): MenuTarget => {
+  const target: MenuTarget = { kind: 'folder', folder };
+
+  return target;
+};
+
+const packageTarget = (name: string): MenuTarget => {
+  const target: MenuTarget = { kind: 'package', name };
+
+  return target;
+};
+
+describe('FEATURE: menu place', () => {
   describe('GIVEN a layer 800 x 600', () => {
     it.each([
       { title: 'a details overlay at 520', bounds: OVERLAID, expected: AREA },
       { title: 'no overlay', bounds: NO_OVERLAY, expected: rectOf(0, 0, 800, 600) }
-    ])('WHEN it has $title THEN the area is $expected', ({ bounds, expected }) => {
+    ])('WHEN it has $title THEN the uncovered area is $expected', ({ bounds, expected }) => {
       const area = uncoveredAreaOf(bounds);
 
       expect(area).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: menuPlaceOf', () => {
   describe('GIVEN the uncovered area 0,0 to 520,600', () => {
     it.each([
       { title: 'room below and right', anchor: rectOf(100, 50, 124, 74), menu: sizeOf(160, 120), expected: pointOf(100, 74) },
@@ -80,44 +113,7 @@ describe('FEATURE: menuPlaceOf', () => {
       expect(place).toStrictEqual(expected);
     });
   });
-});
 
-const BOX = rectOf(10, 20, 300, 200);
-
-const NODE = rectOf(400, 20, 580, 76);
-
-const SELECTED = rectOf(40, 60, 120, 90);
-
-const BOX_FOLDER: FolderRect = { rect: BOX, width: 290 };
-
-const NODE_FOLDER: FolderRect = { rect: NODE, width: 180 };
-
-const RECTS: WidgetRects = {
-  boxes: new Map([
-    ['apps', BOX_FOLDER],
-    ['__proto__', BOX_FOLDER]
-  ]),
-  collapsed: new Map([
-    ['packages', NODE_FOLDER],
-    ['', NODE_FOLDER]
-  ]),
-  selected: SELECTED,
-  zoom: 1
-};
-
-const folderTarget = (folder: string): MenuTarget => {
-  const target: MenuTarget = { kind: 'folder', folder };
-
-  return target;
-};
-
-const packageTarget = (name: string): MenuTarget => {
-  const target: MenuTarget = { kind: 'package', name };
-
-  return target;
-};
-
-describe('FEATURE: targetRectOf', () => {
   describe('GIVEN the box apps and __proto__, the collapsed packages and root, and a selected package', () => {
     it.each([
       { title: 'the box apps', target: folderTarget('apps'), expected: BOX },
