@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "rootDir": ".",
-    "declarationMap": true,
     "emitDeclarationOnly": true,
     "noEmitOnError": true,
     "module": "nodenext",
