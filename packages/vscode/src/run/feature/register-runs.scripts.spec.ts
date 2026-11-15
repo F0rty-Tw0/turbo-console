@@ -36,6 +36,7 @@ describe('FEATURE: run commands on a script', () => {
     commands = new Map();
 
     const roots = new RootStore();
+    const tree = { runChanged: vi.fn() };
     const register: CommandRegistry = (name, callback) => {
       const disposed: Disposed = { dispose: vi.fn() };
 
@@ -46,7 +47,7 @@ describe('FEATURE: run commands on a script', () => {
 
     roots.set([FOLDER], coordinatorMock);
     roots.apply('/ws', loadedWith([SCRIPT_PACKAGE]));
-    registerRuns(new RunSession(ports, []), { runChanged: vi.fn() }, roots, register, vi.fn());
+    registerRuns({ control: new RunSession(ports, []), tree, roots, register, info: vi.fn() });
   });
 
   it('GIVEN a script row WHEN Run Task is invoked THEN the script launches in its package and turbo does not', async () => {

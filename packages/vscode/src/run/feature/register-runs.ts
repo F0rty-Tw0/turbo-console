@@ -8,6 +8,15 @@ import { runnableStateOf } from '../utils/runnable-state.util.ts';
 
 type Info = (text: string) => void;
 
+/** What `activate` built that the run commands are registered over: the run control, the tree rows a run redraws, the roots, the command registry and the info toast. */
+type RunCommandParts = {
+  readonly control: RunControl;
+  readonly tree: Pick<PackagesTreeApi, 'runChanged'>;
+  readonly roots: Roots;
+  readonly register: CommandRegistry;
+  readonly info: Info;
+};
+
 /**
  * UB4 Run Without Turbo on a task row: the task's package script through the package manager, the script-row launch.
  * A task with no script body (umbrella and aggregate rows, a blank body) gets `noScriptText` through `info`, and nothing runs.
@@ -42,14 +51,8 @@ const runWithoutTurbo = async (control: RunControl, roots: Roots, info: Info, ar
  * argument is ignored), a tree row refresh on every change of a run, and the pruning of ended runs when a root reloads.
  * `dispose` undoes all of it.
  */
-export const registerRuns = (
-  control: RunControl,
-  tree: Pick<PackagesTreeApi, 'runChanged'>,
-  roots: Roots,
-  register: CommandRegistry,
-  info: Info
-  // eslint-disable-next-line max-params -- the run inputs plus the toast extension.ts passes, one line there
-): Disposed => {
+export const registerRuns = (parts: RunCommandParts): Disposed => {
+  const { control, tree, roots, register, info } = parts;
   const runOn = async (arg: unknown, force: boolean): Promise<void> => {
     const target = taskTargetOf(arg);
 

@@ -77,7 +77,9 @@ describe('FEATURE: run commands', () => {
       return disposed;
     };
 
-    registered = registerRuns(session, { runChanged }, roots, register, info);
+    const tree = { runChanged };
+
+    registered = registerRuns({ control: session, tree, roots, register, info });
   });
 
   it('GIVEN the run commands WHEN they are registered THEN Run, Run Without Cache, Run Without Turbo and Stop Task are registered', () => {

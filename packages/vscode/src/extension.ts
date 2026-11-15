@@ -71,7 +71,7 @@ const createSession = (context: vscode.ExtensionContext, output: Output): RootsS
 /** The run, pick and run-all commands, the forwarding of turbo task events and the package.json CodeLens. */
 const registerRunCommands = (session: RootsSession, runSession: RunSession, ui: RunCommandsUi, output: Output): vscode.Disposable => {
   const register = vscode.commands.registerCommand;
-  const runs = registerRuns(runSession, ui.tree, session.store, register, showInfo);
+  const runs = registerRuns({ control: runSession, tree: ui.tree, roots: session.store, register, info: showInfo });
   const pickers = registerPickers(runSession, session.store, register, () => ui.scripts.isShown());
   const runAllPorts = editorRunAllPorts(session.store, output);
   const runAll = registerRunAll(session.store, runAllPorts, forwardRunAllEvents, register);
