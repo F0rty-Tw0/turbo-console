@@ -19,7 +19,7 @@ const recountOf = (pkg: GraphPackage): GraphPackage => {
 /** `BARE_SHOWN_STUB` again, every package with one task more. */
 const RECOUNTED: GraphReady = { ...BARE_SHOWN_STUB, packages: BARE_SHOWN_STUB.packages.map(recountOf) };
 
-describe('FEATURE: refreshedDrawn', () => {
+describe('FEATURE: graph package draw', () => {
   describe('GIVEN h1 drawn with scopes shown', () => {
     const shown: DrawnGraph = drawnGraphOf(BARE_SHOWN_STUB);
 
@@ -57,43 +57,43 @@ describe('FEATURE: refreshedDrawn', () => {
       expect(refreshed).toBe(shown);
     });
   });
-});
 
-describe('FEATURE: restoreAfterDraw camera', () => {
-  type CameraCall = 'fit' | 'open' | 'setViewport';
+  describe('GIVEN the first draw of h1 with the camera at the origin', () => {
+    type CameraCall = 'fit' | 'open' | 'setViewport';
 
-  const CAMERA_CALLS: CameraCall[] = ['fit', 'open', 'setViewport'];
-  const ORIGIN: Position = { x: 0, y: 0 };
-  const CAMERA: Viewport = { zoom: 1, pan: ORIGIN };
-  const drawn = drawnGraphOf(BARE_SHOWN_STUB);
-  const OPENING = freshViewStateOf(drawn.hash);
-  const MOVED: GraphViewState = { ...OPENING, zoom: 1.5 };
-  const FITTED: GraphViewState = { ...OPENING, fitted: true };
+    const CAMERA_CALLS: CameraCall[] = ['fit', 'open', 'setViewport'];
+    const ORIGIN: Position = { x: 0, y: 0 };
+    const CAMERA: Viewport = { zoom: 1, pan: ORIGIN };
+    const drawn = drawnGraphOf(BARE_SHOWN_STUB);
+    const OPENING = freshViewStateOf(drawn.hash);
+    const MOVED: GraphViewState = { ...OPENING, zoom: 1.5 };
+    const FITTED: GraphViewState = { ...OPENING, fitted: true };
 
-  const restoredViewOf = (saved: GraphViewState | null): Mocked<GraphView> => {
-    const view = graphViewMock(CAMERA);
-    const frames = { arm: vi.fn(), receivedAt: vi.fn((): number => 0) };
-    const inspection = { mount: vi.fn(), restore: vi.fn() };
-    const filtering = { restore: vi.fn((): ReadonlySet<string> => new Set()), inspection };
+    const restoredViewOf = (saved: GraphViewState | null): Mocked<GraphView> => {
+      const view = graphViewMock(CAMERA);
+      const frames = { arm: vi.fn(), receivedAt: vi.fn((): number => 0) };
+      const inspection = { mount: vi.fn(), restore: vi.fn() };
+      const filtering = { restore: vi.fn((): ReadonlySet<string> => new Set()), inspection };
 
-    restoreAfterDraw({ drawn, opening: OPENING, frames, filtering, view }, saved);
+      restoreAfterDraw({ drawn, opening: OPENING, frames, filtering, view }, saved);
 
-    return view;
-  };
+      return view;
+    };
 
-  describe.each([
-    ['no saved camera', 'open', null],
-    ['a save for another hash', 'open', freshViewStateOf('h0')],
-    ['a fitted save for this hash', 'fit', FITTED],
-    ['a moved save for this hash', 'setViewport', MOVED],
-    ['the opening state itself (large graph, no grouping choice)', 'open', OPENING]
-  ] as const)('GIVEN %s', (_name, called, saved) => {
-    it(`WHEN the first draw restores THEN the camera calls ${called} only`, () => {
-      const view = restoredViewOf(saved);
-      const others = CAMERA_CALLS.filter((name: CameraCall): boolean => name !== called);
+    describe.each([
+      ['no saved camera', 'open', null],
+      ['a save for another hash', 'open', freshViewStateOf('h0')],
+      ['a fitted save for this hash', 'fit', FITTED],
+      ['a moved save for this hash', 'setViewport', MOVED],
+      ['the opening state itself (large graph, no grouping choice)', 'open', OPENING]
+    ] as const)('GIVEN %s', (_name, called, saved) => {
+      it(`WHEN the first draw restores THEN the camera calls ${called} only`, () => {
+        const view = restoredViewOf(saved);
+        const others = CAMERA_CALLS.filter((name: CameraCall): boolean => name !== called);
 
-      expect(view[called]).toHaveBeenCalledOnce();
-      others.forEach((name: CameraCall): void => expect(view[name]).not.toHaveBeenCalled());
+        expect(view[called]).toHaveBeenCalledOnce();
+        others.forEach((name: CameraCall): void => expect(view[name]).not.toHaveBeenCalled());
+      });
     });
   });
 });
