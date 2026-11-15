@@ -8,15 +8,15 @@ import type { RunEntry } from '../common/run.type.ts';
 import { PROGRESS_OWNER_STUB } from '../test/stubs/run-progress.stub.ts';
 import { RUN_REQUEST_STUB } from '../test/stubs/run.stub.ts';
 
-describe('FEATURE: run key', () => {
+describe('FEATURE: run entry', () => {
   describe('GIVEN a root and a task id', () => {
-    it('WHEN keyed THEN they are joined by a NUL', () => {
+    it('WHEN keyed by run key THEN they are joined by a NUL', () => {
       expect(runKeyOf('/ws', 'a#build')).toBe('/ws\0a#build');
     });
   });
 
   describe('GIVEN a root ending where another task id starts', () => {
-    it('WHEN keyed THEN the keys differ', () => {
+    it('WHEN keyed by run key THEN the keys differ', () => {
       expect(runKeyOf('/ws/a', 'b')).not.toBe(runKeyOf('/ws', 'a/b'));
     });
   });
@@ -32,9 +32,7 @@ describe('FEATURE: run key', () => {
       expect(keys.size).toBe(2);
     });
   });
-});
 
-describe('FEATURE: running entry of a request', () => {
   describe('GIVEN a request launched at 1000', () => {
     it('WHEN its entry is made THEN it is running with nothing known of its process', () => {
       const expected: RunEntry = {
