@@ -20,7 +20,7 @@ describe('FEATURE: graph folders', () => {
     { title: 'a drawn folder inside the canvas', folders: [IN_VIEW], keys: ['a'], outOfView: [] },
     { title: 'a drawn folder off the canvas', folders: [IN_VIEW, OUT_OF_VIEW], keys: ['a', 'b'], outOfView: ['b'] }
   ])('GIVEN $title', ({ folders, keys, outOfView }): void => {
-    it('WHEN the folders out of view are listed THEN it returns the expected keys', (): void => {
+    it(`WHEN the folders out of view are listed THEN it returns ${JSON.stringify(outOfView)}`, (): void => {
       const listed = outOfViewOf(CANVAS, folders, keys);
 
       expect(listed).toStrictEqual(outOfView);
@@ -28,7 +28,7 @@ describe('FEATURE: graph folders', () => {
   });
 
   describe('GIVEN no box with the key', () => {
-    it('WHEN found THEN it returns undefined', (): void => {
+    it('WHEN the folder is looked up by that key THEN it returns undefined', (): void => {
       const found = findFolder([IN_VIEW], 'b');
 
       expect(found).toBeUndefined();
@@ -36,7 +36,7 @@ describe('FEATURE: graph folders', () => {
   });
 
   describe('GIVEN a box with the key', () => {
-    it('WHEN found THEN it returns that box', (): void => {
+    it('WHEN the folder is looked up by that key THEN it returns that box', (): void => {
       const found = findFolder([IN_VIEW, OUT_OF_VIEW], 'b');
 
       expect(found).toBe(OUT_OF_VIEW);
