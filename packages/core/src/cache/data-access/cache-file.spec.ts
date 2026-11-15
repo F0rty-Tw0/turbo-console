@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, expectTypeOf, it } from 'vitest';
+import { record, string, unknown } from 'zod/mini';
 import type { output } from 'zod/mini';
 
 import { readCacheFile, writeCacheFile } from './cache-file.ts';
@@ -99,6 +100,8 @@ const IS_POSIX = process.platform !== 'win32';
 
 const PERMISSION_BITS = 0o777;
 
+const jsonObjectSchema = record(string(), unknown());
+
 let tempDir = '';
 
 let caseCount = 0;
@@ -125,7 +128,7 @@ const cacheFilePath = (cacheDir: string, root: string): string => join(cacheDir,
 const rewriteEntry = async (cacheDir: string, edit: (json: Record<string, unknown>) => void): Promise<void> => {
   const path = cacheFilePath(cacheDir, ROOT);
   const text = await readFile(path, 'utf8');
-  const json = JSON.parse(text) as Record<string, unknown>;
+  const json = jsonObjectSchema.parse(JSON.parse(text));
 
   edit(json);
   await writeFile(path, JSON.stringify(json));

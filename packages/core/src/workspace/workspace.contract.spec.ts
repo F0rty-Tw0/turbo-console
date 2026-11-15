@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { PRESETS } from '@turbo-console/repo-gen';
 import type { FixtureHandle, FixtureSpec } from '@turbo-console/repo-gen';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { looseObject, record, string } from 'zod/mini';
 
 import { TurboException, loadWorkspace, resolveTurbo } from '../index.ts';
 import type { TaskNode, TurboBinary, WorkspaceModel } from '../index.ts';
@@ -66,7 +67,10 @@ const E2E_CI_FILE_TASK = { kind: 'atom-file', atom: E2E_CI_ATOM };
 
 const TRUSTED = { trusted: true } as const;
 
-type PackageTurboJson = { tasks: Record<string, object> };
+const taskConfigSchema = looseObject({});
+
+/** Loose at both levels, so every key the fixture wrote is written back. */
+const packageTurboJsonSchema = looseObject({ tasks: record(string(), taskConfigSchema) });
 
 const allTasks = (model: WorkspaceModel): TaskNode[] => model.packages.flatMap((pkg) => pkg.tasks);
 
@@ -94,7 +98,7 @@ const renameFileTask = async (dir: string): Promise<void> => {
 /** Gives `e2e-ci` a description in its own package `turbo.json`, where only the package config can supply it. */
 const describeE2eCi = async (dir: string): Promise<void> => {
   const path = join(dir, E2E_CONFIG);
-  const config = JSON.parse(await readFile(path, 'utf8')) as PackageTurboJson;
+  const config = packageTurboJsonSchema.parse(JSON.parse(await readFile(path, 'utf8')));
   const described = { ...config.tasks['e2e-ci'], description: E2E_CI_DESCRIPTION };
   const tasks = { ...config.tasks, 'e2e-ci': described };
 

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+import { object, string } from 'zod';
 
 const ROOT = join(import.meta.dirname, '../../../../');
 /** `--update-snapshots` or Playwright's short `-u`, bare or with a glued mode (`-uall`). */
@@ -10,9 +11,9 @@ const UPDATE_KEY = /^\s*updateSnapshots:/gm;
 const NEVER_UPDATE = /^\s*updateSnapshots: 'none',$/m;
 const GUARD = "github.event_name == 'workflow_dispatch' && inputs.update-snapshots";
 
-type Scripts = { readonly screenshots: string };
+const scriptsSchema = object({ screenshots: string() });
 
-type Manifest = { readonly scripts: Scripts };
+const manifestSchema = object({ scripts: scriptsSchema });
 
 const hasFlag = (line: string): boolean => FLAG.test(line);
 
@@ -78,7 +79,7 @@ describe('FEATURE: Screenshot update guard', () => {
     it('WHEN they are read THEN the config never updates and the script passes no update flag', () => {
       const config = readFileSync(join(ROOT, 'packages/webview-ui/playwright.screenshot.config.ts'), 'utf8');
       const manifest = readFileSync(join(ROOT, 'packages/webview-ui/package.json'), 'utf8');
-      const { scripts } = JSON.parse(manifest) as Manifest;
+      const { scripts } = manifestSchema.parse(JSON.parse(manifest));
 
       const result = hasFlag(scripts.screenshots);
 

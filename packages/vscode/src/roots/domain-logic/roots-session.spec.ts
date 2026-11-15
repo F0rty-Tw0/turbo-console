@@ -188,7 +188,7 @@ describe('FEATURE: roots session', () => {
       const pendingUntilAbort: LoadDeps['resolve'] = async (signal) => {
         const aborted = new Promise<never>((_resolve, reject) => {
           signal.addEventListener('abort', () => {
-            reject(signal.reason as Error);
+            if (signal.reason instanceof Error) reject(signal.reason);
           });
         });
 
