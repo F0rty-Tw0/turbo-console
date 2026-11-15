@@ -11,7 +11,6 @@ import {
   hiddenScriptsText,
   renderWebviewHtml,
   webviewCsp
-  // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 } from './index.ts';
 import type {
   DetailsState,
@@ -68,7 +67,6 @@ import type {
   ToolView,
   WebviewMessage,
   WebviewSlots
-  // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 } from './index.ts';
 
 type ExpectedEdge = { readonly source: string; readonly target: string };
@@ -181,7 +179,6 @@ const RUNTIME_EXPORTS = [
 describe('FEATURE: webview-ui package entry', () => {
   describe('GIVEN the package entry point', () => {
     it('WHEN its exports are listed THEN they are exactly the public API, and every public type has its exact shape', async () => {
-      // eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
       const entry = await import('./index.ts');
 
       const names = Object.keys(entry).toSorted();

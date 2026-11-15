@@ -4,9 +4,7 @@ import { join } from 'node:path';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { loadWorkspace, resolveTurbo, turboRunArgs } from '../index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { PackageNode, TaskNode, WorkspaceModel } from '../index.ts';
 import { writeMonorepoRootFixture } from './test/utils/monorepo-root-fixture.spec.util.ts';
 import type { TurboResult } from '../shared/turbo/common/turbo.type.ts';

@@ -7,9 +7,7 @@ import type { FixtureHandle, FixtureSpec } from '@turbo-console/repo-gen';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { array, object, string } from 'zod/mini';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, readDryRun, resolveTurbo } from '../index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { DryRunState, TurboBinary } from '../index.ts';
 import type { FilterPair } from './test/common/filter-pair.type.ts';
 import { filterPairOf } from './test/utils/filter-pair.spec.util.ts';

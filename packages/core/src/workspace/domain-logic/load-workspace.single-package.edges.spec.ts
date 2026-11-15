@@ -5,7 +5,6 @@ import { join, resolve } from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { loadWorkspace } from './load-workspace.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import { TurboBinary } from '../../binary/common/index.ts';
 import { PACKAGE_GRAPH_QUERY } from '../../shared/turbo/common/turbo-query.const.ts';
 import type { GraphTask, TurboResult } from '../../shared/turbo/common/turbo.type.ts';

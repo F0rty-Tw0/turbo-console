@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '.' this rule asks for.
 import { PACKAGE_NAME } from './index.ts';
 
 describe('FEATURE: repo-gen package entry', () => {

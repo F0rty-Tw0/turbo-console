@@ -5,7 +5,6 @@ import { join, sep } from 'node:path';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { readCachedWorkspace } from './read-cached-workspace.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import { TurboBinary } from '../../binary/common/index.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import type { WorkspaceModel } from '../../workspace/common/workspace-model.type.ts';

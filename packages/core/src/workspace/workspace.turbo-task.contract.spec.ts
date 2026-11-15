@@ -6,9 +6,7 @@ import type { FixtureHandle, Manifest, ManifestPackage } from '@turbo-console/re
 import { beforeAll, describe, expect, it } from 'vitest';
 import { looseObject, optional, record, string } from 'zod/mini';
 
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import { TurboException, loadWorkspace, readDryRun, resolveTurbo } from '../index.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import '..' this rule asks for.
 import type { DryRunState, TaskNode, TurboBinary, WorkspaceModel } from '../index.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
