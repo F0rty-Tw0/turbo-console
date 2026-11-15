@@ -123,9 +123,11 @@ describe('FEATURE: run all guard', () => {
     });
   });
 
-  it('GIVEN no key was added WHEN a task ends THEN nothing changes and the key can be added', () => {
-    guard.releaseOn(ENDED);
+  describe('GIVEN no key was added', () => {
+    it('WHEN a task ends THEN nothing changes and the key can be added', () => {
+      guard.releaseOn(ENDED);
 
-    expect(guard.tryAdd(KEY)).toBe(true);
+      expect(guard.tryAdd(KEY)).toBe(true);
+    });
   });
 });

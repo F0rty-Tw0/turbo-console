@@ -22,27 +22,35 @@ describe('FEATURE: whether the turbo binary can run', () => {
     await rm(parent, { recursive: true, force: true, maxRetries: 5 });
   });
 
-  it('GIVEN an executable file WHEN it is checked THEN it can run', async () => {
-    const isRunnable = await canExecute(join(parent, 'turbo'));
+  describe('GIVEN an executable file', () => {
+    it('WHEN it is checked THEN it can run', async () => {
+      const isRunnable = await canExecute(join(parent, 'turbo'));
 
-    expect(isRunnable).toBe(true);
+      expect(isRunnable).toBe(true);
+    });
   });
 
-  it('GIVEN no file at the path WHEN it is checked THEN it cannot run', async () => {
-    const isRunnable = await canExecute(join(parent, 'missing'));
+  describe('GIVEN no file at the path', () => {
+    it('WHEN it is checked THEN it cannot run', async () => {
+      const isRunnable = await canExecute(join(parent, 'missing'));
 
-    expect(isRunnable).toBe(false);
+      expect(isRunnable).toBe(false);
+    });
   });
 
-  it.skipIf(isWindows)('GIVEN a file without the execute bit on POSIX WHEN it is checked THEN it cannot run', async () => {
-    const isRunnable = await canExecute(join(parent, 'plain'));
+  describe('GIVEN a file without the execute bit on POSIX', () => {
+    it.skipIf(isWindows)('WHEN it is checked THEN it cannot run', async () => {
+      const isRunnable = await canExecute(join(parent, 'plain'));
 
-    expect(isRunnable).toBe(false);
+      expect(isRunnable).toBe(false);
+    });
   });
 
-  it.runIf(isWindows)('GIVEN any existing file on Windows WHEN it is checked THEN it can run', async () => {
-    const isRunnable = await canExecute(join(parent, 'plain'));
+  describe('GIVEN any existing file on Windows', () => {
+    it.runIf(isWindows)('WHEN it is checked THEN it can run', async () => {
+      const isRunnable = await canExecute(join(parent, 'plain'));
 
-    expect(isRunnable).toBe(true);
+      expect(isRunnable).toBe(true);
+    });
   });
 });

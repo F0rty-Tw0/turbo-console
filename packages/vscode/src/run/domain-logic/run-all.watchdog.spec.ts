@@ -77,15 +77,17 @@ describe('FEATURE: run all, a start that never happens', () => {
     });
   });
 
-  it('GIVEN a launch that never settles WHEN the start timeout passes THEN the key is released and the reason is logged', async () => {
-    const launch = Promise.withResolvers<Terminable>();
+  describe('GIVEN a launch that never settles', () => {
+    it('WHEN the start timeout passes THEN the key is released and the reason is logged', async () => {
+      const launch = Promise.withResolvers<Terminable>();
 
-    fakes.execute.mockReturnValue(launch.promise);
-    void runAll(roots, guard, fakes.ports, EVERYWHERE);
-    await vi.advanceTimersByTimeAsync(START_TIMEOUT_MS);
+      fakes.execute.mockReturnValue(launch.promise);
+      void runAll(roots, guard, fakes.ports, EVERYWHERE);
+      await vi.advanceTimersByTimeAsync(START_TIMEOUT_MS);
 
-    expect(fakes.log).toHaveBeenCalledExactlyOnceWith(startTimeoutText('turbo'));
-    expect(isHeld()).toBe(false);
+      expect(fakes.log).toHaveBeenCalledExactlyOnceWith(startTimeoutText('turbo'));
+      expect(isHeld()).toBe(false);
+    });
   });
 
   describe('GIVEN a launch that hangs until the start timeout frees its key and a second launch takes it', () => {
@@ -116,28 +118,32 @@ describe('FEATURE: run all, a start that never happens', () => {
     });
   });
 
-  it('GIVEN a binary check that stays open until the key is freed and retaken WHEN it then says no THEN the retaken key stays', async () => {
-    const check = Promise.withResolvers<boolean>();
+  describe('GIVEN a binary check that stays open until the key is freed and retaken', () => {
+    it('WHEN it then says no THEN the retaken key stays', async () => {
+      const check = Promise.withResolvers<boolean>();
 
-    fakes.canExecute.mockReturnValueOnce(check.promise);
-    void runAll(roots, guard, fakes.ports, EVERYWHERE);
-    await vi.advanceTimersByTimeAsync(START_TIMEOUT_MS);
-    fakes.choose('build');
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
-    check.resolve(false);
-    await vi.advanceTimersByTimeAsync(0);
+      fakes.canExecute.mockReturnValueOnce(check.promise);
+      void runAll(roots, guard, fakes.ports, EVERYWHERE);
+      await vi.advanceTimersByTimeAsync(START_TIMEOUT_MS);
+      fakes.choose('build');
+      await runAll(roots, guard, fakes.ports, EVERYWHERE);
+      check.resolve(false);
+      await vi.advanceTimersByTimeAsync(0);
 
-    expect(isHeld()).toBe(true);
+      expect(isHeld()).toBe(true);
+    });
   });
 
-  it('GIVEN a launch that failed WHEN the start timeout passes THEN a run started since is not released', async () => {
-    fakes.execute.mockRejectedValueOnce(new Error('no folder'));
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
-    fakes.log.mockClear();
-    guard.tryAdd(runAllKey('/one', 'build', false));
-    vi.advanceTimersByTime(START_TIMEOUT_MS);
+  describe('GIVEN a launch that failed', () => {
+    it('WHEN the start timeout passes THEN a run started since is not released', async () => {
+      fakes.execute.mockRejectedValueOnce(new Error('no folder'));
+      await runAll(roots, guard, fakes.ports, EVERYWHERE);
+      fakes.log.mockClear();
+      guard.tryAdd(runAllKey('/one', 'build', false));
+      vi.advanceTimersByTime(START_TIMEOUT_MS);
 
-    expect(isHeld()).toBe(true);
-    expect(fakes.log).not.toHaveBeenCalled();
+      expect(isHeld()).toBe(true);
+      expect(fakes.log).not.toHaveBeenCalled();
+    });
   });
 });

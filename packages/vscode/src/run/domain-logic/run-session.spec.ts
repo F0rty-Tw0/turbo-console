@@ -50,8 +50,10 @@ describe('FEATURE: run session, task events', () => {
     vi.useRealTimers();
   });
 
-  it('GIVEN a binary check that lets the clock move WHEN it runs THEN turbo is launched with the token read at launch', () => {
-    expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, TURBO_ARGS_STUB, 1000, LOG_ENV_STUB);
+  describe('GIVEN a binary check that lets the clock move', () => {
+    it('WHEN it runs THEN turbo is launched with the token read at launch', () => {
+      expect(ports.execute).toHaveBeenCalledExactlyOnceWith(RUN_REQUEST_STUB, TURBO_ARGS_STUB, 1000, LOG_ENV_STUB);
+    });
   });
 
   describe('GIVEN a run launched at 1000', () => {

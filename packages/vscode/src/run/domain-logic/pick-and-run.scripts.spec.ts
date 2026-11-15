@@ -94,33 +94,39 @@ describe('FEATURE: palette run picker and scripts', () => {
     });
   });
 
-  it('GIVEN a refused script name and scripts shown WHEN names are listed THEN the name is not offered', async () => {
-    fakes.scriptsShown.mockReturnValue(true);
+  describe('GIVEN a refused script name and scripts shown', () => {
+    it('WHEN names are listed THEN the name is not offered', async () => {
+      fakes.scriptsShown.mockReturnValue(true);
 
-    await pickAndRun(roots, fakes.ports);
+      await pickAndRun(roots, fakes.ports);
 
-    expect(valuesOfPick(fakes, 0)).toStrictEqual(['lint']);
-  });
-
-  it('GIVEN only scripts and scripts hidden WHEN it starts THEN it says no tasks are available', async () => {
-    roots.apply('/one', loadedWith([packageB]));
-
-    await pickAndRun(roots, fakes.ports);
-
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
-  });
-
-  it('GIVEN b is picked while scripts are shown WHEN scripts are hidden before the run THEN nothing runs', async () => {
-    fakes.scriptsShown.mockReturnValue(true);
-    fakes.pick.mockImplementationOnce(async (items) => Promise.resolve(items[0]));
-    fakes.pick.mockImplementationOnce(async (items) => {
-      fakes.scriptsShown.mockReturnValue(false);
-
-      return Promise.resolve(items.find((item) => item.value === 'b'));
+      expect(valuesOfPick(fakes, 0)).toStrictEqual(['lint']);
     });
+  });
 
-    await pickAndRun(roots, fakes.ports);
+  describe('GIVEN only scripts and scripts hidden', () => {
+    it('WHEN it starts THEN it says no tasks are available', async () => {
+      roots.apply('/one', loadedWith([packageB]));
 
-    expect(fakes.run).not.toHaveBeenCalled();
+      await pickAndRun(roots, fakes.ports);
+
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+    });
+  });
+
+  describe('GIVEN b is picked while scripts are shown', () => {
+    it('WHEN scripts are hidden before the run THEN nothing runs', async () => {
+      fakes.scriptsShown.mockReturnValue(true);
+      fakes.pick.mockImplementationOnce(async (items) => Promise.resolve(items[0]));
+      fakes.pick.mockImplementationOnce(async (items) => {
+        fakes.scriptsShown.mockReturnValue(false);
+
+        return Promise.resolve(items.find((item) => item.value === 'b'));
+      });
+
+      await pickAndRun(roots, fakes.ports);
+
+      expect(fakes.run).not.toHaveBeenCalled();
+    });
   });
 });

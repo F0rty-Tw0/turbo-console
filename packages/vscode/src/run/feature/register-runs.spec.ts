@@ -82,16 +82,18 @@ describe('FEATURE: run commands', () => {
     registered = registerRuns({ control: session, tree, roots, register, info });
   });
 
-  it('GIVEN the run commands WHEN they are registered THEN Run, Run Without Cache, Run Without Turbo and Stop Task are registered', () => {
-    const names = commands.keys();
-    const expected = [
-      'turboConsole.runTask',
-      'turboConsole.runTaskWithoutCache',
-      'turboConsole.runTaskWithoutTurbo',
-      'turboConsole.stopTask'
-    ];
+  describe('GIVEN the run commands', () => {
+    it('WHEN they are registered THEN Run, Run Without Cache, Run Without Turbo and Stop Task are registered', () => {
+      const names = commands.keys();
+      const expected = [
+        'turboConsole.runTask',
+        'turboConsole.runTaskWithoutCache',
+        'turboConsole.runTaskWithoutTurbo',
+        'turboConsole.stopTask'
+      ];
 
-    expect([...names]).toStrictEqual(expected);
+      expect([...names]).toStrictEqual(expected);
+    });
   });
 
   describe('GIVEN a cached model published before the binary resolved', () => {

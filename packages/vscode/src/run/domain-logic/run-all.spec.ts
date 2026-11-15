@@ -149,69 +149,81 @@ describe('FEATURE: run a task in all packages', () => {
     });
   });
 
-  it('GIVEN a task name turbo would read as a flag WHEN it is picked THEN nothing launches and the key is released', async () => {
-    roots.set([ONE], coordinatorMock);
-    roots.apply('/one', loadedWith([FLAG_PACKAGE]));
-    fakes.choose('-x');
+  describe('GIVEN a task name turbo would read as a flag', () => {
+    it('WHEN it is picked THEN nothing launches and the key is released', async () => {
+      roots.set([ONE], coordinatorMock);
+      roots.apply('/one', loadedWith([FLAG_PACKAGE]));
+      fakes.choose('-x');
 
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
+      await runAll(roots, guard, fakes.ports, EVERYWHERE);
 
-    expect(fakes.execute).not.toHaveBeenCalled();
-    expect(fakes.log).toHaveBeenCalledOnce();
-    expect(fakes.notifyFailedToStart).toHaveBeenCalledOnce();
-    expect(guard.tryAdd(runAllKey('/one', '-x', false))).toBe(true);
-  });
-
-  it('GIVEN one root with no model WHEN it starts THEN it says no tasks are available and picks nothing', async () => {
-    roots.set([ONE], coordinatorMock);
-
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
-
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
-    expect(fakes.pick).not.toHaveBeenCalled();
-  });
-
-  it('GIVEN a root that gets its model while it loads WHEN it starts THEN the tasks are read after the load and build runs', async () => {
-    roots.set([ONE], coordinatorMock);
-    fakes.ensureLoaded.mockImplementation(async (root) => {
-      roots.apply(root, loadedWith([PACKAGE_NODE_STUB]));
-
-      return Promise.resolve();
+      expect(fakes.execute).not.toHaveBeenCalled();
+      expect(fakes.log).toHaveBeenCalledOnce();
+      expect(fakes.notifyFailedToStart).toHaveBeenCalledOnce();
+      expect(guard.tryAdd(runAllKey('/one', '-x', false))).toBe(true);
     });
-    fakes.choose('build');
-
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
-
-    expect(fakes.execute).toHaveBeenCalledExactlyOnceWith(launchOf('/one', false), ['--skip-infer', 'run', 'build']);
   });
 
-  it('GIVEN a root whose only tasks are scripts no turbo config defines WHEN it starts THEN it picks nothing', async () => {
-    const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+  describe('GIVEN one root with no model', () => {
+    it('WHEN it starts THEN it says no tasks are available and picks nothing', async () => {
+      roots.set([ONE], coordinatorMock);
 
-    roots.set([ONE], coordinatorMock);
-    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
+      await runAll(roots, guard, fakes.ports, EVERYWHERE);
 
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
-
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
-    expect(fakes.pick).not.toHaveBeenCalled();
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+      expect(fakes.pick).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a root holding a turbo task and a safe script WHEN it starts THEN the pick lists the turbo task only', async () => {
-    const script: TaskNode = { ...TASK_NODE_STUB, id: 'a#lint', name: 'lint', isTurboTask: false };
+  describe('GIVEN a root that gets its model while it loads', () => {
+    it('WHEN it starts THEN the tasks are read after the load and build runs', async () => {
+      roots.set([ONE], coordinatorMock);
+      fakes.ensureLoaded.mockImplementation(async (root) => {
+        roots.apply(root, loadedWith([PACKAGE_NODE_STUB]));
 
-    roots.set([ONE], coordinatorMock);
-    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [TASK_NODE_STUB, script] }]));
+        return Promise.resolve();
+      });
+      fakes.choose('build');
 
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
+      await runAll(roots, guard, fakes.ports, EVERYWHERE);
 
-    expect(fakes.pick.mock.calls[0]?.[0].map((item) => item.value)).toStrictEqual(['build']);
+      expect(fakes.execute).toHaveBeenCalledExactlyOnceWith(launchOf('/one', false), ['--skip-infer', 'run', 'build']);
+    });
   });
 
-  it('GIVEN no root WHEN it starts THEN it says no tasks are available', async () => {
-    await runAll(roots, guard, fakes.ports, EVERYWHERE);
+  describe('GIVEN a root whose only tasks are scripts no turbo config defines', () => {
+    it('WHEN it starts THEN it picks nothing', async () => {
+      const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+      roots.set([ONE], coordinatorMock);
+      roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
+
+      await runAll(roots, guard, fakes.ports, EVERYWHERE);
+
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+      expect(fakes.pick).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a root holding a turbo task and a safe script', () => {
+    it('WHEN it starts THEN the pick lists the turbo task only', async () => {
+      const script: TaskNode = { ...TASK_NODE_STUB, id: 'a#lint', name: 'lint', isTurboTask: false };
+
+      roots.set([ONE], coordinatorMock);
+      roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [TASK_NODE_STUB, script] }]));
+
+      await runAll(roots, guard, fakes.ports, EVERYWHERE);
+
+      expect(fakes.pick.mock.calls[0]?.[0].map((item) => item.value)).toStrictEqual(['build']);
+    });
+  });
+
+  describe('GIVEN no root', () => {
+    it('WHEN it starts THEN it says no tasks are available', async () => {
+      await runAll(roots, guard, fakes.ports, EVERYWHERE);
+
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+    });
   });
 
   describe('GIVEN two roots, each holding a build task', () => {

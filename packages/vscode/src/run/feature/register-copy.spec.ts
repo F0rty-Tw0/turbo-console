@@ -65,10 +65,18 @@ describe('FEATURE: copy command', () => {
     registered = registerCopy(roots, ports, register);
   });
 
-  it('GIVEN the copy command WHEN it is registered THEN Copy Command is registered', () => {
-    const names = commands.keys();
+  describe('GIVEN the copy command', () => {
+    it('WHEN it is registered THEN Copy Command is registered', () => {
+      const names = commands.keys();
 
-    expect([...names]).toStrictEqual(['turboConsole.copyCommand']);
+      expect([...names]).toStrictEqual(['turboConsole.copyCommand']);
+    });
+
+    it('WHEN it is disposed THEN its command is unregistered', () => {
+      registered.dispose();
+
+      expect(unregister).toHaveBeenCalledOnce();
+    });
   });
 
   describe('GIVEN a root loaded with package a holding the build task', () => {
@@ -295,11 +303,5 @@ describe('FEATURE: copy command', () => {
 
       expect(info).toHaveBeenCalledExactlyOnceWith('Copied. Run it in the repo root.');
     });
-  });
-
-  it('GIVEN the copy command WHEN it is disposed THEN its command is unregistered', () => {
-    registered.dispose();
-
-    expect(unregister).toHaveBeenCalledOnce();
   });
 });
