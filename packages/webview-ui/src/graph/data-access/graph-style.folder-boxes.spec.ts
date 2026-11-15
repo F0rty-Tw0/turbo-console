@@ -27,22 +27,26 @@ describe('FEATURE: graphStyleOf folder boxes', () => {
     cy.destroy();
   });
 
-  it('GIVEN a folder box THEN it shows no label on the page', () => {
-    expect(cy.getElementById('folder:apps').style('label')).toBe('');
+  describe('GIVEN a folder box', () => {
+    it('THEN it shows no label on the page', () => {
+      expect(cy.getElementById('folder:apps').style('label')).toBe('');
+    });
   });
 
-  it('GIVEN a folder box while exporting THEN its title is centred in the top padding band', () => {
-    const box = cy.getElementById('folder:apps');
+  describe('GIVEN a folder box while exporting', () => {
+    it('THEN its title is centred in the top padding band', () => {
+      const box = cy.getElementById('folder:apps');
 
-    box.addClass('exporting');
+      box.addClass('exporting');
 
-    const placement = [
-      box.style('label'),
-      box.style('text-halign'),
-      box.numericStyle('text-margin-x'),
-      box.numericStyle('text-margin-y')
-    ];
+      const placement = [
+        box.style('label'),
+        box.style('text-halign'),
+        box.numericStyle('text-margin-x'),
+        box.numericStyle('text-margin-y')
+      ];
 
-    expect(placement).toStrictEqual(['apps', 'center', 0, 22.5]);
+      expect(placement).toStrictEqual(['apps', 'center', 0, 22.5]);
+    });
   });
 });
