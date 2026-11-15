@@ -50,7 +50,7 @@ const modelWith = (tasks: TaskNode[]): WorkspaceModel => {
   return model;
 };
 
-describe('FEATURE: run view of a task', () => {
+describe('FEATURE: run view of a task and of a live run', () => {
   describe('GIVEN a task that never ran', () => {
     it('WHEN viewed THEN it shows the idle icon, no color, no text, is not running and is idle', () => {
       const view = toRunView(TASK_NODE_STUB, undefined, NOW);
@@ -203,9 +203,7 @@ describe('FEATURE: run view of a task', () => {
       expect(view.iconId).toBe(IDLE_ICON.id);
     });
   });
-});
 
-describe('FEATURE: live run view of a run that changed', () => {
   describe('GIVEN a running build whose config turned it continuous mid-run', () => {
     it('WHEN the model holds the task THEN the view reads the current node', () => {
       const view = liveRunViewOf(modelWith([CONTINUOUS_BUILD]), RUNNING_BUILD, NOW);
