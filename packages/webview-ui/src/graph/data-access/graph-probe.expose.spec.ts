@@ -8,7 +8,8 @@ describe('FEATURE: exposeProbe', () => {
   it.each([
     ['no flag', {}],
     ["the string 'true'", { tcGraphProbeWanted: 'true' }],
-    ['the number 1', { tcGraphProbeWanted: 1 }]
+    ['the number 1', { tcGraphProbeWanted: 1 }],
+    ['an object, as an element with the flag for its id would be', { tcGraphProbeWanted: {} }]
   ])('GIVEN %s WHEN the probe is offered THEN none is built or exposed', (_name, host: ProbeHost) => {
     const probeOf = vi.fn<() => GraphProbe>(() => GRAPH_PROBE_STUB);
 
