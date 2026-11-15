@@ -9,7 +9,27 @@ const SCOPED: GraphPackage = { name: '@org/x', bareName: 'x', path: 'packages/x'
 
 const PLAIN: GraphPackage = { ...SCOPED, name: 'app', bareName: 'app', path: 'packages/app' };
 
-describe('FEATURE: packageLabelOf', () => {
+type RootToggleRow = {
+  readonly given: string;
+  readonly shown: string;
+  readonly hidden: string;
+  readonly sizeName: string;
+};
+
+const rootInfoOf = (bareName: string, sizeName: string): GraphPackage[] => {
+  const root: GraphPackage = { ...PLAIN, name: '//', bareName, sizeName, path: '' };
+
+  return [root];
+};
+
+const rootBoxOf = (infos: GraphPackage[], scopeShown: boolean): NodeSize => {
+  const sizeTexts = sizeTextsOf(infos);
+  const labels = labelsOf(infos, scopeShown);
+
+  return labelledSizeOf(sizeTexts.get('//') ?? '//', labelIn(labels, '//'), lengthSizeOf);
+};
+
+describe('FEATURE: package label', () => {
   describe('GIVEN a scoped package', () => {
     it('WHEN scopes are shown THEN the label is the name', () => {
       const label = packageLabelOf(SCOPED, true);
@@ -51,9 +71,7 @@ describe('FEATURE: packageLabelOf', () => {
       expect(label).toBe(odd.name);
     });
   });
-});
 
-describe('FEATURE: labelIn', () => {
   describe('GIVEN labels that map @org/x to x', () => {
     const labels = new Map([['@org/x', 'x']]);
 
@@ -69,9 +87,7 @@ describe('FEATURE: labelIn', () => {
       expect(label).toBe('app');
     });
   });
-});
 
-describe('FEATURE: labelledSizeOf', () => {
   describe('GIVEN the root // labelled root-fixture', () => {
     it('WHEN sized THEN the box fits the label', () => {
       const size = labelledSizeOf('//', 'root-fixture', lengthSizeOf);
@@ -87,9 +103,7 @@ describe('FEATURE: labelledSizeOf', () => {
       expect(size).toStrictEqual({ width: 60, height: 32 });
     });
   });
-});
 
-describe('FEATURE: labelsOf', () => {
   describe('GIVEN two packages', () => {
     it('WHEN labelled with scopes hidden THEN there is one label per package, keyed by name', () => {
       const labels = labelsOf([SCOPED, PLAIN], false);
@@ -106,52 +120,29 @@ describe('FEATURE: labelsOf', () => {
       expect(labels.has('//')).toBe(false);
     });
   });
-});
 
-describe('FEATURE: sizeTextsOf', () => {
-  it('GIVEN the root // with a sizeName beside a package without one THEN only // has a sizing text', () => {
-    const root: GraphPackage = { ...PLAIN, name: '//', bareName: '(root) savings', sizeName: '(root) savings', path: '' };
+  describe('GIVEN the root // with a sizeName beside a package without one', () => {
+    it('THEN only // has a sizing text', () => {
+      const root: GraphPackage = { ...PLAIN, name: '//', bareName: '(root) savings', sizeName: '(root) savings', path: '' };
 
-    const sizeTexts = sizeTextsOf([root, PLAIN]);
+      const sizeTexts = sizeTextsOf([root, PLAIN]);
 
-    expect([...sizeTexts]).toStrictEqual([['//', '(root) savings']]);
+      expect([...sizeTexts]).toStrictEqual([['//', '(root) savings']]);
+    });
   });
-});
 
-type RootToggleRow = {
-  readonly given: string;
-  readonly shown: string;
-  readonly hidden: string;
-  readonly sizeName: string;
-};
-
-const rootInfoOf = (bareName: string, sizeName: string): GraphPackage[] => {
-  const root: GraphPackage = { ...PLAIN, name: '//', bareName, sizeName, path: '' };
-
-  return [root];
-};
-
-const rootBoxOf = (infos: GraphPackage[], scopeShown: boolean): NodeSize => {
-  const sizeTexts = sizeTextsOf(infos);
-  const labels = labelsOf(infos, scopeShown);
-
-  return labelledSizeOf(sizeTexts.get('//') ?? '//', labelIn(labels, '//'), lengthSizeOf);
-};
-
-describe('FEATURE: the // box across scope toggles', () => {
-  it.each<RootToggleRow>([
+  describe.each<RootToggleRow>([
     { given: 'savings', shown: 'savings', hidden: '(root) savings', sizeName: '(root) savings' },
     { given: '@x/app', shown: '@x/app', hidden: '(root) app', sizeName: '(root) @x/app' }
-  ])(
-    'GIVEN a root labelled $given WHEN sized from the host infos THEN both scope modes give one box that fits the prefixed label',
-    (row) => {
+  ])('GIVEN a root labelled $given', (row) => {
+    it('WHEN sized from the host infos THEN both scope modes give one box that fits the prefixed label', () => {
       const shownBox = rootBoxOf(rootInfoOf(row.shown, row.sizeName), true);
       const hiddenBox = rootBoxOf(rootInfoOf(row.hidden, row.sizeName), false);
 
       expect(hiddenBox).toStrictEqual(shownBox);
       expect(hiddenBox).toStrictEqual(lengthSizeOf(row.sizeName));
-    }
-  );
+    });
+  });
 
   describe('GIVEN a package with no sizeName', () => {
     it('WHEN sized from its name THEN the box is as labelledSizeOf(name, label) gives', () => {
