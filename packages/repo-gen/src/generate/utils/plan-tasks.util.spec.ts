@@ -89,10 +89,8 @@ describe('FEATURE: task planning', () => {
       expect(planned[1]).toBe(atomTest);
     });
   });
-});
 
-describe('FEATURE: task names', () => {
-  describe('GIVEN a task count', () => {
+  describe('GIVEN a task count for task names', () => {
     it('WHEN it is 2 THEN the first two base tasks come back', () => {
       expect(taskNamesFor(2)).toStrictEqual(['build', 'lint']);
     });
