@@ -33,51 +33,60 @@ describe('FEATURE: graphStyleOf corners and arrows', () => {
     cy.destroy();
   });
 
-  it('GIVEN a plain package node THEN its corners are 6 px round', () => {
-    expect(cy.getElementById('a').numericStyle('corner-radius')).toBe(6);
+  describe('GIVEN a plain package node', () => {
+    it('THEN its corners are 6 px round', () => {
+      expect(cy.getElementById('a').numericStyle('corner-radius')).toBe(6);
+    });
   });
 
-  it('GIVEN a node with packages THEN its corners are 8 px round', () => {
-    expect(cy.getElementById('folder:apps').numericStyle('corner-radius')).toBe(8);
+  describe('GIVEN a node with packages', () => {
+    it('THEN its corners are 8 px round', () => {
+      expect(cy.getElementById('folder:apps').numericStyle('corner-radius')).toBe(8);
+    });
   });
 
-  it('GIVEN a collapsed folder node THEN its corners are 8 px round', () => {
-    const node = cy.getElementById('a');
+  describe('GIVEN a collapsed folder node', () => {
+    it('THEN its corners are 8 px round', () => {
+      const node = cy.getElementById('a');
 
-    node.addClass(FOLDER_NODE_CLASS);
+      node.addClass(FOLDER_NODE_CLASS);
 
-    expect(node.numericStyle('corner-radius')).toBe(8);
+      expect(node.numericStyle('corner-radius')).toBe(8);
+    });
   });
 
-  it('GIVEN a ghost node THEN its corners stay 6 px round', () => {
-    const node = cy.getElementById('a');
+  describe('GIVEN a ghost node', () => {
+    it('THEN its corners stay 6 px round', () => {
+      const node = cy.getElementById('a');
 
-    node.addClass('ghost');
+      node.addClass('ghost');
 
-    expect(node.numericStyle('corner-radius')).toBe(6);
+      expect(node.numericStyle('corner-radius')).toBe(6);
+    });
   });
 
-  it.each(['', 'highlighted', 'selected'])(
-    'GIVEN an edge classed "%s" THEN its arrow is 0.8 scaled and 3 px clear of the node',
-    (className) => {
+  describe.each(['', 'highlighted', 'selected'])('GIVEN an edge classed "%s"', (className) => {
+    it('THEN its arrow is 0.8 scaled and 3 px clear of the node', () => {
       const edge = cy.getElementById(AB);
 
       edge.addClass(className);
 
       expect([edge.numericStyle('arrow-scale'), edge.numericStyle('target-distance-from-node')]).toStrictEqual([0.8, 3]);
-    }
-  );
+    });
+  });
 
-  it('GIVEN another theme applied again THEN the corners and the selected width are unchanged', () => {
-    const node = cy.getElementById('a');
-    const edge = cy.getElementById(AB);
+  describe('GIVEN another theme applied again', () => {
+    it('THEN the corners and the selected width are unchanged', () => {
+      const node = cy.getElementById('a');
+      const edge = cy.getElementById(AB);
 
-    cy.style(graphStyleOf(THEMED_COLORS, 'sans-serif', false));
-    node.addClass('selected');
-    edge.addClass('selected');
+      cy.style(graphStyleOf(THEMED_COLORS, 'sans-serif', false));
+      node.addClass('selected');
+      edge.addClass('selected');
 
-    expect([node.numericStyle('corner-radius'), node.numericStyle('border-width'), edge.numericStyle('width')]).toStrictEqual([
-      6, 1.5, 1.5
-    ]);
+      expect([node.numericStyle('corner-radius'), node.numericStyle('border-width'), edge.numericStyle('width')]).toStrictEqual([
+        6, 1.5, 1.5
+      ]);
+    });
   });
 });
