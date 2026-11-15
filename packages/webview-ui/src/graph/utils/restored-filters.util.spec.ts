@@ -68,7 +68,7 @@ const STATE: GraphViewState = {
   panelWidths: null
 };
 
-describe('FEATURE: restoredFilters', () => {
+describe('FEATURE: restored filters', () => {
   describe('GIVEN a saved state naming packages and tags the graph no longer has', () => {
     it('WHEN restored THEN only the known entries stay and the focused name leaves hidden', () => {
       const focus: GraphFocus = { kind: 'package', name: 'web' };
@@ -91,10 +91,8 @@ describe('FEATURE: restoredFilters', () => {
       expect(restored.filters.focus).toStrictEqual(constructorFocus);
     });
   });
-});
 
-describe('FEATURE: restoredFilters focus', () => {
-  it.each([
+  describe.each([
     ['a known package', GRAPH, WEB_FOCUS, WEB_FOCUS],
     ['an unknown package', GRAPH, GHOST_FOCUS, null],
     ['a folder with packages', GRAPH, APPS_FOCUS, APPS_FOCUS],
@@ -102,10 +100,12 @@ describe('FEATURE: restoredFilters focus', () => {
     ['the root folder with a root package', ROOTED, ROOT_FOCUS, ROOT_FOCUS],
     ['the root folder without a root package', GRAPH, ROOT_FOCUS, null],
     ['the folder __proto__', GRAPH, PROTO_FOLDER_FOCUS, null]
-  ])('GIVEN a saved focus on %s WHEN restored THEN the focus is %j', (_name, graph, saved, expected) => {
-    const restored = restoredFilters({ ...STATE, focus: saved, grouped: true }, graph);
+  ])('GIVEN a saved focus on %s', (_name, graph, saved, expected) => {
+    it(`WHEN restored THEN the focus is ${JSON.stringify(expected)}`, () => {
+      const restored = restoredFilters({ ...STATE, focus: saved, grouped: true }, graph);
 
-    expect(restored.filters.focus).toStrictEqual(expected);
+      expect(restored.filters.focus).toStrictEqual(expected);
+    });
   });
 
   describe('GIVEN a saved depth', () => {
@@ -135,9 +135,7 @@ describe('FEATURE: restoredFilters focus', () => {
       expect(restored.filters.hidden).toStrictEqual(new Set(['web']));
     });
   });
-});
 
-describe('FEATURE: restoredFilters grouping', () => {
   describe.each([
     ['a grouped saved state', true],
     ['an ungrouped saved state', false]
@@ -149,17 +147,17 @@ describe('FEATURE: restoredFilters grouping', () => {
     });
   });
 
-  it.each([
+  describe.each([
     ['a folder focus', null, APPS_FOCUS],
     ['a package focus', WEB_FOCUS, WEB_FOCUS]
-  ])('GIVEN %s in an ungrouped saved state WHEN restored THEN the focus is %j', (_name, expected, saved) => {
-    const restored = restoredFilters({ ...STATE, focus: saved, grouped: false }, GRAPH);
+  ])('GIVEN %s in an ungrouped saved state', (_name, expected, saved) => {
+    it(`WHEN restored THEN the focus is ${JSON.stringify(expected)}`, () => {
+      const restored = restoredFilters({ ...STATE, focus: saved, grouped: false }, GRAPH);
 
-    expect(restored.filters.focus).toStrictEqual(expected);
+      expect(restored.filters.focus).toStrictEqual(expected);
+    });
   });
-});
 
-describe('FEATURE: controlsFieldsOf', () => {
   describe.each([
     ['grouped', true],
     ['ungrouped', false]
