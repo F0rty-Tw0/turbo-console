@@ -52,29 +52,31 @@ const CORNER_LINE: ProbeEdgeLine = lineThrough('a', 'b', [
   { x: 100, y: 100 }
 ]);
 
-describe('FEATURE: titleCrossingsOf', () => {
-  it.each([
+describe('FEATURE: graph title crossings', () => {
+  describe.each([
     { title: 'a drawn line through the label', line: THROUGH_LINE, expected: ['pkg:web'] },
     { title: 'a drawn line at x 170, right of the label', line: BESIDE_LINE, expected: [] },
     { title: 'the line through the label not drawn', line: HIDDEN_LINE, expected: [] },
     { title: "a drawn line ending on the label's corner", line: CORNER_LINE, expected: ['pkg:web'] }
-  ])('GIVEN $title WHEN the crossed titles are listed THEN they are $expected', ({ line, expected }) => {
-    const crossed = titleCrossingsOf([TITLE], [line]);
+  ])('GIVEN $title', ({ line, expected }) => {
+    it('WHEN the crossed titles are listed THEN they are the expected keys', () => {
+      const crossed = titleCrossingsOf([TITLE], [line]);
 
-    expect(crossed).toStrictEqual(expected);
+      expect(crossed).toStrictEqual(expected);
+    });
   });
-});
 
-describe('FEATURE: unreadableTitlesOf', () => {
-  it.each([
+  describe.each([
     { title: 'a line through the label, drawn under the title on its backdrop', box: TITLE, line: THROUGH_LINE, expected: [] },
     { title: 'a line through the label, drawn over the title', box: UNDER_TITLE, line: THROUGH_LINE, expected: ['pkg:web'] },
     { title: 'a line through a label with no backdrop', box: BARE_TITLE, line: THROUGH_LINE, expected: ['pkg:web'] },
     { title: 'a line beside the label, drawn over the title', box: UNDER_TITLE, line: BESIDE_LINE, expected: [] },
     { title: 'the line drawn over the title not drawn', box: UNDER_TITLE, line: HIDDEN_LINE, expected: [] }
-  ])('GIVEN $title WHEN the unreadable titles are listed THEN they are $expected', ({ box, line, expected }) => {
-    const unreadable = unreadableTitlesOf([box], [line]);
+  ])('GIVEN $title', ({ box, line, expected }) => {
+    it('WHEN the unreadable titles are listed THEN they are the expected keys', () => {
+      const unreadable = unreadableTitlesOf([box], [line]);
 
-    expect(unreadable).toStrictEqual(expected);
+      expect(unreadable).toStrictEqual(expected);
+    });
   });
 });
