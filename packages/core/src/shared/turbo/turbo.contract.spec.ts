@@ -76,7 +76,7 @@ const affectedTaskNames = (json: unknown): string[] => {
 
 const sha256 = (text: string): string => createHash('sha256').update(text).digest('hex');
 
-describe('FEATURE: turbo CLI contract on generated fixtures', () => {
+describe('FEATURE: turbo CLI contract on generated fixtures and a real repo', () => {
   describe('GIVEN a target-like fixture queried for its package graph (scenario 1)', () => {
     const fixture = fixtureHook(TARGET_LIKE);
     let result: TurboResult;
@@ -325,38 +325,38 @@ describe('FEATURE: turbo CLI contract on generated fixtures', () => {
       expect(result.exitCode).not.toBe(0);
     });
   });
-});
 
-describe.skipIf(REAL_REPO === '')('FEATURE: turbo CLI contract on the repo at TURBO_CONSOLE_REAL_REPO', () => {
-  it('WHEN its package graph is queried THEN stdout passes packageGraphSchema (scenario 1)', async () => {
-    const result = await queryTurbo(TURBO, PACKAGE_GRAPH_QUERY, REAL_REPO);
+  describe.skipIf(REAL_REPO === '')('GIVEN the repo at TURBO_CONSOLE_REAL_REPO', () => {
+    it('WHEN its package graph is queried THEN stdout passes packageGraphSchema (scenario 1)', async () => {
+      const result = await queryTurbo(TURBO, PACKAGE_GRAPH_QUERY, REAL_REPO);
 
-    expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(0);
 
-    const json: unknown = JSON.parse(result.stdout);
-    const parsed = packageGraphSchema.safeParse(json);
+      const json: unknown = JSON.parse(result.stdout);
+      const parsed = packageGraphSchema.safeParse(json);
 
-    expect(parsed.success).toBe(true);
-  });
+      expect(parsed.success).toBe(true);
+    });
 
-  it('WHEN build runs dry on the whole repo THEN stdout passes dryRunSchema (scenario 2)', async () => {
-    const result = await runTurbo(TURBO, ['run', 'build', '--dry=json'], REAL_REPO);
+    it('WHEN build runs dry on the whole repo THEN stdout passes dryRunSchema (scenario 2)', async () => {
+      const result = await runTurbo(TURBO, ['run', 'build', '--dry=json'], REAL_REPO);
 
-    expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(0);
 
-    const json: unknown = JSON.parse(result.stdout);
-    const parsed = dryRunSchema.safeParse(json);
+      const json: unknown = JSON.parse(result.stdout);
+      const parsed = dryRunSchema.safeParse(json);
 
-    expect(parsed.success).toBe(true);
-  });
+      expect(parsed.success).toBe(true);
+    });
 
-  it('WHEN turbo reports its version THEN it is inside SUPPORTED_TURBO_RANGE (scenario 6)', async () => {
-    const result = await runTurbo(TURBO, ['--version'], REAL_REPO);
+    it('WHEN turbo reports its version THEN it is inside SUPPORTED_TURBO_RANGE (scenario 6)', async () => {
+      const result = await runTurbo(TURBO, ['--version'], REAL_REPO);
 
-    expect(result.exitCode).toBe(0);
+      expect(result.exitCode).toBe(0);
 
-    const isSupported = isSupportedTurboVersion(result.stdout.trim(), SUPPORTED_TURBO_RANGE);
+      const isSupported = isSupportedTurboVersion(result.stdout.trim(), SUPPORTED_TURBO_RANGE);
 
-    expect(isSupported).toBe(true);
+      expect(isSupported).toBe(true);
+    });
   });
 });
