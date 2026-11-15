@@ -161,7 +161,7 @@ describe('FEATURE: legend elements', () => {
       expect(elements.legendLists.packages.children).toHaveLength(LEGEND_ROWS.packages.length);
     });
 
-    describe('GIVEN the task affected level', () => {
+    describe('GIVEN it is rendered again with the task affected level', () => {
       beforeEach(() => {
         renderLegend(elements, FALLBACK_COLORS, 'task');
       });
