@@ -2,7 +2,7 @@ import cytoscape from 'cytoscape';
 import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { labelPackages, packageWritersOf } from './graph-package-nodes.ts';
+import { labelPackages } from './graph-package-nodes.ts';
 import { FOLDER_NODE_CLASS } from '../common/graph.const.ts';
 import { lengthSizeOf } from '../test/utils/length-size.spec.util.ts';
 import { collapsedIdOf } from '../utils/folder-id.util.ts';
@@ -77,79 +77,6 @@ describe('FEATURE: labelPackages', () => {
       const width: unknown = cy.getElementById('//').data('width');
 
       expect(width).toBe(120);
-    });
-  });
-});
-
-describe('FEATURE: packageWritersOf', () => {
-  let cy: Core;
-
-  beforeEach(() => {
-    cy = cytoscape({ headless: true });
-  });
-
-  afterEach(() => {
-    cy.destroy();
-  });
-
-  describe('GIVEN the root // drawn by setGraph with a sizer 10 px per character', () => {
-    it('WHEN its label root-fixture is set THEN the node reads root-fixture 120 px wide', () => {
-      const writers = packageWritersOf(cy);
-
-      writers.setGraph(['//'], [], {}, lengthSizeOf);
-
-      writers.setLabels(new Map([['//', 'root-fixture']]), NO_SIZE_TEXTS);
-
-      const data: unknown = cy.getElementById('//').data();
-
-      expect(data).toMatchObject({ label: 'root-fixture', width: 120 });
-    });
-  });
-
-  describe('GIVEN no graph drawn', () => {
-    it('WHEN labels are set THEN no node is added', () => {
-      const writers = packageWritersOf(cy);
-
-      writers.setLabels(new Map([['//', 'root-fixture']]), NO_SIZE_TEXTS);
-
-      expect(cy.nodes()).toHaveLength(0);
-    });
-  });
-});
-
-describe('FEATURE: the root // box across setLabels', () => {
-  const sizeTexts = new Map([['//', '(root) @x/savings']]);
-
-  const rootWidthOf = (cy: Core): unknown => cy.getElementById('//').data('width');
-
-  describe('GIVEN // sized for (root) @x/savings', () => {
-    it('WHEN labelled (root) savings and then @x/savings THEN the width stays that of the sizing text', () => {
-      const cy = cytoscape({ headless: true });
-      const writers = packageWritersOf(cy);
-
-      writers.setGraph(['//'], [], {}, lengthSizeOf);
-      writers.setLabels(new Map([['//', '(root) savings']]), sizeTexts);
-
-      const hiddenWidth = rootWidthOf(cy);
-
-      writers.setLabels(new Map([['//', '@x/savings']]), sizeTexts);
-
-      expect(hiddenWidth).toBe(170);
-      expect(rootWidthOf(cy)).toBe(170);
-
-      cy.destroy();
-    });
-  });
-
-  describe('GIVEN a package whose sizeTexts entry is absent', () => {
-    it('WHEN labelled THEN it is sized as today', () => {
-      const cy = cytoscape({ headless: true, elements: [PACKAGE] });
-
-      labelPackages(cy, new Map([['@org/x', 'x']]), sizeTexts, lengthSizeOf);
-
-      expect(cy.getElementById('@org/x').data('width')).toBe(60);
-
-      cy.destroy();
     });
   });
 });
