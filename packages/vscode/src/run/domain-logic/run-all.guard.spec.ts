@@ -94,7 +94,7 @@ describe('FEATURE: run all guard', () => {
       expect(guard.tryAdd(KEY)).toBe(true);
     });
 
-    describe('AND the task ended and a newer launch took the key', () => {
+    describe('GIVEN the task ended and a newer launch took the key', () => {
       beforeEach(() => {
         guard.releaseOn(ENDED);
         guard.tryAdd(KEY);
@@ -123,9 +123,11 @@ describe('FEATURE: run all guard', () => {
     });
   });
 
-  it('GIVEN no key was added WHEN a task ends THEN nothing changes and the key can be added', () => {
-    guard.releaseOn(ENDED);
+  describe('GIVEN no key was added', () => {
+    it('WHEN a task ends THEN nothing changes and the key can be added', () => {
+      guard.releaseOn(ENDED);
 
-    expect(guard.tryAdd(KEY)).toBe(true);
+      expect(guard.tryAdd(KEY)).toBe(true);
+    });
   });
 });

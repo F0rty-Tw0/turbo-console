@@ -32,11 +32,13 @@ describe('FEATURE: run all editor ports', () => {
     editor.showErrorMessage.mockResolvedValue(undefined);
   });
 
-  it('GIVEN the run all ports WHEN a launch fails to start THEN the error toast names turbo, whatever the package manager', () => {
-    const ports = editorRunAllPorts(roots, output);
+  describe('GIVEN the run all ports', () => {
+    it('WHEN a launch fails to start THEN the error toast names turbo, whatever the package manager', () => {
+      const ports = editorRunAllPorts(roots, output);
 
-    ports.notifyFailedToStart();
+      ports.notifyFailedToStart();
 
-    expect(vscode.window.showErrorMessage).toHaveBeenCalledExactlyOnceWith("Couldn't start turbo.", SHOW_OUTPUT_ACTION);
+      expect(vscode.window.showErrorMessage).toHaveBeenCalledExactlyOnceWith("Couldn't start turbo.", SHOW_OUTPUT_ACTION);
+    });
   });
 });

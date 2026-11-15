@@ -50,18 +50,20 @@ describe('FEATURE: run commands on a script', () => {
     registerRuns({ control: new RunSession(ports, []), tree, roots, register, info: vi.fn() });
   });
 
-  it('GIVEN a script row WHEN Run Task is invoked THEN the script launches in its package and turbo does not', async () => {
-    await command('turboConsole.runTask');
+  describe('GIVEN a script row', () => {
+    it('WHEN Run Task is invoked THEN the script launches in its package and turbo does not', async () => {
+      await command('turboConsole.runTask');
 
-    expect(ports.executeScript).toHaveBeenCalledExactlyOnceWith(SCRIPT_REQUEST, 1000);
-    expect(ports.execute).not.toHaveBeenCalled();
-  });
+      expect(ports.executeScript).toHaveBeenCalledExactlyOnceWith(SCRIPT_REQUEST, 1000);
+      expect(ports.execute).not.toHaveBeenCalled();
+    });
 
-  it('GIVEN a script row WHEN Run Task Without Cache is invoked THEN the force text shows and nothing launches', async () => {
-    await command('turboConsole.runTaskWithoutCache');
+    it('WHEN Run Task Without Cache is invoked THEN the force text shows and nothing launches', async () => {
+      await command('turboConsole.runTaskWithoutCache');
 
-    expect(ports.info).toHaveBeenCalledExactlyOnceWith(NOT_TURBO_FORCE_TEXT);
-    expect(ports.executeScript).not.toHaveBeenCalled();
-    expect(ports.execute).not.toHaveBeenCalled();
+      expect(ports.info).toHaveBeenCalledExactlyOnceWith(NOT_TURBO_FORCE_TEXT);
+      expect(ports.executeScript).not.toHaveBeenCalled();
+      expect(ports.execute).not.toHaveBeenCalled();
+    });
   });
 });

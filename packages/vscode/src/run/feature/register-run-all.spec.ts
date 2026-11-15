@@ -80,10 +80,12 @@ describe('FEATURE: run all commands', () => {
     vi.useRealTimers();
   });
 
-  it('GIVEN the run all commands WHEN they are registered THEN Run Everywhere and Run Affected are registered', () => {
-    const names = commands.keys();
+  describe('GIVEN the run all commands', () => {
+    it('WHEN they are registered THEN Run Everywhere and Run Affected are registered', () => {
+      const names = commands.keys();
 
-    expect([...names]).toStrictEqual(['turboConsole.runEverywhere', 'turboConsole.runAffected']);
+      expect([...names]).toStrictEqual(['turboConsole.runEverywhere', 'turboConsole.runAffected']);
+    });
   });
 
   it('WHEN each command runs THEN the first launches without --affected and the second with it', async () => {

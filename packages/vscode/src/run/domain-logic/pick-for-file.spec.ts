@@ -55,80 +55,100 @@ describe('FEATURE: package.json run action', () => {
     roots.apply('/one', loadedWith([PACKAGE_NODE_STUB, LINT_PACKAGE]));
   });
 
-  it('GIVEN no file is open WHEN it runs THEN it says it is not a package', async () => {
-    await pickForFileAndRun(roots, fakes.ports, null);
+  describe('GIVEN no file is open', () => {
+    it('WHEN it runs THEN it says it is not a package', async () => {
+      await pickForFileAndRun(roots, fakes.ports, null);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+    });
   });
 
-  it('GIVEN a file in no workspace folder WHEN it runs THEN it says so and loads nothing', async () => {
-    await pickForFileAndRun(roots, fakes.ports, '/elsewhere/packages/a/package.json');
+  describe('GIVEN a file in no workspace folder', () => {
+    it('WHEN it runs THEN it says so and loads nothing', async () => {
+      await pickForFileAndRun(roots, fakes.ports, '/elsewhere/packages/a/package.json');
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
-    expect(fakes.ensureLoaded).not.toHaveBeenCalled();
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+      expect(fakes.ensureLoaded).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a file in a workspace folder that is no turbo root WHEN it runs THEN it says so and loads nothing', async () => {
-    await pickForFileAndRun(roots, fakes.ports, '/plain/packages/a/package.json');
+  describe('GIVEN a file in a workspace folder that is no turbo root', () => {
+    it('WHEN it runs THEN it says so and loads nothing', async () => {
+      await pickForFileAndRun(roots, fakes.ports, '/plain/packages/a/package.json');
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
-    expect(fakes.ensureLoaded).not.toHaveBeenCalled();
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+      expect(fakes.ensureLoaded).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN the root manifest WHEN it runs THEN it loads the root and says it is not a package', async () => {
-    await pickForFileAndRun(roots, fakes.ports, '/one/package.json');
+  describe('GIVEN the root manifest', () => {
+    it('WHEN it runs THEN it loads the root and says it is not a package', async () => {
+      await pickForFileAndRun(roots, fakes.ports, '/one/package.json');
 
-    expect(fakes.ensureLoaded).toHaveBeenCalledExactlyOnceWith('/one');
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+      expect(fakes.ensureLoaded).toHaveBeenCalledExactlyOnceWith('/one');
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+    });
   });
 
-  it('GIVEN a file that matches no package WHEN it runs THEN it says so and picks nothing', async () => {
-    await pickForFileAndRun(roots, fakes.ports, '/one/packages/none/package.json');
+  describe('GIVEN a file that matches no package', () => {
+    it('WHEN it runs THEN it says so and picks nothing', async () => {
+      await pickForFileAndRun(roots, fakes.ports, '/one/packages/none/package.json');
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
-    expect(fakes.pick).not.toHaveBeenCalled();
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+      expect(fakes.pick).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a root with no model and no error after the load WHEN it runs THEN it says it is not a package', async () => {
-    await pickForFileAndRun(roots, fakes.ports, '/two/packages/a/package.json');
+  describe('GIVEN a root with no model and no error after the load', () => {
+    it('WHEN it runs THEN it says it is not a package', async () => {
+      await pickForFileAndRun(roots, fakes.ports, '/two/packages/a/package.json');
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NOT_PACKAGE_TEXT);
+    });
   });
 
-  it('GIVEN a root whose load failed with no model WHEN it runs THEN it shows the load error text', async () => {
-    roots.apply('/two', failureOf('load', 'failed'));
+  describe('GIVEN a root whose load failed with no model', () => {
+    it('WHEN it runs THEN it shows the load error text', async () => {
+      roots.apply('/two', failureOf('load', 'failed'));
 
-    await pickForFileAndRun(roots, fakes.ports, '/two/packages/a/package.json');
+      await pickForFileAndRun(roots, fakes.ports, '/two/packages/a/package.json');
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(MESSAGE_TEXTS['load-no-model']);
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(MESSAGE_TEXTS['load-no-model']);
+    });
   });
 
-  it('GIVEN a root whose reload failed over a shown model WHEN it runs THEN the task pick still opens', async () => {
-    roots.apply('/one', failureOf('load', 'failed'));
+  describe('GIVEN a root whose reload failed over a shown model', () => {
+    it('WHEN it runs THEN the task pick still opens', async () => {
+      roots.apply('/one', failureOf('load', 'failed'));
 
-    await pickForFileAndRun(roots, fakes.ports, FILE);
+      await pickForFileAndRun(roots, fakes.ports, FILE);
 
-    expect(fakes.pick).toHaveBeenCalledOnce();
+      expect(fakes.pick).toHaveBeenCalledOnce();
+    });
   });
 
-  it.each<[TurboErrorKind, string]>([
+  describe.each<[TurboErrorKind, string]>([
     ['not-found', MESSAGE_TEXTS['binary-not-found']],
     ['version-unsupported', MESSAGE_TEXTS['binary-version']],
     ['io', MESSAGE_TEXTS['binary-other']]
-  ])('GIVEN a root in a %s binary error WHEN it runs THEN it shows that error text', async (kind, text) => {
-    roots.apply('/one', failureOf('binary', kind));
+  ])('GIVEN a root in a %s binary error', (kind, text) => {
+    it('WHEN it runs THEN it shows that error text', async () => {
+      roots.apply('/one', failureOf('binary', kind));
 
-    await pickForFileAndRun(roots, fakes.ports, FILE);
+      await pickForFileAndRun(roots, fakes.ports, FILE);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(text);
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(text);
+    });
   });
 
-  it('GIVEN a package with no visible task WHEN it runs THEN it says there are no tasks to run in it', async () => {
-    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [] }]));
+  describe('GIVEN a package with no visible task', () => {
+    it('WHEN it runs THEN it says there are no tasks to run in it', async () => {
+      roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [] }]));
 
-    await pickForFileAndRun(roots, fakes.ports, FILE);
+      await pickForFileAndRun(roots, fakes.ports, FILE);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_PACKAGE_TASKS_TEXT);
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_PACKAGE_TASKS_TEXT);
+    });
   });
 
   describe('GIVEN a package holding two offered scripts and one refused', () => {
@@ -172,66 +192,78 @@ describe('FEATURE: package.json run action', () => {
     });
   });
 
-  it('GIVEN a package whose only script is refused WHEN scripts are hidden THEN the plain text shows, without the hint', async () => {
-    const refused: TaskNode = { ...TASK_NODE_STUB, name: 'a b', isTurboTask: false };
+  describe('GIVEN a package whose only script is refused', () => {
+    it('WHEN scripts are hidden THEN the plain text shows, without the hint', async () => {
+      const refused: TaskNode = { ...TASK_NODE_STUB, name: 'a b', isTurboTask: false };
 
-    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [refused] }]));
+      roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [refused] }]));
 
-    await pickForFileAndRun(roots, fakes.ports, FILE);
+      await pickForFileAndRun(roots, fakes.ports, FILE);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_PACKAGE_TASKS_TEXT);
-    expect(fakes.pick).not.toHaveBeenCalled();
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_PACKAGE_TASKS_TEXT);
+      expect(fakes.pick).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a file whose path differs from the root in case WHEN a task is picked THEN that package and task run', async () => {
-    fakes.choose('build');
+  describe('GIVEN a file whose path differs from the root in case', () => {
+    it('WHEN a task is picked THEN that package and task run', async () => {
+      fakes.choose('build');
 
-    await pickForFileAndRun(roots, fakes.ports, '/ONE/packages/a/package.json');
+      await pickForFileAndRun(roots, fakes.ports, '/ONE/packages/a/package.json');
 
-    expect(fakes.run).toHaveBeenCalledExactlyOnceWith(requestOf('/one', 'a', TASK_NODE_STUB));
+      expect(fakes.run).toHaveBeenCalledExactlyOnceWith(requestOf('/one', 'a', TASK_NODE_STUB));
+    });
   });
 
-  it('GIVEN a package WHEN a task is picked THEN that package and task run', async () => {
-    fakes.choose('build');
+  describe('GIVEN a package', () => {
+    it('WHEN a task is picked THEN that package and task run', async () => {
+      fakes.choose('build');
 
-    await pickForFileAndRun(roots, fakes.ports, FILE);
+      await pickForFileAndRun(roots, fakes.ports, FILE);
 
-    expect(fakes.run).toHaveBeenCalledExactlyOnceWith(requestOf('/one', 'a', TASK_NODE_STUB));
-  });
-
-  it("GIVEN a package WHEN the pick opens THEN it offers that package's tasks only, named in the placeholder", async () => {
-    await pickForFileAndRun(roots, fakes.ports, '/one/packages/b/package.json');
-
-    const [items, placeholder] = fakes.pick.mock.calls[0] ?? [];
-
-    expect(items?.map((item) => item.value)).toStrictEqual(['lint']);
-    expect(placeholder).toBe('Select a task to run in b');
-  });
-
-  it('GIVEN a package name with a bidi mark WHEN the pick opens THEN the placeholder shows it cleaned', async () => {
-    roots.apply('/one', loadedWith([{ ...LINT_PACKAGE, name: `${BIDI}b` }]));
-
-    await pickForFileAndRun(roots, fakes.ports, '/one/packages/b/package.json');
-
-    expect(fakes.pick.mock.calls[0]?.[1]).toBe('Select a task to run in b');
-  });
-
-  it('GIVEN the pick is closed WHEN it runs THEN nothing runs', async () => {
-    await pickForFileAndRun(roots, fakes.ports, FILE);
-
-    expect(fakes.run).not.toHaveBeenCalled();
-  });
-
-  it('GIVEN the root reloads without the task during the pick WHEN it ends THEN nothing runs', async () => {
-    fakes.pick.mockImplementationOnce(async (items) => {
-      roots.apply('/one', loadedWith([]));
-
-      return Promise.resolve(items[0]);
+      expect(fakes.run).toHaveBeenCalledExactlyOnceWith(requestOf('/one', 'a', TASK_NODE_STUB));
     });
 
-    await pickForFileAndRun(roots, fakes.ports, FILE);
+    it("WHEN the pick opens THEN it offers that package's tasks only, named in the placeholder", async () => {
+      await pickForFileAndRun(roots, fakes.ports, '/one/packages/b/package.json');
 
-    expect(fakes.run).not.toHaveBeenCalled();
+      const [items, placeholder] = fakes.pick.mock.calls[0] ?? [];
+
+      expect(items?.map((item) => item.value)).toStrictEqual(['lint']);
+      expect(placeholder).toBe('Select a task to run in b');
+    });
+  });
+
+  describe('GIVEN a package name with a bidi mark', () => {
+    it('WHEN the pick opens THEN the placeholder shows it cleaned', async () => {
+      roots.apply('/one', loadedWith([{ ...LINT_PACKAGE, name: `${BIDI}b` }]));
+
+      await pickForFileAndRun(roots, fakes.ports, '/one/packages/b/package.json');
+
+      expect(fakes.pick.mock.calls[0]?.[1]).toBe('Select a task to run in b');
+    });
+  });
+
+  describe('GIVEN the pick is closed', () => {
+    it('WHEN it runs THEN nothing runs', async () => {
+      await pickForFileAndRun(roots, fakes.ports, FILE);
+
+      expect(fakes.run).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN the root reloads without the task during the pick', () => {
+    it('WHEN it ends THEN nothing runs', async () => {
+      fakes.pick.mockImplementationOnce(async (items) => {
+        roots.apply('/one', loadedWith([]));
+
+        return Promise.resolve(items[0]);
+      });
+
+      await pickForFileAndRun(roots, fakes.ports, FILE);
+
+      expect(fakes.run).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN a single-package root', () => {

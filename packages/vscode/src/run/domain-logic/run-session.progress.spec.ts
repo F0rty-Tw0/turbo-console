@@ -147,17 +147,19 @@ describe('FEATURE: live progress of a turbo run (spec D10)', () => {
     });
   });
 
-  it.each([
+  describe.each([
     ['a package script', SCRIPT_REQUEST],
     ['Run Without Turbo on a turbo task', directRequestOf(JOIN_REQUEST_STUB)]
-  ])('GIVEN %s WHEN it runs THEN no begin, no folder, no tail and no env', async (_, request) => {
-    live = liveSessionOf(PARTS);
-    await live.session.run(request);
+  ])('GIVEN %s', (_, request) => {
+    it('WHEN it runs THEN no begin, no folder, no tail and no env', async () => {
+      live = liveSessionOf(PARTS);
+      await live.session.run(request);
 
-    const called: Called[] = [live.begin, live.prepare, live.start, vi.mocked(live.ports.execute)];
-    const counts = called.map((mock) => mock.mock.calls.length);
+      const called: Called[] = [live.begin, live.prepare, live.start, vi.mocked(live.ports.execute)];
+      const counts = called.map((mock) => mock.mock.calls.length);
 
-    expect(counts).toStrictEqual([0, 0, 0, 0]);
+      expect(counts).toStrictEqual([0, 0, 0, 0]);
+    });
   });
 
   describe('GIVEN a log folder that cannot be made (level 2)', () => {

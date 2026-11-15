@@ -161,10 +161,12 @@ describe('FEATURE: run flow, a script', () => {
     });
   });
 
-  it('GIVEN a script name with a control character WHEN it is run THEN the text shows it cleaned', async () => {
-    await runTask(store, ports, named('a\u0007 b'));
+  describe('GIVEN a script name with a control character', () => {
+    it('WHEN it is run THEN the text shows it cleaned', async () => {
+      await runTask(store, ports, named('a\u0007 b'));
 
-    expect(ports.info).toHaveBeenCalledExactlyOnceWith(unsafeText('a b'));
+      expect(ports.info).toHaveBeenCalledExactlyOnceWith(unsafeText('a b'));
+    });
   });
 
   describe('GIVEN a forced run of a script', () => {
@@ -259,13 +261,15 @@ describe('FEATURE: run flow, a script', () => {
     });
   });
 
-  it('GIVEN a script whose launch rejects WHEN it is run THEN the error is logged and the notice names the package manager', async () => {
-    const executeScript = vi.fn().mockRejectedValue(new Error('no folder'));
-    const rejecting = fakeRunPorts({ terminate: vi.fn() }, { executeScript });
+  describe('GIVEN a script whose launch rejects', () => {
+    it('WHEN it is run THEN the error is logged and the notice names the package manager', async () => {
+      const executeScript = vi.fn().mockRejectedValue(new Error('no folder'));
+      const rejecting = fakeRunPorts({ terminate: vi.fn() }, { executeScript });
 
-    await runTask(store, rejecting, SCRIPT);
+      await runTask(store, rejecting, SCRIPT);
 
-    expect(rejecting.log).toHaveBeenCalledOnce();
-    expect(rejecting.notifyFailedToStart).toHaveBeenCalledExactlyOnceWith('pnpm');
+      expect(rejecting.log).toHaveBeenCalledOnce();
+      expect(rejecting.notifyFailedToStart).toHaveBeenCalledExactlyOnceWith('pnpm');
+    });
   });
 });

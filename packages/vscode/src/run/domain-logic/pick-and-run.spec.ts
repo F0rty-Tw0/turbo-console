@@ -40,60 +40,68 @@ describe('FEATURE: palette run picker', () => {
     fakes = pickerFakes([ONE, TWO]);
   });
 
-  it('GIVEN two roots WHEN it starts THEN every root is asked to load at once, before any is answered', async () => {
-    const gates = new Map<string, () => void>();
-    const gate = async (root: string): Promise<void> => {
-      const opened = new Promise<void>((resolve) => {
-        gates.set(root, resolve);
-      });
+  describe('GIVEN two roots', () => {
+    it('WHEN it starts THEN every root is asked to load at once, before any is answered', async () => {
+      const gates = new Map<string, () => void>();
+      const gate = async (root: string): Promise<void> => {
+        const opened = new Promise<void>((resolve) => {
+          gates.set(root, resolve);
+        });
 
-      return opened;
-    };
+        return opened;
+      };
 
-    fakes.ensureLoaded.mockImplementation(gate);
-    roots.apply('/one', loadedWith([PACKAGE_NODE_STUB]));
+      fakes.ensureLoaded.mockImplementation(gate);
+      roots.apply('/one', loadedWith([PACKAGE_NODE_STUB]));
 
-    const running = pickAndRun(roots, fakes.ports);
+      const running = pickAndRun(roots, fakes.ports);
 
-    expect(fakes.ensureLoaded.mock.calls).toStrictEqual([['/one'], ['/two']]);
+      expect(fakes.ensureLoaded.mock.calls).toStrictEqual([['/one'], ['/two']]);
 
-    gates.get('/one')?.();
-    await Promise.resolve();
-    await Promise.resolve();
+      gates.get('/one')?.();
+      await Promise.resolve();
+      await Promise.resolve();
 
-    expect(fakes.pick).not.toHaveBeenCalled();
+      expect(fakes.pick).not.toHaveBeenCalled();
 
-    gates.get('/two')?.();
-    await running;
+      gates.get('/two')?.();
+      await running;
 
-    expect(fakes.pick).toHaveBeenCalledOnce();
+      expect(fakes.pick).toHaveBeenCalledOnce();
+    });
   });
 
-  it('GIVEN no root has a model WHEN it starts THEN it says no tasks are available and picks nothing', async () => {
-    await pickAndRun(roots, fakes.ports);
+  describe('GIVEN no root has a model', () => {
+    it('WHEN it starts THEN it says no tasks are available and picks nothing', async () => {
+      await pickAndRun(roots, fakes.ports);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
-    expect(fakes.pick).not.toHaveBeenCalled();
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+      expect(fakes.pick).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a root whose only tasks are scripts and they are hidden WHEN it starts THEN it lists no task', async () => {
-    const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
+  describe('GIVEN a root whose only tasks are scripts and they are hidden', () => {
+    it('WHEN it starts THEN it lists no task', async () => {
+      const script: TaskNode = { ...TASK_NODE_STUB, isTurboTask: false };
 
-    roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
+      roots.apply('/one', loadedWith([{ ...PACKAGE_NODE_STUB, tasks: [script] }]));
 
-    await pickAndRun(roots, fakes.ports);
+      await pickAndRun(roots, fakes.ports);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
-    expect(fakes.pick).not.toHaveBeenCalled();
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+      expect(fakes.pick).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN the only model sits in a root with a binary error WHEN it starts THEN it says no tasks are available', async () => {
-    roots.apply('/one', loadedWith([PACKAGE_NODE_STUB]));
-    roots.apply('/one', binaryFailure);
+  describe('GIVEN the only model sits in a root with a binary error', () => {
+    it('WHEN it starts THEN it says no tasks are available', async () => {
+      roots.apply('/one', loadedWith([PACKAGE_NODE_STUB]));
+      roots.apply('/one', binaryFailure);
 
-    await pickAndRun(roots, fakes.ports);
+      await pickAndRun(roots, fakes.ports);
 
-    expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+      expect(fakes.info).toHaveBeenCalledExactlyOnceWith(NO_TASKS_TEXT);
+    });
   });
 
   describe('GIVEN a root holding package a with the build task', () => {
@@ -166,15 +174,17 @@ describe('FEATURE: palette run picker', () => {
     });
   });
 
-  it('GIVEN two roots hold the task name WHEN the second root is picked THEN the package pick lists that root only', async () => {
-    roots.apply('/one', loadedWith([PACKAGE_NODE_STUB]));
-    roots.apply('/two', loadedWith([{ ...PACKAGE_NODE_STUB, name: 'z' }]));
-    fakes.pick.mockImplementationOnce(async (items) => Promise.resolve(items.find((item) => item.root === '/two')));
-    fakes.choose('z');
+  describe('GIVEN two roots hold the task name', () => {
+    it('WHEN the second root is picked THEN the package pick lists that root only', async () => {
+      roots.apply('/one', loadedWith([PACKAGE_NODE_STUB]));
+      roots.apply('/two', loadedWith([{ ...PACKAGE_NODE_STUB, name: 'z' }]));
+      fakes.pick.mockImplementationOnce(async (items) => Promise.resolve(items.find((item) => item.root === '/two')));
+      fakes.choose('z');
 
-    await pickAndRun(roots, fakes.ports);
+      await pickAndRun(roots, fakes.ports);
 
-    expect(fakes.pick.mock.calls[1]?.[0].map((item) => item.value)).toStrictEqual(['z']);
-    expect(fakes.run).toHaveBeenCalledExactlyOnceWith(requestOf('/two', 'z', TASK_NODE_STUB));
+      expect(fakes.pick.mock.calls[1]?.[0].map((item) => item.value)).toStrictEqual(['z']);
+      expect(fakes.run).toHaveBeenCalledExactlyOnceWith(requestOf('/two', 'z', TASK_NODE_STUB));
+    });
   });
 });

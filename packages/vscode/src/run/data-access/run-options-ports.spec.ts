@@ -21,12 +21,14 @@ class SessionControl implements Pick<RunControl, 'run'> {
 }
 
 describe('FEATURE: Run with Options editor ports', () => {
-  it('GIVEN a control whose run reads its own fields WHEN the ports run a request THEN the control runs it', async () => {
-    const control = new SessionControl();
-    const ports = editorRunOptionsPorts(control);
+  describe('GIVEN a control whose run reads its own fields', () => {
+    it('WHEN the ports run a request THEN the control runs it', async () => {
+      const control = new SessionControl();
+      const ports = editorRunOptionsPorts(control);
 
-    await ports.run(RUN_REQUEST_STUB);
+      await ports.run(RUN_REQUEST_STUB);
 
-    expect(control.requests).toStrictEqual([RUN_REQUEST_STUB]);
+      expect(control.requests).toStrictEqual([RUN_REQUEST_STUB]);
+    });
   });
 });
