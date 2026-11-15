@@ -8,7 +8,7 @@ import { DETAILS_MODEL_STUB } from '../test/stubs/details-model.stub.ts';
 
 const KEY: PanelKey = { root: '/ws', packageName: 'a' };
 
-describe('FEATURE: panel package check', () => {
+describe('FEATURE: panel package check and reveal', () => {
   describe('GIVEN a package in the model', () => {
     it('WHEN checked THEN it is there', () => {
       expect(hasPackage(DETAILS_MODEL_STUB, 'a')).toBe(true);
@@ -24,9 +24,7 @@ describe('FEATURE: panel package check', () => {
       expect(hasPackage(model, packageName)).toBe(false);
     });
   });
-});
 
-describe('FEATURE: revealing a panel', () => {
   describe('GIVEN a panel', () => {
     it('WHEN revealed THEN its tab comes forward and it is returned', () => {
       const fake = viewMock();
