@@ -19,15 +19,15 @@ const at = (line: number, column: Column): CellAt => {
   return cell;
 };
 
-describe('FEATURE: entryCellOf', () => {
+describe('FEATURE: list keys', () => {
   describe('GIVEN a header and two rows', () => {
-    it('WHEN there is no remembered cell THEN it is the first checkbox', () => {
+    it('WHEN there is no remembered cell THEN the entry cell is the first checkbox', () => {
       const cell = entryCellOf(LINES, null);
 
       expect(cell).toStrictEqual(at(0, 'check'));
     });
 
-    it('WHEN the remembered line is left out THEN it is the first checkbox', () => {
+    it('WHEN the remembered line is left out THEN the entry cell is the first checkbox', () => {
       const cell = entryCellOf(LINES, at(5, 'focus'));
 
       expect(cell).toStrictEqual(at(0, 'check'));
@@ -39,7 +39,7 @@ describe('FEATURE: entryCellOf', () => {
       expect(cell).toStrictEqual(at(2, 'focus'));
     });
 
-    it('WHEN the remembered cell is a name button on a flat header THEN it is the first checkbox', () => {
+    it('WHEN the remembered cell is a name button on a flat header THEN the entry cell is the first checkbox', () => {
       const cell = entryCellOf(LINES, at(0, 'name'));
 
       expect(cell).toStrictEqual(at(0, 'check'));
@@ -53,7 +53,7 @@ describe('FEATURE: entryCellOf', () => {
       expect(cell).toStrictEqual(at(0, 'name'));
     });
 
-    it('WHEN the remembered cell is a focus button on the header THEN it is the first checkbox', () => {
+    it('WHEN the remembered cell is a focus button on the header THEN the entry cell is the first checkbox', () => {
       const cell = entryCellOf(GROUPED_LINES, at(0, 'focus'));
 
       expect(cell).toStrictEqual(at(0, 'check'));
@@ -67,9 +67,7 @@ describe('FEATURE: entryCellOf', () => {
       expect(cell).toBeNull();
     });
   });
-});
 
-describe('FEATURE: enterActionOf', () => {
   describe('GIVEN nothing selected', () => {
     it('WHEN Enter is on web THEN it selects', () => {
       const action = enterActionOf(null, 'web');
@@ -93,11 +91,9 @@ describe('FEATURE: enterActionOf', () => {
       expect(action).toBe('details');
     });
   });
-});
 
-describe('FEATURE: firstSelectableOf', () => {
   describe('GIVEN b and c visible', () => {
-    it('WHEN the order is a, b, c THEN it is b', () => {
+    it('WHEN the order is a, b, c THEN the first selectable is b', () => {
       const name = firstSelectableOf(['a', 'b', 'c'], new Set(['c', 'b']));
 
       expect(name).toBe('b');
@@ -105,7 +101,7 @@ describe('FEATURE: firstSelectableOf', () => {
   });
 
   describe('GIVEN nothing visible', () => {
-    it('WHEN the order has a THEN there is none', () => {
+    it('WHEN the order has a THEN there is no first selectable', () => {
       const name = firstSelectableOf(['a'], new Set());
 
       expect(name).toBeNull();
@@ -113,7 +109,7 @@ describe('FEATURE: firstSelectableOf', () => {
   });
 
   describe('GIVEN __proto__ visible', () => {
-    it('WHEN the order is __proto__ THEN it is __proto__', () => {
+    it('WHEN the order is __proto__ THEN the first selectable is __proto__', () => {
       const name = firstSelectableOf(['__proto__'], new Set(['__proto__']));
 
       expect(name).toBe('__proto__');
