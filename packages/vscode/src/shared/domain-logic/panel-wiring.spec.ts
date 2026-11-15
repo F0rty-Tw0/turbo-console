@@ -111,10 +111,8 @@ describe('FEATURE: panel wiring', () => {
       expect(wire).toThrow('view gone');
     });
   });
-});
 
-describe('FEATURE: a recording post', () => {
-  describe('GIVEN a send that resolves', () => {
+  describe('GIVEN a recording post over a send that resolves', () => {
     it('WHEN a message is posted THEN it is recorded and sent', () => {
       const send = vi.fn(async () => Promise.resolve(true));
       const posted: string[] = [];
@@ -140,7 +138,7 @@ describe('FEATURE: a recording post', () => {
     });
   });
 
-  describe('GIVEN a send that throws', () => {
+  describe('GIVEN a recording post over a send that throws', () => {
     it('WHEN a message is posted THEN it is still recorded and the failure is logged', () => {
       const posted: string[] = [];
       const log = vi.fn();
