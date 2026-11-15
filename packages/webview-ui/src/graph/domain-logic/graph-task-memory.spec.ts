@@ -186,7 +186,7 @@ describe('FEATURE: task mode memory', () => {
       ['single-package', ['//#gone'], ['//#build', '//#lint'], true],
       ['single-package', ['//#gone', '//#lint'], ['//#lint'], true],
       ['monorepo', [], [], false]
-    ])('AND %s with %j chosen', (_kind, chosen, ids, singlePackage) => {
+    ])('GIVEN a %s state with %j chosen', (_kind, chosen, ids, singlePackage) => {
       it('WHEN the shown set is read THEN it lists the expected ids', () => {
         const saved: TaskViewState = { ...TASK_VIEW_STUB, chosen };
         const memory = new GraphTaskMemory(modesOf(saved));
@@ -198,7 +198,7 @@ describe('FEATURE: task mode memory', () => {
       });
     });
 
-    describe('AND single-package with nothing chosen', () => {
+    describe('GIVEN a single-package state with nothing chosen', () => {
       it('WHEN the shown set is read twice THEN nothing is saved', () => {
         const modes = modesOf(null);
         const memory = new GraphTaskMemory(modes);
@@ -214,7 +214,7 @@ describe('FEATURE: task mode memory', () => {
     describe.each([
       [true, 'single-app'],
       [false, null]
-    ])('AND singlePackage %s', (singlePackage, label) => {
+    ])('GIVEN singlePackage is %s', (singlePackage, label) => {
       it('WHEN the root label is read THEN it is the state’s label', () => {
         const memory = new GraphTaskMemory(modesOf(null));
         const state: GraphReady = { ...SINGLE_TASK_STATE_STUB, singlePackage, rootLabel: label };
