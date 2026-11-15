@@ -122,13 +122,9 @@ export type PanSample = {
   readonly longestLongTaskMs: number;
 };
 
-/* eslint-disable @typescript-eslint/naming-convention -- the init script sets this exact name on window */
-
 declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- only an interface merges into Window
   interface Window {
-    __benchPan?: PanHook;
+    tcBenchPan?: PanHook;
   }
 }
-
-/* eslint-enable @typescript-eslint/naming-convention */

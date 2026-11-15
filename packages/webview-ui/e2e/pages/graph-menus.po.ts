@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page under test records its contextmenu events on window.__contextMenus */
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -10,9 +9,9 @@ import { readRect } from '../test/utils/element-rect.spec.util.ts';
 import { menuFaultsOf } from '../test/utils/graph-widgets.spec.util.ts';
 
 const recordContextMenus = (): void => {
-  window.__contextMenus = [];
+  window.tcContextMenus = [];
   document.addEventListener('contextmenu', (event): void => {
-    window.__contextMenus?.push(event.defaultPrevented);
+    window.tcContextMenus?.push(event.defaultPrevented);
   });
 };
 
@@ -142,7 +141,7 @@ export class GraphMenusPage {
   }
 
   protected async contextMenus(): Promise<boolean[]> {
-    return this.page.evaluate((): boolean[] => window.__contextMenus ?? []);
+    return this.page.evaluate((): boolean[] => window.tcContextMenus ?? []);
   }
 
   private async menuFaults(): Promise<string[]> {

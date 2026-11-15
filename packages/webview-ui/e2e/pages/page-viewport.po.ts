@@ -11,23 +11,23 @@ const buttonLabelAt = ({ x, y }: ViewportPoint): string | null => {
   return button?.getAttribute('aria-label') ?? null;
 };
 
-/** Stores a promise of the page's next `resize` event as `window.__resized`. */
-const ARM_RESIZE_WAIT = `window.__resized = new Promise((resolve) =>
+/** Stores a promise of the page's next `resize` event as `window.tcResized`. */
+const ARM_RESIZE_WAIT = `window.tcResized = new Promise((resolve) =>
   addEventListener('resize', resolve, { once: true })); undefined`;
 
 /**
- * Registered before the page's scripts, so it runs before their `resize` listeners: once `window.__catchResize` is
- * set, it keeps every `resize` event from them and resolves `window.__resizeCaught`.
+ * Registered before the page's scripts, so it runs before their `resize` listeners: once `window.tcCatchResize` is
+ * set, it keeps every `resize` event from them and resolves `window.tcResizeCaught`.
  */
 const RESIZE_CATCHER = `addEventListener('resize', (event) => {
-  if (window.__catchResize === undefined) return;
+  if (window.tcCatchResize === undefined) return;
   event.stopImmediatePropagation();
-  window.__catchResize();
+  window.tcCatchResize();
 }, true);`;
 
-/** Arms the catcher and stores a promise of the next caught `resize` event as `window.__resizeCaught`. */
-const ARM_RESIZE_CATCH = `window.__resizeCaught = new Promise((resolve) => {
-  window.__catchResize = resolve;
+/** Arms the catcher and stores a promise of the next caught `resize` event as `window.tcResizeCaught`. */
+const ARM_RESIZE_CATCH = `window.tcResizeCaught = new Promise((resolve) => {
+  window.tcCatchResize = resolve;
 }); undefined`;
 
 /** The page's viewport, and a spot in it that a later click lands on whatever moved there. */
@@ -56,7 +56,7 @@ export class PageViewport {
 
     await this.page.evaluate(ARM_RESIZE_WAIT);
     await this.page.setViewportSize(size);
-    await this.resizeWait.waitFor('window.__resized', 'resize', size);
+    await this.resizeWait.waitFor('window.tcResized', 'resize', size);
   }
 
   /** Before the page loads: lets `resizeUnseenAndClickSpot` keep a `resize` event from the page's own listeners. */
@@ -75,7 +75,7 @@ export class PageViewport {
 
     await this.page.evaluate(ARM_RESIZE_CATCH);
     await this.page.setViewportSize(size);
-    await this.resizeWait.waitFor('window.__resizeCaught', 'resizeUnseenAndClickSpot', size);
+    await this.resizeWait.waitFor('window.tcResizeCaught', 'resizeUnseenAndClickSpot', size);
     await this.page.mouse.click(x, y);
   }
 

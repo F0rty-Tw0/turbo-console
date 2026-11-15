@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Page } from '@playwright/test';
 
 import { boxRectOf } from './graph-folders.spec.util.ts';
@@ -10,7 +9,7 @@ import type { ElementRect, LinkEnds } from '../../common/playwright.type.ts';
 
 /** The folder boxes the probe reports, in page pixels; runs in the page through `evaluate`. */
 export const readFolders = async (page: Page): Promise<ProbeFolder[]> =>
-  page.evaluate((): ProbeFolder[] => window.__tcGraphProbe?.folders() ?? []);
+  page.evaluate((): ProbeFolder[] => window.tcGraphProbe?.folders() ?? []);
 
 /** A drawn box of `folder` at the rendered centre `(renderedX, renderedY)` whose direct children are `packages`. */
 export const folderAt = (folder: string, packages: string[], centre: [number, number], size: [number, number]): ProbeFolder => {

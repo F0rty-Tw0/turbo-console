@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the init script exposes this exact name on window */
-
 import type { Page } from '@playwright/test';
 
 import { NEXT_FRAME } from '../common/graph.const.ts';
@@ -23,7 +21,7 @@ const RECORDER_SCRIPT = `(() => {
 
   requestAnimationFrame(onFrame);
   new PerformanceObserver(onTasks).observe({ type: 'longtask', buffered: true });
-  window.__benchPan = {
+  window.tcBenchPan = {
     markOn: () => {
       state.tOn = performance.now();
       state.tOff = null;
@@ -48,18 +46,18 @@ export class PanRecorder {
   }
 
   public async markOn(): Promise<void> {
-    await this.page.evaluate((): void => window.__benchPan?.markOn());
+    await this.page.evaluate((): void => window.tcBenchPan?.markOn());
   }
 
   public async markOff(): Promise<void> {
-    await this.page.evaluate((): void => window.__benchPan?.markOff());
+    await this.page.evaluate((): void => window.tcBenchPan?.markOff());
   }
 
   /** Waits a frame first, so a long task that ended just before `markOff` has reached the observer. */
   public async read(): Promise<PanTrace> {
     await this.page.evaluate(NEXT_FRAME);
 
-    const raw = await this.page.evaluate((): RawPanTrace | undefined => window.__benchPan?.read());
+    const raw = await this.page.evaluate((): RawPanTrace | undefined => window.tcBenchPan?.read());
 
     if (raw === undefined) throw new Error('pan recorder: the init script did not run, call install before the page opens');
 

@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -51,7 +50,7 @@ export class GraphFolderInspect {
   }
 
   public async folders(): Promise<ProbeFolder[]> {
-    return this.page.evaluate((): ProbeFolder[] => window.__tcGraphProbe?.folders() ?? []);
+    return this.page.evaluate((): ProbeFolder[] => window.tcGraphProbe?.folders() ?? []);
   }
 
   /** Taps a collapsed folder's centre, or an expanded one's left padding at mid height, where no package or link sits, once its box is drawn. */
@@ -194,7 +193,7 @@ export class GraphFolderInspect {
   }
 
   private async linkStateOf(source: string, target: string): Promise<ProbeState | undefined> {
-    const links = await this.page.evaluate((): ProbeFolderLink[] => window.__tcGraphProbe?.folderLinks() ?? []);
+    const links = await this.page.evaluate((): ProbeFolderLink[] => window.tcGraphProbe?.folderLinks() ?? []);
     const found = links.find(isLinkBetween(source, target));
 
     return found?.state;

@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -43,11 +42,11 @@ export class GraphFoldersPage {
   }
 
   public async folders(): Promise<ProbeFolder[]> {
-    return this.page.evaluate((): ProbeFolder[] => window.__tcGraphProbe?.folders() ?? []);
+    return this.page.evaluate((): ProbeFolder[] => window.tcGraphProbe?.folders() ?? []);
   }
 
   public async folderLinks(): Promise<ProbeFolderLink[]> {
-    return this.page.evaluate((): ProbeFolderLink[] => window.__tcGraphProbe?.folderLinks() ?? []);
+    return this.page.evaluate((): ProbeFolderLink[] => window.tcGraphProbe?.folderLinks() ?? []);
   }
 
   /** Waits for the folder's box, then reads it: the probe holds no folders until the state posted after `open()` is handled and laid out. */

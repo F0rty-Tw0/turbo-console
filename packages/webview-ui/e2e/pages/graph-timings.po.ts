@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
-
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -23,35 +21,35 @@ export class GraphTimings {
   }
 
   public async firstFrameMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.firstFrameMs() ?? null);
+    return this.page.evaluate((): number | null => window.tcGraphProbe?.firstFrameMs() ?? null);
   }
 
   public async controlsBuiltMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.controlsBuiltMs() ?? null);
+    return this.page.evaluate((): number | null => window.tcGraphProbe?.controlsBuiltMs() ?? null);
   }
 
   public async filterAppliedMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.filterAppliedMs() ?? null);
+    return this.page.evaluate((): number | null => window.tcGraphProbe?.filterAppliedMs() ?? null);
   }
 
   public async detailsBuiltMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.detailsBuiltMs() ?? null);
+    return this.page.evaluate((): number | null => window.tcGraphProbe?.detailsBuiltMs() ?? null);
   }
 
   public async pickingBuiltMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.pickingBuiltMs() ?? null);
+    return this.page.evaluate((): number | null => window.tcGraphProbe?.pickingBuiltMs() ?? null);
   }
 
   public async toggleMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.toggleMs() ?? null);
+    return this.page.evaluate((): number | null => window.tcGraphProbe?.toggleMs() ?? null);
   }
 
   public async atomToggleMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.atomToggleMs() ?? null);
+    return this.page.evaluate((): number | null => window.tcGraphProbe?.atomToggleMs() ?? null);
   }
 
   public async traceMs(): Promise<number | null> {
-    return this.page.evaluate((): number | null => window.__tcGraphProbe?.traceMs() ?? null);
+    return this.page.evaluate((): number | null => window.tcGraphProbe?.traceMs() ?? null);
   }
 
   /** Polls until the first frame is measured, then returns it. */

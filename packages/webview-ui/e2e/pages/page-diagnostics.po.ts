@@ -22,17 +22,17 @@ export class PageDiagnostics {
   }
 
   public async expectNoViolations(): Promise<void> {
-    const violations = await this.page.evaluate<string[]>('window.__violations');
+    const violations = await this.page.evaluate<string[]>('window.tcViolations');
 
     expect(violations).toEqual([]);
   }
 
   public async expectViolation(): Promise<void> {
-    await expect.poll(async (): Promise<number> => this.page.evaluate<number>('window.__violations.length')).toBeGreaterThanOrEqual(1);
+    await expect.poll(async (): Promise<number> => this.page.evaluate<number>('window.tcViolations.length')).toBeGreaterThanOrEqual(1);
   }
 
   public async expectInlineScriptBlocked(): Promise<void> {
-    const ran = await this.page.evaluate<unknown>('window.__ran');
+    const ran = await this.page.evaluate<unknown>('window.tcRan');
 
     expect(ran).toBeUndefined();
   }

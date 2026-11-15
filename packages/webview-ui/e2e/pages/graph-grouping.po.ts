@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page and its init scripts expose these exact names on window */
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -43,11 +42,11 @@ export class GraphGroupingPage extends GraphBoxesPage {
 
   /** Sends every message queued for the held workers, in order, and lets later ones through. */
   public async releaseWorker(): Promise<void> {
-    await this.page.evaluate((): void => window.__releaseWorker?.());
+    await this.page.evaluate((): void => window.tcReleaseWorker?.());
   }
 
   public async holdWorker(): Promise<void> {
-    await this.page.evaluate((): void => window.__holdWorker?.());
+    await this.page.evaluate((): void => window.tcHoldWorker?.());
   }
 
   /** Drags the folder's box by `dx`, `dy` CSS pixels, held in its left padding band. */
@@ -184,13 +183,13 @@ export class GraphGroupingPage extends GraphBoxesPage {
   }
 
   private async savedGrouped(): Promise<boolean | null> {
-    const raw = await this.page.evaluate((): unknown => window.__state);
+    const raw = await this.page.evaluate((): unknown => window.tcState);
 
     return readGraphViewState(raw)?.grouped ?? null;
   }
 
   private async savedCollapsed(): Promise<string[] | null> {
-    const raw = await this.page.evaluate((): unknown => window.__state);
+    const raw = await this.page.evaluate((): unknown => window.tcState);
     const collapsed = readGraphViewState(raw)?.collapsed;
 
     if (collapsed === undefined) return null;
@@ -199,7 +198,7 @@ export class GraphGroupingPage extends GraphBoxesPage {
   }
 
   private async groupedFact(): Promise<boolean | null> {
-    return this.page.evaluate((): boolean | null => window.__tcGraphProbe?.grouped() ?? null);
+    return this.page.evaluate((): boolean | null => window.tcGraphProbe?.grouped() ?? null);
   }
 
   private async postedGroupings(): Promise<LayoutGrouping[]> {

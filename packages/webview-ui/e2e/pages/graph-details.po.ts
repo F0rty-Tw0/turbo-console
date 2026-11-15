@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
-
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -200,7 +198,7 @@ export class GraphDetailsPage {
   }
 
   private async inspection(): Promise<Inspection | undefined> {
-    return this.page.evaluate((): Inspection | undefined => window.__tcGraphProbe?.inspection());
+    return this.page.evaluate((): Inspection | undefined => window.tcGraphProbe?.inspection());
   }
 
   private buttonOf(name: string): Locator {

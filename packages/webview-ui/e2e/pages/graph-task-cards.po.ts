@@ -57,8 +57,7 @@ type LabelCheck = {
   readonly fit: ProbeLabelFit | null;
 };
 
-// eslint-disable-next-line no-underscore-dangle -- the page exposes this exact name on window
-const labelFitIn = (id: string): ProbeLabelFit | null => window.__tcGraphProbe?.labelFit(id) ?? null;
+const labelFitIn = (id: string): ProbeLabelFit | null => window.tcGraphProbe?.labelFit(id) ?? null;
 
 /** The margin centres a block as wide as the label Cytoscape measured so its left edge sits one padding in, within 1 px. */
 const isBlockAtLeftEdge = (fit: ProbeLabelFit): boolean => {

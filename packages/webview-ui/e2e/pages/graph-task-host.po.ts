@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the host stub keeps the saved view state as window.__state */
-
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -166,7 +164,7 @@ export class GraphTaskHost {
   }
 
   private async saved(): Promise<GraphViewState | null> {
-    const raw = await this.page.evaluate((): unknown => window.__state);
+    const raw = await this.page.evaluate((): unknown => window.tcState);
 
     return readGraphViewState(raw);
   }

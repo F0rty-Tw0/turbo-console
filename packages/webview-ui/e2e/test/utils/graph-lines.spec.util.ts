@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Page } from '@playwright/test';
 
 import { isInside, pointBoxOf } from './element-rect.spec.util.ts';
@@ -23,7 +22,7 @@ const WHOLE_SEGMENT: Clip = { enter: 0, leave: 1, isOutside: false };
 
 /** The drawn lines the probe reports, in page pixels; runs in the page through `evaluate`. */
 export const readEdgeLines = async (page: Page): Promise<ProbeEdgeLine[]> =>
-  page.evaluate((): ProbeEdgeLine[] => window.__tcGraphProbe?.edgeLines() ?? []);
+  page.evaluate((): ProbeEdgeLine[] => window.tcGraphProbe?.edgeLines() ?? []);
 
 /** The first empty corner or side of the container, off every node and every line the page draws now. */
 export const emptySpotOn = async (page: Page, container: ElementRect, nodes: ProbeNode[], zoom: number): Promise<ViewportPoint> => {

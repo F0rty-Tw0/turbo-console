@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -129,7 +128,7 @@ export class GraphControlsPage {
     await expect(this.panel.getByRole('heading', { level: 3 })).toHaveText(titles);
   }
 
-  /** Every `setViewToggle` posted so far is exactly `messages`; the stub's `__posted` also holds `ready`, `positions` and `layoutDone`. */
+  /** Every `setViewToggle` posted so far is exactly `messages`; the stub's `tcPosted` also holds `ready`, `positions` and `layoutDone`. */
   public async expectViewToggles(messages: GraphSetViewToggleMessage[]): Promise<void> {
     await expect.poll(async (): Promise<GraphSetViewToggleMessage[]> => this.viewToggles()).toEqual(messages);
   }
@@ -178,7 +177,7 @@ export class GraphControlsPage {
   }
 
   private async groupedFact(): Promise<boolean | null> {
-    return this.page.evaluate((): boolean | null => window.__tcGraphProbe?.grouped() ?? null);
+    return this.page.evaluate((): boolean | null => window.tcGraphProbe?.grouped() ?? null);
   }
 
   private async isInDomOrder(): Promise<boolean> {

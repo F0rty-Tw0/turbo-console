@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page and its init scripts expose these exact names on window */
-
 import type { Page } from '@playwright/test';
 
 import type { GraphOpenImportMessage } from '../../../src/bridge/common/graph-imports.type.ts';
@@ -89,12 +87,12 @@ export const lastRoutesPosted = (posted: GraphWebviewMessage[]): Routes | null =
 
 /** Every message the page posted to the host stub so far, oldest first. */
 export const readPosted = async (page: Page): Promise<GraphWebviewMessage[]> => {
-  return page.evaluate((): GraphWebviewMessage[] => window.__posted ?? []);
+  return page.evaluate((): GraphWebviewMessage[] => window.tcPosted ?? []);
 };
 
 /** Runs in the page: the own keys of the last `positions` message, read there, because a `__proto__` key would not survive the trip out. */
 export const lastPostedNames = (): string[] => {
-  const posted = window.__posted ?? [];
+  const posted = window.tcPosted ?? [];
   const isPositionsMessage = (message: GraphWebviewMessage): boolean => message.type === 'positions';
   const last = posted.findLast(isPositionsMessage);
 
@@ -105,17 +103,17 @@ export const lastPostedNames = (): string[] => {
 
 /** Runs in the page: true once any `layoutDone` has been posted. */
 export const hasLayoutDone = (): boolean => {
-  const posted = window.__posted ?? [];
+  const posted = window.tcPosted ?? [];
 
   return posted.some((message: GraphWebviewMessage): boolean => message.type === 'layoutDone');
 };
 
 /** Runs in the page: the `performance.now()` at which the page posted `ready`, `null` before it did. */
 export const readyPostedAt = (): number | null => {
-  const posted = window.__posted ?? [];
+  const posted = window.tcPosted ?? [];
   const index = posted.findIndex((message: GraphWebviewMessage): boolean => message.type === 'ready');
 
   if (index === -1) return null;
 
-  return window.__postedAt?.[index] ?? null;
+  return window.tcPostedAt?.[index] ?? null;
 };

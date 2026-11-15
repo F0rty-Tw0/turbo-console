@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Locator, Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
 
@@ -25,7 +24,7 @@ const isGlyphFirst = (chip: HTMLElement): boolean => {
 };
 
 /** Runs in the page: the label `id` draws while an export is on, `null` when the page has no probe. */
-const exportLabelIn = (id: string): string | null => window.__tcGraphProbe?.exportLabel(id) ?? null;
+const exportLabelIn = (id: string): string | null => window.tcGraphProbe?.exportLabel(id) ?? null;
 
 /** The chip row over each drawn umbrella in the widgets layer, and the label the umbrella draws while it is exported. */
 export class GraphAtomChips {

@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import { isInside, pointBoxOf } from './element-rect.spec.util.ts';
 import { boxRectOf } from './graph-folders.spec.util.ts';
 import { foreignBoxHitsOf } from './graph-foreign-boxes.spec.util.ts';
@@ -19,7 +18,7 @@ const BORDER_OUTSIDE_PX = 8;
 
 /** Runs in the page through `evaluate`, so it reads only `window`: one read of the links, their lines, the folders and the nodes. */
 export const readLinks = (): LinkRead => {
-  const probe = window.__tcGraphProbe;
+  const probe = window.tcGraphProbe;
 
   if (probe === undefined) {
     const none: LinkRead = { links: [], lines: [], folders: [], nodes: [], zoom: 0 };

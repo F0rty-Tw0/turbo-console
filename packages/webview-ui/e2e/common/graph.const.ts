@@ -40,8 +40,8 @@ export const THEME_VAR_NAMES = [
   '--vscode-list-activeSelectionForeground'
 ];
 
-/** Init script: opts the page into exposing `window.__tcGraphProbe`. */
-export const PROBE_WANTED = 'window.__tcGraphProbeWanted = true;';
+/** Init script: opts the page into exposing `window.tcGraphProbe`. */
+export const PROBE_WANTED = 'window.tcGraphProbeWanted = true;';
 
 /** The CDP `Performance.getMetrics` entry holding the main thread's CPU time, in seconds. */
 export const THREAD_TIME_METRIC = 'ThreadTime';
@@ -96,13 +96,13 @@ const REAL_WORKER = `(() => {
   window.Worker = class extends RealWorker {
     constructor(...args) {
       super(...args);
-      window.__workers += 1;
+      window.tcWorkers += 1;
       this.addEventListener('message', () => {
-        window.__workerMessages += 1;
+        window.tcWorkerMessages += 1;
       });
     }
     terminate() {
-      window.__terminated += 1;
+      window.tcTerminated += 1;
       super.terminate();
     }
   };
@@ -114,7 +114,7 @@ const THROW_ONCE_WORKER = `(() => {
   let hasThrown = false;
   window.Worker = class extends RealWorker {
     constructor(...args) {
-      window.__workers += 1;
+      window.tcWorkers += 1;
       if (!hasThrown) {
         hasThrown = true;
         throw new Error('worker blocked');
@@ -122,7 +122,7 @@ const THROW_ONCE_WORKER = `(() => {
       super(...args);
     }
     terminate() {
-      window.__terminated += 1;
+      window.tcTerminated += 1;
       super.terminate();
     }
   };
@@ -134,7 +134,7 @@ const ERROR_WORKER = `(() => {
   window.Worker = class extends EventTarget {
     constructor() {
       super();
-      window.__workers += 1;
+      window.tcWorkers += 1;
     }
     postMessage() {
       setTimeout(() => {
@@ -144,7 +144,7 @@ const ERROR_WORKER = `(() => {
       }, 0);
     }
     terminate() {
-      window.__terminated += 1;
+      window.tcTerminated += 1;
     }
   };
 })();`;
@@ -154,11 +154,11 @@ const SILENT_WORKER = `(() => {
   window.Worker = class extends EventTarget {
     constructor() {
       super();
-      window.__workers += 1;
+      window.tcWorkers += 1;
     }
     postMessage() {}
     terminate() {
-      window.__terminated += 1;
+      window.tcTerminated += 1;
     }
   };
 })();`;
@@ -169,17 +169,17 @@ const MALFORMED_WORKER = `(() => {
   window.Worker = class extends EventTarget {
     constructor() {
       super();
-      window.__workers += 1;
+      window.tcWorkers += 1;
     }
     postMessage(message) {
       const data = message.cmd === 'layout' ? { id: 'root', children: {} } : null;
       setTimeout(() => {
-        window.__workerMessages += 1;
+        window.tcWorkerMessages += 1;
         this.onmessage?.({ data: { id: message.id, data } });
       }, 200);
     }
     terminate() {
-      window.__terminated += 1;
+      window.tcTerminated += 1;
     }
   };
 })();`;

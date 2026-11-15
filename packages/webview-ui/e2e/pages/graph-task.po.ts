@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the host stub keeps the saved view state as window.__state */
-
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -152,7 +150,7 @@ export class GraphTask {
   }
 
   private async isCameraSaved(): Promise<boolean> {
-    const raw = await this.page.evaluate((): unknown => window.__state);
+    const raw = await this.page.evaluate((): unknown => window.tcState);
     const task = readGraphViewState(raw)?.task ?? null;
     const zoom = await this.probe.zoom();
     const pan: Position | null = await this.probe.pan();
