@@ -154,51 +154,59 @@ describe('FEATURE: label-measure', () => {
       }
     );
 
-    it('GIVEN no glyphs WHEN sized THEN it never measures in the glyph font', () => {
-      const boldGlyphMeasure = vi.fn<TextMeasure>((): number => {
-        throw new Error('glyph measure called');
+    describe('GIVEN no glyphs', () => {
+      it('WHEN sized THEN it never measures in the glyph font', () => {
+        const boldGlyphMeasure = vi.fn<TextMeasure>((): number => {
+          throw new Error('glyph measure called');
+        });
+
+        expect(() => cardSizerOf(false, lengthMeasureOf(7), boldGlyphMeasure)('build')).not.toThrow();
+      });
+    });
+
+    describe('GIVEN a measure that throws', () => {
+      it('WHEN the sizer is built THEN it does not throw until a name is sized', () => {
+        const broken = vi.fn<TextMeasure>((): number => {
+          throw new Error('measure broken');
+        });
+
+        expect(() => cardSizerOf(true, broken, broken)).not.toThrow();
+        expect(() => cardSizerOf(true, broken, broken)('build')).toThrow('measure broken');
+      });
+    });
+
+    describe('GIVEN a built sizer', () => {
+      it('WHEN it sizes two names THEN the state words were measured once, on the first sizing', () => {
+        const boldMeasure = lengthMeasureOf(7);
+        const sizeOf = cardSizerOf(false, boldMeasure, lengthMeasureOf(9));
+
+        sizeOf('build');
+        sizeOf('test');
+
+        const stateCalls = boldMeasure.mock.calls.filter(([text]) => CARD_STATE_WORDS.includes(text));
+
+        expect(stateCalls).toHaveLength(CARD_STATE_WORDS.length);
       });
 
-      expect(() => cardSizerOf(false, lengthMeasureOf(7), boldGlyphMeasure)('build')).not.toThrow();
-    });
+      it('WHEN it sizes two names THEN the clock samples were measured once, on the first sizing', () => {
+        const boldMeasure = lengthMeasureOf(7);
+        const sizeOf = cardSizerOf(false, boldMeasure, lengthMeasureOf(9));
 
-    it('GIVEN a measure that throws WHEN the sizer is built THEN it does not throw until a name is sized', () => {
-      const broken = vi.fn<TextMeasure>((): number => {
-        throw new Error('measure broken');
+        sizeOf('build');
+        sizeOf('test');
+
+        const sampleCalls = boldMeasure.mock.calls.filter(([text]) => CARD_CLOCK_SAMPLES.includes(text));
+
+        expect(sampleCalls).toHaveLength(CARD_CLOCK_SAMPLES.length);
       });
-
-      expect(() => cardSizerOf(true, broken, broken)).not.toThrow();
-      expect(() => cardSizerOf(true, broken, broken)('build')).toThrow('measure broken');
     });
 
-    it('GIVEN a built sizer WHEN it sizes two names THEN the state words were measured once, on the first sizing', () => {
-      const boldMeasure = lengthMeasureOf(7);
-      const sizeOf = cardSizerOf(false, boldMeasure, lengthMeasureOf(9));
+    describe('GIVEN only Failed to start measures wide', () => {
+      it('WHEN build is sized THEN the widest state word still sets the width', () => {
+        const keyedMeasure = vi.fn<TextMeasure>((text: string): number => (text === 'Failed to start' ? 200 : 10));
 
-      sizeOf('build');
-      sizeOf('test');
-
-      const stateCalls = boldMeasure.mock.calls.filter(([text]) => CARD_STATE_WORDS.includes(text));
-
-      expect(stateCalls).toHaveLength(CARD_STATE_WORDS.length);
-    });
-
-    it('GIVEN a built sizer WHEN it sizes two names THEN the clock samples were measured once, on the first sizing', () => {
-      const boldMeasure = lengthMeasureOf(7);
-      const sizeOf = cardSizerOf(false, boldMeasure, lengthMeasureOf(9));
-
-      sizeOf('build');
-      sizeOf('test');
-
-      const sampleCalls = boldMeasure.mock.calls.filter(([text]) => CARD_CLOCK_SAMPLES.includes(text));
-
-      expect(sampleCalls).toHaveLength(CARD_CLOCK_SAMPLES.length);
-    });
-
-    it('GIVEN only Failed to start measures wide WHEN build is sized THEN the widest state word still sets the width', () => {
-      const keyedMeasure = vi.fn<TextMeasure>((text: string): number => (text === 'Failed to start' ? 200 : 10));
-
-      expect(cardSizerOf(false, keyedMeasure, lengthMeasureOf(9))('build')).toStrictEqual({ width: 224, height: 60 });
+        expect(cardSizerOf(false, keyedMeasure, lengthMeasureOf(9))('build')).toStrictEqual({ width: 224, height: 60 });
+      });
     });
   });
 });

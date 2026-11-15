@@ -45,31 +45,37 @@ describe('FEATURE: drawWithoutLayers', () => {
     });
   });
 
-  it.each([
+  describe.each([
     ['a renderer that is null', null],
     ['a renderer without data', {}],
     ['renderer data without a layered cache', { data: EMPTY }],
     ['a layered cache without getLayers', rendererWith(EMPTY)],
     ['a layered cache whose getLayers is no function', rendererWith(GET_LAYERS_NOT_A_FUNCTION)]
-  ])('GIVEN %s WHEN the probe draws without layers THEN it throws before any render', (_name, renderer: unknown) => {
-    const source = sourceOf(renderer);
+  ])('GIVEN %s', (_name, renderer: unknown) => {
+    it('WHEN the probe draws without layers THEN it throws before any render', () => {
+      const source = sourceOf(renderer);
 
-    expect(() => drawWithoutLayers(source)).toThrow('graph e2e: no layered texture cache');
-    expect(source.forceRender).not.toHaveBeenCalled();
+      expect(() => drawWithoutLayers(source)).toThrow('graph e2e: no layered texture cache');
+      expect(source.forceRender).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a source without a renderer WHEN the probe draws without layers THEN it throws before any render', () => {
-    const source: ProbeLayerSource = { forceRender: vi.fn() };
+  describe('GIVEN a source without a renderer', () => {
+    it('WHEN the probe draws without layers THEN it throws before any render', () => {
+      const source: ProbeLayerSource = { forceRender: vi.fn() };
 
-    expect(() => drawWithoutLayers(source)).toThrow('graph e2e: no layered texture cache');
-    expect(source.forceRender).not.toHaveBeenCalled();
+      expect(() => drawWithoutLayers(source)).toThrow('graph e2e: no layered texture cache');
+      expect(source.forceRender).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a headless Cytoscape, which has no canvas renderer WHEN the probe draws without layers THEN it throws', () => {
-    const cy = cytoscape({ headless: true });
+  describe('GIVEN a headless Cytoscape, which has no canvas renderer', () => {
+    it('WHEN the probe draws without layers THEN it throws', () => {
+      const cy = cytoscape({ headless: true });
 
-    expect(() => drawWithoutLayers(cy)).toThrow('graph e2e: no layered texture cache');
+      expect(() => drawWithoutLayers(cy)).toThrow('graph e2e: no layered texture cache');
 
-    cy.destroy();
+      cy.destroy();
+    });
   });
 });

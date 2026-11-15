@@ -296,19 +296,21 @@ describe('FEATURE: taskRulesOf glyph labels in graphStyleOf with glyphs on', () 
     expect(labelOf('web#build')).toBe('\uec03 build');
   });
 
-  it('GIVEN a task node WHEN it runs and then stops THEN its glyph follows and its width stays', () => {
-    const node = cy.getElementById('web#build');
-    const width: unknown = node.data('width');
+  describe('GIVEN a task node', () => {
+    it('WHEN it runs and then stops THEN its glyph follows and its width stays', () => {
+      const node = cy.getElementById('web#build');
+      const width: unknown = node.data('width');
 
-    node.addClass('run-running');
+      node.addClass('run-running');
 
-    expect(labelOf('web#build')).toBe('\uea77 build');
-    expect(node.data('width')).toBe(width);
+      expect(labelOf('web#build')).toBe('\uea77 build');
+      expect(node.data('width')).toBe(width);
 
-    node.removeClass('run-running').addClass('run-stopped');
+      node.removeClass('run-running').addClass('run-stopped');
 
-    expect(labelOf('web#build')).toBe('\uead7 build');
-    expect(node.data('width')).toBe(width);
+      expect(labelOf('web#build')).toBe('\uead7 build');
+      expect(node.data('width')).toBe(width);
+    });
   });
 
   it('GIVEN an umbrella node THEN the glyph leads its name', () => {
@@ -335,14 +337,16 @@ describe('FEATURE: taskRulesOf glyph labels in graphStyleOf with glyphs on', () 
     expect(cy.getElementById('pkg:web').style('font-family')).toBe('sans-serif');
   });
 
-  it('GIVEN a passed task WHEN the theme is applied again THEN its label and width are unchanged', () => {
-    const node = cy.getElementById('web#build');
+  describe('GIVEN a passed task', () => {
+    it('WHEN the theme is applied again THEN its label and width are unchanged', () => {
+      const node = cy.getElementById('web#build');
 
-    node.addClass('run-passed');
-    cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', true));
+      node.addClass('run-passed');
+      cy.style(graphStyleOf(CANVAS_COLORS, 'sans-serif', true));
 
-    expect(labelOf('web#build')).toBe('\ueba4 build');
-    expect(node.data('width')).toBe(80);
+      expect(labelOf('web#build')).toBe('\ueba4 build');
+      expect(node.data('width')).toBe(80);
+    });
   });
 });
 

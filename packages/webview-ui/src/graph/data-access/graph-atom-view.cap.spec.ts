@@ -206,9 +206,11 @@ describe('FEATURE: createAtomCanvas drawing the spec files and the count node', 
     });
   });
 
-  it('GIVEN a spec with no hidden file WHEN it expands THEN no count node is drawn', () => {
-    atoms.expand({ ...MORE_SPEC, fileIds: [FREE_ID], hidden: 0 }, 'pkg:web', {});
+  describe('GIVEN a spec with no hidden file', () => {
+    it('WHEN it expands THEN no count node is drawn', () => {
+      atoms.expand({ ...MORE_SPEC, fileIds: [FREE_ID], hidden: 0 }, 'pkg:web', {});
 
-    expect(cy.nodes('.atom-more').empty()).toBe(true);
+      expect(cy.nodes('.atom-more').empty()).toBe(true);
+    });
   });
 });

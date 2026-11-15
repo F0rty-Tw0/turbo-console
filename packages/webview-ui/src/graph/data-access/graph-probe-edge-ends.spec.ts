@@ -30,35 +30,43 @@ const markCleanConnected = (cy: Core, id: string, isClean: boolean): void => {
 };
 
 describe('FEATURE: dirtyEdgeEndIdsOf', () => {
-  it('GIVEN a graph never queued for a rendered style WHEN the probe reads it THEN no node keeps its edges dirty', () => {
-    const cy = graphOf();
+  describe('GIVEN a graph never queued for a rendered style', () => {
+    it('WHEN the probe reads it THEN no node keeps its edges dirty', () => {
+      const cy = graphOf();
 
-    expect(dirtyEdgeEndIdsOf(cy)).toStrictEqual([]);
+      expect(dirtyEdgeEndIdsOf(cy)).toStrictEqual([]);
+    });
   });
 
-  it('GIVEN a marked dirty and b marked clean WHEN the probe reads it THEN only a keeps its edges dirty', () => {
-    const cy = graphOf();
+  describe('GIVEN a marked dirty and b marked clean', () => {
+    it('WHEN the probe reads it THEN only a keeps its edges dirty', () => {
+      const cy = graphOf();
 
-    markCleanConnected(cy, 'a', false);
-    markCleanConnected(cy, 'b', true);
+      markCleanConnected(cy, 'a', false);
+      markCleanConnected(cy, 'b', true);
 
-    expect(dirtyEdgeEndIdsOf(cy)).toStrictEqual(['a']);
+      expect(dirtyEdgeEndIdsOf(cy)).toStrictEqual(['a']);
+    });
   });
 
-  it('GIVEN c, added before a, and a marked dirty WHEN the probe reads it THEN their ids come sorted', () => {
-    const cy = graphOf();
+  describe('GIVEN c, added before a, and a marked dirty', () => {
+    it('WHEN the probe reads it THEN their ids come sorted', () => {
+      const cy = graphOf();
 
-    markCleanConnected(cy, 'c', false);
-    markCleanConnected(cy, 'a', false);
+      markCleanConnected(cy, 'c', false);
+      markCleanConnected(cy, 'a', false);
 
-    expect(dirtyEdgeEndIdsOf(cy)).toStrictEqual(['a', 'c']);
+      expect(dirtyEdgeEndIdsOf(cy)).toStrictEqual(['a', 'c']);
+    });
   });
 
-  it('GIVEN a node without a rendered style WHEN the probe reads it THEN it throws', () => {
-    const cy = graphOf();
+  describe('GIVEN a node without a rendered style', () => {
+    it('WHEN the probe reads it THEN it throws', () => {
+      const cy = graphOf();
 
-    Reflect.deleteProperty(internalsOf(cy, 'b'), 'rstyle');
+      Reflect.deleteProperty(internalsOf(cy, 'b'), 'rstyle');
 
-    expect(() => dirtyEdgeEndIdsOf(cy)).toThrow('graph e2e: no rendered style on a node');
+      expect(() => dirtyEdgeEndIdsOf(cy)).toThrow('graph e2e: no rendered style on a node');
+    });
   });
 });

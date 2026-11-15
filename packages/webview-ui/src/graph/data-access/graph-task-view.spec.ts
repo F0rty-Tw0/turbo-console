@@ -266,11 +266,13 @@ describe('FEATURE: createTaskCanvas', () => {
       canvas.show(PAINT_DRAWING);
     });
 
-    it('GIVEN web#build failed WHEN runStates is called THEN only it carries run-failed', () => {
-      canvas.runStates({ 'web#build': 'failed' });
+    describe('GIVEN web#build failed', () => {
+      it('WHEN runStates is called THEN only it carries run-failed', () => {
+        canvas.runStates({ 'web#build': 'failed' });
 
-      expect(runClassesOf(cy, 'web#build')).toStrictEqual(['run-failed']);
-      expect(runClassesOf(cy, 'api#build')).toStrictEqual([]);
+        expect(runClassesOf(cy, 'web#build')).toStrictEqual(['run-failed']);
+        expect(runClassesOf(cy, 'api#build')).toStrictEqual([]);
+      });
     });
 
     it('WHEN a later map omits web#build THEN its run class goes and the new one is set', () => {

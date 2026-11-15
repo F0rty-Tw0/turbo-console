@@ -79,15 +79,19 @@ describe('FEATURE: labelFitOf', () => {
     expect(labelFitOf(cy, 'a')).toStrictEqual(expected);
   });
 
-  it('GIVEN a label box boundingBox builds WHEN its fit is read THEN it reads the box built', () => {
-    setInternal(node, 'labelBounds', NO_BOX_BOUNDS);
-    buildBoundsOn(node, MEASURED_BOUNDS);
+  describe('GIVEN a label box boundingBox builds', () => {
+    it('WHEN its fit is read THEN it reads the box built', () => {
+      setInternal(node, 'labelBounds', NO_BOX_BOUNDS);
+      buildBoundsOn(node, MEASURED_BOUNDS);
 
-    expect(labelFitOf(cy, 'a')?.labelBoxWidth).toBe(45);
+      expect(labelFitOf(cy, 'a')?.labelBoxWidth).toBe(45);
+    });
   });
 
-  it('GIVEN no node b WHEN its fit is read THEN it is null', () => {
-    expect(labelFitOf(cy, 'b')).toBeNull();
+  describe('GIVEN no node b', () => {
+    it('WHEN its fit is read THEN it is null', () => {
+      expect(labelFitOf(cy, 'b')).toBeNull();
+    });
   });
 });
 
@@ -114,18 +118,20 @@ describe('FEATURE: createGraphProbe label fit', () => {
     return createGraphProbe(view, GRAPH_PROBE_STUB);
   };
 
-  it('GIVEN a headless graph WHEN the probe reads the fit of a THEN it has no label box and no measured label', () => {
-    expect(probeOf().labelFit('a')).toMatchObject({ labelBoxWidth: null, labelWidth: 0 });
-  });
+  describe('GIVEN a headless graph', () => {
+    it('WHEN the probe reads the fit of a THEN it has no label box and no measured label', () => {
+      expect(probeOf().labelFit('a')).toMatchObject({ labelBoxWidth: null, labelWidth: 0 });
+    });
 
-  it('GIVEN a headless graph WHEN the probe reads its nodes THEN no node runs boundingBox or renderedBoundingBox', () => {
-    const node = cy.getElementById('a');
-    const boundingBox = vi.spyOn(node, 'boundingBox');
-    const renderedBoundingBox = vi.spyOn(node, 'renderedBoundingBox');
+    it('WHEN the probe reads its nodes THEN no node runs boundingBox or renderedBoundingBox', () => {
+      const node = cy.getElementById('a');
+      const boundingBox = vi.spyOn(node, 'boundingBox');
+      const renderedBoundingBox = vi.spyOn(node, 'renderedBoundingBox');
 
-    probeOf().nodes();
+      probeOf().nodes();
 
-    expect(boundingBox).not.toHaveBeenCalled();
-    expect(renderedBoundingBox).not.toHaveBeenCalled();
+      expect(boundingBox).not.toHaveBeenCalled();
+      expect(renderedBoundingBox).not.toHaveBeenCalled();
+    });
   });
 });

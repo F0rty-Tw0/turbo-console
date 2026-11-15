@@ -206,28 +206,30 @@ describe('FEATURE: graphStyleOf dimmed opacity', () => {
     cy.destroy();
   });
 
-  it('GIVEN colours with a 0.55 dim WHEN a node and an edge are dimmed THEN both are 0.55 opaque', () => {
-    const node = cy.getElementById('a');
-    const edge = cy.getElementById(AB);
+  describe('GIVEN colours with a 0.55 dim', () => {
+    it('WHEN a node and an edge are dimmed THEN both are 0.55 opaque', () => {
+      const node = cy.getElementById('a');
+      const edge = cy.getElementById(AB);
 
-    node.addClass('dimmed');
-    edge.addClass('dimmed');
+      node.addClass('dimmed');
+      edge.addClass('dimmed');
 
-    expect([node.numericStyle('opacity'), edge.numericStyle('opacity')]).toStrictEqual([0.55, 0.55]);
-  });
+      expect([node.numericStyle('opacity'), edge.numericStyle('opacity')]).toStrictEqual([0.55, 0.55]);
+    });
 
-  it('GIVEN colours with a 0.55 dim WHEN a node is a dimmed-box THEN its frame, label and fill are 0.55 opaque', () => {
-    const node = cy.getElementById('a');
+    it('WHEN a node is a dimmed-box THEN its frame, label and fill are 0.55 opaque', () => {
+      const node = cy.getElementById('a');
 
-    node.addClass('dimmed-box');
+      node.addClass('dimmed-box');
 
-    const opacities = [
-      node.numericStyle('border-opacity'),
-      node.numericStyle('text-opacity'),
-      node.numericStyle('background-opacity')
-    ];
+      const opacities = [
+        node.numericStyle('border-opacity'),
+        node.numericStyle('text-opacity'),
+        node.numericStyle('background-opacity')
+      ];
 
-    expect(opacities).toStrictEqual([0.55, 0.55, 0.55]);
+      expect(opacities).toStrictEqual([0.55, 0.55, 0.55]);
+    });
   });
 });
 

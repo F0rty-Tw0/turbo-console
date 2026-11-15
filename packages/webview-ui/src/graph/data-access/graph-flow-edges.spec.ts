@@ -83,43 +83,51 @@ const coreOf = (lit: FlowEdgeSource[], others: FlowEdgeSource[], asked: string[]
 };
 
 describe('FEATURE: flowEdgesOf', () => {
-  it('GIVEN a highlighted curved edge WHEN read THEN it keeps its endpoints and control point', () => {
-    const cy = coreOf([edgeOf(SOURCE, TARGET, [BEND])], [], []);
-    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [BEND] };
+  describe('GIVEN a highlighted curved edge', () => {
+    it('WHEN read THEN it keeps its endpoints and control point', () => {
+      const cy = coreOf([edgeOf(SOURCE, TARGET, [BEND])], [], []);
+      const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [BEND] };
 
-    const edges = flowEdgesOf(cy);
+      const edges = flowEdgesOf(cy);
 
-    expect(edges).toStrictEqual([expected]);
+      expect(edges).toStrictEqual([expected]);
+    });
   });
 
-  it('GIVEN a highlighted edge whose controlPoints() is undefined WHEN read THEN it has no control points', () => {
-    const cy = coreOf([edgeOf(SOURCE, TARGET)], [], []);
-    const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [] };
+  describe('GIVEN a highlighted edge whose controlPoints() is undefined', () => {
+    it('WHEN read THEN it has no control points', () => {
+      const cy = coreOf([edgeOf(SOURCE, TARGET)], [], []);
+      const expected: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [] };
 
-    const edges = flowEdgesOf(cy);
+      const edges = flowEdgesOf(cy);
 
-    expect(edges).toStrictEqual([expected]);
+      expect(edges).toStrictEqual([expected]);
+    });
   });
 
-  it.each([
+  describe.each([
     ['sourceEndpoint()', edgeOf(undefined, TARGET)],
     ['targetEndpoint()', edgeOf(SOURCE, undefined)]
-  ])('GIVEN a highlighted edge whose %s is undefined WHEN read THEN it is skipped', (_part, unplaced) => {
-    const cy = coreOf([unplaced, edgeOf(SOURCE, TARGET)], [], []);
+  ])('GIVEN a highlighted edge whose %s is undefined', (_part, unplaced) => {
+    it('WHEN read THEN it is skipped', () => {
+      const cy = coreOf([unplaced, edgeOf(SOURCE, TARGET)], [], []);
 
-    const edges = flowEdgesOf(cy);
+      const edges = flowEdgesOf(cy);
 
-    expect(edges).toHaveLength(1);
+      expect(edges).toHaveLength(1);
+    });
   });
 
-  it('GIVEN highlighted and other edges WHEN read THEN only the .task-link.highlighted selector is asked for', () => {
-    const asked: string[] = [];
-    const cy = coreOf([], [edgeOf(SOURCE, TARGET)], asked);
+  describe('GIVEN highlighted and other edges', () => {
+    it('WHEN read THEN only the .task-link.highlighted selector is asked for', () => {
+      const asked: string[] = [];
+      const cy = coreOf([], [edgeOf(SOURCE, TARGET)], asked);
 
-    const edges = flowEdgesOf(cy);
+      const edges = flowEdgesOf(cy);
 
-    expect(edges).toStrictEqual([]);
-    expect(asked).toStrictEqual(['.task-link.highlighted']);
+      expect(edges).toStrictEqual([]);
+      expect(asked).toStrictEqual(['.task-link.highlighted']);
+    });
   });
 
   describe('GIVEN a real core with the package edge web -> ui highlighted', () => {

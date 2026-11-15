@@ -32,26 +32,30 @@ describe('FEATURE: exportLabelOf', () => {
     cy.destroy();
   });
 
-  it("GIVEN an umbrella node WHEN its export label is read THEN it is the exporting rule's label", () => {
-    const label = exportLabelOf(cy, 'u');
+  describe('GIVEN an umbrella node', () => {
+    it("WHEN its export label is read THEN it is the exporting rule's label", () => {
+      const label = exportLabelOf(cy, 'u');
 
-    expect(label).toBe(COUNTS_TEXT);
-  });
-
-  it('GIVEN an umbrella node WHEN its export label is read THEN the exporting class is gone after', () => {
-    exportLabelOf(cy, 'u');
-
-    expect(cy.getElementById('u').hasClass(EXPORTING_CLASS)).toBe(false);
-  });
-
-  it('GIVEN the read throws WHEN it does THEN the class is still removed', () => {
-    const node = cy.getElementById('u');
-
-    vi.spyOn(node, 'style').mockImplementation(() => {
-      throw new Error('style read failed');
+      expect(label).toBe(COUNTS_TEXT);
     });
 
-    expect(() => exportLabelOf(cy, 'u')).toThrow('style read failed');
-    expect(node.hasClass(EXPORTING_CLASS)).toBe(false);
+    it('WHEN its export label is read THEN the exporting class is gone after', () => {
+      exportLabelOf(cy, 'u');
+
+      expect(cy.getElementById('u').hasClass(EXPORTING_CLASS)).toBe(false);
+    });
+  });
+
+  describe('GIVEN the read throws', () => {
+    it('WHEN it does THEN the class is still removed', () => {
+      const node = cy.getElementById('u');
+
+      vi.spyOn(node, 'style').mockImplementation(() => {
+        throw new Error('style read failed');
+      });
+
+      expect(() => exportLabelOf(cy, 'u')).toThrow('style read failed');
+      expect(node.hasClass(EXPORTING_CLASS)).toBe(false);
+    });
   });
 });

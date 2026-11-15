@@ -68,17 +68,21 @@ describe('FEATURE: parkedScreenOf', () => {
     screen = parkedScreenOf(inner, (): boolean => isParked);
   });
 
-  it.each(SCREEN_CALLS)('GIVEN the screen is parked WHEN %s is called THEN the inner screen never hears of it', (name, call) => {
-    call(screen);
+  describe('GIVEN the screen is parked', () => {
+    it.each(SCREEN_CALLS)('WHEN %s is called THEN the inner screen never hears of it', (name, call) => {
+      call(screen);
 
-    expect(inner[name]).not.toHaveBeenCalled();
+      expect(inner[name]).not.toHaveBeenCalled();
+    });
   });
 
-  it.each(SCREEN_CALLS)('GIVEN the screen is not parked WHEN %s is called THEN the inner screen does it', (name, call) => {
-    isParked = false;
-    call(screen);
+  describe('GIVEN the screen is not parked', () => {
+    it.each(SCREEN_CALLS)('WHEN %s is called THEN the inner screen does it', (name, call) => {
+      isParked = false;
+      call(screen);
 
-    expect(inner[name]).toHaveBeenCalledOnce();
+      expect(inner[name]).toHaveBeenCalledOnce();
+    });
   });
 });
 
