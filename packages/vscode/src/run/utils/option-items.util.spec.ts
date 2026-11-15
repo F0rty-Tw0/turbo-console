@@ -22,21 +22,27 @@ const ROOT_ROW: TaskNode = { ...TASK_NODE_STUB, id: '//#build', kind: 'task' };
 const LINT_ROW: TaskNode = { ...TASK_NODE_STUB, name: 'lint' };
 
 describe('FEATURE: option items of the Run with Options picker', () => {
-  it.each([
+  describe.each([
     ['task', TASK_ROW],
     ['atom-file', FILE_ROW],
     ['a root //# task', ROOT_ROW]
-  ])('GIVEN a %s row THEN the five items in order', (_name, task) => {
-    expect(optionItemsOf(task)).toStrictEqual([FORCE, ONLY, KEEP, CONC, ARGS]);
+  ])('GIVEN a %s row', (_name, task) => {
+    it('WHEN its option items are listed THEN the five items in order', () => {
+      expect(optionItemsOf(task)).toStrictEqual([FORCE, ONLY, KEEP, CONC, ARGS]);
+    });
   });
 
-  it.each(['atom-umbrella', 'atom-aggregate'] as const)('GIVEN a %s row THEN three items, no only, no extra args', (kind) => {
-    const row: TaskNode = { ...TASK_NODE_STUB, kind };
+  describe.each(['atom-umbrella', 'atom-aggregate'] as const)('GIVEN an %s row', (kind) => {
+    it('WHEN its option items are listed THEN three items, no only, no extra args', () => {
+      const row: TaskNode = { ...TASK_NODE_STUB, kind };
 
-    expect(optionItemsOf(row)).toStrictEqual([FORCE, KEEP, CONC]);
+      expect(optionItemsOf(row)).toStrictEqual([FORCE, KEEP, CONC]);
+    });
   });
 
-  it('GIVEN the task lint THEN the last description names lint', () => {
-    expect(optionItemsOf(LINT_ROW).at(-1)?.description).toBe('after --, passed to every lint task in the run');
+  describe('GIVEN the task lint', () => {
+    it('WHEN its option items are listed THEN the last description names lint', () => {
+      expect(optionItemsOf(LINT_ROW).at(-1)?.description).toBe('after --, passed to every lint task in the run');
+    });
   });
 });
