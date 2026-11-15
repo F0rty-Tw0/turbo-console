@@ -23,7 +23,7 @@ const aliasEntriesOf = (count: number): Record<string, string> => {
   return entries;
 };
 
-describe('FEATURE: alias keys of a dependency', () => {
+describe('FEATURE: alias keys and edge names of a dependency', () => {
   describe('GIVEN a package.json text', () => {
     it.each([
       ['an npm alias', ['ui-alias'], '{"dependencies":{"ui-alias":"npm:@company/ui@^1"}}'],
@@ -81,9 +81,7 @@ describe('FEATURE: alias keys of a dependency', () => {
       expect(keys).toStrictEqual(expected);
     });
   });
-});
 
-describe('FEATURE: names an edge matches', () => {
   describe("GIVEN the source's package.json text", () => {
     it.each([
       ['null (unreadable)', [DEPENDENCY], null],
