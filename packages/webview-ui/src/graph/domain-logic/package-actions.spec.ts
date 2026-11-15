@@ -5,7 +5,7 @@ import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { packageActionsDepsMock, packageActionsMock, packageInspectionActionsMock } from '../test/mocks/widget-menu.mock.ts';
 import { callCountOf } from '../test/utils/widget-menu.spec.util.ts';
 
-describe('FEATURE: packageActionsOf', () => {
+describe('FEATURE: package actions', () => {
   describe('GIVEN web is the focused package', () => {
     it('WHEN openDetails runs for web THEN only openDetailsOf is called with web', () => {
       const deps = packageActionsDepsMock('web');
@@ -78,43 +78,45 @@ describe('FEATURE: packageActionsOf', () => {
     });
   });
 
-  it('GIVEN no focused package WHEN clearFocus runs THEN nothing is called', () => {
-    const deps = packageActionsDepsMock(null);
-    const inspection = packageInspectionActionsMock();
+  describe('GIVEN no focused package', () => {
+    it('WHEN clearFocus runs THEN nothing is called', () => {
+      const deps = packageActionsDepsMock(null);
+      const inspection = packageInspectionActionsMock();
 
-    packageActionsOf(deps, inspection).clearFocus();
+      packageActionsOf(deps, inspection).clearFocus();
 
-    expect(callCountOf(deps) + callCountOf(inspection)).toBe(0);
-  });
-});
-
-describe('FEATURE: focusingShowTasksOf', () => {
-  let container: HTMLElement;
-
-  beforeEach(() => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    container = document.createElement('div');
+      expect(callCountOf(deps) + callCountOf(inspection)).toBe(0);
+    });
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
+  describe('GIVEN a container', () => {
+    let container: HTMLElement;
 
-  it('GIVEN a container WHEN showTasks runs for docs THEN the actions show docs tasks and the container has focus', () => {
-    const actions = packageActionsMock();
+    beforeEach(() => {
+      vi.stubGlobal('document', fakeDocumentMock());
+      container = document.createElement('div');
+    });
 
-    focusingShowTasksOf(actions, container).showTasks('docs');
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
 
-    expect(actions.showTasks).toHaveBeenCalledWith('docs');
-    expect(document.activeElement).toBe(container);
-  });
+    it('WHEN showTasks runs for docs THEN the actions show docs tasks and the container has focus', () => {
+      const actions = packageActionsMock();
 
-  it('GIVEN a container WHEN focus runs for docs THEN the actions focus docs and the container does not take focus', () => {
-    const actions = packageActionsMock();
+      focusingShowTasksOf(actions, container).showTasks('docs');
 
-    focusingShowTasksOf(actions, container).focus('docs');
+      expect(actions.showTasks).toHaveBeenCalledWith('docs');
+      expect(document.activeElement).toBe(container);
+    });
 
-    expect(actions.focus).toHaveBeenCalledWith('docs');
-    expect(document.activeElement).not.toBe(container);
+    it('WHEN focus runs for docs THEN the actions focus docs and the container does not take focus', () => {
+      const actions = packageActionsMock();
+
+      focusingShowTasksOf(actions, container).focus('docs');
+
+      expect(actions.focus).toHaveBeenCalledWith('docs');
+      expect(document.activeElement).not.toBe(container);
+    });
   });
 });

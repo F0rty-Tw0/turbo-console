@@ -206,9 +206,11 @@ describe('FEATURE: GraphFlow', () => {
     });
   });
 
-  it('GIVEN no highlight WHEN the pointer moves THEN no frame is asked for', () => {
-    container.dispatchEvent(POINTER_MOVE);
+  describe('GIVEN no highlight', () => {
+    it('WHEN the pointer moves THEN no frame is asked for', () => {
+      container.dispatchEvent(POINTER_MOVE);
 
-    expect(clock.pendingFrames()).toBe(0);
+      expect(clock.pendingFrames()).toBe(0);
+    });
   });
 });

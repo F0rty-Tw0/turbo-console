@@ -5,7 +5,7 @@ import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { widgetRowViewsMock } from '../test/mocks/widget-row-views.mock.ts';
 import { rectOf } from '../test/utils/rect.spec.util.ts';
 
-describe('FEATURE: releaseFocusOf', () => {
+describe('FEATURE: node toolbar place', () => {
   beforeEach((): void => {
     vi.stubGlobal('document', fakeDocumentMock());
   });
@@ -14,109 +14,117 @@ describe('FEATURE: releaseFocusOf', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN focus on a button inside the root WHEN it is released THEN the container has focus', () => {
-    const { root, focus } = widgetRowViewsMock().views.packageToolbar('web', null);
-    const container = document.createElement('div');
+  describe('GIVEN a toolbar root built for web', () => {
+    describe('GIVEN focus on a button inside the root', () => {
+      it('WHEN it is released THEN the container has focus', () => {
+        const { root, focus } = widgetRowViewsMock().views.packageToolbar('web', null);
+        const container = document.createElement('div');
 
-    focus.focus();
-    releaseFocusOf(root, container);
+        focus.focus();
+        releaseFocusOf(root, container);
 
-    expect(document.activeElement).toBe(container);
+        expect(document.activeElement).toBe(container);
+      });
+    });
+
+    describe('GIVEN focus elsewhere', () => {
+      it('WHEN it is released THEN focus stays there', () => {
+        const { root } = widgetRowViewsMock().views.packageToolbar('web', null);
+        const container = document.createElement('div');
+        const other = document.createElement('button');
+
+        other.focus();
+        releaseFocusOf(root, container);
+
+        expect(document.activeElement).toBe(other);
+      });
+    });
   });
 
-  it('GIVEN focus elsewhere WHEN it is released THEN focus stays there', () => {
-    const { root } = widgetRowViewsMock().views.packageToolbar('web', null);
-    const container = document.createElement('div');
-    const other = document.createElement('button');
+  describe('GIVEN a toolbar root on a layer', () => {
+    let layer: HTMLElement;
+    let root: HTMLElement;
+    let focus: HTMLButtonElement;
+    let container: HTMLElement;
 
-    other.focus();
-    releaseFocusOf(root, container);
+    beforeEach((): void => {
+      ({ root, focus } = widgetRowViewsMock().views.packageToolbar('web', null));
+      layer = document.createElement('div');
+      container = document.createElement('div');
+      layer.append(root);
+    });
 
-    expect(document.activeElement).toBe(other);
-  });
-});
+    describe('GIVEN a root on the layer', () => {
+      it('WHEN it is removed THEN the layer no longer holds it', () => {
+        removeToolbarRoot(root, container);
 
-describe('FEATURE: removeToolbarRoot', () => {
-  let layer: HTMLElement;
-  let root: HTMLElement;
-  let focus: HTMLButtonElement;
-  let container: HTMLElement;
+        expect(Array.from(layer.children)).not.toContain(root);
+      });
+    });
 
-  beforeEach((): void => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    ({ root, focus } = widgetRowViewsMock().views.packageToolbar('web', null));
-    layer = document.createElement('div');
-    container = document.createElement('div');
-    layer.append(root);
-  });
+    describe('GIVEN focus on a button inside the root', () => {
+      it('WHEN it is removed THEN the container has focus', () => {
+        focus.focus();
 
-  afterEach((): void => {
-    vi.unstubAllGlobals();
-  });
+        removeToolbarRoot(root, container);
 
-  it('GIVEN a root on the layer WHEN it is removed THEN the layer no longer holds it', () => {
-    removeToolbarRoot(root, container);
+        expect(document.activeElement).toBe(container);
+      });
+    });
 
-    expect(Array.from(layer.children)).not.toContain(root);
-  });
+    describe('GIVEN focus elsewhere', () => {
+      it('WHEN the root is removed THEN focus stays there', () => {
+        const other = document.createElement('button');
 
-  it('GIVEN focus on a button inside the root WHEN it is removed THEN the container has focus', () => {
-    focus.focus();
+        other.focus();
+        removeToolbarRoot(root, container);
 
-    removeToolbarRoot(root, container);
-
-    expect(document.activeElement).toBe(container);
-  });
-
-  it('GIVEN focus elsewhere WHEN the root is removed THEN focus stays there', () => {
-    const other = document.createElement('button');
-
-    other.focus();
-    removeToolbarRoot(root, container);
-
-    expect(document.activeElement).toBe(other);
-  });
-});
-
-describe('FEATURE: placeToolbarRoot', () => {
-  let root: HTMLElement;
-  let focus: HTMLButtonElement;
-  let container: HTMLElement;
-
-  beforeEach((): void => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    ({ root, focus } = widgetRowViewsMock().views.packageToolbar('web', null));
-    container = document.createElement('div');
+        expect(document.activeElement).toBe(other);
+      });
+    });
   });
 
-  afterEach((): void => {
-    vi.unstubAllGlobals();
-  });
+  describe('GIVEN a toolbar root built hidden beside a container', () => {
+    let root: HTMLElement;
+    let focus: HTMLButtonElement;
+    let container: HTMLElement;
 
-  it('GIVEN a rect WHEN the root is placed THEN it shows at the rect on whole px', () => {
-    placeToolbarRoot(root, rectOf(156.4, 22.6, 180, 46), container);
+    beforeEach((): void => {
+      ({ root, focus } = widgetRowViewsMock().views.packageToolbar('web', null));
+      container = document.createElement('div');
+    });
 
-    expect(root.hidden).toBe(false);
-    expect(root.style.transform).toBe('translate(156px, 23px)');
-  });
+    describe('GIVEN a rect', () => {
+      it('WHEN the root is placed THEN it shows at the rect on whole px', () => {
+        placeToolbarRoot(root, rectOf(156.4, 22.6, 180, 46), container);
 
-  it('GIVEN a shown root with focus inside WHEN it is placed at null THEN it hides and the container has focus', () => {
-    placeToolbarRoot(root, rectOf(156, 22, 180, 46), container);
-    focus.focus();
+        expect(root.hidden).toBe(false);
+        expect(root.style.transform).toBe('translate(156px, 23px)');
+      });
+    });
 
-    placeToolbarRoot(root, null, container);
+    describe('GIVEN a shown root with focus inside', () => {
+      it('WHEN it is placed at null THEN it hides and the container has focus', () => {
+        placeToolbarRoot(root, rectOf(156, 22, 180, 46), container);
+        focus.focus();
 
-    expect(root.hidden).toBe(true);
-    expect(document.activeElement).toBe(container);
-  });
+        placeToolbarRoot(root, null, container);
 
-  it('GIVEN a root built hidden WHEN it is placed at null THEN the focus is not read', () => {
-    const contains = vi.spyOn(root, 'contains');
+        expect(root.hidden).toBe(true);
+        expect(document.activeElement).toBe(container);
+      });
+    });
 
-    expect(root.hidden).toBe(true);
+    describe('GIVEN a root built hidden', () => {
+      it('WHEN it is placed at null THEN the focus is not read', () => {
+        const contains = vi.spyOn(root, 'contains');
 
-    placeToolbarRoot(root, null, container);
+        expect(root.hidden).toBe(true);
 
-    expect(contains).not.toHaveBeenCalled();
+        placeToolbarRoot(root, null, container);
+
+        expect(contains).not.toHaveBeenCalled();
+      });
+    });
   });
 });

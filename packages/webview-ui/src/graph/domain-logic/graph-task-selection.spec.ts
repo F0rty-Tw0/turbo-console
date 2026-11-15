@@ -289,27 +289,33 @@ describe('FEATURE: GraphTaskSelection', () => {
     });
   });
 
-  it('GIVEN entering open WHEN left THEN the panel enters open and exits, and the task "…" goes', () => {
-    selection.enter(true);
-    selection.exit();
+  describe('GIVEN entering open', () => {
+    it('WHEN left THEN the panel enters open and exits, and the task "…" goes', () => {
+      selection.enter(true);
+      selection.exit();
 
-    expect(rig.details.enter).toHaveBeenCalledExactlyOnceWith(true);
-    expect(rig.details.exit).toHaveBeenCalledTimes(1);
-    expect(rig.widgets.exit).toHaveBeenCalledTimes(1);
+      expect(rig.details.enter).toHaveBeenCalledExactlyOnceWith(true);
+      expect(rig.details.exit).toHaveBeenCalledTimes(1);
+      expect(rig.widgets.exit).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('GIVEN web#build hovered WHEN task mode is left and entered again THEN the canvas is painted with no target', () => {
-    selection.hover('web#build');
-    selection.enter(true);
-    selection.exit();
-    selection.enter(true);
+  describe('GIVEN web#build hovered', () => {
+    it('WHEN task mode is left and entered again THEN the canvas is painted with no target', () => {
+      selection.hover('web#build');
+      selection.enter(true);
+      selection.exit();
+      selection.enter(true);
 
-    expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+      expect(rig.canvas.paint).toHaveBeenLastCalledWith(null);
+    });
   });
 
-  it('GIVEN a frame rendered WHEN it is passed on THEN the task "…" follows', () => {
-    selection.rendered();
+  describe('GIVEN a frame rendered', () => {
+    it('WHEN it is passed on THEN the task "…" follows', () => {
+      selection.rendered();
 
-    expect(rig.widgets.rendered).toHaveBeenCalledTimes(1);
+      expect(rig.widgets.rendered).toHaveBeenCalledTimes(1);
+    });
   });
 });

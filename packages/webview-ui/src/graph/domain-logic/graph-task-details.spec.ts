@@ -149,7 +149,7 @@ describe('FEATURE: GraphTaskDetails', () => {
       expect(document.activeElement).toBe(rig.deps.page.packagesMode);
     });
 
-    describe('AND the mode group hidden', () => {
+    describe('GIVEN the mode group is hidden', () => {
       it('WHEN task mode is left with focus in the panel THEN Controls takes focus', () => {
         rig.deps.page.modeGroup.hidden = true;
         details.show(RUNNING);
@@ -161,10 +161,12 @@ describe('FEATURE: GraphTaskDetails', () => {
     });
   });
 
-  it('GIVEN task mode is off WHEN Details is clicked THEN nothing is passed on', () => {
-    rig.deps.page.details.click();
+  describe('GIVEN task mode is off', () => {
+    it('WHEN Details is clicked THEN nothing is passed on', () => {
+      rig.deps.page.details.click();
 
-    expect(rig.onToggle).not.toHaveBeenCalled();
+      expect(rig.onToggle).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN a#build is shown running', () => {

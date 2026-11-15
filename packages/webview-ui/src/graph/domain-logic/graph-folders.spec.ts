@@ -270,9 +270,11 @@ describe('FEATURE: GraphFolders', () => {
     });
   });
 
-  it('GIVEN no toggle WHEN a frame is drawn THEN the toggle time stays null', () => {
-    folders.rendered();
+  describe('GIVEN no toggle', () => {
+    it('WHEN a frame is drawn THEN the toggle time stays null', () => {
+      folders.rendered();
 
-    expect(folders.toggleMs()).toBeNull();
+      expect(folders.toggleMs()).toBeNull();
+    });
   });
 });

@@ -26,60 +26,61 @@ const CONTEXT: Omit<DetailsContext, 'drawn'> = {
   focusedFolder: null
 };
 
-describe('FEATURE: hadFocusOf', () => {
-  let aside: HTMLElement;
-  let content: HTMLElement;
-  let clear: HTMLButtonElement;
-
-  beforeEach(() => {
-    vi.stubGlobal('document', fakeDocumentMock());
-    aside = document.createElement('aside');
-    content = document.createElement('div');
-    clear = document.createElement('button');
-    aside.append(clear, content);
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('GIVEN focus on a button in the content WHEN core is shown THEN the view takes focus', () => {
-    const button = document.createElement('button');
-
-    content.append(button);
-    button.focus();
-
-    expect(hadFocusOf(content, clear, CORE)).toBe(true);
-  });
-
-  it('GIVEN focus on Clear selection WHEN core is shown THEN Clear keeps focus', () => {
-    clear.focus();
-
-    expect(hadFocusOf(content, clear, CORE)).toBe(false);
-  });
-
-  it('GIVEN focus on Clear selection WHEN nothing is shown THEN the Empty view takes focus', () => {
-    clear.focus();
-
-    expect(hadFocusOf(content, clear, NOTHING)).toBe(true);
-  });
-
-  it('GIVEN focus outside the aside WHEN nothing is shown THEN focus stays put', () => {
-    const search = document.createElement('input');
-
-    search.focus();
-
-    expect(hadFocusOf(content, clear, NOTHING)).toBe(false);
-  });
-});
-
-describe('FEATURE: updateView of a package', () => {
+describe('FEATURE: graph details render', () => {
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN an aside holding Clear selection and the content', () => {
+    let aside: HTMLElement;
+    let content: HTMLElement;
+    let clear: HTMLButtonElement;
+
+    beforeEach(() => {
+      aside = document.createElement('aside');
+      content = document.createElement('div');
+      clear = document.createElement('button');
+      aside.append(clear, content);
+    });
+
+    describe('GIVEN focus on a button in the content', () => {
+      it('WHEN core is shown THEN the view takes focus', () => {
+        const button = document.createElement('button');
+
+        content.append(button);
+        button.focus();
+
+        expect(hadFocusOf(content, clear, CORE)).toBe(true);
+      });
+    });
+
+    describe('GIVEN focus on Clear selection', () => {
+      it('WHEN core is shown THEN Clear keeps focus', () => {
+        clear.focus();
+
+        expect(hadFocusOf(content, clear, CORE)).toBe(false);
+      });
+
+      it('WHEN nothing is shown THEN the Empty view takes focus', () => {
+        clear.focus();
+
+        expect(hadFocusOf(content, clear, NOTHING)).toBe(true);
+      });
+    });
+
+    describe('GIVEN focus outside the aside', () => {
+      it('WHEN nothing is shown THEN focus stays put', () => {
+        const search = document.createElement('input');
+
+        search.focus();
+
+        expect(hadFocusOf(content, clear, NOTHING)).toBe(false);
+      });
+    });
   });
 
   describe('GIVEN the web card built with the heading web', () => {

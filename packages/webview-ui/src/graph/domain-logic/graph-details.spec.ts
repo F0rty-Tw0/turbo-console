@@ -44,26 +44,30 @@ describe('FEATURE: GraphDetails mount', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN package mode WHEN the first graph draws THEN the panel is built under the Details bar', async () => {
-    rig.side.show(STATE_STUB, 1);
-    await settled();
+  describe('GIVEN package mode', () => {
+    it('WHEN the first graph draws THEN the panel is built under the Details bar', async () => {
+      rig.side.show(STATE_STUB, 1);
+      await settled();
 
-    expect(rig.page.body.contains(rig.page.detailsBar)).toBe(true);
+      expect(rig.page.body.contains(rig.page.detailsBar)).toBe(true);
+    });
   });
 
-  it('GIVEN task mode WHEN the first graph draws THEN the panel is built', async () => {
-    rig.modes.setMode('tasks', 'h1');
-    rig.side.show(STATE_STUB, 1);
-    await settled();
+  describe('GIVEN task mode', () => {
+    it('WHEN the first graph draws THEN the panel is built', async () => {
+      rig.modes.setMode('tasks', 'h1');
+      rig.side.show(STATE_STUB, 1);
+      await settled();
 
-    expect(bodyIdsOf(rig)).toContain(DETAILS_ID);
-  });
+      expect(bodyIdsOf(rig)).toContain(DETAILS_ID);
+    });
 
-  it('GIVEN task mode WHEN the first graph draws THEN the Details bar stays out of the panel, held by task mode', async () => {
-    rig.modes.setMode('tasks', 'h1');
-    rig.side.show(STATE_STUB, 1);
-    await settled();
+    it('WHEN the first graph draws THEN the Details bar stays out of the panel, held by task mode', async () => {
+      rig.modes.setMode('tasks', 'h1');
+      rig.side.show(STATE_STUB, 1);
+      await settled();
 
-    expect(rig.page.body.contains(rig.page.detailsBar)).toBe(false);
+      expect(rig.page.body.contains(rig.page.detailsBar)).toBe(false);
+    });
   });
 });

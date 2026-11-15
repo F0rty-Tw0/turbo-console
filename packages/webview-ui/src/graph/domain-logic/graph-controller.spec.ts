@@ -75,25 +75,29 @@ describe('FEATURE: createGraphController', () => {
     });
   });
 
-  it('GIVEN a grouping choice saved with a bad camera WHEN a large graph is laid out THEN its folder opens collapsed', async () => {
-    vi.mocked(mock.deps.bridge.savedState).mockReturnValue(BAD_CAMERA_RAW);
-    const controller = createGraphController(mock.deps);
-    const result = resultOf('h1', LARGE_POSITIONS);
+  describe('GIVEN a grouping choice saved with a bad camera', () => {
+    it('WHEN a large graph is laid out THEN its folder opens collapsed', async () => {
+      vi.mocked(mock.deps.bridge.savedState).mockReturnValue(BAD_CAMERA_RAW);
+      const controller = createGraphController(mock.deps);
+      const result = resultOf('h1', LARGE_POSITIONS);
 
-    controller.receive({ type: 'state', state: LARGE_STATE_STUB });
-    await mock.runs.settle(0, result);
-    const scene = mock.view.showFolders.mock.lastCall?.[0];
+      controller.receive({ type: 'state', state: LARGE_STATE_STUB });
+      await mock.runs.settle(0, result);
+      const scene = mock.view.showFolders.mock.lastCall?.[0];
 
-    expect(controller.facts.grouped()).toBe(true);
-    expect(scene?.collapsed).toStrictEqual(new Set(['apps']));
+      expect(controller.facts.grouped()).toBe(true);
+      expect(scene?.collapsed).toStrictEqual(new Set(['apps']));
+    });
   });
 
-  it('GIVEN no state WHEN a runs message carries affected marks THEN the task canvas gets its tasks', () => {
-    const controller = createGraphController(mock.deps);
+  describe('GIVEN no state', () => {
+    it('WHEN a runs message carries affected marks THEN the task canvas gets its tasks', () => {
+      const controller = createGraphController(mock.deps);
 
-    controller.receive({ type: 'runs', runs: {}, affected: AFFECTED });
+      controller.receive({ type: 'runs', runs: {}, affected: AFFECTED });
 
-    expect(mock.view.tasks.affected).toHaveBeenCalledExactlyOnceWith(AFFECTED_TASKS);
+      expect(mock.view.tasks.affected).toHaveBeenCalledExactlyOnceWith(AFFECTED_TASKS);
+    });
   });
 
   describe('GIVEN a restored panel whose saved view says packages', () => {

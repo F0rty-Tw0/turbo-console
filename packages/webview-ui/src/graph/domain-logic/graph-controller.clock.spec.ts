@@ -52,12 +52,14 @@ describe('FEATURE: createGraphController card clock', () => {
       expect(vi.mocked(mock.deps.clockPorts.clearInterval)).toHaveBeenCalledOnce();
     });
 
-    it('GIVEN a live clock and 5 minutes of page time WHEN clockShown is called THEN the canvas gets 6m 4s', () => {
-      controller.receive({ type: 'runs', runs: RUNS, elapsed: ELAPSED });
-      t = 301_000;
-      controller.clockShown();
+    describe('GIVEN a live clock and 5 minutes of page time', () => {
+      it('WHEN clockShown is called THEN the canvas gets 6m 4s', () => {
+        controller.receive({ type: 'runs', runs: RUNS, elapsed: ELAPSED });
+        t = 301_000;
+        controller.clockShown();
 
-      expect(mock.view.tasks.clocks).toHaveBeenLastCalledWith({ 'web#build': '6m 4s' });
+        expect(mock.view.tasks.clocks).toHaveBeenLastCalledWith({ 'web#build': '6m 4s' });
+      });
     });
   });
 });

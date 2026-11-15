@@ -46,9 +46,11 @@ describe('FEATURE: showInspectionBar', () => {
     });
   });
 
-  it('GIVEN task mode WHEN core is shown THEN nothing is written', () => {
-    showInspectionBar({ page, isPackageMode: (): boolean => false }, CORE, CORE_TEXT);
+  describe('GIVEN task mode', () => {
+    it('WHEN core is shown THEN nothing is written', () => {
+      showInspectionBar({ page, isPackageMode: (): boolean => false }, CORE, CORE_TEXT);
 
-    expect([page.status.textContent, page.detailsSummary.textContent, page.detailsBar.hidden]).toStrictEqual(['', '', true]);
+      expect([page.status.textContent, page.detailsSummary.textContent, page.detailsBar.hidden]).toStrictEqual(['', '', true]);
+    });
   });
 });

@@ -61,17 +61,19 @@ describe('FEATURE: GraphLayouts', () => {
     harness = layoutsHarness();
   });
 
-  it('GIVEN the grouped layout is pending WHEN the reader toggles flat, grouped, flat, grouped THEN one grouped run lays out and lands once', async () => {
-    harness.open(STATE_STUB, SAVED_FLAT_STUB);
-    void harness.layouts.switchTo('folders');
-    void harness.layouts.switchTo('flat');
-    void harness.layouts.switchTo('folders');
-    await harness.runs.settle(0, resultOf('h1', GROUPED_POSITIONS_STUB));
+  describe('GIVEN the grouped layout is pending', () => {
+    it('WHEN the reader toggles flat, grouped, flat, grouped THEN one grouped run lays out and lands once', async () => {
+      harness.open(STATE_STUB, SAVED_FLAT_STUB);
+      void harness.layouts.switchTo('folders');
+      void harness.layouts.switchTo('flat');
+      void harness.layouts.switchTo('folders');
+      await harness.runs.settle(0, resultOf('h1', GROUPED_POSITIONS_STUB));
 
-    expect(harness.runs.count()).toBe(1);
-    expect(harness.view.setGrouping).toHaveBeenCalledExactlyOnceWith(expect.any(Array));
-    expect(harness.view.setPositions).toHaveBeenCalledExactlyOnceWith(GROUPED_POSITIONS_STUB);
-    expect(harness.layouts.drawnMode()).toBe('folders');
+      expect(harness.runs.count()).toBe(1);
+      expect(harness.view.setGrouping).toHaveBeenCalledExactlyOnceWith(expect.any(Array));
+      expect(harness.view.setPositions).toHaveBeenCalledExactlyOnceWith(GROUPED_POSITIONS_STUB);
+      expect(harness.layouts.drawnMode()).toBe('folders');
+    });
   });
 
   describe('GIVEN a new hash', () => {

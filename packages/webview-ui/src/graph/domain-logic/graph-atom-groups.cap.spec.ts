@@ -212,12 +212,14 @@ describe('FEATURE: a capped Atomizer group toggled by its count node and redrawn
     });
   });
 
-  it('GIVEN a 40-file group left collapsed WHEN an atoms message fails f30 THEN no position is set', () => {
-    placeGroup(40);
-    rig.atoms.setPositions.mockClear();
+  describe('GIVEN a 40-file group left collapsed', () => {
+    it('WHEN an atoms message fails f30 THEN no position is set', () => {
+      placeGroup(40);
+      rig.atoms.setPositions.mockClear();
 
-    groups.states(atomsOf(F30_FAILED));
+      groups.states(atomsOf(F30_FAILED));
 
-    expect(rig.atoms.setPositions).not.toHaveBeenCalled();
+      expect(rig.atoms.setPositions).not.toHaveBeenCalled();
+    });
   });
 });
