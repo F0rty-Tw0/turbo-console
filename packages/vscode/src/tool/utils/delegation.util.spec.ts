@@ -14,7 +14,7 @@ const REPLACED_BUILTINS = ['clean', 'purge', 'setup', 'deploy', 'rebuild', 'rb']
 
 describe('FEATURE: delegation parser', () => {
   // `start` is the candidate index: 2 for the `npx` row (its wrapper tokens are skipped by the caller), else 0.
-  it.each<[string, Record<string, string>, boolean, string | null]>([
+  describe.each<[string, Record<string, string>, boolean, string | null]>([
     ['npm run test:app', { 'test:app': 'vitest' }, true, 'test:app'],
     ['npm run-script lint', { lint: 'eslint .' }, true, 'lint'],
     ['pnpm test:app', { 'test:app': 'vitest run' }, true, 'test:app'],
@@ -74,9 +74,8 @@ describe('FEATURE: delegation parser', () => {
     ['turbo run test -- a b', { test: 'vitest' }, true, 'test'],
     ['npx --workspace=web turbo run test', { test: 'vitest' }, true, null],
     ['npx turbo run test', { test: 'vitest' }, true, 'test']
-  ])(
-    'GIVEN the tokens of %j and scripts %j (followTurbo %s) WHEN the delegation is read THEN it is %j',
-    (command, bodies, followTurbo, expected) => {
+  ])('GIVEN the tokens of %j and scripts %j (followTurbo %s)', (command, bodies, followTurbo, expected) => {
+    it(`WHEN the delegation is read THEN it is ${JSON.stringify(expected)}`, () => {
       const tokens = tokensOf(command);
       const turboIndex = tokens.indexOf('turbo');
       const start = tokens[0] === 'npx' ? turboIndex : 0;
@@ -84,8 +83,8 @@ describe('FEATURE: delegation parser', () => {
       const name = delegationOf(tokens, start, scriptsOf(bodies, followTurbo));
 
       expect(name).toBe(expected);
-    }
-  );
+    });
+  });
 
   describe.each([...BUILTINS_BY_MANAGER])('GIVEN the %s built-in commands', (manager, builtins) => {
     it('WHEN a script has the same name THEN the built-in wins and nothing is followed', () => {
