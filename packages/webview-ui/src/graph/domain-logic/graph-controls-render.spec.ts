@@ -48,7 +48,7 @@ const rendered = (view: ControlsView): ControlsElements => {
   return elements;
 };
 
-describe('FEATURE: renderControls', () => {
+describe('FEATURE: graph controls render', () => {
   beforeEach((): void => {
     vi.stubGlobal('document', fakeDocumentMock());
   });
@@ -144,16 +144,6 @@ describe('FEATURE: renderControls', () => {
       expect(showAll).toMatchObject({ hidden: isHidden, textContent: text, title: text });
       expect(showAll.getAttribute('aria-disabled')).toBeNull();
     });
-  });
-});
-
-describe('FEATURE: renderLabels', () => {
-  beforeEach((): void => {
-    vi.stubGlobal('document', fakeDocumentMock());
-  });
-
-  afterEach((): void => {
-    vi.unstubAllGlobals();
   });
 
   describe('GIVEN rows built with full names', () => {
