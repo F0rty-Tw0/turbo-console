@@ -44,8 +44,7 @@
     },
     "bench": {
       "dependsOn": ["build"],
-      "cache": false,
-      "outputs": [".bench/**"]
+      "cache": false
     }
   }
 }
