@@ -5,8 +5,14 @@ import { LAYOUT_SETTLE_MS } from '../common/graph.const.ts';
 import { rejectionOf } from './test/utils/rejection.spec.util.ts';
 import { targetLikeState } from '../test/utils/graph-target-like.spec.util.ts';
 
+// The case waits out the whole settle time before anything can be asserted. The default 30 s budget leaves only as
+// much again for a cold browser context, which a loaded macOS runner used up (PR #371).
+const CRASH_TEST_TIMEOUT_MS = 4 * LAYOUT_SETTLE_MS;
+
 test.describe('FEATURE: bench cold open', () => {
   test('GIVEN a worker that crashes, a timed cold open throws after the full ELK settle time', async ({ browser }): Promise<void> => {
+    test.setTimeout(CRASH_TEST_TIMEOUT_MS);
+
     const rejection = await test.step('WHEN a cold open is timed', async (): Promise<string | null> =>
       rejectionOf(coldOpen(browser, targetLikeState(), { workers: 'error' })));
 
