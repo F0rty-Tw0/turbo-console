@@ -63,18 +63,27 @@ const bentFromApps = (target: string): ProbeEdgeLine => {
   return lineThrough('apps', target, [FAR, bend, end]);
 };
 
-describe('FEATURE: countsOf offBorder', () => {
-  it.each([
+describe('FEATURE: graph folder links', () => {
+  const crossingStart: ViewportPoint = { x: 300, y: 308 };
+  const crossingEnd: ViewportPoint = { x: 340, y: 308 };
+  const besideStart: ViewportPoint = { x: 300, y: 340 };
+  const besideEnd: ViewportPoint = { x: 340, y: 340 };
+  const crossing = lineThrough('apps', 'pkg', [crossingStart, crossingEnd]);
+  const beside = lineThrough('apps', 'pkg', [besideStart, besideEnd]);
+
+  describe.each([
     { title: 'the end on the right border', endX: 130, faults: 0 },
     { title: 'the end 2 px inside the border', endX: 128, faults: 0 },
     { title: 'the end 5 px outside the border', endX: 135, faults: 0 },
     { title: 'the end at the node centre', endX: 100, faults: 1 },
     { title: 'the end 4 px inside the border', endX: 126, faults: 1 },
     { title: 'the end 20 px outside the border', endX: 150, faults: 1 }
-  ])('GIVEN $title WHEN the source is collapsed THEN $faults faults', ({ endX, faults }) => {
-    const read = readOf([linkOf('apps', 'pkg')], [fromApps(endX)]);
+  ])('GIVEN $title', ({ endX, faults }) => {
+    it(`WHEN the source is collapsed THEN ${faults} faults`, () => {
+      const read = readOf([linkOf('apps', 'pkg')], [fromApps(endX)]);
 
-    expect(countsOf(read).offBorder).toBe(faults);
+      expect(countsOf(read).offBorder).toBe(faults);
+    });
   });
 
   describe('GIVEN the target is the collapsed folder', () => {
@@ -94,47 +103,40 @@ describe('FEATURE: countsOf offBorder', () => {
       expect(countsOf(read).offBorder).toBe(1);
     });
   });
-});
 
-describe('FEATURE: countsOf labelsOnLine', () => {
-  const crossingStart: ViewportPoint = { x: 300, y: 308 };
-  const crossingEnd: ViewportPoint = { x: 340, y: 308 };
-  const besideStart: ViewportPoint = { x: 300, y: 340 };
-  const besideEnd: ViewportPoint = { x: 340, y: 340 };
-  const crossing = lineThrough('apps', 'pkg', [crossingStart, crossingEnd]);
-  const beside = lineThrough('apps', 'pkg', [besideStart, besideEnd]);
-
-  it.each([
+  describe.each([
     { title: 'a line through its label', line: crossing, onLine: 1 },
     { title: 'a line clear of its label', line: beside, onLine: 0 }
-  ])('GIVEN $title WHEN counted THEN labelsOnLine is $onLine', ({ line, onLine }) => {
-    const read = readOf([linkOf('apps', 'pkg')], [line]);
+  ])('GIVEN $title', ({ line, onLine }) => {
+    it(`WHEN counted THEN labelsOnLine is ${onLine}`, () => {
+      const read = readOf([linkOf('apps', 'pkg')], [line]);
 
-    expect(countsOf(read).labelsOnLine).toBe(onLine);
+      expect(countsOf(read).labelsOnLine).toBe(onLine);
+    });
   });
-});
 
-describe('FEATURE: isReady', () => {
-  const line = fromApps(130);
-  const drawn = linkOf('apps', 'pkg');
-  const hidden: ProbeFolderLink = { ...drawn, isDrawn: false };
+  describe('GIVEN a read checked for readiness', () => {
+    const line = fromApps(130);
+    const drawn = linkOf('apps', 'pkg');
+    const hidden: ProbeFolderLink = { ...drawn, isDrawn: false };
 
-  it.each([
-    { title: 'one drawn link with a sized label and a line', read: readOf([linkOf('apps', 'pkg')], [line]), ready: true },
-    { title: 'no link', read: readOf([], []), ready: false },
-    { title: 'a link with no line', read: readOf([linkOf('apps', 'pkg')], []), ready: false },
-    { title: 'a link whose label has no size', read: readOf([linkOf('apps', 'pkg', NO_SIZE)], [line]), ready: false },
-    { title: 'a link that is not drawn', read: readOf([hidden], [line]), ready: false }
-  ])('GIVEN $title WHEN read THEN ready is $ready', ({ read, ready }) => {
-    expect(isReady(read)).toBe(ready);
+    describe.each([
+      { title: 'one drawn link with a sized label and a line', read: readOf([linkOf('apps', 'pkg')], [line]), ready: true },
+      { title: 'no link', read: readOf([], []), ready: false },
+      { title: 'a link with no line', read: readOf([linkOf('apps', 'pkg')], []), ready: false },
+      { title: 'a link whose label has no size', read: readOf([linkOf('apps', 'pkg', NO_SIZE)], [line]), ready: false },
+      { title: 'a link that is not drawn', read: readOf([hidden], [line]), ready: false }
+    ])('GIVEN $title', ({ read, ready }) => {
+      it(`WHEN read THEN ready is ${ready}`, () => {
+        expect(isReady(read)).toBe(ready);
+      });
+    });
   });
-});
-
-describe('FEATURE: packageEndOf', () => {
-  const nodes = [nodeAt('a', 300, 100), nodeAt('b', 300, 200)];
-  const read = readOf([linkOf('apps', 'b'), linkOf('apps', 'a')], [bentFromApps('b'), bentFromApps('a')], nodes);
 
   describe('GIVEN two drawn links to packages', () => {
+    const nodes = [nodeAt('a', 300, 100), nodeAt('b', 300, 200)];
+    const read = readOf([linkOf('apps', 'b'), linkOf('apps', 'a')], [bentFromApps('b'), bentFromApps('a')], nodes);
+
     it('WHEN the end is picked THEN it is the first package by name', () => {
       expect(packageEndOf(read)).toBe('a');
     });
