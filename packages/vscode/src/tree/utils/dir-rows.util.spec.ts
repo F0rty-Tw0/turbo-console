@@ -203,9 +203,7 @@ describe('FEATURE: children rows of a directory', () => {
       expect(rows[0]?.description).toBe(`${path.slice(0, DESCRIPTION_MAX - 1)}…`);
     });
   });
-});
 
-describe('FEATURE: the single-package // row', () => {
   describe('GIVEN the single-package // node', () => {
     const pkg: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '', label: 'single-app' };
     const view = modelViewWith([pkg]);
