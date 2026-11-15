@@ -47,27 +47,35 @@ const linkOf = (source: string, target: string, labelBox: ProbeRect): ProbeFolde
 const roundedOf = (point: ViewportPoint): number[] => [Math.round(point.x * 10) / 10, Math.round(point.y * 10) / 10];
 
 describe('FEATURE: labelTurnDragOf', () => {
-  it('GIVEN a label up and right of the line WHEN pkg is dragged THEN the line turns toward the label', () => {
-    const read = readOf(linkOf('apps', 'pkg', labelAt(20, -20)), [APPS_END, PKG_END]);
+  describe('GIVEN a label up and right of the line', () => {
+    it('WHEN pkg is dragged THEN the line turns toward the label', () => {
+      const read = readOf(linkOf('apps', 'pkg', labelAt(20, -20)), [APPS_END, PKG_END]);
 
-    expect(roundedOf(labelTurnDragOf(read, 'pkg'))).toStrictEqual(roundedOf(TURN_UP_RIGHT));
+      expect(roundedOf(labelTurnDragOf(read, 'pkg'))).toStrictEqual(roundedOf(TURN_UP_RIGHT));
+    });
   });
 
-  it('GIVEN a label down and left of the line WHEN pkg is dragged THEN the line turns away from it, the shorter drag', () => {
-    const read = readOf(linkOf('apps', 'pkg', labelAt(-20, 20)), [APPS_END, PKG_END]);
+  describe('GIVEN a label down and left of the line', () => {
+    it('WHEN pkg is dragged THEN the line turns away from it, the shorter drag', () => {
+      const read = readOf(linkOf('apps', 'pkg', labelAt(-20, 20)), [APPS_END, PKG_END]);
 
-    expect(roundedOf(labelTurnDragOf(read, 'pkg'))).toStrictEqual(roundedOf(TURN_UP_RIGHT));
+      expect(roundedOf(labelTurnDragOf(read, 'pkg'))).toStrictEqual(roundedOf(TURN_UP_RIGHT));
+    });
   });
 
-  it('GIVEN the link runs from pkg to apps WHEN pkg is dragged THEN its first point is the end that moves', () => {
-    const read = readOf(linkOf('pkg', 'apps', labelAt(20, -20)), [PKG_END, APPS_END]);
+  describe('GIVEN the link runs from pkg to apps', () => {
+    it('WHEN pkg is dragged THEN its first point is the end that moves', () => {
+      const read = readOf(linkOf('pkg', 'apps', labelAt(20, -20)), [PKG_END, APPS_END]);
 
-    expect(roundedOf(labelTurnDragOf(read, 'pkg'))).toStrictEqual(roundedOf(TURN_UP_RIGHT));
+      expect(roundedOf(labelTurnDragOf(read, 'pkg'))).toStrictEqual(roundedOf(TURN_UP_RIGHT));
+    });
   });
 
-  it('GIVEN no drawn link ends on the package WHEN asked THEN it throws', () => {
-    const read = readOf(linkOf('apps', 'other', labelAt(20, -20)), [APPS_END, PKG_END]);
+  describe('GIVEN no drawn link ends on the package', () => {
+    it('WHEN asked THEN it throws', () => {
+      const read = readOf(linkOf('apps', 'other', labelAt(20, -20)), [APPS_END, PKG_END]);
 
-    expect(() => labelTurnDragOf(read, 'pkg')).toThrow('no drawn folder link ends on pkg');
+      expect(() => labelTurnDragOf(read, 'pkg')).toThrow('no drawn folder link ends on pkg');
+    });
   });
 });

@@ -59,20 +59,22 @@ describe('FEATURE: task details elements', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN buildTaskDetailsPanel WHEN built THEN it is the hidden aside #graph-task-details labelled Details', () => {
-    const { panel } = buildTaskDetailsPanel();
+  describe('GIVEN buildTaskDetailsPanel', () => {
+    it('WHEN built THEN it is the hidden aside #graph-task-details labelled Details', () => {
+      const { panel } = buildTaskDetailsPanel();
 
-    expect(panel).toMatchObject({ tagName: 'ASIDE', id: TASK_DETAILS_ID, hidden: true });
-    expect(panel.className).toBe('graph-details graph-task-details');
-    expect(panel.getAttribute('aria-label')).toBe(DETAILS_LABEL);
-  });
+      expect(panel).toMatchObject({ tagName: 'ASIDE', id: TASK_DETAILS_ID, hidden: true });
+      expect(panel.className).toBe('graph-details graph-task-details');
+      expect(panel.getAttribute('aria-label')).toBe(DETAILS_LABEL);
+    });
 
-  it('GIVEN buildTaskDetailsPanel WHEN built THEN the aside holds only its empty content', () => {
-    const { panel, content } = buildTaskDetailsPanel();
+    it('WHEN built THEN the aside holds only its empty content', () => {
+      const { panel, content } = buildTaskDetailsPanel();
 
-    expect(panel.children).toStrictEqual([content]);
-    expect(content.className).toBe('details-content');
-    expect(content.children).toStrictEqual([]);
+      expect(panel.children).toStrictEqual([content]);
+      expect(content.className).toBe('details-content');
+      expect(content.children).toStrictEqual([]);
+    });
   });
 
   it('GIVEN a task with a null command and isRunnable false THEN No command shows and Run is absent', () => {
@@ -137,19 +139,23 @@ describe('FEATURE: task details elements', () => {
     });
   });
 
-  it('GIVEN a task with no shown dependent WHEN built THEN Dependents reads None shown with no button', () => {
-    const els = buildTaskDetails(RUNNING);
-    const texts = dependentsSectionOf(els.root).map((child) => child.textContent);
+  describe('GIVEN a task with no shown dependent', () => {
+    it('WHEN built THEN Dependents reads None shown with no button', () => {
+      const els = buildTaskDetails(RUNNING);
+      const texts = dependentsSectionOf(els.root).map((child) => child.textContent);
 
-    expect(texts).toStrictEqual(['Dependents', 'None shown']);
-    expect(els.dependents).toStrictEqual([]);
+      expect(texts).toStrictEqual(['Dependents', 'None shown']);
+      expect(els.dependents).toStrictEqual([]);
+    });
   });
 
-  it('GIVEN a#build of package a WHEN built THEN the owner is a details-name button labelled and titled Show package a', () => {
-    const { owner } = buildTaskDetails(RUNNING);
+  describe('GIVEN a#build of package a', () => {
+    it('WHEN built THEN the owner is a details-name button labelled and titled Show package a', () => {
+      const { owner } = buildTaskDetails(RUNNING);
 
-    expect(owner).toMatchObject({ tagName: 'BUTTON', className: 'details-name', textContent: 'a', title: 'Show package a' });
-    expect([owner?.getAttribute('aria-label'), owner?.getAttribute('data-focus')]).toStrictEqual(['Show package a', 'owner']);
+      expect(owner).toMatchObject({ tagName: 'BUTTON', className: 'details-name', textContent: 'a', title: 'Show package a' });
+      expect([owner?.getAttribute('aria-label'), owner?.getAttribute('data-focus')]).toStrictEqual(['Show package a', 'owner']);
+    });
   });
 
   describe('GIVEN a#build running under the run of web#build', () => {
@@ -175,26 +181,32 @@ describe('FEATURE: task details elements', () => {
     });
   });
 
-  it('GIVEN a#build running on its own WHEN built THEN Stop has no aria-label and title Stop', () => {
-    const { stop } = buildTaskDetails(RUNNING);
+  describe('GIVEN a#build running on its own', () => {
+    it('WHEN built THEN Stop has no aria-label and title Stop', () => {
+      const { stop } = buildTaskDetails(RUNNING);
 
-    expect(stop.getAttribute('aria-label')).toBeNull();
-    expect(stop.title).toBe('Stop');
+      expect(stop.getAttribute('aria-label')).toBeNull();
+      expect(stop.title).toBe('Stop');
+    });
   });
 
-  it('GIVEN a continuous task WHEN built THEN the state reads Continuous and Stop is shown', () => {
-    const els = buildTaskDetails(CONTINUOUS);
+  describe('GIVEN a continuous task', () => {
+    it('WHEN built THEN the state reads Continuous and Stop is shown', () => {
+      const els = buildTaskDetails(CONTINUOUS);
 
-    expect(els.state).toMatchObject({ textContent: 'Continuous', hidden: false });
-    expect(els.state.getAttribute('data-state')).toBe('continuous');
-    expect(els.stop.hidden).toBe(false);
+      expect(els.state).toMatchObject({ textContent: 'Continuous', hidden: false });
+      expect(els.state.getAttribute('data-state')).toBe('continuous');
+      expect(els.stop.hidden).toBe(false);
+    });
   });
 
-  it('GIVEN a task that never ran WHEN built THEN the state line is hidden and Stop too', () => {
-    const els = buildTaskDetails(NEVER_RUN);
+  describe('GIVEN a task that never ran', () => {
+    it('WHEN built THEN the state line is hidden and Stop too', () => {
+      const els = buildTaskDetails(NEVER_RUN);
 
-    expect(els.state.hidden).toBe(true);
-    expect(els.stop.hidden).toBe(true);
+      expect(els.state.hidden).toBe(true);
+      expect(els.stop.hidden).toBe(true);
+    });
   });
 
   describe('GIVEN the task //#build', () => {

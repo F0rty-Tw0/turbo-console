@@ -27,15 +27,19 @@ describe('FEATURE: outOfViewOf', () => {
 });
 
 describe('FEATURE: findFolder', () => {
-  it('GIVEN no box with the key WHEN found THEN it returns undefined', (): void => {
-    const found = findFolder([IN_VIEW], 'b');
+  describe('GIVEN no box with the key', () => {
+    it('WHEN found THEN it returns undefined', (): void => {
+      const found = findFolder([IN_VIEW], 'b');
 
-    expect(found).toBeUndefined();
+      expect(found).toBeUndefined();
+    });
   });
 
-  it('GIVEN a box with the key WHEN found THEN it returns that box', (): void => {
-    const found = findFolder([IN_VIEW, OUT_OF_VIEW], 'b');
+  describe('GIVEN a box with the key', () => {
+    it('WHEN found THEN it returns that box', (): void => {
+      const found = findFolder([IN_VIEW, OUT_OF_VIEW], 'b');
 
-    expect(found).toBe(OUT_OF_VIEW);
+      expect(found).toBe(OUT_OF_VIEW);
+    });
   });
 });

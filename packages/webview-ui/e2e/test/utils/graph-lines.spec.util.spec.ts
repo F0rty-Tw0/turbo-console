@@ -36,20 +36,26 @@ const FROM_BELOW: ProbeEdgeLine = lineThrough('mid', 'b', [{ x: 100, y: 236 }, F
 const FROM_OTHER_NODE: ProbeEdgeLine = lineThrough('a', 'b', [BORDER_START, FAR_END]);
 
 describe('FEATURE: lineOf', () => {
-  it('GIVEN drawn lines WHEN one is looked up by its ends THEN that line is returned', () => {
-    const found = lineOf([HIDDEN_LINE, LINE], 'a', 'b');
+  describe('GIVEN drawn lines', () => {
+    it('WHEN one is looked up by its ends THEN that line is returned', () => {
+      const found = lineOf([HIDDEN_LINE, LINE], 'a', 'b');
 
-    expect(found).toBe(LINE);
+      expect(found).toBe(LINE);
+    });
   });
 
-  it('GIVEN a line that is not drawn WHEN it is looked up THEN it throws', () => {
-    expect(() => lineOf([HIDDEN_LINE], 'c', 'd')).toThrow('the edge c>d is not drawn');
+  describe('GIVEN a line that is not drawn', () => {
+    it('WHEN it is looked up THEN it throws', () => {
+      expect(() => lineOf([HIDDEN_LINE], 'c', 'd')).toThrow('the edge c>d is not drawn');
+    });
   });
 
-  it('GIVEN a drawn line WHEN its midpoint is read THEN it is the line midpoint', () => {
-    const midpoint = lineMidpointOf([LINE], 'a', 'b');
+  describe('GIVEN a drawn line', () => {
+    it('WHEN its midpoint is read THEN it is the line midpoint', () => {
+      const midpoint = lineMidpointOf([LINE], 'a', 'b');
 
-    expect(midpoint).toStrictEqual({ x: 100, y: 100 });
+      expect(midpoint).toStrictEqual({ x: 100, y: 100 });
+    });
   });
 });
 

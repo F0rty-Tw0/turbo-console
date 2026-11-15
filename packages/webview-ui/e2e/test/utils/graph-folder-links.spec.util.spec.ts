@@ -77,18 +77,22 @@ describe('FEATURE: countsOf offBorder', () => {
     expect(countsOf(read).offBorder).toBe(faults);
   });
 
-  it('GIVEN the target is the collapsed folder WHEN its end is the line last point THEN that end is checked', () => {
-    const atCentre = readOf([linkOf('pkg', 'apps')], [toApps(100)]);
-    const onBorder = readOf([linkOf('pkg', 'apps')], [toApps(130)]);
+  describe('GIVEN the target is the collapsed folder', () => {
+    it('WHEN its end is the line last point THEN that end is checked', () => {
+      const atCentre = readOf([linkOf('pkg', 'apps')], [toApps(100)]);
+      const onBorder = readOf([linkOf('pkg', 'apps')], [toApps(130)]);
 
-    expect(countsOf(atCentre).offBorder).toBe(1);
-    expect(countsOf(onBorder).offBorder).toBe(0);
+      expect(countsOf(atCentre).offBorder).toBe(1);
+      expect(countsOf(onBorder).offBorder).toBe(0);
+    });
   });
 
-  it('GIVEN a link that ends on no collapsed folder WHEN counted THEN it is a fault, so a key mismatch cannot pass', () => {
-    const read = readOf([linkOf('other', 'pkg')], [fromApps(130)]);
+  describe('GIVEN a link that ends on no collapsed folder', () => {
+    it('WHEN counted THEN it is a fault, so a key mismatch cannot pass', () => {
+      const read = readOf([linkOf('other', 'pkg')], [fromApps(130)]);
 
-    expect(countsOf(read).offBorder).toBe(1);
+      expect(countsOf(read).offBorder).toBe(1);
+    });
   });
 });
 
@@ -130,13 +134,17 @@ describe('FEATURE: packageEndOf', () => {
   const nodes = [nodeAt('a', 300, 100), nodeAt('b', 300, 200)];
   const read = readOf([linkOf('apps', 'b'), linkOf('apps', 'a')], [bentFromApps('b'), bentFromApps('a')], nodes);
 
-  it('GIVEN two drawn links to packages WHEN the end is picked THEN it is the first package by name', () => {
-    expect(packageEndOf(read)).toBe('a');
+  describe('GIVEN two drawn links to packages', () => {
+    it('WHEN the end is picked THEN it is the first package by name', () => {
+      expect(packageEndOf(read)).toBe('a');
+    });
   });
 
-  it('GIVEN no drawn link WHEN the end is picked THEN it throws', () => {
-    const none = readOf([], []);
+  describe('GIVEN no drawn link', () => {
+    it('WHEN the end is picked THEN it throws', () => {
+      const none = readOf([], []);
 
-    expect(() => packageEndOf(none)).toThrow('no drawn folder link ends on a package');
+      expect(() => packageEndOf(none)).toThrow('no drawn folder link ends on a package');
+    });
   });
 });

@@ -23,17 +23,21 @@ const ORPHAN_SELECTOR = `${PACKAGE_ROW_SELECTOR} > :nth-last-child(1 of :not([hi
 const NARROW_ICON_SELECTOR = `${PACKAGE_ROW_SELECTOR} .codicon`;
 
 describe('FEATURE: graph.css', () => {
-  it('GIVEN the :root rule WHEN it is read THEN it defines the muted token', () => {
-    const declarations = declarationsOf(css, ':root');
+  describe('GIVEN the :root rule', () => {
+    it('WHEN it is read THEN it defines the muted token', () => {
+      const declarations = declarationsOf(css, ':root');
 
-    expect(declarations).toContain(MUTED_TOKEN);
+      expect(declarations).toContain(MUTED_TOKEN);
+    });
   });
 
-  it('GIVEN the body rule WHEN it is read THEN it drops the webview default padding so the panels meet the editor edges', () => {
-    const rules = Array.from(css.matchAll(RULE_PATTERN));
-    const body = rules.find((rule) => selectorOf(rule) === 'body');
+  describe('GIVEN the body rule', () => {
+    it('WHEN it is read THEN it drops the webview default padding so the panels meet the editor edges', () => {
+      const rules = Array.from(css.matchAll(RULE_PATTERN));
+      const body = rules.find((rule) => selectorOf(rule) === 'body');
 
-    expect(body?.[2]).toContain('padding: 0;');
+      expect(body?.[2]).toContain('padding: 0;');
+    });
   });
 
   describe('GIVEN the controls panel rule', () => {
@@ -264,14 +268,16 @@ describe('FEATURE: graph.css', () => {
     );
   });
 
-  it.each(['.graph-page.task-mode .legend-packages', '.graph-page:not(.task-mode) .legend-tasks'])(
-    'GIVEN the mode rule WHEN %s is read THEN that list is hidden',
-    (selector) => {
-      const declarations = declarationsOf(css, selector);
+  describe('GIVEN the mode rule', () => {
+    it.each(['.graph-page.task-mode .legend-packages', '.graph-page:not(.task-mode) .legend-tasks'])(
+      'WHEN %s is read THEN that list is hidden',
+      (selector) => {
+        const declarations = declarationsOf(css, selector);
 
-      expect(declarations).toContain('display: none');
-    }
-  );
+        expect(declarations).toContain('display: none');
+      }
+    );
+  });
 
   describe('GIVEN the empty task notice rule', () => {
     const declarations = declarationsOf(css, '.graph-task-notice:empty');
@@ -281,10 +287,12 @@ describe('FEATURE: graph.css', () => {
     });
   });
 
-  it('GIVEN the filters-on rule WHEN it is read THEN it uses the info foreground', () => {
-    const declarations = declarationsOf(css, '.filters-on');
+  describe('GIVEN the filters-on rule', () => {
+    it('WHEN it is read THEN it uses the info foreground', () => {
+      const declarations = declarationsOf(css, '.filters-on');
 
-    expect(declarations).toContain('var(--vscode-editorInfo-foreground)');
+      expect(declarations).toContain('var(--vscode-editorInfo-foreground)');
+    });
   });
 
   describe('GIVEN the kbd rule', () => {
