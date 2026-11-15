@@ -22,19 +22,11 @@ export type LinkEndOnFolder = {
   readonly box: ElementRect;
 };
 
-/** The drawn folder links counted against each oracle; every count but `drawn` and `routed` is a failure count. */
+/** The drawn folder links counted against each oracle; every count but `drawn` is a failure count. */
 export type FolderLinkCounts = {
   readonly drawn: number;
-  readonly routed: number;
   readonly throughNodes: number;
   readonly foreignBoxes: number;
   readonly labelsOnLine: number;
   readonly offBorder: number;
-};
-
-/** A drawn folder link on a route, by its id and its two node ids. */
-export type RoutedLink = {
-  readonly id: string;
-  readonly source: string;
-  readonly target: string;
 };

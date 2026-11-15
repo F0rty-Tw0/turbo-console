@@ -34,14 +34,13 @@ export class GraphAtomLinks {
   }
 
   /**
-   * `count` lines out of `umbrellaId` are drawn straight: unrouted, one segment each. Read from the line state, not page
+   * `count` lines out of `umbrellaId` are drawn straight: one segment each. Read from the line state, not page
    * points, so it holds whatever the camera and however late Cytoscape recomputes the drawn ends.
    */
   public async expectStraightFrom(umbrellaId: string, count: number): Promise<void> {
     const straightCountOf = async (): Promise<number> => {
       const lines = await readEdgeLines(this.page);
-      const isStraightFrom = (line: ProbeEdgeLine): boolean =>
-        line.source === umbrellaId && line.isDrawn && !line.isRouted && line.points.length === 2;
+      const isStraightFrom = (line: ProbeEdgeLine): boolean => line.source === umbrellaId && line.isDrawn && line.points.length === 2;
 
       return lines.filter(isStraightFrom).length;
     };

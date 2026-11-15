@@ -13,10 +13,7 @@ export const TASK_LAYOUT_VERSION = 7;
 /** An edge route with more bends than this is not a route: the page leaves it out of its post and the host drops it alone. */
 export const ROUTE_BENDS_MAX = 64;
 
-/** The class of an edge drawn on its ELK route: `round-segments` from its `segWeights`/`segDistances`/`srcEnd`/`tgtEnd` data. */
-export const ROUTED_CLASS = 'routed';
-
-/** How round a routed edge's corners are, in px. */
+/** How near a bend a folder-link label's anchor counts as on its corner, in px: the label then clears both arms. */
 export const ROUTE_RADIUS_PX = 6;
 
 /**

@@ -65,7 +65,6 @@ export type ProbeEdge = {
 export type ProbeEdgeLine = {
   readonly source: string;
   readonly target: string;
-  readonly isRouted: boolean;
   readonly isDrawn: boolean;
   readonly points: Position[];
   readonly midpoint: Position;
@@ -103,6 +102,9 @@ export type ProbeFolderLink = {
   /** Cytoscape's `visible()`. */
   readonly isDrawn: boolean;
   readonly state: ProbeState;
+  /** Cytoscape's `curve-style` and `z-compound-depth`, read as on `ProbeEdge`. */
+  readonly curveStyle: string;
+  readonly zCompoundDepth: string;
   /** The `<n> links` label's box, background included; width and height 0 while the link is not drawn (left and top then equal the container origin). */
   readonly labelBox: ProbeRect;
 };

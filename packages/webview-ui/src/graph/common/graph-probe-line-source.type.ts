@@ -10,7 +10,6 @@ export type ProbeLineSource = {
   readonly source: () => ProbeLineEnd;
   readonly target: () => ProbeLineEnd;
   readonly visible: () => boolean;
-  readonly hasClass: (name: string) => boolean;
   readonly sourceEndpoint: () => Position;
   readonly targetEndpoint: () => Position;
   readonly controlPoints: () => Position[] | undefined;

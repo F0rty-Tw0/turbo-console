@@ -2,7 +2,6 @@ import type { Core, EdgeCollection } from 'cytoscape';
 
 import { packageEdges } from './graph-boxes.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import type { ProbeLineSource } from '../common/graph-probe-line-source.type.ts';
 import type { ProbeEdgeLine } from '../common/graph-probe.type.ts';
 import { FOLDER_LINK_CLASS } from '../common/graph.const.ts';
@@ -24,8 +23,8 @@ const pathOf = (edge: ProbeLineSource): Position[] => {
   return path;
 };
 
-const hiddenLineOf = (source: string, target: string, isRouted: boolean): ProbeEdgeLine => {
-  const line: ProbeEdgeLine = { source, target, isRouted, isDrawn: false, points: [], midpoint: ORIGIN };
+const hiddenLineOf = (source: string, target: string): ProbeEdgeLine => {
+  const line: ProbeEdgeLine = { source, target, isDrawn: false, points: [], midpoint: ORIGIN };
 
   return line;
 };
@@ -34,15 +33,14 @@ const hiddenLineOf = (source: string, target: string, isRouted: boolean): ProbeE
 export const edgeLineOf = (edge: ProbeLineSource, zoom: number, offset: Position): ProbeEdgeLine => {
   const source = edge.source().id();
   const target = edge.target().id();
-  const isRouted = edge.hasClass(ROUTED_CLASS);
   const isDrawn = edge.visible();
 
-  if (!isDrawn) return hiddenLineOf(source, target, isRouted);
+  if (!isDrawn) return hiddenLineOf(source, target);
 
   const toRendered = (point: Position): Position => renderedOf(point, zoom, offset);
   const points = pathOf(edge).map(toRendered);
   const midpoint = toRendered(edge.midpoint());
-  const line: ProbeEdgeLine = { source, target, isRouted, isDrawn: true, points, midpoint };
+  const line: ProbeEdgeLine = { source, target, isDrawn: true, points, midpoint };
 
   return line;
 };
