@@ -36,6 +36,34 @@ const PROTO_PKG: Inspection = { kind: 'package', name: '__proto__' };
 
 const ALL_THREE = new Set(['web', 'ui', 'core']);
 
+const withoutDocsAndWeb = BOARDS_NAMES.filter((name) => name !== 'docs' && name !== 'web');
+
+const ALL_BOARDS = new Set(BOARDS_NAMES);
+
+const WITHOUT_APPS = new Set(withoutDocsAndWeb);
+
+const BOARDS_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, {});
+
+const GHOST_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { visible: withoutDocsAndWeb, ghosts: ['web'] });
+
+const ROOT_INFOS = [{ name: 'root-a', bareName: 'root-a', path: 'root-a', tags: [], taskCount: 0 }];
+
+const ROOT_SCENE = sceneOf(ROOT_INFOS, [], {});
+
+const FOLDER_APPS = folderInspection('apps');
+
+const P = collapsedIdOf('packages');
+
+const BUNDLE_DOCS = bundle('docs', P);
+
+const PACKAGES_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'] });
+
+const withoutNames = (hidden: string[]): string[] => BOARDS_NAMES.filter((name: string): boolean => !hidden.includes(name));
+
+const sceneWithout = (hidden: string[]): FolderScene => {
+  return sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'], visible: withoutNames(hidden) });
+};
+
 describe('FEATURE: recheckInspection', () => {
   describe('GIVEN a filter change', () => {
     it.each([
@@ -95,26 +123,8 @@ describe('FEATURE: recheckInspection', () => {
       expect(next).toStrictEqual(expected);
     });
   });
-});
 
-const withoutDocsAndWeb = BOARDS_NAMES.filter((name) => name !== 'docs' && name !== 'web');
-
-const ALL_BOARDS = new Set(BOARDS_NAMES);
-
-const WITHOUT_APPS = new Set(withoutDocsAndWeb);
-
-const BOARDS_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, {});
-
-const GHOST_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { visible: withoutDocsAndWeb, ghosts: ['web'] });
-
-const ROOT_INFOS = [{ name: 'root-a', bareName: 'root-a', path: 'root-a', tags: [], taskCount: 0 }];
-
-const ROOT_SCENE = sceneOf(ROOT_INFOS, [], {});
-
-const FOLDER_APPS = folderInspection('apps');
-
-describe('FEATURE: recheckInspection of a folder', () => {
-  describe('GIVEN a filter change', () => {
+  describe('GIVEN a filter change while a folder is inspected', () => {
     it.each([
       { title: 'a folder with visible members stays', current: FOLDER_APPS, visible: ALL_BOARDS, scene: BOARDS_SCENE, isKept: true },
       {
@@ -142,21 +152,7 @@ describe('FEATURE: recheckInspection of a folder', () => {
       expect(next).toBe(expected);
     });
   });
-});
 
-const P = collapsedIdOf('packages');
-
-const BUNDLE_DOCS = bundle('docs', P);
-
-const PACKAGES_SCENE = sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'] });
-
-const withoutNames = (hidden: string[]): string[] => BOARDS_NAMES.filter((name: string): boolean => !hidden.includes(name));
-
-const sceneWithout = (hidden: string[]): FolderScene => {
-  return sceneOf(BOARDS_INFOS, BOARDS_EDGES, { collapsed: ['packages'], visible: withoutNames(hidden) });
-};
-
-describe('FEATURE: recheckInspection of a bundle', () => {
   describe('GIVEN a scene that still draws the bundled link', () => {
     it.each([
       { title: 'its link is still drawn', scene: PACKAGES_SCENE },
