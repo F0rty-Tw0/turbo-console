@@ -175,7 +175,7 @@ describe('FEATURE: themeColorsOf', () => {
   const HC_LIGHT_DESCRIPTION = '#696969'; // foreground #292929: 0.7 * 41 + 0.3 * 255 = 105 over white
 
   /** Values from the VS Code 1.141 theme-defaults themes (descriptionForeground on editor.background, following `include`); High Contrast and High Contrast Light set neither descriptionForeground nor, for the latter, editor.background, so they take the baseColors defaults. */
-  it.each([
+  describe.each([
     ['Light Modern', '#3b3b3b', '#ffffff'],
     ['Dark Modern', '#9d9d9d', '#1f1f1f'],
     ['High Contrast', HC_DESCRIPTION, '#000000'],
@@ -183,8 +183,10 @@ describe('FEATURE: themeColorsOf', () => {
     ['Dark 2026', '#8c8c8c', '#121314'],
     ['Light 2026', '#606060', '#ffffff'],
     ['fallback (Light+ default)', '#717171', '#ffffff']
-  ])('GIVEN %s, stopped (descriptionForeground) on the editor background is at least 3:1', (_, foreground, background) => {
-    expect(contrastRatioOf(foreground, background)).toBeGreaterThanOrEqual(3);
+  ])('GIVEN %s', (_, foreground, background) => {
+    it('THEN stopped (descriptionForeground) on the editor background is at least 3:1', () => {
+      expect(contrastRatioOf(foreground, background)).toBeGreaterThanOrEqual(3);
+    });
   });
 
   describe('GIVEN a selection fill with alpha', () => {
