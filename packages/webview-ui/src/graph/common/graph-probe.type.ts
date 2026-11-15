@@ -59,7 +59,7 @@ export type ProbeEdge = {
 
 /**
  * One drawn edge's line (a package edge or a task link) in page CSS pixels, the frame of `ProbeNode.renderedX`: `points` run from the source end
- * through the bends (a routed edge's segment points, else its control points) to the target end, `[]` while the edge
+ * through its control points to the target end, `[]` while the edge
  * is not drawn; `midpoint` lies on that path (the origin while the edge is not drawn).
  */
 export type ProbeEdgeLine = {

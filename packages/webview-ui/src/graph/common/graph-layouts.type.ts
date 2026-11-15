@@ -37,7 +37,7 @@ export type DragSnapshots = {
   readonly engineOf: (mode: LayoutGrouping) => LayoutEngine | null;
 };
 
-export type LayoutView = Pick<GraphView, 'setGraph' | 'setGrouping' | 'setPositions' | 'setRoutes' | 'fit' | 'resize'>;
+export type LayoutView = Pick<GraphView, 'setGraph' | 'setGrouping' | 'setPositions' | 'relinkFolders' | 'fit' | 'resize'>;
 
 export type GraphLayoutsDeps = {
   readonly bridge: Bridge;

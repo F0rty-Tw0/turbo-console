@@ -36,11 +36,10 @@ const MIDDLE_RENDERED: Position = { x: 170, y: 190 };
 type SourceFacts = {
   readonly isRouted: boolean;
   readonly isVisible: boolean;
-  readonly segments: Position[] | undefined;
   readonly controls: Position[] | undefined;
 };
 
-const ROUTED_FACTS: SourceFacts = { isRouted: true, isVisible: true, segments: [BEND_ONE, BEND_TWO], controls: undefined };
+const ROUTED_FACTS: SourceFacts = { isRouted: true, isVisible: true, controls: [BEND_ONE, BEND_TWO] };
 
 const sourceOf = (facts: SourceFacts): ProbeLineSource => {
   const source: ProbeLineSource = {
@@ -50,7 +49,6 @@ const sourceOf = (facts: SourceFacts): ProbeLineSource => {
     hasClass: (name: string): boolean => facts.isRouted && name === ROUTED_CLASS,
     sourceEndpoint: (): Position => START,
     targetEndpoint: (): Position => END,
-    segmentPoints: (): Position[] | undefined => facts.segments,
     controlPoints: (): Position[] | undefined => facts.controls,
     midpoint: (): Position => MIDDLE
   };
@@ -66,7 +64,7 @@ const renderedOf = (point: Position): Position => {
 
 describe('FEATURE: edgeLineOf', () => {
   describe('GIVEN a routed edge', () => {
-    it('WHEN read THEN points are start, the segment points and the end, in rendered px', () => {
+    it('WHEN read THEN points are start, the control points and the end, in rendered px', () => {
       const line = edgeLineOf(sourceOf(ROUTED_FACTS), ZOOM, OFFSET);
 
       expect(line.points).toStrictEqual([
@@ -86,7 +84,7 @@ describe('FEATURE: edgeLineOf', () => {
 
   describe('GIVEN an unrouted edge with no control points', () => {
     it('WHEN read THEN points are start and end only', () => {
-      const line = edgeLineOf(sourceOf({ ...ROUTED_FACTS, isRouted: false, segments: undefined }), ZOOM, OFFSET);
+      const line = edgeLineOf(sourceOf({ ...ROUTED_FACTS, isRouted: false, controls: undefined }), ZOOM, OFFSET);
 
       expect(line.points).toStrictEqual([renderedOf(START), renderedOf(END)]);
     });

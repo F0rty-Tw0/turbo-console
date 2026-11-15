@@ -15,8 +15,9 @@ const postDragged = (bridge: Bridge, engine: LayoutEngine | null, message: Graph
 };
 
 /**
- * Keeps a drag in the snapshot of `mode`, the mode on screen: its touched edges lose their routes and are drawn
- * straight, the rest keep theirs. The post carries the routes left, less those the host would drop for their bends.
+ * Keeps a drag in the snapshot of `mode`, the mode on screen: its touched edges lose their routes, the rest keep theirs,
+ * and the folder links are re-labelled on their moved lines. The post carries the routes left, less those the host would
+ * drop for their bends.
  */
 export const keepDrag = (deps: GraphLayoutsDeps, snapshots: DragSnapshots, mode: LayoutGrouping, drag: GraphDrag): void => {
   const drawn = deps.drawn();
@@ -35,6 +36,6 @@ export const keepDrag = (deps: GraphLayoutsDeps, snapshots: DragSnapshots, mode:
     grouping: mode
   };
 
-  deps.view.setRoutes(routes);
+  deps.view.relinkFolders();
   postDragged(deps.bridge, snapshots.engineOf(mode), message);
 };

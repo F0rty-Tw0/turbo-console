@@ -15,7 +15,7 @@ const SOURCE: Position = { x: 0, y: 0 };
 
 const TARGET: Position = { x: 50, y: 0 };
 
-const EDGE: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [], isPolyline: false };
+const EDGE: FlowEdgeGeometry = { source: SOURCE, target: TARGET, controlPoints: [] };
 
 const PAN: Position = { x: 10, y: 20 };
 

@@ -1,11 +1,10 @@
 import cytoscape from 'cytoscape';
-import type { Core, EdgeSingular } from 'cytoscape';
+import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import type { GraphTask, Position, Positions } from '../../bridge/common/graph-state.type.ts';
-import { ROUTED_CLASS } from '../common/graph-layout.const.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { TaskCanvas, TaskDrawing } from '../common/task-canvas.type.ts';
 import { NAMING_STUB } from '../test/stubs/graph-task.stub.ts';
@@ -41,9 +40,6 @@ const DRAWING: TaskDrawing = {
 
 const WEB_LINK = edgeIdOf({ source: 'web#build', target: 'api#build' });
 
-/** What a link carries that would draw it on a route: the routed class and the segment data. */
-const routeDataOf = (link: EdgeSingular): unknown[] => [link.hasClass(ROUTED_CLASS), link.data('segWeights'), link.data('srcEnd')];
-
 describe('FEATURE: createTaskCanvas links in the graph stylesheet', () => {
   let cy: Core;
   let canvas: TaskCanvas;
@@ -64,10 +60,6 @@ describe('FEATURE: createTaskCanvas links in the graph stylesheet', () => {
       const curve: unknown = cy.getElementById(WEB_LINK).style('curve-style');
 
       expect(curve).toBe('straight');
-    });
-
-    it('WHEN shown THEN the link carries no route class and no segment data', () => {
-      expect(routeDataOf(cy.getElementById(WEB_LINK))).toStrictEqual([false, undefined, undefined]);
     });
 
     it('WHEN a task is moved THEN the link stays straight', () => {

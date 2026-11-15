@@ -14,12 +14,11 @@ import { packageWritersOf } from './graph-package-nodes.ts';
 import { applyFocusTarget, applyPaint } from './graph-paint.ts';
 import { placeNodes } from './graph-place.ts';
 import { markRowLess, widgetRectsOf } from './graph-rects.ts';
-import { applyRoutes } from './graph-routes.ts';
 import { markPackageRuns } from './graph-run-marks.ts';
 import { graphStyleOf } from './graph-style.ts';
 import { createTaskCanvas } from './graph-task-view.ts';
 import { showOnly } from './graph-visibility.ts';
-import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import type { Positions } from '../../bridge/common/graph-state.type.ts';
 import type { FlowEdgeGeometry } from '../common/flow.type.ts';
 import type { FolderGroup } from '../common/folder-group.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
@@ -69,12 +68,6 @@ const placeOn = (cy: Core, folders: FoldersView, placed: Positions): void => {
   folders.recentre();
 };
 
-/** Draws the package links on their routes, then the folder links, which `applyRoutes` straightens with the rest. */
-const placeRoutes = (cy: Core, folders: FoldersView, routes: Routes): void => {
-  applyRoutes(cy, routes);
-  folders.setRoutes(routes);
-};
-
 /** Paints the packages and links, then the folder boxes and collapsed folders. */
 const paintOn = (cy: Core, folders: FoldersView, next: Paint): void => {
   applyPaint(cy, next);
@@ -108,7 +101,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     setViewport: camera.setViewport,
     setGrouping: (groups: FolderGroup[] | null): void => setBoxes(cy, groups),
     setPositions: (placed: Positions): void => placeOn(cy, folders, placed),
-    setRoutes: (routes: Routes): void => placeRoutes(cy, folders, routes),
+    relinkFolders: folders.relinkFolders,
     showFolders: (scene: FolderScene | null, labelOf: (folder: string) => string): void => folders.show(scene, labelOf),
     applyTheme: (colors: ThemeColors): void => void cy.style(graphStyleOf(colors, fonts.family, fonts.glyphs, fonts.cards)),
     widgetRects: (selected: string | null): WidgetRects => widgetRectsOf(cy, selected),

@@ -5,7 +5,7 @@ export type ProbeLineEnd = {
   readonly id: () => string;
 };
 
-/** What `ProbeEdgeLine` reads of a Cytoscape edge; `segmentPoints` is `undefined` unless the edge is drawn `round-segments`. */
+/** What `ProbeEdgeLine` reads of a Cytoscape edge; `controlPoints` is `undefined` for a straight edge. */
 export type ProbeLineSource = {
   readonly source: () => ProbeLineEnd;
   readonly target: () => ProbeLineEnd;
@@ -13,7 +13,6 @@ export type ProbeLineSource = {
   readonly hasClass: (name: string) => boolean;
   readonly sourceEndpoint: () => Position;
   readonly targetEndpoint: () => Position;
-  readonly segmentPoints: () => Position[] | undefined;
   readonly controlPoints: () => Position[] | undefined;
   readonly midpoint: () => Position;
 };
