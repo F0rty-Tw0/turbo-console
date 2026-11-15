@@ -22,17 +22,19 @@ const TASK = {
 };
 
 describe('FEATURE: graph task list shape', () => {
-  it.each([
+  describe.each([
     ['an empty list', []],
     ['a task with a command', [TASK]],
     ['a task with a null command', [{ ...TASK, command: null }]],
     ['a task with no dependencies', [{ ...TASK, dependencies: [] }]],
     ['a script task', [{ ...TASK, isTurboTask: false }]]
-  ])('GIVEN %s WHEN checked THEN it is a task list', (_label, value) => {
-    expect(isGraphTaskList(value)).toBe(true);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is a task list', () => {
+      expect(isGraphTaskList(value)).toBe(true);
+    });
   });
 
-  it.each([
+  describe.each([
     ['not an array', TASK],
     ['a non-record entry', ['a#build']],
     ['a numeric id', [{ ...TASK, id: 1 }]],
@@ -46,20 +48,24 @@ describe('FEATURE: graph task list shape', () => {
     ['a dependencies string', [{ ...TASK, dependencies: 'b#build' }]],
     ['a numeric dependency', [{ ...TASK, dependencies: [1] }]],
     ['one bad task after a good one', [TASK, { ...TASK, id: 1 }]]
-  ])('GIVEN %s WHEN checked THEN it is not a task list', (_label, value) => {
-    expect(isGraphTaskList(value)).toBe(false);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is not a task list', () => {
+      expect(isGraphTaskList(value)).toBe(false);
+    });
   });
 });
 
 describe('FEATURE: runs record shape', () => {
-  it.each([
+  describe.each([
     ['an empty record', {}],
     ['every run state', { a: 'running', b: 'passed', c: 'failed', d: 'stopped', e: 'failed-to-start', f: 'continuous' }]
-  ])('GIVEN %s WHEN checked THEN it is a runs record', (_label, value) => {
-    expect(isRunsRecord(value)).toBe(true);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is a runs record', () => {
+      expect(isRunsRecord(value)).toBe(true);
+    });
   });
 
-  it.each([
+  describe.each([
     ['null', null],
     ['a string', 'running'],
     ['an empty array', []],
@@ -67,26 +73,32 @@ describe('FEATURE: runs record shape', () => {
     ['an unknown run state', { a: 'busy' }],
     ['a numeric run state', { a: 5 }],
     ['one bad state after a good one', { a: 'passed', b: 'busy' }]
-  ])('GIVEN %s WHEN checked THEN it is not a runs record', (_label, value) => {
-    expect(isRunsRecord(value)).toBe(false);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is not a runs record', () => {
+      expect(isRunsRecord(value)).toBe(false);
+    });
   });
 });
 
 describe('FEATURE: task id list shape', () => {
-  it.each([
+  describe.each([
     ['an empty list', []],
     ['a list of ids', ['a#build', 'b#build']]
-  ])('GIVEN %s WHEN checked THEN it is a task id list', (_label, value) => {
-    expect(isTaskIdList(value)).toBe(true);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is a task id list', () => {
+      expect(isTaskIdList(value)).toBe(true);
+    });
   });
 
-  it.each([
+  describe.each([
     ['a string', 'a#build'],
     ['null', null],
     ['a record', { 0: 'a#build' }],
     ['a numeric entry', ['a#build', 1]]
-  ])('GIVEN %s WHEN checked THEN it is not a task id list', (_label, value) => {
-    expect(isTaskIdList(value)).toBe(false);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is not a task id list', () => {
+      expect(isTaskIdList(value)).toBe(false);
+    });
   });
 });
 
@@ -166,16 +178,18 @@ const PROTOTYPE_NAMED = '{"__proto__":"web#build","constructor":"web#build"}';
 const PROTOTYPE_NAMED_WITH_NUMBER = '{"__proto__":1,"constructor":"web#build"}';
 
 describe('FEATURE: atom group list shape', () => {
-  it.each([
+  describe.each([
     ['an empty list', []],
     ['a group with a file', [GROUP]],
     ['a group with no files', groupsWithFiles([])],
     ['a live file', groupsWithFile({ isLive: true })]
-  ])('GIVEN %s WHEN checked THEN it is a group list', (_label, value) => {
-    expect(isAtomGroupList(value)).toBe(true);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is a group list', () => {
+      expect(isAtomGroupList(value)).toBe(true);
+    });
   });
 
-  it.each([
+  describe.each([
     ['no list', undefined],
     ['a record', GROUP],
     ['a non-record group', ['app#e2e-ci']],
@@ -189,37 +203,47 @@ describe('FEATURE: atom group list shape', () => {
     ['a string isLive', groupsWithFile({ isLive: 'no' })],
     ['one bad group after a good one', [GROUP, { ...GROUP, umbrellaId: 1 }]],
     ['two groups of one umbrella id', [GROUP, { ...GROUP, files: [] }]]
-  ])('GIVEN %s WHEN checked THEN it is not a group list', (_label, value) => {
-    expect(isAtomGroupList(value)).toBe(false);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is not a group list', () => {
+      expect(isAtomGroupList(value)).toBe(false);
+    });
   });
 
-  it('GIVEN TASK_COUNT_MAX groups WHEN checked THEN it is a group list', () => {
-    expect(isAtomGroupList(groupsOf(TASK_COUNT_MAX))).toBe(true);
+  describe('GIVEN TASK_COUNT_MAX groups', () => {
+    it('WHEN checked THEN it is a group list', () => {
+      expect(isAtomGroupList(groupsOf(TASK_COUNT_MAX))).toBe(true);
+    });
   });
 
-  it('GIVEN TASK_COUNT_MAX + 1 groups WHEN checked THEN it is not a group list', () => {
-    expect(isAtomGroupList(groupsOf(TASK_COUNT_MAX + 1))).toBe(false);
+  describe('GIVEN TASK_COUNT_MAX + 1 groups', () => {
+    it('WHEN checked THEN it is not a group list', () => {
+      expect(isAtomGroupList(groupsOf(TASK_COUNT_MAX + 1))).toBe(false);
+    });
   });
 
-  it('GIVEN a group of TASK_COUNT_MAX + 1 files WHEN checked THEN it is not a group list', () => {
-    const files = Array.from({ length: TASK_COUNT_MAX + 1 }, () => FILE);
-    const groups = groupsWithFiles(files);
+  describe('GIVEN a group of TASK_COUNT_MAX + 1 files', () => {
+    it('WHEN checked THEN it is not a group list', () => {
+      const files = Array.from({ length: TASK_COUNT_MAX + 1 }, () => FILE);
+      const groups = groupsWithFiles(files);
 
-    expect(isAtomGroupList(groups)).toBe(false);
+      expect(isAtomGroupList(groups)).toBe(false);
+    });
   });
 });
 
 describe('FEATURE: atom state record shape', () => {
-  it.each([
+  describe.each([
     ['an empty record', {}],
     ['a group with every outcome', recordWith({ counts: EVERY_COUNT, files: EVERY_OUTCOME })],
     ['a group with no files', recordWith({ counts: NO_FILE_COUNTS, files: {} })],
     ['TASK_COUNT_MAX files', recordWith({ files: idsWith(TASK_COUNT_MAX, PASSED) })]
-  ])('GIVEN %s WHEN checked THEN it is an atom state record', (_label, value) => {
-    expect(isAtomStateRecord(value)).toBe(true);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is an atom state record', () => {
+      expect(isAtomStateRecord(value)).toBe(true);
+    });
   });
 
-  it.each([
+  describe.each([
     ['null', null],
     ['an array', [STATE]],
     ['a non-record group', recordOf('x')],
@@ -236,8 +260,10 @@ describe('FEATURE: atom state record shape', () => {
     ['failed over the cap', recordWithCounts({ files: 1, cached: null, failed: TASK_COUNT_MAX + 1 })],
     ['counts with no failed key', recordWithCounts({ files: 1, cached: null })],
     ['TASK_COUNT_MAX + 1 files', recordWith({ files: idsWith(TASK_COUNT_MAX + 1, PASSED) })]
-  ])('GIVEN %s WHEN checked THEN it is not an atom state record', (_label, value) => {
-    expect(isAtomStateRecord(value)).toBe(false);
+  ])('GIVEN %s', (_label, value) => {
+    it('WHEN checked THEN it is not an atom state record', () => {
+      expect(isAtomStateRecord(value)).toBe(false);
+    });
   });
 });
 
@@ -246,16 +272,18 @@ const COUNTS = { files: 10, cached: 3, failed: 1 };
 const OVER = TASK_COUNT_MAX + 1;
 
 describe('FEATURE: atom counts shape', () => {
-  it.each([
+  describe.each([
     ['all null but files', { files: 0, cached: null, failed: null }],
     ['every number', COUNTS],
     ['zeros', { files: 0, cached: 0, failed: 0 }],
     ['TASK_COUNT_MAX in each', { files: TASK_COUNT_MAX, cached: TASK_COUNT_MAX, failed: TASK_COUNT_MAX }]
-  ])('GIVEN counts with %s WHEN checked THEN they are atom counts', (_label, value) => {
-    expect(isAtomCounts(value)).toBe(true);
+  ])('GIVEN counts with %s', (_label, value) => {
+    it('WHEN checked THEN they are atom counts', () => {
+      expect(isAtomCounts(value)).toBe(true);
+    });
   });
 
-  it.each([
+  describe.each([
     ['a string', '10 files'],
     ['null', null],
     ['an array', [10, 3, 1]],
@@ -277,24 +305,28 @@ describe('FEATURE: atom counts shape', () => {
     ['fractional failed', { ...COUNTS, failed: 0.5 }],
     ['string failed', { ...COUNTS, failed: '1' }],
     ['failed over the cap', { ...COUNTS, failed: OVER }]
-  ])('GIVEN counts with %s WHEN checked THEN they are not atom counts', (_label, value) => {
-    expect(isAtomCounts(value)).toBe(false);
+  ])('GIVEN counts with %s', (_label, value) => {
+    it('WHEN checked THEN they are not atom counts', () => {
+      expect(isAtomCounts(value)).toBe(false);
+    });
   });
 });
 
 describe('FEATURE: the owners of a runs message (spec D11)', () => {
-  it.each([
+  describe.each([
     ['one owner', { 'ui#build': 'web#build' }],
     ['no keys', {}],
     ['TASK_COUNT_MAX keys', idsWith(TASK_COUNT_MAX, WEB_BUILD)],
     ['keys named like Object.prototype members', JSON.parse(PROTOTYPE_NAMED)]
-  ])('GIVEN owners as %s WHEN checked THEN it is an owners record', (_label, value) => {
-    const isOwners = isOwnersRecord(value);
+  ])('GIVEN owners as %s', (_label, value) => {
+    it('WHEN checked THEN it is an owners record', () => {
+      const isOwners = isOwnersRecord(value);
 
-    expect(isOwners).toBe(true);
+      expect(isOwners).toBe(true);
+    });
   });
 
-  it.each([
+  describe.each([
     ['TASK_COUNT_MAX + 1 keys', idsWith(TASK_COUNT_MAX + 1, WEB_BUILD)],
     ['an empty owner id', { 'ui#build': '' }],
     ['a number owner', { 'ui#build': 1 }],
@@ -303,9 +335,11 @@ describe('FEATURE: the owners of a runs message (spec D11)', () => {
     ['an array', ['web#build']],
     ['null', null],
     ['a string', 'web#build']
-  ])('GIVEN owners as %s WHEN checked THEN it is not an owners record', (_label, value) => {
-    const isOwners = isOwnersRecord(value);
+  ])('GIVEN owners as %s', (_label, value) => {
+    it('WHEN checked THEN it is not an owners record', () => {
+      const isOwners = isOwnersRecord(value);
 
-    expect(isOwners).toBe(false);
+      expect(isOwners).toBe(false);
+    });
   });
 });

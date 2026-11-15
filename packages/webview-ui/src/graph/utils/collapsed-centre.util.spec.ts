@@ -26,30 +26,36 @@ describe('FEATURE: collapsedCentreOf', () => {
     });
   });
 
-  it('GIVEN one member WHEN the centre is taken THEN it is that position', () => {
-    const positionOf = lookupOf([['a', { x: 7, y: -3 }]]);
+  describe('GIVEN one member', () => {
+    it('WHEN the centre is taken THEN it is that position', () => {
+      const positionOf = lookupOf([['a', { x: 7, y: -3 }]]);
 
-    const centre = collapsedCentreOf(['a'], positionOf);
+      const centre = collapsedCentreOf(['a'], positionOf);
 
-    expect(centre).toStrictEqual({ x: 7, y: -3 });
+      expect(centre).toStrictEqual({ x: 7, y: -3 });
+    });
   });
 
-  it('GIVEN no member WHEN the centre is taken THEN it is the origin', () => {
-    const positionOf = lookupOf([]);
+  describe('GIVEN no member', () => {
+    it('WHEN the centre is taken THEN it is the origin', () => {
+      const positionOf = lookupOf([]);
 
-    const centre = collapsedCentreOf([], positionOf);
+      const centre = collapsedCentreOf([], positionOf);
 
-    expect(centre).toStrictEqual({ x: 0, y: 0 });
+      expect(centre).toStrictEqual({ x: 0, y: 0 });
+    });
   });
 
-  it('GIVEN a member named __proto__ WHEN the centre is taken THEN its position counts', () => {
-    const positionOf = lookupOf([
-      ['__proto__', { x: 10, y: 20 }],
-      ['constructor', { x: 30, y: 60 }]
-    ]);
+  describe('GIVEN a member named __proto__', () => {
+    it('WHEN the centre is taken THEN its position counts', () => {
+      const positionOf = lookupOf([
+        ['__proto__', { x: 10, y: 20 }],
+        ['constructor', { x: 30, y: 60 }]
+      ]);
 
-    const centre = collapsedCentreOf(['__proto__', 'constructor'], positionOf);
+      const centre = collapsedCentreOf(['__proto__', 'constructor'], positionOf);
 
-    expect(centre).toStrictEqual({ x: 20, y: 40 });
+      expect(centre).toStrictEqual({ x: 20, y: 40 });
+    });
   });
 });

@@ -37,20 +37,24 @@ describe('FEATURE: flatElkGraphOf', () => {
     });
   });
 
-  it('GIVEN an already flat graph WHEN flattened THEN it comes back equal', () => {
-    const flat = elkGraphOf(['a', 'b'], [{ source: 'a', target: 'b' }], boardsSizeOf);
+  describe('GIVEN an already flat graph', () => {
+    it('WHEN flattened THEN it comes back equal', () => {
+      const flat = elkGraphOf(['a', 'b'], [{ source: 'a', target: 'b' }], boardsSizeOf);
 
-    const flattened = flatElkGraphOf(flat);
+      const flattened = flatElkGraphOf(flat);
 
-    expect(flattened).toStrictEqual(flat);
+      expect(flattened).toStrictEqual(flat);
+    });
   });
 
-  it('GIVEN an empty graph WHEN flattened THEN it has no children', () => {
-    const empty = elkGraphOf([], [], boardsSizeOf);
+  describe('GIVEN an empty graph', () => {
+    it('WHEN flattened THEN it has no children', () => {
+      const empty = elkGraphOf([], [], boardsSizeOf);
 
-    const flattened = flatElkGraphOf(empty);
+      const flattened = flatElkGraphOf(empty);
 
-    expect(flattened.children).toStrictEqual([]);
+      expect(flattened.children).toStrictEqual([]);
+    });
   });
 
   describe('GIVEN a packed graph with edges at three depths', () => {

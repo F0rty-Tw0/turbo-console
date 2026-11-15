@@ -80,10 +80,12 @@ describe('FEATURE: controls text', () => {
     });
   });
 
-  it('GIVEN 2 of 5 packages visible WHEN the count line is built THEN it names both numbers', () => {
-    const text = countTextOf(2, 5);
+  describe('GIVEN 2 of 5 packages visible', () => {
+    it('WHEN the count line is built THEN it names both numbers', () => {
+      const text = countTextOf(2, 5);
 
-    expect(text).toBe('Showing 2 of 5 packages');
+      expect(text).toBe('Showing 2 of 5 packages');
+    });
   });
 
   describe('GIVEN the package web', () => {

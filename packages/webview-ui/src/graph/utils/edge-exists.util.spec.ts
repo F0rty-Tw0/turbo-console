@@ -11,15 +11,17 @@ const E: GraphEdge[] = [
 const PROTO: GraphEdge[] = [{ source: '__proto__', target: 'constructor' }];
 
 describe('FEATURE: hasEdge', () => {
-  it.each([
-    { title: 'the link runs that way', edges: E, source: 'web', target: 'ui', expected: true },
-    { title: 'the link runs the other way', edges: E, source: 'ui', target: 'web', expected: false },
-    { title: 'only a longer path joins them', edges: E, source: 'web', target: 'core', expected: false },
-    { title: 'there are no links', edges: [], source: 'web', target: 'ui', expected: false },
-    { title: 'the names are __proto__ and constructor', edges: PROTO, source: '__proto__', target: 'constructor', expected: true }
-  ])('GIVEN edges WHEN $title THEN it is $expected', ({ edges, source, target, expected }) => {
-    const found = hasEdge(edges, source, target);
+  describe('GIVEN edges', () => {
+    it.each([
+      { title: 'the link runs that way', edges: E, source: 'web', target: 'ui', expected: true },
+      { title: 'the link runs the other way', edges: E, source: 'ui', target: 'web', expected: false },
+      { title: 'only a longer path joins them', edges: E, source: 'web', target: 'core', expected: false },
+      { title: 'there are no links', edges: [], source: 'web', target: 'ui', expected: false },
+      { title: 'the names are __proto__ and constructor', edges: PROTO, source: '__proto__', target: 'constructor', expected: true }
+    ])('WHEN $title THEN it is $expected', ({ edges, source, target, expected }) => {
+      const found = hasEdge(edges, source, target);
 
-    expect(found).toBe(expected);
+      expect(found).toBe(expected);
+    });
   });
 });

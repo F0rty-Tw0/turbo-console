@@ -122,9 +122,11 @@ describe('FEATURE: drawableEdges', () => {
     });
   });
 
-  it('GIVEN no input WHEN edges are filtered THEN the result is empty', () => {
-    const edges = drawableEdges([], []);
+  describe('GIVEN no input', () => {
+    it('WHEN edges are filtered THEN the result is empty', () => {
+      const edges = drawableEdges([], []);
 
-    expect(edges).toStrictEqual([]);
+      expect(edges).toStrictEqual([]);
+    });
   });
 });

@@ -6,49 +6,59 @@ import { ROUTES_STUB } from '../test/stubs/layout.stub.ts';
 import { graphWithTaskOf, stateMessageOf, without } from '../test/utils/graph-host-message.spec.util.ts';
 
 describe('FEATURE: graph host message, new state fields', () => {
-  it('GIVEN a state message with a script task WHEN checked THEN it is accepted', () => {
-    expect(isGraphHostMessage(graphWithTaskOf({ isTurboTask: false }))).toBe(true);
+  describe('GIVEN a state message with a script task', () => {
+    it('WHEN checked THEN it is accepted', () => {
+      expect(isGraphHostMessage(graphWithTaskOf({ isTurboTask: false }))).toBe(true);
+    });
   });
 
-  it.each([
+  describe.each([
     ['a task with no isTurboTask', graphWithTaskOf({ isTurboTask: undefined })],
     ['a task with a numeric isTurboTask', graphWithTaskOf({ isTurboTask: 1 })]
-  ])('GIVEN a state message with %s WHEN checked THEN it is rejected', (_label, message) => {
-    expect(isGraphHostMessage(message)).toBe(false);
+  ])('GIVEN a state message with %s', (_label, message) => {
+    it('WHEN checked THEN it is rejected', () => {
+      expect(isGraphHostMessage(message)).toBe(false);
+    });
   });
 });
 
 describe('FEATURE: graph host message, package bareName', () => {
-  it.each([
+  describe.each([
     ['a package with no bareName', [{ ...HOST_PACKAGES_STUB[0], bareName: undefined }]],
     ['a package with a numeric bareName', [{ ...HOST_PACKAGES_STUB[0], bareName: 5 }]]
-  ])('GIVEN a state message with %s WHEN checked THEN it is rejected', (_label, packages) => {
-    expect(isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, packages }))).toBe(false);
+  ])('GIVEN a state message with %s', (_label, packages) => {
+    it('WHEN checked THEN it is rejected', () => {
+      expect(isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, packages }))).toBe(false);
+    });
   });
 });
 
 describe('FEATURE: graph host message, route fields', () => {
-  it.each([
+  describe.each([
     ['routes missing', without(HOST_GRAPH_STUB, 'routes')],
     ['folderRoutes missing', without(HOST_GRAPH_STUB, 'folderRoutes')],
     ['routes a string', { ...HOST_GRAPH_STUB, routes: 'x' }],
     ['folderRoutes a number', { ...HOST_GRAPH_STUB, folderRoutes: 1 }]
-  ])('GIVEN a state with %s WHEN checked THEN it is rejected', (_label, state) => {
-    expect(isGraphHostMessage(stateMessageOf(state))).toBe(false);
+  ])('GIVEN a state with %s', (_label, state) => {
+    it('WHEN checked THEN it is rejected', () => {
+      expect(isGraphHostMessage(stateMessageOf(state))).toBe(false);
+    });
   });
 
-  it.each([
+  describe.each([
     [null, null],
     [{}, null],
     [null, {}],
     [ROUTES_STUB, ROUTES_STUB]
-  ])('GIVEN routes %j and folderRoutes %j WHEN checked THEN it is accepted', (routes, folderRoutes) => {
-    expect(isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, routes, folderRoutes }))).toBe(true);
+  ])('GIVEN routes %j and folderRoutes %j', (routes, folderRoutes) => {
+    it('WHEN checked THEN it is accepted', () => {
+      expect(isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, routes, folderRoutes }))).toBe(true);
+    });
   });
 });
 
 describe('FEATURE: graph host message, shown toggles', () => {
-  it.each([
+  describe.each([
     ['scopeShown missing', without(HOST_GRAPH_STUB, 'scopeShown')],
     ['scriptsShown missing', without(HOST_GRAPH_STUB, 'scriptsShown')],
     ['scopeShown a string', { ...HOST_GRAPH_STUB, scopeShown: 'yes' }],
@@ -57,23 +67,29 @@ describe('FEATURE: graph host message, shown toggles', () => {
     ['predictionShown a string', { ...HOST_GRAPH_STUB, predictionShown: 'yes' }],
     ['affectedShown missing', without(HOST_GRAPH_STUB, 'affectedShown')],
     ['affectedShown a string', { ...HOST_GRAPH_STUB, affectedShown: 'yes' }]
-  ])('GIVEN a state with %s WHEN checked THEN it is rejected', (_label, state) => {
-    expect(isGraphHostMessage(stateMessageOf(state))).toBe(false);
+  ])('GIVEN a state with %s', (_label, state) => {
+    it('WHEN checked THEN it is rejected', () => {
+      expect(isGraphHostMessage(stateMessageOf(state))).toBe(false);
+    });
   });
 
-  it('GIVEN both flags false WHEN checked THEN it is accepted', () => {
-    expect(
-      isGraphHostMessage(
-        stateMessageOf({ ...HOST_GRAPH_STUB, scopeShown: false, scriptsShown: false, predictionShown: false, affectedShown: false })
-      )
-    ).toBe(true);
+  describe('GIVEN both flags false', () => {
+    it('WHEN checked THEN it is accepted', () => {
+      expect(
+        isGraphHostMessage(
+          stateMessageOf({ ...HOST_GRAPH_STUB, scopeShown: false, scriptsShown: false, predictionShown: false, affectedShown: false })
+        )
+      ).toBe(true);
+    });
   });
 
-  it('GIVEN both flags true WHEN checked THEN it is accepted', () => {
-    expect(
-      isGraphHostMessage(
-        stateMessageOf({ ...HOST_GRAPH_STUB, scopeShown: true, scriptsShown: true, predictionShown: true, affectedShown: true })
-      )
-    ).toBe(true);
+  describe('GIVEN both flags true', () => {
+    it('WHEN checked THEN it is accepted', () => {
+      expect(
+        isGraphHostMessage(
+          stateMessageOf({ ...HOST_GRAPH_STUB, scopeShown: true, scriptsShown: true, predictionShown: true, affectedShown: true })
+        )
+      ).toBe(true);
+    });
   });
 });

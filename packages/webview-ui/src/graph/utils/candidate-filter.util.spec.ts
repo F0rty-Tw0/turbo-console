@@ -109,28 +109,32 @@ describe('FEATURE: filteredCandidatesOf', () => {
 });
 
 describe('FEATURE: firstCandidateOf', () => {
-  it.each([
+  describe.each([
     ['forward has one', R1, 'forms'],
     ['only backward has one', candidatesOf([], ['app:1'], []), 'app'],
     ['only none has one', candidatesOf([], [], ['docs']), 'docs'],
     ['nothing at all', EMPTY, null]
-  ])('GIVEN %s WHEN the first is asked THEN the name or null is exact', (_title, candidates, first) => {
-    const name = firstCandidateOf(candidates);
+  ])('GIVEN %s', (_title, candidates, first) => {
+    it('WHEN the first is asked THEN the name or null is exact', () => {
+      const name = firstCandidateOf(candidates);
 
-    expect(name).toBe(first);
+      expect(name).toBe(first);
+    });
   });
 });
 
 describe('FEATURE: litCandidatesOf', () => {
-  it.each([
+  describe.each([
     ['forward and backward', R1, ['app', 'core', 'forms', 'shell', 'ui']],
     ['only none', candidatesOf([], [], ['docs']), []],
     ['nothing at all', EMPTY, []]
-  ])('GIVEN %s WHEN the lit names are asked THEN they are exact', (_title, candidates, lit) => {
-    const names = litCandidatesOf(candidates);
-    const listed = [...names];
-    const sorted = listed.sort();
+  ])('GIVEN %s', (_title, candidates, lit) => {
+    it('WHEN the lit names are asked THEN they are exact', () => {
+      const names = litCandidatesOf(candidates);
+      const listed = [...names];
+      const sorted = listed.sort();
 
-    expect(sorted).toStrictEqual(lit);
+      expect(sorted).toStrictEqual(lit);
+    });
   });
 });

@@ -105,10 +105,12 @@ describe('FEATURE: folderGroupsOf', () => {
 });
 
 describe('FEATURE: folderKeysOf', () => {
-  it('GIVEN packages in several folders and at the root WHEN the keys are taken THEN they follow the group order', () => {
-    const keys = folderKeysOf(MIXED);
+  describe('GIVEN packages in several folders and at the root', () => {
+    it('WHEN the keys are taken THEN they follow the group order', () => {
+      const keys = folderKeysOf(MIXED);
 
-    expect(keys).toStrictEqual(['', 'apps', 'packages/ui']);
+      expect(keys).toStrictEqual(['', 'apps', 'packages/ui']);
+    });
   });
 });
 
@@ -125,18 +127,22 @@ describe('FEATURE: modeGroupsOf', () => {
 });
 
 describe('FEATURE: tagsOf', () => {
-  it('GIVEN overlapping tags WHEN collected THEN each appears once, sorted by code unit', () => {
-    const packages = [pkgOf('a', 'p', ['ui', 'app']), pkgOf('b', 'q', ['app', '__proto__']), pkgOf('c', 'r')];
+  describe('GIVEN overlapping tags', () => {
+    it('WHEN collected THEN each appears once, sorted by code unit', () => {
+      const packages = [pkgOf('a', 'p', ['ui', 'app']), pkgOf('b', 'q', ['app', '__proto__']), pkgOf('c', 'r')];
 
-    const tags = tagsOf(packages);
+      const tags = tagsOf(packages);
 
-    expect(tags).toStrictEqual(['__proto__', 'app', 'ui']);
+      expect(tags).toStrictEqual(['__proto__', 'app', 'ui']);
+    });
   });
 
-  it('GIVEN no packages WHEN collected THEN there are no tags', () => {
-    const tags = tagsOf([]);
+  describe('GIVEN no packages', () => {
+    it('WHEN collected THEN there are no tags', () => {
+      const tags = tagsOf([]);
 
-    expect(tags).toStrictEqual([]);
+      expect(tags).toStrictEqual([]);
+    });
   });
 });
 

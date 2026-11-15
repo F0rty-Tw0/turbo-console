@@ -23,22 +23,28 @@ const graphOf = (children: ElkNode[]): ElkNode => {
 };
 
 describe('FEATURE: cellPitchOf', () => {
-  it('GIVEN children 40 and 100 px wide WHEN the pitch is taken THEN it is 124 across and 96 down', () => {
-    const pitch = cellPitchOf([NARROW, WIDE]);
+  describe('GIVEN children 40 and 100 px wide', () => {
+    it('WHEN the pitch is taken THEN it is 124 across and 96 down', () => {
+      const pitch = cellPitchOf([NARROW, WIDE]);
 
-    expect(pitch).toStrictEqual({ x: 124, y: 96 });
+      expect(pitch).toStrictEqual({ x: 124, y: 96 });
+    });
   });
 
-  it('GIVEN no children WHEN the pitch is taken THEN it is the padding across', () => {
-    const pitch = cellPitchOf([]);
+  describe('GIVEN no children', () => {
+    it('WHEN the pitch is taken THEN it is the padding across', () => {
+      const pitch = cellPitchOf([]);
 
-    expect(pitch).toStrictEqual({ x: 24, y: 96 });
+      expect(pitch).toStrictEqual({ x: 24, y: 96 });
+    });
   });
 
-  it('GIVEN a child with no width WHEN the pitch is taken THEN it counts as 0 px wide', () => {
-    const pitch = cellPitchOf([NO_WIDTH]);
+  describe('GIVEN a child with no width', () => {
+    it('WHEN the pitch is taken THEN it counts as 0 px wide', () => {
+      const pitch = cellPitchOf([NO_WIDTH]);
 
-    expect(pitch.x).toBe(24);
+      expect(pitch.x).toBe(24);
+    });
   });
 });
 
@@ -64,17 +70,21 @@ describe('FEATURE: gridPositions', () => {
     });
   });
 
-  it('GIVEN children named like Object members WHEN laid out THEN each is an own key', () => {
-    const children = [childOf('__proto__', 40), childOf('constructor', 40)];
+  describe('GIVEN children named like Object members', () => {
+    it('WHEN laid out THEN each is an own key', () => {
+      const children = [childOf('__proto__', 40), childOf('constructor', 40)];
 
-    const positions = gridPositions(graphOf(children));
+      const positions = gridPositions(graphOf(children));
 
-    expect(Object.keys(positions)).toStrictEqual(['__proto__', 'constructor']);
+      expect(Object.keys(positions)).toStrictEqual(['__proto__', 'constructor']);
+    });
   });
 
-  it('GIVEN a graph with no children WHEN laid out THEN there are no positions', () => {
-    const positions = gridPositions({ id: 'root' });
+  describe('GIVEN a graph with no children', () => {
+    it('WHEN laid out THEN there are no positions', () => {
+      const positions = gridPositions({ id: 'root' });
 
-    expect(positions).toStrictEqual({});
+      expect(positions).toStrictEqual({});
+    });
   });
 });

@@ -77,18 +77,22 @@ describe('FEATURE: elkGraphOf', () => {
     });
   });
 
-  it('GIVEN the edges a>b > c and a > b>c WHEN built THEN their ids differ', () => {
-    const graph = elkGraphOf(['a', 'a>b', 'b>c', 'c'], [AB_C, A_BC], sizeOf);
+  describe('GIVEN the edges a>b > c and a > b>c', () => {
+    it('WHEN built THEN their ids differ', () => {
+      const graph = elkGraphOf(['a', 'a>b', 'b>c', 'c'], [AB_C, A_BC], sizeOf);
 
-    const edgeIds = new Set(idsOf(graph.edges));
+      const edgeIds = new Set(idsOf(graph.edges));
 
-    expect(edgeIds.size).toBe(2);
+      expect(edgeIds.size).toBe(2);
+    });
   });
 
-  it('GIVEN no packages WHEN built THEN children and edges are empty arrays', () => {
-    const graph = elkGraphOf([], [], sizeOf);
+  describe('GIVEN no packages', () => {
+    it('WHEN built THEN children and edges are empty arrays', () => {
+      const graph = elkGraphOf([], [], sizeOf);
 
-    expect(graph).toMatchObject({ id: 'root', children: [], edges: [] });
+      expect(graph).toMatchObject({ id: 'root', children: [], edges: [] });
+    });
   });
 });
 
@@ -136,10 +140,12 @@ describe('FEATURE: layoutGraphOf sizeName', () => {
   const sized: GraphPackage = { ...ROOT, bareName: '(root) root-fixture', sizeName: '(root) @x/root-fixture' };
   const drawn = drawnGraphOf({ ...STATE_STUB, packages: [...STATE_STUB.packages, sized] });
 
-  it('GIVEN // with a sizeName WHEN built flat THEN its box is the width of the sizeName and web keeps its name width', () => {
-    const graph = layoutGraphOf(drawn, 'flat', lengthSizeOf);
+  describe('GIVEN // with a sizeName', () => {
+    it('WHEN built flat THEN its box is the width of the sizeName and web keeps its name width', () => {
+      const graph = layoutGraphOf(drawn, 'flat', lengthSizeOf);
 
-    expect(graph.children).toContainEqual({ id: '//', width: 220, height: 32 });
-    expect(graph.children).toContainEqual({ id: 'web', width: 30, height: 32 });
+      expect(graph.children).toContainEqual({ id: '//', width: 220, height: 32 });
+      expect(graph.children).toContainEqual({ id: 'web', width: 30, height: 32 });
+    });
   });
 });

@@ -13,23 +13,27 @@ const rootWithSizeName = (sizeName: unknown): unknown[] => {
 const rootWithoutSizeName: unknown[] = [{ name: '//', bareName: 'savings', path: '', tags: [], taskCount: 0 }];
 
 describe('FEATURE: isGraphHostMessage sizeName', () => {
-  it.each([
+  describe.each([
     ['a string sizeName', rootWithSizeName('(root) savings')],
     ['no sizeName', rootWithoutSizeName],
     ['an undefined sizeName', rootWithSizeName(undefined)]
-  ])('GIVEN a root package with %s WHEN the state arrives THEN it is accepted', (_name, packages) => {
-    const isMessage = isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, packages }));
+  ])('GIVEN a root package with %s', (_name, packages) => {
+    it('WHEN the state arrives THEN it is accepted', () => {
+      const isMessage = isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, packages }));
 
-    expect(isMessage).toBe(true);
+      expect(isMessage).toBe(true);
+    });
   });
 
-  it.each([
+  describe.each([
     ['a numeric sizeName', rootWithSizeName(3)],
     ['a null sizeName', rootWithSizeName(null)],
     ['an object sizeName', rootWithSizeName({})]
-  ])('GIVEN a root package with %s WHEN the state arrives THEN it is rejected', (_name, packages) => {
-    const isMessage = isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, packages }));
+  ])('GIVEN a root package with %s', (_name, packages) => {
+    it('WHEN the state arrives THEN it is rejected', () => {
+      const isMessage = isGraphHostMessage(stateMessageOf({ ...HOST_GRAPH_STUB, packages }));
 
-    expect(isMessage).toBe(false);
+      expect(isMessage).toBe(false);
+    });
   });
 });

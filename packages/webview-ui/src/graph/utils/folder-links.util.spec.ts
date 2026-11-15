@@ -58,24 +58,28 @@ describe('FEATURE: folderLinksOf', () => {
       expect(rows).toStrictEqual(expected);
     });
 
-    it('GIVEN apps collapsed WHEN folder links are built THEN a merged link lists its package edges in order', () => {
-      const links = folderLinksOf(BOARDS_EDGES, new Set(ALL), folderMapOf(BOARDS_INFOS), new Set(['apps']));
+    describe('GIVEN apps collapsed', () => {
+      it('WHEN folder links are built THEN a merged link lists its package edges in order', () => {
+        const links = folderLinksOf(BOARDS_EDGES, new Set(ALL), folderMapOf(BOARDS_INFOS), new Set(['apps']));
 
-      expect(links[0]?.links).toStrictEqual([
-        { source: 'web', target: '@acme/ui' },
-        { source: 'docs', target: '@acme/ui' }
-      ]);
+        expect(links[0]?.links).toStrictEqual([
+          { source: 'web', target: '@acme/ui' },
+          { source: 'docs', target: '@acme/ui' }
+        ]);
+      });
     });
 
-    it('GIVEN an edge from a package no folder knows WHEN folder links are built THEN it gives no link', () => {
-      const edges: GraphEdge[] = [...BOARDS_EDGES, { source: 'ghost', target: 'web' }];
+    describe('GIVEN an edge from a package no folder knows', () => {
+      it('WHEN folder links are built THEN it gives no link', () => {
+        const edges: GraphEdge[] = [...BOARDS_EDGES, { source: 'ghost', target: 'web' }];
 
-      const rows = rowsOf(BOARDS_INFOS, edges, ['apps'], [...ALL, 'ghost']);
+        const rows = rowsOf(BOARDS_INFOS, edges, ['apps'], [...ALL, 'ghost']);
 
-      expect(rows).toStrictEqual([
-        [A, '@acme/ui', 2],
-        [A, '@acme/utils', 1]
-      ]);
+        expect(rows).toStrictEqual([
+          [A, '@acme/ui', 2],
+          [A, '@acme/utils', 1]
+        ]);
+      });
     });
   });
 

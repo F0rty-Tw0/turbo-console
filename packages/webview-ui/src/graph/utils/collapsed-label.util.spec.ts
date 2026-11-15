@@ -17,30 +17,38 @@ describe('FEATURE: collapsedLabelOf', () => {
     expect(label).toBe(expected);
   });
 
-  it('GIVEN a title measuring exactly 116 px WHEN the label is built THEN the title is kept', () => {
-    const label = collapsedLabelOf('apps', 2, () => 116);
+  describe('GIVEN a title measuring exactly 116 px', () => {
+    it('WHEN the label is built THEN the title is kept', () => {
+      const label = collapsedLabelOf('apps', 2, () => 116);
 
-    expect(label).toBe('apps\n2 packages');
+      expect(label).toBe('apps\n2 packages');
+    });
   });
 
-  it('GIVEN a 25-char title WHEN the label is built THEN the longest prefix that fits with an ellipsis is used', () => {
-    const label = collapsedLabelOf('packages/long-folder-name', 3, measureOf);
+  describe('GIVEN a 25-char title', () => {
+    it('WHEN the label is built THEN the longest prefix that fits with an ellipsis is used', () => {
+      const label = collapsedLabelOf('packages/long-folder-name', 3, measureOf);
 
-    expect(label).toBe('packages/long-f…\n3 packages');
+      expect(label).toBe('packages/long-f…\n3 packages');
+    });
   });
 
-  it('GIVEN a title of 20 emoji WHEN the label is built THEN it is cut by code point, not into a surrogate', () => {
-    const label = collapsedLabelOf('😀'.repeat(20), 3, measureOf);
-    const [firstLine = ''] = label.split('\n');
-    const characters = [...firstLine];
+  describe('GIVEN a title of 20 emoji', () => {
+    it('WHEN the label is built THEN it is cut by code point, not into a surrogate', () => {
+      const label = collapsedLabelOf('😀'.repeat(20), 3, measureOf);
+      const [firstLine = ''] = label.split('\n');
+      const characters = [...firstLine];
 
-    expect(firstLine).toBe(`${'😀'.repeat(7)}…`);
-    expect(characters).toHaveLength(8);
+      expect(firstLine).toBe(`${'😀'.repeat(7)}…`);
+      expect(characters).toHaveLength(8);
+    });
   });
 
-  it('GIVEN nothing fits WHEN the label is built THEN the title is only an ellipsis', () => {
-    const label = collapsedLabelOf('apps', 3, () => 1000);
+  describe('GIVEN nothing fits', () => {
+    it('WHEN the label is built THEN the title is only an ellipsis', () => {
+      const label = collapsedLabelOf('apps', 3, () => 1000);
 
-    expect(label).toBe('…\n3 packages');
+      expect(label).toBe('…\n3 packages');
+    });
   });
 });

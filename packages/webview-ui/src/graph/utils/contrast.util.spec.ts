@@ -13,8 +13,10 @@ describe('FEATURE: contrastRatioOf', () => {
     expect(contrastRatioOf(first, second)).toBe(ratio);
   });
 
-  it('GIVEN a value that is not a colour WHEN the ratio is read THEN it is 1, no contrast', () => {
-    expect(contrastRatioOf('not-a-colour', '#ffffff')).toBe(1);
+  describe('GIVEN a value that is not a colour', () => {
+    it('WHEN the ratio is read THEN it is 1, no contrast', () => {
+      expect(contrastRatioOf('not-a-colour', '#ffffff')).toBe(1);
+    });
   });
 });
 
@@ -36,12 +38,14 @@ describe('FEATURE: dimmedOpacityOf', () => {
     expect(dimmedOpacityOf(background, foregrounds)).toBe(opacity);
   });
 
-  it.each([
+  describe.each([
     ['#000000', ['not-a-colour']],
     ['#000000', ['#ffffff', 'rgb(1, 2)']],
     ['transparent', ['#ffffff']]
-  ])('GIVEN %s behind %j, one not a colour, WHEN the opacity is chosen THEN it is 0.25', (background, foregrounds) => {
-    expect(dimmedOpacityOf(background, foregrounds)).toBe(0.25);
+  ])('GIVEN %s behind %j, one not a colour,', (background, foregrounds) => {
+    it('WHEN the opacity is chosen THEN it is 0.25', () => {
+      expect(dimmedOpacityOf(background, foregrounds)).toBe(0.25);
+    });
   });
 });
 
