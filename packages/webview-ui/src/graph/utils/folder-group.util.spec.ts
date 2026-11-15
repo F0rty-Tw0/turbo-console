@@ -22,99 +22,103 @@ const MIXED: GraphPackage[] = [
   pkgOf('admin', 'apps/admin')
 ];
 
-describe('FEATURE: folderOf', () => {
-  it.each([
-    ['apps/web', 'apps'],
-    ['packages/ui/button', 'packages/ui'],
-    ['tools', ''],
-    ['', ''],
-    ['(root)/a', '(root)'],
-    ['__proto__/x', '__proto__']
-  ])('GIVEN the path %j WHEN the folder is taken THEN it is %j', (path, expected) => {
-    const folder = folderOf(path);
+describe('FEATURE: folder group', () => {
+  describe('GIVEN a package path whose folder is taken', () => {
+    describe.each([
+      ['apps/web', 'apps'],
+      ['packages/ui/button', 'packages/ui'],
+      ['tools', ''],
+      ['', ''],
+      ['(root)/a', '(root)'],
+      ['__proto__/x', '__proto__']
+    ])('GIVEN the path %j', (path, expected) => {
+      const shown = JSON.stringify(expected);
 
-    expect(folder).toBe(expected);
-  });
-});
+      it(`WHEN the folder is taken THEN it is ${shown}`, () => {
+        const folder = folderOf(path);
 
-describe('FEATURE: folderGroupsOf', () => {
-  describe('GIVEN packages in several folders and at the root', () => {
-    it('WHEN grouped THEN the root group comes first, then folders by code unit', () => {
-      const groups = folderGroupsOf(MIXED);
-
-      expect(groups.map((group) => group.folder)).toStrictEqual(['', 'apps', 'packages/ui']);
-    });
-
-    it('WHEN grouped THEN the rows of each group are sorted by name', () => {
-      const groups = folderGroupsOf(MIXED);
-
-      expect(groups.map(namesOf)).toStrictEqual([['root-pkg', 'tools-pkg'], ['admin', 'web', 'zeta'], ['button']]);
+        expect(folder).toBe(expected);
+      });
     });
   });
 
-  describe('GIVEN a top-level folder named (root) and a package at the root', () => {
-    it('WHEN grouped THEN they land in two groups, the root one first', () => {
-      const rootPkg = pkgOf('a', 'a');
-      const folderPkg = pkgOf('b', '(root)/b');
+  describe('GIVEN packages grouped by folder', () => {
+    describe('GIVEN packages in several folders and at the root', () => {
+      it('WHEN grouped THEN the root group comes first, then folders by code unit', () => {
+        const groups = folderGroupsOf(MIXED);
 
-      const groups = folderGroupsOf([folderPkg, rootPkg]);
+        expect(groups.map((group) => group.folder)).toStrictEqual(['', 'apps', 'packages/ui']);
+      });
 
-      expect(groups).toStrictEqual([
-        { folder: '', packages: [rootPkg] },
-        { folder: '(root)', packages: [folderPkg] }
-      ]);
+      it('WHEN grouped THEN the rows of each group are sorted by name', () => {
+        const groups = folderGroupsOf(MIXED);
+
+        expect(groups.map(namesOf)).toStrictEqual([['root-pkg', 'tools-pkg'], ['admin', 'web', 'zeta'], ['button']]);
+      });
+    });
+
+    describe('GIVEN a top-level folder named (root) and a package at the root', () => {
+      it('WHEN grouped THEN they land in two groups, the root one first', () => {
+        const rootPkg = pkgOf('a', 'a');
+        const folderPkg = pkgOf('b', '(root)/b');
+
+        const groups = folderGroupsOf([folderPkg, rootPkg]);
+
+        expect(groups).toStrictEqual([
+          { folder: '', packages: [rootPkg] },
+          { folder: '(root)', packages: [folderPkg] }
+        ]);
+      });
+    });
+
+    describe('GIVEN no packages', () => {
+      it('WHEN grouped THEN there are no groups', () => {
+        const groups = folderGroupsOf([]);
+
+        expect(groups).toStrictEqual([]);
+      });
+    });
+
+    describe('GIVEN a folder and a package named like Object.prototype keys', () => {
+      it('WHEN grouped THEN they are plain data', () => {
+        const constructorPkg = pkgOf('constructor', '__proto__/constructor');
+        const aPkg = pkgOf('a', '__proto__/a');
+
+        const groups = folderGroupsOf([constructorPkg, aPkg]);
+
+        expect(groups).toStrictEqual([{ folder: '__proto__', packages: [aPkg, constructorPkg] }]);
+      });
+    });
+
+    describe('GIVEN names that differ in case', () => {
+      it('WHEN grouped THEN upper case sorts before lower case', () => {
+        const groups = folderGroupsOf([pkgOf('alpha', 'x/alpha'), pkgOf('Zeta', 'x/Zeta')]);
+
+        expect(groups.map(namesOf)).toStrictEqual([['Zeta', 'alpha']]);
+      });
+    });
+
+    describe('GIVEN an unsorted input', () => {
+      it('WHEN grouped THEN the input order is unchanged', () => {
+        const input = [pkgOf('b', 'x/b'), pkgOf('a', 'x/a')];
+
+        folderGroupsOf(input);
+
+        expect(input.map((pkg) => pkg.name)).toStrictEqual(['b', 'a']);
+      });
     });
   });
 
-  describe('GIVEN no packages', () => {
-    it('WHEN grouped THEN there are no groups', () => {
-      const groups = folderGroupsOf([]);
+  describe('GIVEN packages whose folder keys are taken', () => {
+    describe('GIVEN packages in several folders and at the root', () => {
+      it('WHEN the keys are taken THEN they follow the group order', () => {
+        const keys = folderKeysOf(MIXED);
 
-      expect(groups).toStrictEqual([]);
+        expect(keys).toStrictEqual(['', 'apps', 'packages/ui']);
+      });
     });
   });
 
-  describe('GIVEN a folder and a package named like Object.prototype keys', () => {
-    it('WHEN grouped THEN they are plain data', () => {
-      const constructorPkg = pkgOf('constructor', '__proto__/constructor');
-      const aPkg = pkgOf('a', '__proto__/a');
-
-      const groups = folderGroupsOf([constructorPkg, aPkg]);
-
-      expect(groups).toStrictEqual([{ folder: '__proto__', packages: [aPkg, constructorPkg] }]);
-    });
-  });
-
-  describe('GIVEN names that differ in case', () => {
-    it('WHEN grouped THEN upper case sorts before lower case', () => {
-      const groups = folderGroupsOf([pkgOf('alpha', 'x/alpha'), pkgOf('Zeta', 'x/Zeta')]);
-
-      expect(groups.map(namesOf)).toStrictEqual([['Zeta', 'alpha']]);
-    });
-  });
-
-  describe('GIVEN an unsorted input', () => {
-    it('WHEN grouped THEN the input order is unchanged', () => {
-      const input = [pkgOf('b', 'x/b'), pkgOf('a', 'x/a')];
-
-      folderGroupsOf(input);
-
-      expect(input.map((pkg) => pkg.name)).toStrictEqual(['b', 'a']);
-    });
-  });
-});
-
-describe('FEATURE: folderKeysOf', () => {
-  describe('GIVEN packages in several folders and at the root', () => {
-    it('WHEN the keys are taken THEN they follow the group order', () => {
-      const keys = folderKeysOf(MIXED);
-
-      expect(keys).toStrictEqual(['', 'apps', 'packages/ui']);
-    });
-  });
-});
-
-describe('FEATURE: modeGroupsOf', () => {
   describe('GIVEN packages in several folders', () => {
     it('WHEN the mode is flat THEN there are no groups', () => {
       expect(modeGroupsOf(MIXED, 'flat')).toBeNull();
@@ -124,60 +128,60 @@ describe('FEATURE: modeGroupsOf', () => {
       expect(modeGroupsOf(MIXED, 'folders')).toStrictEqual(folderGroupsOf(MIXED));
     });
   });
-});
 
-describe('FEATURE: tagsOf', () => {
-  describe('GIVEN overlapping tags', () => {
-    it('WHEN collected THEN each appears once, sorted by code unit', () => {
-      const packages = [pkgOf('a', 'p', ['ui', 'app']), pkgOf('b', 'q', ['app', '__proto__']), pkgOf('c', 'r')];
+  describe('GIVEN packages whose tags are collected', () => {
+    describe('GIVEN overlapping tags', () => {
+      it('WHEN collected THEN each appears once, sorted by code unit', () => {
+        const packages = [pkgOf('a', 'p', ['ui', 'app']), pkgOf('b', 'q', ['app', '__proto__']), pkgOf('c', 'r')];
 
-      const tags = tagsOf(packages);
+        const tags = tagsOf(packages);
 
-      expect(tags).toStrictEqual(['__proto__', 'app', 'ui']);
+        expect(tags).toStrictEqual(['__proto__', 'app', 'ui']);
+      });
+    });
+
+    describe('GIVEN no packages', () => {
+      it('WHEN collected THEN there are no tags', () => {
+        const tags = tagsOf([]);
+
+        expect(tags).toStrictEqual([]);
+      });
     });
   });
 
-  describe('GIVEN no packages', () => {
-    it('WHEN collected THEN there are no tags', () => {
-      const tags = tagsOf([]);
+  describe('GIVEN packages whose names in a folder are asked', () => {
+    describe('GIVEN the boards packages', () => {
+      it.each([
+        ['apps', ['docs', 'web']],
+        ['packages', ['@acme/config', '@acme/ui', '@acme/utils']],
+        ['', []]
+      ])('WHEN the folder is %j THEN the names are %j', (folder, expected) => {
+        const names = namesInFolderOf(BOARDS_INFOS, folder);
 
-      expect(tags).toStrictEqual([]);
-    });
-  });
-});
-
-describe('FEATURE: namesInFolderOf', () => {
-  describe('GIVEN the boards packages', () => {
-    it.each([
-      ['apps', ['docs', 'web']],
-      ['packages', ['@acme/config', '@acme/ui', '@acme/utils']],
-      ['', []]
-    ])('WHEN the folder is %j THEN the names are %j', (folder, expected) => {
-      const names = namesInFolderOf(BOARDS_INFOS, folder);
-
-      expect(names).toStrictEqual(expected);
-    });
-  });
-
-  describe('GIVEN a root package and a __proto__ folder', () => {
-    const PACKAGES: GraphPackage[] = [pkgOf('r', 'r'), pkgOf('p', '__proto__/p'), pkgOf('b', 'x/b'), pkgOf('a', 'x/a')];
-
-    it('WHEN the root folder is asked THEN the root package is listed', () => {
-      const names = namesInFolderOf(PACKAGES, '');
-
-      expect(names).toStrictEqual(['r']);
+        expect(names).toStrictEqual(expected);
+      });
     });
 
-    it('WHEN the __proto__ folder is asked THEN its names are listed', () => {
-      const names = namesInFolderOf(PACKAGES, '__proto__');
+    describe('GIVEN a root package and a __proto__ folder', () => {
+      const PACKAGES: GraphPackage[] = [pkgOf('r', 'r'), pkgOf('p', '__proto__/p'), pkgOf('b', 'x/b'), pkgOf('a', 'x/a')];
 
-      expect(names).toStrictEqual(['p']);
-    });
+      it('WHEN the root folder is asked THEN the root package is listed', () => {
+        const names = namesInFolderOf(PACKAGES, '');
 
-    it('WHEN a folder holds several packages THEN the input order is kept', () => {
-      const names = namesInFolderOf(PACKAGES, 'x');
+        expect(names).toStrictEqual(['r']);
+      });
 
-      expect(names).toStrictEqual(['b', 'a']);
+      it('WHEN the __proto__ folder is asked THEN its names are listed', () => {
+        const names = namesInFolderOf(PACKAGES, '__proto__');
+
+        expect(names).toStrictEqual(['p']);
+      });
+
+      it('WHEN a folder holds several packages THEN the input order is kept', () => {
+        const names = namesInFolderOf(PACKAGES, 'x');
+
+        expect(names).toStrictEqual(['b', 'a']);
+      });
     });
   });
 });
