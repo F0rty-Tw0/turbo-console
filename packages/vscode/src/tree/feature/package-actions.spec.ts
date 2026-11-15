@@ -70,10 +70,18 @@ describe('FEATURE: package actions', () => {
     registered = registerPackageActions(roots, ports, register);
   });
 
-  it('GIVEN the package actions WHEN they are registered THEN Open, Reveal and Copy Path are registered', () => {
-    const names = commands.keys();
+  describe('GIVEN the package actions', () => {
+    it('WHEN they are registered THEN Open, Reveal and Copy Path are registered', () => {
+      const names = commands.keys();
 
-    expect([...names]).toStrictEqual(['turboConsole.openPackageJson', 'turboConsole.revealInExplorer', 'turboConsole.copyPath']);
+      expect([...names]).toStrictEqual(['turboConsole.openPackageJson', 'turboConsole.revealInExplorer', 'turboConsole.copyPath']);
+    });
+
+    it('WHEN they are disposed THEN every command is unregistered', () => {
+      registered.dispose();
+
+      expect(unregister).toHaveBeenCalledTimes(3);
+    });
   });
 
   describe('GIVEN a root loaded with package a under packages/a', () => {
@@ -146,11 +154,5 @@ describe('FEATURE: package actions', () => {
       expect(reveal).not.toHaveBeenCalled();
       expect(copy).not.toHaveBeenCalled();
     });
-  });
-
-  it('GIVEN the package actions WHEN they are disposed THEN every command is unregistered', () => {
-    registered.dispose();
-
-    expect(unregister).toHaveBeenCalledTimes(3);
   });
 });

@@ -52,10 +52,12 @@ const ROWS: [string, Partial<AtomView>, GraphAtomCounts, string][] = [
 ];
 
 describe('FEATURE: umbrella counts', () => {
-  it.each(ROWS)('GIVEN %s WHEN the umbrella counts are read THEN numbers and text both match', (_label, change, counts, text) => {
-    const view: AtomView = { ...ATOM_VIEW_STUB, ...change };
+  describe.each(ROWS)('GIVEN %s', (_label, change, counts, text) => {
+    it('WHEN the umbrella counts are read THEN numbers and text both match', () => {
+      const view: AtomView = { ...ATOM_VIEW_STUB, ...change };
 
-    expect(umbrellaCountsOf(ATOM_GROUP_STUB, view)).toStrictEqual(counts);
-    expect(umbrellaCounts(ATOM_GROUP_STUB, view)).toBe(text);
+      expect(umbrellaCountsOf(ATOM_GROUP_STUB, view)).toStrictEqual(counts);
+      expect(umbrellaCounts(ATOM_GROUP_STUB, view)).toBe(text);
+    });
   });
 });

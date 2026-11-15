@@ -11,17 +11,19 @@ const taskOf = (overrides: Partial<TaskNode>): TaskNode => {
 };
 
 describe('FEATURE: visible task', () => {
-  it.each([
+  describe.each([
     ['a plain task', true, taskOf({})],
     ['a script', true, taskOf({ isTurboTask: false })],
     ['a file atom task', false, taskOf({ kind: 'atom-file' })]
-  ])('GIVEN %s WHEN checked THEN visible is %s', (_label, isVisible, task) => {
-    expect(isVisibleTask(task)).toBe(isVisible);
+  ])('GIVEN %s', (_label, isVisible, task) => {
+    it(`WHEN checked THEN visible is ${isVisible}`, () => {
+      expect(isVisibleTask(task)).toBe(isVisible);
+    });
   });
 });
 
 describe('FEATURE: runnable task', () => {
-  it.each([
+  describe.each([
     ['a visible turbo task', true, taskOf({})],
     ['a continuous turbo task', true, taskOf({ persistent: true })],
     ['a script with a safe name', true, taskOf({ isTurboTask: false })],
@@ -31,13 +33,15 @@ describe('FEATURE: runnable task', () => {
     ['a script with no command', false, taskOf({ isTurboTask: false, command: null })],
     ['a script with a whitespace-only command', false, taskOf({ isTurboTask: false, command: ' \t ' })],
     ['a file atom task', false, taskOf({ kind: 'atom-file' })]
-  ])('GIVEN %s WHEN checked THEN runnable is %s', (_label, isRunnable, task) => {
-    expect(isRunnableTask(task)).toBe(isRunnable);
+  ])('GIVEN %s', (_label, isRunnable, task) => {
+    it(`WHEN checked THEN runnable is ${isRunnable}`, () => {
+      expect(isRunnableTask(task)).toBe(isRunnable);
+    });
   });
 });
 
 describe('FEATURE: offered task', () => {
-  it.each([
+  describe.each([
     ['a turbo task', false, true, taskOf({})],
     ['a turbo task', true, true, taskOf({})],
     ['a safe script', false, false, taskOf({ isTurboTask: false })],
@@ -46,8 +50,10 @@ describe('FEATURE: offered task', () => {
     ['a script with no command', true, false, taskOf({ isTurboTask: false, command: null })],
     ['a script with a blank command', true, false, taskOf({ isTurboTask: false, command: '  ' })],
     ['a file atom task', true, false, taskOf({ kind: 'atom-file' })]
-  ])('GIVEN %s and scripts shown is %s WHEN checked THEN offered is %s', (_label, scriptsShown, isOffered, task) => {
-    expect(isOfferedTask(task, scriptsShown)).toBe(isOffered);
+  ])('GIVEN %s and scripts shown is %s', (_label, scriptsShown, isOffered, task) => {
+    it(`WHEN checked THEN offered is ${isOffered}`, () => {
+      expect(isOfferedTask(task, scriptsShown)).toBe(isOffered);
+    });
   });
 });
 

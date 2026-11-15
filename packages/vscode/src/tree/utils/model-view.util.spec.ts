@@ -327,12 +327,14 @@ describe('FEATURE: root prefix while scopes are hidden', () => {
     expect(read).toStrictEqual(texts);
   });
 
-  it('GIVEN a root label longer than LABEL_MAX + web WHEN scopes are hidden THEN the row keeps the prefix and fits LABEL_MAX', () => {
-    const pkg = rootOf('a'.repeat(LABEL_MAX + 10));
-    const view = modelViewWith([pkg, packageOf('web')]);
-    const text = shownTextOf(view, pkg, false);
+  describe('GIVEN a root label longer than LABEL_MAX + web', () => {
+    it('WHEN scopes are hidden THEN the row keeps the prefix and fits LABEL_MAX', () => {
+      const pkg = rootOf('a'.repeat(LABEL_MAX + 10));
+      const view = modelViewWith([pkg, packageOf('web')]);
+      const text = shownTextOf(view, pkg, false);
 
-    expect(text.startsWith('(root) a')).toBe(true);
-    expect(text).toHaveLength(LABEL_MAX);
+      expect(text.startsWith('(root) a')).toBe(true);
+      expect(text).toHaveLength(LABEL_MAX);
+    });
   });
 });
