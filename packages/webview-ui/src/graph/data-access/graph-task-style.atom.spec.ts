@@ -37,66 +37,80 @@ describe('FEATURE: taskRulesOf Atomizer files and boxes in graphStyleOf', () => 
     cy.destroy();
   });
 
-  it('GIVEN an atom file THEN its label is its data label, cut with an ellipsis at 88 px, clear of both round pill ends', () => {
-    const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
+  describe('GIVEN an atom file', () => {
+    it('THEN its label is its data label, cut with an ellipsis at 88 px, clear of both round pill ends', () => {
+      const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
 
-    expect([file.style('label'), file.style('text-wrap'), file.numericStyle('text-max-width')]).toStrictEqual([
-      'c.spec.ts',
-      'ellipsis',
-      88
-    ]);
+      expect([file.style('label'), file.style('text-wrap'), file.numericStyle('text-max-width')]).toStrictEqual([
+        'c.spec.ts',
+        'ellipsis',
+        88
+      ]);
+    });
   });
 
-  it('GIVEN an atom file with no outcome class THEN it has no outline', () => {
-    expect(cy.getElementById('web#e2e-ci--a b/c.spec.ts').numericStyle('outline-width')).toBe(0);
+  describe('GIVEN an atom file with no outcome class', () => {
+    it('THEN it has no outline', () => {
+      expect(cy.getElementById('web#e2e-ci--a b/c.spec.ts').numericStyle('outline-width')).toBe(0);
+    });
   });
 
-  it.each(ATOM_OUTLINES)('GIVEN an atom file classed %s THEN it has a 2 wide outline in %s', (className, rgb) => {
-    const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
+  describe.each(ATOM_OUTLINES)('GIVEN an atom file classed %s', (className, rgb) => {
+    it(`THEN it has a 2 wide outline in ${rgb}`, () => {
+      const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
 
-    file.addClass(className);
+      file.addClass(className);
 
-    expect(file.numericStyle('outline-width')).toBe(2);
-    expect(file.style('outline-color')).toBe(rgb);
+      expect(file.numericStyle('outline-width')).toBe(2);
+      expect(file.style('outline-color')).toBe(rgb);
+    });
   });
 
-  it('GIVEN a failed atom file that is running THEN the run colour wins over the outcome one', () => {
-    const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
+  describe('GIVEN a failed atom file that is running', () => {
+    it('THEN the run colour wins over the outcome one', () => {
+      const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
 
-    file.addClass('atom-failed run-running');
+      file.addClass('atom-failed run-running');
 
-    expect(file.style('outline-color')).toBe('rgb(255,255,0)');
+      expect(file.style('outline-color')).toBe('rgb(255,255,0)');
+    });
   });
 
-  it('GIVEN a live atom file THEN its border is dashed, and a file that is not live keeps a solid one', () => {
-    const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
+  describe('GIVEN a live atom file', () => {
+    it('THEN its border is dashed, and a file that is not live keeps a solid one', () => {
+      const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
 
-    expect(file.style('border-style')).toBe('solid');
+      expect(file.style('border-style')).toBe('solid');
 
-    file.addClass('atom-live');
+      file.addClass('atom-live');
 
-    expect(file.style('border-style')).toBe('dashed');
+      expect(file.style('border-style')).toBe('dashed');
+    });
   });
 
-  it('GIVEN a live atom file with an outcome THEN its outline is dashed too, so the outline does not hide the dashed border', () => {
-    const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
+  describe('GIVEN a live atom file with an outcome', () => {
+    it('THEN its outline is dashed too, so the outline does not hide the dashed border', () => {
+      const file = cy.getElementById('web#e2e-ci--a b/c.spec.ts');
 
-    file.addClass('atom-passed');
+      file.addClass('atom-passed');
 
-    expect(file.style('outline-style')).toBe('solid');
+      expect(file.style('outline-style')).toBe('solid');
 
-    file.addClass('atom-live');
+      file.addClass('atom-live');
 
-    expect(file.style('outline-style')).toBe('dashed');
+      expect(file.style('outline-style')).toBe('dashed');
+    });
   });
 
-  it('GIVEN an atom box THEN it pads its content 12 px, sizes without its descendants’ labels and draws no label', () => {
-    const box = cy.getElementById('atom:web#e2e-ci');
+  describe('GIVEN an atom box', () => {
+    it('THEN it pads its content 12 px, sizes without its descendants’ labels and draws no label', () => {
+      const box = cy.getElementById('atom:web#e2e-ci');
 
-    expect([box.numericStyle('padding'), box.style('compound-sizing-wrt-labels'), box.style('label')]).toStrictEqual([
-      12,
-      'exclude',
-      ''
-    ]);
+      expect([box.numericStyle('padding'), box.style('compound-sizing-wrt-labels'), box.style('label')]).toStrictEqual([
+        12,
+        'exclude',
+        ''
+      ]);
+    });
   });
 });
