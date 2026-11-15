@@ -171,6 +171,7 @@ export const createFoldersView = (cy: Core): FoldersView => {
   const relinkFolders = (): void => {
     drawn = emptyDrawnLinks();
     cy.batch(markLinks);
+    labelLinks();
   };
   const view: FoldersView = { show, paint, recentre, relinkFolders, markRuns };
 
