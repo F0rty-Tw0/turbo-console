@@ -1,16 +1,10 @@
-import type { GraphTask } from '@turbo-console/webview-ui';
 import { describe, expect, it, vi } from 'vitest';
 
 import { predictionsOf } from './graph-predictions.util.ts';
 import type { PredictionLookup } from '../../tree/common/prediction.type.ts';
 import { GRAPH_TASKS_STUB } from '../test/stubs/graph-model.stub.ts';
 import { predictionViewOf } from '../test/utils/prediction-view.spec.util.ts';
-
-const protoNamed = (task: GraphTask): GraphTask => {
-  const renamed: GraphTask = { ...task, id: '__proto__' };
-
-  return renamed;
-};
+import { protoNamed } from '../test/utils/proto-named.spec.util.ts';
 
 describe('FEATURE: predictions of the listed tasks', () => {
   describe('GIVEN answers for two of three packages', () => {
@@ -49,6 +43,7 @@ describe('FEATURE: predictions of the listed tasks', () => {
       const predictions = predictionsOf('/ws', tasks, predictionViewOf({ a: [['__proto__', 'HIT']] }));
 
       expect(Object.hasOwn(predictions, '__proto__')).toBe(true);
+      expect(Object.entries(predictions)).toStrictEqual([['__proto__', 'cached']]);
     });
   });
 

@@ -18,7 +18,8 @@ const byPackageOf = (tasks: GraphTask[]): Map<string, GraphTask[]> => {
 
 /**
  * The prediction word of every listed task whose package the store answered, keyed by task id. The view is read once per
- * package, in the order the packages first appear in `tasks`; a task the view does not name is left out.
+ * package, in the order the packages first appear in `tasks`; a task the view does not name is left out. The record is built
+ * with `Object.fromEntries`, which defines own keys, so a task id such as `__proto__` stays a key of it.
  */
 export const predictionsOf = (root: string, tasks: GraphTask[], view: PredictionLookup): Readonly<Record<string, GraphPrediction>> => {
   const predictions: [string, GraphPrediction][] = [];
@@ -35,6 +36,5 @@ export const predictionsOf = (root: string, tasks: GraphTask[], view: Prediction
     }
   }
 
-  // Object.fromEntries defines own keys, so a task id such as `__proto__` stays a key of the record.
   return Object.fromEntries(predictions);
 };
