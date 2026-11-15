@@ -9,6 +9,15 @@ import { SINGLE_PACKAGE_KEY } from '../common/single-package-key.const.ts';
 import type { TreeContext } from '../common/tree-context.type.ts';
 import type { TreeProviderDeps } from '../common/tree-node.type.ts';
 
+/** What `activate` built that the tree provider's deps are made of. */
+type TreeParts = {
+  readonly runs: TreeProviderDeps['runs'];
+  readonly timings: Timings;
+  readonly scripts: ScriptsToggleApi;
+  readonly loads: SharedLoads;
+  readonly log: (line: string) => void;
+};
+
 const setHasScripts = async (value: boolean): Promise<void> => {
   await vscode.commands.executeCommand('setContext', HAS_SCRIPTS_KEY, value);
 };
@@ -21,14 +30,8 @@ const setSinglePackage = async (value: boolean): Promise<void> => {
  * What the tree provider is built from: the run lookup, the first-children spans, the scripts toggle, the shared loads
  * (Atomizer, cache prediction and affected), the `turboConsole.hasScripts` and `turboConsole.singlePackage` sends and `log` for a send that fails.
  */
-export const treeDepsOf = (
-  runs: TreeProviderDeps['runs'],
-  timings: Timings,
-  scripts: ScriptsToggleApi,
-  loads: SharedLoads,
-  log: (line: string) => void
-  // eslint-disable-next-line max-params -- the provider's inputs `extension.ts` passes, one line there
-): TreeProviderDeps => {
+export const treeDepsOf = (parts: TreeParts): TreeProviderDeps => {
+  const { runs, timings, scripts, loads, log } = parts;
   const deps: TreeProviderDeps = {
     runs,
     treeVisible: timings.treeVisible,
