@@ -291,10 +291,12 @@ describe('FEATURE: isGraphHostMessage', () => {
     });
   });
 
-  it('GIVEN a showPackage message WHEN it names a package THEN it is accepted', () => {
-    const isMessage = isGraphHostMessage({ type: 'showPackage', name: 'web' });
+  describe('GIVEN a showPackage message', () => {
+    it('WHEN it names a package THEN it is accepted', () => {
+      const isMessage = isGraphHostMessage({ type: 'showPackage', name: 'web' });
 
-    expect(isMessage).toBe(true);
+      expect(isMessage).toBe(true);
+    });
   });
 
   describe('GIVEN an atoms message', () => {

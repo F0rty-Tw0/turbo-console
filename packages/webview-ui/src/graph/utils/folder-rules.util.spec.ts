@@ -19,106 +19,112 @@ const APPS_HIDDEN: GraphFilters = { ...NONE, hidden: new Set(['docs', 'web']) };
 
 const DOCS_HIDDEN: GraphFilters = { ...NONE, hidden: new Set(['docs']) };
 
-describe('FEATURE: focusFolderOf', () => {
-  it.each([
-    ['a folder focus', FOLDER_FOCUSED, 'apps'],
-    ['a package focus', WEB_FOCUSED, null],
-    ['no focus', NONE, null]
-  ])('GIVEN %s WHEN the focused folder is read THEN it is %j', (_name, filters, expected) => {
-    const folder = focusFolderOf(filters);
+describe('FEATURE: folder rules', () => {
+  describe('GIVEN filters whose focused folder is read', () => {
+    describe.each([
+      ['a folder focus', FOLDER_FOCUSED, 'apps'],
+      ['a package focus', WEB_FOCUSED, null],
+      ['no focus', NONE, null]
+    ])('GIVEN %s', (_name, filters, expected) => {
+      const shown = JSON.stringify(expected);
 
-    expect(folder).toBe(expected);
-  });
-});
+      it(`WHEN the focused folder is read THEN it is ${shown}`, () => {
+        const folder = focusFolderOf(filters);
 
-describe('FEATURE: clearFolderFocusOf', () => {
-  describe('GIVEN a folder focus', () => {
-    it('WHEN it is cleared THEN the focus is null and the rest is kept', () => {
-      const filters = clearFolderFocusOf({ ...FOLDER_FOCUSED, hidden: new Set(['docs']) });
-
-      expect(filters).toStrictEqual({ ...DOCS_HIDDEN });
+        expect(folder).toBe(expected);
+      });
     });
   });
 
-  describe('GIVEN a package focus', () => {
-    it('WHEN it is cleared THEN the filters are returned as they were', () => {
-      const filters = clearFolderFocusOf(WEB_FOCUSED);
+  describe('GIVEN filters whose folder focus is cleared', () => {
+    describe('GIVEN a folder focus', () => {
+      it('WHEN it is cleared THEN the focus is null and the rest is kept', () => {
+        const filters = clearFolderFocusOf({ ...FOLDER_FOCUSED, hidden: new Set(['docs']) });
 
-      expect(filters).toBe(WEB_FOCUSED);
+        expect(filters).toStrictEqual({ ...DOCS_HIDDEN });
+      });
+    });
+
+    describe('GIVEN a package focus', () => {
+      it('WHEN it is cleared THEN the filters are returned as they were', () => {
+        const filters = clearFolderFocusOf(WEB_FOCUSED);
+
+        expect(filters).toBe(WEB_FOCUSED);
+      });
+    });
+
+    describe('GIVEN no focus', () => {
+      it('WHEN it is cleared THEN the filters are returned as they were', () => {
+        const filters = clearFolderFocusOf(NONE);
+
+        expect(filters).toBe(NONE);
+      });
     });
   });
 
-  describe('GIVEN no focus', () => {
-    it('WHEN it is cleared THEN the filters are returned as they were', () => {
-      const filters = clearFolderFocusOf(NONE);
+  describe('GIVEN filters and a folder to exclude', () => {
+    describe('GIVEN the boards with nothing hidden', () => {
+      it('WHEN apps is excluded THEN docs and web are hidden', () => {
+        const filters = excludeFolderOf(NONE, BOARDS_INFOS, 'apps');
 
-      expect(filters).toBe(NONE);
-    });
-  });
-});
+        expect(filters.hidden).toStrictEqual(new Set(['docs', 'web']));
+      });
 
-describe('FEATURE: excludeFolderOf', () => {
-  describe('GIVEN the boards with nothing hidden', () => {
-    it('WHEN apps is excluded THEN docs and web are hidden', () => {
-      const filters = excludeFolderOf(NONE, BOARDS_INFOS, 'apps');
+      it('WHEN a folder without packages is excluded THEN the filters are returned as they were', () => {
+        const filters = excludeFolderOf(NONE, BOARDS_INFOS, 'missing');
 
-      expect(filters.hidden).toStrictEqual(new Set(['docs', 'web']));
+        expect(filters).toBe(NONE);
+      });
     });
 
-    it('WHEN a folder without packages is excluded THEN the filters are returned as they were', () => {
-      const filters = excludeFolderOf(NONE, BOARDS_INFOS, 'missing');
+    describe('GIVEN web is the focused package', () => {
+      it('WHEN apps is excluded THEN only docs is hidden and the focus stays', () => {
+        const filters = excludeFolderOf(WEB_FOCUSED, BOARDS_INFOS, 'apps');
 
-      expect(filters).toBe(NONE);
-    });
-  });
+        expect(filters.hidden).toStrictEqual(new Set(['docs']));
+        expect(filters.focus).toStrictEqual(WEB_FOCUS);
+      });
 
-  describe('GIVEN web is the focused package', () => {
-    it('WHEN apps is excluded THEN only docs is hidden and the focus stays', () => {
-      const filters = excludeFolderOf(WEB_FOCUSED, BOARDS_INFOS, 'apps');
+      it('WHEN a folder holding only web is excluded THEN the filters are returned as they were', () => {
+        const onlyWeb = BOARDS_INFOS.filter((pkg) => pkg.name === 'web');
+        const filters = excludeFolderOf(WEB_FOCUSED, onlyWeb, 'apps');
 
-      expect(filters.hidden).toStrictEqual(new Set(['docs']));
-      expect(filters.focus).toStrictEqual(WEB_FOCUS);
-    });
-
-    it('WHEN a folder holding only web is excluded THEN the filters are returned as they were', () => {
-      const onlyWeb = BOARDS_INFOS.filter((pkg) => pkg.name === 'web');
-      const filters = excludeFolderOf(WEB_FOCUSED, onlyWeb, 'apps');
-
-      expect(filters).toBe(WEB_FOCUSED);
-    });
-  });
-});
-
-describe('FEATURE: showFolderOf', () => {
-  describe('GIVEN every package of apps is shown', () => {
-    it('WHEN the folder is toggled THEN docs and web are hidden', () => {
-      const filters = showFolderOf(NONE, BOARDS_INFOS, 'apps');
-
-      expect(filters.hidden).toStrictEqual(new Set(['docs', 'web']));
+        expect(filters).toBe(WEB_FOCUSED);
+      });
     });
   });
 
-  describe('GIVEN every package of apps is hidden', () => {
-    it('WHEN the folder is toggled THEN none is hidden', () => {
-      const filters = showFolderOf(APPS_HIDDEN, BOARDS_INFOS, 'apps');
+  describe('GIVEN filters and a folder to toggle', () => {
+    describe('GIVEN every package of apps is shown', () => {
+      it('WHEN the folder is toggled THEN docs and web are hidden', () => {
+        const filters = showFolderOf(NONE, BOARDS_INFOS, 'apps');
 
-      expect(filters.hidden).toStrictEqual(new Set());
+        expect(filters.hidden).toStrictEqual(new Set(['docs', 'web']));
+      });
     });
-  });
 
-  describe('GIVEN only docs of apps is hidden', () => {
-    it('WHEN the folder is toggled THEN docs is shown again', () => {
-      const filters = showFolderOf(DOCS_HIDDEN, BOARDS_INFOS, 'apps');
+    describe('GIVEN every package of apps is hidden', () => {
+      it('WHEN the folder is toggled THEN none is hidden', () => {
+        const filters = showFolderOf(APPS_HIDDEN, BOARDS_INFOS, 'apps');
 
-      expect(filters.hidden).toStrictEqual(new Set());
+        expect(filters.hidden).toStrictEqual(new Set());
+      });
     });
-  });
 
-  describe('GIVEN web is the focused package and docs is hidden', () => {
-    it('WHEN apps is toggled THEN docs is shown again', () => {
-      const filters = showFolderOf({ ...WEB_FOCUSED, hidden: new Set(['docs']) }, BOARDS_INFOS, 'apps');
+    describe('GIVEN only docs of apps is hidden', () => {
+      it('WHEN the folder is toggled THEN docs is shown again', () => {
+        const filters = showFolderOf(DOCS_HIDDEN, BOARDS_INFOS, 'apps');
 
-      expect(filters.hidden).toStrictEqual(new Set());
+        expect(filters.hidden).toStrictEqual(new Set());
+      });
+    });
+
+    describe('GIVEN web is the focused package and docs is hidden', () => {
+      it('WHEN apps is toggled THEN docs is shown again', () => {
+        const filters = showFolderOf({ ...WEB_FOCUSED, hidden: new Set(['docs']) }, BOARDS_INFOS, 'apps');
+
+        expect(filters.hidden).toStrictEqual(new Set());
+      });
     });
   });
 });

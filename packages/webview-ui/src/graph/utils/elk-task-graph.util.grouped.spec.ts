@@ -118,7 +118,7 @@ describe('FEATURE: elkTaskGraphOf grouped by folder', () => {
   });
 
   describe('GIVEN grouped tasks where a script of web (apps) needs a task of ui (packages), and cli (tools) has its own pair', () => {
-    it('c9: WHEN built THEN two wrappers: apps and packages in the first, tools in the second, each with its own link', () => {
+    it('WHEN built THEN two wrappers: apps and packages in the first, tools in the second, each with its own link (c9)', () => {
       const graph = packedTaskGraphOf();
 
       const edgeIdsOfWrapper = (edges: ElkEdge[]): string[] => edges.map((edge) => edge.id);

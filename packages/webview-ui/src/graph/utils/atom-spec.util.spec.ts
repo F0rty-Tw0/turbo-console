@@ -72,39 +72,49 @@ const FAILED_FIRST = [idOf(15), idOf(30), ...FIRST_EIGHT];
 const FAILED_FIRST_AND_MORE = [...FAILED_FIRST, MORE_ID];
 
 describe('FEATURE: the atom spec util', () => {
-  it('GIVEN a shown, sized, boxed umbrella with files WHEN read THEN the spec names its size and file ids', () => {
-    expect(atomSpecOf(GROUP, PLACEMENT, {})).toStrictEqual({
-      umbrellaId: 'app#e2e',
-      umbrellaSize: SIZE,
-      fileIds: ['app#e2e--a', 'app#e2e--b'],
-      files: GROUP.files,
-      hidden: 0
+  describe('GIVEN a shown, sized, boxed umbrella with files', () => {
+    it('WHEN read THEN the spec names its size and file ids', () => {
+      expect(atomSpecOf(GROUP, PLACEMENT, {})).toStrictEqual({
+        umbrellaId: 'app#e2e',
+        umbrellaSize: SIZE,
+        fileIds: ['app#e2e--a', 'app#e2e--b'],
+        files: GROUP.files,
+        hidden: 0
+      });
     });
   });
 
-  it.each([
+  describe.each([
     ['not shown', { ...PLACEMENT, shown: new Set<string>() }],
     ['not sized', { ...PLACEMENT, sizes: new Map<string, NodeSize>() }],
     ['in no package box', { ...PLACEMENT, pkgBoxes: new Map<string, string>() }]
-  ])('GIVEN an umbrella that is %s WHEN read THEN it has no spec', (_name, placement) => {
-    expect(atomSpecOf(GROUP, placement, {})).toBeNull();
+  ])('GIVEN an umbrella that is %s', (_name, placement) => {
+    it('WHEN read THEN it has no spec', () => {
+      expect(atomSpecOf(GROUP, placement, {})).toBeNull();
+    });
   });
 
-  it('GIVEN a group of no files WHEN read THEN it has no spec', () => {
-    expect(atomSpecOf(withGroupFiles(), PLACEMENT, {})).toBeNull();
+  describe('GIVEN a group of no files', () => {
+    it('WHEN read THEN it has no spec', () => {
+      expect(atomSpecOf(withGroupFiles(), PLACEMENT, {})).toBeNull();
+    });
   });
 
-  it('GIVEN a file with the id of a task WHEN read THEN the spec leaves that file out', () => {
-    const pkgBoxes = new Map([...PLACEMENT.pkgBoxes, ['app#build', 'pkg:app']]);
-    const group = withGroupFiles('app#build', 'app#e2e--b');
+  describe('GIVEN a file with the id of a task', () => {
+    it('WHEN read THEN the spec leaves that file out', () => {
+      const pkgBoxes = new Map([...PLACEMENT.pkgBoxes, ['app#build', 'pkg:app']]);
+      const group = withGroupFiles('app#build', 'app#e2e--b');
 
-    expect(atomSpecOf(group, { ...PLACEMENT, pkgBoxes }, {})?.fileIds).toStrictEqual(['app#e2e--b']);
+      expect(atomSpecOf(group, { ...PLACEMENT, pkgBoxes }, {})?.fileIds).toStrictEqual(['app#e2e--b']);
+    });
   });
 
-  it('GIVEN a group whose every file has the id of a task WHEN read THEN it has no spec', () => {
-    const pkgBoxes = new Map([...PLACEMENT.pkgBoxes, ['app#build', 'pkg:app']]);
+  describe('GIVEN a group whose every file has the id of a task', () => {
+    it('WHEN read THEN it has no spec', () => {
+      const pkgBoxes = new Map([...PLACEMENT.pkgBoxes, ['app#build', 'pkg:app']]);
 
-    expect(atomSpecOf(withGroupFiles('app#build'), { ...PLACEMENT, pkgBoxes }, {})).toBeNull();
+      expect(atomSpecOf(withGroupFiles('app#build'), { ...PLACEMENT, pkgBoxes }, {})).toBeNull();
+    });
   });
 
   describe.each([10, 11])('GIVEN a group of %i free files', (count) => {
@@ -232,24 +242,30 @@ describe('FEATURE: the atom spec util', () => {
     });
   });
 
-  it('GIVEN the umbrella app#e2e WHEN moreIdOf reads it THEN its count node id is atom-more: before it', () => {
-    expect(moreIdOf('app#e2e')).toBe(MORE_ID);
+  describe('GIVEN the umbrella app#e2e', () => {
+    it('WHEN moreIdOf reads it THEN its count node id is atom-more: before it', () => {
+      expect(moreIdOf('app#e2e')).toBe(MORE_ID);
+    });
   });
 
-  it('GIVEN outcomes kept for an umbrella WHEN outcomesOf reads it THEN they are returned', () => {
-    const kept: Record<string, GraphAtomOutcome> = { [idOf(1)]: 'failed' };
-    const byUmbrella = new Map([['app#e2e', kept]]);
+  describe('GIVEN outcomes kept for an umbrella', () => {
+    it('WHEN outcomesOf reads it THEN they are returned', () => {
+      const kept: Record<string, GraphAtomOutcome> = { [idOf(1)]: 'failed' };
+      const byUmbrella = new Map([['app#e2e', kept]]);
 
-    const outcomes = outcomesOf(byUmbrella, 'app#e2e');
+      const outcomes = outcomesOf(byUmbrella, 'app#e2e');
 
-    expect(outcomes).toBe(kept);
+      expect(outcomes).toBe(kept);
+    });
   });
 
-  it('GIVEN no outcomes kept for an umbrella WHEN outcomesOf reads it THEN there are none', () => {
-    const byUmbrella = new Map<string, Record<string, GraphAtomOutcome>>();
+  describe('GIVEN no outcomes kept for an umbrella', () => {
+    it('WHEN outcomesOf reads it THEN there are none', () => {
+      const byUmbrella = new Map<string, Record<string, GraphAtomOutcome>>();
 
-    const outcomes = outcomesOf(byUmbrella, 'app#e2e');
+      const outcomes = outcomesOf(byUmbrella, 'app#e2e');
 
-    expect(outcomes).toStrictEqual({});
+      expect(outcomes).toStrictEqual({});
+    });
   });
 });

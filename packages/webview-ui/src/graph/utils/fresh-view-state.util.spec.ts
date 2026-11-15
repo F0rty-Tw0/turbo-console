@@ -34,19 +34,21 @@ describe('FEATURE: freshViewStateOf', () => {
     });
   });
 
-  it('GIVEN no saved task view WHEN a fresh one is made THEN nothing is chosen, the cap holds, depth is 1 and the camera is the default', () => {
-    const task = freshTaskViewOf();
+  describe('GIVEN no saved task view', () => {
+    it('WHEN a fresh one is made THEN nothing is chosen, the cap holds, depth is 1 and the camera is the default', () => {
+      const task = freshTaskViewOf();
 
-    expect(task).toStrictEqual({
-      chosen: [],
-      capLifted: false,
-      depth: 1,
-      selected: null,
-      search: '',
-      zoom: 1,
-      pan: ORIGIN,
-      fitted: false,
-      layoutKey: ''
+      expect(task).toStrictEqual({
+        chosen: [],
+        capLifted: false,
+        depth: 1,
+        selected: null,
+        search: '',
+        zoom: 1,
+        pan: ORIGIN,
+        fitted: false,
+        layoutKey: ''
+      });
     });
   });
 });

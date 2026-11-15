@@ -13,12 +13,16 @@ const edgeOf = (curve: Position[] | undefined): DrawnBendsSource => {
 };
 
 describe('FEATURE: drawnBendsOf', () => {
-  it.each([
+  describe.each([
     { title: 'a curved edge', edge: edgeOf(CURVE_BENDS), expected: CURVE_BENDS },
     { title: 'a straight edge', edge: edgeOf(undefined), expected: [] }
-  ])('GIVEN $title WHEN its bends are read THEN they are $expected', ({ edge, expected }) => {
-    const bends = drawnBendsOf(edge);
+  ])('GIVEN $title', ({ edge, expected }) => {
+    const shown = JSON.stringify(expected);
 
-    expect(bends).toStrictEqual(expected);
+    it(`WHEN its bends are read THEN they are ${shown}`, () => {
+      const bends = drawnBendsOf(edge);
+
+      expect(bends).toStrictEqual(expected);
+    });
   });
 });
