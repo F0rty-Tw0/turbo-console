@@ -12,6 +12,15 @@ import { manifestFile, rootOf } from '../run/feature/register-pickers.ts';
 import type { Output } from '../shared/common/output.type.ts';
 import type { SharedLoads } from '../tree/common/shared-loads.type.ts';
 
+/** What `activate` built that the graph panels are wired over: the extension context, the root session, the Details registry, the output and the feeds. */
+type GraphParts = {
+  readonly context: GraphContext;
+  readonly session: PanelRoots;
+  readonly details: GraphDetails;
+  readonly output: Output;
+  readonly feeds: GraphFeeds;
+};
+
 /** The feeds every graph panel reads: the run states and the task progress of the run session, the shared Atomizer, prediction and affected loads and the tree's toggles. */
 export const graphFeedsOf = (
   run: Pick<GraphFeeds, 'runs' | 'progress'>,
@@ -35,14 +44,8 @@ export const graphFeedsOf = (
  * session only through the `setPanelVisible` closure here. It sits beside the layers, like `extension.ts`, because it
  * joins `data-access` to `feature`.
  */
-export const createGraph = (
-  context: GraphContext,
-  session: PanelRoots,
-  details: GraphDetails,
-  output: Output,
-  feeds: GraphFeeds
-  // eslint-disable-next-line max-params -- the wiring inputs plus the run and atom stores `extension.ts` passes
-): GraphWiring => {
+export const createGraph = (parts: GraphParts): GraphWiring => {
+  const { context, session, details, output, feeds } = parts;
   const setPanelVisible = (root: string, panelId: string, visible: boolean): void => {
     session.setPanelVisible(root, panelId, visible);
   };

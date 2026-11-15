@@ -125,7 +125,7 @@ describe('FEATURE: the graph wiring', () => {
     editor.createWebviewPanel.mockImplementation(createPanel);
     editor.showErrorMessage.mockReset();
     editor.showErrorMessage.mockResolvedValue(undefined);
-    graph = createGraph(contextOf(page), session, details, output, feedsOf(new RunStore()));
+    graph = createGraph({ context: contextOf(page), session, details, output, feeds: feedsOf(new RunStore()) });
   });
 
   afterEach(() => {
@@ -166,7 +166,7 @@ describe('FEATURE: the graph wiring', () => {
 
     it('GIVEN feeds with scope shown WHEN Show All Task Graphs runs and the page is ready THEN the posted state carries scopeShown true', async () => {
       const feeds = feedsWithToggles(new RunStore(), togglesOf(true));
-      const scoped = createGraph(contextOf(page), session, details, output, feeds);
+      const scoped = createGraph({ context: contextOf(page), session, details, output, feeds });
 
       scoped.register();
       await callbackOf(ALL_TASKS_COMMAND)(undefined);
@@ -179,7 +179,7 @@ describe('FEATURE: the graph wiring', () => {
 
     it("WHEN the page sends setViewToggle scope true THEN this feeds object's scope toggle is set to true", async () => {
       const feeds = feedsOf(new RunStore());
-      const toggled = createGraph(contextOf(page), session, details, output, feeds);
+      const toggled = createGraph({ context: contextOf(page), session, details, output, feeds });
 
       toggled.register();
       await callbackOf(COMMAND)(undefined);
@@ -191,7 +191,7 @@ describe('FEATURE: the graph wiring', () => {
     describe('GIVEN a script task in the model', () => {
       it('WHEN Show All Task Graphs runs with scripts hidden, then shown THEN the second request adds the script id', async () => {
         const feeds = feedsOf(new RunStore());
-        const toggled = createGraph(contextOf(page), session, details, output, feeds);
+        const toggled = createGraph({ context: contextOf(page), session, details, output, feeds });
         const showTasksIds = (): string[][] => {
           const requests = toggled.api.posted('/ws').filter((message) => message.type === 'showTasks');
 
