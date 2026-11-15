@@ -22,69 +22,71 @@ const graphOf = (children: ElkNode[]): ElkNode => {
   return graph;
 };
 
-describe('FEATURE: cellPitchOf', () => {
-  describe('GIVEN children 40 and 100 px wide', () => {
-    it('WHEN the pitch is taken THEN it is 124 across and 96 down', () => {
-      const pitch = cellPitchOf([NARROW, WIDE]);
+describe('FEATURE: grid layout', () => {
+  describe('GIVEN a list of children whose cell pitch is taken', () => {
+    describe('GIVEN children 40 and 100 px wide', () => {
+      it('WHEN the pitch is taken THEN it is 124 across and 96 down', () => {
+        const pitch = cellPitchOf([NARROW, WIDE]);
 
-      expect(pitch).toStrictEqual({ x: 124, y: 96 });
+        expect(pitch).toStrictEqual({ x: 124, y: 96 });
+      });
+    });
+
+    describe('GIVEN no children', () => {
+      it('WHEN the pitch is taken THEN it is the padding across', () => {
+        const pitch = cellPitchOf([]);
+
+        expect(pitch).toStrictEqual({ x: 24, y: 96 });
+      });
+    });
+
+    describe('GIVEN a child with no width', () => {
+      it('WHEN the pitch is taken THEN it counts as 0 px wide', () => {
+        const pitch = cellPitchOf([NO_WIDTH]);
+
+        expect(pitch.x).toBe(24);
+      });
     });
   });
 
-  describe('GIVEN no children', () => {
-    it('WHEN the pitch is taken THEN it is the padding across', () => {
-      const pitch = cellPitchOf([]);
+  const cellAt = (x: number, y: number): Position => {
+    const cell: Position = { x, y };
 
-      expect(pitch).toStrictEqual({ x: 24, y: 96 });
+    return cell;
+  };
+
+  const ROW_ONE: Positions = { a: cellAt(0, 0), b: cellAt(124, 0), c: cellAt(248, 0) };
+
+  const ROW_TWO: Positions = { d: cellAt(0, 96), e: cellAt(124, 96) };
+
+  describe('GIVEN a graph laid out on the grid', () => {
+    describe('GIVEN five children', () => {
+      const names = ['a', 'b', 'c', 'd', 'e'];
+      const children = names.map((name: string): ElkNode => childOf(name, 100));
+
+      it('WHEN laid out THEN they fill rows of three, left to right, top to bottom', () => {
+        const positions = gridPositions(graphOf(children));
+
+        expect(positions).toStrictEqual({ ...ROW_ONE, ...ROW_TWO });
+      });
     });
-  });
 
-  describe('GIVEN a child with no width', () => {
-    it('WHEN the pitch is taken THEN it counts as 0 px wide', () => {
-      const pitch = cellPitchOf([NO_WIDTH]);
+    describe('GIVEN children named like Object members', () => {
+      it('WHEN laid out THEN each is an own key', () => {
+        const children = [childOf('__proto__', 40), childOf('constructor', 40)];
 
-      expect(pitch.x).toBe(24);
+        const positions = gridPositions(graphOf(children));
+
+        expect(Object.keys(positions)).toStrictEqual(['__proto__', 'constructor']);
+      });
     });
-  });
-});
 
-const cellAt = (x: number, y: number): Position => {
-  const cell: Position = { x, y };
+    describe('GIVEN a graph with no children', () => {
+      it('WHEN laid out THEN there are no positions', () => {
+        const positions = gridPositions({ id: 'root' });
 
-  return cell;
-};
-
-const ROW_ONE: Positions = { a: cellAt(0, 0), b: cellAt(124, 0), c: cellAt(248, 0) };
-
-const ROW_TWO: Positions = { d: cellAt(0, 96), e: cellAt(124, 96) };
-
-describe('FEATURE: gridPositions', () => {
-  describe('GIVEN five children', () => {
-    const names = ['a', 'b', 'c', 'd', 'e'];
-    const children = names.map((name: string): ElkNode => childOf(name, 100));
-
-    it('WHEN laid out THEN they fill rows of three, left to right, top to bottom', () => {
-      const positions = gridPositions(graphOf(children));
-
-      expect(positions).toStrictEqual({ ...ROW_ONE, ...ROW_TWO });
-    });
-  });
-
-  describe('GIVEN children named like Object members', () => {
-    it('WHEN laid out THEN each is an own key', () => {
-      const children = [childOf('__proto__', 40), childOf('constructor', 40)];
-
-      const positions = gridPositions(graphOf(children));
-
-      expect(Object.keys(positions)).toStrictEqual(['__proto__', 'constructor']);
-    });
-  });
-
-  describe('GIVEN a graph with no children', () => {
-    it('WHEN laid out THEN there are no positions', () => {
-      const positions = gridPositions({ id: 'root' });
-
-      expect(positions).toStrictEqual({});
+        expect(positions).toStrictEqual({});
+      });
     });
   });
 });
