@@ -59,7 +59,7 @@ describe('FEATURE: graph title crossings', () => {
     { title: 'the line through the label not drawn', line: HIDDEN_LINE, expected: [] },
     { title: "a drawn line ending on the label's corner", line: CORNER_LINE, expected: ['pkg:web'] }
   ])('GIVEN $title', ({ line, expected }) => {
-    it('WHEN the crossed titles are listed THEN they are the expected keys', () => {
+    it(`WHEN the crossed titles are listed THEN they are ${JSON.stringify(expected)}`, () => {
       const crossed = titleCrossingsOf([TITLE], [line]);
 
       expect(crossed).toStrictEqual(expected);
@@ -73,7 +73,7 @@ describe('FEATURE: graph title crossings', () => {
     { title: 'a line beside the label, drawn over the title', box: UNDER_TITLE, line: BESIDE_LINE, expected: [] },
     { title: 'the line drawn over the title not drawn', box: UNDER_TITLE, line: HIDDEN_LINE, expected: [] }
   ])('GIVEN $title', ({ box, line, expected }) => {
-    it('WHEN the unreadable titles are listed THEN they are the expected keys', () => {
+    it(`WHEN the unreadable titles are listed THEN they are ${JSON.stringify(expected)}`, () => {
       const unreadable = unreadableTitlesOf([box], [line]);
 
       expect(unreadable).toStrictEqual(expected);
