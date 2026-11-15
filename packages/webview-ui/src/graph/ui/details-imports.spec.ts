@@ -48,7 +48,7 @@ const builtFrom = (state: ImportsState): Built => {
   return built;
 };
 
-describe('FEATURE: importsView', () => {
+describe('FEATURE: details imports', () => {
   beforeEach((): void => {
     vi.stubGlobal('document', fakeDocumentMock());
   });
@@ -227,19 +227,9 @@ describe('FEATURE: importsView', () => {
       expect(holders).toStrictEqual([1, 0]);
     });
   });
-});
 
-describe('FEATURE: importsStatusView', () => {
-  afterEach((): void => {
-    vi.unstubAllGlobals();
-  });
-
-  describe('GIVEN a document', () => {
-    beforeEach((): void => {
-      vi.stubGlobal('document', fakeDocumentMock());
-    });
-
-    it('WHEN built THEN it is an empty, visually hidden p with role status', () => {
+  describe('GIVEN no model', () => {
+    it('WHEN the status view is built THEN it is an empty, visually hidden p with role status', () => {
       const status = importsStatusView();
       const parts = [status.tagName, status.className, status.getAttribute('role'), status.textContent];
 
