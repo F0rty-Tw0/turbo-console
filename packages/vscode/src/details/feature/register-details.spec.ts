@@ -39,52 +39,60 @@ const openerMock = (): PanelOpener => {
 };
 
 describe('FEATURE: the Open Package Details command', () => {
-  it('GIVEN a package row WHEN the command runs THEN that root and package open, never a file', async () => {
-    const panels = openerMock();
-    const registered = registrationMock();
+  describe('GIVEN a package row', () => {
+    it('WHEN the command runs THEN that root and package open, never a file', async () => {
+      const panels = openerMock();
+      const registered = registrationMock();
 
-    registerDetails(panels, registered.register, () => MANIFEST);
+      registerDetails(panels, registered.register, () => MANIFEST);
 
-    await registered.run(PACKAGE_ROW);
+      await registered.run(PACKAGE_ROW);
 
-    expect(panels.open).toHaveBeenCalledExactlyOnceWith({ root: '/ws', packageName: 'a' });
-    expect(panels.openFile).not.toHaveBeenCalled();
+      expect(panels.open).toHaveBeenCalledExactlyOnceWith({ root: '/ws', packageName: 'a' });
+      expect(panels.openFile).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN a resource that is not a row WHEN the command runs THEN the manifest file of that resource opens', async () => {
-    const panels = openerMock();
-    const registered = registrationMock();
-    const fileOf = vi.fn(() => MANIFEST);
+  describe('GIVEN a resource that is not a row', () => {
+    it('WHEN the command runs THEN the manifest file of that resource opens', async () => {
+      const panels = openerMock();
+      const registered = registrationMock();
+      const fileOf = vi.fn(() => MANIFEST);
 
-    registerDetails(panels, registered.register, fileOf);
-    const resource = { scheme: 'file' };
+      registerDetails(panels, registered.register, fileOf);
+      const resource = { scheme: 'file' };
 
-    await registered.run(resource);
+      await registered.run(resource);
 
-    expect(fileOf).toHaveBeenCalledExactlyOnceWith(resource);
-    expect(panels.openFile).toHaveBeenCalledExactlyOnceWith(MANIFEST);
-    expect(panels.open).not.toHaveBeenCalled();
+      expect(fileOf).toHaveBeenCalledExactlyOnceWith(resource);
+      expect(panels.openFile).toHaveBeenCalledExactlyOnceWith(MANIFEST);
+      expect(panels.open).not.toHaveBeenCalled();
+    });
   });
 
-  it('GIVEN no argument and no active file WHEN the command runs THEN null is passed to the registry', async () => {
-    const panels = openerMock();
-    const registered = registrationMock();
+  describe('GIVEN no argument and no active file', () => {
+    it('WHEN the command runs THEN null is passed to the registry', async () => {
+      const panels = openerMock();
+      const registered = registrationMock();
 
-    registerDetails(panels, registered.register, () => null);
+      registerDetails(panels, registered.register, () => null);
 
-    await registered.run(undefined);
+      await registered.run(undefined);
 
-    expect(panels.openFile).toHaveBeenCalledExactlyOnceWith(null);
+      expect(panels.openFile).toHaveBeenCalledExactlyOnceWith(null);
+    });
   });
 
-  it('GIVEN the command is registered WHEN it is disposed THEN the command is removed and every panel closes', () => {
-    const panels = openerMock();
-    const registered = registrationMock();
-    const details = registerDetails(panels, registered.register, () => null);
+  describe('GIVEN the command is registered', () => {
+    it('WHEN it is disposed THEN the command is removed and every panel closes', () => {
+      const panels = openerMock();
+      const registered = registrationMock();
+      const details = registerDetails(panels, registered.register, () => null);
 
-    details.dispose();
+      details.dispose();
 
-    expect(registered.unregister).toHaveBeenCalledOnce();
-    expect(panels.dispose).toHaveBeenCalledOnce();
+      expect(registered.unregister).toHaveBeenCalledOnce();
+      expect(panels.dispose).toHaveBeenCalledOnce();
+    });
   });
 });

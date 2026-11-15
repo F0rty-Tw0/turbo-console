@@ -141,32 +141,38 @@ describe('FEATURE: webview message validation', () => {
 });
 
 describe('FEATURE: panel task ids', () => {
-  it('GIVEN a package state WHEN asked THEN the ids are those of its cards', () => {
-    const state = toDetailsState(DETAILS_INPUT_STUB);
+  describe('GIVEN a package state', () => {
+    it('WHEN asked THEN the ids are those of its cards', () => {
+      const state = toDetailsState(DETAILS_INPUT_STUB);
 
-    const ids = cardTaskIdsOf(state);
+      const ids = cardTaskIdsOf(state);
 
-    expect(ids.all).toStrictEqual(new Set(['a#build', 'a#check', 'a#test']));
+      expect(ids.all).toStrictEqual(new Set(['a#build', 'a#check', 'a#test']));
+    });
   });
 
-  it('GIVEN a package with a script WHEN asked THEN the script is among the ids', () => {
-    const pkg = { ...A_PACKAGE_STUB, tasks: [BUILD_TASK_STUB, ADHOC_TASK_STUB] };
-    const model = { ...DETAILS_MODEL_STUB, packages: [pkg] };
-    const rootState = { ...DETAILS_ROOT_STATE_STUB, model };
-    const state = toDetailsState({ ...DETAILS_INPUT_STUB, state: rootState });
+  describe('GIVEN a package with a script', () => {
+    it('WHEN asked THEN the script is among the ids', () => {
+      const pkg = { ...A_PACKAGE_STUB, tasks: [BUILD_TASK_STUB, ADHOC_TASK_STUB] };
+      const model = { ...DETAILS_MODEL_STUB, packages: [pkg] };
+      const rootState = { ...DETAILS_ROOT_STATE_STUB, model };
+      const state = toDetailsState({ ...DETAILS_INPUT_STUB, state: rootState });
 
-    const ids = cardTaskIdsOf(state);
+      const ids = cardTaskIdsOf(state);
 
-    expect(ids.all).toStrictEqual(new Set(['a#adhoc', 'a#build']));
+      expect(ids.all).toStrictEqual(new Set(['a#adhoc', 'a#build']));
+    });
   });
 
-  it.each<[string, DetailsState | null]>([
+  describe.each<[string, DetailsState | null]>([
     ['a missing package', { kind: 'missing', root: '/ws', packageName: 'a', label: null }],
     ['no state yet', null]
-  ])('GIVEN %s WHEN asked THEN there are none', (_name, state) => {
-    const ids = cardTaskIdsOf(state);
+  ])('GIVEN %s', (_name, state) => {
+    it('WHEN asked THEN there are none', () => {
+      const ids = cardTaskIdsOf(state);
 
-    expect(ids.all.size).toBe(0);
+      expect(ids.all.size).toBe(0);
+    });
   });
 });
 
@@ -186,28 +192,38 @@ describe('FEATURE: refused runs', () => {
     return changed;
   };
 
-  it('GIVEN scripts hidden WHEN run names a script card THEN it gets the already-running text', () => {
-    expect(refusedRunTextOf(RUN_ADHOC, scriptStateOf(false), false)).toBe(ALREADY_RUNNING_TEXT);
+  describe('GIVEN scripts hidden', () => {
+    it('WHEN run names a script card THEN it gets the already-running text', () => {
+      expect(refusedRunTextOf(RUN_ADHOC, scriptStateOf(false), false)).toBe(ALREADY_RUNNING_TEXT);
+    });
   });
 
-  it.each<[string, CommandMessage, boolean]>([
+  describe.each<[string, CommandMessage, boolean]>([
     ['stop names the script card while hidden', { type: 'stop', taskId: 'a#adhoc' }, false],
     ['copy names the script card while hidden', { type: 'copy', taskId: 'a#adhoc' }, false],
     ['run names a turbo task card while hidden', { type: 'run', taskId: 'a#build' }, false],
     ['run names the script card while shown', RUN_ADHOC, true]
-  ])('GIVEN %s WHEN checked THEN it is not refused', (_name, message, scriptsShown) => {
-    expect(refusedRunTextOf(message, scriptStateOf(scriptsShown), false)).toBeNull();
+  ])('GIVEN %s', (_name, message, scriptsShown) => {
+    it('WHEN checked THEN it is not refused', () => {
+      expect(refusedRunTextOf(message, scriptStateOf(scriptsShown), false)).toBeNull();
+    });
   });
 
-  it('GIVEN no state WHEN run arrives THEN it is not refused', () => {
-    expect(refusedRunTextOf(RUN_ADHOC, null, false)).toBeNull();
+  describe('GIVEN no state', () => {
+    it('WHEN run arrives THEN it is not refused', () => {
+      expect(refusedRunTextOf(RUN_ADHOC, null, false)).toBeNull();
+    });
   });
 
-  it('GIVEN a failed binary with its reload text WHEN run arrives THEN it gets that text first', () => {
-    expect(refusedRunTextOf(RUN_ADHOC, scriptStateOf(false, 'no turbo'), true)).toBe('no turbo');
+  describe('GIVEN a failed binary with its reload text', () => {
+    it('WHEN run arrives THEN it gets that text first', () => {
+      expect(refusedRunTextOf(RUN_ADHOC, scriptStateOf(false, 'no turbo'), true)).toBe('no turbo');
+    });
   });
 
-  it('GIVEN a failed binary with no reload text WHEN a turbo task runs THEN it is not refused', () => {
-    expect(refusedRunTextOf({ type: 'run', taskId: 'a#build' }, scriptStateOf(true), true)).toBeNull();
+  describe('GIVEN a failed binary with no reload text', () => {
+    it('WHEN a turbo task runs THEN it is not refused', () => {
+      expect(refusedRunTextOf({ type: 'run', taskId: 'a#build' }, scriptStateOf(true), true)).toBeNull();
+    });
   });
 });

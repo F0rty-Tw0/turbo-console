@@ -178,21 +178,25 @@ describe('FEATURE: details session with scripts shown', () => {
     await session.receive({ type: 'ready' });
   });
 
-  it('GIVEN a ready panel WHEN a script starts and ends THEN only run states are posted', () => {
-    runStore.tryStart(RUN_SCRIPT, 1000);
-    runStore.processEnded(SCRIPT, 0, 2000);
+  describe('GIVEN a ready panel', () => {
+    it('WHEN a script starts and ends THEN only run states are posted', () => {
+      runStore.tryStart(RUN_SCRIPT, 1000);
+      runStore.processEnded(SCRIPT, 0, 2000);
 
-    expect(postedOf(ports).map((message) => message.type)).toStrictEqual(['state', 'runState', 'runState']);
+      expect(postedOf(ports).map((message) => message.type)).toStrictEqual(['state', 'runState', 'runState']);
+    });
   });
 
-  it('GIVEN a script started while shown WHEN scripts are hidden and its run ends THEN a full state without its card is posted', () => {
-    runStore.tryStart(RUN_SCRIPT, 1000);
-    vi.mocked(ports.scriptsShown).mockReturnValue(false);
-    session.publish();
-    runStore.processEnded(SCRIPT, 0, 2000);
-    const types = postedOf(ports).map((message) => message.type);
+  describe('GIVEN a script started while shown', () => {
+    it('WHEN scripts are hidden and its run ends THEN a full state without its card is posted', () => {
+      runStore.tryStart(RUN_SCRIPT, 1000);
+      vi.mocked(ports.scriptsShown).mockReturnValue(false);
+      session.publish();
+      runStore.processEnded(SCRIPT, 0, 2000);
+      const types = postedOf(ports).map((message) => message.type);
 
-    expect(types.slice(-1)).toStrictEqual(['state']);
-    expect(lastCardIdsOf(ports)).toStrictEqual(['a#build']);
+      expect(types.slice(-1)).toStrictEqual(['state']);
+      expect(lastCardIdsOf(ports)).toStrictEqual(['a#build']);
+    });
   });
 });

@@ -21,26 +21,32 @@ const namesOf = (tasks: TaskNode[]): string[] => tasks.map((task) => task.name);
 const runningAdhoc: RunLookup = () => RUNNING_ADHOC;
 
 describe('FEATURE: the tasks that get a card', () => {
-  it('GIVEN scripts shown WHEN chosen THEN every visible task is in name order and nothing is hidden', () => {
-    const { shown, hiddenScriptCount } = cardTasksOf(PACKAGE, DETAILS_INPUT_STUB);
+  describe('GIVEN scripts shown', () => {
+    it('WHEN chosen THEN every visible task is in name order and nothing is hidden', () => {
+      const { shown, hiddenScriptCount } = cardTasksOf(PACKAGE, DETAILS_INPUT_STUB);
 
-    expect(namesOf(shown)).toStrictEqual(['adhoc', 'build', 'test']);
-    expect(hiddenScriptCount).toBe(0);
+      expect(namesOf(shown)).toStrictEqual(['adhoc', 'build', 'test']);
+      expect(hiddenScriptCount).toBe(0);
+    });
   });
 
-  it('GIVEN scripts hidden WHEN chosen THEN the script is left out and counted', () => {
-    const { shown, hiddenScriptCount } = cardTasksOf(PACKAGE, { ...DETAILS_INPUT_STUB, scriptsShown: false });
+  describe('GIVEN scripts hidden', () => {
+    it('WHEN chosen THEN the script is left out and counted', () => {
+      const { shown, hiddenScriptCount } = cardTasksOf(PACKAGE, { ...DETAILS_INPUT_STUB, scriptsShown: false });
 
-    expect(namesOf(shown)).toStrictEqual(['build', 'test']);
-    expect(hiddenScriptCount).toBe(1);
+      expect(namesOf(shown)).toStrictEqual(['build', 'test']);
+      expect(hiddenScriptCount).toBe(1);
+    });
   });
 
-  it('GIVEN scripts hidden and the script running WHEN chosen THEN it keeps its card and is not counted', () => {
-    const input = { ...DETAILS_INPUT_STUB, scriptsShown: false, runs: runningAdhoc };
+  describe('GIVEN scripts hidden and the script running', () => {
+    it('WHEN chosen THEN it keeps its card and is not counted', () => {
+      const input = { ...DETAILS_INPUT_STUB, scriptsShown: false, runs: runningAdhoc };
 
-    const { shown, hiddenScriptCount } = cardTasksOf(PACKAGE, input);
+      const { shown, hiddenScriptCount } = cardTasksOf(PACKAGE, input);
 
-    expect(namesOf(shown)).toStrictEqual(['adhoc', 'build', 'test']);
-    expect(hiddenScriptCount).toBe(0);
+      expect(namesOf(shown)).toStrictEqual(['adhoc', 'build', 'test']);
+      expect(hiddenScriptCount).toBe(0);
+    });
   });
 });
