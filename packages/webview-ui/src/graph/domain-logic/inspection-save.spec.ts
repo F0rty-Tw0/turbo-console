@@ -40,14 +40,13 @@ describe('FEATURE: scheduleSave', () => {
     deps = { drawn: (): DrawnGraph => DRAWN, view, controls: (): ControlsViewFields => CONTROLS, saver };
   });
 
-  it.each([true, false])(
-    'GIVEN a drawn graph WHEN a save is scheduled while isFitted is %s THEN the state keeps it',
-    (fitted: boolean) => {
+  describe('GIVEN a drawn graph', () => {
+    it.each([true, false])('WHEN a save is scheduled while isFitted is %s THEN the state keeps it', (fitted: boolean) => {
       view.isFitted.mockReturnValue(fitted);
 
       scheduleSave(deps, SHOWN);
 
       expect(saver.schedule).toHaveBeenCalledWith(expect.objectContaining({ hash: 'h1', ...CAMERA, fitted }));
-    }
-  );
+    });
+  });
 });

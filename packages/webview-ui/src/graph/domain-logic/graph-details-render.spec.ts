@@ -43,33 +43,39 @@ describe('FEATURE: hadFocusOf', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN focus on a button in the content WHEN core is shown THEN the view takes focus', () => {
-    const button = document.createElement('button');
+  describe('GIVEN focus on a button in the content', () => {
+    it('WHEN core is shown THEN the view takes focus', () => {
+      const button = document.createElement('button');
 
-    content.append(button);
-    button.focus();
+      content.append(button);
+      button.focus();
 
-    expect(hadFocusOf(content, clear, CORE)).toBe(true);
+      expect(hadFocusOf(content, clear, CORE)).toBe(true);
+    });
   });
 
-  it('GIVEN focus on Clear selection WHEN core is shown THEN Clear keeps focus', () => {
-    clear.focus();
+  describe('GIVEN focus on Clear selection', () => {
+    it('WHEN core is shown THEN Clear keeps focus', () => {
+      clear.focus();
 
-    expect(hadFocusOf(content, clear, CORE)).toBe(false);
+      expect(hadFocusOf(content, clear, CORE)).toBe(false);
+    });
+
+    it('WHEN nothing is shown THEN the Empty view takes focus', () => {
+      clear.focus();
+
+      expect(hadFocusOf(content, clear, NOTHING)).toBe(true);
+    });
   });
 
-  it('GIVEN focus on Clear selection WHEN nothing is shown THEN the Empty view takes focus', () => {
-    clear.focus();
+  describe('GIVEN focus outside the aside', () => {
+    it('WHEN nothing is shown THEN focus stays put', () => {
+      const search = document.createElement('input');
 
-    expect(hadFocusOf(content, clear, NOTHING)).toBe(true);
-  });
+      search.focus();
 
-  it('GIVEN focus outside the aside WHEN nothing is shown THEN focus stays put', () => {
-    const search = document.createElement('input');
-
-    search.focus();
-
-    expect(hadFocusOf(content, clear, NOTHING)).toBe(false);
+      expect(hadFocusOf(content, clear, NOTHING)).toBe(false);
+    });
   });
 });
 

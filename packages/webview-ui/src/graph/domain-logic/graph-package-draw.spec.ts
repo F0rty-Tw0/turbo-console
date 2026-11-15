@@ -81,17 +81,19 @@ describe('FEATURE: restoreAfterDraw camera', () => {
     return view;
   };
 
-  it.each([
+  describe.each([
     ['no saved camera', 'open', null],
     ['a save for another hash', 'open', freshViewStateOf('h0')],
     ['a fitted save for this hash', 'fit', FITTED],
     ['a moved save for this hash', 'setViewport', MOVED],
     ['the opening state itself (large graph, no grouping choice)', 'open', OPENING]
-  ] as const)('GIVEN %s WHEN the first draw restores THEN the camera calls %s only', (_name, called, saved) => {
-    const view = restoredViewOf(saved);
-    const others = CAMERA_CALLS.filter((name: CameraCall): boolean => name !== called);
+  ] as const)('GIVEN %s', (_name, called, saved) => {
+    it(`WHEN the first draw restores THEN the camera calls ${called} only`, () => {
+      const view = restoredViewOf(saved);
+      const others = CAMERA_CALLS.filter((name: CameraCall): boolean => name !== called);
 
-    expect(view[called]).toHaveBeenCalledOnce();
-    others.forEach((name: CameraCall): void => expect(view[name]).not.toHaveBeenCalled());
+      expect(view[called]).toHaveBeenCalledOnce();
+      others.forEach((name: CameraCall): void => expect(view[name]).not.toHaveBeenCalled());
+    });
   });
 });

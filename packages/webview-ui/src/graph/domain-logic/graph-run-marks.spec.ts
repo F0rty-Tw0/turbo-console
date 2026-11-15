@@ -95,9 +95,11 @@ describe('FEATURE: applyRunMarks', () => {
     });
   });
 
-  it('GIVEN an object with an unknown mark word WHEN it is applied THEN the canvas gets the record without that entry', () => {
-    applyRunMarks(canvas, runsOf(MIXED));
+  describe('GIVEN an object with an unknown mark word', () => {
+    it('WHEN it is applied THEN the canvas gets the record without that entry', () => {
+      applyRunMarks(canvas, runsOf(MIXED));
 
-    expect(canvas.affected).toHaveBeenCalledExactlyOnceWith(TASKS);
+      expect(canvas.affected).toHaveBeenCalledExactlyOnceWith(TASKS);
+    });
   });
 });

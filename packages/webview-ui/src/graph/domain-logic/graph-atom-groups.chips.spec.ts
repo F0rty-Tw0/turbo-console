@@ -42,28 +42,34 @@ describe('FEATURE: the chip rows of the Atomizer groups', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN groups received and atoms sent BEFORE any layout WHEN the layout is placed THEN the row appears with the kept counts', () => {
-    groups.received([E2E_CI]);
-    groups.states(statesOf(UMBRELLA, { files: 10, cached: 3, failed: 1 }));
-    const beforeLayout = layerRowsOf(layer).length;
+  describe('GIVEN groups received and atoms sent BEFORE any layout', () => {
+    it('WHEN the layout is placed THEN the row appears with the kept counts', () => {
+      groups.received([E2E_CI]);
+      groups.states(statesOf(UMBRELLA, { files: 10, cached: 3, failed: 1 }));
+      const beforeLayout = layerRowsOf(layer).length;
 
-    groups.placed(SHOWN_UMBRELLA, layoutOf(BASE), SIZES, TASKS);
+      groups.placed(SHOWN_UMBRELLA, layoutOf(BASE), SIZES, TASKS);
 
-    expect([beforeLayout, rowTexts()]).toStrictEqual([0, ['10 files · 3 cached · 1 failed']]);
+      expect([beforeLayout, rowTexts()]).toStrictEqual([0, ['10 files · 3 cached · 1 failed']]);
+    });
   });
 
-  it('GIVEN a placed layout and no atoms yet WHEN placed THEN the row shows the file count text', () => {
-    groups.received([E2E_CI]);
-    groups.placed(SHOWN_UMBRELLA, layoutOf(BASE), SIZES, TASKS);
+  describe('GIVEN a placed layout and no atoms yet', () => {
+    it('WHEN placed THEN the row shows the file count text', () => {
+      groups.received([E2E_CI]);
+      groups.placed(SHOWN_UMBRELLA, layoutOf(BASE), SIZES, TASKS);
 
-    expect(rowTexts()).toStrictEqual(['10 files']);
+      expect(rowTexts()).toStrictEqual(['10 files']);
+    });
   });
 
-  it('GIVEN a plain-sized task (not in the placed sizes) WHEN placed THEN it gets no row', () => {
-    groups.received([E2E_CI, LIB_CI]);
-    groups.placed(SHOWN_BOTH, layoutOf(BASE), SIZES, TASKS);
+  describe('GIVEN a plain-sized task (not in the placed sizes)', () => {
+    it('WHEN placed THEN it gets no row', () => {
+      groups.received([E2E_CI, LIB_CI]);
+      groups.placed(SHOWN_BOTH, layoutOf(BASE), SIZES, TASKS);
 
-    expect(layerRowsOf(layer).map((row) => row.dataset['umbrella'])).toStrictEqual([UMBRELLA]);
+      expect(layerRowsOf(layer).map((row) => row.dataset['umbrella'])).toStrictEqual([UMBRELLA]);
+    });
   });
 
   describe('GIVEN the umbrella placed with its row', () => {

@@ -161,10 +161,12 @@ describe('FEATURE: GraphTaskDetails', () => {
     });
   });
 
-  it('GIVEN task mode is off WHEN Details is clicked THEN nothing is passed on', () => {
-    rig.deps.page.details.click();
+  describe('GIVEN task mode is off', () => {
+    it('WHEN Details is clicked THEN nothing is passed on', () => {
+      rig.deps.page.details.click();
 
-    expect(rig.onToggle).not.toHaveBeenCalled();
+      expect(rig.onToggle).not.toHaveBeenCalled();
+    });
   });
 
   describe('GIVEN a#build is shown running', () => {

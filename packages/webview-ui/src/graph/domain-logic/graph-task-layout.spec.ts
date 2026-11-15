@@ -226,7 +226,7 @@ describe('FEATURE: GraphTaskLayout', () => {
       return taskSavedOf({ ...saved, zoom: SAVED_ZOOM, pan: API_AT }).task;
     };
 
-    it.each([
+    describe.each([
       ['fitted for the key', 'fit', FITTED_FOR_KEY, []],
       ['moved for the key', 'setViewport', MOVED_FOR_KEY, RESTORED_ARGS],
       ['none at all', 'open', null, []],
@@ -234,22 +234,24 @@ describe('FEATURE: GraphTaskLayout', () => {
       ["a regroup's pending choice, fitted", 'fit', PENDING_FITTED, []],
       ['a pending choice, not fitted (choose, depth, cap)', 'open', PENDING_MOVED, []],
       ['fitted for another key', 'open', FITTED_FOR_OTHER, []]
-    ] as const)('GIVEN a save that is %s WHEN the layout lands THEN the camera calls %s only', async (_name, called, saved, args) => {
-      const task = savedTaskOf(saved);
-      const others = CAMERA_CALLS.filter((name: CameraCall): boolean => name !== called);
+    ] as const)('GIVEN a save that is %s', (_name, called, saved, args) => {
+      it(`WHEN the layout lands THEN the camera calls ${called} only`, async () => {
+        const task = savedTaskOf(saved);
+        const others = CAMERA_CALLS.filter((name: CameraCall): boolean => name !== called);
 
-      layout = new GraphTaskLayout({
-        ...rig.deps,
-        saved: (): TaskViewState | null => task,
-        rootLabel: (): null => null,
-        onPlaced: vi.fn(),
-        onDrawn
+        layout = new GraphTaskLayout({
+          ...rig.deps,
+          saved: (): TaskViewState | null => task,
+          rootLabel: (): null => null,
+          onPlaced: vi.fn(),
+          onDrawn
+        });
+
+        await land('k0');
+
+        expect(rig.view[called]).toHaveBeenCalledExactlyOnceWith(...args);
+        others.forEach((name: CameraCall): void => expect(rig.view[name]).not.toHaveBeenCalled());
       });
-
-      await land('k0');
-
-      expect(rig.view[called]).toHaveBeenCalledExactlyOnceWith(...args);
-      others.forEach((name: CameraCall): void => expect(rig.view[name]).not.toHaveBeenCalled());
     });
   });
 
@@ -331,23 +333,27 @@ describe('FEATURE: GraphTaskLayout', () => {
     });
   });
 
-  it('GIVEN a placed layout and a canvas that then throws WHEN its key is shown again from memory THEN the failure is reported', async () => {
-    await land('k0');
-    rig.view.tasks.show.mockImplementation(throwPlace);
+  describe('GIVEN a placed layout and a canvas that then throws', () => {
+    it('WHEN its key is shown again from memory THEN the failure is reported', async () => {
+      await land('k0');
+      rig.view.tasks.show.mockImplementation(throwPlace);
 
-    await layout.show(requestOf('k0'));
+      await layout.show(requestOf('k0'));
 
-    expect(rig.onFailure).toHaveBeenCalledExactlyOnceWith(PLACE_FAILED);
+      expect(rig.onFailure).toHaveBeenCalledExactlyOnceWith(PLACE_FAILED);
+    });
   });
 
-  it('GIVEN a run in flight WHEN another key is asked for and the first run fails THEN nothing is reported and the second stays asked for', async () => {
-    const first = layout.show(requestOf('k0'));
+  describe('GIVEN a run in flight', () => {
+    it('WHEN another key is asked for and the first run fails THEN nothing is reported and the second stays asked for', async () => {
+      const first = layout.show(requestOf('k0'));
 
-    void layout.show(requestOf('k1'));
-    await rig.runs.fail(0, PLACE_FAILED);
-    await first;
+      void layout.show(requestOf('k1'));
+      await rig.runs.fail(0, PLACE_FAILED);
+      await first;
 
-    expect(rig.onFailure).not.toHaveBeenCalled();
-    expect(layout.key()).toBe('k1');
+      expect(rig.onFailure).not.toHaveBeenCalled();
+      expect(layout.key()).toBe('k1');
+    });
   });
 });

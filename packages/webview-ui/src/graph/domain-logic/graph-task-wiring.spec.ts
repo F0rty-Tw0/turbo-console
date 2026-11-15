@@ -45,11 +45,13 @@ describe('FEATURE: onTaskKey', () => {
     });
   });
 
-  it('GIVEN package mode WHEN Escape is pressed THEN the task selection is left alone', () => {
-    const rig = keyRigOf(false);
+  describe('GIVEN package mode', () => {
+    it('WHEN Escape is pressed THEN the task selection is left alone', () => {
+      const rig = keyRigOf(false);
 
-    rig.press('Escape');
+      rig.press('Escape');
 
-    expect(rig.clear).not.toHaveBeenCalled();
+      expect(rig.clear).not.toHaveBeenCalled();
+    });
   });
 });

@@ -170,25 +170,31 @@ describe('FEATURE: GraphPackageSide', () => {
     });
   });
 
-  it('GIVEN the view modes hold a grouped view the host never saved WHEN h1 arrives THEN the grouped layout runs', () => {
-    rig = rigOf(SAVED_GROUPED_STUB);
-    rig.side.show(STATE_STUB, 1);
+  describe('GIVEN the view modes hold a grouped view the host never saved', () => {
+    it('WHEN h1 arrives THEN the grouped layout runs', () => {
+      rig = rigOf(SAVED_GROUPED_STUB);
+      rig.side.show(STATE_STUB, 1);
 
-    expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(true);
+      expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(true);
+    });
   });
 
-  it('GIVEN a flat view saved before folders existed WHEN a large graph arrives THEN the grouped layout runs', () => {
-    rig = rigOf(SAVED_FLAT_STUB, false);
-    rig.side.show(LARGE_STATE_STUB, 1);
+  describe('GIVEN a flat view saved before folders existed', () => {
+    it('WHEN a large graph arrives THEN the grouped layout runs', () => {
+      rig = rigOf(SAVED_FLAT_STUB, false);
+      rig.side.show(LARGE_STATE_STUB, 1);
 
-    expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(true);
+      expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(true);
+    });
   });
 
-  it('GIVEN a flat view saved with its grouping choice WHEN a large graph arrives THEN the flat layout runs', () => {
-    rig = rigOf(SAVED_FLAT_STUB);
-    rig.side.show(LARGE_STATE_STUB, 1);
+  describe('GIVEN a flat view saved with its grouping choice', () => {
+    it('WHEN a large graph arrives THEN the flat layout runs', () => {
+      rig = rigOf(SAVED_FLAT_STUB);
+      rig.side.show(LARGE_STATE_STUB, 1);
 
-    expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(false);
+      expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(false);
+    });
   });
 });
 
@@ -339,19 +345,20 @@ describe('FEATURE: GraphPackageSide mode button focus', () => {
     vi.unstubAllGlobals();
   });
 
-  it.each(['packagesMode', 'taskMode'] as const)(
-    'GIVEN focus on %s WHEN the graph shows again THEN Packages has focus',
-    async (key) => {
+  describe.each(['packagesMode', 'taskMode'] as const)('GIVEN focus on %s', (key) => {
+    it('WHEN the graph shows again THEN Packages has focus', async () => {
       await leaveWithFocusOn(key);
 
       expect(doc.activeElement).toBe(rig.page.packagesMode);
-    }
-  );
+    });
+  });
 
-  it('GIVEN the mode group hidden and focus on Tasks WHEN the graph shows again THEN Controls has focus', async () => {
-    rig.page.modeGroup.hidden = true;
-    await leaveWithFocusOn('taskMode');
+  describe('GIVEN the mode group hidden and focus on Tasks', () => {
+    it('WHEN the graph shows again THEN Controls has focus', async () => {
+      rig.page.modeGroup.hidden = true;
+      await leaveWithFocusOn('taskMode');
 
-    expect(doc.activeElement).toBe(rig.page.controls);
+      expect(doc.activeElement).toBe(rig.page.controls);
+    });
   });
 });

@@ -41,38 +41,46 @@ describe('FEATURE: placeRow Tab stop', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN every button shown, the stop on the chevron and the tab index left on Focus folder WHEN the row is placed THEN only the chevron is a Tab stop', () => {
-    elements.chevron.tabIndex = -1;
-    elements.focus.tabIndex = 0;
+  describe('GIVEN every button shown, the stop on the chevron and the tab index left on Focus folder', () => {
+    it('WHEN the row is placed THEN only the chevron is a Tab stop', () => {
+      elements.chevron.tabIndex = -1;
+      elements.focus.tabIndex = 0;
 
-    placeRow(entryOf(elements, 'chevron'), planOf(ALL_SHOWN));
+      placeRow(entryOf(elements, 'chevron'), planOf(ALL_SHOWN));
 
-    expect(tabIndexesOf(elements)).toStrictEqual([0, -1, -1, -1]);
+      expect(tabIndexesOf(elements)).toStrictEqual([0, -1, -1, -1]);
+    });
   });
 
-  it('GIVEN the chevron hidden WHEN the row is placed THEN the title is the Tab stop', () => {
-    placeRow(entryOf(elements, 'chevron'), planOf({ ...ALL_SHOWN, isChevronShown: false }));
+  describe('GIVEN the chevron hidden', () => {
+    it('WHEN the row is placed THEN the title is the Tab stop', () => {
+      placeRow(entryOf(elements, 'chevron'), planOf({ ...ALL_SHOWN, isChevronShown: false }));
 
-    expect(tabIndexesOf(elements)).toStrictEqual([-1, 0, -1, -1]);
+      expect(tabIndexesOf(elements)).toStrictEqual([-1, 0, -1, -1]);
+    });
   });
 
-  it('GIVEN the stop moved to Focus folder, shown WHEN the row is placed THEN Focus folder stays the Tab stop', () => {
-    placeRow(entryOf(elements, 'focus'), planOf(ALL_SHOWN));
+  describe('GIVEN the stop moved to Focus folder, shown', () => {
+    it('WHEN the row is placed THEN Focus folder stays the Tab stop', () => {
+      placeRow(entryOf(elements, 'focus'), planOf(ALL_SHOWN));
 
-    expect(tabIndexesOf(elements)).toStrictEqual([-1, -1, 0, -1]);
+      expect(tabIndexesOf(elements)).toStrictEqual([-1, -1, 0, -1]);
+    });
   });
 
-  it('GIVEN a row placed once WHEN it is placed again with the same plan THEN nothing is written and no layout is read', () => {
-    const entry = entryOf(elements, 'chevron');
-    const plan = planOf({ ...ALL_SHOWN, isChevronShown: false });
+  describe('GIVEN a row placed once', () => {
+    it('WHEN it is placed again with the same plan THEN nothing is written and no layout is read', () => {
+      const entry = entryOf(elements, 'chevron');
+      const plan = planOf({ ...ALL_SHOWN, isChevronShown: false });
 
-    placeRow(entry, plan);
+      placeRow(entry, plan);
 
-    const buttons = ROW_ORDER.map((kind) => elements[kind]);
-    const log = accessLogOf([elements.root, ...buttons]);
+      const buttons = ROW_ORDER.map((kind) => elements[kind]);
+      const log = accessLogOf([elements.root, ...buttons]);
 
-    placeRow(entry, plan);
+      placeRow(entry, plan);
 
-    expect(log).toStrictEqual([]);
+      expect(log).toStrictEqual([]);
+    });
   });
 });

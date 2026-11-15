@@ -59,9 +59,11 @@ describe('FEATURE: InspectionCanvas', () => {
     });
   });
 
-  it('GIVEN nothing drawn WHEN it is repainted THEN nothing is painted', () => {
-    canvas.repaint(boardsSceneOf([]));
+  describe('GIVEN nothing drawn', () => {
+    it('WHEN it is repainted THEN nothing is painted', () => {
+      canvas.repaint(boardsSceneOf([]));
 
-    expect(paint).not.toHaveBeenCalled();
+      expect(paint).not.toHaveBeenCalled();
+    });
   });
 });

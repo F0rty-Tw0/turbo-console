@@ -78,13 +78,15 @@ describe('FEATURE: packageActionsOf', () => {
     });
   });
 
-  it('GIVEN no focused package WHEN clearFocus runs THEN nothing is called', () => {
-    const deps = packageActionsDepsMock(null);
-    const inspection = packageInspectionActionsMock();
+  describe('GIVEN no focused package', () => {
+    it('WHEN clearFocus runs THEN nothing is called', () => {
+      const deps = packageActionsDepsMock(null);
+      const inspection = packageInspectionActionsMock();
 
-    packageActionsOf(deps, inspection).clearFocus();
+      packageActionsOf(deps, inspection).clearFocus();
 
-    expect(callCountOf(deps) + callCountOf(inspection)).toBe(0);
+      expect(callCountOf(deps) + callCountOf(inspection)).toBe(0);
+    });
   });
 });
 
@@ -100,21 +102,23 @@ describe('FEATURE: focusingShowTasksOf', () => {
     vi.unstubAllGlobals();
   });
 
-  it('GIVEN a container WHEN showTasks runs for docs THEN the actions show docs tasks and the container has focus', () => {
-    const actions = packageActionsMock();
+  describe('GIVEN a container', () => {
+    it('WHEN showTasks runs for docs THEN the actions show docs tasks and the container has focus', () => {
+      const actions = packageActionsMock();
 
-    focusingShowTasksOf(actions, container).showTasks('docs');
+      focusingShowTasksOf(actions, container).showTasks('docs');
 
-    expect(actions.showTasks).toHaveBeenCalledWith('docs');
-    expect(document.activeElement).toBe(container);
-  });
+      expect(actions.showTasks).toHaveBeenCalledWith('docs');
+      expect(document.activeElement).toBe(container);
+    });
 
-  it('GIVEN a container WHEN focus runs for docs THEN the actions focus docs and the container does not take focus', () => {
-    const actions = packageActionsMock();
+    it('WHEN focus runs for docs THEN the actions focus docs and the container does not take focus', () => {
+      const actions = packageActionsMock();
 
-    focusingShowTasksOf(actions, container).focus('docs');
+      focusingShowTasksOf(actions, container).focus('docs');
 
-    expect(actions.focus).toHaveBeenCalledWith('docs');
-    expect(document.activeElement).not.toBe(container);
+      expect(actions.focus).toHaveBeenCalledWith('docs');
+      expect(document.activeElement).not.toBe(container);
+    });
   });
 });
