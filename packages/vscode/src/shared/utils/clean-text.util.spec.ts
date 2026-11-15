@@ -160,23 +160,21 @@ describe('FEATURE: cleaning untrusted text', () => {
       expect(cleanText('abc', max)).toBe('');
     });
   });
-});
 
-describe('FEATURE: cleaning untrusted multi-line text', () => {
   describe('GIVEN lines with tabs and a bidi control', () => {
-    it('WHEN cleaned THEN newline and tab are kept and the control is dropped', () => {
+    it('WHEN cleaned as multi-line text THEN newline and tab are kept and the control is dropped', () => {
       expect(cleanLines('one\n\ttwo\u202E', MAX)).toBe('one\n\ttwo');
     });
   });
 
   describe('GIVEN lines split by CR LF, CR, VT, FF, NEL and the Unicode line separators', () => {
-    it('WHEN cleaned THEN each split is a newline, so no two lines join', () => {
+    it('WHEN cleaned as multi-line text THEN each split is a newline, so no two lines join', () => {
       expect(cleanLines('a\r\nb\rc\vd\fe\u0085f\u2028g\u2029h', MAX)).toBe('a\nb\nc\nd\ne\nf\ng\nh');
     });
   });
 
   describe('GIVEN lines longer than the limit', () => {
-    it('WHEN cleaned THEN they are cut with an ellipsis', () => {
+    it('WHEN cleaned as multi-line text THEN they are cut with an ellipsis', () => {
       expect(cleanLines(`${'a'.repeat(MAX)}\nb`, MAX)).toBe(`${'a'.repeat(MAX - 1)}\u2026`);
     });
   });
