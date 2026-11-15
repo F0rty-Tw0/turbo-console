@@ -79,7 +79,7 @@ describe('FEATURE: graph folder links', () => {
     { title: 'the end 4 px inside the border', endX: 126, faults: 1 },
     { title: 'the end 20 px outside the border', endX: 150, faults: 1 }
   ])('GIVEN $title', ({ endX, faults }) => {
-    it(`WHEN the source is collapsed THEN ${faults} faults`, () => {
+    it(`WHEN the source is collapsed THEN ${faults} links are counted off the border`, () => {
       const read = readOf([linkOf('apps', 'pkg')], [fromApps(endX)]);
 
       expect(countsOf(read).offBorder).toBe(faults);
@@ -115,7 +115,7 @@ describe('FEATURE: graph folder links', () => {
     });
   });
 
-  describe('GIVEN a read checked for readiness', () => {
+  describe('GIVEN a line from the right border of the collapsed apps folder', () => {
     const line = fromApps(130);
     const drawn = linkOf('apps', 'pkg');
     const hidden: ProbeFolderLink = { ...drawn, isDrawn: false };
