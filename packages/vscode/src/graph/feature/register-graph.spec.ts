@@ -88,14 +88,6 @@ const storeOf = (folders: RootFolder[]): RootStore => {
 };
 
 describe('FEATURE: the Show Package Graph command', () => {
-  it('GIVEN it is registered THEN the command ids are Show Package Graph, Show Task Graph, Show All Task Graphs and Focus on Graph', () => {
-    const registered = registrationMock();
-
-    registerGraph(openerMock(), storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
-
-    expect(registered.ids).toStrictEqual([COMMAND, TASK_COMMAND, ALL_TASKS_COMMAND, FOCUS_COMMAND]);
-  });
-
   describe('GIVEN a resolvable root', () => {
     it('WHEN the command runs THEN that root opens', async () => {
       const panels = openerMock();
@@ -180,6 +172,14 @@ describe('FEATURE: the Show Package Graph command', () => {
   });
 
   describe('GIVEN it is registered', () => {
+    it('THEN the command ids are Show Package Graph, Show Task Graph, Show All Task Graphs and Focus on Graph', () => {
+      const registered = registrationMock();
+
+      registerGraph(openerMock(), storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
+
+      expect(registered.ids).toStrictEqual([COMMAND, TASK_COMMAND, ALL_TASKS_COMMAND, FOCUS_COMMAND]);
+    });
+
     it('WHEN it is disposed THEN every command is removed and the panels are disposed', () => {
       const panels = openerMock();
       const registered = registrationMock();
