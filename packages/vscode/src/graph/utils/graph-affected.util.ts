@@ -9,15 +9,16 @@ import type { AffectedView } from '../../tree/common/affected.type.ts';
 export const affectedOf = (tasks: GraphTask[], view: AffectedView | null): GraphAffected | null => {
   if (view === null) return null;
 
-  const marks: Record<string, GraphAffectedMark> = {};
+  const marks: [string, GraphAffectedMark][] = [];
 
   for (const task of tasks) {
     const entry = view.tasks.get(task.id);
 
-    if (entry !== undefined) marks[task.id] = entry.mark;
+    if (entry !== undefined) marks.push([task.id, entry.mark]);
   }
 
-  const affected: GraphAffected = { mode: view.mode, tasks: marks };
+  // Object.fromEntries defines own keys, so a task id such as `__proto__` stays a key of the record.
+  const affected: GraphAffected = { mode: view.mode, tasks: Object.fromEntries(marks) };
 
   return affected;
 };
