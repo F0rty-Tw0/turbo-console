@@ -34,7 +34,7 @@ const stateOf = (checked: ShowFolderState['checked'], isDisabled: boolean): Show
   return state;
 };
 
-describe('FEATURE: showFolderOf', () => {
+describe('FEATURE: show folder', () => {
   describe('GIVEN a folder of packages a and b', () => {
     it.each([
       { title: 'none hidden', hidden: [], focus: null, names: ['a', 'b'], expected: stateOf('true', false) },
@@ -68,9 +68,7 @@ describe('FEATURE: showFolderOf', () => {
       expect(state).toStrictEqual(stateOf(CHECKED_OF[twin], twinLocked));
     });
   });
-});
 
-describe('FEATURE: showFolderChecksOf', () => {
   describe('GIVEN a folder group checkbox state', () => {
     it.each([
       { checked: 'mixed' as const, expected: true },
