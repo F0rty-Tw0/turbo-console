@@ -37,7 +37,7 @@ const badgeOf = (row: FolderRowElements): Element => {
   return badge;
 };
 
-describe('FEATURE: buildFolderRow', () => {
+describe('FEATURE: widget elements', () => {
   beforeEach((): void => {
     vi.stubGlobal('document', fakeDocumentMock());
   });
@@ -203,16 +203,6 @@ describe('FEATURE: buildFolderRow', () => {
       expect(badgeTitle).toBe('12 packages');
     });
   });
-});
-
-describe('FEATURE: buildPackageToolbar', () => {
-  beforeEach((): void => {
-    vi.stubGlobal('document', fakeDocumentMock());
-  });
-
-  afterEach((): void => {
-    vi.unstubAllGlobals();
-  });
 
   describe('GIVEN the package toolbar of web in the folder apps', () => {
     let toolbar: PackageToolbarElements;
@@ -305,16 +295,6 @@ describe('FEATURE: buildPackageToolbar', () => {
 
       expect(toolbar.collapse?.getAttribute('aria-label')).toBe('Collapse folder (root)');
     });
-  });
-});
-
-describe('FEATURE: buildTaskToolbar', () => {
-  beforeEach((): void => {
-    vi.stubGlobal('document', fakeDocumentMock());
-  });
-
-  afterEach((): void => {
-    vi.unstubAllGlobals();
   });
 
   describe('GIVEN the task toolbar of app#build in the package app', () => {
