@@ -37,8 +37,8 @@ const viewOf = (icon: IconSpec, text: string, elapsedMs: number | null, isIdle: 
  * What the details page shows for a task's run. `iconId` and `colorVar` come only from the tree's fixed icon tables
  * (`runningKindOf` / `taskDisplay`), never from repo text; the spin modifier becomes `isSpinning`, which the page turns
  * back into `codicon-modifier-spin`. While running, the page draws the clock from `elapsedMs`, so `text` is the kind
- * prefix only, and the icon drops the tree's running colour (polish spec 3 §4.4: running icons carry no colour of their
- * own on the page). `task` is the current model node (its kind), `now` the wall clock.
+ * prefix only, and the icon drops the tree's running colour (polish spec 3 §4.4): the page gives every running status
+ * icon its own running colour. `task` is the current model node (its kind), `now` the wall clock.
  */
 export const toRunView = (task: TaskNode, entry: RunEntry | undefined, now: number): RunView => {
   if (entry?.state === 'running') {

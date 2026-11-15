@@ -172,15 +172,6 @@ export class TaskCardSection {
     await expect(this.status).toHaveText('');
   }
 
-  /** The card's `--status-color` is `var(<varName>)`; `null` means the property is unset. */
-  public async expectStatusColor(varName: string | null): Promise<void> {
-    const readColor = (card: HTMLElement): string => card.style.getPropertyValue('--status-color');
-    const statusColor = async (): Promise<string> => this.root.evaluate(readColor);
-    const expected = varName === null ? '' : `var(${varName})`;
-
-    await expect.poll(statusColor).toBe(expected);
-  }
-
   /** The button found by its exact accessible name shows `text` as its visible text. */
   public async expectButtonText(name: string, text: string): Promise<void> {
     const button = this.root.getByRole('button', { name, exact: true });

@@ -1,5 +1,5 @@
 import { test } from './details.fixture.ts';
-import { CONTINUOUS_CHIP, FULL_TERMS, SCRIPT_TERMS } from './test/common/details.const.ts';
+import { CONTINUOUS_CHIP, FULL_TERMS, RUNNING_ICON_COLOR, SCRIPT_TERMS } from './test/common/details.const.ts';
 import {
   PACKAGE_DETAILS_STUB,
   RUNNING_RUN_VIEW_STUB,
@@ -112,8 +112,8 @@ test.describe('FEATURE: package details page, the Tool chip', () => {
       await detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB);
     });
 
-    await test.step('THEN the status icon spins', async (): Promise<void> =>
-      card.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', ''));
+    await test.step('THEN the status icon spins in the running color', async (): Promise<void> =>
+      card.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', RUNNING_ICON_COLOR));
 
     await test.step('AND the Tool chip still carries the logo', async (): Promise<void> =>
       card.expectToolChip('Vitest', 'turbo-console-vitest'));

@@ -18,24 +18,11 @@ const statusIcon = (run: RunView, colorVar: string | null): HTMLSpanElement => {
   return icon;
 };
 
-const fillStatusColor = (refs: CardRefs, colorVar: string | null): void => {
-  if (colorVar === null) {
-    refs.card.style.removeProperty('--status-color');
-
-    return;
-  }
-
-  refs.card.style.setProperty('--status-color', `var(${colorVar})`);
-};
-
-/** Every card's status stays blank until it has a run to show (spec 1c-b §4.5, polish spec 3 §4.4). */
+/**
+ * Every card's status stays blank until it has a run to show (spec 1c-b §4.5, polish spec 3 §4.4). The status icon alone
+ * carries the run's colour, beside its plain word; the card itself stays neutral in every state.
+ */
 const fillStatus = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
-  const ownColorVar = safeColorVar(run.colorVar);
-  const liveColorVar = run.isRunning ? RUNNING_STATUS_COLOR_VAR : ownColorVar;
-  const cardColorVar = run.isIdle ? null : liveColorVar;
-
-  fillStatusColor(refs, cardColorVar);
-
   if (run.isIdle) {
     runTexts.drop(refs.taskId);
     refs.status.replaceChildren();
@@ -43,7 +30,9 @@ const fillStatus = (refs: CardRefs, run: RunView, runTexts: RunTexts): void => {
     return;
   }
 
-  const icon = statusIcon(run, ownColorVar);
+  const ownColorVar = safeColorVar(run.colorVar);
+  const colorVar = run.isRunning ? RUNNING_STATUS_COLOR_VAR : ownColorVar;
+  const icon = statusIcon(run, colorVar);
   const text = textElement('span', 'run-text', '');
 
   runTexts.show(refs.taskId, text, run);
