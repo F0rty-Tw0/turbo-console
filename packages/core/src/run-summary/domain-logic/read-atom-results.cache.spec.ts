@@ -66,6 +66,11 @@ const HIT_RESULT: AtomResult = { outcome: 'cached', durationMs: 1000, endedAt: 2
 
 const AT = OLDEST + 10;
 
+/** In no summary, so a read never stops early and visits every file. */
+const NEVER_RAN = '@fx/e2e#e2e-ci--tests/never.spec.ts';
+
+const OVERLAPPING = 8;
+
 let tempDir = '';
 
 describe('FEATURE: read atom results caching', () => {
@@ -151,6 +156,57 @@ describe('FEATURE: read atom results caching', () => {
 
       expect(again).toStrictEqual(new Map([[ID, FIRST_RESULT]]));
       expect(reads.count).toBe(1);
+    });
+  });
+
+  describe('GIVEN four summaries never read', () => {
+    it('WHEN eight calls overlap THEN each summary is read once and every call has the same results', async () => {
+      const root = await newRunsRoot(tempDir, 'overlap');
+      const wanted = new Set([...FILE_IDS, NEVER_RAN]);
+      const expected = Array.from({ length: OVERLAPPING }, () => WITHOUT_RUN_5);
+
+      await writeAtomRuns(root, 4);
+      reads.count = 0;
+
+      const calls = Array.from({ length: OVERLAPPING }, async () => readAtomResults(root, wanted));
+      const all = await Promise.all(calls);
+
+      expect(all).toStrictEqual(expected);
+      expect(reads.count).toBe(4);
+    });
+  });
+
+  describe('GIVEN a summary that is not JSON, read by eight overlapping calls', () => {
+    it('WHEN read again THEN nothing was kept of it: it is read again', async () => {
+      const root = await newRunsRoot(tempDir, 'overlap broken');
+
+      await writeRun(root, NAME, BROKEN_TEXT, AT);
+
+      const calls = Array.from({ length: OVERLAPPING }, async () => readAtomResults(root, WANTED));
+
+      await Promise.all(calls);
+      reads.count = 0;
+
+      const again = await readAtomResults(root, WANTED);
+
+      expect(again).toStrictEqual(new Map());
+      expect(reads.count).toBe(1);
+    });
+  });
+
+  describe('GIVEN two roots with a same-named summary of one mtime and size, and other content', () => {
+    it('WHEN each is read THEN each has its own results', async () => {
+      const one = await newRunsRoot(tempDir, 'root one');
+      const other = await newRunsRoot(tempDir, 'root other');
+
+      await writeRun(one, NAME, FIRST_TEXT, AT);
+      await writeRun(other, NAME, SECOND_TEXT, AT);
+
+      const ofOne = await readAtomResults(one, WANTED);
+      const ofOther = await readAtomResults(other, WANTED);
+
+      expect(ofOne).toStrictEqual(new Map([[ID, FIRST_RESULT]]));
+      expect(ofOther).toStrictEqual(new Map([[ID, SECOND_RESULT]]));
     });
   });
 
