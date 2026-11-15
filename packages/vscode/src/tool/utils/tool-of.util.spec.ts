@@ -187,7 +187,7 @@ describe('FEATURE: tool detection', () => {
     });
   });
 
-  it.each<[string, Record<string, string>, boolean, Outcome]>([
+  describe.each<[string, Record<string, string>, boolean, Outcome]>([
     ['npm run test:app', { 'test:app': 'vitest' }, true, ['vitest', ['test:app']]],
     ['pnpm deploy', { deploy: 'docker compose up' }, true, ['docker', ['deploy']]],
     ['turbo run test', { test: 'vitest' }, false, [null, []]],
@@ -209,10 +209,12 @@ describe('FEATURE: tool detection', () => {
     ['npm run a', { a: 'npm run a; vitest' }, true, ['vitest', ['a']]],
     ['npm run a', { a: 'npm run b', b: 'npm run a || vitest' }, true, ['vitest', ['a', 'b']]],
     ['npx --workspace=web turbo run test', { test: 'vitest' }, true, [null, []]]
-  ])('GIVEN %j with scripts %j (followTurbo %s) WHEN its tool is resolved THEN it is %j', (command, bodies, followTurbo, expected) => {
-    const outcome = outcomeOf(command, scriptsOf(bodies, followTurbo));
+  ])('GIVEN %j with scripts %j (followTurbo %s)', (command, bodies, followTurbo, expected) => {
+    it(`WHEN its tool is resolved THEN it is ${JSON.stringify(expected)}`, () => {
+      const outcome = outcomeOf(command, scriptsOf(bodies, followTurbo));
 
-    expect(outcome).toStrictEqual(expected);
+      expect(outcome).toStrictEqual(expected);
+    });
   });
 
   describe('GIVEN 14 scripts that each run all the others and none reach a tool', () => {
@@ -283,9 +285,7 @@ describe('FEATURE: tool detection', () => {
       expect(rows.some((match) => match.via.length === MAX_VIA)).toBe(true);
     });
   });
-});
 
-describe('FEATURE: tool icon id', () => {
   describe('GIVEN a tool with a glyph', () => {
     it('WHEN its icon id is read THEN it is the prefix plus the id', () => {
       const rows = TOOLS.filter((tool) => tool.id === 'vitest');
