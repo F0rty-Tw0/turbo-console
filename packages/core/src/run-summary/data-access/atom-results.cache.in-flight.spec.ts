@@ -169,6 +169,27 @@ describe('FEATURE: atom results cache in-flight reads', () => {
 
       expect(next?.get(ID)).toStrictEqual(NEW_RESULT);
     });
+
+    it('WHEN its file is dropped, read again with the same mtime and size, and it then settles null THEN the second map is still the kept one', async () => {
+      const root = 'in flight, dropped then read again';
+      const read = Promise.withResolvers<RunSummary | null>();
+
+      reads.queued.push(read.promise, Promise.resolve(NEW));
+
+      const dropped = readCachedAtomResults(root, FILE);
+
+      dropUnlistedAtomResults(root, []);
+
+      const kept = await readCachedAtomResults(root, FILE);
+
+      read.resolve(null);
+      await dropped;
+
+      const again = await readCachedAtomResults(root, FILE);
+
+      expect(reads.count).toBe(2);
+      expect(again).toBe(kept);
+    });
   });
 
   describe('GIVEN a newer read that settled while an older one is in flight', () => {

@@ -12,7 +12,8 @@ type CachedResults = {
 /**
  * Per workspace root as given, then per summary file name. Only the small derived results are kept, never the parsed
  * summary: a summary lists every task of a run and would stay pinned in the host process. The entries of a root that is
- * no longer read stay until the process exits, bounded by `MAX_SUMMARY_TRIES` small maps per root.
+ * no longer read stay until the process exits. A root is pruned to its listing at each call, so it holds about
+ * `MAX_SUMMARY_TRIES` small maps; a call that overlaps a newer one can add a dropped file back until the next call.
  */
 const cachedByRoot = new Map<string, Map<string, CachedResults>>();
 
@@ -40,8 +41,9 @@ const forget = (root: string, name: string, entry: CachedResults): void => {
  * The result of every task `<root>/.turbo/runs/<file.name>` lists, by `taskId`. Read with `readRunSummaryFile` once and
  * kept while the file's `mtimeMs` and `size` stay those of `file`: the read is kept from its start, so calls that
  * overlap share it, and a call with another mtime or size starts one of its own. `null`, kept nowhere, when that read
- * is `null`, so a summary still being written is tried again; a read that rejects is kept nowhere either. The map is
- * shared between calls.
+ * is `null`, so a summary still being written is tried again; a read that rejects is kept nowhere either. A read that
+ * never settles holds every later call with the same mtime and size until the file's listing changes. The map is shared
+ * between calls.
  */
 export const readCachedAtomResults = async (root: string, file: RunSummaryFile): Promise<ReadonlyMap<string, AtomResult> | null> => {
   const cached = cachedByRoot.get(root)?.get(file.name);
