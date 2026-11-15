@@ -16,10 +16,9 @@ const taskkill = vi.hoisted(() => {
 vi.mock('node:child_process', async (importOriginal) => {
   const real = await importOriginal<typeof childProcess>();
 
-  const execFile = (...args: unknown[]): void => {
+  const execFile = (_file: string, _args: string[], _options: object, callback: (error: Error | null) => void): void => {
     if (taskkill.ending === 'throws') throw Object.assign(new Error('spawn ENOMEM'), { code: 'ENOMEM' });
 
-    const callback = args.at(-1) as (error: Error | null) => void;
     const exitError = new Error('taskkill exited with code 128');
 
     callback(taskkill.ending === 'fails' ? exitError : null);

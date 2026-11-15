@@ -16,6 +16,7 @@ import { isAlive } from './test/utils/process.spec.util.ts';
 import { optionalKeyPaths } from './test/utils/schema-strictness.spec.util.ts';
 import { turboRunArgs } from '../../run-args/utils/run-args.util.ts';
 import type { TaskNode } from '../../workspace/common/workspace-model.type.ts';
+import { errnoCode } from '../errors/utils/errno.util.ts';
 
 const TURBO = devTurboPath();
 
@@ -65,7 +66,9 @@ const readHangPid = async (packageDir: string): Promise<number | undefined> => {
   try {
     return parsePid(await readFile(join(packageDir, HANG_PID_FILE), 'utf8'));
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    const code = errnoCode(error);
+
+    if (code === 'ENOENT') return undefined;
 
     throw error;
   }

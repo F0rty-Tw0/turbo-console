@@ -9,7 +9,8 @@ import { TurboException, resolveTurbo } from '../index.ts';
 import type { TurboBinary } from '../index.ts';
 
 const spawns = vi.hoisted(() => {
-  const state = { files: [] as string[] };
+  const files: string[] = [];
+  const state = { files };
 
   return state;
 });
