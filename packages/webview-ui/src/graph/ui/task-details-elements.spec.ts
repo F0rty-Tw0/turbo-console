@@ -59,8 +59,8 @@ describe('FEATURE: task details elements', () => {
     vi.unstubAllGlobals();
   });
 
-  describe('GIVEN buildTaskDetailsPanel', () => {
-    it('WHEN built THEN it is the hidden aside #graph-task-details labelled Details', () => {
+  describe('GIVEN no task yet', () => {
+    it('WHEN the panel is built THEN it is the hidden aside #graph-task-details labelled Details', () => {
       const { panel } = buildTaskDetailsPanel();
 
       expect(panel).toMatchObject({ tagName: 'ASIDE', id: TASK_DETAILS_ID, hidden: true });
@@ -68,7 +68,7 @@ describe('FEATURE: task details elements', () => {
       expect(panel.getAttribute('aria-label')).toBe(DETAILS_LABEL);
     });
 
-    it('WHEN built THEN the aside holds only its empty content', () => {
+    it('WHEN the panel is built THEN the aside holds only its empty content', () => {
       const { panel, content } = buildTaskDetailsPanel();
 
       expect(panel.children).toStrictEqual([content]);
@@ -77,13 +77,15 @@ describe('FEATURE: task details elements', () => {
     });
   });
 
-  it('GIVEN a task with a null command and isRunnable false THEN No command shows and Run is absent', () => {
-    const els = buildTaskDetails(STOPPED_NO_COMMAND);
+  describe('GIVEN a task with a null command and isRunnable false', () => {
+    it('WHEN built THEN No command shows and Run is absent', () => {
+      const els = buildTaskDetails(STOPPED_NO_COMMAND);
 
-    expect(els.command.textContent).toBe('No command');
-    expect(els.run.hidden).toBe(true);
-    expect(els.runNoCache.hidden).toBe(true);
-    expect(els.stop.hidden).toBe(true);
+      expect(els.command.textContent).toBe('No command');
+      expect(els.run.hidden).toBe(true);
+      expect(els.runNoCache.hidden).toBe(true);
+      expect(els.stop.hidden).toBe(true);
+    });
   });
 
   describe('GIVEN a runnable a#build that is running and needs api#build', () => {
