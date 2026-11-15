@@ -12,7 +12,7 @@ const planOf = (flags: Pick<RowPlan, 'isChevronShown' | 'isFocusShown' | 'isElli
   return plan;
 };
 
-describe('FEATURE: shownKindsOf', () => {
+describe('FEATURE: row stop', () => {
   describe('GIVEN every button shown', () => {
     it('WHEN the kinds are read THEN they follow the DOM order', () => {
       const plan = planOf({ isChevronShown: true, isFocusShown: true, isEllipsisShown: true });
@@ -32,23 +32,20 @@ describe('FEATURE: shownKindsOf', () => {
       expect(kinds).toStrictEqual(['title', 'ellipsis']);
     });
   });
-});
 
-describe('FEATURE: rowStopOf', () => {
   const rows: StopRow[] = [
     { preferred: 'chevron', shown: ['title', 'focus', 'ellipsis'], expected: 'title' },
     { preferred: 'ellipsis', shown: ['chevron', 'title', 'ellipsis'], expected: 'ellipsis' },
     { preferred: 'focus', shown: ['chevron', 'title', 'ellipsis'], expected: 'chevron' }
   ];
 
-  it.each(rows)(
-    'GIVEN the stop $preferred and shown $shown WHEN the stop is read THEN it is $expected',
-    ({ preferred, shown, expected }) => {
+  describe.each(rows)('GIVEN the stop $preferred and shown $shown', ({ preferred, shown, expected }) => {
+    it(`WHEN the stop is read THEN it is ${expected}`, () => {
       const stop = rowStopOf(preferred, shown);
 
       expect(stop).toBe(expected);
-    }
-  );
+    });
+  });
 
   describe('GIVEN no button shown', () => {
     it('WHEN the stop is read THEN it is the title', () => {
@@ -57,9 +54,7 @@ describe('FEATURE: rowStopOf', () => {
       expect(stop).toBe('title');
     });
   });
-});
 
-describe('FEATURE: kindOf', () => {
   const elements = { chevron: new EventTarget(), title: new EventTarget(), focus: new EventTarget(), ellipsis: new EventTarget() };
 
   describe('GIVEN the Focus folder button', () => {
