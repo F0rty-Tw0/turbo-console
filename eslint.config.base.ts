@@ -38,6 +38,14 @@ export const workspaceConfig = defineConfig([
     }
   },
   {
+    // The preset switches this off for specs and e2e; a cast there hides a stub that no longer matches its type.
+    name: 'workspace/spec-type-assertions',
+    files: ['**/*.spec.ts', '**/*.e2e.ts'],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }]
+    }
+  },
+  {
     name: 'workspace/entry-points',
     files: ['**/*.ts'],
     rules: {
