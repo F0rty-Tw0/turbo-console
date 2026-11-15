@@ -196,26 +196,17 @@ describe('FEATURE: GraphPackageSide', () => {
       expect(isGroupedGraph(rig.runs.graphOf(0))).toBe(false);
     });
   });
-});
-
-describe('FEATURE: GraphPackageSide parked by task mode', () => {
-  let rig: PackageSideRig;
-
-  beforeEach(async () => {
-    stubPackageSideGlobals();
-    rig = rigOf(SAVED_FLAT_STUB);
-    rig.side.show(STATE_STUB, 1);
-    await settled();
-    rig.side.filtering.inspection.select('web');
-    rig.modes.setMode('tasks', 'h1');
-    rig.view.resize.mockClear();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
 
   describe('GIVEN h1 drawn with web selected, then task mode on', () => {
+    beforeEach(async () => {
+      rig = rigOf(SAVED_FLAT_STUB);
+      rig.side.show(STATE_STUB, 1);
+      await settled();
+      rig.side.filtering.inspection.select('web');
+      rig.modes.setMode('tasks', 'h1');
+      rig.view.resize.mockClear();
+    });
+
     it('WHEN nothing is clicked THEN h1 drew with no failure', () => {
       expect(rig.page.messageText.textContent).toBe('');
       expect(rig.onMessage).not.toHaveBeenCalled();
@@ -285,18 +276,6 @@ describe('FEATURE: GraphPackageSide parked by task mode', () => {
       expect(rig.modes.current()).toBe(before);
     });
   });
-});
-
-describe('FEATURE: GraphPackageSide leaving task mode', () => {
-  let rig: PackageSideRig;
-
-  beforeEach(() => {
-    stubPackageSideGlobals();
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
 
   describe('GIVEN h1 drawn grouped with the packages folder inspected, then Group by folder unticked in task mode', () => {
     beforeEach(async () => {
@@ -319,46 +298,40 @@ describe('FEATURE: GraphPackageSide leaving task mode', () => {
       expect(grouped).not.toContain(true);
     });
   });
-});
 
-describe('FEATURE: GraphPackageSide mode button focus', () => {
-  let rig: PackageSideRig;
-  let doc: Pick<Document, 'activeElement'>;
+  describe('GIVEN a package side over a flat saved view, not yet drawn', () => {
+    let doc: Pick<Document, 'activeElement'>;
 
-  /** Focus is on `key` when task mode is left; a loading screen drops it (the new fake document has none), then the next graph shows. */
-  const leaveWithFocusOn = async (key: 'packagesMode' | 'taskMode'): Promise<void> => {
-    rig.page[key].focus();
-    rig.side.keepModeFocus();
-    rig.page.details.focus();
-    vi.stubGlobal('document', fakeDocumentMock());
-    rig.side.show(STATE_STUB, 1);
-    await settled();
-  };
+    /** Focus is on `key` when task mode is left; a loading screen drops it (the new fake document has none), then the next graph shows. */
+    const leaveWithFocusOn = async (key: 'packagesMode' | 'taskMode'): Promise<void> => {
+      rig.page[key].focus();
+      rig.side.keepModeFocus();
+      rig.page.details.focus();
+      vi.stubGlobal('document', fakeDocumentMock());
+      rig.side.show(STATE_STUB, 1);
+      await settled();
+    };
 
-  beforeEach(() => {
-    stubPackageSideGlobals();
-    doc = document;
-    rig = rigOf(SAVED_FLAT_STUB);
-  });
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  describe.each(['packagesMode', 'taskMode'] as const)('GIVEN focus on %s', (key) => {
-    it('WHEN the graph shows again THEN Packages has focus', async () => {
-      await leaveWithFocusOn(key);
-
-      expect(doc.activeElement).toBe(rig.page.packagesMode);
+    beforeEach(() => {
+      doc = document;
+      rig = rigOf(SAVED_FLAT_STUB);
     });
-  });
 
-  describe('GIVEN the mode group hidden and focus on Tasks', () => {
-    it('WHEN the graph shows again THEN Controls has focus', async () => {
-      rig.page.modeGroup.hidden = true;
-      await leaveWithFocusOn('taskMode');
+    describe.each(['packagesMode', 'taskMode'] as const)('GIVEN focus on %s', (key) => {
+      it('WHEN the graph shows again THEN Packages has focus', async () => {
+        await leaveWithFocusOn(key);
 
-      expect(doc.activeElement).toBe(rig.page.controls);
+        expect(doc.activeElement).toBe(rig.page.packagesMode);
+      });
+    });
+
+    describe('GIVEN the mode group hidden and focus on Tasks', () => {
+      it('WHEN the graph shows again THEN Controls has focus', async () => {
+        rig.page.modeGroup.hidden = true;
+        await leaveWithFocusOn('taskMode');
+
+        expect(doc.activeElement).toBe(rig.page.controls);
+      });
     });
   });
 });
