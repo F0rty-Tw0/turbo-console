@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { loadWorkspace } from './load-workspace.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import { TurboBinary } from '../../binary/common/index.ts';
 import type { TurboResult } from '../../shared/turbo/common/turbo.type.ts';
 import { PNPM_BY_DEV_ENGINES_STUB } from '../test/stubs/package-manager.stub.ts';

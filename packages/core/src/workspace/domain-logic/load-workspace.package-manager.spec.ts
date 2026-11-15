@@ -6,7 +6,6 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { loadWorkspace } from './load-workspace.ts';
-// eslint-disable-next-line import-x/no-useless-path-segments -- nodenext type resolution rejects the directory import this rule asks for.
 import { TurboBinary } from '../../binary/common/index.ts';
 import { TurboException } from '../../shared/errors/common/turbo.exception.ts';
 import type * as smallFile from '../../shared/fs/data-access/small-file.ts';
