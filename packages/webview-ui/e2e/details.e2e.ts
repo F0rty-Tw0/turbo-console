@@ -1,5 +1,5 @@
 import { expect, test } from './details.fixture.ts';
-import { CONTINUOUS_CHIP, FULL_TERMS } from './test/common/details.const.ts';
+import { CONTINUOUS_CHIP, FULL_TERMS, RUNNING_ICON_COLOR } from './test/common/details.const.ts';
 import {
   HOSTILE_NAME_STUB,
   MISSING_PACKAGE_STUB,
@@ -12,7 +12,7 @@ import {
 import { packageWithTasks, taskNames } from './test/utils/details-state.spec.util.ts';
 import type { WebviewMessage } from '../src/bridge/common/details-message.type.ts';
 import type { PackageDetails, RunView, TaskCard } from '../src/bridge/common/details-state.type.ts';
-import { RUNNING_STATUS_COLOR_VAR, RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
+import { RUN_SWAP_HOLD_MS } from '../src/details/common/run-view.const.ts';
 
 const AC1 = { description: 'AC1', type: 'requirement' };
 const AC4 = { description: 'AC4', type: 'requirement' };
@@ -152,8 +152,9 @@ test.describe('FEATURE: package details page', () => {
     await test.step('AND no CSP violation is recorded', async (): Promise<void> => detailsPage.expectNoViolations());
   });
 
-  test('GIVEN a hostile icon id and color, the card renders without them', async ({ detailsPage }): Promise<void> => {
+  test('GIVEN a hostile icon id and color, the card renders without them', async ({ detailsPage, pageLayout }): Promise<void> => {
     const card = detailsPage.card('build');
+    const frame = pageLayout.card('build');
     const task: TaskCard = { ...TASK_CARD_STUB, run: HOSTILE_RUN };
     const state: PackageDetails = { ...PACKAGE_DETAILS_STUB, tasks: [task] };
 
@@ -162,8 +163,10 @@ test.describe('FEATURE: package details page', () => {
     await test.step('AND the task starts running', async (): Promise<void> =>
       detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
 
-    await test.step('THEN the card has the running status color', async (): Promise<void> =>
-      card.expectStatusColor(RUNNING_STATUS_COLOR_VAR));
+    await test.step('THEN the status icon has the running color', async (): Promise<void> =>
+      card.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', RUNNING_ICON_COLOR));
+
+    await test.step('AND the card frame is neutral', async (): Promise<void> => frame.expectNeutralFrame());
 
     await test.step('WHEN a runState ends it with the hostile run', async (): Promise<void> =>
       detailsPage.sendRunState('web#build', HOSTILE_RUN));
@@ -172,7 +175,7 @@ test.describe('FEATURE: package details page', () => {
 
     await test.step('AND the icon has no class or color from them', async (): Promise<void> => card.expectStatusIcon('codicon', ''));
 
-    await test.step('AND the card has no status color', async (): Promise<void> => card.expectStatusColor(null));
+    await test.step('AND the card frame is still neutral', async (): Promise<void> => frame.expectNeutralFrame());
 
     await test.step('AND no console or page error is logged', (): void => detailsPage.expectNoErrors());
   });
@@ -343,8 +346,8 @@ test.describe('FEATURE: package details page', () => {
     await test.step('AND the task starts running', async (): Promise<void> =>
       detailsPage.sendRunState('web#build', RUNNING_RUN_VIEW_STUB));
 
-    await test.step('THEN the icon has the spin class', async (): Promise<void> =>
-      card.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', ''));
+    await test.step('THEN the icon has the spin class and the running color', async (): Promise<void> =>
+      card.expectStatusIcon('codicon codicon-sync codicon-modifier-spin', RUNNING_ICON_COLOR));
 
     await test.step('AND it has no animation', async (): Promise<void> => card.expectIconAnimation('none'));
   });

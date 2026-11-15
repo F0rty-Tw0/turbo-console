@@ -177,7 +177,7 @@ export const taskCard = (card: TaskCard, phase: DryRunPhase, context: RenderCont
   const runSlot = textElement('span', 'run-slot', '');
   const buildRunButton = runButtonFor(card, context);
   const { taskId } = card;
-  const refs: CardRefs = { taskId, card: element, status, runSlot, runButton: buildRunButton };
+  const refs: CardRefs = { taskId, status, runSlot, runButton: buildRunButton };
 
   const header = cardHeader(card, refs, context);
   const description = descriptions(card);

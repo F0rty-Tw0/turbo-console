@@ -85,7 +85,7 @@ const PASSED_BOTH: TaskOutcome[] = [
 ];
 
 const fileAt = (mtimeMs: number): RunSummaryFile => {
-  const file: RunSummaryFile = { name: 'a.json', mtimeMs };
+  const file: RunSummaryFile = { name: 'a.json', mtimeMs, size: 2 };
 
   return file;
 };

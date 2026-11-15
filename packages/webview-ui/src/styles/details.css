@@ -271,7 +271,8 @@ ul {
 /*
  * Every frame (this one, .page-header, .chip) sets width and style apart from colour: an unset colour
  * variable inside a `border` shorthand drops the whole border, but as a lone `border-color` it falls back to
- * currentColor and keeps it, so a status change never changes a width or shifts the layout.
+ * currentColor and keeps it, so a theme without the variable still draws the frame. The card frame is the same on
+ * all four sides in every run state: a run's colour shows on its status icon only.
  */
 .card {
   display: grid;
@@ -281,8 +282,6 @@ ul {
   padding: var(--space-3);
   border: 1px solid;
   border-color: var(--frame);
-  border-inline-start-width: 3px;
-  border-inline-start-color: var(--status-color, var(--frame));
   border-radius: var(--radius);
   container-type: inline-size;
 }

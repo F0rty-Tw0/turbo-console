@@ -10,7 +10,7 @@ export const COLOR_VAR_PATTERN = /^--vscode-[A-Za-z0-9-]+$/;
 /** The Stop button's codicon id; `patchRun` looks for it to spot a Stop→Run swap. */
 export const STOP_ICON_ID = 'debug-stop';
 
-/** A running card's `--status-color`: the running icons carry no colour of their own (polish spec 3 §4.4). */
+/** A running card's status icon colour: the host sends running icons without one (polish spec 3 §4.4). */
 export const RUNNING_STATUS_COLOR_VAR = '--vscode-progressBar-background';
 
 /** Past a double-click's gap (about 300–500 ms), so its second click never lands on the Run or Stop swapped in. */
