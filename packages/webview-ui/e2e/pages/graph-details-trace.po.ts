@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
-
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -176,7 +174,7 @@ export class GraphDetailsTrace {
   private async leftovers(): Promise<string[]> {
     const nodes = await this.probe.nodes();
     const edges = await this.probe.edges();
-    const visible = await this.page.evaluate((): string[] => window.__tcGraphProbe?.visibleIds() ?? []);
+    const visible = await this.page.evaluate((): string[] => window.tcGraphProbe?.visibleIds() ?? []);
 
     return leftoverGhostOf(nodes, edges, visible);
   }

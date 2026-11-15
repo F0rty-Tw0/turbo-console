@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page's view-state stand-in is the exact name window.__state */
-
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -84,7 +82,7 @@ export class GraphSashes {
   /** The debounced save has caught up: the saved view state carries exactly these widths. */
   public async expectSaved(widths: PanelWidths): Promise<void> {
     const savedWidths = async (): Promise<PanelWidths | null> => {
-      const raw = await this.page.evaluate((): unknown => window.__state);
+      const raw = await this.page.evaluate((): unknown => window.tcState);
 
       return readGraphViewState(raw)?.panelWidths ?? null;
     };

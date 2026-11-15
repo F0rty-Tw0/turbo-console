@@ -2,13 +2,13 @@
 export const BROKEN_MEASURE = `{
   const measureText = CanvasRenderingContext2D.prototype.measureText;
 
-  window.__tcMeasureBroken = true;
+  window.tcMeasureBroken = true;
   CanvasRenderingContext2D.prototype.measureText = function (text) {
-    if (window.__tcMeasureBroken) throw new Error('measureText is broken');
+    if (window.tcMeasureBroken) throw new Error('measureText is broken');
 
     return measureText.call(this, text);
   };
 }`;
 
 /** Page script: canvas text measurement works again after `BROKEN_MEASURE`. */
-export const MEASURE_FIXED = 'window.__tcMeasureBroken = false;';
+export const MEASURE_FIXED = 'window.tcMeasureBroken = false;';

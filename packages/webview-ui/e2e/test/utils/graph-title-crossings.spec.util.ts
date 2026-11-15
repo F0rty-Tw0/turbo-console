@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Page } from '@playwright/test';
 
 import { lineSegmentsOf } from './graph-geometry.spec.util.ts';
@@ -9,7 +8,7 @@ import type { LinkEnds } from '../../common/playwright.type.ts';
 
 /** The task mode package boxes and their titles the probe reports, in page pixels; runs in the page through `evaluate`. */
 export const readBoxTitles = async (page: Page): Promise<ProbeTitle[]> =>
-  page.evaluate((): ProbeTitle[] => window.__tcGraphProbe?.boxTitles() ?? []);
+  page.evaluate((): ProbeTitle[] => window.tcGraphProbe?.boxTitles() ?? []);
 
 const isDrawnLine = (line: ProbeEdgeLine): boolean => line.isDrawn;
 

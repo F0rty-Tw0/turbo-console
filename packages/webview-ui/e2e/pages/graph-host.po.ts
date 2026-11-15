@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page and its init scripts expose these exact names on window */
-
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -172,19 +170,19 @@ export class GraphHost {
   }
 
   private async workerCount(): Promise<number> {
-    return this.page.evaluate((): number => window.__workers ?? 0);
+    return this.page.evaluate((): number => window.tcWorkers ?? 0);
   }
 
   private async terminatedCount(): Promise<number> {
-    return this.page.evaluate((): number => window.__terminated ?? 0);
+    return this.page.evaluate((): number => window.tcTerminated ?? 0);
   }
 
   private async workerMessageCount(): Promise<number> {
-    return this.page.evaluate((): number => window.__workerMessages ?? 0);
+    return this.page.evaluate((): number => window.tcWorkerMessages ?? 0);
   }
 
   private async savedState(): Promise<unknown> {
-    return this.page.evaluate((): unknown => window.__state);
+    return this.page.evaluate((): unknown => window.tcState);
   }
 
   private async openDetailsMessages(): Promise<OpenDetailsMessage[]> {

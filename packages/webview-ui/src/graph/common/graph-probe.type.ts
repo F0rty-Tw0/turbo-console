@@ -111,7 +111,7 @@ export type ProbeFolderLink = {
 
 export type LayoutEngine = 'elk' | 'cache' | 'fallback';
 
-/** What the e2e tests read from the page; exposed only when `window.__tcGraphProbeWanted === true` before `main.js` runs. */
+/** What the e2e tests read from the page; exposed only when `window.tcGraphProbeWanted === true` before `main.js` runs. */
 // eslint-disable-next-line local/no-inline-object-types -- `ProbeExport` joins the literal here because this file is at its line cap
 export type GraphProbe = {
   readonly nodes: () => ProbeNode[];
@@ -216,22 +216,18 @@ export type FactsFolders = {
 /** The filtering's own timings, read by its facts. */
 export type FilteringTimes = Pick<FilteringFacts, 'controlsBuiltMs' | 'filterAppliedMs'>;
 
-/* eslint-disable @typescript-eslint/naming-convention -- the e2e tests set and read these exact names on window */
-
-/** Where the probe goes: `window` in the page. `__tcGraphProbe` stays mutable: it is assigned. */
+/** Where the probe goes: `window` in the page. `tcGraphProbe` stays mutable: it is assigned. */
 export type ProbeHost = {
-  __tcGraphProbe?: GraphProbe;
-  readonly __tcGraphProbeWanted?: unknown;
-  readonly __tcLayoutTimeoutMs?: unknown;
+  tcGraphProbe?: GraphProbe;
+  readonly tcGraphProbeWanted?: unknown;
+  readonly tcLayoutTimeoutMs?: unknown;
 };
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- only an interface merges into Window
   interface Window {
-    __tcGraphProbe?: GraphProbe;
-    readonly __tcGraphProbeWanted?: unknown;
-    readonly __tcLayoutTimeoutMs?: unknown;
+    tcGraphProbe?: GraphProbe;
+    readonly tcGraphProbeWanted?: unknown;
+    readonly tcLayoutTimeoutMs?: unknown;
   }
 }
-
-/* eslint-enable @typescript-eslint/naming-convention */

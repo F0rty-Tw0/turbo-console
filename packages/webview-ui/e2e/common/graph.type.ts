@@ -216,23 +216,19 @@ export type PostedPositions = {
   readonly names: string[];
 };
 
-/* eslint-disable @typescript-eslint/naming-convention -- the host and worker init scripts set these exact names on window */
-
 declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- only an interface merges into Window
   interface Window {
-    __posted?: GraphWebviewMessage[];
-    /** `performance.now()` of each message in `__posted`, same order. */
-    readonly __postedAt?: number[];
-    readonly __workers?: number;
-    readonly __terminated?: number;
-    readonly __workerMessages?: number;
-    readonly __releaseWorker?: () => void;
-    readonly __holdWorker?: () => void;
-    __state?: unknown;
+    tcPosted?: GraphWebviewMessage[];
+    /** `performance.now()` of each message in `tcPosted`, same order. */
+    readonly tcPostedAt?: number[];
+    readonly tcWorkers?: number;
+    readonly tcTerminated?: number;
+    readonly tcWorkerMessages?: number;
+    readonly tcReleaseWorker?: () => void;
+    readonly tcHoldWorker?: () => void;
+    tcState?: unknown;
     /** `defaultPrevented` of each `contextmenu` event, as a late listener saw it. */
-    __contextMenus?: boolean[];
+    tcContextMenus?: boolean[];
   }
 }
-
-/* eslint-enable @typescript-eslint/naming-convention */

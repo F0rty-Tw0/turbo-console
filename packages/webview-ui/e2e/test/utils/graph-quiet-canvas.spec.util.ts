@@ -1,9 +1,8 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { QuietWindow } from '../../common/graph.type.ts';
 
 /** Runs in the page: the Cytoscape renders since the page opened; throws when the page exposes no probe. */
 export const rendersSoFar = (): number => {
-  const probe = window.__tcGraphProbe;
+  const probe = window.tcGraphProbe;
 
   if (probe === undefined) throw new Error('graph e2e: the page exposes no probe to count renders with');
 
@@ -12,7 +11,7 @@ export const rendersSoFar = (): number => {
 
 /** Runs in the page: redraws the canvas at once; throws when the page exposes no probe. */
 export const forcesRender = (): void => {
-  const probe = window.__tcGraphProbe;
+  const probe = window.tcGraphProbe;
 
   if (probe === undefined) throw new Error('graph e2e: the page exposes no probe to force a render with');
 
@@ -21,7 +20,7 @@ export const forcesRender = (): void => {
 
 /** Runs in the page: turns off Cytoscape's layered texture cache, then redraws; throws when the page exposes no probe. */
 export const drawsWithoutLayers = (): void => {
-  const probe = window.__tcGraphProbe;
+  const probe = window.tcGraphProbe;
 
   if (probe === undefined) throw new Error('graph e2e: the page exposes no probe to draw without layers with');
 
@@ -34,7 +33,7 @@ export const drawsWithoutLayers = (): void => {
  */
 export const settlesQuiet = async ({ quietMs, timeoutMs }: QuietWindow): Promise<boolean> => {
   const pollMs = 25;
-  const probe = window.__tcGraphProbe;
+  const probe = window.tcGraphProbe;
 
   if (probe === undefined) throw new Error('graph e2e: the page exposes no probe to count renders with');
 

@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page and its init scripts expose these exact names on window */
-
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -39,12 +37,12 @@ const isDescending = (rows: number[]): boolean => {
 };
 
 const hasNodes = (): boolean => {
-  const nodes = window.__tcGraphProbe?.nodes() ?? [];
+  const nodes = window.tcGraphProbe?.nodes() ?? [];
 
   return nodes.length > 0;
 };
 
-/** Reads the drawn graph through the opt-in `window.__tcGraphProbe`, the only reader of it, and checks what it reports. */
+/** Reads the drawn graph through the opt-in `window.tcGraphProbe`, the only reader of it, and checks what it reports. */
 export class GraphProbePage {
   private readonly page: Page;
 
@@ -59,27 +57,27 @@ export class GraphProbePage {
   }
 
   public async nodes(): Promise<ProbeNode[]> {
-    return this.page.evaluate((): ProbeNode[] => window.__tcGraphProbe?.nodes() ?? []);
+    return this.page.evaluate((): ProbeNode[] => window.tcGraphProbe?.nodes() ?? []);
   }
 
   public async edges(): Promise<ProbeEdge[]> {
-    return this.page.evaluate((): ProbeEdge[] => window.__tcGraphProbe?.edges() ?? []);
+    return this.page.evaluate((): ProbeEdge[] => window.tcGraphProbe?.edges() ?? []);
   }
 
   public async zoom(): Promise<number> {
-    return this.page.evaluate((): number => window.__tcGraphProbe?.zoom() ?? 0);
+    return this.page.evaluate((): number => window.tcGraphProbe?.zoom() ?? 0);
   }
 
   public async pan(): Promise<Position | null> {
-    return this.page.evaluate((): Position | null => window.__tcGraphProbe?.pan() ?? null);
+    return this.page.evaluate((): Position | null => window.tcGraphProbe?.pan() ?? null);
   }
 
   public async edgeColor(): Promise<string> {
-    return this.page.evaluate((): string => window.__tcGraphProbe?.edgeColor() ?? '');
+    return this.page.evaluate((): string => window.tcGraphProbe?.edgeColor() ?? '');
   }
 
   public async selected(): Promise<string | null> {
-    return this.page.evaluate((): string | null => window.__tcGraphProbe?.selected() ?? null);
+    return this.page.evaluate((): string | null => window.tcGraphProbe?.selected() ?? null);
   }
 
   public async nodeIds(): Promise<string[]> {
@@ -90,7 +88,7 @@ export class GraphProbePage {
   }
 
   public async expectNoProbe(): Promise<void> {
-    const isExposed = await this.page.evaluate((): boolean => window.__tcGraphProbe !== undefined);
+    const isExposed = await this.page.evaluate((): boolean => window.tcGraphProbe !== undefined);
 
     expect(isExposed).toBe(false);
   }
@@ -182,7 +180,7 @@ export class GraphProbePage {
   }
 
   private async layoutEngine(): Promise<LayoutEngine | null> {
-    return this.page.evaluate((): LayoutEngine | null => window.__tcGraphProbe?.layoutEngine() ?? null);
+    return this.page.evaluate((): LayoutEngine | null => window.tcGraphProbe?.layoutEngine() ?? null);
   }
 
   private async nodeCount(): Promise<number> {

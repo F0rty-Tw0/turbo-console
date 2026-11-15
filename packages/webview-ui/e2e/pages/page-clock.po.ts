@@ -55,7 +55,7 @@ export class PageClock {
   }
 
   public async expectIntervals(count: number): Promise<void> {
-    const liveIntervals = await this.page.evaluate<number>('window.__intervals.size');
+    const liveIntervals = await this.page.evaluate<number>('window.tcIntervals.size');
 
     expect(liveIntervals).toBe(count);
   }

@@ -59,7 +59,7 @@ export class ResizeWait {
   public async waitFor(promise: string, where: string, size: ViewportSize): Promise<void> {
     const startedAt = Date.now();
     const wanted = `${where} wanted ${JSON.stringify(size)}`;
-    const arm = `window.__resizeSettled = false; ${promise}.then(() => { window.__resizeSettled = true; }); undefined`;
+    const arm = `window.tcResizeSettled = false; ${promise}.then(() => { window.tcResizeSettled = true; }); undefined`;
 
     await this.evaluate(arm, `${wanted}, arming the wait`);
 
@@ -120,7 +120,7 @@ export class ResizeWait {
   /** Polls the page with Node timers until the awaited `resize` promise settled or `deadline` (epoch ms) passed. */
   private async isSettledBy(deadline: number, wanted: string): Promise<boolean> {
     const context = `${wanted}, asking whether it came`;
-    const readSettled = async (): Promise<boolean> => this.evaluate<boolean>('window.__resizeSettled === true', context);
+    const readSettled = async (): Promise<boolean> => this.evaluate<boolean>('window.tcResizeSettled === true', context);
     let isSettled = await readSettled();
 
     while (!isSettled && Date.now() < deadline) {

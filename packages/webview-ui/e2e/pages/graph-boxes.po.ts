@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -62,7 +61,7 @@ export class GraphBoxesPage {
   }
 
   public async visibleIds(): Promise<string[]> {
-    return this.page.evaluate((): string[] => window.__tcGraphProbe?.visibleIds() ?? []);
+    return this.page.evaluate((): string[] => window.tcGraphProbe?.visibleIds() ?? []);
   }
 
   /** Wheels in one notch at a time until the narrowest box is `minWidthPx` wide. */
@@ -148,7 +147,7 @@ export class GraphBoxesPage {
   }
 
   protected async folders(): Promise<ProbeFolder[]> {
-    return this.page.evaluate((): ProbeFolder[] => window.__tcGraphProbe?.folders() ?? []);
+    return this.page.evaluate((): ProbeFolder[] => window.tcGraphProbe?.folders() ?? []);
   }
 
   private async folderKeys(): Promise<string[]> {

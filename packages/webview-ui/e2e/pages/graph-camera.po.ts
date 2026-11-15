@@ -1,5 +1,3 @@
-/* eslint-disable no-underscore-dangle -- the page exposes the probe as window.__tcGraphProbe */
-
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
@@ -138,7 +136,7 @@ export class GraphCamera {
   }
 
   private async visibleIds(): Promise<string[]> {
-    return this.page.evaluate((): string[] => window.__tcGraphProbe?.visibleIds() ?? []);
+    return this.page.evaluate((): string[] => window.tcGraphProbe?.visibleIds() ?? []);
   }
 
   private async isCamera(camera: Camera): Promise<boolean> {

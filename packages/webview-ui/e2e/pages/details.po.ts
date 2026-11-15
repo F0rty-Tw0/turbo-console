@@ -77,7 +77,7 @@ export class DetailsPage {
   public async restoreScroll(scrollY: number): Promise<void> {
     const savedState = JSON.stringify({ scrollY });
 
-    await this.page.addInitScript({ content: `window.__state = ${savedState};` });
+    await this.page.addInitScript({ content: `window.tcState = ${savedState};` });
   }
 
   public card(taskName: string): TaskCardSection {
@@ -158,7 +158,7 @@ export class DetailsPage {
   public async expectSavedScrollY(scrollY: number): Promise<void> {
     await this.page.evaluate(NEXT_FRAME);
 
-    const savedScrollY = await this.page.evaluate<unknown>('window.__state?.scrollY');
+    const savedScrollY = await this.page.evaluate<unknown>('window.tcState?.scrollY');
 
     expect(savedScrollY).toBe(scrollY);
   }
@@ -170,14 +170,14 @@ export class DetailsPage {
   }
 
   public async expectLastPosted(message: WebviewMessage): Promise<void> {
-    const posted = await this.page.evaluate<unknown[]>('window.__posted');
+    const posted = await this.page.evaluate<unknown[]>('window.tcPosted');
 
     expect(posted.at(-1)).toEqual(message);
   }
 
   /** Every message the page posted, in order, starting with `ready`. */
   public async expectPosted(messages: WebviewMessage[]): Promise<void> {
-    const posted = await this.page.evaluate<unknown[]>('window.__posted');
+    const posted = await this.page.evaluate<unknown[]>('window.tcPosted');
 
     expect(posted).toEqual(messages);
   }

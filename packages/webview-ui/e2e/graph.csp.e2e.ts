@@ -80,6 +80,6 @@ test.describe('FEATURE: graph page CSP', () => {
   test('GIVEN no probe flag, the page exposes no probe', async ({ graphPage, graphProbe }): Promise<void> => {
     await test.step('WHEN the page is opened without the probe flag', async (): Promise<void> => graphPage.open({ probe: false }));
 
-    await test.step('THEN window.__tcGraphProbe is undefined', async (): Promise<void> => graphProbe.expectNoProbe());
+    await test.step('THEN window.tcGraphProbe is undefined', async (): Promise<void> => graphProbe.expectNoProbe());
   });
 });
