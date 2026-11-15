@@ -6,7 +6,7 @@ import { hasEdge, manifestFilesOf, packageNamesOf, packagesByName } from './grap
 import { GRAPH_STATE_STUB } from '../test/stubs/graph-model.stub.ts';
 import { graphPackageOf } from '../test/utils/graph-model.spec.util.ts';
 
-describe('FEATURE: graph package names', () => {
+describe('FEATURE: graph package lookups', () => {
   describe('GIVEN packages', () => {
     it('WHEN their names are read THEN the names come in the given order', () => {
       expect(packageNamesOf([graphPackageOf('b', 'p'), graphPackageOf('a', 'q')])).toStrictEqual(['b', 'a']);
@@ -18,9 +18,7 @@ describe('FEATURE: graph package names', () => {
       expect(packageNamesOf([])).toStrictEqual([]);
     });
   });
-});
 
-describe('FEATURE: manifest files of a package', () => {
   describe('GIVEN a package in a folder', () => {
     it('WHEN its manifest is named THEN shown is under the root and absolute is the file', () => {
       const files = manifestFilesOf('/ws', graphPackageOf('web', 'apps/web'));
@@ -36,9 +34,7 @@ describe('FEATURE: manifest files of a package', () => {
       expect(files).toStrictEqual({ shown: 'package.json', absolute: join('/ws', 'package.json') });
     });
   });
-});
 
-describe('FEATURE: graph packages by name', () => {
   describe('GIVEN a graph', () => {
     it('WHEN its packages are keyed THEN each name gives its package', () => {
       const byName = packagesByName(GRAPH_STATE_STUB);
@@ -53,20 +49,20 @@ describe('FEATURE: graph packages by name', () => {
       expect(packagesByName(GRAPH_STATE_STUB).get('ghost')).toBeUndefined();
     });
   });
-});
 
-describe('FEATURE: edge lookup', () => {
-  const edges = [{ source: 'web', target: 'a' }];
+  describe('GIVEN the edges of a graph', () => {
+    const edges = [{ source: 'web', target: 'a' }];
 
-  describe('GIVEN a listed edge', () => {
-    it('WHEN it is asked THEN it is true', () => {
-      expect(hasEdge(edges, 'web', 'a')).toBe(true);
+    describe('GIVEN a listed edge', () => {
+      it('WHEN it is asked THEN it is true', () => {
+        expect(hasEdge(edges, 'web', 'a')).toBe(true);
+      });
     });
-  });
 
-  describe('GIVEN the reverse of a listed edge', () => {
-    it('WHEN it is asked THEN it is false', () => {
-      expect(hasEdge(edges, 'a', 'web')).toBe(false);
+    describe('GIVEN the reverse of a listed edge', () => {
+      it('WHEN it is asked THEN it is false', () => {
+        expect(hasEdge(edges, 'a', 'web')).toBe(false);
+      });
     });
   });
 });
