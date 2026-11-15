@@ -5,16 +5,20 @@ import { collapsedLabelOf } from './collapsed-label.util.ts';
 const measureOf = (text: string): number => text.length * 7;
 
 describe('FEATURE: collapsedLabelOf', () => {
-  it.each([
+  describe.each([
     ['apps', 2, 'apps\n2 packages'],
     ['apps', 1, 'apps\n1 package'],
     ['(root)', 1, '(root)\n1 package'],
     ['./(root)', 1, './(root)\n1 package'],
     ['sixteen-chars-ok', 3, 'sixteen-chars-ok\n3 packages']
-  ])('GIVEN the title %j fits and %i packages WHEN the label is built THEN it is %j', (title, count, expected) => {
-    const label = collapsedLabelOf(title, count, measureOf);
+  ])('GIVEN the title %j fits and %i packages', (title, count, expected) => {
+    const shown = JSON.stringify(expected);
 
-    expect(label).toBe(expected);
+    it(`WHEN the label is built THEN it is ${shown}`, () => {
+      const label = collapsedLabelOf(title, count, measureOf);
+
+      expect(label).toBe(expected);
+    });
   });
 
   describe('GIVEN a title measuring exactly 116 px', () => {
