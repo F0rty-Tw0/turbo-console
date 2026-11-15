@@ -101,7 +101,9 @@ jobs:
   bench:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    # One bench run takes about 7 minutes and a round is two runs (base and head). Rounds 1-3 take about 41 minutes and
+    # the confirmation rounds 4-6 as much again, so the limit has to hold six rounds plus setup.
+    timeout-minutes: 110
     concurrency:
       group: bench-${{ github.event.pull_request.number }}
       cancel-in-progress: true
