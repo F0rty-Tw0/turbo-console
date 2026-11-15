@@ -65,13 +65,15 @@ describe('FEATURE: labelFitOf', () => {
     cy.destroy();
   });
 
-  it.each(ROWS)('GIVEN $name WHEN its fit is read THEN the box is $box and the label $label', (row: LabelRow) => {
-    const expected: ProbeLabelFit = { width: 120, labelWidth: row.label, labelBoxWidth: row.box, textMarginX: 7 };
+  describe.each(ROWS)('GIVEN $name', (row: LabelRow) => {
+    it(`WHEN its fit is read THEN the box is ${row.box} and the label ${row.label}`, () => {
+      const expected: ProbeLabelFit = { width: 120, labelWidth: row.label, labelBoxWidth: row.box, textMarginX: 7 };
 
-    setInternal(node, 'rstyle', row.rstyle);
-    buildBoundsOn(node, row.bounds);
+      setInternal(node, 'rstyle', row.rstyle);
+      buildBoundsOn(node, row.bounds);
 
-    expect(labelFitOf(cy, 'a')).toStrictEqual(expected);
+      expect(labelFitOf(cy, 'a')).toStrictEqual(expected);
+    });
   });
 
   describe('GIVEN a label box boundingBox builds', () => {
