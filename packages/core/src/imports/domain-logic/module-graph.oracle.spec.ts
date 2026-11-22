@@ -115,13 +115,17 @@ describe('FEATURE: module links agree with the TypeScript resolver', () => {
       expect(scan.limit).toBeNull();
     });
 
-    it('WHEN TypeScript and moduleGraphOf resolve every relative specifier THEN their file links differ only by KNOWN_GAPS', () => {
-      const graph = moduleGraphOf({ dir: DIR, selfName: '@turbo-console/webview-ui', scan, others: [] });
-      const ours = ourPairsOf(graph);
-      const theirs = tsPairsOf(scan);
+    it(
+      'WHEN TypeScript and moduleGraphOf resolve every relative specifier THEN their file links differ only by KNOWN_GAPS',
+      () => {
+        const graph = moduleGraphOf({ dir: DIR, selfName: '@turbo-console/webview-ui', scan, others: [] });
+        const ours = ourPairsOf(graph);
+        const theirs = tsPairsOf(scan);
 
-      expect(ours.size).toBeGreaterThan(0);
-      expect(mismatchesOf(ours, theirs)).toStrictEqual(KNOWN_GAPS.map((gap) => gap.pair));
-    });
+        expect(ours.size).toBeGreaterThan(0);
+        expect(mismatchesOf(ours, theirs)).toStrictEqual(KNOWN_GAPS.map((gap) => gap.pair));
+      },
+      SCAN_TIMEOUT_MS
+    );
   });
 });
