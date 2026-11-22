@@ -23,8 +23,8 @@ describe('FEATURE: root file rendering', () => {
       ]);
     });
 
-    it('THEN package.json is private and pins pnpm 12.11.2', () => {
-      expect(contentOf('package.json')).toBe('{\n  "name": "fx-root",\n  "private": true,\n  "packageManager": "pnpm@12.11.2"\n}\n');
+    it('THEN package.json is private and pins pnpm 12.21.0', () => {
+      expect(contentOf('package.json')).toBe('{\n  "name": "fx-root",\n  "private": true,\n  "packageManager": "pnpm@12.21.0"\n}\n');
     });
 
     it('THEN pnpm-workspace.yaml lists packages/* only', () => {
@@ -79,7 +79,7 @@ describe('FEATURE: root file rendering', () => {
       const file = renderRootFiles(plan).find((entry) => entry.path === 'package.json');
 
       expect(file?.content).toBe(
-        '{\n  "name": "fx-root",\n  "private": true,\n  "packageManager": "pnpm@12.11.2",\n  "scripts": {\n    "fmt": "node -e 0"\n  }\n}\n'
+        '{\n  "name": "fx-root",\n  "private": true,\n  "packageManager": "pnpm@12.21.0",\n  "scripts": {\n    "fmt": "node -e 0"\n  }\n}\n'
       );
     });
   });
@@ -92,7 +92,7 @@ describe('FEATURE: root file rendering', () => {
     it('WHEN rendered THEN package.json holds no scripts', () => {
       const file = renderRootFiles(plan).find((entry) => entry.path === 'package.json');
 
-      expect(file?.content).toBe('{\n  "name": "fx-root",\n  "private": true,\n  "packageManager": "pnpm@12.11.2"\n}\n');
+      expect(file?.content).toBe('{\n  "name": "fx-root",\n  "private": true,\n  "packageManager": "pnpm@12.21.0"\n}\n');
     });
   });
 });
