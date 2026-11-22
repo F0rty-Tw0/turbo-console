@@ -54,16 +54,19 @@ export class GraphPlainEdges {
   }
 
   /**
-   * Polls until the line between `ends` reaches `MIN_INK` over the box `fill` (`inkOnEdge`), then records the ink it
-   * reached as an `edge-ink` annotation for `label`.
+   * Polls until the line between `ends` reaches `MIN_INK` over the box `fill` toward `edgeInk` (`inkOnEdge`), then
+   * records the read that passed as an `edge-ink` annotation for `label`.
    */
-  public async expectInkOnEdge(ends: EdgeEnds, fill: Rgb, edge: Rgb, label: string): Promise<void> {
+  public async expectInkOnEdge(ends: EdgeEnds, fill: Rgb, edgeInk: Rgb, label: string): Promise<void> {
     const { source, target } = ends;
-    const inkOf = async (): Promise<number> => this.inkOnEdge(source, target, fill, edge);
+    let ink = 0;
+    const inkOf = async (): Promise<number> => {
+      ink = await this.inkOnEdge(source, target, fill, edgeInk);
+
+      return ink;
+    };
 
     await expect.poll(inkOf, { message: `no edge ink at the ${source} to ${target} midpoint` }).toBeGreaterThanOrEqual(MIN_INK);
-
-    const ink = await inkOf();
 
     test.info().annotations.push({ type: 'edge-ink', description: `${label}: ${ink.toFixed(2)}` });
   }
@@ -75,13 +78,13 @@ export class GraphPlainEdges {
     return lineMidpointOf(lines, source, target);
   }
 
-  /** How far the screen around the midpoint of the drawn package edge from `source` to `target` has moved from the box `fill` toward the `edge` colour, 0 to 1 (`inkTowardOf`). */
-  public async inkOnEdge(source: string, target: string, fill: Rgb, edge: Rgb): Promise<number> {
+  /** How far the screen around the midpoint of the drawn package edge from `source` to `target` has moved from the box `fill` toward the `edgeInk` colour, 0 to 1 (`inkTowardOf`). */
+  public async inkOnEdge(source: string, target: string, fill: Rgb, edgeInk: Rgb): Promise<number> {
     const midpoint = await this.midpointOf(source, target);
     const png = await this.page.screenshot({ clip: clipAround(midpoint, INK_RADIUS_PX) });
     const pixels = await this.page.evaluate(pixelsOfPng, png.toString('base64'));
 
-    return inkTowardOf(pixels, fill, edge);
+    return inkTowardOf(pixels, fill, edgeInk);
   }
 
   /** The distinct drawn styles of the drawn package edges, then of the drawn folder links. */
