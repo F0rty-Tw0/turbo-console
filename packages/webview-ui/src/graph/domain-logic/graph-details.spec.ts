@@ -19,7 +19,7 @@ type DetailsRig = PackageSideDepsMock & PackageSideParts;
 /** A `GraphPackageSide`, whose first draw mounts the details panel, over the mocked deps and a saved flat view. */
 const detailsRigOf = (): DetailsRig => {
   const mock = packageSideDepsMock();
-  const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false };
+  const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false, onShowModules: vi.fn() };
   const modes = new ViewStateModes(mock.saver, SAVED_FLAT_STUB);
   const frames = new GraphFrames(mock.deps.now);
   const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced, onLocation: mock.onLocation };

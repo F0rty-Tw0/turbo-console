@@ -15,6 +15,16 @@ export const iconButton = (icon: GraphIconId, label: string, title: string): HTM
   return button;
 };
 
+/** A text button: its visible text is its accessible name and its hover title. */
+export const textButton = (label: string): HTMLButtonElement => {
+  const button = textElement('button', 'text-button', label);
+
+  button.type = 'button';
+  button.title = label;
+
+  return button;
+};
+
 /** A `text-button` with its icon, then its label, whose text is the accessible name; `title` is its hover text. */
 export const iconTextButton = (icon: GraphIconId, label: string, title: string): HTMLButtonElement => {
   const button = textElement('button', 'text-button', '');

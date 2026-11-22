@@ -33,7 +33,7 @@ const TEST_ADDED: GraphReady = { ...STATE_STUB, tasks: [WEB_BUILD_STUB, WEB_TEST
 /** A `GraphPackageSide` over the mocked deps, its view modes starting at `saved`. */
 const rigOf = (saved: GraphViewState): RunsSideRig => {
   const mock = packageSideDepsMock();
-  const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false };
+  const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false, onShowModules: vi.fn() };
   const modes = new ViewStateModes(mock.saver, saved);
   const frames = new GraphFrames(mock.deps.now);
   const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced, onLocation: mock.onLocation };

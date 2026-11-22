@@ -4,7 +4,8 @@ import type { GraphView, Viewport } from './graph-page.type.ts';
 import type { TaskModes } from './graph-task.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { HandledModules, ModuleCanvas } from './module-canvas.type.ts';
-import type { ModuleMeasures } from './module-scene.type.ts';
+import type { ModuleMeasures, ModuleScene } from './module-scene.type.ts';
+import type { PageElements } from './page-elements.type.ts';
 import type { PageTaskMode } from './page-task-mode.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphPackageModulesMessage, GraphShowModulesMessage, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
@@ -38,7 +39,7 @@ type ModuleRedrawFit = { readonly kind: 'fit' };
 /** How a draw places the camera: the saved one or a fit, as it was, around a toggled folder, or a fresh fit (spec §7.4). */
 export type ModuleRedraw = ModuleRedrawFirst | ModuleRedrawKeep | ModuleRedrawAnchor | ModuleRedrawFit;
 
-/** What the mode asks of the page: Tasks 4.3 and 4.4 fill in the canvas, bar and banners. */
+/** What the mode asks of the page: the canvas, the modules bar and its banners. */
 export type ModuleScreen = {
   readonly enter: () => void;
   /** Waiting and Loading: empty canvas, "Scanning <P>…", Refresh visible. */
@@ -113,6 +114,21 @@ export type ModuleLayoutDeps = {
   readonly showNotice: LayoutScreen['showNotice'];
   /** A draw that threw while still the one asked for last; the canvas is already empty. */
   readonly onFailure: (error: unknown) => void;
+};
+
+/** The module layout as the screen drives it (`GraphModuleLayout`). */
+export type ModuleScreenLayout = {
+  readonly draw: (found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => Promise<void>;
+  /** The scene on screen; `null` before the first draw and after `clear`. */
+  readonly scene: () => ModuleScene | null;
+  readonly clear: () => void;
+};
+
+/** What the modules screen writes to: the page's root, mode buttons and modules bar, the layout and the canvas. */
+export type ModuleScreenDeps = {
+  readonly page: Pick<PageElements, 'root' | 'packagesMode' | 'taskMode' | 'modules'>;
+  readonly layout: ModuleScreenLayout;
+  readonly canvas: Pick<ModuleCanvas, 'clear'>;
 };
 
 /** Modules mode as the canvas input drives it (`GraphModuleMode`). */

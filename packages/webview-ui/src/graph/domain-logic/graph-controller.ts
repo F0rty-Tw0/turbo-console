@@ -2,7 +2,7 @@ import { GraphCardClock } from './graph-card-clock.ts';
 import { probeFactsOf } from './graph-controller-facts.ts';
 import { GraphFrames } from './graph-frames.ts';
 import { graphLocationOf } from './graph-location.ts';
-import { moduleModeOf, reportDropped, resumeModules } from './graph-module-wiring.ts';
+import { modeGroupHiderOf, moduleModeOf, reportDropped, resumeModules } from './graph-module-wiring.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { wirePanelSashes } from './graph-panel-sashes.ts';
 import { packageRevealOf } from './graph-reveal.ts';
@@ -59,7 +59,7 @@ class GraphPageController {
       modules: () => this.modules.input,
       flow: () => this.flow
     });
-    const tasks = packageTasksOf((): PageTaskMode => this.tasks, deps.now);
+    const tasks = packageTasksOf((): PageTaskMode => this.tasks, deps.now, (): PageModuleMode => this.modules);
     const onMessage = (): void => this.tasks.suspend();
     const onPlaced = (): void => this.reveal.placed();
     const onLocation = (): void => this.location.update();
@@ -82,10 +82,7 @@ class GraphPageController {
       selectedPackage: (): string | null => this.packages.filtering.inspection.selected(),
       showPackage: (name: string): void => this.reveal.request(name)
     });
-    const hideModes = (isHidden: boolean): void => {
-      page.modeGroup.hidden = isHidden;
-      page.modeEnd.hidden = isHidden;
-    };
+    const hideModes = modeGroupHiderOf(page);
 
     this.routing = new GraphStateRouting({ tasks: this.tasks, modules: this.modules, packages: this.packages, hideModes, now });
     this.reveal = packageRevealOf(this.tasks, this.packages, this.view);

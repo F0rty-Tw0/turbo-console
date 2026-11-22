@@ -7,6 +7,32 @@ export const MODULE_SLOW_TEXT = `Drawing more than ${MODULE_SHOWN_CAP} items can
 /** The page root's class while modules mode owns the canvas. */
 export const MODULES_MODE_CLASS = 'modules-mode';
 
+/** The modules bar's id; CSS shows it only in modules mode. */
+export const MODULES_BAR_ID = 'graph-modules-bar';
+
+/** The Details package button, and the toolbar entry on a single-package root, that open a package's modules. */
+export const SHOW_MODULES_LABEL = 'Show modules';
+
+export const MODULES_BACK_LABEL = 'Back';
+
+export const MODULES_REFRESH_LABEL = 'Refresh';
+
+export const MODULES_RETRY_LABEL = 'Retry';
+
+/** The name of the modules bar's group of kind toggles and Reset view. */
+export const MODULES_VIEW_LABEL = 'View';
+
+export const MODULE_TYPES_LABEL = 'Type-only imports';
+
+export const MODULE_TESTS_LABEL = 'Test files';
+
+export const MODULE_LAZIES_LABEL = 'Dynamic/require';
+
+export const MODULES_RESET_LABEL = 'Reset view';
+
+/** The banner of a scan that found no source file (spec §7.4). */
+export const NO_MODULE_FILES_TEXT = 'No source files found.';
+
 /** What the page warns on the console when it drops a `packageModules` its validator rejects (spec §8). */
 export const MODULES_DROPPED_WARNING = 'Dropped an invalid packageModules message from the host.';
 

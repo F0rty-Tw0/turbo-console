@@ -54,6 +54,7 @@ const wirePackage = (view: PackageDetails, name: string, env: DetailsEnv): void 
   onClick(view.startTrace, (): void => deps.onInput(START_TRACE));
   onClick(view.showTasks, (): void => deps.onShowTasks(name));
   view.showTasks.hidden = !deps.hasTasks(name);
+  onClick(view.showModules, (): void => deps.onShowModules(name));
 };
 
 const packageOf = (name: string, context: DetailsContext, env: DetailsEnv): DetailsView => {

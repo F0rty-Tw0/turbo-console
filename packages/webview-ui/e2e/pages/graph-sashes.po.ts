@@ -154,6 +154,26 @@ export class GraphSashes {
     await expect.poll(wrappedOf).toEqual([]);
   }
 
+  /** The shown buttons of the Details row sit in this many columns and rows, read from their distinct left and top edges. */
+  public async expectDetailsRowGrid(columns: number, rows: number): Promise<void> {
+    const buttons = this.page.locator('#graph-details .details-row button:not([hidden])');
+    const gridOf = async (): Promise<number[]> => {
+      const counts = await buttons.evaluateAll((elements): number[] => {
+        const boxes = elements.map((element) => element.getBoundingClientRect());
+        const lefts = new Set(boxes.map((box) => Math.round(box.left)));
+        const tops = new Set(boxes.map((box) => Math.round(box.top)));
+        const grid = [lefts.size, tops.size];
+
+        return grid;
+      });
+
+      return counts;
+    };
+
+    await expect(buttons.first()).toBeVisible();
+    await expect.poll(gridOf).toEqual([columns, rows]);
+  }
+
   public async expectPanelWidth(id: string, px: number): Promise<void> {
     const panel = this.page.locator(`#${id}`);
     const widthOf = async (): Promise<number> => panel.evaluate((element): number => element.getBoundingClientRect().width);

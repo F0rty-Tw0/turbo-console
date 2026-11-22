@@ -1,6 +1,7 @@
 import type { TaskScreenElements } from './graph-task.type.ts';
 import type { LegendElements } from './legend.type.ts';
 import type { LocationBarElements } from './location.type.ts';
+import type { ModulesBarElements } from './modules-bar.type.ts';
 import type { PanelSashes } from './panel-sash.type.ts';
 
 /** The page's parts other than the Legend's. */
@@ -10,6 +11,12 @@ type PageParts = {
   /** The Packages/Tasks group and its separator; hidden for a single-package root. */
   readonly modeGroup: HTMLElement;
   readonly modeEnd: HTMLElement;
+  /** The Show modules group after `modeEnd`: shown only on a single-package root, hidden by CSS in modules mode. */
+  readonly rootModulesGroup: HTMLElement;
+  /** Opens the root package's (`//`) modules. */
+  readonly rootModules: HTMLButtonElement;
+  /** `div#graph-modules-bar`, right after the toolbar; CSS shows it only in modules mode. */
+  readonly modules: ModulesBarElements;
   /** The Packages button, first in the toolbar; `aria-pressed` while the package graph shows. */
   readonly packagesMode: HTMLButtonElement;
   /** The Tasks button, after Packages; `aria-pressed` while task mode is on. */

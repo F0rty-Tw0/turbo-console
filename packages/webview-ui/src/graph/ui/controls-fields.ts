@@ -59,7 +59,8 @@ export const depthInput = (): HTMLInputElement => {
   return depth;
 };
 
-const checkField = (text: string, input: HTMLInputElement): HTMLElement => {
+/** A checkbox before its text; the wrapping `<label>` names the input. */
+export const checkField = (text: string, input: HTMLInputElement): HTMLElement => {
   const label = textElement('label', 'controls-check-field', text);
 
   label.prepend(input);

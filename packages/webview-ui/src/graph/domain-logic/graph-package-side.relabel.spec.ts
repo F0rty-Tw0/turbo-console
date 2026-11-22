@@ -25,7 +25,7 @@ type RelabelRig = PackageSideDepsMock & RelabelSide;
 /** A `GraphPackageSide` over the mocked deps, its view modes starting flat, in a project with no task. */
 const rigOf = (): RelabelRig => {
   const mock = packageSideDepsMock();
-  const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false };
+  const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false, onShowModules: vi.fn() };
   const modes = new ViewStateModes(mock.saver, SAVED_FLAT_STUB);
   const frames = new GraphFrames(mock.deps.now);
   const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced, onLocation: mock.onLocation };
