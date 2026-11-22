@@ -88,9 +88,9 @@ type ExplainTag = { readonly type: 'explainEdge' | 'openManifest' };
 /** A page request to look into the graph: the reply to an edge or the opening of a package's manifest. */
 export type ExplainRequest = Extract<GraphWebviewMessage, ExplainTag>;
 
-type ImportTag = { readonly type: 'scanImports' | 'openImport' };
+type ImportTag = { readonly type: 'scanImports' | 'openImport' | 'scanModules' };
 
-/** A page request about one link's imports: scan the dependent, or open one site (module-private: only `LookupRequest` reads it). */
+/** A page request about imports: scan a link's dependent, open one site, or scan a package's modules (module-private: only `LookupRequest` reads it). */
 type ImportRequest = Extract<GraphWebviewMessage, ImportTag>;
 
 /** Every request `GraphLookups` answers. */

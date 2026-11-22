@@ -42,6 +42,8 @@ const openManifestSchema = object({
 
 const scanImportsSchema = object({ type: literal('scanImports'), source: packageNameSchema, target: packageNameSchema });
 
+const scanModulesSchema = object({ type: literal('scanModules'), packageName: packageNameSchema });
+
 const openImportSchema = object({
   type: literal('openImport'),
   packageName: packageNameSchema,
@@ -100,6 +102,7 @@ export const graphMessageSchema = discriminatedUnion('type', [
   explainEdgeSchema,
   openManifestSchema,
   scanImportsSchema,
+  scanModulesSchema,
   openImportSchema,
   exportImageSchema,
   runTaskSchema,

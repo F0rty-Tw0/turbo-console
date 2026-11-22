@@ -11,11 +11,15 @@ type LookupJob = {
   readonly value: unknown;
 };
 
+/** A lookup about imports, which `ImportScans` or `openImport` answers apart from the explain queue. */
+type ImportLookup = Exclude<LookupRequest, ExplainRequest>;
+
 const LOOKUP_TYPES: Readonly<Record<LookupRequest['type'], true>> = {
   explainEdge: true,
   openManifest: true,
   scanImports: true,
-  openImport: true
+  openImport: true,
+  scanModules: true
 };
 
 export function isLookupMessage(message: GraphWebviewMessage): message is LookupRequest {
@@ -25,7 +29,8 @@ export function isLookupMessage(message: GraphWebviewMessage): message is Lookup
 /**
  * The page's look-ups into the graph. One `explainEdge` is answered at a time; the one waiting behind it is replaced by each
  * newer request, so a page that floods them costs one read in flight and one waiting. An `openManifest` is answered at once,
- * never behind a read. A scan runs in `ImportScans`, apart from the explain queue, so neither waits for the other (spec D1).
+ * never behind a read. A scan, of a link's imports or of a package's modules, runs in `ImportScans`, apart from the explain
+ * queue, so neither waits for the other (spec D1).
  * A reply is posted only if the panel is still shown and ready after its read; after `dispose` nothing more is read.
  */
 export class GraphLookups {
@@ -49,9 +54,24 @@ export class GraphLookups {
         await this.answer({ request, value });
 
         return;
-      case 'scanImports': {
-        if (this.isDisposed) return;
+      case 'scanImports':
+      case 'openImport':
+      case 'scanModules':
+        await this.receiveImport(request, value);
+    }
+  }
 
+  public dispose(): void {
+    this.isDisposed = true;
+    this.scans.dispose();
+  }
+
+  /** A `scanModules` is never dropped: `askModules` answers every one, `failed` included. */
+  private async receiveImport(request: ImportLookup, value: unknown): Promise<void> {
+    if (this.isDisposed) return;
+
+    switch (request.type) {
+      case 'scanImports': {
         const isHandled = await this.scans.ask(request.source, request.target);
 
         if (!isHandled) this.gate.drop(value);
@@ -59,20 +79,15 @@ export class GraphLookups {
         return;
       }
       case 'openImport': {
-        if (this.isDisposed) return;
-
         const isHandled = await openImport(request.packageName, request.file, request.line, this.contextNow());
 
         if (!isHandled) this.gate.drop(value);
 
         return;
       }
+      case 'scanModules':
+        await this.scans.askModules(request.packageName);
     }
-  }
-
-  public dispose(): void {
-    this.isDisposed = true;
-    this.scans.dispose();
   }
 
   private contextNow(): ExplainContext {

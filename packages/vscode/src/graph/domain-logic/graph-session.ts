@@ -195,9 +195,6 @@ export class GraphSession {
         await this.images.save(message.png);
 
         return;
-      // `graphMessageSchema` has no `scanModules` yet, so none reaches here.
-      case 'scanModules':
-        return;
     }
   }
 
