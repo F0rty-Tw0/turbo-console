@@ -1,13 +1,8 @@
 import type { GraphOpenImportMessage } from '../../bridge/common/graph-imports.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { DIR_PREFIX, FILE_PREFIX, STUB_PREFIX } from '../common/graph-module.const.ts';
 import type { HandledModules, ModuleElementKind } from '../common/module-canvas.type.ts';
 import type { ModuleInputDeps, ModuleInputMode, ModuleRedraw } from '../common/module-mode.type.ts';
-
-const DIR_PREFIX = 'dir:';
-
-const FILE_PREFIX = 'file:';
-
-const STUB_PREFIX = 'pkg:';
 
 const ROOT_BOX_ID = DIR_PREFIX;
 

@@ -1,8 +1,5 @@
+import { DIR_PREFIX, FILE_PREFIX } from '../common/graph-module.const.ts';
 import type { ModuleBox, ModuleLeaf, ModuleScene } from '../common/module-scene.type.ts';
-
-const DIR_PREFIX = 'dir:';
-
-const FILE_PREFIX = 'file:';
 
 const PATH_SEPARATOR = '/';
 

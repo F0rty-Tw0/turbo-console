@@ -3,6 +3,15 @@ import type { ModulesViewState } from '../../bridge/common/graph-view-state.type
 /** The kinds a modules view with nothing saved shows: every kind but test files. */
 export const FRESH_MODULES_SHOWN: ModulesViewState['shown'] = { types: true, tests: false, lazies: true };
 
+/** The id prefix of a folder, drawn as a box or a card; the root box's id is the prefix alone. */
+export const DIR_PREFIX = 'dir:';
+
+/** The id prefix of a file card. */
+export const FILE_PREFIX = 'file:';
+
+/** The id prefix of a stub, another workspace package. */
+export const STUB_PREFIX = 'pkg:';
+
 /** Past this many drawn leaves the module view warns that drawing can be slow (D10). */
 export const MODULE_SHOWN_CAP = 300;
 
