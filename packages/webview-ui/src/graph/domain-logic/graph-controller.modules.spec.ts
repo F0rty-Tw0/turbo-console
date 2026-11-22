@@ -4,8 +4,10 @@ import { createGraphController } from './graph-controller.ts';
 import { GraphModuleMode } from './graph-module-mode.ts';
 import type { GraphPackageModulesMessage } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphViewState, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
-import { MODULES_DROPPED_WARNING, MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
+import { MODULES_DROPPED_WARNING, MODULES_MODE_CLASS, SHOW_MODULES_LABEL } from '../common/graph-module.const.ts';
 import type { GraphController } from '../common/graph-page.type.ts';
+import type { MenuElements, MenuItemModel } from '../common/widget-menu.type.ts';
+import type { RectPx, WidgetRects, WidgetViews } from '../common/widget.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { FLAT_POSITIONS_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
@@ -24,6 +26,13 @@ const FRESH_WEB: ModulesViewState = freshModulesViewOf('web');
 const SAVED_ON_WEB: GraphViewState = { ...FRESH_STATE, mode: 'modules', modules: FRESH_WEB };
 
 const WEB_FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
+
+/** The selected package's drawn rect, so a menu opened without a shown "…" has somewhere to anchor. */
+const WEB_RECT: RectPx = { x1: 0, y1: 0, x2: 100, y2: 32 };
+
+const WEB_RECTS: WidgetRects = { boxes: new Map(), collapsed: new Map(), selected: WEB_RECT, zoom: 1 };
+
+const SHIFT_F10 = Object.assign(new Event('keydown'), { key: 'F10', shiftKey: true });
 
 describe('FEATURE: createGraphController modules messages', () => {
   let mock: PackageSideDepsMock;
@@ -145,6 +154,38 @@ describe('FEATURE: createGraphController modules messages', () => {
 
     it('WHEN the Details Show modules is clicked THEN scanModules for web is posted', () => {
       mock.packageViews.at(-1)?.showModules.click();
+
+      expect(mock.deps.bridge.post).toHaveBeenLastCalledWith({ type: 'scanModules', packageName: 'web' });
+    });
+  });
+
+  describe('GIVEN web inspected and drawn, its "…" menu opened with Shift+F10', () => {
+    let menus: MenuElements[];
+
+    beforeEach(async () => {
+      menus = [];
+      const build = mock.deps.widgetViews.menu;
+      const record = (model: MenuItemModel[], label: string): MenuElements => {
+        const built = build(model, label);
+
+        menus.push(built);
+
+        return built;
+      };
+      const widgetViews: WidgetViews = { ...mock.deps.widgetViews, menu: record };
+      const controller = createGraphController({ ...mock.deps, widgetViews });
+
+      mock.view.widgetRects.mockReturnValue(WEB_RECTS);
+      controller.receive({ type: 'state', state: STATE_STUB });
+      await mock.runs.settle(mock.runs.count() - 1, resultOf('h1', FLAT_POSITIONS_STUB));
+      vi.mocked(mock.deps.createView).mock.calls[0]?.[1].onTapNode('web');
+      mock.page.container.dispatchEvent(SHIFT_F10);
+    });
+
+    it('WHEN Show modules is chosen THEN scanModules for web is posted', () => {
+      const item = menus.at(-1)?.items.find((each) => each.title === SHOW_MODULES_LABEL);
+
+      item?.click();
 
       expect(mock.deps.bridge.post).toHaveBeenLastCalledWith({ type: 'scanModules', packageName: 'web' });
     });
