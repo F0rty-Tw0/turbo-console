@@ -37,7 +37,7 @@ test.describe('FEATURE: graph affected overlay', () => {
 
       await test.step('WHEN the host sends affected null', async () => graphTaskHost.sendAffected(null));
 
-      await test.step('THEN all three are 0', async () => graphAffected.expectHalos(TASK_IDS, 0));
+      await test.step('THEN all three are 0', async (): Promise<void> => graphAffected.expectHalos(TASK_IDS, 0));
     }
   );
 
