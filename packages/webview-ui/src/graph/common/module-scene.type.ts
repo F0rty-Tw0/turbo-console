@@ -1,3 +1,5 @@
+import type { NodeSize } from './node-size.type.ts';
+
 /** Which kinds of modules and imports the scene draws. */
 export type ModuleShown = {
   readonly types: boolean;
@@ -71,4 +73,10 @@ export type ModuleScene = {
   readonly leaves: ModuleLeaf[];
   readonly links: ModuleSceneLink[];
   readonly leafCount: number;
+};
+
+/** How the page sizes module nodes: each leaf's card, and each box's title width in px (no padding). */
+export type ModuleMeasures = {
+  readonly sizeOf: (leaf: ModuleLeaf) => NodeSize;
+  readonly titleWidthOf: (box: ModuleBox) => number;
 };
