@@ -7,7 +7,8 @@ import type { Position } from '../../bridge/common/graph-state.type.ts';
 import { MODULE_BOX_CLASS, MODULE_DIR_CLASS, MODULE_FILE_CLASS, MODULE_STUB_CLASS } from '../common/graph-module.const.ts';
 import { TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
 import type { ModuleCanvas, ModuleDrawing, ModuleElementKind } from '../common/module-canvas.type.ts';
-import type { ModuleBox, ModuleLeaf } from '../common/module-scene.type.ts';
+import type { ModuleBox, ModuleLeaf, ModuleScene } from '../common/module-scene.type.ts';
+import { paintedAfterRedrawOf } from '../utils/module-painted.util.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 
 type KindClass = [ModuleElementKind, string];
@@ -86,14 +87,32 @@ const drawModules = (cy: Core, drawing: ModuleDrawing): void => {
 
 /**
  * The modules graph on `cy`, the core the package and task graphs share; showing it removes what they drew. A drag
- * unroutes only module links, so it leaves the other modes' edges as they are.
+ * unroutes only module links, so it leaves the other modes' edges as they are. It keeps the painted card across a
+ * redraw, or paints the folder card just collapsed over it; `clear` forgets it.
  */
 export const createModuleCanvas = (cy: Core): ModuleCanvas => {
   cy.on('drag', 'node', unrouteDragged);
 
-  const show = (drawing: ModuleDrawing): void => drawModules(cy, drawing);
-  const clear = (): void => void cy.elements().remove();
-  const paint = (id: string | null): void => paintModules(cy, id);
+  let drawn: ModuleScene | null = null;
+  let painted: string | null = null;
+  const paint = (id: string | null): void => {
+    painted = id;
+    paintModules(cy, id);
+  };
+  const show = (drawing: ModuleDrawing): void => {
+    const kept = paintedAfterRedrawOf(painted, drawn, drawing.scene);
+
+    drawModules(cy, drawing);
+    drawn = drawing.scene;
+    painted = kept;
+
+    if (kept !== null) paintModules(cy, kept);
+  };
+  const clear = (): void => {
+    drawn = null;
+    painted = null;
+    cy.elements().remove();
+  };
   const kindOf = (id: string): ModuleElementKind | null => kindOfNode(cy.getElementById(id));
   const renderedCentre = (id: string): Position | null => renderedCentreOf(cy, id);
   const canvas: ModuleCanvas = { show, clear, paint, kindOf, renderedCentre };

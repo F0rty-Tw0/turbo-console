@@ -107,7 +107,7 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
   const layout = new GraphModuleLayout({ view, runner, measures, frames, showGraph, onFailure });
   const screen = moduleScreenOf({ page, layout, canvas: view.modules, showGraph });
   const mode = new GraphModuleMode({ modes, bridge, screen, tasks, onExit, notice, viewport, frames });
-  const input = moduleInputOf({ mode, canvas: view.modules, bridge });
+  const input = moduleInputOf({ mode, canvas: view.modules, container: page.container, bridge });
   const leave = (): void => mode.leave();
   const modules: PageModuleMode = {
     isActive: (): boolean => mode.isActive(),

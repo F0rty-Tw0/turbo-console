@@ -4,7 +4,7 @@ import { expect } from '@playwright/test';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import { MODULE_SLOW_TEXT } from '../../src/graph/common/graph-module.const.ts';
-import type { ProbeEdge, ProbeNode } from '../../src/graph/common/graph-probe.type.ts';
+import type { ProbeEdge, ProbeNode, ProbeState } from '../../src/graph/common/graph-probe.type.ts';
 import { MODULES_BAR, SHOW_MODULES_LABEL } from '../common/graph-modules.const.ts';
 import type { Camera } from '../common/graph.type.ts';
 
@@ -71,6 +71,17 @@ export class GraphModulesPage {
     const sorted = copy.sort();
 
     await expect.poll(async (): Promise<string[]> => this.edgeLines()).toEqual(sorted);
+  }
+
+  /** The drawn node `id` paints `state`: selected, lit as a neighbour, dimmed or normal. */
+  public async expectState(id: string, state: ProbeState): Promise<void> {
+    const stateOf = async (): Promise<ProbeState> => {
+      const node = await this.nodeOf(id);
+
+      return node.state;
+    };
+
+    await expect.poll(stateOf).toBe(state);
   }
 
   public async expectBarText(text: string): Promise<void> {

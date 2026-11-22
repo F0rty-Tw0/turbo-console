@@ -43,16 +43,19 @@ const expandedAfterTap = (view: ModulesViewState, kind: ModuleElementKind | null
 
 /**
  * The canvas events in modules mode (spec §7.4), each ignored unless Shown: a folder tap toggles it and redraws anchored
- * on it, a file or stub tap paints it; a file double tap opens it, a stub double tap enters that package.
+ * on it, a file or stub tap paints it; a file double tap opens it, a stub double tap enters that package. A node tap
+ * then focuses the container, as in package mode, since Cytoscape blurs it on the press.
  */
 export const moduleInputOf = (deps: ModuleInputDeps): HandledModules => {
-  const { mode, canvas, bridge } = deps;
+  const { mode, canvas, container, bridge } = deps;
   const tapNode = (id: string): void => {
     const view = shownViewOf(mode);
     const kind = canvas.kindOf(id);
     const isCard = kind === 'file' || kind === 'stub';
 
     if (view === null) return;
+
+    container.focus();
 
     if (isCard) {
       canvas.paint(id);

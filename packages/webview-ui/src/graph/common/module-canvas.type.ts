@@ -16,7 +16,9 @@ export type ModuleDrawing = {
 
 /** The modules graph on the one Cytoscape core; `show` removes every element first, as the task canvas does. */
 export type ModuleCanvas = {
+  /** Draws `drawing`, painting again the card painted before, or the folder card now collapsed over it. */
   readonly show: (drawing: ModuleDrawing) => void;
+  /** Removes every element and forgets the painted card. */
   readonly clear: () => void;
   /** `id` selected and its 1-hop neighbours highlighted, the rest dimmed; `null` paints all normal. */
   readonly paint: (id: string | null) => void;

@@ -153,5 +153,7 @@ export type ModuleInputMode = {
 export type ModuleInputDeps = {
   readonly mode: ModuleInputMode;
   readonly canvas: ModuleCanvas;
+  /** The graph container a canvas tap hands focus back to, as Cytoscape blurs it on every press. */
+  readonly container: Pick<HTMLElement, 'focus'>;
   readonly bridge: Pick<Bridge, 'post'>;
 };
