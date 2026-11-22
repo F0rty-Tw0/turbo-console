@@ -73,7 +73,7 @@ describe('FEATURE: rescans use the stat-checked cache', () => {
   });
 
   describe('GIVEN a finished scan of a.ts (A1) and b.ts (B1), both at DATE', () => {
-    let first: PackageImportScan = { files: [], tsconfigPaths: null, scanned: 0, skipped: 0, limit: null };
+    let first: PackageImportScan = { files: [], walkedFiles: [], tsconfigPaths: null, scanned: 0, skipped: 0, limit: null };
 
     beforeEach(async () => {
       await fixAt('a.ts', importOf('A1'), DATE);

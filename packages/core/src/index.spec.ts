@@ -143,6 +143,7 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<ImportScanLimit>().toEqualTypeOf<'files' | 'entries' | 'time'>();
       expectTypeOf<SourceImport['kind']>().toEqualTypeOf<'static' | 'reexport' | 'dynamic' | 'require'>();
       expectTypeOf<PackageImportScan['tsconfigPaths']>().toEqualTypeOf<TsconfigPaths | null>();
+      expectTypeOf<PackageImportScan['walkedFiles']>().toEqualTypeOf<string[]>();
       expectTypeOf<ScannedFile>().toHaveProperty('imports');
       expectTypeOf<ImportScanCaps>().toHaveProperty('reads');
       expectTypeOf<CachedFile>().toHaveProperty('mtimeMs');

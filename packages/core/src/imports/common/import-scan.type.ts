@@ -57,8 +57,8 @@ export type TsconfigPaths = {
 };
 
 /**
- * `file` is posix, relative to `dir`; only files with at least one import are listed, in walk order. `imports` is the
- * cache's own array (`CachedFile.imports`); never mutate it.
+ * `file` is posix, relative to `dir`. `PackageImportScan.files` lists only files with at least one import, in walk order.
+ * `imports` is the cache's own array (`CachedFile.imports`); never mutate it.
  */
 export type ScannedFile = {
   readonly file: string;
@@ -67,6 +67,11 @@ export type ScannedFile = {
 
 export type PackageImportScan = {
   readonly files: ScannedFile[];
+  /**
+   * Every file the walk listed, in walk order, posix and relative to `dir`: files with no imports, skipped (oversize)
+   * files and files the reads never reached included.
+   */
+  readonly walkedFiles: string[];
   /** `null` when A's `tsconfig.json` chain sets no `paths` (D6). */
   readonly tsconfigPaths: TsconfigPaths | null;
   readonly scanned: number;
