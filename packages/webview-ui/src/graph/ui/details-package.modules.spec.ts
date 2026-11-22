@@ -20,7 +20,10 @@ describe('FEATURE: packageView Show modules', () => {
     it('WHEN built THEN Show modules is shown and draws the list-tree icon before its label', () => {
       const view = packageView({ ...WEB_PACKAGE_STUB, taskCount: 0 }, false);
 
-      expect([view.showModules.hidden, faceOf(view.showModules)]).toStrictEqual([false, ['codicon codicon-list-tree', 'Show modules']]);
+      expect([view.showModules.hidden, faceOf(view.showModules)]).toStrictEqual([
+        false,
+        ['codicon codicon-list-tree', 'Show modules']
+      ]);
     });
   });
 

@@ -13,7 +13,13 @@ import { graphPackageOf } from '../test/utils/graph-model.spec.util.ts';
 import { frozenScanOf, importScanOf, scannedFileOf, sourceImportOf } from '../test/utils/import-scan.spec.util.ts';
 
 const WEB_DIR = join(IMPORT_ROOT, 'apps', 'web');
-const WEB_CTX: ModulesContext = { root: IMPORT_ROOT, packageName: 'web', dir: WEB_DIR, packages: GRAPH_INFOS_STUB, manifestText: null };
+const WEB_CTX: ModulesContext = {
+  root: IMPORT_ROOT,
+  packageName: 'web',
+  dir: WEB_DIR,
+  packages: GRAPH_INFOS_STUB,
+  manifestText: null
+};
 const ROOT_PACKAGE = graphPackageOf('//', '');
 const ROOTED_PACKAGES = [...GRAPH_INFOS_STUB, ROOT_PACKAGE];
 const LONG = `${'x'.repeat(MANIFEST_FILE_MAX + 1)}.ts`;

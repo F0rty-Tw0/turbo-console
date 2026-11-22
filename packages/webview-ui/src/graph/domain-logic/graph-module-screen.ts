@@ -27,7 +27,12 @@ const showFound = (bar: ModulesBarElements, name: string, found: ModulesFound, v
 };
 
 /** Draws the view, then shows the slow notice when more than `MODULE_SHOWN_CAP` leaves are on screen. */
-const drawAndWarn = async (deps: ModuleScreenDeps, found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw): Promise<void> => {
+const drawAndWarn = async (
+  deps: ModuleScreenDeps,
+  found: ModulesFound,
+  view: ModulesViewState,
+  redraw: ModuleRedraw
+): Promise<void> => {
   const { layout, page } = deps;
 
   await layout.draw(found, view, redraw);

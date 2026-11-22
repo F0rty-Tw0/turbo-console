@@ -96,7 +96,13 @@ describe('FEATURE: ViewStateModes', () => {
 
       modes.packages.schedule(PACKAGE_STATE);
 
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, mode: 'packages', task: null, modules: null, panelWidths: null });
+      expect(saver.schedule).toHaveBeenLastCalledWith({
+        ...PACKAGE_STATE,
+        mode: 'packages',
+        task: null,
+        modules: null,
+        panelWidths: null
+      });
     });
   });
 
@@ -132,7 +138,14 @@ describe('FEATURE: ViewStateModes', () => {
 
       modes.packages.schedule({ ...PACKAGE_STATE, zoom: 2 });
 
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, zoom: 2, mode: 'packages', task: TASK, modules: null, panelWidths: null });
+      expect(saver.schedule).toHaveBeenLastCalledWith({
+        ...PACKAGE_STATE,
+        zoom: 2,
+        mode: 'packages',
+        task: TASK,
+        modules: null,
+        panelWidths: null
+      });
     });
 
     it('WHEN a package save for a new hash arrives THEN the task carries across', () => {
@@ -163,7 +176,13 @@ describe('FEATURE: ViewStateModes', () => {
 
       modes.saveTask(NEXT_TASK, 'h1');
 
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, mode: 'tasks', task: NEXT_TASK, modules: null, panelWidths: null });
+      expect(saver.schedule).toHaveBeenLastCalledWith({
+        ...PACKAGE_STATE,
+        mode: 'tasks',
+        task: NEXT_TASK,
+        modules: null,
+        panelWidths: null
+      });
     });
 
     it('WHEN the packages are flushed THEN the saver flushes', () => {
@@ -238,7 +257,13 @@ describe('FEATURE: ViewStateModes', () => {
 
       modes.packages.schedule(PACKAGE_STATE);
 
-      expect(saver.schedule).toHaveBeenLastCalledWith({ ...PACKAGE_STATE, mode: 'packages', task: null, modules: null, panelWidths: WIDTHS });
+      expect(saver.schedule).toHaveBeenLastCalledWith({
+        ...PACKAGE_STATE,
+        mode: 'packages',
+        task: null,
+        modules: null,
+        panelWidths: WIDTHS
+      });
     });
 
     it('WHEN the next package save is for another hash THEN it still carries them', () => {

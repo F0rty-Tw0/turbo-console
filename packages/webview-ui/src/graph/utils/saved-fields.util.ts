@@ -27,4 +27,5 @@ export const readCamera = (zoom: unknown, rawPan: unknown): Viewport | null => {
   return camera;
 };
 
-export const isNameList = (value: unknown): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+export const isNameList = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((entry) => typeof entry === 'string');

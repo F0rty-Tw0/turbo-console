@@ -83,7 +83,9 @@ const wireBar = (page: PageElements, mode: GraphModuleMode): void => {
 };
 
 /** The Packages/Tasks group shows unless the root is a single package, where the toolbar's Show modules shows instead. */
-export const modeGroupHiderOf = (page: Pick<PageElements, 'modeGroup' | 'modeEnd' | 'rootModulesGroup'>): ((isHidden: boolean) => void) => {
+export const modeGroupHiderOf = (
+  page: Pick<PageElements, 'modeGroup' | 'modeEnd' | 'rootModulesGroup'>
+): ((isHidden: boolean) => void) => {
   const hideModes = (isHidden: boolean): void => {
     page.modeGroup.hidden = isHidden;
     page.modeEnd.hidden = isHidden;
@@ -125,7 +127,10 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
 };
 
 /** A host message replaced the page: task and modules mode each take it back on the next graph state. Both are read per call. */
-export const messageSuspenderOf = (tasks: () => Pick<PageTaskMode, 'suspend'>, modules: () => Pick<PageModuleMode, 'suspend'>): (() => void) => {
+export const messageSuspenderOf = (
+  tasks: () => Pick<PageTaskMode, 'suspend'>,
+  modules: () => Pick<PageModuleMode, 'suspend'>
+): (() => void) => {
   const onMessage = (): void => {
     tasks().suspend();
     modules().suspend();

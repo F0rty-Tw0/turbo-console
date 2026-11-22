@@ -16,14 +16,14 @@ describe('FEATURE: buildModulesBar', () => {
     it('WHEN its parts are read THEN it has the bar id, Back, Refresh and the three checked View boxes', () => {
       const bar = buildModulesBar();
 
-      expect([bar.bar.id, bar.back.textContent, bar.refresh.textContent, bar.types.checked, bar.tests.checked, bar.lazies.checked]).toStrictEqual([
-        'graph-modules-bar',
-        'Back',
-        'Refresh',
-        true,
-        true,
-        true
-      ]);
+      expect([
+        bar.bar.id,
+        bar.back.textContent,
+        bar.refresh.textContent,
+        bar.types.checked,
+        bar.tests.checked,
+        bar.lazies.checked
+      ]).toStrictEqual(['graph-modules-bar', 'Back', 'Refresh', true, true, true]);
     });
 
     it('WHEN the banner, Retry and slow notice are read THEN all three start hidden', () => {

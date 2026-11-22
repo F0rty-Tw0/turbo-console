@@ -59,8 +59,10 @@ class GraphPageController {
       modules: () => this.modules.input,
       flow: () => this.flow
     });
-    const tasks = packageTasksOf((): PageTaskMode => this.tasks, deps.now, (): PageModuleMode => this.modules);
-    const onMessage = messageSuspenderOf((): PageTaskMode => this.tasks, (): PageModuleMode => this.modules);
+    const taskMode = (): PageTaskMode => this.tasks;
+    const moduleMode = (): PageModuleMode => this.modules;
+    const tasks = packageTasksOf(taskMode, deps.now, moduleMode);
+    const onMessage = messageSuspenderOf(taskMode, moduleMode);
     const onPlaced = (): void => this.reveal.placed();
     const onLocation = (): void => this.location.update();
     const onExit = (to: GraphViewMode): void => this.routing.exitTo(to);

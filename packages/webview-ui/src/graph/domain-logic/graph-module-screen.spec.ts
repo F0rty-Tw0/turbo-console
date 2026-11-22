@@ -58,12 +58,12 @@ describe('FEATURE: moduleScreenOf', () => {
     it('WHEN it is scanning THEN the bar reads Modules of web and Scanning web…, with Refresh shown and no banner', () => {
       screen.scanning('web');
 
-      expect([page.modules.title.textContent, page.modules.status.textContent, page.modules.refresh.hidden, page.modules.banner.hidden]).toStrictEqual([
-        'Modules of web',
-        'Scanning web…',
-        false,
-        true
-      ]);
+      expect([
+        page.modules.title.textContent,
+        page.modules.status.textContent,
+        page.modules.refresh.hidden,
+        page.modules.banner.hidden
+      ]).toStrictEqual(['Modules of web', 'Scanning web…', false, true]);
     });
 
     it('WHEN it fails THEN the banner reads Could not scan web. with Retry shown', () => {
@@ -80,12 +80,12 @@ describe('FEATURE: moduleScreenOf', () => {
       screen.shown('web', FOUND, WEB_TYPES_OFF, { kind: 'first' });
       await vi.waitFor(() => expect(layout.draw).toHaveBeenCalledOnce());
 
-      expect([page.modules.status.textContent, page.modules.status.title, page.modules.types.checked, page.modules.retry.hidden]).toStrictEqual([
-        '6 files · 9 imports · 4 unresolved',
-        '3 external · 2 assets · 1 self',
-        false,
-        true
-      ]);
+      expect([
+        page.modules.status.textContent,
+        page.modules.status.title,
+        page.modules.types.checked,
+        page.modules.retry.hidden
+      ]).toStrictEqual(['6 files · 9 imports · 4 unresolved', '3 external · 2 assets · 1 self', false, true]);
     });
 
     it('WHEN 301 leaves are drawn THEN the slow notice shows MODULE_SLOW_TEXT', async () => {
@@ -113,12 +113,12 @@ describe('FEATURE: moduleScreenOf', () => {
       screen.failed('web');
       screen.scanning('web');
 
-      expect([page.modules.banner.hidden, page.modules.retry.hidden, page.modules.slow.hidden, layout.clear.mock.calls.length]).toStrictEqual([
-        true,
-        true,
-        true,
-        1
-      ]);
+      expect([
+        page.modules.banner.hidden,
+        page.modules.retry.hidden,
+        page.modules.slow.hidden,
+        layout.clear.mock.calls.length
+      ]).toStrictEqual([true, true, true, 1]);
     });
   });
 });

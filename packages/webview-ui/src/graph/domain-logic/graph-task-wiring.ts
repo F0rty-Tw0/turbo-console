@@ -87,7 +87,11 @@ export const taskModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: Ta
  * Show tasks from the package graph: task mode on every task of the package, offered only for a package with one; Show
  * modules: modules mode on the package. Both modes are read per call, as they are built after the package side.
  */
-export const packageTasksOf = (mode: () => PageTaskMode, now: () => number, modules: () => Pick<PageModuleMode, 'enter'>): PackageTasks => {
+export const packageTasksOf = (
+  mode: () => PageTaskMode,
+  now: () => number,
+  modules: () => Pick<PageModuleMode, 'enter'>
+): PackageTasks => {
   const onShowTasks = (name: string): void => {
     const taskIds = mode().packageTaskIds(name);
 

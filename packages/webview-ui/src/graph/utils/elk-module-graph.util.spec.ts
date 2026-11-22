@@ -79,7 +79,16 @@ describe('FEATURE: nested ELK module graph', () => {
       expect(shapeOf(graph)).toStrictEqual([
         'root',
         [
-          ['dir:', [['dir:src', [['dir:src/lib', ['file:src/lib/b.ts', 'file:src/lib/c.ts']], 'dir:src/ui', 'file:src/a.spec.ts', 'file:src/a.ts']], 'file:index.ts']],
+          [
+            'dir:',
+            [
+              [
+                'dir:src',
+                [['dir:src/lib', ['file:src/lib/b.ts', 'file:src/lib/c.ts']], 'dir:src/ui', 'file:src/a.spec.ts', 'file:src/a.ts']
+              ],
+              'file:index.ts'
+            ]
+          ],
           'pkg:@s/x',
           'pkg:@s/y'
         ]
@@ -95,7 +104,8 @@ describe('FEATURE: nested ELK module graph', () => {
 
     it('WHEN the ELK input is built THEN every scene link is a root edge and no compound holds an edge', () => {
       const ids = SCENE.links.map((link) => edgeIdOf(link));
-      const inner = nodesOf(graph).slice(1).filter((node) => node.edges !== undefined);
+      const compounds = nodesOf(graph).slice(1);
+      const inner = compounds.filter((node) => node.edges !== undefined);
 
       expect(graph.edges?.map((edge) => edge.id)).toStrictEqual(ids);
       expect(inner).toStrictEqual([]);

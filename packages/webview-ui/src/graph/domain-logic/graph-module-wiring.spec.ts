@@ -69,7 +69,11 @@ describe('FEATURE: modules bar wiring', () => {
 
       mock.page.modules.back.click();
 
-      expect([entered, classList.contains(TASK_MODE_CLASS), classList.contains(MODULES_MODE_CLASS)]).toStrictEqual([true, true, false]);
+      expect([entered, classList.contains(TASK_MODE_CLASS), classList.contains(MODULES_MODE_CLASS)]).toStrictEqual([
+        true,
+        true,
+        false
+      ]);
     });
   });
 
@@ -170,12 +174,12 @@ describe('FEATURE: modules bar wiring', () => {
       controller.receive({ type: 'state', state: WEB_LISTED });
       await mock.runs.settle(runs, resultOf('modules', {}));
 
-      expect([mock.page.message.hidden, mock.page.toolbar.hidden, mock.page.body.hidden, mock.view.fit.mock.calls.length]).toStrictEqual([
-        true,
-        false,
-        false,
-        fits
-      ]);
+      expect([
+        mock.page.message.hidden,
+        mock.page.toolbar.hidden,
+        mock.page.body.hidden,
+        mock.view.fit.mock.calls.length
+      ]).toStrictEqual([true, false, false, fits]);
     });
   });
 

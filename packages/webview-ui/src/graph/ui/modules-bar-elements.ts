@@ -25,7 +25,12 @@ const checkedBox = (): HTMLInputElement => {
 };
 
 /** The View group: the three kind toggles, then Reset view. */
-const viewGroup = (types: HTMLInputElement, tests: HTMLInputElement, lazies: HTMLInputElement, reset: HTMLButtonElement): HTMLElement => {
+const viewGroup = (
+  types: HTMLInputElement,
+  tests: HTMLInputElement,
+  lazies: HTMLInputElement,
+  reset: HTMLButtonElement
+): HTMLElement => {
   const group = textElement('div', 'modules-bar-view', '');
   const typesField = checkField(MODULE_TYPES_LABEL, types);
   const testsField = checkField(MODULE_TESTS_LABEL, tests);
@@ -74,7 +79,21 @@ export const buildModulesBar = (): ModulesBarElements => {
   slow.hidden = true;
   bar.append(back, title, refresh, status, view, banner, slow);
 
-  const elements: ModulesBarElements = { bar, back, title, refresh, status, banner, bannerText, retry, slow, types, tests, lazies, reset };
+  const elements: ModulesBarElements = {
+    bar,
+    back,
+    title,
+    refresh,
+    status,
+    banner,
+    bannerText,
+    retry,
+    slow,
+    types,
+    tests,
+    lazies,
+    reset
+  };
 
   return elements;
 };

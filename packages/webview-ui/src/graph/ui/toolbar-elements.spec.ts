@@ -155,12 +155,12 @@ describe('FEATURE: buildToolbar', () => {
     it('WHEN the root Show modules group is read THEN it is hidden, third in the toolbar, and holds one Show modules button', () => {
       const group = elements.toolbar.children[2];
 
-      expect([elements.rootModulesGroup.hidden, group, elements.rootModulesGroup.children.length, elements.rootModules.title]).toStrictEqual([
-        true,
-        elements.rootModulesGroup,
-        1,
-        'Show modules'
-      ]);
+      expect([
+        elements.rootModulesGroup.hidden,
+        group,
+        elements.rootModulesGroup.children.length,
+        elements.rootModules.title
+      ]).toStrictEqual([true, elements.rootModulesGroup, 1, 'Show modules']);
     });
   });
 });

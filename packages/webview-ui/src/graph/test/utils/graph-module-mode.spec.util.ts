@@ -40,7 +40,14 @@ export const ROOT_LISTED: GraphReady = { ...STATE_STUB, singlePackage: true, roo
 export const moduleModeRigOf = (modes: ModuleModes, isTaskMode = false): ModuleModeRig => {
   const post = vi.fn<Bridge['post']>();
   const bridge = { post };
-  const screen: Mocked<ModuleScreen> = { enter: vi.fn(), scanning: vi.fn(), shown: vi.fn(), failed: vi.fn(), reshow: vi.fn(), exit: vi.fn() };
+  const screen: Mocked<ModuleScreen> = {
+    enter: vi.fn(),
+    scanning: vi.fn(),
+    shown: vi.fn(),
+    failed: vi.fn(),
+    reshow: vi.fn(),
+    exit: vi.fn()
+  };
   const tasks: Mocked<ModuleTaskSide> = { isActive: vi.fn(() => isTaskMode), leave: vi.fn() };
   const onExit = vi.fn<(to: ModuleExit) => void>();
   const notice = vi.fn<(text: string) => void>();
