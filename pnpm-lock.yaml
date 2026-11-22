@@ -300,6 +300,9 @@ importers:
       turbo:
         specifier: catalog:dev
         version: 2.11.7
+      typescript:
+        specifier: catalog:dev
+        version: 6.0.3
 
   packages/repo-gen:
     devDependencies:

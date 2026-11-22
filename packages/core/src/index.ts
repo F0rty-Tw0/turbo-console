@@ -49,6 +49,10 @@ export { aliasTargetsOf } from './imports/utils/alias-targets.util.ts';
 
 export { isNameOf } from './imports/utils/specifier-name.util.ts';
 
+export { moduleGraphOf } from './imports/utils/module-graph.util.ts';
+
+export type { ModuleCounts, ModuleGraph, ModuleGraphInput, ModuleLink, WorkspaceTarget } from './imports/common/module-graph.type.ts';
+
 export type {
   CachedFile,
   ImportScanCaps,
