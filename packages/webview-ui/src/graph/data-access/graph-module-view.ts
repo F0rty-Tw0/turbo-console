@@ -8,7 +8,7 @@ import { MODULE_BOX_CLASS, MODULE_DIR_CLASS, MODULE_FILE_CLASS, MODULE_STUB_CLAS
 import { TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
 import type { ModuleCanvas, ModuleDrawing, ModuleElementKind } from '../common/module-canvas.type.ts';
 import type { ModuleBox, ModuleLeaf, ModuleScene } from '../common/module-scene.type.ts';
-import { paintedAfterRedrawOf } from '../utils/module-painted.util.ts';
+import { keepsSelection, paintTargetOf } from '../utils/module-painted.util.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 
 type KindClass = [ModuleElementKind, string];
@@ -85,32 +85,43 @@ const drawModules = (cy: Core, drawing: ModuleDrawing): void => {
   cy.add(elements);
 };
 
+/** `chosen` while `scene` keeps it; `null` once it drops it or with nothing chosen. */
+const keptChoiceOf = (chosen: string | null, scene: ModuleScene): string | null => {
+  if (chosen === null) return null;
+
+  const isKept = keepsSelection(chosen, scene);
+
+  return isKept ? chosen : null;
+};
+
 /**
  * The modules graph on `cy`, the core the package and task graphs share; showing it removes what they drew. A drag
- * unroutes only module links, so it leaves the other modes' edges as they are. It keeps the painted card across a
- * redraw, or paints the folder card just collapsed over it; `clear` forgets it.
+ * unroutes only module links, so it leaves the other modes' edges as they are. It keeps the chosen card apart from what
+ * it paints: a redraw keeps the choice while a card holds it and paints that card, the folder collapsed over it or the
+ * card itself once the folder opens again, so a folder tap never changes the choice; `clear` forgets it.
  */
 export const createModuleCanvas = (cy: Core): ModuleCanvas => {
   cy.on('drag', 'node', unrouteDragged);
 
-  let drawn: ModuleScene | null = null;
-  let painted: string | null = null;
+  let chosen: string | null = null;
   const paint = (id: string | null): void => {
-    painted = id;
+    chosen = id;
     paintModules(cy, id);
   };
   const show = (drawing: ModuleDrawing): void => {
-    const kept = paintedAfterRedrawOf(painted, drawn, drawing.scene);
+    const kept = keptChoiceOf(chosen, drawing.scene);
 
     drawModules(cy, drawing);
-    drawn = drawing.scene;
-    painted = kept;
+    chosen = kept;
 
-    if (kept !== null) paintModules(cy, kept);
+    if (kept === null) return;
+
+    const target = paintTargetOf(kept, drawing.scene);
+
+    paintModules(cy, target);
   };
   const clear = (): void => {
-    drawn = null;
-    painted = null;
+    chosen = null;
     cy.elements().remove();
   };
   const kindOf = (id: string): ModuleElementKind | null => kindOfNode(cy.getElementById(id));

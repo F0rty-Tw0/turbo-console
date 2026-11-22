@@ -16,11 +16,14 @@ export type ModuleDrawing = {
 
 /** The modules graph on the one Cytoscape core; `show` removes every element first, as the task canvas does. */
 export type ModuleCanvas = {
-  /** Draws `drawing`, painting again the card painted before, or the folder card now collapsed over it. */
+  /**
+   * Draws `drawing` and keeps the chosen card while a card holds it, painting that card: the chosen one, or the folder
+   * card now collapsed over it. Otherwise, as for a test file now hidden, the choice is dropped and nothing is painted.
+   */
   readonly show: (drawing: ModuleDrawing) => void;
-  /** Removes every element and forgets the painted card. */
+  /** Removes every element and forgets the chosen card. */
   readonly clear: () => void;
-  /** `id` selected and its 1-hop neighbours highlighted, the rest dimmed; `null` paints all normal. */
+  /** Chooses `id`: it is selected and its 1-hop neighbours highlighted, the rest dimmed; `null` paints all normal. */
   readonly paint: (id: string | null) => void;
   readonly kindOf: (id: string) => ModuleElementKind | null;
   /** The element's centre in container px; `null` when not drawn. */

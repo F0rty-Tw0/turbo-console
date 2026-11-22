@@ -6,7 +6,7 @@ import { createModuleCanvas } from './graph-module-view.ts';
 import type { EdgeRoute, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import { MODULE_LAZY_CLASS, MODULE_LINK_CLASS, MODULE_ROUTED_CLASS, MODULE_TYPE_CLASS } from '../common/graph-module.const.ts';
 import type { ModuleCanvas, ModuleDrawing } from '../common/module-canvas.type.ts';
-import type { ModuleScene } from '../common/module-scene.type.ts';
+import type { ModuleScene, ModuleShown } from '../common/module-scene.type.ts';
 import { ALL_SHOWN_STUB, MODULES_FOUND_STUB, MODULE_MEASURES_STUB } from '../test/stubs/module-scene.stub.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { moduleSceneOf } from '../utils/module-scene.util.ts';
@@ -20,6 +20,10 @@ const SCENE: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [
 
 const LIB_OPEN: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src', 'src/lib'], shown: ALL_SHOWN_STUB });
 
+const TESTS_HIDDEN: ModuleShown = { ...ALL_SHOWN_STUB, tests: false };
+
+const NO_TESTS: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src'], shown: TESTS_HIDDEN });
+
 /** No centre listed: every card is drawn at the origin. */
 const AT_ORIGIN: Positions = {};
 
@@ -30,6 +34,8 @@ const LIB_ID = 'dir:src/lib';
 const B_ID = 'file:src/lib/b.ts';
 
 const X_ID = 'pkg:@s/x';
+
+const SPEC_ID = 'file:src/a.spec.ts';
 
 const A_LIB_ID = edgeIdOf({ source: A_ID, target: LIB_ID });
 
@@ -174,6 +180,26 @@ describe('FEATURE: createModuleCanvas', () => {
       canvas.show(drawingOf(SCENE));
 
       expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([LIB_ID]);
+    });
+
+    it('WHEN src/lib is closed and opened again THEN b.ts is selected again', () => {
+      canvas.show(drawingOf(SCENE));
+      canvas.show(drawingOf(LIB_OPEN));
+
+      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([B_ID]);
+    });
+  });
+
+  describe('GIVEN web drawn with src open and the test file a.spec.ts painted', () => {
+    beforeEach(() => {
+      canvas.paint(SPEC_ID);
+    });
+
+    it('WHEN test files are hidden and shown again THEN nothing is selected, as hiding dropped the choice', () => {
+      canvas.show(drawingOf(NO_TESTS));
+      canvas.show(drawingOf(SCENE));
+
+      expect(cy.$('.selected')).toHaveLength(0);
     });
   });
 
