@@ -1,6 +1,5 @@
-import { posix, relative, sep } from 'node:path';
+import { posix, sep } from 'node:path';
 
-import { isWithin } from '../../shared/fs/utils/path-within.util.ts';
 import { SOURCE_SUFFIXES } from '../common/import-scan.const.ts';
 import { ASSET_SUFFIXES, JS_EXTENSION_SWAPS } from '../common/module-graph.const.ts';
 import type { ModuleBucket, ModuleResolveContext, ModuleTarget } from '../common/module-graph.type.ts';
@@ -21,12 +20,31 @@ const ownersOf = (context: ModuleResolveContext): Owner[] => {
   return owners;
 };
 
+/**
+ * `path` is `dir` or lies below it, both resolved absolute paths. An exact-case prefix test: `path.relative` re-resolves
+ * and lowercases both sides on win32, which made it the bench hot spot (spec §11 already leaves case mismatch a gap).
+ */
+const isUnder = (dir: string, path: string): boolean => {
+  const withSep = dir + sep;
+  const prefix = dir.endsWith(sep) ? dir : withSep;
+
+  return path === dir || path.startsWith(prefix);
+};
+
+/** `path` relative to `dir` with posix separators; `path` must satisfy `isUnder(dir, path)`. */
+const posixFrom = (dir: string, path: string): string => {
+  const pastSep = dir.length + 1;
+  const start = dir.endsWith(sep) ? dir.length : pastSep;
+
+  return path.slice(start).replaceAll(sep, '/');
+};
+
 /** The deepest package dir that contains `path`; the package being resolved wins a tie. */
 const ownerOf = (path: string, context: ModuleResolveContext): Owner | null => {
   let best: Owner | null = null;
 
   for (const owner of ownersOf(context)) {
-    const isInside = isWithin(owner.dir, path);
+    const isInside = isUnder(owner.dir, path);
 
     if (!isInside) continue;
 
@@ -38,16 +56,23 @@ const ownerOf = (path: string, context: ModuleResolveContext): Owner | null => {
   return best;
 };
 
-/** The walked files `r` may name, in probe order: the JS extension swap, `r` itself, `r` plus a suffix, then `r/index` plus a suffix. */
-const candidatesOf = (r: string): string[] => {
+/**
+ * The first walked file `r` names, in probe order: the JS extension swap, `r` itself, `r` plus a suffix, then `r/index`
+ * plus a suffix. Lazy: it stops at the first hit, so the common case builds one or two strings.
+ */
+const walkedFileOf = (r: string, walked: ReadonlySet<string>): string | undefined => {
   const extension = posix.extname(r);
   const stem = r.slice(0, r.length - extension.length);
   const swaps = JS_EXTENSION_SWAPS.get(extension) ?? [];
+  const indexDir = r === '' ? '' : `${r}/`;
   const swapped = swaps.map((suffix) => stem + suffix);
-  const suffixed = SOURCE_SUFFIXES.map((suffix) => r + suffix);
-  const indexes = SOURCE_SUFFIXES.map((suffix) => posix.join(r, `index${suffix}`));
+  const probes = [...swapped, r];
 
-  return [...swapped, r, ...suffixed, ...indexes];
+  return (
+    probes.find((candidate) => walked.has(candidate)) ??
+    SOURCE_SUFFIXES.map((suffix) => r + suffix).find((candidate) => walked.has(candidate)) ??
+    SOURCE_SUFFIXES.map((suffix) => `${indexDir}index${suffix}`).find((candidate) => walked.has(candidate))
+  );
 };
 
 /**
@@ -69,8 +94,8 @@ export const placeOf = (path: string, context: ModuleResolveContext): ModuleTarg
     return stub;
   }
 
-  const r = relative(context.dir, path).replaceAll(sep, '/');
-  const file = candidatesOf(r).find((candidate) => context.walked.has(candidate));
+  const r = posixFrom(context.dir, path);
+  const file = walkedFileOf(r, context.walked);
 
   if (file !== undefined) {
     const found: ModuleTarget = { kind: 'file', file };

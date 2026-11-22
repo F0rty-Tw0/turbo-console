@@ -18,6 +18,8 @@ type PlaceRow = {
 const UNRESOLVED: ModuleTarget = { kind: 'unresolved' };
 const ASSETS: ModuleTarget = { kind: 'assets' };
 const OUTSIDE = resolve('/ws/z/q.ts');
+/** `/ws/x/ab/i.css`: starts with the text of `A_DIR` but lies outside it, so no package owns it (not `assets`). */
+const PREFIX_TWIN = join(`${A_DIR}b`, 'i.css');
 const ROOT_PACKAGE: WorkspaceTarget = { name: '//', names: ['//'], dir: null };
 
 const NESTED_B: Partial<ModuleResolveContext> = { others: [targetOf(B_DIR, 'b')] };
@@ -70,6 +72,7 @@ const ROWS: PlaceRow[] = [
   },
   { label: 'an exact walked `.js` file', walked: ['src/a.js'], path: inA('src/a.js'), patch: {}, target: fileOf('src/a.js') },
   { label: 'a path escapes every package', walked: [], path: OUTSIDE, patch: {}, target: UNRESOLVED },
+  { label: 'a sibling dir that shares the name prefix', walked: [], path: PREFIX_TWIN, patch: {}, target: UNRESOLVED },
   { label: 'a path into a nested package', walked: [], path: join(B_DIR, 'src/x.ts'), patch: NESTED_B, target: stubOf('b') },
   { label: 'an ancestor package', walked: ['src/x.ts'], path: join(B_DIR, 'src/x.ts'), patch: ANCESTOR_A, target: fileOf('src/x.ts') },
   { label: 'nested a ⊃ b ⊃ c, deepest owner', walked: [], path: join(C_DIR, 'i.ts'), patch: NESTED_B_C, target: stubOf('c') },
