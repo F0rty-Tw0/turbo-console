@@ -5,6 +5,7 @@ const SPEC_7 = { description: 'M3-1 spec 7.7, 4 (Feeds: graph)', type: 'requirem
 const BLANK = GLYPH_CODE_POINTS.blank;
 const HISTORY = GLYPH_CODE_POINTS.history;
 const QUESTION = GLYPH_CODE_POINTS.question;
+const TASK_IDS = ['app#build', 'lib#build', 'ui#build'];
 const PACKAGES = ['app', 'lib', 'ui'];
 const PREDICTIONS = { 'app#build': 'cached', 'lib#build': 'unknown', 'ui#build': 'notCached' } as const;
 const TICKED = { type: 'setViewToggle', toggle: 'prediction', shown: true } as const;
@@ -16,11 +17,7 @@ test.describe('FEATURE: graph cache prediction', () => {
     async ({ graphPrediction, graphTaskHost, graphGlyphs, graphTask }): Promise<void> => {
       await test.step('WHEN the page is opened with predictionShown true', async () => graphPrediction.open(true));
 
-      await test.step('THEN the three tasks start blank', async () => {
-        await graphGlyphs.expectFirstChar('app#build', BLANK);
-        await graphGlyphs.expectFirstChar('lib#build', BLANK);
-        await graphGlyphs.expectFirstChar('ui#build', BLANK);
-      });
+      await test.step('THEN the three tasks start blank', async () => graphGlyphs.expectFirstChars(TASK_IDS, BLANK));
 
       await test.step('WHEN the host sends runs with the three predictions', async () => graphTaskHost.sendRuns({}, PREDICTIONS));
 
@@ -51,11 +48,7 @@ test.describe('FEATURE: graph cache prediction', () => {
 
       await test.step('WHEN the host sends runs with no run and predictions {}', async () => graphTaskHost.sendRuns({}, {}));
 
-      await test.step('THEN all three are blank again', async () => {
-        await graphGlyphs.expectFirstChar('app#build', BLANK);
-        await graphGlyphs.expectFirstChar('lib#build', BLANK);
-        await graphGlyphs.expectFirstChar('ui#build', BLANK);
-      });
+      await test.step('THEN all three are blank again', async () => graphGlyphs.expectFirstChars(TASK_IDS, BLANK));
     }
   );
 

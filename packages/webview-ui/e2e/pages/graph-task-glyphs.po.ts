@@ -112,6 +112,11 @@ export class GraphTaskGlyphs {
     await expect.poll(async (): Promise<string | null> => this.firstCharOf(id)).toBe(glyph);
   }
 
+  /** The text drawn on each task in `ids` starts with `glyph`. */
+  public async expectFirstChars(ids: string[], glyph: string): Promise<void> {
+    for (const id of ids) await this.expectFirstChar(id, glyph);
+  }
+
   /** The node `id` is drawn `width` px wide; every glyph state of one node gives one width. */
   public async expectWidthOf(id: string, width: number): Promise<void> {
     await expect.poll(async (): Promise<number | null> => this.widthOf(id)).toBe(width);

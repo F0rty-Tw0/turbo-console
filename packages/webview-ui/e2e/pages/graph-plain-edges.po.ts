@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { GraphFoldersPage } from './graph-folders.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
@@ -17,10 +17,15 @@ const PLAIN_LINE = 'bezier auto';
 /** How far around a line's midpoint the screen is read, so a rounding of the midpoint cannot miss a 1 px line. */
 const INK_RADIUS_PX = 2;
 
+/** The least share of the way from the box fill to the edge colour the line's inkiest pixel reaches: a 0.75 px line is anti-aliased. */
+const MIN_INK = 0.25;
+
 /** The distinct drawn folder link styles while folder links show, and while none do. */
 const LINK_STYLES: Record<FolderLinksShown, string[]> = { some: [PLAIN_LINE], none: [] };
 
 type DrawnStyle = Pick<ProbeEdge, 'curveStyle' | 'zCompoundDepth'>;
+
+type EdgeEnds = Pick<ProbeEdge, 'source' | 'target'>;
 
 const drawnStyleOf = (edge: DrawnStyle): string => `${edge.curveStyle} ${edge.zCompoundDepth}`;
 
@@ -46,6 +51,21 @@ export class GraphPlainEdges {
   /** At least one drawn line crosses the title band or the body of a drawn folder box that holds neither of its ends. */
   public async expectSomeLineThroughForeignBoxes(): Promise<void> {
     await expect.poll(async (): Promise<number> => this.foreignBoxHitCount()).toBeGreaterThan(0);
+  }
+
+  /**
+   * Polls until the line between `ends` reaches `MIN_INK` over the box `fill` (`inkOnEdge`), then records the ink it
+   * reached as an `edge-ink` annotation for `label`.
+   */
+  public async expectInkOnEdge(ends: EdgeEnds, fill: Rgb, edge: Rgb, label: string): Promise<void> {
+    const { source, target } = ends;
+    const inkOf = async (): Promise<number> => this.inkOnEdge(source, target, fill, edge);
+
+    await expect.poll(inkOf, { message: `no edge ink at the ${source} to ${target} midpoint` }).toBeGreaterThanOrEqual(MIN_INK);
+
+    const ink = await inkOf();
+
+    test.info().annotations.push({ type: 'edge-ink', description: `${label}: ${ink.toFixed(2)}` });
   }
 
   /** The midpoint of the drawn package edge from `source` to `target`, in page px. */
