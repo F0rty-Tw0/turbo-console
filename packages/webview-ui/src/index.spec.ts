@@ -47,6 +47,7 @@ import type {
   ManifestEntry,
   ManifestField,
   MissingPackage,
+  ModulesViewState,
   OpenPackageJsonMessage,
   PackageDetails,
   Positions,
@@ -272,8 +273,9 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<Routes[string]>().toEqualTypeOf<ExpectedEdgeRoute>();
       expectTypeOf<GraphViewState['selected']>().toEqualTypeOf<string | null>();
       expectTypeOf<TaskViewState>().toEqualTypeOf<ExpectedTaskView>();
-      expectTypeOf<GraphViewState['mode']>().toEqualTypeOf<'packages' | 'tasks'>();
+      expectTypeOf<GraphViewState['mode']>().toEqualTypeOf<'packages' | 'tasks' | 'modules'>();
       expectTypeOf<GraphViewState['task']>().toEqualTypeOf<TaskViewState | null>();
+      expectTypeOf<GraphViewState['modules']>().toEqualTypeOf<ModulesViewState | null>();
     });
   });
 });

@@ -85,7 +85,7 @@ export type {
   Routes
 } from './bridge/common/graph-state.type.ts';
 
-export type { GraphViewState, TaskViewState } from './bridge/common/graph-view-state.type.ts';
+export type { GraphViewState, ModulesViewState, TaskViewState } from './bridge/common/graph-view-state.type.ts';
 
 export type { WebviewSlots } from './shell/common/webview-html.type.ts';
 

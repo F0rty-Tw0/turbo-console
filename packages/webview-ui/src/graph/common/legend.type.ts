@@ -61,6 +61,9 @@ export type LegendSwatch = {
 /** Draws the legend in `colors`, with the affected rows of `affected`'s level, or none for `null`. */
 export type LegendRender = (colors: ThemeColors, affected: GraphAffected['mode'] | null) => void;
 
+/** The modes that draw a legend list; modules mode has none. */
+export type LegendMode = Exclude<GraphViewMode, 'modules'>;
+
 export type LegendRow = {
   readonly id: string;
   readonly text: string;
@@ -80,6 +83,6 @@ export type LegendElements = {
   readonly legend: HTMLButtonElement;
   /** `div.graph-legend[popover=auto]`, last child of the toolbar; `role=region`, `aria-labelledby` its heading. */
   readonly legendPanel: HTMLElement;
-  /** `dl.legend-list` per mode, filled by `renderLegend`; CSS shows the one for the page's mode. */
-  readonly legendLists: Readonly<Record<GraphViewMode, HTMLElement>>;
+  /** `dl.legend-list` per legend mode, filled by `renderLegend`; CSS shows the one for the page's mode. */
+  readonly legendLists: Readonly<Record<LegendMode, HTMLElement>>;
 };

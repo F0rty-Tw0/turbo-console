@@ -48,6 +48,7 @@ const VALID: GraphViewState = {
   collapsed: ['apps', '__proto__'],
   mode: 'packages',
   task: null,
+  modules: null,
   panelWidths: PANEL_WIDTHS
 };
 
@@ -70,6 +71,7 @@ const DEFAULTED: GraphViewState = {
   collapsed: [],
   mode: 'packages',
   task: null,
+  modules: null,
   panelWidths: null
 };
 

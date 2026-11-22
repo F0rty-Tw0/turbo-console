@@ -1,6 +1,7 @@
 import type {
   GraphViewMode,
   GraphViewState,
+  ModulesViewState,
   PackageViewState,
   PanelWidths,
   TaskViewState
@@ -13,10 +14,10 @@ import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 type StateWithoutWidths = Omit<GraphViewState, 'panelWidths'>;
 
 /**
- * The one save path for both modes. A package save keeps the mode and the last task view; in task mode it writes nothing,
- * since task mode saves the shared `controlsOpen` and `detailsOpen` itself and the package fields wait for package mode,
- * except the Group by folder choice: `saveGrouped` writes `grouped` and `fitted` from either mode.
- * Every write carries the panel widths, which no mode owns.
+ * The one save path for every mode. A package save writes only in package mode and keeps the last task view; in task or
+ * modules mode it writes nothing, since task mode saves the shared `controlsOpen` and `detailsOpen` itself and the package
+ * fields wait for package mode, except the Group by folder choice: `saveGrouped` writes `grouped` and `fitted` from any mode.
+ * Every write carries the panel widths, which no mode owns, and keeps the modules view.
  */
 export class ViewStateModes {
   public readonly packages: PackageSaver;
@@ -46,6 +47,10 @@ export class ViewStateModes {
     return this.last?.task ?? null;
   }
 
+  public modules(): ModulesViewState | null {
+    return this.last?.modules ?? null;
+  }
+
   public current(): GraphViewState | null {
     return this.last;
   }
@@ -71,6 +76,14 @@ export class ViewStateModes {
   public saveTask(task: TaskViewState, hash: string): void {
     const base = this.last ?? freshViewStateOf(hash);
     const state: GraphViewState = { ...base, mode: 'tasks', task };
+
+    this.write(state);
+  }
+
+  /** Writes `modules` over the last state, or the fresh state of `hash` with nothing saved, in modules mode. */
+  public saveModules(modules: ModulesViewState, hash: string): void {
+    const base = this.last ?? freshViewStateOf(hash);
+    const state: GraphViewState = { ...base, mode: 'modules', modules };
 
     this.write(state);
   }
@@ -109,14 +122,15 @@ export class ViewStateModes {
     this.write(last);
   }
 
-  /** Task mode owns the panels' open state, so a package save then would write the package side's stale copy. */
+  /** Task and modules mode cover the package graph, so a package save then would write the package side's stale copy. */
   private schedulePackages(state: PackageViewState): void {
-    const isTaskMode = this.mode() === 'tasks';
+    const isPackageMode = this.mode() === 'packages';
 
-    if (isTaskMode) return;
+    if (!isPackageMode) return;
 
     const task = this.task();
-    const kept: StateWithoutWidths = { ...state, mode: 'packages', task };
+    const modules = this.modules();
+    const kept: StateWithoutWidths = { ...state, mode: 'packages', task, modules };
 
     this.write(kept);
   }
