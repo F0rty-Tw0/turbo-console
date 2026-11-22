@@ -51,7 +51,7 @@ type PageParts = {
   readonly message: HTMLElement;
   readonly messageText: HTMLElement;
   readonly reload: HTMLButtonElement;
-  /** `nav.graph-location`, directly before the body and shown with it: where the graph is, in both modes. */
+  /** `nav.graph-location`, directly before the body and shown with it: where the graph is, in package and task mode; modules mode hides it. */
   readonly location: LocationBarElements;
   /**
    * `div.graph-body`: the controls panel, once a graph shows, the Controls sash, the container, the flow overlay, the widget

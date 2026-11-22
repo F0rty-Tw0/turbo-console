@@ -241,14 +241,16 @@ p {
 
 /*
  * Modules mode draws one package's modules: the package Controls, Details and widgets have nothing to act on. It has no
- * legend either, so the Legend button goes, and a Legend left open (a host showModules does not close it) is hidden.
+ * legend either, so the Legend button goes, and a Legend left open (a host showModules does not close it) is hidden. The
+ * location bar goes too: its trail and crumbs belong to the package graph, and the modules bar names the package.
  */
 .modules-mode #graph-controls,
 .modules-mode #graph-details,
 .modules-mode .widget-row,
 .modules-mode .widget-toolbar-package,
 .modules-mode .legend-button,
-.modules-mode .graph-legend {
+.modules-mode .graph-legend,
+.modules-mode .graph-location {
   display: none;
 }
 
