@@ -1,3 +1,8 @@
+import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+
+/** The kinds a modules view with nothing saved shows: every kind but test files. */
+export const FRESH_MODULES_SHOWN: ModulesViewState['shown'] = { types: true, tests: false, lazies: true };
+
 /** Past this many drawn leaves the module view warns that drawing can be slow (D10). */
 export const MODULE_SHOWN_CAP = 300;
 
