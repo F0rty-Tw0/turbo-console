@@ -26,7 +26,8 @@ export type ModuleCanvas = {
   /**
    * Chooses `id` and paints the card that holds it in the scene drawn last (the folder card collapsed over a file):
    * that card is selected and its 1-hop neighbours highlighted, the rest dimmed; `null`, or no card holding it, paints
-   * all normal.
+   * all normal. It keeps the choice even when no card holds it, so a caller checks `keepsSelection` first; the next
+   * `show` then drops it.
    */
   readonly paint: (id: string | null) => void;
   readonly kindOf: (id: string) => ModuleElementKind | null;
