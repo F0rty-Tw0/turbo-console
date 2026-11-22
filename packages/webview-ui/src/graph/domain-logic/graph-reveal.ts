@@ -1,5 +1,5 @@
 import type { DrawnGraph } from '../common/graph-page.type.ts';
-import type { RevealDeps } from '../common/graph-reveal.type.ts';
+import type { RevealDeps, RevealPackageSide, RevealTaskMode } from '../common/graph-reveal.type.ts';
 import { REVEAL_ZOOM, REVEAL_ZOOM_MIN } from '../common/graph.const.ts';
 import { folderOf } from '../utils/folder-group.util.ts';
 import { revealFiltersOf } from '../utils/reveal-filters.util.ts';
@@ -103,3 +103,12 @@ export class PackageReveal {
     inspection.select(name);
   }
 }
+
+/** The package reveal the host's `showPackage`, the task owner button and the location bar's package crumb call. */
+export const packageRevealOf = (tasks: RevealTaskMode, packages: RevealPackageSide, view: RevealDeps['view']): PackageReveal => {
+  const { layouts, filtering } = packages;
+  const drawn = (): DrawnGraph | null => packages.drawnGraph();
+  const reveal = new PackageReveal({ tasks, layouts, drawn, filtering, inspection: filtering.inspection, view });
+
+  return reveal;
+};

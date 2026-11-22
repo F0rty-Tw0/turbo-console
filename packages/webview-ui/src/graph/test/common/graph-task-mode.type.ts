@@ -36,7 +36,7 @@ export type TaskModeRig = {
   readonly panel: Mocked<TaskPanel>;
   readonly controls: Mocked<TaskControls>;
   readonly details: Mocked<TaskDetails>;
-  readonly onExit: Mock<() => void>;
+  readonly onExit: Mock<(to: 'packages' | 'modules') => void>;
   /** Called after each panel write of a shown set and after leaving, so the location bar reads again. */
   readonly onLocation: Mock<() => void>;
   readonly onFailure: Mock<(error: unknown) => void>;
