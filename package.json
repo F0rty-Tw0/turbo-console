@@ -15,6 +15,7 @@
     "jiti": "catalog:dev",
     "lint-suite": "catalog:dev",
     "prettier": "catalog:dev",
+    "supports-color": "catalog:dev",
     "turbo": "catalog:dev",
     "typescript": "catalog:dev",
     "typescript-eslint": "catalog:dev",

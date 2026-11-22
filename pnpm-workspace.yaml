@@ -28,6 +28,10 @@ catalogs:
     simple-icons: '16.37.0'
     svg2ttf: '6.1.0'
     svgicons2svgfont: '16.0.0'
+    # Root-only pin for debug's optional supports-color peer. chalk 4 brings 7.2.0 and stylelint's supports-hyperlinks
+    # brings 10.2.2, so without it the root and the packages resolved different peers and eslint, typescript-eslint,
+    # lint-suite and stylelint installed twice. Peers resolve from the workspace root first, so one variant installs.
+    supports-color: '10.2.2'
     turbo: '2.11.7'
     # TS 6 stays for typescript-eslint and editors; TS 7 runs typecheck and declaration emit.
     typescript: '6.0.3'
