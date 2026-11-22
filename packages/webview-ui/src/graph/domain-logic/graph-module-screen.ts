@@ -41,8 +41,9 @@ const drawAndWarn = async (deps: ModuleScreenDeps, found: ModulesFound, view: Mo
 /**
  * The modules screen (spec §7.4): the `modules-mode` class on the page, which shows the modules bar, and the mode buttons,
  * neither pressed while it shows. Waiting and Loading empty the canvas and read "Scanning <P>…"; Shown writes the bar and
- * draws; Failed shows "Could not scan <P>." with Retry and empties the canvas only when no graph is drawn; leaving clears
- * it and presses Packages again, which task mode's enter undoes on a leave to tasks.
+ * draws; Failed shows "Could not scan <P>." with Retry and empties the canvas only when no graph is drawn; `reshow` takes
+ * the page back from a host message; leaving clears it and presses Packages again, which task mode's enter undoes on a
+ * leave to tasks.
  */
 export const moduleScreenOf = (deps: ModuleScreenDeps): ModuleScreen => {
   const { page, layout, canvas } = deps;
@@ -73,12 +74,13 @@ export const moduleScreenOf = (deps: ModuleScreenDeps): ModuleScreen => {
 
     if (drawn === null) canvas.clear();
   };
+  const reshow = (): void => deps.showGraph(false);
   const exit = (): void => {
     layout.clear();
     page.root.classList.remove(MODULES_MODE_CLASS);
     page.packagesMode.setAttribute('aria-pressed', 'true');
   };
-  const screen: ModuleScreen = { enter, scanning, shown, failed, exit };
+  const screen: ModuleScreen = { enter, scanning, shown, failed, reshow, exit };
 
   return screen;
 };

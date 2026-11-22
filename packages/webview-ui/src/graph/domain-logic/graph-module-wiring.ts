@@ -15,6 +15,7 @@ import type { ModuleBox, ModuleLeaf, ModuleMeasures, ModuleShown } from '../comm
 import type { ModulesBarElements } from '../common/modules-bar.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
+import type { PageTaskMode } from '../common/page-task-mode.type.ts';
 import { defaultExpandedOf } from '../utils/module-expand.util.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
@@ -101,7 +102,7 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
   const measures = measuresOf(deps);
   const onFailure = (error: unknown): void => showFailure(page, error);
   const layout = new GraphModuleLayout({ view, runner, measures, frames: hooks.frames, showGraph, onFailure });
-  const screen = moduleScreenOf({ page, layout, canvas: view.modules });
+  const screen = moduleScreenOf({ page, layout, canvas: view.modules, showGraph });
   const mode = new GraphModuleMode({ modes: hooks.modes, bridge, screen, tasks: hooks.tasks, onExit: hooks.onExit, notice, viewport });
   const input = moduleInputOf({ mode, canvas: view.modules, bridge });
   const leave = (): void => mode.leave();
@@ -111,6 +112,7 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
     enter: (packageName: string): void => mode.enter(packageName),
     leave,
     receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage): void => mode.receive(message),
+    suspend: (): void => mode.suspend(),
     relayout: (): void => relayoutOf(mode),
     input
   };
@@ -120,6 +122,16 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
   wireBar(page, mode);
 
   return modules;
+};
+
+/** A host message replaced the page: task and modules mode each take it back on the next graph state. Both are read per call. */
+export const messageSuspenderOf = (tasks: () => Pick<PageTaskMode, 'suspend'>, modules: () => Pick<PageModuleMode, 'suspend'>): (() => void) => {
+  const onMessage = (): void => {
+    tasks().suspend();
+    modules().suspend();
+  };
+
+  return onMessage;
 };
 
 /** A reload saved in modules mode enters its package again, Waiting for the first graph state; called once task mode is built. */

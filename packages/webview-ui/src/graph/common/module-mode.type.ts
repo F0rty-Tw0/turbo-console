@@ -47,6 +47,8 @@ export type ModuleScreen = {
   readonly shown: (name: string, found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => void;
   /** Keeps the old graph drawn, if any, and shows "Could not scan <P>." with Retry. */
   readonly failed: (name: string) => void;
+  /** Failed after a host message: the graph view shows again over whatever canvas was kept. */
+  readonly reshow: () => void;
   readonly exit: () => void;
 };
 
@@ -100,6 +102,8 @@ export type PageModuleMode = {
   readonly enter: (packageName: string) => void;
   readonly leave: () => void;
   readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage) => void;
+  /** A host message replaced the page; the next graph state still listing the package takes it back. */
+  readonly suspend: () => void;
   /** Draws the saved view again with the camera kept; Shown only. */
   readonly relayout: () => void;
   readonly input: HandledModules;
@@ -125,11 +129,12 @@ export type ModuleScreenLayout = {
   readonly clear: () => void;
 };
 
-/** What the modules screen writes to: the page's root, mode buttons and modules bar, the layout and the canvas. */
+/** What the modules screen writes to: the page's root, mode buttons and modules bar, the layout, the canvas and the graph view. */
 export type ModuleScreenDeps = {
   readonly page: Pick<PageElements, 'root' | 'packagesMode' | 'taskMode' | 'modules'>;
   readonly layout: ModuleScreenLayout;
   readonly canvas: Pick<ModuleCanvas, 'clear'>;
+  readonly showGraph: LayoutScreen['showGraph'];
 };
 
 /** Modules mode as the canvas input drives it (`GraphModuleMode`). */

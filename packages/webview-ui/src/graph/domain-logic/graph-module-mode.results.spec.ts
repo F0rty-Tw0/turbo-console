@@ -127,6 +127,41 @@ describe('FEATURE: GraphModuleMode scan results', () => {
     });
   });
 
+  describe('GIVEN Shown web replaced by a host message', () => {
+    beforeEach(() => {
+      mode.scanned(FOUND);
+      mode.suspend();
+    });
+
+    it('WHEN a state lists web THEN the saved view is drawn again keeping the camera', () => {
+      mode.received(WEB_LISTED);
+
+      expect(rig.screen.shown.mock.lastCall).toStrictEqual(['web', MODULES_FOUND_STUB, modes.modules(), { kind: 'keep' }]);
+    });
+
+    it('WHEN a second state lists web THEN nothing is drawn again', () => {
+      mode.received(WEB_LISTED);
+      mode.received(WEB_LISTED);
+
+      expect(rig.screen.shown).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN a state no longer lists web THEN it leaves without drawing', () => {
+      mode.received(WEB_GONE);
+
+      expect([mode.isActive(), rig.screen.shown.mock.calls.length]).toStrictEqual([false, 1]);
+    });
+  });
+
+  describe('GIVEN Loading web replaced by a host message', () => {
+    it('WHEN a state lists web THEN nothing is drawn or shown until its scan lands', () => {
+      mode.suspend();
+      mode.received(WEB_LISTED);
+
+      expect([rig.screen.shown.mock.calls, rig.screen.reshow.mock.calls]).toStrictEqual([[], []]);
+    });
+  });
+
   describe('GIVEN Failed web', () => {
     beforeEach(() => {
       mode.scanned(FAILED);
@@ -142,6 +177,13 @@ describe('FEATURE: GraphModuleMode scan results', () => {
       mode.scanned(FOUND);
 
       expect(mode.phase().kind).toBe('shown');
+    });
+
+    it('WHEN a host message replaced it and a state lists web THEN the graph view shows again', () => {
+      mode.suspend();
+      mode.received(WEB_LISTED);
+
+      expect(rig.screen.reshow).toHaveBeenCalledOnce();
     });
 
     it('WHEN a view is updated THEN it is saved but nothing is drawn', () => {

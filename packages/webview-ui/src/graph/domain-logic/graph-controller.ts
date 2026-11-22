@@ -2,7 +2,7 @@ import { GraphCardClock } from './graph-card-clock.ts';
 import { probeFactsOf } from './graph-controller-facts.ts';
 import { GraphFrames } from './graph-frames.ts';
 import { graphLocationOf } from './graph-location.ts';
-import { modeGroupHiderOf, moduleModeOf, reportDropped, resumeModules } from './graph-module-wiring.ts';
+import { messageSuspenderOf, modeGroupHiderOf, moduleModeOf, reportDropped, resumeModules } from './graph-module-wiring.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { wirePanelSashes } from './graph-panel-sashes.ts';
 import { packageRevealOf } from './graph-reveal.ts';
@@ -60,7 +60,7 @@ class GraphPageController {
       flow: () => this.flow
     });
     const tasks = packageTasksOf((): PageTaskMode => this.tasks, deps.now, (): PageModuleMode => this.modules);
-    const onMessage = (): void => this.tasks.suspend();
+    const onMessage = messageSuspenderOf((): PageTaskMode => this.tasks, (): PageModuleMode => this.modules);
     const onPlaced = (): void => this.reveal.placed();
     const onLocation = (): void => this.location.update();
     const onExit = (to: GraphViewMode): void => this.routing.exitTo(to);

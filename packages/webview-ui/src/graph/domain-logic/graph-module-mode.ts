@@ -21,6 +21,8 @@ export class GraphModuleMode {
   private readonly deps: ModuleModeDeps;
   private current: ModulePhase = OFF;
   private latest: GraphReady | null = null;
+  /** A host message replaced the page while active; the next graph state still listing the package shows it again. */
+  private isSuspended = false;
 
   public constructor(deps: ModuleModeDeps) {
     this.deps = deps;
@@ -73,6 +75,7 @@ export class GraphModuleMode {
     const to: ModuleExit = this.latest?.singlePackage === true ? 'tasks' : 'packages';
 
     this.current = OFF;
+    this.isSuspended = false;
 
     if (to === 'packages') this.deps.modes.setMode('packages', this.hash());
 
@@ -80,7 +83,12 @@ export class GraphModuleMode {
     this.deps.onExit(to);
   }
 
-  /** Every graph state: a package gone from it leaves with a notice, and Waiting asks for the scan. */
+  /** A host message replaced the page (spec §7.2): the next graph state still listing the package takes it back. */
+  public suspend(): void {
+    this.isSuspended = this.isActive();
+  }
+
+  /** Every graph state: a package gone from it leaves with a notice, a suspended page comes back, and Waiting asks for the scan. */
   public received(state: GraphReady): void {
     const { current } = this;
 
@@ -96,6 +104,8 @@ export class GraphModuleMode {
 
       return;
     }
+
+    if (this.isSuspended) this.resume(current);
 
     if (current.kind !== 'waiting') return;
 
@@ -165,6 +175,16 @@ export class GraphModuleMode {
 
     this.current = { kind: 'shown', name, found };
     this.update(view, wasShown ? KEEP : FIRST);
+  }
+
+  /** After a host message: Shown draws the saved view again with the camera kept, Failed shows the graph view again; Waiting and Loading come back with their draw. */
+  private resume(current: ModulePhase): void {
+    const view = this.view();
+
+    this.isSuspended = false;
+
+    if (current.kind === 'shown' && view !== null) this.update(view, KEEP);
+    else if (current.kind === 'failed') this.deps.screen.reshow();
   }
 
   /** Entering from package or task mode: task mode is parked toward modules, then the page shows the modules screen. */

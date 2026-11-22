@@ -46,7 +46,7 @@ describe('FEATURE: moduleScreenOf', () => {
     page = pageMock();
     canvas = moduleCanvasMock();
     layout = { draw: vi.fn(async (): Promise<void> => Promise.resolve()), scene: vi.fn(() => SCENE_OF_301), clear: vi.fn() };
-    screen = moduleScreenOf({ page, layout, canvas });
+    screen = moduleScreenOf({ page, layout, canvas, showGraph: vi.fn() });
     screen.enter();
   });
 

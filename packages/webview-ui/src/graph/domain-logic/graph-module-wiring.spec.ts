@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGraphController } from './graph-controller.ts';
-import type { GraphPackageModulesMessage } from '../../bridge/common/graph-modules.type.ts';
+import type { GraphPackageModulesMessage, ModulesResult } from '../../bridge/common/graph-modules.type.ts';
+import type { GraphState } from '../../bridge/common/graph-state.type.ts';
 import { MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
 import type { GraphController } from '../common/graph-page.type.ts';
 import { TASK_MODE_CLASS } from '../common/graph-task.const.ts';
@@ -17,7 +18,13 @@ import { moduleTreeOf } from '../utils/module-tree.util.ts';
 
 const WEB_FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
 
+const FAILED_RESULT: ModulesResult = { kind: 'failed' };
+
+const WEB_FAILED: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: FAILED_RESULT };
+
 const WEB_SCAN = { type: 'scanModules', packageName: 'web' };
+
+const HOST_ERROR: GraphState = { kind: 'error', message: 'host failed' };
 
 const ELK_FAILED = new Error('elk failed');
 
@@ -144,6 +151,50 @@ describe('FEATURE: modules bar wiring', () => {
       mock.page.packagesMode.click();
 
       expect(mock.page.root.classList.contains(MODULES_MODE_CLASS)).toBe(false);
+    });
+  });
+
+  describe('GIVEN web shown in modules mode, then a host error in place of the graph', () => {
+    beforeEach(async () => {
+      controller.receive({ type: 'state', state: WEB_LISTED });
+      controller.receive({ type: 'showModules', name: 'web' });
+      controller.receive(WEB_FOUND);
+      await mock.runs.settle(mock.runs.count() - 1, resultOf('modules', {}));
+      controller.receive({ type: 'state', state: HOST_ERROR });
+    });
+
+    it('WHEN a graph state listing web arrives and its layout lands THEN the graph view is back with the camera kept', async () => {
+      const runs = mock.runs.count();
+      const fits = mock.view.fit.mock.calls.length;
+
+      controller.receive({ type: 'state', state: WEB_LISTED });
+      await mock.runs.settle(runs, resultOf('modules', {}));
+
+      expect([mock.page.message.hidden, mock.page.toolbar.hidden, mock.page.body.hidden, mock.view.fit.mock.calls.length]).toStrictEqual([
+        true,
+        false,
+        false,
+        fits
+      ]);
+    });
+  });
+
+  describe('GIVEN web failed in modules mode, then a host error in place of the graph', () => {
+    beforeEach(() => {
+      controller.receive({ type: 'state', state: WEB_LISTED });
+      controller.receive({ type: 'showModules', name: 'web' });
+      controller.receive(WEB_FAILED);
+      controller.receive({ type: 'state', state: HOST_ERROR });
+    });
+
+    it('WHEN a graph state listing web arrives THEN the graph view is back with the modules bar', () => {
+      controller.receive({ type: 'state', state: WEB_LISTED });
+
+      expect([mock.page.message.hidden, mock.page.body.hidden, mock.page.root.classList.contains(MODULES_MODE_CLASS)]).toStrictEqual([
+        true,
+        false,
+        true
+      ]);
     });
   });
 
