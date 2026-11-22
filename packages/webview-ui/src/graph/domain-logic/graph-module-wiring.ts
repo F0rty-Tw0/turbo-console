@@ -97,10 +97,10 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
   const { page, bridge, runner } = deps;
   const notice = (text: string): void => hooks.tasks().notice(text);
   const viewport = (): Viewport => view.viewport();
-  const { showNotice } = layoutScreenOf(page);
+  const { showGraph } = layoutScreenOf(page);
   const measures = measuresOf(deps);
   const onFailure = (error: unknown): void => showFailure(page, error);
-  const layout = new GraphModuleLayout({ view, runner, measures, frames: hooks.frames, showNotice, onFailure });
+  const layout = new GraphModuleLayout({ view, runner, measures, frames: hooks.frames, showGraph, onFailure });
   const screen = moduleScreenOf({ page, layout, canvas: view.modules });
   const mode = new GraphModuleMode({ modes: hooks.modes, bridge, screen, tasks: hooks.tasks, onExit: hooks.onExit, notice, viewport });
   const input = moduleInputOf({ mode, canvas: view.modules, bridge });

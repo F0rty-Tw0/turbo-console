@@ -5,6 +5,7 @@ import type { GraphPackageModulesMessage } from '../../bridge/common/graph-modul
 import { MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
 import type { GraphController } from '../common/graph-page.type.ts';
 import { TASK_MODE_CLASS } from '../common/graph-task.const.ts';
+import { LAYOUT_FAILED_TEXT } from '../common/graph.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
@@ -17,6 +18,8 @@ import { moduleTreeOf } from '../utils/module-tree.util.ts';
 const WEB_FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
 
 const WEB_SCAN = { type: 'scanModules', packageName: 'web' };
+
+const ELK_FAILED = new Error('elk failed');
 
 const WEB_TREE = moduleTreeOf(MODULES_FOUND_STUB.files);
 
@@ -141,6 +144,31 @@ describe('FEATURE: modules bar wiring', () => {
       mock.page.packagesMode.click();
 
       expect(mock.page.root.classList.contains(MODULES_MODE_CLASS)).toBe(false);
+    });
+  });
+
+  describe('GIVEN web in modules mode whose layout failed', () => {
+    beforeEach(async () => {
+      controller.receive({ type: 'state', state: WEB_LISTED });
+      controller.receive({ type: 'showModules', name: 'web' });
+      controller.receive(WEB_FOUND);
+      await mock.runs.fail(mock.runs.count() - 1, ELK_FAILED);
+    });
+
+    it('WHEN it is read THEN the page shows Layout failed in place of the graph', () => {
+      expect([mock.page.message.hidden, mock.page.messageText.textContent, mock.page.body.hidden]).toStrictEqual([
+        false,
+        `${LAYOUT_FAILED_TEXT}: elk failed`,
+        true
+      ]);
+    });
+
+    it('WHEN Refresh is pressed and the new scan lays out THEN the graph view is back', async () => {
+      mock.page.modules.refresh.click();
+      controller.receive(WEB_FOUND);
+      await mock.runs.settle(mock.runs.count() - 1, resultOf('modules', {}));
+
+      expect([mock.page.message.hidden, mock.page.toolbar.hidden, mock.page.body.hidden]).toStrictEqual([true, false, false]);
     });
   });
 });

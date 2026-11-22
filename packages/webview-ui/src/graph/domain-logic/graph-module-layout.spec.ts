@@ -45,13 +45,13 @@ describe('FEATURE: GraphModuleLayout', () => {
   let canvas: Mocked<ModuleCanvas>;
   let runner: Mocked<LayoutRunner>;
   let arm: Mock<() => void>;
-  let showNotice: Mock<LayoutScreen['showNotice']>;
+  let showGraph: Mock<LayoutScreen['showGraph']>;
   let onFailure: Mock<(error: unknown) => void>;
   let layout: GraphModuleLayout;
 
   const layoutWith = (run: LayoutRunner, measures: ModuleMeasures): GraphModuleLayout => {
     const frames = { arm };
-    const deps: ModuleLayoutDeps = { view, runner: run, measures, frames, showNotice, onFailure };
+    const deps: ModuleLayoutDeps = { view, runner: run, measures, frames, showGraph, onFailure };
 
     return new GraphModuleLayout(deps);
   };
@@ -63,7 +63,7 @@ describe('FEATURE: GraphModuleLayout', () => {
     view = { ...base, modules: canvas };
     runner = { run: vi.fn(laidOut) };
     arm = vi.fn();
-    showNotice = vi.fn();
+    showGraph = vi.fn();
     onFailure = vi.fn();
     layout = layoutWith(runner, MODULE_MEASURES_STUB);
   });
@@ -84,16 +84,26 @@ describe('FEATURE: GraphModuleLayout', () => {
       expect(view.open).toHaveBeenCalledOnce();
     });
 
-    it('WHEN it is drawn THEN the frame clock is armed and the engine notice cleared', async () => {
+    it('WHEN it is drawn THEN the frame clock is armed and the graph view shown without the fallback notice', async () => {
       await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'first' });
 
-      expect([arm.mock.calls.length, showNotice.mock.calls]).toStrictEqual([1, [[{ kind: 'none' }]]]);
+      expect([arm.mock.calls.length, showGraph.mock.calls]).toStrictEqual([1, [[false]]]);
     });
 
     it('WHEN it is drawn THEN the runner key names the package, its expansion and its shown kinds', async () => {
       await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'first' });
 
       expect(runner.run.mock.calls[0]?.[0]).toBe('modules:web:{"expanded":["src"],"shown":{"types":true,"tests":true,"lazies":true}}');
+    });
+  });
+
+  describe('GIVEN a draw the fallback engine lays out', () => {
+    it('WHEN it lands THEN the graph view is shown with the fallback notice', async () => {
+      runner.run.mockResolvedValueOnce(resultOf('modules', {}, 'fallback'));
+
+      await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'keep' });
+
+      expect(showGraph.mock.calls).toStrictEqual([[true]]);
     });
   });
 

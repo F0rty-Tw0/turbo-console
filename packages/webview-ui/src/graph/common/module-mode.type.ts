@@ -111,7 +111,8 @@ export type ModuleLayoutDeps = {
   readonly runner: LayoutRunner;
   readonly measures: ModuleMeasures;
   readonly frames: Pick<FrameClock, 'arm'>;
-  readonly showNotice: LayoutScreen['showNotice'];
+  /** Each placed draw shows the graph view, so one that lands after a failure message takes the page back from it. */
+  readonly showGraph: LayoutScreen['showGraph'];
   /** A draw that threw while still the one asked for last; the canvas is already empty. */
   readonly onFailure: (error: unknown) => void;
 };

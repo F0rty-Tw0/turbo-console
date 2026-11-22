@@ -5,7 +5,6 @@ import type { LayoutResult } from '../common/layout.type.ts';
 import type { ModuleLayoutDeps, ModuleRedraw } from '../common/module-mode.type.ts';
 import type { ModuleScene, ModuleSceneView } from '../common/module-scene.type.ts';
 import { elkModuleGraphOf } from '../utils/elk-module-graph.util.ts';
-import { engineNoticeOf } from '../utils/layout-plan.util.ts';
 import { moduleSceneOf } from '../utils/module-scene.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
 
@@ -77,14 +76,17 @@ export class GraphModuleLayout {
     this.place(scene, result, view, redraw);
   }
 
-  /** Shows the scene, then the engine notice, then the camera, then arms the frame clock, as the task layout does. */
+  /**
+   * Shows the scene, then the graph view with its engine notice, then the camera, then arms the frame clock, as the task
+   * layout does. The graph view replaces a "Layout failed" message, so a Refresh or Retry that draws recovers the page.
+   */
   private place(scene: ModuleScene, result: LayoutResult, view: ModulesViewState, redraw: ModuleRedraw): void {
     const { modules } = this.deps.view;
     const before = this.anchorCentreOf(redraw);
 
     modules.show({ scene, positions: result.positions, measures: this.deps.measures });
     this.drawn = scene;
-    this.deps.showNotice(engineNoticeOf(result.engine));
+    this.deps.showGraph(result.engine === 'fallback');
     this.placeCamera(view, redraw, before);
     this.deps.frames.arm();
   }
