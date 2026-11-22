@@ -14,6 +14,7 @@ const COMMAND = 'turboConsole.openPackageGraph';
 const TASK_COMMAND = 'turboConsole.showTaskGraph';
 const ALL_TASKS_COMMAND = 'turboConsole.showAllTaskGraphs';
 const FOCUS_COMMAND = 'turboConsole.focusPackageInGraph';
+const MODULES_COMMAND = 'turboConsole.showPackageModules';
 const PACKAGE_ROW = { kind: 'pkg', root: '/ws', packageName: 'web' };
 const TASK_ROW = { kind: 'task', root: '/ws', key: 'web#build', packageName: 'web' };
 const OTHER_FOLDER = { root: '/other', name: 'other' };
@@ -64,6 +65,7 @@ const portsOf = (picked: string | undefined): RootPickPorts => {
     rootOf: () => null,
     pick,
     pickMany,
+    pickOne: vi.fn(),
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
@@ -172,12 +174,12 @@ describe('FEATURE: the Show Package Graph command', () => {
   });
 
   describe('GIVEN it is registered', () => {
-    it('THEN the command ids are Show Package Graph, Show Task Graph, Show All Task Graphs and Focus on Graph', () => {
+    it('THEN the command ids are Show Package Graph, Show Task Graph, Show All Task Graphs, Focus on Graph and Show Package Modules', () => {
       const registered = registrationMock();
 
       registerGraph(openerMock(), storeOf([ROOT_FOLDER_STUB]), portsOf(undefined), registered.register);
 
-      expect(registered.ids).toStrictEqual([COMMAND, TASK_COMMAND, ALL_TASKS_COMMAND, FOCUS_COMMAND]);
+      expect(registered.ids).toStrictEqual([COMMAND, TASK_COMMAND, ALL_TASKS_COMMAND, FOCUS_COMMAND, MODULES_COMMAND]);
     });
 
     it('WHEN it is disposed THEN every command is removed and the panels are disposed', () => {
@@ -187,7 +189,7 @@ describe('FEATURE: the Show Package Graph command', () => {
 
       graph.dispose();
 
-      expect(registered.unregister).toHaveBeenCalledTimes(4);
+      expect(registered.unregister).toHaveBeenCalledTimes(5);
       expect(panels.dispose).toHaveBeenCalledOnce();
     });
   });

@@ -43,6 +43,8 @@ const shownSession = (store: RootStore = loadedStore()): ShownSession => {
 
 const SHOW_A_BUILD: GraphShowRequest = { type: 'showTasks', taskIds: ['a#build'] };
 const SHOW_WEB: GraphShowRequest = { type: 'showPackage', name: 'web' };
+const SHOW_WEB_MODULES: GraphShowRequest = { type: 'showModules', name: 'web' };
+const SHOW_ROOT_MODULES: GraphShowRequest = { type: 'showModules', name: '//' };
 
 describe('FEATURE: graph session showTasks', () => {
   describe('GIVEN a shown session on /ws', () => {
@@ -149,6 +151,15 @@ describe('FEATURE: graph session showTasks', () => {
 
       expect(postedTypesOf(ports)).toStrictEqual(['state', 'runs', 'showPackage']);
     });
+
+    it('WHEN showModules is held THEN ready posts the state, the runs, then the request', async () => {
+      const { session, ports } = shownSession();
+
+      session.show(SHOW_WEB_MODULES);
+      await session.receive({ type: 'ready' });
+
+      expect(postedTypesOf(ports)).toStrictEqual(['state', 'runs', 'showModules']);
+    });
   });
 
   describe('GIVEN a ready session with a graph', () => {
@@ -214,6 +225,21 @@ describe('FEATURE: graph session showTasks', () => {
 
       expect(postedShowsOf(ports)).toStrictEqual([]);
       expect(ports.log).toHaveBeenCalledExactlyOnceWith('Ignored showPackage: a single-package root has no package graph');
+    });
+
+    it('WHEN showModules of // is called THEN it is posted after the ready state and not logged as ignored', async () => {
+      const store = loadedStore();
+      const singleModel = { ...GRAPH_LOADED_STUB.model, singlePackage: true };
+
+      store.apply('/ws', { ...GRAPH_LOADED_STUB, model: singleModel });
+
+      const { session, ports } = shownSession(store);
+
+      session.show(SHOW_ROOT_MODULES);
+      await session.receive({ type: 'ready' });
+
+      expect(postedShowsOf(ports)).toStrictEqual([SHOW_ROOT_MODULES]);
+      expect(ports.log).not.toHaveBeenCalledWith('Ignored showPackage: a single-package root has no package graph');
     });
   });
 });

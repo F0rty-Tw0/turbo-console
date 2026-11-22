@@ -16,7 +16,7 @@ const isAtoms = (message: GraphHostMessage): message is GraphAtomsMessage => mes
 const isShowTasks = (message: GraphHostMessage): message is GraphShowTasksMessage => message.type === 'showTasks';
 
 const isShow = (message: GraphHostMessage): message is GraphShowRequest => {
-  return message.type === 'showTasks' || message.type === 'showPackage';
+  return message.type === 'showTasks' || message.type === 'showPackage' || message.type === 'showModules';
 };
 
 /** The `runs` messages posted so far, in order, with their `owners`. */
@@ -35,7 +35,7 @@ export const postedAtomsOf = (ports: GraphPorts): GraphAtomsMessage[] => postedO
 /** The `showTasks` messages posted so far, in order. */
 export const postedShowTasksOf = (ports: GraphPorts): GraphShowTasksMessage[] => postedOf(ports).filter(isShowTasks);
 
-/** The `showTasks` and `showPackage` messages posted so far, in order. */
+/** The `showTasks`, `showPackage` and `showModules` messages posted so far, in order. */
 export const postedShowsOf = (ports: GraphPorts): GraphShowRequest[] => postedOf(ports).filter(isShow);
 
 /** The `type` of every message posted so far, in order. */
