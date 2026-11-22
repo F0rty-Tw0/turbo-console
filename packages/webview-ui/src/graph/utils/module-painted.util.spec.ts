@@ -81,7 +81,7 @@ describe('FEATURE: module painted', () => {
       expect(keepsSelection(SPEC_ID, SRC_OPEN_NO_TESTS)).toBe(false);
     });
 
-    it('WHEN test files are hidden and src is collapsed, in either order, THEN nothing holds it, though the src card is drawn', () => {
+    it('WHEN test files are hidden and src is collapsed THEN nothing holds it, though the src card is drawn', () => {
       expect(heldOf(SPEC_ID, ROOT_ONLY_NO_TESTS)).toBeNull();
     });
 

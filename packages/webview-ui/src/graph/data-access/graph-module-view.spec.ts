@@ -220,9 +220,9 @@ describe('FEATURE: createModuleCanvas', () => {
     });
 
     it.each([
-      ['src is collapsed, then test files are hidden', [ROOT_ONLY, ROOT_ONLY_NO_TESTS]],
-      ['test files are hidden, then src is collapsed', [NO_TESTS, ROOT_ONLY_NO_TESTS]]
-    ])('WHEN %s and test files are shown again THEN nothing is selected, as hiding dropped the choice', (_, scenes) => {
+      { order: 'src is collapsed, then test files are hidden', scenes: [ROOT_ONLY, ROOT_ONLY_NO_TESTS] },
+      { order: 'test files are hidden, then src is collapsed', scenes: [NO_TESTS, ROOT_ONLY_NO_TESTS] }
+    ])('WHEN $order and test files are shown again THEN nothing is selected, as hiding dropped the choice', ({ scenes }) => {
       for (const scene of scenes) canvas.show(drawingOf(scene));
 
       canvas.show(drawingOf(ROOT_ONLY));
