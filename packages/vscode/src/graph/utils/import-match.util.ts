@@ -1,16 +1,10 @@
 import { resolve } from 'node:path';
 
-import { isWithin } from '@turbo-console/core';
+import { PATHS_SKIPPED, aliasTargetsOf, isNameOf, isWithin } from '@turbo-console/core';
 import type { TsconfigPaths } from '@turbo-console/core';
 import type { ImportVia } from '@turbo-console/webview-ui';
 
-import { aliasTargetsOf } from './alias-targets.util.ts';
 import type { ImportEdge } from '../common/import-match.type.ts';
-
-/** TS `pathIsRelative`: the names TS never maps through `paths`, so a backslash after the dots (`.\x`) counts too. */
-const PATHS_SKIPPED = /^\.\.?(?:$|[\\/])/;
-
-const isNameOf = (specifier: string, name: string): boolean => specifier === name || specifier.startsWith(`${name}/`);
 
 const isRelativeSpecifier = (specifier: string): boolean => {
   const isDots = specifier === '.' || specifier === '..';

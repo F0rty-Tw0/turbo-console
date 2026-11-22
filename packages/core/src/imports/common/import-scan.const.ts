@@ -22,3 +22,6 @@ export const TSCONFIG_NAME = 'tsconfig.json';
 
 /** D6: candidate lists one chain read pops, A's own included, each opening at most one file (OQ1). */
 export const TSCONFIG_CHAIN_MAX = 8;
+
+/** TS `pathIsRelative`: the names TS never maps through `paths`, so a backslash after the dots (`.\x`) counts too. */
+export const PATHS_SKIPPED = /^\.\.?(?:$|[\\/])/;
