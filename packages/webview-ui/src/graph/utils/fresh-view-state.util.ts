@@ -34,11 +34,11 @@ export const freshViewStateOf = (hash: string): GraphViewState => {
   return state;
 };
 
-const ALL_SHOWN: ModulesViewState['shown'] = { types: true, tests: true, lazies: true };
+const TESTS_HIDDEN: ModulesViewState['shown'] = { types: true, tests: false, lazies: true };
 
-/** The modules view of `packageName` with nothing saved: the expansion not set up yet, every kind shown and a camera that fits. */
+/** The modules view of `packageName` with nothing saved: the expansion not set up yet, every kind but test files shown and a camera that fits. */
 export const freshModulesViewOf = (packageName: string): ModulesViewState => {
-  const modules: ModulesViewState = { packageName, expanded: null, shown: ALL_SHOWN, camera: null };
+  const modules: ModulesViewState = { packageName, expanded: null, shown: TESTS_HIDDEN, camera: null };
 
   return modules;
 };

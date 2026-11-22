@@ -7,7 +7,9 @@ import {
   TESTS_LABEL,
   TYPES_LABEL,
   VIEWS_EDGES,
-  VIEWS_IDS
+  VIEWS_IDS,
+  VIEWS_TESTS_EDGES,
+  VIEWS_TESTS_IDS
 } from './common/graph-modules.const.ts';
 import { expect, test } from './graph-modules.fixture.ts';
 import { MODULES_APP_STUB } from './test/stubs/graph-modules.stub.ts';
@@ -24,29 +26,34 @@ const without = (items: string[], gone: string[]): string[] => items.filter((ite
 
 type Toggle = {
   readonly label: string;
-  readonly gone: string;
+  /** Whether the box starts checked on a fresh view; the test flips it to the other state. */
+  readonly isChecked: boolean;
+  readonly change: string;
   readonly ids: string[];
   readonly edges: string[];
 };
 
 const TYPE_EDGE = 'file:src/views/main.ts→dir:src/model dashed';
 
-const TEST_FILE = 'file:src/views/main.spec.ts';
-
-const TEST_EDGE = 'file:src/views/main.spec.ts→file:src/views/main.ts solid';
-
 const LAZY_EDGE = 'file:src/views/panel.ts→dir:src/model dotted';
 
-/** Each View box with views expanded: what unchecking it removes from the drawn graph. */
+/** Each View box with views expanded on a fresh view: what flipping it changes in the drawn graph. */
 const TOGGLES: Toggle[] = [
-  { label: TYPES_LABEL, gone: 'the type-only link', ids: VIEWS_IDS, edges: without(VIEWS_EDGES, [TYPE_EDGE]) },
   {
-    label: TESTS_LABEL,
-    gone: 'main.spec.ts and its link',
-    ids: without(VIEWS_IDS, [TEST_FILE]),
-    edges: without(VIEWS_EDGES, [TEST_EDGE])
+    label: TYPES_LABEL,
+    isChecked: true,
+    change: 'hides the type-only link',
+    ids: VIEWS_IDS,
+    edges: without(VIEWS_EDGES, [TYPE_EDGE])
   },
-  { label: LAZIES_LABEL, gone: 'the lazy link', ids: VIEWS_IDS, edges: without(VIEWS_EDGES, [LAZY_EDGE]) }
+  { label: TESTS_LABEL, isChecked: false, change: 'shows main.spec.ts and its link', ids: VIEWS_TESTS_IDS, edges: VIEWS_TESTS_EDGES },
+  {
+    label: LAZIES_LABEL,
+    isChecked: true,
+    change: 'hides the lazy link',
+    ids: VIEWS_IDS,
+    edges: without(VIEWS_EDGES, [LAZY_EDGE])
+  }
 ];
 
 test.describe('FEATURE: package modules view', () => {
@@ -156,9 +163,11 @@ test.describe('FEATURE: package modules view', () => {
     }
   );
 
-  for (const { label, gone, ids, edges } of TOGGLES) {
+  for (const { label, isChecked, change, ids, edges } of TOGGLES) {
+    const start = isChecked ? 'checked' : 'unchecked';
+
     test(
-      `GIVEN views expanded, unchecking ${label} hides ${gone} and leaves pan and zoom as they were`,
+      `GIVEN views expanded, flipping ${label} from ${start} ${change} and leaves pan and zoom as they were`,
       { annotation: MODULES },
       async ({ graphCanvas, graphModules, shownModules }): Promise<void> => {
         await test.step('WHEN app is shown and views is expanded', async (): Promise<void> => {
@@ -167,22 +176,22 @@ test.describe('FEATURE: package modules view', () => {
           await graphModules.expectEdges(VIEWS_EDGES);
         });
 
-        await test.step(`THEN ${label} is checked`, async (): Promise<void> => graphModules.expectChecked(label, true));
+        await test.step(`THEN ${label} starts ${start}`, async (): Promise<void> => graphModules.expectChecked(label, isChecked));
 
         const camera = await graphModules.camera();
 
-        await test.step(`WHEN ${label} is unchecked`, async (): Promise<void> => graphModules.setShown(label, false));
+        await test.step(`WHEN ${label} is flipped`, async (): Promise<void> => graphModules.setShown(label, !isChecked));
 
-        await test.step(`THEN ${gone} is gone`, async (): Promise<void> => {
+        await test.step(`THEN it ${change}`, async (): Promise<void> => {
           await graphModules.expectIds(ids);
           await graphModules.expectEdges(edges);
         });
 
         await test.step('AND pan and zoom are as they were', async (): Promise<void> => graphModules.expectCamera(camera));
 
-        await test.step(`WHEN ${label} is checked again`, async (): Promise<void> => graphModules.setShown(label, true));
+        await test.step(`WHEN ${label} is flipped back`, async (): Promise<void> => graphModules.setShown(label, isChecked));
 
-        await test.step('THEN views is drawn whole again', async (): Promise<void> => {
+        await test.step('THEN views is drawn as it opened', async (): Promise<void> => {
           await graphModules.expectIds(VIEWS_IDS);
           await graphModules.expectEdges(VIEWS_EDGES);
         });

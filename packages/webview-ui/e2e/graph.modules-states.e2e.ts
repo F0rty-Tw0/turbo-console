@@ -6,7 +6,8 @@ import {
   REFRESH_LABEL,
   RETRY_LABEL,
   TESTS_LABEL,
-  VIEWS_IDS
+  VIEWS_IDS,
+  VIEWS_TESTS_IDS
 } from './common/graph-modules.const.ts';
 import { expect, test } from './graph-modules.fixture.ts';
 import { MODULES_APP_STUB, MODULES_EMPTY_STUB, MODULES_FAILED_STUB } from './test/stubs/graph-modules.stub.ts';
@@ -54,28 +55,26 @@ const BANNERS: Banner[] = [
   { name: 'clean', result: MODULES_APP_STUB, text: null }
 ];
 
-const VIEWS_NO_TESTS = VIEWS_IDS.filter((id): boolean => id !== 'file:src/views/main.spec.ts');
-
-const TESTS_HIDDEN: ModulesViewState['shown'] = { types: true, tests: false, lazies: true };
+const ALL_SHOWN: ModulesViewState['shown'] = { types: true, tests: true, lazies: true };
 
 test.describe('FEATURE: package modules view states', () => {
   test(
-    'GIVEN views expanded, tests hidden and the camera zoomed, a reload waits, asks once and restores all three',
+    'GIVEN views expanded, tests shown and the camera zoomed, a reload waits, asks once and restores all three',
     { annotation: [MODULES, REVIEW_RELOAD] },
     async ({ graphCanvas, graphHost, graphModules, graphModulesHost, shownModules }): Promise<void> => {
-      await test.step('WHEN app is shown, views is expanded, Test files unchecked and the canvas zoomed in', async (): Promise<void> => {
+      await test.step('WHEN app is shown, views is expanded, Test files checked and the canvas zoomed in', async (): Promise<void> => {
         await shownModules();
         await graphCanvas.tapNode('dir:src/views');
         await graphModules.expectIds(VIEWS_IDS);
-        await graphModules.setShown(TESTS_LABEL, false);
-        await graphModules.expectIds(VIEWS_NO_TESTS);
+        await graphModules.setShown(TESTS_LABEL, true);
+        await graphModules.expectIds(VIEWS_TESTS_IDS);
         await graphCanvas.zoomBy(-300);
       });
 
       const zoomed = await graphModules.camera();
 
-      await test.step('THEN the modules view is saved with tests hidden and that camera', async (): Promise<void> =>
-        graphModulesHost.expectModulesSaved({ packageName: 'app', shown: TESTS_HIDDEN, camera: zoomed }));
+      await test.step('THEN the modules view is saved with tests shown and that camera', async (): Promise<void> =>
+        graphModulesHost.expectModulesSaved({ packageName: 'app', shown: ALL_SHOWN, camera: zoomed }));
 
       await test.step('WHEN the page reloads, the view it restores is in modules mode', async (): Promise<void> => {
         const saved = await graphHost.reopen();
@@ -94,10 +93,9 @@ test.describe('FEATURE: package modules view states', () => {
 
       await test.step('WHEN the host answers', async (): Promise<void> => graphModulesHost.answerModules(MODULES_APP_STUB));
 
-      await test.step('THEN views is expanded without the test file', async (): Promise<void> =>
-        graphModules.expectIds(VIEWS_NO_TESTS));
+      await test.step('THEN views is expanded with the test file', async (): Promise<void> => graphModules.expectIds(VIEWS_TESTS_IDS));
 
-      await test.step('AND Test files is unchecked', async (): Promise<void> => graphModules.expectChecked(TESTS_LABEL, false));
+      await test.step('AND Test files is checked', async (): Promise<void> => graphModules.expectChecked(TESTS_LABEL, true));
 
       await test.step('AND the camera is the zoomed one', async (): Promise<void> => graphModules.expectCamera(zoomed));
     }

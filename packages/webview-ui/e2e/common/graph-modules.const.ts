@@ -28,14 +28,22 @@ export const D9_IDS = ['dir:', 'dir:src', 'dir:src/model', 'dir:src/views', 'fil
 /** The D9 edges, `<source>→<target> <line style>`: `views` → `model` merges a type and a lazy import, so lazy wins and it is dotted; `views`' own links are self-pairs. */
 export const D9_EDGES = ['dir:src/views→dir:src/model dotted', 'dir:src/views→pkg:lib solid', 'file:index.ts→dir:src/views solid'];
 
-/** The D9 view with `views` expanded into its three files. */
-export const VIEWS_IDS = [...D9_IDS, 'file:src/views/main.spec.ts', 'file:src/views/main.ts', 'file:src/views/panel.ts'];
+const TEST_FILE_ID = 'file:src/views/main.spec.ts';
+
+const TEST_FILE_EDGE = 'file:src/views/main.spec.ts→file:src/views/main.ts solid';
+
+/** The D9 view with `views` expanded into its two files, its test file hidden as Test files starts unchecked. */
+export const VIEWS_IDS = [...D9_IDS, 'file:src/views/main.ts', 'file:src/views/panel.ts'];
 
 export const VIEWS_EDGES = [
   'file:index.ts→file:src/views/main.ts solid',
-  'file:src/views/main.spec.ts→file:src/views/main.ts solid',
   'file:src/views/main.ts→dir:src/model dashed',
   'file:src/views/main.ts→file:src/views/panel.ts solid',
   'file:src/views/panel.ts→dir:src/model dotted',
   'file:src/views/panel.ts→pkg:lib solid'
 ];
+
+/** `views` expanded with Test files checked: its three files, the test file's link with them. */
+export const VIEWS_TESTS_IDS = [...VIEWS_IDS, TEST_FILE_ID];
+
+export const VIEWS_TESTS_EDGES = [...VIEWS_EDGES, TEST_FILE_EDGE];
