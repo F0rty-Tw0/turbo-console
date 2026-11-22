@@ -139,11 +139,11 @@ describe('FEATURE: module scene', () => {
 
     it('WHEN only the root is open THEN the files it includes are every file but a.spec.ts, folded ones too', () => {
       expect(sceneOf(MODULES_FOUND_STUB, [], NO_TESTS).fileIds).toStrictEqual([
+        'file:index.ts',
         'file:src/a.ts',
         'file:src/lib/b.ts',
         'file:src/lib/c.ts',
-        'file:src/ui/d.ts',
-        'file:index.ts'
+        'file:src/ui/d.ts'
       ]);
     });
   });

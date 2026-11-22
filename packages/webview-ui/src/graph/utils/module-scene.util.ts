@@ -90,7 +90,7 @@ const stubLeafOf = (name: string): ModuleStubLeaf => {
 /**
  * What the module view draws for `view`: the walked tree's boxes and leaves, then the stubs a drawn link targets, in
  * `data.stubs` order. Links merge per drawn pair (self-pairs dropped), and a link left with no import shown is dropped.
- * `fileIds` lists every file the walk drew, as its own card or under a folder card, in walk order.
+ * `fileIds` lists every file the walk drew, as its own card or under a folder card, in `tree.files` order.
  */
 export const moduleSceneOf = (tree: ModuleTree, data: ModulesFound, view: ModuleSceneView): ModuleScene => {
   const drawn = moduleDrawnOf(tree, data.tests, view);
@@ -102,9 +102,8 @@ export const moduleSceneOf = (tree: ModuleTree, data: ModulesFound, view: Module
   const drawnStubs = data.stubs.filter((name) => targets.has(`pkg:${name}`));
   const stubs = drawnStubs.map(stubLeafOf);
   const leaves = [...drawn.leaves, ...stubs];
-  const indexes = drawn.drawnOf.keys();
-  const included = [...indexes];
-  const paths = included.map((index) => tree.files[index] ?? '');
+  const isIncludedAt = (_: string, index: number): boolean => drawn.drawnOf.has(index);
+  const paths = tree.files.filter(isIncludedAt);
   const fileIds = paths.map((path) => `${FILE_PREFIX}${path}`);
   const scene: ModuleScene = { boxes: drawn.boxes, leaves, links, leafCount: leaves.length, fileIds };
 
