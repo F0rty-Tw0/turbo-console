@@ -20,9 +20,15 @@ const pageObjectAssertions: FlatConfig.Config = {
   files: ['**/*.e2e.ts'],
   rules: {
     'playwright/expect-expect': ['warn', { assertFunctionPatterns: ['^expect'] }],
-    'playwright/prefer-ending-with-an-expect': ['error', { assertFunctionPatterns: ['^expect'] }],
-    // Parameterized cases build their titles from constant tables, so each title is the same on every run and --grep
-    // still finds it; the rule cannot tell such a title from one built from run-time data.
+    'playwright/prefer-ending-with-an-expect': ['error', { assertFunctionPatterns: ['^expect'] }]
+  }
+};
+
+const constantTableTitles: FlatConfig.Config = {
+  name: 'webview-ui/constant-table-titles',
+  files: ['**/*.e2e.ts'],
+  rules: {
+    // Parameterized cases build their titles from constant tables, so each title is stable and --grep still finds it.
     'playwright/no-template-literal-title': 'off'
   }
 };
@@ -36,7 +42,15 @@ const UNSAFE_ATTRIBUTES = 'srcdoc|style|on.*|href|src|action|formaction|xlink:hr
 
 const URL_PROPERTIES = 'href|src|action|formAction';
 
-const baseConfigs: ConfigArray = [...recommended, ...vitest, ...playwright, ...workspaceConfig, typescriptFiles, pageObjectAssertions];
+const baseConfigs: ConfigArray = [
+  ...recommended,
+  ...vitest,
+  ...playwright,
+  ...workspaceConfig,
+  typescriptFiles,
+  pageObjectAssertions,
+  constantTableTitles
+];
 
 const restrictedSyntaxOf = (config: FlatConfig.Config): unknown[] => {
   const rule = config.rules?.['no-restricted-syntax'];
