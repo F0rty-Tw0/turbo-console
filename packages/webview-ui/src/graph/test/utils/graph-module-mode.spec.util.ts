@@ -3,6 +3,7 @@ import type { Mocked } from 'vitest';
 
 import type { Bridge } from '../../../bridge/common/bridge.type.ts';
 import type { GraphPackage, GraphReady, Position } from '../../../bridge/common/graph-state.type.ts';
+import type { FrameClock } from '../../common/frame-clock.type.ts';
 import type { Viewport } from '../../common/graph-page.type.ts';
 import type { ModuleExit, ModuleModeDeps, ModuleModes, ModuleScreen, ModuleTaskSide } from '../../common/module-mode.type.ts';
 import type { ModuleModeRig } from '../common/graph-module-mode.type.ts';
@@ -12,6 +13,9 @@ const RIG_PAN: Position = { x: 3, y: 4 };
 
 /** The camera the rig's view reports. */
 export const RIG_CAMERA: Viewport = { zoom: 2, pan: RIG_PAN };
+
+/** The receive time the specs hand each host reply. */
+export const REPLY_AT = 10;
 
 /** STATE_STUB lists web, ui and core under hash h1. */
 export const WEB_LISTED: GraphReady = STATE_STUB;
@@ -53,8 +57,10 @@ export const moduleModeRigOf = (modes: ModuleModes, isTaskMode = false): ModuleM
   const notice = vi.fn<(text: string) => void>();
   const viewport = (): Viewport => RIG_CAMERA;
   const taskSide = (): ModuleTaskSide => tasks;
-  const deps: ModuleModeDeps = { modes, bridge, screen, tasks: taskSide, onExit, notice, viewport };
-  const rig: ModuleModeRig = { deps, post, screen, tasks, onExit, notice };
+  const start = vi.fn<FrameClock['start']>();
+  const frames = { start };
+  const deps: ModuleModeDeps = { modes, bridge, screen, tasks: taskSide, onExit, notice, viewport, frames };
+  const rig: ModuleModeRig = { deps, post, screen, tasks, onExit, notice, start };
 
   return rig;
 };

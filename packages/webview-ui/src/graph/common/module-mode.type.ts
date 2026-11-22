@@ -74,6 +74,8 @@ export type ModuleModeDeps = {
   readonly onExit: (to: ModuleExit) => void;
   readonly notice: (text: string) => void;
   readonly viewport: () => Viewport;
+  /** Started at a found scan's receive time, so the module draw's first frame is timed from the host's reply. */
+  readonly frames: Pick<FrameClock, 'start'>;
 };
 
 /** `ModuleModes` plus the mode, which tells `resumeModules` a reload left the page in modules mode. */
@@ -88,8 +90,8 @@ export type ModuleModeHooks = {
   /** Read per call: task mode is built after modules mode. */
   readonly tasks: () => ModuleHookTasks;
   readonly onExit: (to: ModuleExit) => void;
-  /** Armed after each module draw, so the next frame is timed. */
-  readonly frames: Pick<FrameClock, 'arm'>;
+  /** Started at a found scan's receive time and armed after each module draw, so the next frame is timed. */
+  readonly frames: Pick<FrameClock, 'arm' | 'start'>;
 };
 
 /**
@@ -101,7 +103,8 @@ export type PageModuleMode = {
   readonly received: (state: GraphReady) => void;
   readonly enter: (packageName: string) => void;
   readonly leave: () => void;
-  readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage) => void;
+  /** A host message received at `at`. */
+  readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number) => void;
   /** A host message replaced the page; the next graph state still listing the package takes it back. */
   readonly suspend: () => void;
   /** Draws the saved view again with the camera kept; Shown only. */

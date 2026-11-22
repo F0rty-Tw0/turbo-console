@@ -98,14 +98,15 @@ export const modeGroupHiderOf = (
 /** Modules mode over the page; Packages and Tasks leave it, wired before task mode's listeners, so they run first. */
 export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: ModuleModeHooks): PageModuleMode => {
   const { page, bridge, runner } = deps;
+  const { frames, modes, onExit, tasks } = hooks;
   const notice = (text: string): void => hooks.tasks().notice(text);
   const viewport = (): Viewport => view.viewport();
   const { showGraph } = layoutScreenOf(page);
   const measures = measuresOf(deps);
   const onFailure = (error: unknown): void => showFailure(page, error);
-  const layout = new GraphModuleLayout({ view, runner, measures, frames: hooks.frames, showGraph, onFailure });
+  const layout = new GraphModuleLayout({ view, runner, measures, frames, showGraph, onFailure });
   const screen = moduleScreenOf({ page, layout, canvas: view.modules, showGraph });
-  const mode = new GraphModuleMode({ modes: hooks.modes, bridge, screen, tasks: hooks.tasks, onExit: hooks.onExit, notice, viewport });
+  const mode = new GraphModuleMode({ modes, bridge, screen, tasks, onExit, notice, viewport, frames });
   const input = moduleInputOf({ mode, canvas: view.modules, bridge });
   const leave = (): void => mode.leave();
   const modules: PageModuleMode = {
@@ -113,7 +114,7 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
     received: (state: GraphReady): void => mode.received(state),
     enter: (packageName: string): void => mode.enter(packageName),
     leave,
-    receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage): void => mode.receive(message),
+    receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number): void => mode.receive(message, at),
     suspend: (): void => mode.suspend(),
     relayout: (): void => relayoutOf(mode),
     input

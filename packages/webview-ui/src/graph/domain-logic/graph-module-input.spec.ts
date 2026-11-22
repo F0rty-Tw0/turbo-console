@@ -12,7 +12,7 @@ import type { ModuleRedraw } from '../common/module-mode.type.ts';
 import type { ModuleModeRig } from '../test/common/graph-module-mode.type.ts';
 import { moduleCanvasMock } from '../test/mocks/module-canvas.mock.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
-import { RIG_CAMERA, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
+import { REPLY_AT, RIG_CAMERA, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
 import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
 
 const FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
@@ -64,7 +64,7 @@ describe('FEATURE: moduleInputOf', () => {
 
   describe('GIVEN Shown web with src expanded', () => {
     beforeEach(() => {
-      mode.scanned(FOUND);
+      mode.scanned(FOUND, REPLY_AT);
       mode.update(WEB_SRC_OPEN, KEEP);
     });
 
@@ -139,7 +139,7 @@ describe('FEATURE: moduleInputOf', () => {
 
   describe('GIVEN Shown web with src and src/lib expanded', () => {
     beforeEach(() => {
-      mode.scanned(FOUND);
+      mode.scanned(FOUND, REPLY_AT);
     });
 
     it('WHEN src is collapsed THEN src/lib stays listed, to show again when src opens', () => {

@@ -113,8 +113,11 @@ export class GraphModuleMode {
     this.ask(current.name);
   }
 
-  /** The host's scan of the package on screen; a reply for another package, or before any ask, is ignored. */
-  public scanned(message: GraphPackageModulesMessage): void {
+  /**
+   * The host's scan of the package on screen, received at `at`; a reply for another package, or before any ask, is
+   * ignored. A found scan starts the frame clock at `at`, so its draw's first frame is timed from the reply.
+   */
+  public scanned(message: GraphPackageModulesMessage, at: number): void {
     const { current } = this;
     const isAsked = current.kind === 'loading' || current.kind === 'shown' || current.kind === 'failed';
 
@@ -123,6 +126,7 @@ export class GraphModuleMode {
     const { result } = message;
 
     if (result.kind === 'found') {
+      this.deps.frames.start(at);
       this.show(current.name, result, current.kind === 'shown');
 
       return;
@@ -142,9 +146,9 @@ export class GraphModuleMode {
     if (isAsked) this.ask(current.name);
   }
 
-  public receive(message: GraphPackageModulesMessage | GraphShowModulesMessage): void {
+  public receive(message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number): void {
     if (message.type === 'showModules') this.enter(message.name);
-    else this.scanned(message);
+    else this.scanned(message, at);
   }
 
   public saveCamera(): void {

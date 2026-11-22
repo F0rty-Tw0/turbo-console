@@ -6,7 +6,7 @@ import type { GraphScanModulesMessage } from '../../bridge/common/graph-modules.
 import type { GraphViewState, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import type { ModuleModeRig } from '../test/common/graph-module-mode.type.ts';
-import { ROOT_LISTED, WEB_GONE, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
+import { REPLY_AT, ROOT_LISTED, WEB_GONE, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
 import { freshModulesViewOf, freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
 const SCAN_WEB: GraphScanModulesMessage = { type: 'scanModules', packageName: 'web' };
@@ -82,7 +82,7 @@ describe('FEATURE: GraphModuleMode entry and package states', () => {
     });
 
     it('WHEN showModules web arrives THEN it is Waiting and posts nothing', () => {
-      mode.receive({ type: 'showModules', name: 'web' });
+      mode.receive({ type: 'showModules', name: 'web' }, REPLY_AT);
 
       expect(mode.phase()).toStrictEqual({ kind: 'waiting', name: 'web' });
       expect(rig.post).not.toHaveBeenCalled();
