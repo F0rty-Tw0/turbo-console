@@ -53,8 +53,8 @@ const PAN_FRAMES = 120;
 const GROUPED_FIRST_FRAME_MS = IS_WINDOWS_RUNNER || IS_MAC_RUNNER ? 3000 : 2000;
 
 /**
- * About 320 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every
- * frame), so the budget sits between them with room for CI runners that measure up to 3.4x slower (macOS reads up to
+ * About 320 ms pinned with tracing off; Cytoscape 3.34.4 unpatched read about 1500 ms (folder boxes re-styled every
+ * frame, fixed upstream in 3.35.0), so the budget sits between them with room for CI runners that measure up to 3.4x slower (macOS reads up to
  * 4.4x, see `IS_MAC_RUNNER`). The 120 px box zoom (about 0.21) is below the header rows' 0.5 floor, so no widget moves
  * in this pan.
  */

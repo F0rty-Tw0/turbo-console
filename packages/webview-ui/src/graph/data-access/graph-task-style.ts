@@ -62,7 +62,7 @@ const frameTitleYOf = (node: NodeSingular): number => Number(node.data('frameTit
 /**
  * A `box-framed` titled-row box is drawn on its ELK frame: its padding, minimum size and the px bias of each side come
  * from the frame data `applyBoxFrames` writes, and its title margins put the title at the placeholder. Not annotated
- * `Css.Node`: Cytoscape's typings lack `min-height-bias-bottom` (cytoscape 3.34.4 `index.d.ts`), which it does read.
+ * `Css.Node`: Cytoscape's typings lack `min-height-bias-bottom` (cytoscape 3.35.0 `index.d.ts`), which it does read.
  */
 const FRAMED_BOX = {
   padding: 'data(framePadding)',

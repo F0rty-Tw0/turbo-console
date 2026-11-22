@@ -93,7 +93,7 @@ const setFileOutcomes = (cy: Core, outcomes: Record<string, GraphAtomOutcome>): 
 /**
  * Starts each drawn link in `ends`, by edge id, at its `srcEnd` offset, or at its source's border for `null`; any other
  * id is skipped. `null` clears `srcEnd` through `data({ srcEnd: undefined })`, not `removeData`, which leaves the
- * link's style stale in Cytoscape 3.34.4: it skips the restyle `data` does.
+ * link's style stale in Cytoscape 3.35.0: it skips the restyle `data` does.
  */
 const setSourceEnds = (cy: Core, ends: ReadonlyMap<string, string | null>): void => {
   const startEdge = (end: string | null, id: string): void => {
