@@ -32,7 +32,7 @@ catalogs:
     # brings 10.2.2, so without it the root and the packages resolved different peers and eslint, typescript-eslint,
     # lint-suite and stylelint installed twice. Peers resolve from the workspace root first, so one variant installs.
     supports-color: '10.2.2'
-    turbo: '2.11.7'
+    turbo: '2.11.13'
     # TS 6 stays for typescript-eslint and editors; TS 7 runs typecheck and declaration emit.
     typescript: '6.0.3'
     typescript7: 'npm:typescript@7.0.2'
