@@ -88,15 +88,16 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
   test(
     'GIVEN app, a package with tasks, picked, its four action buttons sit in two equal columns',
     { annotation: D5 },
-    async ({ graphHost, graphList, graphPage, graphProbe, graphTask }): Promise<void> => {
-      const buttonOf = (name: string): Locator => graphTask.detailsButton(name);
+    async ({ graphDetailsCard, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
+      const buttonOf = (name: string): Locator => graphDetailsCard.button(name);
+      const showTasks = buttonOf(SHOW_TASKS_LABEL);
 
       await test.step('WHEN the package graph is drawn and app is picked', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(TASK_MODE_STATE_STUB);
         await graphProbe.expectNodeIds(PACKAGES);
         await graphList.pick('app');
-        await expect(graphTask.showTasksButton).toBeVisible();
+        await expect(showTasks).toBeVisible();
       });
 
       await test.step('THEN Focus sits over Start trace and Exclude over Show tasks, all four as wide', async (): Promise<void> =>
@@ -107,8 +108,9 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
   test(
     'GIVEN docs, a package with no task, picked, Start trace spans the row under Focus and Exclude',
     { annotation: D5 },
-    async ({ graphHost, graphList, graphPage, graphProbe, graphTask }): Promise<void> => {
-      const buttonOf = (name: string): Locator => graphTask.detailsButton(name);
+    async ({ graphDetailsCard, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
+      const buttonOf = (name: string): Locator => graphDetailsCard.button(name);
+      const showTasks = buttonOf(SHOW_TASKS_LABEL);
 
       await test.step('WHEN the package graph with docs is drawn and docs is picked', async (): Promise<void> => {
         await graphPage.open();
@@ -117,7 +119,7 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
         await graphList.pick('docs');
       });
 
-      await test.step('THEN Show tasks is hidden', async (): Promise<void> => expect(graphTask.showTasksButton).toBeHidden());
+      await test.step('THEN Show tasks is hidden', async (): Promise<void> => expect(showTasks).toBeHidden());
 
       await test.step('AND Start trace is as wide as Focus and Exclude together, on its own row', async (): Promise<void> =>
         expect.poll(async (): Promise<Checks> => orphanSpanOf(buttonOf)).toStrictEqual(ORPHAN_SPAN));

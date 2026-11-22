@@ -23,6 +23,11 @@ export class GraphDetailsCard {
     this.heading = this.panel.getByRole('heading', { level: 2 });
   }
 
+  /** The card's button named exactly `name`. */
+  public button(name: string): Locator {
+    return this.panel.getByRole('button', { name, exact: true });
+  }
+
   public async markHeading(): Promise<void> {
     await this.heading.evaluate(markKept);
   }
@@ -48,9 +53,5 @@ export class GraphDetailsCard {
 
       await expect(button, `the ${label} button`).toBeVisible();
     }
-  }
-
-  private button(name: string): Locator {
-    return this.panel.getByRole('button', { name, exact: true });
   }
 }
