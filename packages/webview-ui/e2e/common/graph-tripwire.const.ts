@@ -1,4 +1,4 @@
-import { IS_MAC_RUNNER } from './graph.const.ts';
+import { IS_MAC_RUNNER, IS_WINDOWS_RUNNER } from './graph.const.ts';
 
 /**
  * About 690 ms pinned (685 to 701) with tracing off, at the first notch past the rows' 0.5 zoom floor (about 0.51);
@@ -29,6 +29,12 @@ export const ROWS_BUTTONS_SHOWN = 4;
 
 /** The first-frame budget of the 14-package target-like flat row, where ELK takes little of the frame. */
 export const FLAT_FIRST_FRAME_MS = 2000;
+
+/**
+ * The first frame of a package's modules drawn at `MODULE_SHOWN_CAP` leaves (spec §9), timed from the host's reply.
+ * Windows and macOS get 3 s, as the grouped cold open does; Linux keeps 2 s.
+ */
+export const MODULES_FIRST_FRAME_MS = IS_WINDOWS_RUNNER || IS_MAC_RUNNER ? 3000 : 2000;
 
 /** Five folders of `largeState()` that sit well inside the canvas after Fit and the zoom to 120 px boxes. */
 export const TOGGLED_FOLDERS = ['group-2', 'group-3', 'group-4', 'group-12', 'group-13'];
