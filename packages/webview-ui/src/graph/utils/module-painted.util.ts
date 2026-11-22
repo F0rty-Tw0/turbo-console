@@ -31,33 +31,51 @@ const foldersAroundOf = (path: string): string[] => {
   return folders;
 };
 
-/**
- * What holds `id` in `scene`: `id` while the scene draws it, as a card or a box; else the nearest folder around it, by its
- * id path, that the scene draws as a card. `null` when the first drawn folder around it is an open box or none is drawn,
- * as for a test file now hidden or an id gone from the scene.
- */
-export const heldOf = (id: string, scene: ModuleScene): string | null => {
+/** `heldOf` over the scene's card ids, built once by the caller. */
+const heldAmongOf = (id: string, scene: ModuleScene, cardIds: string[]): string | null => {
   const boxIds = scene.boxes.map(idOfElement);
-  const cardIds = scene.leaves.map(idOfElement);
   const drawn = new Set([...boxIds, ...cardIds]);
   const isDrawn = drawn.has(id);
+  const isFile = id.startsWith(FILE_PREFIX);
+  const isIncluded = scene.fileIds.includes(id);
 
   if (isDrawn) return id;
+
+  if (isFile && !isIncluded) return null;
 
   const path = pathOf(id);
   const folders = foldersAroundOf(path);
   const isFolderDrawn = (folder: string): boolean => drawn.has(folder);
-  const nearest = folders.find(isFolderDrawn) ?? null;
-  const isCard = nearest !== null && cardIds.includes(nearest);
+  const nearest = folders.find(isFolderDrawn);
+
+  if (nearest === undefined) return null;
+
+  const isCard = cardIds.includes(nearest);
 
   return isCard ? nearest : null;
 };
 
+/**
+ * What holds `id` in `scene`: `id` while the scene draws it, as a card or a box; else the nearest folder around it, by its
+ * id path, that the scene draws as a card. `null` for a file the scene's view leaves out (`scene.fileIds`), as a test file
+ * now hidden, even under a collapsed folder; `null` too when the first drawn folder around it is an open box or none is
+ * drawn, as for an id gone from the scene.
+ */
+export const heldOf = (id: string, scene: ModuleScene): string | null => {
+  const cardIds = scene.leaves.map(idOfElement);
+  const held = heldAmongOf(id, scene, cardIds);
+
+  return held;
+};
+
 /** The card to paint for the chosen `id` in `scene`: the card that holds it; `null` when a box or nothing does. */
 export const paintTargetOf = (id: string, scene: ModuleScene): string | null => {
-  const held = heldOf(id, scene);
   const cardIds = scene.leaves.map(idOfElement);
-  const isCard = held !== null && cardIds.includes(held);
+  const held = heldAmongOf(id, scene, cardIds);
+
+  if (held === null) return null;
+
+  const isCard = cardIds.includes(held);
 
   return isCard ? held : null;
 };

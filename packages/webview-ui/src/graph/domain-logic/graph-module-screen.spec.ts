@@ -33,7 +33,9 @@ const fileLeafOf = (_: unknown, index: number): ModuleLeaf => {
 
 const LEAVES_301: ModuleLeaf[] = Array.from({ length: 301 }, fileLeafOf);
 
-const SCENE_OF_301: ModuleScene = { boxes: [], leaves: LEAVES_301, links: [], leafCount: 301 };
+const FILE_IDS_301 = LEAVES_301.map((leaf) => leaf.id);
+
+const SCENE_OF_301: ModuleScene = { boxes: [], leaves: LEAVES_301, links: [], leafCount: 301, fileIds: FILE_IDS_301 };
 
 describe('FEATURE: moduleScreenOf', () => {
   let page: PageElements;

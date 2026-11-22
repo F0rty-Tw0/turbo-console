@@ -1,6 +1,7 @@
 import { mergedLinksOf } from './merged-links.util.ts';
 import { moduleDrawnOf } from './module-drawn.util.ts';
 import type { ModuleLink, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
+import { FILE_PREFIX } from '../common/graph-module.const.ts';
 import type { DrawnEnds, MergedLink } from '../common/merged-links.type.ts';
 import type { ModuleScene, ModuleSceneLink, ModuleSceneView, ModuleShown, ModuleStubLeaf } from '../common/module-scene.type.ts';
 import type { ModuleTree } from '../common/module-tree.type.ts';
@@ -89,6 +90,7 @@ const stubLeafOf = (name: string): ModuleStubLeaf => {
 /**
  * What the module view draws for `view`: the walked tree's boxes and leaves, then the stubs a drawn link targets, in
  * `data.stubs` order. Links merge per drawn pair (self-pairs dropped), and a link left with no import shown is dropped.
+ * `fileIds` lists every file the walk drew, as its own card or under a folder card, in walk order.
  */
 export const moduleSceneOf = (tree: ModuleTree, data: ModulesFound, view: ModuleSceneView): ModuleScene => {
   const drawn = moduleDrawnOf(tree, data.tests, view);
@@ -100,7 +102,11 @@ export const moduleSceneOf = (tree: ModuleTree, data: ModulesFound, view: Module
   const drawnStubs = data.stubs.filter((name) => targets.has(`pkg:${name}`));
   const stubs = drawnStubs.map(stubLeafOf);
   const leaves = [...drawn.leaves, ...stubs];
-  const scene: ModuleScene = { boxes: drawn.boxes, leaves, links, leafCount: leaves.length };
+  const indexes = drawn.drawnOf.keys();
+  const included = [...indexes];
+  const paths = included.map((index) => tree.files[index] ?? '');
+  const fileIds = paths.map((path) => `${FILE_PREFIX}${path}`);
+  const scene: ModuleScene = { boxes: drawn.boxes, leaves, links, leafCount: leaves.length, fileIds };
 
   return scene;
 };

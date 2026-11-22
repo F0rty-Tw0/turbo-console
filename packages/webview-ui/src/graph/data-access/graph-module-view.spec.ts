@@ -24,6 +24,10 @@ const TESTS_HIDDEN: ModuleShown = { ...ALL_SHOWN_STUB, tests: false };
 
 const NO_TESTS: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src'], shown: TESTS_HIDDEN });
 
+const ROOT_ONLY: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [], shown: ALL_SHOWN_STUB });
+
+const ROOT_ONLY_NO_TESTS: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [], shown: TESTS_HIDDEN });
+
 /** No centre listed: every card is drawn at the origin. */
 const AT_ORIGIN: Positions = {};
 
@@ -198,6 +202,17 @@ describe('FEATURE: createModuleCanvas', () => {
     it('WHEN test files are hidden and shown again THEN nothing is selected, as hiding dropped the choice', () => {
       canvas.show(drawingOf(NO_TESTS));
       canvas.show(drawingOf(SCENE));
+
+      expect(cy.$('.selected')).toHaveLength(0);
+    });
+
+    it.each([
+      ['src is collapsed, then test files are hidden', [ROOT_ONLY, ROOT_ONLY_NO_TESTS]],
+      ['test files are hidden, then src is collapsed', [NO_TESTS, ROOT_ONLY_NO_TESTS]]
+    ])('WHEN %s and test files are shown again THEN nothing is selected, as hiding dropped the choice', (_, scenes) => {
+      for (const scene of scenes) canvas.show(drawingOf(scene));
+
+      canvas.show(drawingOf(ROOT_ONLY));
 
       expect(cy.$('.selected')).toHaveLength(0);
     });
