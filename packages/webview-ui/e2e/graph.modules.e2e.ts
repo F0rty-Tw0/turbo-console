@@ -4,6 +4,7 @@ import {
   D9_IDS,
   LAZIES_LABEL,
   RESET_VIEW_LABEL,
+  SHOW_MODULES_LABEL,
   TESTS_LABEL,
   TYPES_LABEL,
   VIEWS_EDGES,
@@ -86,6 +87,34 @@ test.describe('FEATURE: package modules view', () => {
         await graphModules.expectIds(D9_IDS);
         await graphModules.expectEdges(D9_EDGES);
       });
+    }
+  );
+
+  test(
+    'GIVEN app picked in the package graph, Show modules in its "…" menu asks once and draws the D9 view',
+    { annotation: MODULES },
+    async ({ graphHost, graphList, graphMenus, graphModules, graphModulesHost, graphPage, graphProbe }): Promise<void> => {
+      await test.step('WHEN the package graph is drawn and app is picked', async (): Promise<void> => {
+        await graphPage.open();
+        await graphHost.sendState(TASK_MODE_STATE_STUB);
+        await graphProbe.expectNodeIds(PACKAGES);
+        await graphList.pick('app');
+      });
+
+      await test.step('AND Show modules is chosen from its "…" menu', async (): Promise<void> => {
+        await graphMenus.openPackageMenu('app');
+        await graphMenus.item(SHOW_MODULES_LABEL).click();
+      });
+
+      await test.step('THEN the page asks for app once', async (): Promise<void> => graphModulesHost.expectModulesAsked('app', 1));
+
+      await test.step('AND the graph container has focus, the package toolbar being hidden in modules mode', async (): Promise<void> =>
+        graphPage.expectContainerFocused());
+
+      await test.step("WHEN the host answers with app's modules", async (): Promise<void> =>
+        graphModulesHost.answerModules(MODULES_APP_STUB));
+
+      await test.step('THEN the D9 view is drawn', async (): Promise<void> => graphModules.expectIds(D9_IDS));
     }
   );
 

@@ -29,7 +29,7 @@ const APP_SET = ['app#build', 'app#lint', 'lib#build', 'ui#build'];
 
 const HELD: GraphOptions = { workers: 'held' };
 
-const WEB_ITEMS = ['View Package Details', 'Focus', 'Start trace', 'Exclude'];
+const WEB_ITEMS = ['View Package Details', 'Focus', 'Start trace', 'Show modules', 'Exclude'];
 
 test.describe('FEATURE: package node toolbar', () => {
   test(
