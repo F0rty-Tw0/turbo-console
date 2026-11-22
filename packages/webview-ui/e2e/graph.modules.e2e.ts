@@ -238,18 +238,29 @@ test.describe('FEATURE: package modules view', () => {
   );
 
   test(
-    'GIVEN the D9 view, Back returns to the package graph',
+    'GIVEN the D9 view, the Controls and Details toggles and the Details sash are hidden, and Back returns to the package graph',
     { annotation: MODULES },
-    async ({ graphModules, graphProbe, graphTask, shownModules }): Promise<void> => {
-      await test.step('WHEN app is shown at D9', async (): Promise<void> => shownModules());
+    async ({ graphModules, graphProbe, graphSashes, graphTask, graphToolbar, shownModules }): Promise<void> => {
+      await test.step('WHEN app is shown at D9 from the open Details panel', async (): Promise<void> => shownModules());
 
-      await test.step('AND Back is pressed', async (): Promise<void> => graphModules.pressBar(BACK_LABEL));
+      await test.step('THEN the Controls and Details toggles are hidden', async (): Promise<void> =>
+        graphToolbar.expectPanelToggles(false));
+
+      await test.step('AND the Details sash is hidden', async (): Promise<void> => graphSashes.expectShown('details', false));
+
+      await test.step('WHEN Back is pressed', async (): Promise<void> => graphModules.pressBar(BACK_LABEL));
 
       await test.step('THEN the package graph is drawn', async (): Promise<void> => graphProbe.expectNodeIds(PACKAGES));
 
       await test.step('AND Packages is the pressed mode', async (): Promise<void> => graphTask.expectPressed(false));
 
       await test.step('AND the modules bar is hidden', async (): Promise<void> => expect(graphModules.bar).toBeHidden());
+
+      await test.step('AND the Controls and Details toggles show again', async (): Promise<void> =>
+        graphToolbar.expectPanelToggles(true));
+
+      await test.step('AND the Details sash shows beside the open panel again', async (): Promise<void> =>
+        graphSashes.expectShown('details', true));
     }
   );
 });
