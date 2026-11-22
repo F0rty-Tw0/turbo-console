@@ -1,6 +1,7 @@
 import type { GraphAffected } from './graph-affected.type.ts';
 import type { GraphAtomsMessage } from './graph-atoms-message.type.ts';
 import type { GraphEdgeImportsMessage, GraphOpenImportMessage, GraphScanImportsMessage } from './graph-imports.type.ts';
+import type { GraphPackageModulesMessage, GraphScanModulesMessage, GraphShowModulesMessage } from './graph-modules.type.ts';
 import type { GraphRunState, GraphState, Positions, Routes } from './graph-state.type.ts';
 
 /** The `package.json` field that holds a dependency entry. */
@@ -95,8 +96,8 @@ export type GraphShowPackageMessage = {
   readonly name: string;
 };
 
-/** The one request a graph panel holds until its page can take it: the latest of either kind wins. */
-export type GraphShowRequest = GraphShowTasksMessage | GraphShowPackageMessage;
+/** The one request a graph panel holds until its page can take it: the latest of any kind wins. */
+export type GraphShowRequest = GraphShowTasksMessage | GraphShowPackageMessage | GraphShowModulesMessage;
 
 /** Host to webview. */
 export type GraphHostMessage =
@@ -106,7 +107,9 @@ export type GraphHostMessage =
   | GraphRunsMessage
   | GraphShowTasksMessage
   | GraphShowPackageMessage
-  | GraphAtomsMessage;
+  | GraphAtomsMessage
+  | GraphPackageModulesMessage
+  | GraphShowModulesMessage;
 
 type GraphReadyMessage = { readonly type: 'ready' };
 
@@ -202,4 +205,5 @@ export type GraphWebviewMessage =
   | GraphStopTaskMessage
   | GraphShownUmbrellasMessage
   | GraphShownTaskPackagesMessage
-  | GraphSetViewToggleMessage;
+  | GraphSetViewToggleMessage
+  | GraphScanModulesMessage;

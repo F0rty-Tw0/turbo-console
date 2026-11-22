@@ -1,5 +1,27 @@
 import type { ImportSite } from '../../../bridge/common/graph-imports.type.ts';
+import type { ModuleCounts, ModuleLink, ModulesFound } from '../../../bridge/common/graph-modules.type.ts';
 import type { GraphEdge } from '../../../bridge/common/graph-state.type.ts';
+
+const MODULE_FILE_LINKS: ModuleLink[] = [[0, 1, 1, 0, 0]];
+
+const MODULE_STUB_LINKS: ModuleLink[] = [[0, 0, 0, 1, 0]];
+
+const MODULE_COUNTS: ModuleCounts = { unresolved: 0, external: 2, assets: 0, self: 0 };
+
+/** One valid modules scan: two files (the second a test), one static file link 0 → 1, and one type link from file 0 to the stub `@s/b`. */
+export const MODULES_FOUND_STUB: ModulesFound = {
+  kind: 'found',
+  files: ['src/a.ts', 'src/a.spec.ts'],
+  tests: [1],
+  stubs: ['@s/b'],
+  fileLinks: MODULE_FILE_LINKS,
+  stubLinks: MODULE_STUB_LINKS,
+  counts: MODULE_COUNTS,
+  scanned: 2,
+  skipped: 0,
+  limit: null,
+  dropped: 0
+};
 
 /** One valid import site, a static `import 'core';` on line 3 of `src/a.ts`, as a host sends it. */
 export const IMPORT_SITE_STUB: ImportSite = {
