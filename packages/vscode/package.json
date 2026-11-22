@@ -29,7 +29,7 @@
   ],
   "type": "module",
   "engines": {
-    "vscode": "^1.139.0"
+    "vscode": "^1.144.0"
   },
   "main": "./dist/extension.cjs",
   "activationEvents": [
@@ -797,7 +797,7 @@
     "@turbo-console/tools": "workspace:*",
     "@turbo-console/webview-ui": "workspace:*",
     "@types/svg2ttf": "catalog:dev",
-    "@types/vscode": "1.138.0",
+    "@types/vscode": "1.144.0",
     "@vscode/test-electron": "catalog:dev",
     "@vscode/vsce": "catalog:dev",
     "lint-suite": "catalog:dev",

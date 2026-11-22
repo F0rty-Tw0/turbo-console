@@ -350,8 +350,8 @@ importers:
         specifier: catalog:dev
         version: 5.0.3
       '@types/vscode':
-        specifier: 1.138.0
-        version: 1.138.0
+        specifier: 1.144.0
+        version: 1.144.0
       '@vscode/test-electron':
         specifier: catalog:dev
         version: 3.1.0(supports-color@10.2.2)
@@ -1518,8 +1518,8 @@ packages:
   '@types/svg2ttf@5.0.3':
     resolution: {integrity: sha512-hL+/A4qMISvDbDTtdY73R0zuvsdc7YRYnV5FyAfKVGk8OsluXu/tCFxop7IB5Sgr+ZCS0hHtFxylD0REmm+abA==}
 
-  '@types/vscode@1.138.0':
-    resolution: {integrity: sha512-DhlvrucJa8n6EHst7qQcXOcjLKs/VRTQy55plLO+RN74jonYsr/t9dd66zBnAyz1tpDig0okQAxuoPHpVNje2g==}
+  '@types/vscode@1.144.0':
+    resolution: {integrity: sha512-IDd4eQzu6MjGucfaQF0V/TY5vHX9o1albkKyZD6K/iVXSCcL5NSj4KW1wWfx1QDadPKWyxMaE/+M1wKLCJlXpA==}
 
   '@typescript-eslint/eslint-plugin@8.71.1':
     resolution: {integrity: sha512-nNlBf6HuotqMgZvSkWD5hNdemiBIxQ2NmrlgfcUIeZRs+BbakjscCQRq/Hb74EFVnFiSWWdL12JruqwBy3ERDw==}
@@ -4926,7 +4926,7 @@ snapshots:
 
   '@types/svg2ttf@5.0.3': {}
 
-  '@types/vscode@1.138.0': {}
+  '@types/vscode@1.144.0': {}
 
   '@typescript-eslint/eslint-plugin@8.71.1(@typescript-eslint/parser@8.71.1(eslint@10.15.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint@10.15.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)':
     dependencies:
