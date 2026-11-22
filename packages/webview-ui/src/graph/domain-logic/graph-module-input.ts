@@ -22,19 +22,23 @@ const shownViewOf = (mode: ModuleInputMode): ModulesViewState | null => {
 };
 
 /**
- * The expansion after a folder tap: a collapsed folder opens, a box other than the root closes (folders expanded inside
- * it stay listed, never drawn while it is closed, spec §7.3); `null` for the root box and for a card that is no folder.
+ * The expansion after a folder tap, toggled by the saved list rather than the drawn kind, which lags until the anchored
+ * redraw lands: a folder not listed opens, a listed one other than the root closes (folders expanded inside it stay
+ * listed, never drawn while it is closed, spec §7.3). So a double tap opens and closes, and no path is listed twice;
+ * `null` for the root box and for a card that is no folder.
  */
 const expandedAfterTap = (view: ModulesViewState, kind: ModuleElementKind | null, id: string): string[] | null => {
   const expanded = view.expanded ?? [];
   const path = id.slice(DIR_PREFIX.length);
   const isOther = (open: string): boolean => open !== path;
+  const isFolder = kind === 'dir' || kind === 'box';
+  const isListed = expanded.includes(path);
 
-  if (kind === 'dir') return [...expanded, path];
+  if (!isFolder || id === ROOT_BOX_ID) return null;
 
-  if (kind !== 'box' || id === ROOT_BOX_ID) return null;
+  if (isListed) return expanded.filter(isOther);
 
-  return expanded.filter(isOther);
+  return [...expanded, path];
 };
 
 /**

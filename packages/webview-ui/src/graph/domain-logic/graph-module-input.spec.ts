@@ -76,6 +76,14 @@ describe('FEATURE: moduleInputOf', () => {
       expect(rig.screen.shown.mock.lastCall?.[3]).toStrictEqual({ kind: 'anchor', id: 'dir:src/lib' });
     });
 
+    it('WHEN the collapsed folder src/lib is tapped twice before it is redrawn THEN the expansion is back to src alone', () => {
+      canvas.kindOf.mockReturnValue('dir');
+      input.tapNode('dir:src/lib');
+      input.tapNode('dir:src/lib');
+
+      expect(modes.modules()?.expanded).toStrictEqual(['src']);
+    });
+
     it('WHEN the src box is tapped THEN src is collapsed', () => {
       canvas.kindOf.mockReturnValue('box');
       input.tapNode('dir:src');
