@@ -15,7 +15,7 @@ import {
 } from '../common/graph-module.const.ts';
 import type { ModulesBarElements } from '../common/modules-bar.type.ts';
 
-/** A View checkbox, checked: every kind shows until the saved view says otherwise. */
+/** A View checkbox, checked until the screen sets it from the view when a scan starts. */
 const checkedBox = (): HTMLInputElement => {
   const check = checkbox('controls-check');
 

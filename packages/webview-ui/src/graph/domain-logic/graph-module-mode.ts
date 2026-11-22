@@ -54,7 +54,7 @@ export class GraphModuleMode {
     const view = saved?.packageName === packageName ? saved : fresh;
 
     deps.modes.saveModules(view, this.hash());
-    deps.screen.scanning(packageName);
+    deps.screen.scanning(packageName, view);
 
     if (this.latest === null) {
       this.current = { kind: 'waiting', name: packageName };

@@ -85,6 +85,24 @@ describe('FEATURE: modules bar wiring', () => {
     });
   });
 
+  describe('GIVEN a multi-package graph with web entered fresh and its scan not back yet', () => {
+    beforeEach(() => {
+      controller.receive({ type: 'state', state: WEB_LISTED });
+      controller.receive({ type: 'showModules', name: 'web' });
+    });
+
+    it('WHEN Type-only imports is unchecked THEN the saved view still hides test files', () => {
+      mock.page.modules.types.checked = false;
+      mock.page.modules.types.dispatchEvent(new Event('change'));
+
+      expect(vi.mocked(mock.saver.schedule).mock.lastCall?.[0].modules?.shown).toStrictEqual({
+        types: false,
+        tests: false,
+        lazies: true
+      });
+    });
+  });
+
   describe('GIVEN a multi-package graph with web shown in modules mode', () => {
     beforeEach(() => {
       controller.receive({ type: 'state', state: WEB_LISTED });

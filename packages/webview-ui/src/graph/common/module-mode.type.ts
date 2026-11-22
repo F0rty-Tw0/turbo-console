@@ -42,8 +42,8 @@ export type ModuleRedraw = ModuleRedrawFirst | ModuleRedrawKeep | ModuleRedrawAn
 /** What the mode asks of the page: the canvas, the modules bar and its banners. */
 export type ModuleScreen = {
   readonly enter: () => void;
-  /** Waiting and Loading: empty canvas, "Scanning <P>…", Refresh visible. */
-  readonly scanning: (name: string) => void;
+  /** Waiting and Loading: empty canvas, "Scanning <P>…", Refresh visible, the View boxes set from `view`. */
+  readonly scanning: (name: string, view: ModulesViewState) => void;
   readonly shown: (name: string, found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => void;
   /** Keeps the old graph drawn, if any, and shows "Could not scan <P>." with Retry; with none, the status is emptied. */
   readonly failed: (name: string) => void;

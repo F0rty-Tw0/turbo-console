@@ -49,10 +49,10 @@ describe('FEATURE: GraphModuleMode entry and package states', () => {
       expect([modes.mode(), modes.modules()]).toStrictEqual(['modules', FRESH_WEB]);
     });
 
-    it('WHEN web is entered THEN the screen enters and shows the scan of web', () => {
+    it('WHEN web is entered THEN the screen enters and shows the scan of web with the fresh view', () => {
       mode.enter('web');
 
-      expect([rig.screen.enter.mock.calls, rig.screen.scanning.mock.calls]).toStrictEqual([[[]], [['web']]]);
+      expect([rig.screen.enter.mock.calls, rig.screen.scanning.mock.calls]).toStrictEqual([[[]], [['web', FRESH_WEB]]]);
     });
 
     it('WHEN web is entered twice THEN the second enter is ignored', () => {

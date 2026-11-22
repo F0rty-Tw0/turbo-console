@@ -56,7 +56,7 @@ describe('FEATURE: moduleScreenOf', () => {
 
   describe('GIVEN the screen entered on web', () => {
     it('WHEN it is scanning THEN the bar reads Modules of web and Scanning web…, with Refresh shown and no banner', () => {
-      screen.scanning('web');
+      screen.scanning('web', FRESH_WEB);
 
       expect([
         page.modules.title.textContent,
@@ -64,6 +64,12 @@ describe('FEATURE: moduleScreenOf', () => {
         page.modules.refresh.hidden,
         page.modules.banner.hidden
       ]).toStrictEqual(['Modules of web', 'Scanning web…', false, true]);
+    });
+
+    it('WHEN a fresh view is scanning THEN the View boxes read it, Test files unchecked', () => {
+      screen.scanning('web', FRESH_WEB);
+
+      expect([page.modules.types.checked, page.modules.tests.checked, page.modules.lazies.checked]).toStrictEqual([true, false, true]);
     });
 
     it('WHEN it fails THEN the banner reads Could not scan web. with Retry shown', () => {
@@ -99,7 +105,7 @@ describe('FEATURE: moduleScreenOf', () => {
   describe('GIVEN web scanning with no graph drawn', () => {
     it('WHEN it fails THEN the bar no longer reads Scanning web…', () => {
       layout.scene.mockReturnValue(null);
-      screen.scanning('web');
+      screen.scanning('web', FRESH_WEB);
       screen.failed('web');
 
       expect([page.modules.status.textContent, page.modules.status.title]).toStrictEqual(['', '']);
@@ -111,7 +117,7 @@ describe('FEATURE: moduleScreenOf', () => {
       screen.shown('web', FOUND, FRESH_WEB, { kind: 'first' });
       await vi.waitFor(() => expect(page.modules.slow.hidden).toBe(false));
       screen.failed('web');
-      screen.scanning('web');
+      screen.scanning('web', FRESH_WEB);
 
       expect([
         page.modules.banner.hidden,

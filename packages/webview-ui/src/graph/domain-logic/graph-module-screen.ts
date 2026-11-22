@@ -13,6 +13,13 @@ const showBanner = (bar: ModulesBarElements, text: string | null, canRetry: bool
   bar.retry.hidden = !canRetry;
 };
 
+/** The View boxes read the kinds `view` shows, so a toggle reads them back unchanged. */
+const showBoxes = (bar: ModulesBarElements, view: ModulesViewState): void => {
+  bar.types.checked = view.shown.types;
+  bar.tests.checked = view.shown.tests;
+  bar.lazies.checked = view.shown.lazies;
+};
+
 /** Title, counts, tooltip, banner and the View boxes of a found scan; the counts read the payload, so toggles never change them. */
 const showFound = (bar: ModulesBarElements, name: string, found: ModulesFound, view: ModulesViewState): void => {
   const banner = moduleBannerOf(found);
@@ -20,9 +27,7 @@ const showFound = (bar: ModulesBarElements, name: string, found: ModulesFound, v
   bar.title.textContent = modulesTitleOf(name);
   bar.status.textContent = moduleStatusOf(found);
   bar.status.title = moduleTooltipOf(found);
-  bar.types.checked = view.shown.types;
-  bar.tests.checked = view.shown.tests;
-  bar.lazies.checked = view.shown.lazies;
+  showBoxes(bar, view);
   showBanner(bar, banner, false);
 };
 
@@ -45,10 +50,10 @@ const drawAndWarn = async (
 
 /**
  * The modules screen (spec §7.4): the `modules-mode` class on the page, which shows the modules bar, and the mode buttons,
- * neither pressed while it shows. Waiting and Loading empty the canvas and read "Scanning <P>…"; Shown writes the bar and
- * draws; Failed shows "Could not scan <P>." with Retry and, only when no graph is drawn, empties the canvas and the
- * status; `reshow` takes the page back from a host message; leaving clears it and presses Packages again, which task
- * mode's enter undoes on a leave to tasks.
+ * neither pressed while it shows. Waiting and Loading empty the canvas, read "Scanning <P>…" and set the View boxes from
+ * the view; Shown writes the bar and draws; Failed shows "Could not scan <P>." with Retry and, only when no graph is
+ * drawn, empties the canvas and the status; `reshow` takes the page back from a host message; leaving clears it and
+ * presses Packages again, which task mode's enter undoes on a leave to tasks.
  */
 export const moduleScreenOf = (deps: ModuleScreenDeps): ModuleScreen => {
   const { page, layout, canvas } = deps;
@@ -58,10 +63,11 @@ export const moduleScreenOf = (deps: ModuleScreenDeps): ModuleScreen => {
     page.packagesMode.setAttribute('aria-pressed', 'false');
     page.taskMode.setAttribute('aria-pressed', 'false');
   };
-  const scanning = (name: string): void => {
+  const scanning = (name: string, view: ModulesViewState): void => {
     bar.title.textContent = modulesTitleOf(name);
     bar.status.textContent = scanningTextOf(name);
     bar.status.title = '';
+    showBoxes(bar, view);
     bar.refresh.hidden = false;
     bar.slow.hidden = true;
     showBanner(bar, null, false);
