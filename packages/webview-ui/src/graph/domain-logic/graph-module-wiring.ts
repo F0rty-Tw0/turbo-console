@@ -1,7 +1,7 @@
 import { moduleInputOf } from './graph-module-input.ts';
 import { GraphModuleLayout } from './graph-module-layout.ts';
 import { GraphModuleMode } from './graph-module-mode.ts';
-import { layoutScreenOf } from './graph-page-states.ts';
+import { layoutScreenOf, showFailure } from './graph-page-states.ts';
 import type { GraphPackageModulesMessage, GraphShowModulesMessage, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
@@ -71,7 +71,8 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
   const viewport = (): Viewport => view.viewport();
   const { showNotice } = layoutScreenOf(page);
   const measures = measuresOf(deps);
-  const layout = new GraphModuleLayout({ view, runner, measures, frames: hooks.frames, showNotice });
+  const onFailure = (error: unknown): void => showFailure(page, error);
+  const layout = new GraphModuleLayout({ view, runner, measures, frames: hooks.frames, showNotice, onFailure });
   const screen = moduleScreenOf(page, layout, view);
   const mode = new GraphModuleMode({ modes: hooks.modes, bridge, screen, tasks: hooks.tasks, onExit: hooks.onExit, notice, viewport });
   const input = moduleInputOf({ mode, canvas: view.modules, bridge });

@@ -8,7 +8,11 @@ import type { LayoutScreen } from '../common/graph-layouts.type.ts';
 import type { GraphView, Viewport } from '../common/graph-page.type.ts';
 import type { LayoutResult, LayoutRunner } from '../common/layout.type.ts';
 import type { ModuleCanvas } from '../common/module-canvas.type.ts';
+import type { ModuleLayoutDeps } from '../common/module-mode.type.ts';
+import type { ModuleMeasures } from '../common/module-scene.type.ts';
+import type { NodeSize } from '../common/node-size.type.ts';
 import { graphViewMock } from '../test/mocks/graph-view.mock.ts';
+import { layoutRunsMock } from '../test/mocks/layout-runner.mock.ts';
 import { moduleCanvasMock } from '../test/mocks/module-canvas.mock.ts';
 import { MODULES_FOUND_STUB, MODULE_MEASURES_STUB } from '../test/stubs/module-scene.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
@@ -26,15 +30,31 @@ const SAVED_PAN: Position = { x: 3, y: 4 };
 
 const SAVED_CAMERA: Viewport = { zoom: 2, pan: SAVED_PAN };
 
+const ELK_FAILED = new Error('elk failed');
+
+const throwSize = (): NodeSize => {
+  throw ELK_FAILED;
+};
+
+const THROWING_MEASURES: ModuleMeasures = { ...MODULE_MEASURES_STUB, sizeOf: throwSize };
+
 const laidOut = async (hash: string): Promise<LayoutResult | null> => Promise.resolve(resultOf(hash, {}));
 
-describe('FEATURE: GraphModuleLayout camera', () => {
+describe('FEATURE: GraphModuleLayout', () => {
   let view: Mocked<GraphView>;
   let canvas: Mocked<ModuleCanvas>;
   let runner: Mocked<LayoutRunner>;
   let arm: Mock<() => void>;
   let showNotice: Mock<LayoutScreen['showNotice']>;
+  let onFailure: Mock<(error: unknown) => void>;
   let layout: GraphModuleLayout;
+
+  const layoutWith = (run: LayoutRunner, measures: ModuleMeasures): GraphModuleLayout => {
+    const frames = { arm };
+    const deps: ModuleLayoutDeps = { view, runner: run, measures, frames, showNotice, onFailure };
+
+    return new GraphModuleLayout(deps);
+  };
 
   beforeEach(() => {
     const base = graphViewMock(VIEWPORT);
@@ -44,9 +64,8 @@ describe('FEATURE: GraphModuleLayout camera', () => {
     runner = { run: vi.fn(laidOut) };
     arm = vi.fn();
     showNotice = vi.fn();
-    const frames = { arm };
-
-    layout = new GraphModuleLayout({ view, runner, measures: MODULE_MEASURES_STUB, frames, showNotice });
+    onFailure = vi.fn();
+    layout = layoutWith(runner, MODULE_MEASURES_STUB);
   });
 
   describe('GIVEN a first draw with a saved camera', () => {
@@ -123,6 +142,38 @@ describe('FEATURE: GraphModuleLayout camera', () => {
       await drawing;
 
       expect([canvas.show.mock.calls.length, layout.scene()]).toStrictEqual([0, null]);
+    });
+  });
+
+  describe('GIVEN a layout that throws while it is the draw asked for last', () => {
+    it('WHEN it lands THEN the canvas is cleared and the failure reported once', async () => {
+      runner.run.mockRejectedValueOnce(ELK_FAILED);
+
+      await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'first' });
+
+      expect([canvas.clear.mock.calls.length, onFailure.mock.calls]).toStrictEqual([1, [[ELK_FAILED]]]);
+    });
+
+    it('WHEN measuring a card throws THEN the failure is reported and nothing is laid out', async () => {
+      const measured = layoutWith(runner, THROWING_MEASURES);
+
+      await measured.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'first' });
+
+      expect([runner.run.mock.calls.length, onFailure.mock.calls]).toStrictEqual([0, [[ELK_FAILED]]]);
+    });
+  });
+
+  describe('GIVEN a draw overtaken by a newer one', () => {
+    it('WHEN the first layout then throws THEN nothing is cleared or reported', async () => {
+      const runs = layoutRunsMock();
+      const raced = layoutWith(runs.runner, MODULE_MEASURES_STUB);
+      const first = raced.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'first' });
+
+      void raced.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'keep' });
+      await runs.fail(0, ELK_FAILED);
+      await first;
+
+      expect([canvas.clear.mock.calls.length, onFailure.mock.calls.length]).toStrictEqual([0, 0]);
     });
   });
 });

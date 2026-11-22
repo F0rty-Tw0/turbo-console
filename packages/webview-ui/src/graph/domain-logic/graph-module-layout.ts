@@ -24,7 +24,8 @@ const sceneViewOf = (view: ModulesViewState): ModuleSceneView => {
 
 /**
  * The modules graph's layout (spec §7.4): builds the scene, lays it out on the shared runner (latest call wins, and a
- * `clear` drops the run in flight), shows it and places the camera as `redraw` says.
+ * `clear` drops the run in flight), shows it and places the camera as `redraw` says. A draw that throws while it is
+ * still the one asked for last empties the canvas and goes to `onFailure`; one a newer draw or a `clear` overtook is dropped.
  */
 export class GraphModuleLayout {
   private readonly deps: ModuleLayoutDeps;
@@ -36,20 +37,18 @@ export class GraphModuleLayout {
   }
 
   public async draw(found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw): Promise<void> {
-    const tree = moduleTreeOf(found.files);
-    const scene = moduleSceneOf(tree, found, sceneViewOf(view));
-    const graph = elkModuleGraphOf(scene, this.deps.measures);
-    const key = layoutKeyOf(view);
-
     this.ticket += 1;
 
-    const ticket = this.ticket;
-    const result = await this.deps.runner.run(key, graph);
-    const isOvertaken = ticket !== this.ticket;
+    const { ticket } = this;
 
-    if (result === null || isOvertaken) return;
+    try {
+      await this.layOut(found, view, redraw, ticket);
+    } catch (error: unknown) {
+      if (ticket !== this.ticket) return;
 
-    this.place(scene, result, view, redraw);
+      this.clear();
+      this.deps.onFailure(error);
+    }
   }
 
   /** The scene on screen; `null` before the first draw and after `clear`. */
@@ -62,6 +61,20 @@ export class GraphModuleLayout {
     this.ticket += 1;
     this.drawn = null;
     this.deps.view.modules.clear();
+  }
+
+  /** Builds the scene and lays it out; a run that lands after `ticket` was overtaken, or that the runner dropped, shows nothing. */
+  private async layOut(found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw, ticket: number): Promise<void> {
+    const tree = moduleTreeOf(found.files);
+    const scene = moduleSceneOf(tree, found, sceneViewOf(view));
+    const graph = elkModuleGraphOf(scene, this.deps.measures);
+    const key = layoutKeyOf(view);
+    const result = await this.deps.runner.run(key, graph);
+    const isOvertaken = ticket !== this.ticket;
+
+    if (result === null || isOvertaken) return;
+
+    this.place(scene, result, view, redraw);
   }
 
   /** Shows the scene, then the engine notice, then the camera, then arms the frame clock, as the task layout does. */

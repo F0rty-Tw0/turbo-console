@@ -111,6 +111,8 @@ export type ModuleLayoutDeps = {
   readonly measures: ModuleMeasures;
   readonly frames: Pick<FrameClock, 'arm'>;
   readonly showNotice: LayoutScreen['showNotice'];
+  /** A draw that threw while still the one asked for last; the canvas is already empty. */
+  readonly onFailure: (error: unknown) => void;
 };
 
 /** Modules mode as the canvas input drives it (`GraphModuleMode`). */
