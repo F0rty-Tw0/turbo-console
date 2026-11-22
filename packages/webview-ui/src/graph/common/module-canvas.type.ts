@@ -21,9 +21,13 @@ export type ModuleCanvas = {
    * card now collapsed over it. Otherwise, as for a test file now hidden, the choice is dropped and nothing is painted.
    */
   readonly show: (drawing: ModuleDrawing) => void;
-  /** Removes every element and forgets the chosen card. */
+  /** Removes every element and forgets the chosen card and the scene drawn last. */
   readonly clear: () => void;
-  /** Chooses `id`: it is selected and its 1-hop neighbours highlighted, the rest dimmed; `null` paints all normal. */
+  /**
+   * Chooses `id` and paints the card that holds it in the scene drawn last (the folder card collapsed over a file):
+   * that card is selected and its 1-hop neighbours highlighted, the rest dimmed; `null`, or no card holding it, paints
+   * all normal.
+   */
   readonly paint: (id: string | null) => void;
   readonly kindOf: (id: string) => ModuleElementKind | null;
   /** The element's centre in container px; `null` when not drawn. */

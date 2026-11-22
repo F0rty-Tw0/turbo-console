@@ -8,7 +8,7 @@ import { MODULE_BOX_CLASS, MODULE_DIR_CLASS, MODULE_FILE_CLASS, MODULE_STUB_CLAS
 import { TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
 import type { ModuleCanvas, ModuleDrawing, ModuleElementKind } from '../common/module-canvas.type.ts';
 import type { ModuleBox, ModuleLeaf, ModuleScene } from '../common/module-scene.type.ts';
-import { keepsSelection, paintTargetOf } from '../utils/module-painted.util.ts';
+import { paintTargetOf } from '../utils/module-painted.util.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 
 type KindClass = [ModuleElementKind, string];
@@ -85,43 +85,53 @@ const drawModules = (cy: Core, drawing: ModuleDrawing): void => {
   cy.add(elements);
 };
 
-/** `chosen` while `scene` keeps it; `null` once it drops it or with nothing chosen. */
-const keptChoiceOf = (chosen: string | null, scene: ModuleScene): string | null => {
-  if (chosen === null) return null;
+/**
+ * The card to paint for `chosen` in `scene`: the card that holds it, or `null` when none does or nothing is chosen. With
+ * no scene drawn yet, `chosen` itself, which paints nothing on the empty core.
+ */
+const paintedOf = (chosen: string | null, scene: ModuleScene | null): string | null => {
+  if (chosen === null || scene === null) return chosen;
 
-  const isKept = keepsSelection(chosen, scene);
+  const target = paintTargetOf(chosen, scene);
 
-  return isKept ? chosen : null;
+  return target;
 };
 
 /**
  * The modules graph on `cy`, the core the package and task graphs share; showing it removes what they drew. A drag
  * unroutes only module links, so it leaves the other modes' edges as they are. It keeps the chosen card apart from what
- * it paints: a redraw keeps the choice while a card holds it and paints that card, the folder collapsed over it or the
- * card itself once the folder opens again, so a folder tap never changes the choice; `clear` forgets it.
+ * it paints, the card that holds it in the scene drawn last: a redraw keeps the choice while a card holds it and paints
+ * that card, the folder collapsed over it or the card itself once the folder opens again, so a folder tap never changes
+ * the choice; `clear` forgets it and the scene.
  */
 export const createModuleCanvas = (cy: Core): ModuleCanvas => {
   cy.on('drag', 'node', unrouteDragged);
 
   let chosen: string | null = null;
+  let scene: ModuleScene | null = null;
   const paint = (id: string | null): void => {
+    const target = paintedOf(id, scene);
+
     chosen = id;
-    paintModules(cy, id);
+    paintModules(cy, target);
   };
   const show = (drawing: ModuleDrawing): void => {
-    const kept = keptChoiceOf(chosen, drawing.scene);
+    const target = paintedOf(chosen, drawing.scene);
 
     drawModules(cy, drawing);
-    chosen = kept;
+    scene = drawing.scene;
 
-    if (kept === null) return;
+    if (target === null) {
+      chosen = null;
 
-    const target = paintTargetOf(kept, drawing.scene);
+      return;
+    }
 
     paintModules(cy, target);
   };
   const clear = (): void => {
     chosen = null;
+    scene = null;
     cy.elements().remove();
   };
   const kindOf = (id: string): ModuleElementKind | null => kindOfNode(cy.getElementById(id));

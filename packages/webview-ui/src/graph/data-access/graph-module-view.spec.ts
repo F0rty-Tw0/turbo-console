@@ -161,6 +161,19 @@ describe('FEATURE: createModuleCanvas', () => {
       expect([cy.$id(A_ID).hasClass('selected'), cy.$id(B_ID).hasClass('highlighted')]).toStrictEqual([true, true]);
     });
 
+    it('WHEN b.ts inside the collapsed src/lib is painted THEN the src/lib card is selected', () => {
+      canvas.paint(B_ID);
+
+      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([LIB_ID]);
+    });
+
+    it('WHEN b.ts inside the collapsed src/lib is painted and src/lib opened THEN b.ts is selected, as it stayed the choice', () => {
+      canvas.paint(B_ID);
+      canvas.show(drawingOf(LIB_OPEN));
+
+      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([B_ID]);
+    });
+
     it('WHEN a.ts is painted, the canvas cleared and the scene drawn again THEN nothing is selected', () => {
       canvas.paint(A_ID);
       canvas.clear();
