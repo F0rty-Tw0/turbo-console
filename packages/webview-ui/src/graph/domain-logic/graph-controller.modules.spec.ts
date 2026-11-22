@@ -8,7 +8,7 @@ import { MODULES_DROPPED_WARNING, MODULES_MODE_CLASS } from '../common/graph-mod
 import type { GraphController } from '../common/graph-page.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
-import { STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
+import { FLAT_POSITIONS_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
@@ -130,6 +130,23 @@ describe('FEATURE: createGraphController modules messages', () => {
       mock.page.packagesMode.click();
 
       expect(clear).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN web inspected in a multi-package graph', () => {
+    let controller: GraphController;
+
+    beforeEach(async () => {
+      controller = createGraphController(mock.deps);
+      controller.receive({ type: 'state', state: STATE_STUB });
+      await mock.runs.settle(mock.runs.count() - 1, resultOf('h1', FLAT_POSITIONS_STUB));
+      vi.mocked(mock.deps.createView).mock.calls[0]?.[1].onTapNode('web');
+    });
+
+    it('WHEN the Details Show modules is clicked THEN scanModules for web is posted', () => {
+      mock.packageViews.at(-1)?.showModules.click();
+
+      expect(mock.deps.bridge.post).toHaveBeenLastCalledWith({ type: 'scanModules', packageName: 'web' });
     });
   });
 
