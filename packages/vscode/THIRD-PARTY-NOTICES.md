@@ -2,7 +2,7 @@
 
 `dist/extension.cjs` bundles the packages below.
 
-## zod 4.6.5
+## zod 4.6.7
 
 - License: MIT.
 - Source: https://github.com/colinhacks/zod
