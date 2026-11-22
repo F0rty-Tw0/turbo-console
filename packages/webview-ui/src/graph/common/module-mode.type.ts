@@ -1,5 +1,10 @@
-import type { Viewport } from './graph-page.type.ts';
+import type { FrameClock } from './frame-clock.type.ts';
+import type { LayoutScreen } from './graph-layouts.type.ts';
+import type { GraphView, Viewport } from './graph-page.type.ts';
 import type { TaskModes } from './graph-task.type.ts';
+import type { LayoutRunner } from './layout.type.ts';
+import type { HandledModules, ModuleCanvas } from './module-canvas.type.ts';
+import type { ModuleMeasures } from './module-scene.type.ts';
 import type { PageTaskMode } from './page-task-mode.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphPackageModulesMessage, GraphShowModulesMessage, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
@@ -80,13 +85,46 @@ export type ModuleModeHooks = {
   /** Read per call: task mode is built after modules mode. */
   readonly tasks: () => ModuleHookTasks;
   readonly onExit: (to: ModuleExit) => void;
+  /** Armed after each module draw, so the next frame is timed. */
+  readonly frames: Pick<FrameClock, 'arm'>;
 };
 
-/** Modules mode as the page controller holds it: what the state routing asks of it, plus the host's messages and the leave. */
+/**
+ * Modules mode as the page controller holds it: what the state routing asks of it, the host's messages and the leave,
+ * Re-layout and Retry (`relayout`), and the canvas events (`input`).
+ */
 export type PageModuleMode = {
   readonly isActive: () => boolean;
   readonly received: (state: GraphReady) => void;
   readonly enter: (packageName: string) => void;
   readonly leave: () => void;
   readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage) => void;
+  /** Draws the saved view again with the camera kept; Shown only. */
+  readonly relayout: () => void;
+  readonly input: HandledModules;
+};
+
+/** What the module layout draws on and with. */
+export type ModuleLayoutDeps = {
+  readonly view: Pick<GraphView, 'modules' | 'viewport' | 'setViewport' | 'open' | 'fit'>;
+  readonly runner: LayoutRunner;
+  readonly measures: ModuleMeasures;
+  readonly frames: Pick<FrameClock, 'arm'>;
+  readonly showNotice: LayoutScreen['showNotice'];
+};
+
+/** Modules mode as the canvas input drives it (`GraphModuleMode`). */
+export type ModuleInputMode = {
+  readonly isActive: () => boolean;
+  readonly phase: () => ModulePhase;
+  readonly view: () => ModulesViewState | null;
+  readonly update: (view: ModulesViewState, redraw: ModuleRedraw) => void;
+  readonly enter: (packageName: string) => void;
+  readonly saveCamera: () => void;
+};
+
+export type ModuleInputDeps = {
+  readonly mode: ModuleInputMode;
+  readonly canvas: ModuleCanvas;
+  readonly bridge: Pick<Bridge, 'post'>;
 };

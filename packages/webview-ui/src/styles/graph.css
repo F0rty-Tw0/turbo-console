@@ -238,6 +238,14 @@ p {
   display: none;
 }
 
+/* Modules mode draws one package's modules: the package Controls, Details and widgets have nothing to act on. */
+.modules-mode #graph-controls,
+.modules-mode #graph-details,
+.modules-mode .widget-row,
+.modules-mode .widget-toolbar-package {
+  display: none;
+}
+
 /* A Projects grid of hundreds of rows lays out and paints only the rows near the viewport; 19px is a task or project row, and `auto` keeps each row's last rendered height. */
 #graph-task-controls .controls-row {
   padding-inline-start: 0;

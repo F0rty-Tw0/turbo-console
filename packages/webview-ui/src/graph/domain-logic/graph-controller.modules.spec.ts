@@ -2,11 +2,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGraphController } from './graph-controller.ts';
 import { GraphModuleMode } from './graph-module-mode.ts';
+import type { GraphPackageModulesMessage } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphViewState, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { MODULES_DROPPED_WARNING, MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
+import type { GraphController } from '../common/graph-page.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
+import { STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
+import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 import { freshModulesViewOf, freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
@@ -18,6 +22,8 @@ const FRESH_STATE: GraphViewState = freshViewStateOf('h1');
 const FRESH_WEB: ModulesViewState = freshModulesViewOf('web');
 
 const SAVED_ON_WEB: GraphViewState = { ...FRESH_STATE, mode: 'modules', modules: FRESH_WEB };
+
+const WEB_FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
 
 describe('FEATURE: createGraphController modules messages', () => {
   let mock: PackageSideDepsMock;
@@ -89,6 +95,41 @@ describe('FEATURE: createGraphController modules messages', () => {
       controller.receive({ type: 'showModules' });
 
       expect(warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN modules mode scanning web, listed in a graph state', () => {
+    let controller: GraphController;
+
+    beforeEach(() => {
+      controller = createGraphController(mock.deps);
+      controller.receive({ type: 'showModules', name: 'web' });
+      controller.receive({ type: 'state', state: STATE_STUB });
+    });
+
+    it('WHEN web is found and its run lands THEN the modules canvas shows it', async () => {
+      controller.receive(WEB_FOUND);
+      await mock.runs.settle(mock.runs.count() - 1, resultOf('modules', {}));
+
+      expect(mock.view.modules.show).toHaveBeenCalledOnce();
+    });
+
+    it('WHEN web is found and Re-layout is clicked THEN the module graph is laid out again', () => {
+      controller.receive(WEB_FOUND);
+      const before = mock.runs.count();
+
+      mock.page.relayout.click();
+
+      expect(mock.runs.count()).toBe(before + 1);
+    });
+
+    it('WHEN Packages is clicked THEN the modules canvas is cleared', () => {
+      const clear = vi.mocked(mock.view.modules.clear);
+
+      clear.mockClear();
+      mock.page.packagesMode.click();
+
+      expect(clear).toHaveBeenCalledOnce();
     });
   });
 

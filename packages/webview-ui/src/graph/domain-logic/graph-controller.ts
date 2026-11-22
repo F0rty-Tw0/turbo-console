@@ -56,6 +56,7 @@ class GraphPageController {
       filtering: () => this.packages.filtering,
       layouts: () => this.packages.layouts,
       tasks: () => this.tasks,
+      modules: () => this.modules.input,
       flow: () => this.flow
     });
     const tasks = packageTasksOf((): PageTaskMode => this.tasks, deps.now);
@@ -70,7 +71,7 @@ class GraphPageController {
     this.flow = deps.createFlow(this.view);
     this.clock = new GraphCardClock({ canvas: this.view.tasks, now: deps.now, ...deps.clockPorts });
     this.packages = new GraphPackageSide(deps, this.view, { frames, modes, tasks, onMessage, onPlaced, onLocation });
-    this.modules = moduleModeOf(deps, this.view, { modes, tasks: (): PageTaskMode => this.tasks, onExit });
+    this.modules = moduleModeOf(deps, this.view, { modes, frames, tasks: (): PageTaskMode => this.tasks, onExit });
     this.tasks = taskModeOf(deps, this.view, {
       modes,
       frames,
@@ -150,17 +151,14 @@ class GraphPageController {
     this.clock.runs(message.elapsed, at);
   }
 
-  /** Re-layout and Retry act on the graph of the mode on screen. */
+  /** Re-layout and Retry act on the graph of the mode on screen; the package side never lays out under the modules canvas. */
   private relayout(): void {
+    const isModuleMode = this.modules.isActive();
     const isTaskMode = this.tasks.isActive();
 
-    if (isTaskMode) {
-      void this.tasks.layout.relayout();
-
-      return;
-    }
-
-    void this.packages.guard(async (): Promise<void> => this.packages.layouts.relayout());
+    if (isModuleMode) this.modules.relayout();
+    else if (isTaskMode) void this.tasks.layout.relayout();
+    else void this.packages.guard(async (): Promise<void> => this.packages.layouts.relayout());
   }
 }
 

@@ -10,6 +10,7 @@ import type { GhostMarks } from './ghost.type.ts';
 import type { ProbeFacts } from './graph-probe.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
+import type { ModuleCanvas } from './module-canvas.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { PageElements } from './page-elements.type.ts';
 import type { Paint } from './paint.type.ts';
@@ -168,6 +169,8 @@ export type GraphView = {
   readonly tasks: TaskCanvas;
   /** The Atomizer groups on the task graph: an expanded umbrella's box and file nodes. */
   readonly atoms: AtomCanvas;
+  /** One package's modules on the same core; modules mode draws here, and neither other mode draws meanwhile. */
+  readonly modules: ModuleCanvas;
 };
 
 export type GraphViewFactory = (container: HTMLElement, handlers: GraphViewHandlers) => GraphView;
