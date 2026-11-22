@@ -45,7 +45,7 @@ export type ModuleScreen = {
   /** Waiting and Loading: empty canvas, "Scanning <P>…", Refresh visible. */
   readonly scanning: (name: string) => void;
   readonly shown: (name: string, found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => void;
-  /** Keeps the old graph drawn, if any, and shows "Could not scan <P>." with Retry. */
+  /** Keeps the old graph drawn, if any, and shows "Could not scan <P>." with Retry; with none, the status is emptied. */
   readonly failed: (name: string) => void;
   /** Failed after a host message: the graph view shows again over whatever canvas was kept. */
   readonly reshow: () => void;

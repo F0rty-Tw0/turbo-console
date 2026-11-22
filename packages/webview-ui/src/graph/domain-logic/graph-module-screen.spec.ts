@@ -96,6 +96,16 @@ describe('FEATURE: moduleScreenOf', () => {
     });
   });
 
+  describe('GIVEN web scanning with no graph drawn', () => {
+    it('WHEN it fails THEN the bar no longer reads Scanning web…', () => {
+      layout.scene.mockReturnValue(null);
+      screen.scanning('web');
+      screen.failed('web');
+
+      expect([page.modules.status.textContent, page.modules.status.title]).toStrictEqual(['', '']);
+    });
+  });
+
   describe('GIVEN web shown with 301 leaves, then failed on Refresh', () => {
     it('WHEN it is scanning again THEN the banner, Retry and slow notice hide and the canvas is cleared', async () => {
       screen.shown('web', FOUND, FRESH_WEB, { kind: 'first' });
