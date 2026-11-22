@@ -4,7 +4,7 @@ packages:
 
 catalogs:
   runtime:
-    cytoscape: '3.34.4'
+    cytoscape: '3.35.0'
     elkjs: '0.12.0'
     jsonc-parser: '^3.3.1'
     yaml: '^2.9.1'
@@ -47,10 +47,6 @@ allowBuilds:
   '@vscode/vsce-sign': false
 
 patchedDependencies:
-  # drawImages counts a `background-image: none` slot as loaded in its outside pass only, so `backgrounding` flips and
-  # every directly drawn node (folder boxes) re-styles itself each frame; a grouped pan cost twice the CPU of a flat one.
-  # remove() keeps its ids in plain objects, so an element named `constructor` or `__proto__` was skipped by `remove()`
-  # and `move()` (it never joined its folder box); the patch makes both maps prototype-free.
   # visible(), takesUpSpace(), interactive() and effectiveOpacity() built a parents() collection per element read, the
   # largest part of a profiled 632 ms `:visible` framed set on the stretch S open; the patch walks the same parent refs.
   # The rendered style flush emptied its queue after recalculating, dropping the nodes a compound bounds update re-queued
@@ -58,5 +54,5 @@ patchedDependencies:
   # CPU); the patch takes the queue before recalculating, so they flush next time.
   # boundingBox() recalculated the rendered style before it dirtied style-dirty elements, so a label changed in the same
   # tick kept its old label bounds (a card's label box stayed narrower than its two rows); the patch unCleans them first.
-  # Drop the patch once a cytoscape release fixes all five; a version bump fails install until then.
-  cytoscape@3.34.4: patches/cytoscape@3.34.4.patch
+  # Drop the patch once a cytoscape release fixes all three; a version bump fails install until then.
+  cytoscape@3.35.0: patches/cytoscape@3.35.0.patch

@@ -27,7 +27,7 @@ const DARK_2026_VARS: Readonly<Record<string, string>> = {
   '--vscode-input-border': '#333536'
 };
 
-/** The selected fill is white at 0.13 over `#121314`; Cytoscape draws the focus border without its alpha. */
+/** The selected fill is white at 0.13 over `#121314`; `selected` is the focus border colour without its 0.7 alpha. */
 const DARK_2026_COLORS: ExpectedThemeColors = {
   fill: 'rgb(18, 19, 20)',
   label: 'rgb(191, 191, 191)',
@@ -65,7 +65,7 @@ const LIGHT_2026_VARS: Readonly<Record<string, string>> = {
   '--vscode-input-border': 'rgba(216, 216, 216, 0.4)'
 };
 
-/** The selected fill is black at 0.15 over white; the card frame is `#D8D8D866`, which Cytoscape draws without its alpha. */
+/** The selected fill is black at 0.15 over white; the card frame is `#D8D8D866`, which Cytoscape 3.35 draws with its alpha. */
 const LIGHT_2026_COLORS: ExpectedThemeColors = {
   fill: 'rgb(255, 255, 255)',
   label: 'rgb(32, 32, 32)',
@@ -74,7 +74,7 @@ const LIGHT_2026_COLORS: ExpectedThemeColors = {
   selected: 'rgb(0, 105, 204)',
   selectedFill: 'rgb(217, 217, 217)',
   cardFill: 'rgb(255, 255, 255)',
-  cardFrame: 'rgb(216, 216, 216)'
+  cardFrame: 'rgba(216, 216, 216, 0.4)'
 };
 
 export const THEME_LIGHT_2026_STUB: ThemeStub = { bodyClass: 'vscode-light', vars: LIGHT_2026_VARS, expected: LIGHT_2026_COLORS };

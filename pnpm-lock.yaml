@@ -226,8 +226,8 @@ catalogs:
       version: 5.0.3
   runtime:
     cytoscape:
-      specifier: 3.34.4
-      version: 3.34.4
+      specifier: 3.35.0
+      version: 3.35.0
     elkjs:
       specifier: 0.12.0
       version: 0.12.0
@@ -239,7 +239,7 @@ catalogs:
       version: 4.6.5
 
 patchedDependencies:
-  cytoscape@3.34.4: ab8d1fee731943b0b000eceb9c3210b5ef14dee5bf024091291653cc33c22725
+  cytoscape@3.35.0: 50e7b776bad866a836147ca1e3efb282870018319d99cf215a2d87763ee5d401
 
 importers:
 
@@ -360,7 +360,7 @@ importers:
     dependencies:
       cytoscape:
         specifier: catalog:runtime
-        version: 3.34.4(patch_hash=ab8d1fee731943b0b000eceb9c3210b5ef14dee5bf024091291653cc33c22725)
+        version: 3.35.0(patch_hash=50e7b776bad866a836147ca1e3efb282870018319d99cf215a2d87763ee5d401)
       elkjs:
         specifier: catalog:runtime
         version: 0.12.0
@@ -2052,6 +2052,7 @@ packages:
   '@secretlint/secretlint-rule-preset-recommend@10.2.2':
     resolution: {integrity: sha512-K3jPqjva8bQndDKJqctnGfwuAxU2n9XNCPtbXVI5JvC7FnQiNg/yWlQPbMUlBXtBoBGFYp08A94m6fvtc9v+zA==}
     engines: {node: '>=20.0.0'}
+    deprecated: Built into secretlint v14 and later. Remove this package; the rule id still works. https://github.com/secretlint/secretlint/blob/HEAD/docs/rules/preset-recommend.md
 
   '@secretlint/source-creator@10.2.2':
     resolution: {integrity: sha512-h6I87xJfwfUTgQ7irWq7UTdq/Bm1RuQ/fYhA3dtTIAop5BwSFmZyrchph4WcoEvbN460BWKmk4RYSvPElIIvxw==}
@@ -2930,8 +2931,8 @@ packages:
   cubic2quad@1.2.1:
     resolution: {integrity: sha512-wT5Y7mO8abrV16gnssKdmIhIbA9wSkeMzhh27jAguKrV82i24wER0vL5TGhUJ9dbJNDcigoRZ0IAHFEEEI4THQ==}
 
-  cytoscape@3.34.4:
-    resolution: {integrity: sha512-msY99tMY8iWTg+sIPGfSqDcPNOt4xcj+v/K/7qUFaCUxxlqnMkUYLBjRUzn9W5CU/R2hrmtJa5+UtovrEM2ctg==}
+  cytoscape@3.35.0:
+    resolution: {integrity: sha512-sMvBIXiGMnhkCaWz2R06FwF/27MNlS+Tqvi17foO9UhnUg3XGZccKjxsvEqQFAQYMSSZmN5SxYzUYlQ0DOJJ3g==}
     engines: {node: '>=0.10'}
 
   debug@3.2.7:
@@ -7375,7 +7376,7 @@ snapshots:
 
   cubic2quad@1.2.1: {}
 
-  cytoscape@3.34.4(patch_hash=ab8d1fee731943b0b000eceb9c3210b5ef14dee5bf024091291653cc33c22725): {}
+  cytoscape@3.35.0(patch_hash=50e7b776bad866a836147ca1e3efb282870018319d99cf215a2d87763ee5d401): {}
 
   debug@3.2.7(supports-color@7.2.0):
     dependencies:
