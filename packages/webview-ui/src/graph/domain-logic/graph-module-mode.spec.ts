@@ -19,6 +19,10 @@ const FRESH_WEB: ModulesViewState = freshModulesViewOf('web');
 
 const WEB_SRC_OPEN: ModulesViewState = { ...FRESH_WEB, expanded: ['src'] };
 
+const TESTS_SHOWN: ModulesViewState['shown'] = { ...FRESH_WEB.shown, tests: true };
+
+const WEB_TESTS_SHOWN: ModulesViewState = { ...FRESH_WEB, shown: TESTS_SHOWN };
+
 const FRESH_STATE: GraphViewState = freshViewStateOf('h1');
 
 describe('FEATURE: GraphModuleMode entry and package states', () => {
@@ -130,6 +134,21 @@ describe('FEATURE: GraphModuleMode entry and package states', () => {
 
       expect(rig.post.mock.calls).toStrictEqual([[SCAN_WEB]]);
       expect(modes.modules()?.expanded).toStrictEqual(['src']);
+    });
+  });
+
+  describe('GIVEN a web view saved with test files shown', () => {
+    beforeEach(() => {
+      const saved: GraphViewState = { ...FRESH_STATE, mode: 'modules', modules: WEB_TESTS_SHOWN };
+
+      open(saved);
+      mode.received(WEB_LISTED);
+    });
+
+    it('WHEN web is entered THEN the screen shows the scan of web with the saved view, not a fresh one', () => {
+      mode.enter('web');
+
+      expect(rig.screen.scanning.mock.calls).toStrictEqual([['web', WEB_TESTS_SHOWN]]);
     });
   });
 

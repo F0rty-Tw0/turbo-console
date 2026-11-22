@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { freshModulesViewOf, freshViewStateOf } from './fresh-view-state.util.ts';
+import { freshViewStateOf } from './fresh-view-state.util.ts';
 import { readGraphViewState } from './graph-view-state.util.ts';
 import type { GraphViewState, ModulesCamera, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 
@@ -92,7 +92,7 @@ describe('FEATURE: readGraphViewState modules view', () => {
     it('WHEN it is read THEN shown reads as a fresh view, test files hidden', () => {
       const state = readGraphViewState(rawOf('modules', { ...SAVED_MODULES, shown: undefined }));
 
-      expect(state?.modules?.shown).toStrictEqual(freshModulesViewOf('web').shown);
+      expect(state?.modules?.shown).toStrictEqual({ types: true, tests: false, lazies: true });
     });
   });
 
