@@ -17,6 +17,7 @@ Unofficial. Not affiliated with or endorsed by Vercel or the Turborepo team.
 - **Package and task rows:** Copy Command puts `turbo run <task> --filter=<package>` on the clipboard, quoted for your terminal's shell. Open package.json, Reveal in Explorer and Copy Path are there too.
 - **Package Details page:** Open Package Details shows a package's Turbo tasks and Scripts as cards with their cache status and run state.
 - **Package and Task Graph:** Show Package Graph and Show Task Graph… draw the dependency graphs, with run state and a live clock on task cards.
+- **Package Modules:** Show Package Modules opens one package in the graph and draws the imports between its own folders and files. Run it from the palette, a Packages row's menu, the graph's package details or the Package Details page. Folders expand in place, arrows count the imports they merge, and each other workspace package it imports is one node. npm imports are counted, not drawn.
 - **Show Cache Prediction and Show Affected:** the first marks which tasks turbo would replay from cache, the second marks the packages your changes touch.
 - **Help and Feedback view:** links to the project page on GitHub, the bug tracker and the Turborepo docs.
 

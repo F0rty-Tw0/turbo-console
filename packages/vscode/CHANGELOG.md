@@ -15,6 +15,7 @@ This build is published as `turbo-console-dev.turbo-console`. A later Marketplac
 - Common Commands view: Run Task in All Packages, Run Affected and Refresh.
 - Package Details page: open a package to see its Turbo tasks and Scripts as cards, with cache status and run state.
 - Package Graph and Task Graph: browse the package and task dependency graphs, grouped in folders. Task cards show run state and a live clock while a task runs.
+- Show Package Modules: open one package in the graph to see the imports between its own folders and files, with one node for each workspace package it imports.
 - Show All Task Graphs: open the task graph with every task of the workspace.
 - Focus on Graph: from a package or task row, open the graph on that package.
 - Show Cache Prediction and Show Affected: overlays that mark which tasks turbo would replay from cache and which packages your changes affect.
