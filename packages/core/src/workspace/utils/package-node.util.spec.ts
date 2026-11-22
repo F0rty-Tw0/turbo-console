@@ -11,9 +11,26 @@ import { configOf } from '../test/utils/config-ok.spec.util.ts';
 const COMMAND = 'node -e 0';
 
 const classifiedTask = (id: string, name: string, rawDependencies: string[]): ClassifiedTask => {
-  const task: ClassifiedTask = { id, name, command: COMMAND, tags: ['z', 'a'], rawDependencies, kind: 'task', atom: null };
+  const task: ClassifiedTask = {
+    id,
+    name,
+    command: COMMAND,
+    tags: ['z', 'a'],
+    rawDependencies,
+    kind: 'task',
+    atom: null,
+    optedOut: false
+  };
 
   return task;
+};
+
+/** A task turbo 2.11.11+ opts out: its configs define it, but `turbo query` reports no command for its script. */
+const optedOutTask = (id: string, name: string): ClassifiedTask => {
+  const task = classifiedTask(id, name, []);
+  const optedOut: ClassifiedTask = { ...task, optedOut: true };
+
+  return optedOut;
 };
 
 const classifiedPackage = (name: string, tasks: ClassifiedTask[]): ClassifiedPackage => {
@@ -59,6 +76,36 @@ describe('FEATURE: package node', () => {
       const node = nodeOf(pkg, [configError('turbo.json')], false);
 
       expect(node.tasks[0]).toMatchObject({ isTurboTask: true, persistent: false });
+    });
+  });
+
+  describe('GIVEN a persistent task its configs define', () => {
+    const configs = [configOf({ dev: 'defined' }, { dev: true })];
+
+    it('WHEN turbo reports its command (turbo 2.11.7) THEN it is a persistent turbo task', () => {
+      const pkg = classifiedPackage('a', [classifiedTask('a#dev', 'dev', [])]);
+
+      const node = nodeOf(pkg, configs, false);
+
+      expect(node.tasks[0]).toMatchObject({ isTurboTask: true, persistent: true });
+    });
+
+    it('WHEN turbo opts it out (turbo 2.11.11+) THEN it is a plain script, not persistent', () => {
+      const pkg = classifiedPackage('a', [optedOutTask('a#dev', 'dev')]);
+
+      const node = nodeOf(pkg, configs, false);
+
+      expect(node.tasks[0]).toMatchObject({ command: COMMAND, isTurboTask: false, persistent: false });
+    });
+  });
+
+  describe('GIVEN an opted-out task in a package whose root config cannot be read', () => {
+    it('WHEN built THEN turbo opting it out still makes it no turbo task', () => {
+      const pkg = classifiedPackage('a', [optedOutTask('a#lint', 'lint')]);
+
+      const node = nodeOf(pkg, [configError('turbo.json')], false);
+
+      expect(node.tasks[0]).toMatchObject({ isTurboTask: false, persistent: false });
     });
   });
 

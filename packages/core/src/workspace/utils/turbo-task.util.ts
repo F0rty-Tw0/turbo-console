@@ -137,11 +137,14 @@ const applyTasks = (tasks: Map<string, TurboTaskFacts>, config: TurboConfigOk): 
 };
 
 /**
- * The tasks turbo 2.11.7 defines, and so runs, for `pkg`, each with its resolved `persistent` (`applyPersistent`). The
- * first config with an entry for a name decides presence, in this order: the package's own config, the root config's
- * bare and `<pkg>#<task>` keys, then the parent chain of `chainOf`; an entry of exactly `{ "extends": false }` drops
- * the task. So a parent's exclusion hides only a task another parent package defines, never a root task. Applied
- * last-wins from the lowest priority up. `turbo query` lists a package script with no such key all the same, and
+ * The tasks turbo defines for `pkg`, each with its resolved `persistent` (`applyPersistent`). The first config with an
+ * entry for a name decides presence, in this order: the package's own config, the root config's bare and
+ * `<pkg>#<task>` keys, then the parent chain of `chainOf`; an entry of exactly `{ "extends": false }` drops the task.
+ * So a parent's exclusion hides only a task another parent package defines, never a root task. Applied last-wins from
+ * the lowest priority up. Turbo 2.11.7 runs every task defined here; 2.11.11+ defines the same tasks but also opts out
+ * one its own exclusion walk hits (a parent's entry outranks the root's), and `turbo query` reports such a task with no
+ * command, which `classifyTasks` marks `optedOut`, so no version check is needed here. `turbo query` lists a package
+ * script with no such key all the same, and
  * `turbo run` of a name no config defines exits 1 (a single-package turbo runs it uncached). `null` when it cannot tell:
  * no parsed root config, or a chain `chainOf` cannot build.
  *

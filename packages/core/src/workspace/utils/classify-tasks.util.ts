@@ -91,14 +91,16 @@ const rawDependenciesOf = (task: GraphTask): string[] => task.directDependencies
 
 /**
  * Rules 2.2–2.4 and 3 for one non-carrier task; `null` drops it. A file task with two group tags adds a warning. A plain
- * task with no command is a phantom (rule 3): dropped, and its raw dependencies are kept in `phantoms`.
+ * task with neither a command nor a script is a phantom (rule 3): dropped, and its raw dependencies are kept in
+ * `phantoms`. A task with a script but no command is one turbo 2.11.11+ opts out: kept, its script as its command.
  */
 const classifyTask = (task: GraphTask, packageName: string, packageGroups: Set<string>, sink: ClassifySink): ClassifiedTask | null => {
   const name = nameOf(packageName, task.fullName);
   const groups = groupsOf(task);
   const kind = kindOf(name, groups, packageGroups);
   const rawDependencies = rawDependenciesOf(task);
-  const isPhantom = kind === 'task' && task.command === null;
+  const command = task.command ?? task.script;
+  const isPhantom = kind === 'task' && command === null;
 
   if (isPhantom) {
     sink.phantoms.set(task.fullName, rawDependencies);
@@ -113,7 +115,8 @@ const classifyTask = (task: GraphTask, packageName: string, packageGroups: Set<s
 
   const isLive = kind === 'atom-file' && task.tags.includes(LIVE_TAG);
   const atom = atomOf(kind, group, isLive);
-  const classified: ClassifiedTask = { id: task.fullName, name, command: task.command, tags: task.tags, rawDependencies, kind, atom };
+  const optedOut = task.command === null && task.script !== null;
+  const classified: ClassifiedTask = { id: task.fullName, name, command, tags: task.tags, rawDependencies, kind, atom, optedOut };
 
   return classified;
 };

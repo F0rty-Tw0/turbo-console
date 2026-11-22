@@ -17,6 +17,8 @@ export type ClassifiedTask = {
   readonly rawDependencies: string[];
   readonly kind: TaskNodeKind;
   readonly atom: TaskAtom | null;
+  /** Turbo 2.11.11+ opts the task out: `turbo query` reports no command for its package script, so it is no turbo task. */
+  readonly optedOut: boolean;
 };
 
 export type ClassifiedPackage = {
