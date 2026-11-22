@@ -65,4 +65,34 @@ test.describe('FEATURE: package modules selection across folder taps', () => {
       await test.step('AND the canvas keeps keyboard focus', async (): Promise<void> => expect(graphCanvas.container).toBeFocused());
     }
   );
+
+  test(
+    'GIVEN main.ts selected inside views, collapsing views and tapping it open again selects main.ts again',
+    { annotation: MODULES },
+    async ({ graphCanvas, graphModules, shownModules }): Promise<void> => {
+      await test.step('WHEN app is shown, views tapped open and main.ts tapped', async (): Promise<void> => {
+        await shownModules();
+        await graphCanvas.tapNode(VIEWS_ID);
+        await graphModules.expectIds(VIEWS_IDS);
+        await graphCanvas.tapNode(MAIN_ID);
+        await graphModules.expectState(MAIN_ID, 'selected');
+      });
+
+      await test.step("AND the views box's title is tapped", async (): Promise<void> => {
+        await graphModules.tapBoxTitle(VIEWS_ID);
+        await graphModules.expectIds(D9_IDS);
+        await graphModules.expectState(VIEWS_ID, 'selected');
+      });
+
+      await test.step('AND the views card is tapped open again', async (): Promise<void> => {
+        await graphCanvas.tapNode(VIEWS_ID);
+        await graphModules.expectIds(VIEWS_IDS);
+      });
+
+      await test.step('THEN main.ts is selected again and index.ts lit as its neighbour', async (): Promise<void> => {
+        await graphModules.expectState(MAIN_ID, 'selected');
+        await graphModules.expectState(INDEX_ID, 'highlighted');
+      });
+    }
+  );
 });
