@@ -74,6 +74,8 @@ test.describe('FEATURE: every edge draws as a plain bezier over the folder boxes
         const ink = await inkOf();
 
         test.info().annotations.push({ type: 'edge-ink', description: `${name}: ${ink.toFixed(2)}` });
+
+        expect(ink).toBeGreaterThanOrEqual(MIN_INK);
       });
     });
 

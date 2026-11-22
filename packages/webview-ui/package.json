@@ -30,6 +30,10 @@
   "devDependencies": {
     "@playwright/test": "catalog:dev",
     "@turbo-console/core": "workspace:*",
-    "@vscode/codicons": "catalog:dev"
+    "@vscode/codicons": "catalog:dev",
+    "esbuild": "catalog:dev",
+    "lint-suite": "catalog:dev",
+    "typescript-eslint": "catalog:dev",
+    "vitest": "catalog:dev"
   }
 }

@@ -30,6 +30,9 @@
   "devDependencies": {
     "@turbo-console/repo-gen": "workspace:*",
     "@turbo-console/tools": "workspace:*",
-    "turbo": "catalog:dev"
+    "lint-suite": "catalog:dev",
+    "turbo": "catalog:dev",
+    "typescript-eslint": "catalog:dev",
+    "vitest": "catalog:dev"
   }
 }

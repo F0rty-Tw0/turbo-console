@@ -114,7 +114,7 @@ export class GraphFlowPage {
   }
 
   /** Ticks one frame per poll until the overlay has no ink; the fake clock reaches `FLOW_IDLE_MS` only after far more polls. */
-  public async waitForClear(): Promise<void> {
+  public async expectClearedByTicks(): Promise<void> {
     const isClear = async (): Promise<boolean> => {
       await this.clock.tick(FRAME_MS);
 

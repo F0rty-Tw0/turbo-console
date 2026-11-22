@@ -19,7 +19,11 @@ const pageObjectAssertions: FlatConfig.Config = {
   name: 'webview-ui/page-object-assertions',
   files: ['**/*.e2e.ts'],
   rules: {
-    'playwright/expect-expect': ['warn', { assertFunctionPatterns: ['^expect'] }]
+    'playwright/expect-expect': ['warn', { assertFunctionPatterns: ['^expect'] }],
+    'playwright/prefer-ending-with-an-expect': ['error', { assertFunctionPatterns: ['^expect'] }],
+    // Parameterized cases build their titles from constant tables, so each title is the same on every run and --grep
+    // still finds it; the rule cannot tell such a title from one built from run-time data.
+    'playwright/no-template-literal-title': 'off'
   }
 };
 

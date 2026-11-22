@@ -23,5 +23,10 @@
   },
   "dependencies": {
     "zod": "catalog:runtime"
+  },
+  "devDependencies": {
+    "lint-suite": "catalog:dev",
+    "typescript-eslint": "catalog:dev",
+    "vitest": "catalog:dev"
   }
 }

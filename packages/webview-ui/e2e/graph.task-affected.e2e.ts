@@ -5,7 +5,6 @@ import { FALLBACK_COLORS } from '../src/graph/common/graph.const.ts';
 import { TASK_LEGEND_ROWS } from '../src/graph/common/legend-task.const.ts';
 
 const SPEC_7 = { description: 'M3-2 spec 7.7, 4 (Feeds: graph)', type: 'requirement' };
-const TASK_IDS = ['app#build', 'lib#build', 'ui#build'];
 const MARKED = { 'app#build': 'changed', 'lib#build': 'dependency' } as const;
 const MARKS = { mode: 'task', tasks: MARKED } as const;
 const PACKAGE_MARKS = { mode: 'package', tasks: MARKED } as const;
@@ -38,7 +37,9 @@ test.describe('FEATURE: graph affected overlay', () => {
       await test.step('WHEN the host sends affected null', async () => graphTaskHost.sendAffected(null));
 
       await test.step('THEN all three are 0', async () => {
-        for (const id of TASK_IDS) await graphAffected.expectHalo(id, 0);
+        await graphAffected.expectHalo('app#build', 0);
+        await graphAffected.expectHalo('lib#build', 0);
+        await graphAffected.expectHalo('ui#build', 0);
       });
     }
   );

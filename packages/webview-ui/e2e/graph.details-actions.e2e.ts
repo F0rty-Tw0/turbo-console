@@ -95,6 +95,10 @@ const expectRowIcons = async (buttonOf: ButtonOf, isShown: boolean): Promise<voi
   }
 };
 
+const expectRowLabels = async (buttonOf: ButtonOf): Promise<void> => {
+  for (const label of ROW_LABELS) await expect(buttonOf(label)).toBeVisible();
+};
+
 test.describe('FEATURE: Details package buttons in one grid', () => {
   test(
     'GIVEN app, a package with tasks, picked, its four action buttons sit in two equal columns',
@@ -164,9 +168,7 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
 
       await test.step('THEN each row button hides its icon', async (): Promise<void> => expectRowIcons(buttonOf, false));
 
-      await test.step('AND each row button keeps its label', async (): Promise<void> => {
-        for (const label of ROW_LABELS) await expect(buttonOf(label)).toBeVisible();
-      });
+      await test.step('AND each row button keeps its label', async (): Promise<void> => expectRowLabels(buttonOf));
     }
   );
 });

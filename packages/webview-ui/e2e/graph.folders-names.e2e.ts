@@ -135,6 +135,7 @@ test.describe('FEATURE: folder names and keys', () => {
     await test.step('THEN the list is one Tab stop and Tab reaches the apps group checkbox again', async (): Promise<void> => {
       await graphKeys.expectListTabStops(1);
       await graphKeys.tabTo('apps (2)');
+      await graphKeys.expectFocusedName('apps (2)');
     });
   });
 
