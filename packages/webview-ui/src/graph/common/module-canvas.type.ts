@@ -1,12 +1,16 @@
 import type { ModuleMeasures, ModuleScene } from './module-scene.type.ts';
-import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 
 export type ModuleElementKind = 'box' | 'file' | 'dir' | 'stub';
 
-/** A laid-out scene: leaf centres from the layout, and the measures it was laid out with, which size the cards and box titles. */
+/**
+ * A laid-out scene: leaf centres and link routes from the layout (no routes from the fallback engine), and the measures
+ * it was laid out with, which size the cards and box titles.
+ */
 export type ModuleDrawing = {
   readonly scene: ModuleScene;
   readonly positions: Positions;
+  readonly routes: Routes;
   readonly measures: ModuleMeasures;
 };
 

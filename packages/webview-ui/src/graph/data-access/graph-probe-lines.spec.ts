@@ -29,9 +29,10 @@ const MIDDLE_RENDERED: Position = { x: 170, y: 190 };
 type SourceFacts = {
   readonly isVisible: boolean;
   readonly controls: Position[] | undefined;
+  readonly segments: Position[] | undefined;
 };
 
-const BENT_FACTS: SourceFacts = { isVisible: true, controls: [BEND_ONE, BEND_TWO] };
+const BENT_FACTS: SourceFacts = { isVisible: true, controls: [BEND_ONE, BEND_TWO], segments: undefined };
 
 const sourceOf = (facts: SourceFacts): ProbeLineSource => {
   const source: ProbeLineSource = {
@@ -41,6 +42,7 @@ const sourceOf = (facts: SourceFacts): ProbeLineSource => {
     sourceEndpoint: (): Position => START,
     targetEndpoint: (): Position => END,
     controlPoints: (): Position[] | undefined => facts.controls,
+    segmentPoints: (): Position[] | undefined => facts.segments,
     midpoint: (): Position => MIDDLE
   };
 
@@ -87,6 +89,14 @@ describe('FEATURE: edgeLineOf', () => {
       const line = edgeLineOf(sourceOf({ ...BENT_FACTS, controls: [control] }), ZOOM, OFFSET);
 
       expect(line.points).toStrictEqual([renderedOf(START), renderedOf(control), renderedOf(END)]);
+    });
+  });
+
+  describe('GIVEN a routed module link drawn as segments', () => {
+    it('WHEN read THEN points are start, the segment points and the end, in rendered px', () => {
+      const line = edgeLineOf(sourceOf({ ...BENT_FACTS, controls: undefined, segments: [BEND_TWO] }), ZOOM, OFFSET);
+
+      expect(line.points).toStrictEqual([renderedOf(START), renderedOf(BEND_TWO), renderedOf(END)]);
     });
   });
 

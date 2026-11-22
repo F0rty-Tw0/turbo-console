@@ -10,7 +10,11 @@ describe('FEATURE: moduleRulesOf', () => {
       ['edge.module-type', 'line-style', 'dashed'],
       ['node.module-stub', 'border-style', 'dashed'],
       ['edge.module-link', 'label', 'data(count)'],
-      ['edge.module-link', 'min-zoomed-font-size', 5]
+      ['edge.module-link', 'min-zoomed-font-size', 5],
+      ['edge.module-routed', 'curve-style', 'round-segments'],
+      ['edge.module-routed', 'segment-weights', 'data(segWeights)'],
+      ['edge.module-routed', 'source-endpoint', 'data(srcEnd)'],
+      ['edge.module-routed', 'edge-distances', 'node-position']
     ])('WHEN %s is read THEN %s is %s', (selector, property, value) => {
       const rule = moduleRulesOf(THEME_COLORS_STUB, 'sans').find((entry) => entry.selector === selector);
       const style = new Map(Object.entries(rule?.style ?? {}));

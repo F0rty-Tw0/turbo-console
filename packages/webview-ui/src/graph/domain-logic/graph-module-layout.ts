@@ -84,7 +84,7 @@ export class GraphModuleLayout {
     const { modules } = this.deps.view;
     const before = this.anchorCentreOf(redraw);
 
-    modules.show({ scene, positions: result.positions, measures: this.deps.measures });
+    modules.show({ scene, positions: result.positions, routes: result.routes, measures: this.deps.measures });
     this.drawn = scene;
     this.deps.showGraph(result.engine === 'fallback');
     this.placeCamera(view, redraw, before);

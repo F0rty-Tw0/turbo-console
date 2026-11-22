@@ -57,6 +57,12 @@ export const MODULE_LAZY_CLASS = 'module-lazy';
 /** A module link with type imports only, drawn dashed. */
 export const MODULE_TYPE_CLASS = 'module-type';
 
+/**
+ * A module link drawn on its ELK route: `round-segments` from its `segWeights`/`segDistances`/`srcEnd`/`tgtEnd` data
+ * (`routeSegmentsOf`). A link with no route, or one whose card was dragged, has no such class and draws plain.
+ */
+export const MODULE_ROUTED_CLASS = 'module-routed';
+
 /** The font size of a module link's import count. */
 export const MODULE_COUNT_FONT_PX = 10;
 

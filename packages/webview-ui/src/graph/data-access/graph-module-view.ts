@@ -1,21 +1,13 @@
 import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 
+import { moduleLinkDefinitionOf, unrouteDragged } from './graph-module-links.ts';
 import { paintModules } from './graph-module-paint.ts';
 import { positionOf } from './graph-place.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import {
-  MODULE_BOX_CLASS,
-  MODULE_DIR_CLASS,
-  MODULE_FILE_CLASS,
-  MODULE_LAZY_CLASS,
-  MODULE_LINK_CLASS,
-  MODULE_STUB_CLASS,
-  MODULE_TYPE_CLASS
-} from '../common/graph-module.const.ts';
+import { MODULE_BOX_CLASS, MODULE_DIR_CLASS, MODULE_FILE_CLASS, MODULE_STUB_CLASS } from '../common/graph-module.const.ts';
 import { TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
 import type { ModuleCanvas, ModuleDrawing, ModuleElementKind } from '../common/module-canvas.type.ts';
-import type { ModuleBox, ModuleLeaf, ModuleSceneLink } from '../common/module-scene.type.ts';
-import { edgeIdOf } from '../utils/edge-id.util.ts';
+import type { ModuleBox, ModuleLeaf } from '../common/module-scene.type.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 
 type KindClass = [ModuleElementKind, string];
@@ -31,12 +23,6 @@ const KIND_CLASSES: KindClass[] = [
   ['dir', MODULE_DIR_CLASS],
   ['stub', MODULE_STUB_CLASS]
 ];
-
-const SOLID_LINK_CLASSES = MODULE_LINK_CLASS;
-
-const LAZY_LINK_CLASSES = `${MODULE_LINK_CLASS} ${MODULE_LAZY_CLASS}`;
-
-const TYPE_LINK_CLASSES = `${MODULE_LINK_CLASS} ${MODULE_TYPE_CLASS}`;
 
 /** A box titled with its folder name, at least as wide as that title; the root box has no parent. */
 const boxDefinitionOf = (box: ModuleBox, drawing: ModuleDrawing): ElementDefinition => {
@@ -60,37 +46,12 @@ const leafDefinitionOf = (leaf: ModuleLeaf, drawing: ModuleDrawing): ElementDefi
   return definition;
 };
 
-/** Solid while the link carries a static import; else dotted with a lazy one, else dashed (types only). */
-const linkClassesOf = (link: ModuleSceneLink): string => {
-  if (link.statics > 0) return SOLID_LINK_CLASSES;
-
-  if (link.lazies > 0) return LAZY_LINK_CLASSES;
-
-  return TYPE_LINK_CLASSES;
-};
-
-/** The link's import count as its label, none for a single import. */
-const countOf = (link: ModuleSceneLink): string => {
-  const total = link.statics + link.types + link.lazies;
-
-  if (total > 1) return String(total);
-
-  return '';
-};
-
-const linkDefinitionOf = (link: ModuleSceneLink): ElementDefinition => {
-  const data = { id: edgeIdOf(link), source: link.source, target: link.target, count: countOf(link) };
-  const definition: ElementDefinition = { data, classes: linkClassesOf(link) };
-
-  return definition;
-};
-
 /** Boxes first in pre-order, so each child's parent exists as it is added, then the leaves, then the links. */
 const elementsOf = (drawing: ModuleDrawing): ElementDefinition[] => {
   const { boxes, leaves, links } = drawing.scene;
   const boxNodes = boxes.map((box) => boxDefinitionOf(box, drawing));
   const leafNodes = leaves.map((leaf) => leafDefinitionOf(leaf, drawing));
-  const edges = links.map(linkDefinitionOf);
+  const edges = links.map((link) => moduleLinkDefinitionOf(link, drawing));
 
   return [...boxNodes, ...leafNodes, ...edges];
 };
@@ -114,7 +75,7 @@ const renderedCentreOf = (cy: Core, id: string): Position | null => {
   return centre;
 };
 
-/** Replaces every element with the scene: its boxes as compounds, its leaves at their laid-out centres, its links. */
+/** Replaces every element with the scene: its boxes as compounds, its leaves at their laid-out centres, its links on their routes. */
 const drawModules = (cy: Core, drawing: ModuleDrawing): void => {
   const elements = elementsOf(drawing);
 
@@ -123,8 +84,13 @@ const drawModules = (cy: Core, drawing: ModuleDrawing): void => {
   cy.add(elements);
 };
 
-/** The modules graph on `cy`, the core the package and task graphs share; showing it removes what they drew. */
+/**
+ * The modules graph on `cy`, the core the package and task graphs share; showing it removes what they drew. A drag
+ * unroutes only module links, so it leaves the other modes' edges as they are.
+ */
 export const createModuleCanvas = (cy: Core): ModuleCanvas => {
+  cy.on('drag', 'node', unrouteDragged);
+
   const show = (drawing: ModuleDrawing): void => drawModules(cy, drawing);
   const clear = (): void => void cy.elements().remove();
   const paint = (id: string | null): void => paintModules(cy, id);

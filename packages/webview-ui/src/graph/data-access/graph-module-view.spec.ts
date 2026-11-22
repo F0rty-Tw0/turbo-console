@@ -3,8 +3,8 @@ import type { Core } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createModuleCanvas } from './graph-module-view.ts';
-import type { Positions } from '../../bridge/common/graph-state.type.ts';
-import { MODULE_LAZY_CLASS, MODULE_TYPE_CLASS } from '../common/graph-module.const.ts';
+import type { EdgeRoute, Position, Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import { MODULE_LAZY_CLASS, MODULE_LINK_CLASS, MODULE_ROUTED_CLASS, MODULE_TYPE_CLASS } from '../common/graph-module.const.ts';
 import type { ModuleCanvas } from '../common/module-canvas.type.ts';
 import type { ModuleScene } from '../common/module-scene.type.ts';
 import { ALL_SHOWN_STUB, MODULES_FOUND_STUB, MODULE_MEASURES_STUB } from '../test/stubs/module-scene.stub.ts';
@@ -21,6 +21,43 @@ const SCENE: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [
 /** No centre listed: every card is drawn at the origin. */
 const AT_ORIGIN: Positions = {};
 
+const A_ID = 'file:src/a.ts';
+
+const LIB_ID = 'dir:src/lib';
+
+const X_ID = 'pkg:@s/x';
+
+const A_LIB_ID = edgeIdOf({ source: A_ID, target: LIB_ID });
+
+const LIB_X_ID = edgeIdOf({ source: LIB_ID, target: X_ID });
+
+const A_CENTRE: Position = { x: 0, y: 0 };
+
+const LIB_CENTRE: Position = { x: 0, y: 100 };
+
+const X_CENTRE: Position = { x: 200, y: 100 };
+
+/** a.ts above lib, and @s/x right of lib. */
+const PLACED: Positions = { [A_ID]: A_CENTRE, [LIB_ID]: LIB_CENTRE, [X_ID]: X_CENTRE };
+
+const A_BOTTOM: Position = { x: 0, y: 16 };
+
+const LEFT_BEND: Position = { x: 40, y: 50 };
+
+const LIB_TOP: Position = { x: 0, y: 84 };
+
+const A_LIB_ROUTE: EdgeRoute = { start: A_BOTTOM, bends: [LEFT_BEND], end: LIB_TOP };
+
+const LIB_RIGHT: Position = { x: 50, y: 100 };
+
+const X_LEFT: Position = { x: 150, y: 100 };
+
+const LIB_X_ROUTE: EdgeRoute = { start: LIB_RIGHT, bends: [], end: X_LEFT };
+
+const ROUTES: Routes = { [A_LIB_ID]: A_LIB_ROUTE, [LIB_X_ID]: LIB_X_ROUTE };
+
+const ROUTED_IDS = Object.keys(ROUTES).toSorted();
+
 describe('FEATURE: createModuleCanvas', () => {
   let cy: Core;
   let canvas: ModuleCanvas;
@@ -28,7 +65,7 @@ describe('FEATURE: createModuleCanvas', () => {
   beforeEach(() => {
     cy = cytoscape({ headless: true });
     canvas = createModuleCanvas(cy);
-    canvas.show({ scene: SCENE, positions: AT_ORIGIN, measures: MODULE_MEASURES_STUB });
+    canvas.show({ scene: SCENE, positions: AT_ORIGIN, routes: {}, measures: MODULE_MEASURES_STUB });
   });
 
   afterEach(() => cy.destroy());
@@ -95,6 +132,50 @@ describe('FEATURE: createModuleCanvas', () => {
       canvas.paint(null);
 
       expect([cy.$id('file:src/a.ts').hasClass('normal'), cy.$id('dir:src/ui').hasClass('normal')]).toStrictEqual([true, true]);
+    });
+
+    it('WHEN its links are read with no routes THEN none is routed', () => {
+      expect(cy.edges(`.${MODULE_ROUTED_CLASS}`)).toHaveLength(0);
+    });
+  });
+
+  describe('GIVEN web drawn with routes for a.ts → lib and lib → @s/x', () => {
+    beforeEach(() => {
+      canvas.show({ scene: SCENE, positions: PLACED, routes: ROUTES, measures: MODULE_MEASURES_STUB });
+    });
+
+    it('WHEN the links are read THEN exactly the two with routes are routed', () => {
+      const routed = cy.edges(`.${MODULE_ROUTED_CLASS}`);
+
+      const routedIds = routed.map((edge) => edge.id());
+
+      expect(routedIds.toSorted()).toStrictEqual(ROUTED_IDS);
+    });
+
+    it('WHEN a.ts → lib is read THEN it carries the segments of its route and keeps its style classes', () => {
+      const edge = cy.$id(A_LIB_ID);
+
+      expect([
+        edge.data('segWeights'),
+        edge.data('segDistances'),
+        edge.data('srcEnd'),
+        edge.hasClass(MODULE_LINK_CLASS)
+      ]).toStrictEqual([[0.5], [-40], '0px 16px', true]);
+    });
+
+    it('WHEN a.ts is dragged THEN its link draws plain and the link it is not on stays routed', () => {
+      cy.$id(A_ID).emit('drag');
+
+      expect([cy.$id(A_LIB_ID).hasClass(MODULE_ROUTED_CLASS), cy.$id(LIB_X_ID).hasClass(MODULE_ROUTED_CLASS)]).toStrictEqual([
+        false,
+        true
+      ]);
+    });
+
+    it('WHEN the src box is dragged THEN the links of every card in it draw plain', () => {
+      cy.$id('dir:src').emit('drag');
+
+      expect(cy.edges(`.${MODULE_ROUTED_CLASS}`)).toHaveLength(0);
     });
   });
 });

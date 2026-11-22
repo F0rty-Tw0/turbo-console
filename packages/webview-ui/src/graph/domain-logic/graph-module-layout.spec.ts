@@ -2,7 +2,7 @@ import type { Mock, Mocked } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphModuleLayout } from './graph-module-layout.ts';
-import type { Position } from '../../bridge/common/graph-state.type.ts';
+import type { EdgeRoute, Position, Routes } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { LayoutScreen } from '../common/graph-layouts.type.ts';
 import type { GraphView, Viewport } from '../common/graph-page.type.ts';
@@ -37,6 +37,18 @@ const throwSize = (): NodeSize => {
 };
 
 const THROWING_MEASURES: ModuleMeasures = { ...MODULE_MEASURES_STUB, sizeOf: throwSize };
+
+const A_BOTTOM: Position = { x: 0, y: 16 };
+
+const B_TOP: Position = { x: 0, y: 84 };
+
+const A_TO_B: EdgeRoute = { start: A_BOTTOM, bends: [], end: B_TOP };
+
+const ROUTES: Routes = { 'e:file:src/a.ts>file:src/lib/b.ts': A_TO_B };
+
+const ELK_RESULT: LayoutResult = resultOf('modules', {});
+
+const ROUTED_RESULT: LayoutResult = { ...ELK_RESULT, routes: ROUTES };
 
 const laidOut = async (hash: string): Promise<LayoutResult | null> => Promise.resolve(resultOf(hash, {}));
 
@@ -104,6 +116,16 @@ describe('FEATURE: GraphModuleLayout', () => {
       await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'keep' });
 
       expect(showGraph.mock.calls).toStrictEqual([[true]]);
+    });
+  });
+
+  describe('GIVEN a draw ELK lays out with a route', () => {
+    it('WHEN it lands THEN the canvas is shown that route', async () => {
+      runner.run.mockResolvedValueOnce(ROUTED_RESULT);
+
+      await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'keep' });
+
+      expect(canvas.show.mock.calls[0]?.[0].routes).toStrictEqual(ROUTES);
     });
   });
 
