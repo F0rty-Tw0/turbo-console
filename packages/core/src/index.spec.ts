@@ -23,6 +23,9 @@ import type {
   ModuleGraph,
   ModuleGraphInput,
   ModuleLink,
+  ModuleSiteRow,
+  ModuleSites,
+  ModuleSitesQuery,
   PackageEdge,
   PackageGraph,
   PackageImportScan,
@@ -54,7 +57,8 @@ import type {
  * The runtime exports: the readers, `TurboException`, the text cleaners `plainLine` and `plainLines`, the import scan
  * (`scanPackageImports` and the `ImportFileCache` it reads and fills, and `isSourceName`, which the host's `openImport`
  * checks), the alias helpers the host's import match uses (`aliasTargetsOf`, `PATHS_SKIPPED`, `isNameOf`), the module
- * graph fold `moduleGraphOf` the host's modules mode draws from, and the run
+ * graph fold `moduleGraphOf` the host's modules mode draws from, the module sites lookup `moduleSitesOf` the host's
+ * modules Details asks, and the run
  * option words `turboOptionArgs` with the patterns their checks use (`BARE`,
  * `BARE_FIRST_BLOCKED`, `CONCURRENCY_VALUE`). The
  * task-name check `assertTaskName` and the boundary check `isWithin` are public: the vscode run flow uses them.
@@ -90,6 +94,7 @@ const RUNTIME_EXPORTS = [
   'loadWorkspace',
   'matchRunTasks',
   'moduleGraphOf',
+  'moduleSitesOf',
   'packageGraphSchema',
   'plainLine',
   'plainLines',
@@ -165,6 +170,9 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<ModuleLink>().toEqualTypeOf<readonly [from: number, to: number, statics: number, types: number, lazies: number]>();
       expectTypeOf<ModuleCounts>().toHaveProperty('unresolved');
       expectTypeOf<ModuleGraph>().toHaveProperty('stubLinks');
+      expectTypeOf<ModuleSitesQuery>().toHaveProperty('to');
+      expectTypeOf<ModuleSiteRow>().toHaveProperty('source');
+      expectTypeOf<ModuleSites>().toHaveProperty('importedBy');
     });
 
     it('WHEN TurboErrorKind is imported THEN it is the exact kind union', () => {

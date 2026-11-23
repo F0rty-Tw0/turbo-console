@@ -53,6 +53,10 @@ export { moduleGraphOf } from './imports/utils/module-graph.util.ts';
 
 export type { ModuleCounts, ModuleGraph, ModuleGraphInput, ModuleLink, WorkspaceTarget } from './imports/common/module-graph.type.ts';
 
+export { moduleSitesOf } from './imports/utils/module-sites.util.ts';
+
+export type { ModuleSiteRow, ModuleSites, ModuleSitesQuery } from './imports/common/module-sites.type.ts';
+
 export type {
   CachedFile,
   ImportScanCaps,
