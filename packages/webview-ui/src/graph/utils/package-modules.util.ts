@@ -17,7 +17,8 @@ const isPath = (file: unknown): boolean => isShortString(file, MANIFEST_FILE_MAX
 
 const isStubName = (stub: unknown): boolean => isShortString(stub, MODULE_STUB_NAME_MAX);
 
-const isFiles = (files: unknown): files is unknown[] => Array.isArray(files) && files.length <= MODULE_FILES_MAX && files.every(isPath);
+const isFiles = (files: unknown): files is unknown[] =>
+  Array.isArray(files) && files.length <= MODULE_FILES_MAX && files.every(isPath);
 
 const isStubs = (stubs: unknown): stubs is unknown[] => Array.isArray(stubs) && stubs.every(isStubName);
 

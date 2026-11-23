@@ -46,7 +46,8 @@ const FOUND_ONE = { kind: 'found', total: 1 };
 
 const edgeImportsOf = (ports: GraphPorts): GraphHostMessage[] => postedOf(ports).filter((message) => message.type === 'edgeImports');
 
-const packageModulesOf = (ports: GraphPorts): GraphHostMessage[] => postedOf(ports).filter((message) => message.type === 'packageModules');
+const packageModulesOf = (ports: GraphPorts): GraphHostMessage[] =>
+  postedOf(ports).filter((message) => message.type === 'packageModules');
 
 const MODULES_OF_WEB = { type: 'packageModules', packageName: 'web' };
 
