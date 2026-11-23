@@ -58,5 +58,7 @@ patchedDependencies:
   # CPU); the patch takes the queue before recalculating, so they flush next time.
   # boundingBox() recalculated the rendered style before it dirtied style-dirty elements, so a label changed in the same
   # tick kept its old label bounds (a card's label box stayed narrower than its two rows); the patch unCleans them first.
-  # Drop the patch once a cytoscape release fixes all five; a version bump fails install until then.
+  # breadthfirst cached each node's weighted percent but read a cached 0 as missing, so a row of roots re-read every
+  # neighborhood on each sort comparison (~80k calls on a 10k-module fallback layout); the patch checks for undefined.
+  # Drop the patch once a cytoscape release fixes all six; a version bump fails install until then.
   cytoscape@3.34.4: patches/cytoscape@3.34.4.patch
