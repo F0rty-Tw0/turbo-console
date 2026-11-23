@@ -2,12 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { freshViewStateOf } from './fresh-view-state.util.ts';
 import { readGraphViewState } from './graph-view-state.util.ts';
-import type {
-  GraphViewState,
-  ModuleSelection,
-  ModulesCamera,
-  ModulesViewState
-} from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphViewState, ModuleSelection, ModulesCamera, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 const SAVED_SHOWN = { types: false, tests: true, lazies: true };
 
