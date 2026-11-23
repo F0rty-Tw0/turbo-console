@@ -102,11 +102,13 @@ describe('FEATURE: moduleInputOf', () => {
 
     it('WHEN the root box is tapped THEN nothing is saved or drawn', () => {
       canvas.kindOf.mockReturnValue('box');
-      const before = rig.screen.shown.mock.calls.length;
+      const saved = modes.modules();
+      const drawn = rig.screen.shown.mock.calls.length;
 
       input.tapNode('dir:');
 
-      expect(rig.screen.shown.mock.calls).toHaveLength(before);
+      expect(modes.modules()).toBe(saved);
+      expect(rig.screen.shown.mock.calls).toHaveLength(drawn);
     });
 
     it('WHEN a.ts is tapped THEN it is painted with its neighbours', () => {
