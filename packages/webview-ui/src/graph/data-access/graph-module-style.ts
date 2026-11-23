@@ -21,9 +21,12 @@ const TYPE_LINK = { 'line-style': 'dashed', 'line-dash-pattern': DASHED_LINE_PX 
 
 /**
  * The modules mode rules: a stub card drawn dashed; a module link labelled with its import count in a chip of its own
- * (canvas background, padded, framed in the edge colour), so counts of nearby links never fuse into one number, the
- * label hidden below zoom 0.5 (`min-zoomed-font-size`); a lazy-only link dotted and a type-only link dashed. No rule sets a link's `curve-style` or `z-compound-depth`, so a module link draws as the base edge rule's
- * plain bezier at card depth, like a package edge. Boxes take the task folder box rule and cards the base node rule.
+ * (canvas background, padded, framed in the edge colour), so two side-by-side counts read as two numbers, the label
+ * hidden below zoom 0.5 (`min-zoomed-font-size`); a lazy-only link dotted and a type-only link dashed. A chip sits on its
+ * link's midpoint with no collision avoidance, so chips of links with close midpoints can still cover each other, and a
+ * card drawn over a midpoint hides its chip. No rule sets a link's `curve-style` or `z-compound-depth`, so a module link
+ * draws as the base edge rule's plain bezier at card depth, like a package edge. Boxes take the task folder box rule and
+ * cards the base node rule.
  */
 export const moduleRulesOf = (colors: ThemeColors, fontFamily: string): StylesheetStyle[] => {
   const link = {
