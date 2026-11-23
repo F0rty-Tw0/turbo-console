@@ -132,16 +132,23 @@ const trimmedModulesOf = (graph: ModuleGraph): TrimmedModules => {
   return trimmed;
 };
 
-/**
- * The modules reply for one package from one scan of it (spec §6.1): the scan folded by `moduleGraphOf`, with every other
- * listed package a stub target (the root `//` owns no dir), then trimmed to the §5 caps. `scanned`, `skipped` and `limit`
- * are the scan's. Never mutates `scan`: its arrays are the import cache's own.
- */
-export const answerModules = (scan: PackageImportScan, ctx: ModulesContext): ModulesResult => {
+/** The fold input for one package scan: every other listed package a stub target (the root `//` owns no dir). */
+export const moduleInputOf = (scan: PackageImportScan, ctx: ModulesContext): ModuleGraphInput => {
   const isOther = (pkg: GraphPackage): boolean => pkg.name !== ctx.packageName;
   const namesOfTarget = namesOfEach(ctx.manifestText);
   const others = ctx.packages.filter(isOther).map((pkg) => targetOf(ctx, namesOfTarget, pkg));
   const input: ModuleGraphInput = { dir: ctx.dir, selfName: selfNameOf(ctx), scan, others };
+
+  return input;
+};
+
+/**
+ * The modules reply for one package from one scan of it (spec §6.1): the scan folded by `moduleGraphOf` over
+ * `moduleInputOf`, then trimmed to the §5 caps. `scanned`, `skipped` and `limit` are the scan's. Never mutates `scan`: its
+ * arrays are the import cache's own.
+ */
+export const answerModules = (scan: PackageImportScan, ctx: ModulesContext): ModulesResult => {
+  const input = moduleInputOf(scan, ctx);
   const graph = moduleGraphOf(input);
   const { files, tests, stubs, fileLinks, stubLinks, dropped } = trimmedModulesOf(graph);
   const { scanned, skipped, limit } = scan;
