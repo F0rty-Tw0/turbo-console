@@ -862,8 +862,11 @@ p {
   font-weight: 600;
 }
 
+/* A package list of thousands of rows lays out and paints only the rows near the viewport; 24px is a row's icon button pitch, and `auto` keeps each row's last rendered height. */
 .controls-row {
   padding-inline-start: var(--space-3);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 24px;
 }
 
 .controls-cell {
