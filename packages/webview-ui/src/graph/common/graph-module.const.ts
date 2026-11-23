@@ -7,6 +7,9 @@ export const FRESH_MODULES_SHOWN: ModulesViewState['shown'] = { types: true, tes
 /** A module redraw that leaves the camera as it is. */
 export const MODULE_REDRAW_KEEP: ModuleRedraw = { kind: 'keep' };
 
+/** Re-layout and Retry: the camera left as it is, ELK forced on a graph past `ELK_NODES_MAX`. */
+export const MODULE_REDRAW_RELAYOUT: ModuleRedraw = { kind: 'relayout' };
+
 /** The id prefix of a folder, drawn as a box or a card; the root box's id is the prefix alone. */
 export const DIR_PREFIX = 'dir:';
 

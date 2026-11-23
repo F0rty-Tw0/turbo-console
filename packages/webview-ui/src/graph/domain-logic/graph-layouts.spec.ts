@@ -80,7 +80,7 @@ describe('FEATURE: GraphLayouts', () => {
     it('WHEN it opens with the flat layout cached THEN the cached layout draws at once', () => {
       harness.open(STATE_STUB, SAVED_FLAT_STUB);
 
-      expect(harness.screen.showGraph).toHaveBeenCalledExactlyOnceWith(false);
+      expect(harness.screen.showGraph).toHaveBeenCalledExactlyOnceWith(null);
       expect(harness.view.setGraph).toHaveBeenCalledExactlyOnceWith(NAMES, STATE_STUB.edges, FLAT_POSITIONS_STUB, harness.deps.sizeOf);
       expect(harness.runs.count()).toBe(0);
       expect(harness.layouts.engine()).toBe('cache');

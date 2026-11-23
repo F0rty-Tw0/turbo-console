@@ -10,7 +10,7 @@ type ScreenCall = (screen: LayoutScreen) => void;
 
 const SCREEN_CALLS: [keyof LayoutScreen, ScreenCall][] = [
   ['showLoading', (screen: LayoutScreen): void => screen.showLoading()],
-  ['showGraph', (screen: LayoutScreen): void => screen.showGraph(false)],
+  ['showGraph', (screen: LayoutScreen): void => screen.showGraph(null)],
   ['showNotice', (screen: LayoutScreen): void => screen.showNotice(FALLBACK_NOTICE)]
 ];
 

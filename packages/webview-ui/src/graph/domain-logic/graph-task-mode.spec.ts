@@ -85,7 +85,7 @@ describe('FEATURE: GraphTaskMode', () => {
 
     it('WHEN a state arrives THEN the graph view shows and one run of the chain starts under its key', () => {
       expect(mode.isActive()).toBe(true);
-      expect(rig.screen.showGraph).toHaveBeenCalledExactlyOnceWith(false);
+      expect(rig.screen.showGraph).toHaveBeenCalledExactlyOnceWith(null);
       expect(rig.frames.start).toHaveBeenCalledExactlyOnceWith(7);
       expect(rig.runs.count()).toBe(1);
     });
