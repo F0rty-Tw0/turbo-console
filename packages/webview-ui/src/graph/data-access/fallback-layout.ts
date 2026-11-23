@@ -1,8 +1,9 @@
 import cytoscape from 'cytoscape';
-import type { Position as CytoscapePosition, ElementDefinition } from 'cytoscape';
+import type { ElementDefinition } from 'cytoscape';
 import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { Cell } from '../common/wrapped-rows.type.ts';
 import { cellPitchOf } from '../utils/grid-layout.util.ts';
 import { squareColumnsOf, wrappedCellsOf } from '../utils/wrapped-rows.util.ts';
 
@@ -55,12 +56,12 @@ export const breadthfirstPositions = (graph: ElkNode): Positions => {
   const edges = elkEdges.flatMap((edge: ElkEdge): ElementDefinition[] => edgesOf(edge, idsByName));
   const elements = [...nodes, ...edges];
   const cy = cytoscape({ headless: true, elements });
-  const cellOf = (child: ElkNode, index: number): [string, CytoscapePosition] => {
+  const cellOf = (child: ElkNode, index: number): Cell => {
     const cell = cy.getElementById(cytoscapeIdOf(index)).position();
 
     return [child.id, cell];
   };
-  const scaled = ([id, cell]: readonly [string, Position]): [string, Position] => {
+  const scaled = ([id, cell]: Cell): [string, Position] => {
     const position: Position = { x: cell.x * pitch.x, y: cell.y * pitch.y };
 
     return [id, position];

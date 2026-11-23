@@ -1,8 +1,6 @@
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import { MIN_FALLBACK_COLUMNS } from '../common/graph.const.ts';
-
-/** A node id and its cell: column across, depth down. */
-type Cell = readonly [id: string, cell: Position];
+import type { Cell } from '../common/wrapped-rows.type.ts';
 
 const depthOf = ([, cell]: Cell): number => cell.y;
 
