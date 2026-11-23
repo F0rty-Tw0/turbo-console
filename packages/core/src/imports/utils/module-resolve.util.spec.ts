@@ -187,7 +187,14 @@ const ROWS: ResolveRow[] = [
   { label: 'a manifest alias key', walked: [], specifier: 'b-alias/x', fromDir: SRC_DIR, patch: WORKSPACE_B, target: stubOf('@s/b') },
   { label: 'a longer name', walked: [], specifier: '@s/bx', fromDir: SRC_DIR, patch: WORKSPACE_B, target: EXTERNAL },
   { label: "the package's own name", walked: [], specifier: '@s/a/x', fromDir: SRC_DIR, patch: {}, target: SELF },
-  { label: 'an empty self name', walked: [], specifier: 'react', fromDir: SRC_DIR, patch: NO_SELF, target: EXTERNAL },
+  {
+    label: 'an empty specifier under an empty self name',
+    walked: [],
+    specifier: '',
+    fromDir: SRC_DIR,
+    patch: NO_SELF,
+    target: EXTERNAL
+  },
   { label: 'an npm name', walked: [], specifier: 'react', fromDir: SRC_DIR, patch: {}, target: EXTERNAL }
 ];
 
