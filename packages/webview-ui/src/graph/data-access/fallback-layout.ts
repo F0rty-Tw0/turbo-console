@@ -1,9 +1,11 @@
 import cytoscape from 'cytoscape';
-import type { Position as CytoscapePosition, ElementDefinition } from 'cytoscape';
+import type { ElementDefinition } from 'cytoscape';
 import type { ElkEdge, ElkNode } from 'elkjs/lib/elk-api.js';
 
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
+import type { Cell } from '../common/wrapped-rows.type.ts';
 import { cellPitchOf } from '../utils/grid-layout.util.ts';
+import { squareColumnsOf, wrappedCellsOf } from '../utils/wrapped-rows.util.ts';
 
 /**
  * Cytoscape's BFS (`collection/algorithms/bfs-dfs.mjs`) keeps its visited and parent-edge tables in plain objects
@@ -39,8 +41,10 @@ const edgesOf = (edge: ElkEdge, idsByName: Map<string, string>): ElementDefiniti
 
 /**
  * Cytoscape's `breadthfirst` on the main thread, for when ELK fails: dependents above their dependencies.
- * Headless nodes are 1 px square, so with `spacingFactor: 1` the layout returns a unit grid (column, depth), which is
- * scaled here to the widest node and to `FALLBACK_SPACING_FACTOR` node heights per row.
+ * Headless nodes are 1 px square, so with `spacingFactor: 1` the layout returns a unit grid (column, depth). Each depth
+ * row is wrapped into sub-rows so the whole graph is about square (one 10k-node row is too wide for Cytoscape's texture
+ * cache), never under `MIN_FALLBACK_COLUMNS` columns so a small graph keeps one row per depth, then scaled to the widest
+ * node and to `FALLBACK_SPACING_FACTOR` node heights per row.
  */
 export const breadthfirstPositions = (graph: ElkNode): Positions => {
   const children = graph.children ?? [];
@@ -52,20 +56,23 @@ export const breadthfirstPositions = (graph: ElkNode): Positions => {
   const edges = elkEdges.flatMap((edge: ElkEdge): ElementDefinition[] => edgesOf(edge, idsByName));
   const elements = [...nodes, ...edges];
   const cy = cytoscape({ headless: true, elements });
-  const scaled = (cell: CytoscapePosition): Position => {
-    const position: Position = { x: cell.x * pitch.x, y: cell.y * pitch.y };
-
-    return position;
-  };
-  const entryOf = (child: ElkNode, index: number): [string, Position] => {
+  const cellOf = (child: ElkNode, index: number): Cell => {
     const cell = cy.getElementById(cytoscapeIdOf(index)).position();
 
-    return [child.id, scaled(cell)];
+    return [child.id, cell];
+  };
+  const scaled = ([id, cell]: Cell): [string, Position] => {
+    const position: Position = { x: cell.x * pitch.x, y: cell.y * pitch.y };
+
+    return [id, position];
   };
 
   cy.layout({ name: 'breadthfirst', directed: true, animate: false, spacingFactor: 1 }).run();
 
-  const entries = children.map(entryOf);
+  const cells = children.map(cellOf);
+  const columns = squareColumnsOf(children.length, pitch);
+  const wrapped = wrappedCellsOf(cells, columns);
+  const entries = wrapped.map(scaled);
 
   cy.destroy();
 
