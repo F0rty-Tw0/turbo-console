@@ -165,17 +165,26 @@ describe('FEATURE: turbo tasks of a real workspace', () => {
       expect(turboFlagOf(model, loseChild.name, GRAND_TASK)).toBe(false);
     });
 
-    it('WHEN the keeping child runs both tasks dry THEN turbo returns a state for each it does not opt out', async () => {
-      const rootId = `${keepChild.name}#${ROOT_TASK}`;
+    it('WHEN the keeping child runs both tasks dry THEN turbo returns the grandparent task state', async () => {
       const grandId = `${keepChild.name}#${GRAND_TASK}`;
-      const optsOut = optsOutExcludedTasks(binary.version);
 
       const states = await readDryRun(binary, { tasks: [ROOT_TASK, GRAND_TASK], packages: [keepChild.name] });
 
       const stateIds = states.map((state) => state.id);
 
       expect(stateIds).toContain(grandId);
-      expect(stateIds.includes(rootId)).toBe(!optsOut);
+    });
+
+    it('WHEN the keeping child runs both tasks dry THEN turbo returns the root task state unless it opts it out', async () => {
+      const rootId = `${keepChild.name}#${ROOT_TASK}`;
+      const expectsRootState = !optsOutExcludedTasks(binary.version);
+
+      const states = await readDryRun(binary, { tasks: [ROOT_TASK, GRAND_TASK], packages: [keepChild.name] });
+
+      const stateIds = states.map((state) => state.id);
+      const hasRootState = stateIds.includes(rootId);
+
+      expect(hasRootState).toBe(expectsRootState);
     });
 
     it('WHEN the losing child runs both tasks dry THEN turbo returns the root task state but none for the grandparent task', async () => {
