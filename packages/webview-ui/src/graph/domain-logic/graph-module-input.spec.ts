@@ -93,6 +93,17 @@ describe('FEATURE: moduleInputOf', () => {
       expect(modes.modules()?.expanded).toStrictEqual(['src']);
     });
 
+    it('WHEN the collapsed folder src/lib is tapped while a.ts is focused THEN nothing is saved or drawn', () => {
+      mode.update({ ...WEB_SRC_OPEN, focus: 'file:src/a.ts' }, KEEP);
+      canvas.kindOf.mockReturnValue('dir');
+      const drawn = rig.screen.shown.mock.calls.length;
+
+      input.tapNode('dir:src/lib');
+
+      expect(modes.modules()?.expanded).toStrictEqual(['src']);
+      expect(rig.screen.shown.mock.calls).toHaveLength(drawn);
+    });
+
     it('WHEN the src box is tapped THEN src is collapsed', () => {
       canvas.kindOf.mockReturnValue('box');
       input.tapNode('dir:src');
