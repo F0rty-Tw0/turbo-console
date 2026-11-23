@@ -9,7 +9,7 @@ import { CARD_MEASURES_STUB } from '../test/stubs/graph-card.stub.ts';
 import { THEME_COLORS_STUB } from '../test/stubs/theme-colors.stub.ts';
 import { CANVAS_COLORS, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
 
-/** The class modules mode once drew a link on its ELK route with; a link that still carries it must draw plain. */
+/** A link with this class still draws plain. */
 const OLD_ROUTED_CLASS = 'module-routed';
 
 const SEGMENT_DATA = { segWeights: [0.5], segDistances: [-40], srcEnd: '0px 16px', tgtEnd: '0px -16px' };
@@ -38,7 +38,7 @@ const drawnStyleOf = (cy: Core, id: string): string[] => {
   return drawn;
 };
 
-describe('FEATURE: moduleRulesOf', () => {
+describe('FEATURE: moduleRulesOf, alone and in the graph stylesheet', () => {
   describe('GIVEN the module link rules', () => {
     it.each([
       ['edge.module-lazy', 'line-style', 'dotted'],

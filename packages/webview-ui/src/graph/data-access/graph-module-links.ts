@@ -28,7 +28,7 @@ const countOf = (link: ModuleSceneLink): string => {
   return '';
 };
 
-/** A module link, drawn as the plain bezier every mode draws; its count label sits on the line's midpoint. */
+/** A module link, drawn as the plain bezier a package edge draws; its count label sits on the line's midpoint. */
 export const moduleLinkDefinitionOf = (link: ModuleSceneLink): ElementDefinition => {
   const data = { id: edgeIdOf(link), source: link.source, target: link.target, count: countOf(link) };
   const definition: ElementDefinition = { data, classes: linkClassesOf(link) };
