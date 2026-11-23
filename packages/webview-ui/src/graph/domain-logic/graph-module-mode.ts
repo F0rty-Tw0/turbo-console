@@ -162,13 +162,14 @@ export class GraphModuleMode {
     this.deps.modes.saveModules(saved, this.hash());
   }
 
-  /** Saves `view` and, while Shown, draws it again placed by `redraw`. */
+  /** Saves `view` and, while Shown or Failed with the old graph still drawn, draws it again placed by `redraw`. */
   public update(view: ModulesViewState, redraw: ModuleRedraw): void {
     const { current } = this;
 
     this.deps.modes.saveModules(view, this.hash());
 
     if (current.kind === 'shown') this.deps.screen.shown(current.name, current.found, view, redraw);
+    else if (current.kind === 'failed') this.drawKept(current.found, view, redraw);
   }
 
   /** A found scan: the default expansion is saved the first time, then it is drawn, keeping the camera when it was Shown. */
@@ -179,6 +180,15 @@ export class GraphModuleMode {
 
     this.current = { kind: 'shown', name, found };
     this.update(view, wasShown ? KEEP : FIRST);
+  }
+
+  /** Failed over a kept graph that is on screen: drawn again, so a View box or folder tap shows, the failed banner kept. */
+  private drawKept(found: ModulesFound | null, view: ModulesViewState, redraw: ModuleRedraw): void {
+    const isDrawn = this.deps.screen.isDrawn();
+
+    if (found === null || !isDrawn) return;
+
+    this.deps.screen.drawAgain(found, view, redraw);
   }
 
   /** After a host message: Shown draws the saved view again with the camera kept, Failed shows the graph view again; Waiting and Loading come back with their draw. */

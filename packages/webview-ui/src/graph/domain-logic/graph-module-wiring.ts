@@ -33,7 +33,7 @@ const measuresOf = (deps: GraphControllerDeps): ModuleMeasures => {
   return measures;
 };
 
-/** Re-layout and Retry while Shown: the saved view drawn again, the camera kept. */
+/** Re-layout while Shown, or Failed over a kept graph: the saved view drawn again, the camera kept. */
 const relayoutOf = (mode: GraphModuleMode): void => {
   const view = mode.view();
 

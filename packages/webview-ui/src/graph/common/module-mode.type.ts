@@ -114,7 +114,7 @@ export type PageModuleMode = {
   readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number) => void;
   /** A host message replaced the page; the next graph state still listing the package takes it back. */
   readonly suspend: () => void;
-  /** Draws the saved view again with the camera kept; Shown only. */
+  /** Draws the saved view again with the camera kept; Shown, or Failed over a kept graph, only. */
   readonly relayout: () => void;
   readonly input: HandledModules;
 };

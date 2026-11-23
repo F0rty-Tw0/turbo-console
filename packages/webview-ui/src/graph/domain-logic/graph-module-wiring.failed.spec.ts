@@ -44,4 +44,29 @@ describe('FEATURE: modules wiring after a failed scan', () => {
       expect(mock.view.modules.show).not.toHaveBeenCalled();
     });
   });
+
+  describe('GIVEN web shown, then failed on Refresh with its graph kept', () => {
+    beforeEach(async () => {
+      controller.receive(WEB_FOUND);
+      await mock.runs.settle(mock.runs.count() - 1, resultOf('modules', {}));
+      mock.page.modules.refresh.click();
+      controller.receive(WEB_FAILED);
+    });
+
+    it('WHEN Type-only imports is unchecked THEN the module graph is laid out again', () => {
+      const runs = mock.runs.count();
+
+      mock.page.modules.types.checked = false;
+      mock.page.modules.types.dispatchEvent(new Event('change'));
+
+      expect(mock.runs.count()).toBe(runs + 1);
+    });
+
+    it('WHEN Type-only imports is unchecked THEN the failed banner stays', () => {
+      mock.page.modules.types.checked = false;
+      mock.page.modules.types.dispatchEvent(new Event('change'));
+
+      expect([mock.page.modules.banner.hidden, mock.page.modules.retry.hidden]).toStrictEqual([false, false]);
+    });
+  });
 });

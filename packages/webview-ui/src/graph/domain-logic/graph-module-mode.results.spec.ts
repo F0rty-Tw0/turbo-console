@@ -5,6 +5,7 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphPackageModulesMessage, ModulesResult } from '../../bridge/common/graph-modules.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
+import type { ModuleRedraw } from '../common/module-mode.type.ts';
 import type { ModuleModeRig } from '../test/common/graph-module-mode.type.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { REPLY_AT, RIG_CAMERA, WEB_GONE, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
@@ -27,6 +28,8 @@ const FRESH_WEB: ModulesViewState = freshModulesViewOf('web');
 const WEB_BACK: ModulesViewState = { ...FRESH_WEB, expanded: DEFAULT_EXPANDED, camera: RIG_CAMERA };
 
 const WEB_SRC_OPEN: ModulesViewState = { ...FRESH_WEB, expanded: ['src'] };
+
+const KEEP: ModuleRedraw = { kind: 'keep' };
 
 describe('FEATURE: GraphModuleMode scan results', () => {
   let rig: ModuleModeRig;
@@ -201,7 +204,31 @@ describe('FEATURE: GraphModuleMode scan results', () => {
     it('WHEN a view is updated THEN it is saved but nothing is drawn', () => {
       mode.update(WEB_SRC_OPEN, { kind: 'fit' });
 
-      expect([mode.view(), rig.screen.shown.mock.calls]).toStrictEqual([WEB_SRC_OPEN, []]);
+      expect([mode.view(), rig.screen.shown.mock.calls, rig.screen.drawAgain.mock.calls]).toStrictEqual([WEB_SRC_OPEN, [], []]);
+    });
+  });
+
+  describe('GIVEN Shown web, then failed on Refresh with its graph kept', () => {
+    beforeEach(() => {
+      mode.scanned(FOUND, REPLY_AT);
+      mode.scanned(FAILED, REPLY_AT);
+    });
+
+    it('WHEN a view is updated THEN it is drawn again without writing the bar', () => {
+      mode.update(WEB_SRC_OPEN, KEEP);
+
+      expect([rig.screen.drawAgain.mock.calls, rig.screen.shown.mock.calls.length]).toStrictEqual([
+        [[MODULES_FOUND_STUB, WEB_SRC_OPEN, KEEP]],
+        1
+      ]);
+    });
+
+    it('WHEN a view is updated while no graph is on screen THEN nothing is drawn again', () => {
+      rig.screen.isDrawn.mockReturnValue(false);
+
+      mode.update(WEB_SRC_OPEN, KEEP);
+
+      expect(rig.screen.drawAgain).not.toHaveBeenCalled();
     });
   });
 });
