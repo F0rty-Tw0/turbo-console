@@ -43,7 +43,14 @@ const MODULES_WEB: GraphPackageModulesMessage = { type: 'packageModules', packag
 const X_END: ModuleEnd = { kind: 'file', path: 'src/x.ts' };
 const SRC_END: ModuleEnd = { kind: 'dir', path: 'src' };
 const A_STUB: ModuleSite['target'] = { kind: 'stub', name: 'a' };
-const SITE_X_TO_A: ModuleSite = { file: 'src/x.ts', line: 0, text: "import x from 'a';", kind: 'static', isType: false, target: A_STUB };
+const SITE_X_TO_A: ModuleSite = {
+  file: 'src/x.ts',
+  line: 0,
+  text: "import x from 'a';",
+  kind: 'static',
+  isType: false,
+  target: A_STUB
+};
 const FOUND_SITES: ModuleSitesFound = {
   kind: 'found',
   imports: [SITE_X_TO_A],

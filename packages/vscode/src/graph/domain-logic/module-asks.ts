@@ -39,7 +39,12 @@ const replyListedOf = (port: ModuleAskPort, message: ModulesReply): void => {
  * Joins the run of `pkg`'s dir, or starts it, under `key`, reads `pkg`'s manifest and waits for the scan; `undefined` once
  * disposed, when the run in flight is already asked for `key`, or when the scan was aborted.
  */
-const settledAskOf = async (port: ModuleAskPort, state: GraphReady, pkg: GraphPackage, key: string): Promise<SettledAsk | undefined> => {
+const settledAskOf = async (
+  port: ModuleAskPort,
+  state: GraphReady,
+  pkg: GraphPackage,
+  key: string
+): Promise<SettledAsk | undefined> => {
   const isDisposed = port.isDisposed();
 
   if (isDisposed) return undefined;
@@ -95,7 +100,12 @@ export const askModules = async (port: ModuleAskPort, packageName: string): Prom
  * graph does not list it; else the reply once the scan of its dir settled (`failed` when it failed), joining a modules or
  * sites run of the same package, held back when the scan was aborted or the package is no longer listed.
  */
-export const askModuleSites = async (port: ModuleAskPort, packageName: string, from: ModuleEnd, to: ModuleEnd | null): Promise<void> => {
+export const askModuleSites = async (
+  port: ModuleAskPort,
+  packageName: string,
+  from: ModuleEnd,
+  to: ModuleEnd | null
+): Promise<void> => {
   const listed = listedPackageOf(port.gate.state(), packageName);
 
   if (listed === undefined) {

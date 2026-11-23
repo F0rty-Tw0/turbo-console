@@ -47,7 +47,11 @@ export const sitesInputOf = (): ModuleGraphInput => {
   const yImports: SourceImport[] = [importOf('../lib/c', { kind: 'dynamic' })];
   const zImports: SourceImport[] = [importOf('../a/x'), importOf('../lib/c', { line: 1 })];
   const cImports: SourceImport[] = [importOf('@s/b', { line: 2, kind: 'require' })];
-  const mainImports: SourceImport[] = [importOf('./a/x', { kind: 'reexport' }), importOf('./ab/z', { line: 1 }), importOf('./lib/c', { line: 3 })];
+  const mainImports: SourceImport[] = [
+    importOf('./a/x', { kind: 'reexport' }),
+    importOf('./ab/z', { line: 1 }),
+    importOf('./lib/c', { line: 3 })
+  ];
 
   const imports: Record<string, SourceImport[]> = {
     'src/a/x.ts': xImports,
