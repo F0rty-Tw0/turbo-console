@@ -11,6 +11,7 @@ import { packageTasksOf, taskModeOf } from './graph-task-wiring.ts';
 import { wireToolbar } from './graph-toolbar-actions.ts';
 import { viewHandlersOf } from './graph-view-handlers.ts';
 import { ViewStateModes } from './view-state-modes.ts';
+import type { GraphHostMessage, GraphRunsMessage } from '../../bridge/common/graph-message.type.ts';
 import type { FlowControl } from '../common/flow.type.ts';
 import type { DrawnGraph, GraphController, GraphControllerDeps, GraphView } from '../common/graph-page.type.ts';
 import type { ProbeFacts } from '../common/graph-probe.type.ts';
@@ -90,8 +91,19 @@ class GraphPageController {
   public receive(message: unknown): void {
     const at = this.deps.now();
 
-    if (!isGraphHostMessage(message)) return;
+    if (isGraphHostMessage(message)) this.route(message, at);
+  }
 
+  public facts(): ProbeFacts {
+    return probeFactsOf({ frames: this.frames, packages: this.packages, tasks: this.tasks });
+  }
+
+  /** The page became visible: the card clock catches up at once instead of at the next tick. */
+  public clockShown(): void {
+    this.clock.shown();
+  }
+
+  private route(message: GraphHostMessage, at: number): void {
     switch (message.type) {
       case 'state':
         this.routing.show(message.state, at);
@@ -107,24 +119,23 @@ class GraphPageController {
         this.packages.filtering.inspection.replied(message);
         break;
       case 'runs':
-        this.tasks.selection.runs(message.runs, message.owners ?? NO_OWNERS);
-        this.packages.runs(message.runs);
-        applyRunMarks(this.view.tasks, message);
-        this.clock.runs(message.elapsed, at);
+        this.runs(message, at);
         break;
       case 'atoms':
         this.tasks.layout.atoms.states(message.groups);
         break;
+      // The page has no modules view yet, so it ignores both.
+      case 'packageModules':
+      case 'showModules':
+        break;
     }
   }
 
-  public facts(): ProbeFacts {
-    return probeFactsOf({ frames: this.frames, packages: this.packages, tasks: this.tasks });
-  }
-
-  /** The page became visible: the card clock catches up at once instead of at the next tick. */
-  public clockShown(): void {
-    this.clock.shown();
+  private runs(message: GraphRunsMessage, at: number): void {
+    this.tasks.selection.runs(message.runs, message.owners ?? NO_OWNERS);
+    this.packages.runs(message.runs);
+    applyRunMarks(this.view.tasks, message);
+    this.clock.runs(message.elapsed, at);
   }
 
   /** The package reveal the host's `showPackage`, the task owner button and the location bar's package crumb call. */

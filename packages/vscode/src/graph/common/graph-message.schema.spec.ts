@@ -112,6 +112,24 @@ describe('FEATURE: graph message schema', () => {
     });
   });
 
+  describe('GIVEN a scanModules message', () => {
+    it('WHEN it names a package THEN it parses to it and an unknown key is stripped', () => {
+      const parsed = graphMessageSchema.safeParse({ type: 'scanModules', packageName: 'web', extra: 1 });
+
+      expect(parsed.data).toStrictEqual({ type: 'scanModules', packageName: 'web' });
+    });
+
+    it.each([
+      ['no packageName', {}],
+      ['a numeric packageName', { packageName: 7 }],
+      ['a packageName past PACKAGE_NAME_MAX', { packageName: 'a'.repeat(PACKAGE_NAME_MAX + 1) }]
+    ])('WHEN it has %s THEN parse fails', (_label, fields) => {
+      const parsed = graphMessageSchema.safeParse({ type: 'scanModules', ...fields });
+
+      expect(parsed.success).toBe(false);
+    });
+  });
+
   describe('GIVEN an openImport message', () => {
     it.each([
       ['line 0', 0],

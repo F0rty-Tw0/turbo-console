@@ -61,6 +61,16 @@ export type {
 } from './bridge/common/graph-imports.type.ts';
 
 export type {
+  GraphPackageModulesMessage,
+  GraphScanModulesMessage,
+  GraphShowModulesMessage,
+  ModuleCounts,
+  ModuleLink,
+  ModulesFound,
+  ModulesResult
+} from './bridge/common/graph-modules.type.ts';
+
+export type {
   EdgeRoute,
   GraphAtomFile,
   GraphAtomGroup,
@@ -86,6 +96,9 @@ export {
   MANIFEST_FIELDS,
   MANIFEST_FILE_MAX,
   MANIFEST_LINE_MAX,
+  MODULE_FILES_MAX,
+  MODULE_LINKS_MAX,
+  MODULE_STUB_NAME_MAX,
   TASK_COUNT_MAX
 } from './bridge/common/graph-message.const.ts';
 
