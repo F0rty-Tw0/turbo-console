@@ -4,22 +4,11 @@ import { freshModulesViewOf } from './fresh-view-state.util.ts';
 import { keptViewOf } from './module-selection.util.ts';
 import type { ModuleSelection, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
+import { link, node } from '../test/utils/module-selections.spec.util.ts';
 
 const FRESH: ModulesViewState = freshModulesViewOf('web');
 
 const VIEW: ModulesViewState = { ...FRESH, expanded: ['src'], depth: 2 };
-
-const node = (id: string): ModuleSelection => {
-  const selection: ModuleSelection = { kind: 'node', id };
-
-  return selection;
-};
-
-const link = (source: string, target: string): ModuleSelection => {
-  const selection: ModuleSelection = { kind: 'link', source, target };
-
-  return selection;
-};
 
 describe('FEATURE: keptViewOf', () => {
   describe('GIVEN a saved selection and a new answer of six files and stubs @s/x, @s/y', () => {
