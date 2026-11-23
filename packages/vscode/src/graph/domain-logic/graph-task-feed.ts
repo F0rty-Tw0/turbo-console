@@ -31,7 +31,7 @@ type TaskFeedDeps = {
  * What a graph panel is told about tasks besides its state: the run words and owners of its root, merged from its own runs and
  * the task progress (spec D11) and coalesced so a burst of task events, progress or prediction changes is one post, the cache
  * prediction of its tasks while the prediction toggle is on, the affected marks (a `GraphAffectedFeed`), the Atomizer counts of its
- * groups (a `GraphAtomFeed`) and the one `showTasks` or `showPackage` request held until the page can take it. A coalesced post that
+ * groups (a `GraphAtomFeed`) and the one `showTasks`, `showPackage` or `showModules` request held until the page can take it. A coalesced post that
  * equals the last one sent is skipped, and a post carries `predictions` or `affected` only when they changed since the last one sent:
  * an absent key leaves the page's marks as they are. A request is never posted before a `graph` state: `flush` is the one point that posts the
  * full runs message, always, the atoms and the held request, in that order, right after a state is posted.
