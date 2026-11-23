@@ -85,7 +85,8 @@ const writeModules = async (srcDir: string, files: ModuleFile[]): Promise<void> 
   await Promise.all(files.map(async (file): Promise<void> => writeFile(join(srcDir, file.name), file.text)));
 };
 
-const isTabOf = (tab: vscode.Tab, fsPath: string): boolean => tab.input instanceof vscode.TabInputText && tab.input.uri.fsPath === fsPath;
+const isTabOf = (tab: vscode.Tab, fsPath: string): boolean =>
+  tab.input instanceof vscode.TabInputText && tab.input.uri.fsPath === fsPath;
 
 /**
  * Closes the tabs of `u-mod-a.ts`, then removes only the four files `writeModules` wrote. Closing the active editor instead would
