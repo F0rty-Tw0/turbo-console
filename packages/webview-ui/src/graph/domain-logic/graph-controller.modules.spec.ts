@@ -200,6 +200,7 @@ describe('FEATURE: createGraphController modules messages', () => {
       createGraphController(mock.deps);
 
       expect(enter).toHaveBeenCalledWith('web');
+      expect(mock.deps.bridge.post).not.toHaveBeenCalledWith({ type: 'scanModules', packageName: 'web' });
     });
   });
 });
