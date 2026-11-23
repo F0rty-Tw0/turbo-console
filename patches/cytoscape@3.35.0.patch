@@ -1,5 +1,5 @@
 diff --git a/dist/cytoscape.cjs.js b/dist/cytoscape.cjs.js
-index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..852e9c4b70f2d59ccd54bc2512569be255fac23e 100644
+index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..9b82b70f35fd7cd7211b26cced38dfe03b600b3e 100644
 --- a/dist/cytoscape.cjs.js
 +++ b/dist/cytoscape.cjs.js
 @@ -12141,6 +12141,10 @@ elesfn$b.boundingBox = function (options) {
@@ -62,8 +62,248 @@ index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..852e9c4b70f2d59ccd54bc2512569be2
      }
    };
    r.flushRenderedStyleQueue = function () {
+@@ -29442,6 +29446,13 @@ var LayeredTextureCache = function LayeredTextureCache(renderer) {
+   self.lastInvalidationTime = performanceNow() - 2 * invalidThreshold;
+   self.skipping = false;
+   self.eleTxrDeqs = cy.collection();
++
++  // patched: region state (see LTCp.makeRegion); drawEles is what drawLayeredElements falls back on when getLayers returns null
++  self.regions = {};
++  self.regionLvls = [];
++  self.fullBb = null;
++  self.fullBbEles = null;
++  self.drawEles = null;
+   self.scheduleElementRefinement = debounce(function () {
+     self.refineElementTextures(self.eleTxrDeqs);
+     self.eleTxrDeqs.unmerge(self.eleTxrDeqs);
+@@ -29510,17 +29521,44 @@ LTCp.getLayers = function (eles, pxRatio, lvl) {
+       return null;
+     }
+   }
++  // patched: a level in region mode holds only the eles in its region; the checks and layers below run on that list
++  var allEles = eles;
++  var region = self.regions[lvl];
++  if (region && self.fullBbEles !== eles && self.layerFits(self.getFullBb(eles), lvl)) {
++    self.dropRegion(lvl);
++    region = null;
++  }
++  if (region) {
++    var extent = cy.extent();
++    eles = self.regionElesOf(region, allEles, extent);
++    if (!eles) {
++      region = self.makeRegion(lvl, allEles, extent);
++      if (!region) {
++        return null;
++      }
++      eles = self.regionElesOf(region, allEles, extent);
++    }
++    removeFromArray(self.regionLvls, lvl);
++    self.regionLvls.push(lvl);
++    self.drawEles = eles;
++  }
+   self.validateLayersElesOrdering(lvl, eles);
+   var layersByLvl = self.layersByLevel;
+   var scale = Math.pow(2, lvl);
+   var layers = layersByLvl[lvl] = layersByLvl[lvl] || [];
+-  var bb;
++  var bb = region ? region.bb : undefined;
+   var lvlComplete = self.levelIsComplete(lvl, eles);
+   var tmpLayers;
+   var checkTempLevels = function checkTempLevels() {
+     var canUseAsTmpLvl = function canUseAsTmpLvl(l) {
+-      self.validateLayersElesOrdering(l, eles);
+-      if (self.levelIsComplete(l, eles)) {
++      // patched: a region level is checked against its own eles, and only while its frame holds the viewport
++      var lvlRegion = self.regions[l];
++      var lvlEles = lvlRegion ? self.regionElesOf(lvlRegion, allEles, cy.extent()) : allEles;
++      if (!lvlEles) {
++        return false;
++      }
++      self.validateLayersElesOrdering(l, lvlEles);
++      if (self.levelIsComplete(l, lvlEles)) {
+         tmpLayers = layersByLvl[l];
+         return true;
+       }
+@@ -29616,7 +29654,8 @@ LTCp.getLayers = function (eles, pxRatio, lvl) {
+       layer = existingLayer;
+       continue;
+     }
+-    if (!layer || layer.eles.length >= maxElesPerLayer || !boundingBoxInBoundingBox(layer.bb, ele.boundingBox())) {
++    // patched: a region layer takes the eles that straddle its edge, else each one would start another layer
++    if (!layer || layer.eles.length >= maxElesPerLayer || !region && !boundingBoxInBoundingBox(layer.bb, ele.boundingBox())) {
+       // log('make new layer for ele %s', ele.id());
+ 
+       layer = makeLayer({
+@@ -29626,7 +29665,17 @@ LTCp.getLayers = function (eles, pxRatio, lvl) {
+ 
+       // if now layer can be built then we can't use layers at this level
+       if (!layer) {
+-        return null;
++        if (region) {
++          return null;
++        }
++
++        // patched: the whole graph is too big for one layer at this level, so the level holds a region around the viewport
++        self.fullBb = bb;
++        self.fullBbEles = eles;
++        if (!self.makeRegion(lvl, eles, cy.extent())) {
++          return null;
++        }
++        return self.getLayers(eles, pxRatio, lvl);
+       }
+ 
+       // log('new layer with id %s', layer.id);
+@@ -29655,6 +29704,104 @@ LTCp.getLayers = function (eles, pxRatio, lvl) {
+   return layers;
+ };
+ 
++// patched: at most this many levels keep region layers, each up to maxLayerArea px
++var maxRegionLvls = 3;
++
++// patched: a region frame spans this many viewports per axis, so a pan rebuilds about once per viewport of travel
++var regionViewports = 3;
++
++// patched: whether one layer over bb fits the canvas limits at lvl, as getLayers checks before it makes a layer
++LTCp.layerFits = function (bb, lvl) {
++  var scale = Math.pow(2, lvl);
++  var w = Math.ceil(bb.w * scale);
++  var h = Math.ceil(bb.h * scale);
++  return w <= maxLayerDim && h <= maxLayerDim && w * h <= maxLayerArea;
++};
++
++// patched: the bbox of all eles, kept until the eles list changes or invalidateElements runs
++LTCp.getFullBb = function (eles) {
++  if (this.fullBbEles !== eles) {
++    var bb = makeBoundingBox();
++    for (var i = 0; i < eles.length; i++) {
++      updateBoundingBox(bb, eles[i].boundingBox());
++    }
++    this.fullBb = bb;
++    this.fullBbEles = eles;
++  }
++  return this.fullBb;
++};
++
++// patched: the part of frame that holds eles
++LTCp.regionBbOf = function (frame, eles) {
++  var full = this.getFullBb(eles);
++  var x1 = Math.max(frame.x1, full.x1);
++  var y1 = Math.max(frame.y1, full.y1);
++  var x2 = Math.max(x1, Math.min(frame.x2, full.x2));
++  var y2 = Math.max(y1, Math.min(frame.y2, full.y2));
++  return makeBoundingBox({ x1: x1, y1: y1, x2: x2, y2: y2 });
++};
++
++// patched: replaces lvl's layers with a region: a frame centred on extent, up to regionViewports viewports per axis
++// within the layer limits, whose layer covers the part of the frame that holds eles; null when no frame that fits
++// holds extent, so the level draws directly as before
++LTCp.makeRegion = function (lvl, eles, extent) {
++  this.dropRegion(lvl);
++  var scale = Math.pow(2, lvl);
++  var wPx = Math.min(extent.w * regionViewports * scale, maxLayerDim - 1);
++  var hPx = Math.min(extent.h * regionViewports * scale, maxLayerDim - 1);
++  var shrink = Math.min(1, Math.sqrt((maxLayerArea - 2 * maxLayerDim - 1) / (wPx * hPx)));
++  var w = wPx * shrink / scale;
++  var h = hPx * shrink / scale;
++  if (w < extent.w || h < extent.h) {
++    return null;
++  }
++  var midX = (extent.x1 + extent.x2) / 2;
++  var midY = (extent.y1 + extent.y2) / 2;
++  var frame = makeBoundingBox({ x1: midX - w / 2, y1: midY - h / 2, x2: midX + w / 2, y2: midY + h / 2 });
++  var region = { frame: frame, bb: this.regionBbOf(frame, eles), eles: null, srcEles: null };
++  this.regions[lvl] = region;
++  this.regionLvls.push(lvl);
++  if (this.regionLvls.length > maxRegionLvls) {
++    this.dropRegion(this.regionLvls[0]);
++  }
++  return region;
++};
++
++// patched: the region's eles in eles order, recomputed when the eles list changed or invalidateElements ran; null when
++// extent has left the frame or the eles' bbox has moved the region's edges, so the caller makes a new region
++LTCp.regionElesOf = function (region, eles, extent) {
++  if (!boundingBoxInBoundingBox(region.frame, extent)) {
++    return null;
++  }
++  if (region.srcEles === eles && region.eles) {
++    return region.eles;
++  }
++  var bb = this.regionBbOf(region.frame, eles);
++  if (bb.x1 !== region.bb.x1 || bb.y1 !== region.bb.y1 || bb.x2 !== region.bb.x2 || bb.y2 !== region.bb.y2) {
++    return null;
++  }
++  var inRegion = [];
++  for (var i = 0; i < eles.length; i++) {
++    if (boundingBoxesIntersect(bb, eles[i].boundingBox())) {
++      inRegion.push(eles[i]);
++    }
++  }
++  region.eles = inRegion;
++  region.srcEles = eles;
++  return inRegion;
++};
++
++// patched: discards lvl's layers and region without the invalidation timestamp, which would skip every level for
++// invalidThreshold ms and stall the rebuild
++LTCp.dropRegion = function (lvl) {
++  var layers = this.layersByLevel[lvl] || [];
++  for (var i = layers.length - 1; i >= 0; i--) {
++    this.discardLayer(layers[i]);
++  }
++  delete this.regions[lvl];
++  removeFromArray(this.regionLvls, lvl);
++};
++
+ // a layer may want to use an ele cache of a higher level to avoid blurriness
+ // so the layer level might not equal the ele level
+ LTCp.getEleLevelForLayerLevel = function (lvl, pxRatio) {
+@@ -29789,6 +29936,12 @@ LTCp.invalidateElements = function (eles) {
+   if (eles.length === 0) {
+     return;
+   }
++  // patched: positions or sizes changed, so the full bbox and every region's eles are stale
++  self.fullBb = null;
++  self.fullBbEles = null;
++  for (var l in self.regions) {
++    self.regions[l].eles = null;
++  }
+   self.lastInvalidationTime = performanceNow();
+ 
+   // log('update invalidate layer time from eles');
+@@ -29804,6 +29957,11 @@ LTCp.invalidateLayer = function (layer) {
+   // log('update invalidate layer time');
+ 
+   this.lastInvalidationTime = performanceNow();
++  this.discardLayer(layer);
++};
++
++// patched: invalidateLayer without the timestamp, for dropRegion
++LTCp.discardLayer = function (layer) {
+   if (layer.invalid) {
+     return;
+   } // save cycles
+@@ -30208,6 +30366,8 @@ CRp$a.drawCachedNodes = function (context, eles, pxRatio, extent) {
+ };
+ CRp$a.drawLayeredElements = function (context, eles, pxRatio, extent) {
+   var r = this;
++  // patched: cleared before every getLayers, so its early returns (past maxZoom, while skipping) and a stubbed getLayers fall back on all eles, never an earlier frame's region
++  r.data.lyrTxrCache.drawEles = null;
+   var layers = r.data.lyrTxrCache.getLayers(eles, pxRatio);
+   if (layers) {
+     for (var i = 0; i < layers.length; i++) {
+@@ -30220,7 +30380,8 @@ CRp$a.drawLayeredElements = function (context, eles, pxRatio, extent) {
+     }
+   } else {
+     // fall back on plain caching if no layers
+-    r.drawCachedElements(context, eles, pxRatio, extent);
++    // patched: a region level without layers draws just its region's eles, which hold every ele in the viewport
++    r.drawCachedElements(context, r.data.lyrTxrCache.drawEles || eles, pxRatio, extent);
+   }
+ };
+ 
 diff --git a/dist/cytoscape.esm.mjs b/dist/cytoscape.esm.mjs
-index 4b7cd162da9d60f25702153f09b6f3876de94e80..5cf3ed42f0812037158f3958b59520e32233771d 100644
+index 4b7cd162da9d60f25702153f09b6f3876de94e80..34e501797b9cbf86867fb74da33c8aac18e4b210 100644
 --- a/dist/cytoscape.esm.mjs
 +++ b/dist/cytoscape.esm.mjs
 @@ -12139,6 +12139,10 @@ elesfn$b.boundingBox = function (options) {
@@ -126,8 +366,248 @@ index 4b7cd162da9d60f25702153f09b6f3876de94e80..5cf3ed42f0812037158f3958b59520e3
      }
    };
    r.flushRenderedStyleQueue = function () {
+@@ -29440,6 +29444,13 @@ var LayeredTextureCache = function LayeredTextureCache(renderer) {
+   self.lastInvalidationTime = performanceNow() - 2 * invalidThreshold;
+   self.skipping = false;
+   self.eleTxrDeqs = cy.collection();
++
++  // patched: region state (see LTCp.makeRegion); drawEles is what drawLayeredElements falls back on when getLayers returns null
++  self.regions = {};
++  self.regionLvls = [];
++  self.fullBb = null;
++  self.fullBbEles = null;
++  self.drawEles = null;
+   self.scheduleElementRefinement = debounce(function () {
+     self.refineElementTextures(self.eleTxrDeqs);
+     self.eleTxrDeqs.unmerge(self.eleTxrDeqs);
+@@ -29508,17 +29519,44 @@ LTCp.getLayers = function (eles, pxRatio, lvl) {
+       return null;
+     }
+   }
++  // patched: a level in region mode holds only the eles in its region; the checks and layers below run on that list
++  var allEles = eles;
++  var region = self.regions[lvl];
++  if (region && self.fullBbEles !== eles && self.layerFits(self.getFullBb(eles), lvl)) {
++    self.dropRegion(lvl);
++    region = null;
++  }
++  if (region) {
++    var extent = cy.extent();
++    eles = self.regionElesOf(region, allEles, extent);
++    if (!eles) {
++      region = self.makeRegion(lvl, allEles, extent);
++      if (!region) {
++        return null;
++      }
++      eles = self.regionElesOf(region, allEles, extent);
++    }
++    removeFromArray(self.regionLvls, lvl);
++    self.regionLvls.push(lvl);
++    self.drawEles = eles;
++  }
+   self.validateLayersElesOrdering(lvl, eles);
+   var layersByLvl = self.layersByLevel;
+   var scale = Math.pow(2, lvl);
+   var layers = layersByLvl[lvl] = layersByLvl[lvl] || [];
+-  var bb;
++  var bb = region ? region.bb : undefined;
+   var lvlComplete = self.levelIsComplete(lvl, eles);
+   var tmpLayers;
+   var checkTempLevels = function checkTempLevels() {
+     var canUseAsTmpLvl = function canUseAsTmpLvl(l) {
+-      self.validateLayersElesOrdering(l, eles);
+-      if (self.levelIsComplete(l, eles)) {
++      // patched: a region level is checked against its own eles, and only while its frame holds the viewport
++      var lvlRegion = self.regions[l];
++      var lvlEles = lvlRegion ? self.regionElesOf(lvlRegion, allEles, cy.extent()) : allEles;
++      if (!lvlEles) {
++        return false;
++      }
++      self.validateLayersElesOrdering(l, lvlEles);
++      if (self.levelIsComplete(l, lvlEles)) {
+         tmpLayers = layersByLvl[l];
+         return true;
+       }
+@@ -29614,7 +29652,8 @@ LTCp.getLayers = function (eles, pxRatio, lvl) {
+       layer = existingLayer;
+       continue;
+     }
+-    if (!layer || layer.eles.length >= maxElesPerLayer || !boundingBoxInBoundingBox(layer.bb, ele.boundingBox())) {
++    // patched: a region layer takes the eles that straddle its edge, else each one would start another layer
++    if (!layer || layer.eles.length >= maxElesPerLayer || !region && !boundingBoxInBoundingBox(layer.bb, ele.boundingBox())) {
+       // log('make new layer for ele %s', ele.id());
+ 
+       layer = makeLayer({
+@@ -29624,7 +29663,17 @@ LTCp.getLayers = function (eles, pxRatio, lvl) {
+ 
+       // if now layer can be built then we can't use layers at this level
+       if (!layer) {
+-        return null;
++        if (region) {
++          return null;
++        }
++
++        // patched: the whole graph is too big for one layer at this level, so the level holds a region around the viewport
++        self.fullBb = bb;
++        self.fullBbEles = eles;
++        if (!self.makeRegion(lvl, eles, cy.extent())) {
++          return null;
++        }
++        return self.getLayers(eles, pxRatio, lvl);
+       }
+ 
+       // log('new layer with id %s', layer.id);
+@@ -29653,6 +29702,104 @@ LTCp.getLayers = function (eles, pxRatio, lvl) {
+   return layers;
+ };
+ 
++// patched: at most this many levels keep region layers, each up to maxLayerArea px
++var maxRegionLvls = 3;
++
++// patched: a region frame spans this many viewports per axis, so a pan rebuilds about once per viewport of travel
++var regionViewports = 3;
++
++// patched: whether one layer over bb fits the canvas limits at lvl, as getLayers checks before it makes a layer
++LTCp.layerFits = function (bb, lvl) {
++  var scale = Math.pow(2, lvl);
++  var w = Math.ceil(bb.w * scale);
++  var h = Math.ceil(bb.h * scale);
++  return w <= maxLayerDim && h <= maxLayerDim && w * h <= maxLayerArea;
++};
++
++// patched: the bbox of all eles, kept until the eles list changes or invalidateElements runs
++LTCp.getFullBb = function (eles) {
++  if (this.fullBbEles !== eles) {
++    var bb = makeBoundingBox();
++    for (var i = 0; i < eles.length; i++) {
++      updateBoundingBox(bb, eles[i].boundingBox());
++    }
++    this.fullBb = bb;
++    this.fullBbEles = eles;
++  }
++  return this.fullBb;
++};
++
++// patched: the part of frame that holds eles
++LTCp.regionBbOf = function (frame, eles) {
++  var full = this.getFullBb(eles);
++  var x1 = Math.max(frame.x1, full.x1);
++  var y1 = Math.max(frame.y1, full.y1);
++  var x2 = Math.max(x1, Math.min(frame.x2, full.x2));
++  var y2 = Math.max(y1, Math.min(frame.y2, full.y2));
++  return makeBoundingBox({ x1: x1, y1: y1, x2: x2, y2: y2 });
++};
++
++// patched: replaces lvl's layers with a region: a frame centred on extent, up to regionViewports viewports per axis
++// within the layer limits, whose layer covers the part of the frame that holds eles; null when no frame that fits
++// holds extent, so the level draws directly as before
++LTCp.makeRegion = function (lvl, eles, extent) {
++  this.dropRegion(lvl);
++  var scale = Math.pow(2, lvl);
++  var wPx = Math.min(extent.w * regionViewports * scale, maxLayerDim - 1);
++  var hPx = Math.min(extent.h * regionViewports * scale, maxLayerDim - 1);
++  var shrink = Math.min(1, Math.sqrt((maxLayerArea - 2 * maxLayerDim - 1) / (wPx * hPx)));
++  var w = wPx * shrink / scale;
++  var h = hPx * shrink / scale;
++  if (w < extent.w || h < extent.h) {
++    return null;
++  }
++  var midX = (extent.x1 + extent.x2) / 2;
++  var midY = (extent.y1 + extent.y2) / 2;
++  var frame = makeBoundingBox({ x1: midX - w / 2, y1: midY - h / 2, x2: midX + w / 2, y2: midY + h / 2 });
++  var region = { frame: frame, bb: this.regionBbOf(frame, eles), eles: null, srcEles: null };
++  this.regions[lvl] = region;
++  this.regionLvls.push(lvl);
++  if (this.regionLvls.length > maxRegionLvls) {
++    this.dropRegion(this.regionLvls[0]);
++  }
++  return region;
++};
++
++// patched: the region's eles in eles order, recomputed when the eles list changed or invalidateElements ran; null when
++// extent has left the frame or the eles' bbox has moved the region's edges, so the caller makes a new region
++LTCp.regionElesOf = function (region, eles, extent) {
++  if (!boundingBoxInBoundingBox(region.frame, extent)) {
++    return null;
++  }
++  if (region.srcEles === eles && region.eles) {
++    return region.eles;
++  }
++  var bb = this.regionBbOf(region.frame, eles);
++  if (bb.x1 !== region.bb.x1 || bb.y1 !== region.bb.y1 || bb.x2 !== region.bb.x2 || bb.y2 !== region.bb.y2) {
++    return null;
++  }
++  var inRegion = [];
++  for (var i = 0; i < eles.length; i++) {
++    if (boundingBoxesIntersect(bb, eles[i].boundingBox())) {
++      inRegion.push(eles[i]);
++    }
++  }
++  region.eles = inRegion;
++  region.srcEles = eles;
++  return inRegion;
++};
++
++// patched: discards lvl's layers and region without the invalidation timestamp, which would skip every level for
++// invalidThreshold ms and stall the rebuild
++LTCp.dropRegion = function (lvl) {
++  var layers = this.layersByLevel[lvl] || [];
++  for (var i = layers.length - 1; i >= 0; i--) {
++    this.discardLayer(layers[i]);
++  }
++  delete this.regions[lvl];
++  removeFromArray(this.regionLvls, lvl);
++};
++
+ // a layer may want to use an ele cache of a higher level to avoid blurriness
+ // so the layer level might not equal the ele level
+ LTCp.getEleLevelForLayerLevel = function (lvl, pxRatio) {
+@@ -29787,6 +29934,12 @@ LTCp.invalidateElements = function (eles) {
+   if (eles.length === 0) {
+     return;
+   }
++  // patched: positions or sizes changed, so the full bbox and every region's eles are stale
++  self.fullBb = null;
++  self.fullBbEles = null;
++  for (var l in self.regions) {
++    self.regions[l].eles = null;
++  }
+   self.lastInvalidationTime = performanceNow();
+ 
+   // log('update invalidate layer time from eles');
+@@ -29802,6 +29955,11 @@ LTCp.invalidateLayer = function (layer) {
+   // log('update invalidate layer time');
+ 
+   this.lastInvalidationTime = performanceNow();
++  this.discardLayer(layer);
++};
++
++// patched: invalidateLayer without the timestamp, for dropRegion
++LTCp.discardLayer = function (layer) {
+   if (layer.invalid) {
+     return;
+   } // save cycles
+@@ -30206,6 +30364,8 @@ CRp$a.drawCachedNodes = function (context, eles, pxRatio, extent) {
+ };
+ CRp$a.drawLayeredElements = function (context, eles, pxRatio, extent) {
+   var r = this;
++  // patched: cleared before every getLayers, so its early returns (past maxZoom, while skipping) and a stubbed getLayers fall back on all eles, never an earlier frame's region
++  r.data.lyrTxrCache.drawEles = null;
+   var layers = r.data.lyrTxrCache.getLayers(eles, pxRatio);
+   if (layers) {
+     for (var i = 0; i < layers.length; i++) {
+@@ -30218,7 +30378,8 @@ CRp$a.drawLayeredElements = function (context, eles, pxRatio, extent) {
+     }
+   } else {
+     // fall back on plain caching if no layers
+-    r.drawCachedElements(context, eles, pxRatio, extent);
++    // patched: a region level without layers draws just its region's eles, which hold every ele in the viewport
++    r.drawCachedElements(context, r.data.lyrTxrCache.drawEles || eles, pxRatio, extent);
+   }
+ };
+ 
 diff --git a/dist/cytoscape.umd.js b/dist/cytoscape.umd.js
-index af67ea46e043233d17eacc6979a22157f7b90425..694dee38021e90bbeff3141444be9954b546e234 100644
+index af67ea46e043233d17eacc6979a22157f7b90425..e4179a2b3c52b0cbc961dc6b22c28f0afa580c12 100644
 --- a/dist/cytoscape.umd.js
 +++ b/dist/cytoscape.umd.js
 @@ -12145,6 +12145,10 @@
@@ -190,6 +670,246 @@ index af67ea46e043233d17eacc6979a22157f7b90425..694dee38021e90bbeff3141444be9954
        }
      };
      r.flushRenderedStyleQueue = function () {
+@@ -29446,6 +29450,13 @@ var printLayoutInfo;
+     self.lastInvalidationTime = performanceNow() - 2 * invalidThreshold;
+     self.skipping = false;
+     self.eleTxrDeqs = cy.collection();
++
++    // patched: region state (see LTCp.makeRegion); drawEles is what drawLayeredElements falls back on when getLayers returns null
++    self.regions = {};
++    self.regionLvls = [];
++    self.fullBb = null;
++    self.fullBbEles = null;
++    self.drawEles = null;
+     self.scheduleElementRefinement = debounce(function () {
+       self.refineElementTextures(self.eleTxrDeqs);
+       self.eleTxrDeqs.unmerge(self.eleTxrDeqs);
+@@ -29514,17 +29525,44 @@ var printLayoutInfo;
+         return null;
+       }
+     }
++    // patched: a level in region mode holds only the eles in its region; the checks and layers below run on that list
++    var allEles = eles;
++    var region = self.regions[lvl];
++    if (region && self.fullBbEles !== eles && self.layerFits(self.getFullBb(eles), lvl)) {
++      self.dropRegion(lvl);
++      region = null;
++    }
++    if (region) {
++      var extent = cy.extent();
++      eles = self.regionElesOf(region, allEles, extent);
++      if (!eles) {
++        region = self.makeRegion(lvl, allEles, extent);
++        if (!region) {
++          return null;
++        }
++        eles = self.regionElesOf(region, allEles, extent);
++      }
++      removeFromArray(self.regionLvls, lvl);
++      self.regionLvls.push(lvl);
++      self.drawEles = eles;
++    }
+     self.validateLayersElesOrdering(lvl, eles);
+     var layersByLvl = self.layersByLevel;
+     var scale = Math.pow(2, lvl);
+     var layers = layersByLvl[lvl] = layersByLvl[lvl] || [];
+-    var bb;
++    var bb = region ? region.bb : undefined;
+     var lvlComplete = self.levelIsComplete(lvl, eles);
+     var tmpLayers;
+     var checkTempLevels = function checkTempLevels() {
+       var canUseAsTmpLvl = function canUseAsTmpLvl(l) {
+-        self.validateLayersElesOrdering(l, eles);
+-        if (self.levelIsComplete(l, eles)) {
++        // patched: a region level is checked against its own eles, and only while its frame holds the viewport
++        var lvlRegion = self.regions[l];
++        var lvlEles = lvlRegion ? self.regionElesOf(lvlRegion, allEles, cy.extent()) : allEles;
++        if (!lvlEles) {
++          return false;
++        }
++        self.validateLayersElesOrdering(l, lvlEles);
++        if (self.levelIsComplete(l, lvlEles)) {
+           tmpLayers = layersByLvl[l];
+           return true;
+         }
+@@ -29620,7 +29658,8 @@ var printLayoutInfo;
+         layer = existingLayer;
+         continue;
+       }
+-      if (!layer || layer.eles.length >= maxElesPerLayer || !boundingBoxInBoundingBox(layer.bb, ele.boundingBox())) {
++      // patched: a region layer takes the eles that straddle its edge, else each one would start another layer
++      if (!layer || layer.eles.length >= maxElesPerLayer || !region && !boundingBoxInBoundingBox(layer.bb, ele.boundingBox())) {
+         // log('make new layer for ele %s', ele.id());
+ 
+         layer = makeLayer({
+@@ -29630,7 +29669,17 @@ var printLayoutInfo;
+ 
+         // if now layer can be built then we can't use layers at this level
+         if (!layer) {
+-          return null;
++          if (region) {
++            return null;
++          }
++
++          // patched: the whole graph is too big for one layer at this level, so the level holds a region around the viewport
++          self.fullBb = bb;
++          self.fullBbEles = eles;
++          if (!self.makeRegion(lvl, eles, cy.extent())) {
++            return null;
++          }
++          return self.getLayers(eles, pxRatio, lvl);
+         }
+ 
+         // log('new layer with id %s', layer.id);
+@@ -29659,6 +29708,104 @@ var printLayoutInfo;
+     return layers;
+   };
+ 
++  // patched: at most this many levels keep region layers, each up to maxLayerArea px
++  var maxRegionLvls = 3;
++
++  // patched: a region frame spans this many viewports per axis, so a pan rebuilds about once per viewport of travel
++  var regionViewports = 3;
++
++  // patched: whether one layer over bb fits the canvas limits at lvl, as getLayers checks before it makes a layer
++  LTCp.layerFits = function (bb, lvl) {
++    var scale = Math.pow(2, lvl);
++    var w = Math.ceil(bb.w * scale);
++    var h = Math.ceil(bb.h * scale);
++    return w <= maxLayerDim && h <= maxLayerDim && w * h <= maxLayerArea;
++  };
++
++  // patched: the bbox of all eles, kept until the eles list changes or invalidateElements runs
++  LTCp.getFullBb = function (eles) {
++    if (this.fullBbEles !== eles) {
++      var bb = makeBoundingBox();
++      for (var i = 0; i < eles.length; i++) {
++        updateBoundingBox(bb, eles[i].boundingBox());
++      }
++      this.fullBb = bb;
++      this.fullBbEles = eles;
++    }
++    return this.fullBb;
++  };
++
++  // patched: the part of frame that holds eles
++  LTCp.regionBbOf = function (frame, eles) {
++    var full = this.getFullBb(eles);
++    var x1 = Math.max(frame.x1, full.x1);
++    var y1 = Math.max(frame.y1, full.y1);
++    var x2 = Math.max(x1, Math.min(frame.x2, full.x2));
++    var y2 = Math.max(y1, Math.min(frame.y2, full.y2));
++    return makeBoundingBox({ x1: x1, y1: y1, x2: x2, y2: y2 });
++  };
++
++  // patched: replaces lvl's layers with a region: a frame centred on extent, up to regionViewports viewports per axis
++  // within the layer limits, whose layer covers the part of the frame that holds eles; null when no frame that fits
++  // holds extent, so the level draws directly as before
++  LTCp.makeRegion = function (lvl, eles, extent) {
++    this.dropRegion(lvl);
++    var scale = Math.pow(2, lvl);
++    var wPx = Math.min(extent.w * regionViewports * scale, maxLayerDim - 1);
++    var hPx = Math.min(extent.h * regionViewports * scale, maxLayerDim - 1);
++    var shrink = Math.min(1, Math.sqrt((maxLayerArea - 2 * maxLayerDim - 1) / (wPx * hPx)));
++    var w = wPx * shrink / scale;
++    var h = hPx * shrink / scale;
++    if (w < extent.w || h < extent.h) {
++      return null;
++    }
++    var midX = (extent.x1 + extent.x2) / 2;
++    var midY = (extent.y1 + extent.y2) / 2;
++    var frame = makeBoundingBox({ x1: midX - w / 2, y1: midY - h / 2, x2: midX + w / 2, y2: midY + h / 2 });
++    var region = { frame: frame, bb: this.regionBbOf(frame, eles), eles: null, srcEles: null };
++    this.regions[lvl] = region;
++    this.regionLvls.push(lvl);
++    if (this.regionLvls.length > maxRegionLvls) {
++      this.dropRegion(this.regionLvls[0]);
++    }
++    return region;
++  };
++
++  // patched: the region's eles in eles order, recomputed when the eles list changed or invalidateElements ran; null when
++  // extent has left the frame or the eles' bbox has moved the region's edges, so the caller makes a new region
++  LTCp.regionElesOf = function (region, eles, extent) {
++    if (!boundingBoxInBoundingBox(region.frame, extent)) {
++      return null;
++    }
++    if (region.srcEles === eles && region.eles) {
++      return region.eles;
++    }
++    var bb = this.regionBbOf(region.frame, eles);
++    if (bb.x1 !== region.bb.x1 || bb.y1 !== region.bb.y1 || bb.x2 !== region.bb.x2 || bb.y2 !== region.bb.y2) {
++      return null;
++    }
++    var inRegion = [];
++    for (var i = 0; i < eles.length; i++) {
++      if (boundingBoxesIntersect(bb, eles[i].boundingBox())) {
++        inRegion.push(eles[i]);
++      }
++    }
++    region.eles = inRegion;
++    region.srcEles = eles;
++    return inRegion;
++  };
++
++  // patched: discards lvl's layers and region without the invalidation timestamp, which would skip every level for
++  // invalidThreshold ms and stall the rebuild
++  LTCp.dropRegion = function (lvl) {
++    var layers = this.layersByLevel[lvl] || [];
++    for (var i = layers.length - 1; i >= 0; i--) {
++      this.discardLayer(layers[i]);
++    }
++    delete this.regions[lvl];
++    removeFromArray(this.regionLvls, lvl);
++  };
++
+   // a layer may want to use an ele cache of a higher level to avoid blurriness
+   // so the layer level might not equal the ele level
+   LTCp.getEleLevelForLayerLevel = function (lvl, pxRatio) {
+@@ -29793,6 +29940,12 @@ var printLayoutInfo;
+     if (eles.length === 0) {
+       return;
+     }
++    // patched: positions or sizes changed, so the full bbox and every region's eles are stale
++    self.fullBb = null;
++    self.fullBbEles = null;
++    for (var l in self.regions) {
++      self.regions[l].eles = null;
++    }
+     self.lastInvalidationTime = performanceNow();
+ 
+     // log('update invalidate layer time from eles');
+@@ -29808,6 +29961,11 @@ var printLayoutInfo;
+     // log('update invalidate layer time');
+ 
+     this.lastInvalidationTime = performanceNow();
++    this.discardLayer(layer);
++  };
++
++  // patched: invalidateLayer without the timestamp, for dropRegion
++  LTCp.discardLayer = function (layer) {
+     if (layer.invalid) {
+       return;
+     } // save cycles
+@@ -30212,6 +30370,8 @@ var printLayoutInfo;
+   };
+   CRp$a.drawLayeredElements = function (context, eles, pxRatio, extent) {
+     var r = this;
++    // patched: cleared before every getLayers, so its early returns (past maxZoom, while skipping) and a stubbed getLayers fall back on all eles, never an earlier frame's region
++    r.data.lyrTxrCache.drawEles = null;
+     var layers = r.data.lyrTxrCache.getLayers(eles, pxRatio);
+     if (layers) {
+       for (var i = 0; i < layers.length; i++) {
+@@ -30224,7 +30384,8 @@ var printLayoutInfo;
+       }
+     } else {
+       // fall back on plain caching if no layers
+-      r.drawCachedElements(context, eles, pxRatio, extent);
++      // patched: a region level without layers draws just its region's eles, which hold every ele in the viewport
++      r.drawCachedElements(context, r.data.lyrTxrCache.drawEles || eles, pxRatio, extent);
+     }
+   };
+ 
 diff --git a/src/collection/dimensions/bounds.mjs b/src/collection/dimensions/bounds.mjs
 index 465e702bf70b29a2acbb3af672604290b8fad2fe..24915adc9f4f294b42d4cda35df85bd4b2bb3898 100644
 --- a/src/collection/dimensions/bounds.mjs
@@ -269,3 +989,280 @@ index 563b687e07e212a17e4728c3ad88dd4ef540251d..cb8d862e6c525d1dd0d6657874a79c8f
      }
    };
  
+diff --git a/src/extensions/renderer/canvas/drawing-elements.mjs b/src/extensions/renderer/canvas/drawing-elements.mjs
+index 9ee4ef8f6235593253177ba6037b1e5a816606da..5c1a9528055a6a6cc8906470de051996393a438f 100644
+--- a/src/extensions/renderer/canvas/drawing-elements.mjs
++++ b/src/extensions/renderer/canvas/drawing-elements.mjs
+@@ -167,6 +167,9 @@ CRp.drawCachedNodes = function( context, eles, pxRatio, extent ){
+ CRp.drawLayeredElements = function( context, eles, pxRatio, extent ){
+   let r = this;
+ 
++  // patched: cleared before every getLayers, so its early returns (past maxZoom, while skipping) and a stubbed getLayers fall back on all eles, never an earlier frame's region
++  r.data.lyrTxrCache.drawEles = null;
++
+   let layers = r.data.lyrTxrCache.getLayers( eles, pxRatio );
+ 
+   if( layers ){
+@@ -179,7 +182,8 @@ CRp.drawLayeredElements = function( context, eles, pxRatio, extent ){
+       context.drawImage( layer.canvas, bb.x1, bb.y1, bb.w, bb.h );
+     }
+   } else { // fall back on plain caching if no layers
+-    r.drawCachedElements( context, eles, pxRatio, extent );
++    // patched: a region level without layers draws just its region's eles, which hold every ele in the viewport
++    r.drawCachedElements( context, r.data.lyrTxrCache.drawEles || eles, pxRatio, extent );
+   }
+ };
+ 
+diff --git a/src/extensions/renderer/canvas/layered-texture-cache.mjs b/src/extensions/renderer/canvas/layered-texture-cache.mjs
+index 12afb7b755411f167007c6bbaa04007f751402f8..6b2fafffc6505dea035e95422626c747ad2c80c5 100644
+--- a/src/extensions/renderer/canvas/layered-texture-cache.mjs
++++ b/src/extensions/renderer/canvas/layered-texture-cache.mjs
+@@ -41,6 +41,13 @@ var LayeredTextureCache = function( renderer ){
+ 
+   self.eleTxrDeqs = cy.collection();
+ 
++  // patched: region state (see LTCp.makeRegion); drawEles is what drawLayeredElements falls back on when getLayers returns null
++  self.regions = {};
++  self.regionLvls = [];
++  self.fullBb = null;
++  self.fullBbEles = null;
++  self.drawEles = null;
++
+   self.scheduleElementRefinement = util.debounce( function(){
+     self.refineElementTextures( self.eleTxrDeqs );
+ 
+@@ -125,21 +132,54 @@ LTCp.getLayers = function( eles, pxRatio, lvl ){
+     }
+   }
+ 
++  // patched: a level in region mode holds only the eles in its region; the checks and layers below run on that list
++  var allEles = eles;
++  var region = self.regions[ lvl ];
++
++  if( region && self.fullBbEles !== eles && self.layerFits( self.getFullBb( eles ), lvl ) ){
++    self.dropRegion( lvl );
++    region = null;
++  }
++
++  if( region ){
++    var extent = cy.extent();
++
++    eles = self.regionElesOf( region, allEles, extent );
++
++    if( !eles ){
++      region = self.makeRegion( lvl, allEles, extent );
++
++      if( !region ){ return null; }
++
++      eles = self.regionElesOf( region, allEles, extent );
++    }
++
++    util.removeFromArray( self.regionLvls, lvl );
++    self.regionLvls.push( lvl );
++    self.drawEles = eles;
++  }
++
+   self.validateLayersElesOrdering( lvl, eles );
+ 
+   var layersByLvl = self.layersByLevel;
+   var scale = Math.pow( 2, lvl );
+   var layers = layersByLvl[ lvl ] = layersByLvl[ lvl ] || [];
+-  var bb;
++  var bb = region ? region.bb : undefined;
+ 
+   var lvlComplete = self.levelIsComplete( lvl, eles );
+   var tmpLayers;
+ 
+   var checkTempLevels = function(){
+     var canUseAsTmpLvl = function( l ){
+-      self.validateLayersElesOrdering( l, eles );
++      // patched: a region level is checked against its own eles, and only while its frame holds the viewport
++      var lvlRegion = self.regions[ l ];
++      var lvlEles = lvlRegion ? self.regionElesOf( lvlRegion, allEles, cy.extent() ) : allEles;
++
++      if( !lvlEles ){ return false; }
++
++      self.validateLayersElesOrdering( l, lvlEles );
+ 
+-      if( self.levelIsComplete( l, eles ) ){
++      if( self.levelIsComplete( l, lvlEles ) ){
+         tmpLayers = layersByLvl[l];
+         return true;
+       }
+@@ -254,17 +294,28 @@ LTCp.getLayers = function( eles, pxRatio, lvl ){
+       continue;
+     }
+ 
++    // patched: a region layer takes the eles that straddle its edge, else each one would start another layer
+     if(
+       !layer
+       || layer.eles.length >= maxElesPerLayer
+-      || !math.boundingBoxInBoundingBox( layer.bb, ele.boundingBox() )
++      || !region && !math.boundingBoxInBoundingBox( layer.bb, ele.boundingBox() )
+     ){
+       // log('make new layer for ele %s', ele.id());
+ 
+       layer = makeLayer({ insert: true, after: layer });
+ 
+       // if now layer can be built then we can't use layers at this level
+-      if( !layer ){ return null; }
++      if( !layer ){
++        if( region ){ return null; }
++
++        // patched: the whole graph is too big for one layer at this level, so the level holds a region around the viewport
++        self.fullBb = bb;
++        self.fullBbEles = eles;
++
++        if( !self.makeRegion( lvl, eles, cy.extent() ) ){ return null; }
++
++        return self.getLayers( eles, pxRatio, lvl );
++      }
+ 
+       // log('new layer with id %s', layer.id);
+     }
+@@ -296,6 +347,118 @@ LTCp.getLayers = function( eles, pxRatio, lvl ){
+   return layers;
+ };
+ 
++// patched: at most this many levels keep region layers, each up to maxLayerArea px
++var maxRegionLvls = 3;
++
++// patched: a region frame spans this many viewports per axis, so a pan rebuilds about once per viewport of travel
++var regionViewports = 3;
++
++// patched: whether one layer over bb fits the canvas limits at lvl, as getLayers checks before it makes a layer
++LTCp.layerFits = function( bb, lvl ){
++  var scale = Math.pow( 2, lvl );
++  var w = Math.ceil( bb.w * scale );
++  var h = Math.ceil( bb.h * scale );
++
++  return w <= maxLayerDim && h <= maxLayerDim && w * h <= maxLayerArea;
++};
++
++// patched: the bbox of all eles, kept until the eles list changes or invalidateElements runs
++LTCp.getFullBb = function( eles ){
++  if( this.fullBbEles !== eles ){
++    var bb = math.makeBoundingBox();
++
++    for( var i = 0; i < eles.length; i++ ){
++      math.updateBoundingBox( bb, eles[i].boundingBox() );
++    }
++
++    this.fullBb = bb;
++    this.fullBbEles = eles;
++  }
++
++  return this.fullBb;
++};
++
++// patched: the part of frame that holds eles
++LTCp.regionBbOf = function( frame, eles ){
++  var full = this.getFullBb( eles );
++  var x1 = Math.max( frame.x1, full.x1 );
++  var y1 = Math.max( frame.y1, full.y1 );
++  var x2 = Math.max( x1, Math.min( frame.x2, full.x2 ) );
++  var y2 = Math.max( y1, Math.min( frame.y2, full.y2 ) );
++
++  return math.makeBoundingBox({ x1: x1, y1: y1, x2: x2, y2: y2 });
++};
++
++// patched: replaces lvl's layers with a region: a frame centred on extent, up to regionViewports viewports per axis
++// within the layer limits, whose layer covers the part of the frame that holds eles; null when no frame that fits
++// holds extent, so the level draws directly as before
++LTCp.makeRegion = function( lvl, eles, extent ){
++  this.dropRegion( lvl );
++
++  var scale = Math.pow( 2, lvl );
++  var wPx = Math.min( extent.w * regionViewports * scale, maxLayerDim - 1 );
++  var hPx = Math.min( extent.h * regionViewports * scale, maxLayerDim - 1 );
++  var shrink = Math.min( 1, Math.sqrt( ( maxLayerArea - 2 * maxLayerDim - 1 ) / ( wPx * hPx ) ) );
++  var w = wPx * shrink / scale;
++  var h = hPx * shrink / scale;
++
++  if( w < extent.w || h < extent.h ){ return null; }
++
++  var midX = ( extent.x1 + extent.x2 ) / 2;
++  var midY = ( extent.y1 + extent.y2 ) / 2;
++  var frame = math.makeBoundingBox({ x1: midX - w / 2, y1: midY - h / 2, x2: midX + w / 2, y2: midY + h / 2 });
++  var region = { frame: frame, bb: this.regionBbOf( frame, eles ), eles: null, srcEles: null };
++
++  this.regions[ lvl ] = region;
++  this.regionLvls.push( lvl );
++
++  if( this.regionLvls.length > maxRegionLvls ){
++    this.dropRegion( this.regionLvls[0] );
++  }
++
++  return region;
++};
++
++// patched: the region's eles in eles order, recomputed when the eles list changed or invalidateElements ran; null when
++// extent has left the frame or the eles' bbox has moved the region's edges, so the caller makes a new region
++LTCp.regionElesOf = function( region, eles, extent ){
++  if( !math.boundingBoxInBoundingBox( region.frame, extent ) ){ return null; }
++
++  if( region.srcEles === eles && region.eles ){ return region.eles; }
++
++  var bb = this.regionBbOf( region.frame, eles );
++
++  if( bb.x1 !== region.bb.x1 || bb.y1 !== region.bb.y1 || bb.x2 !== region.bb.x2 || bb.y2 !== region.bb.y2 ){
++    return null;
++  }
++
++  var inRegion = [];
++
++  for( var i = 0; i < eles.length; i++ ){
++    if( math.boundingBoxesIntersect( bb, eles[i].boundingBox() ) ){
++      inRegion.push( eles[i] );
++    }
++  }
++
++  region.eles = inRegion;
++  region.srcEles = eles;
++
++  return inRegion;
++};
++
++// patched: discards lvl's layers and region without the invalidation timestamp, which would skip every level for
++// invalidThreshold ms and stall the rebuild
++LTCp.dropRegion = function( lvl ){
++  var layers = this.layersByLevel[ lvl ] || [];
++
++  for( var i = layers.length - 1; i >= 0; i-- ){
++    this.discardLayer( layers[i] );
++  }
++
++  delete this.regions[ lvl ];
++  util.removeFromArray( this.regionLvls, lvl );
++};
++
+ // a layer may want to use an ele cache of a higher level to avoid blurriness
+ // so the layer level might not equal the ele level
+ LTCp.getEleLevelForLayerLevel = function( lvl, pxRatio ){
+@@ -439,6 +602,14 @@ LTCp.invalidateElements = function( eles ){
+ 
+   if( eles.length === 0 ){ return; }
+ 
++  // patched: positions or sizes changed, so the full bbox and every region's eles are stale
++  self.fullBb = null;
++  self.fullBbEles = null;
++
++  for( var l in self.regions ){
++    self.regions[ l ].eles = null;
++  }
++
+   self.lastInvalidationTime = util.performanceNow();
+ 
+   // log('update invalidate layer time from eles');
+@@ -454,7 +625,11 @@ LTCp.invalidateLayer = function( layer ){
+   // log('update invalidate layer time');
+ 
+   this.lastInvalidationTime = util.performanceNow();
++  this.discardLayer( layer );
++};
+ 
++// patched: invalidateLayer without the timestamp, for dropRegion
++LTCp.discardLayer = function( layer ){
+   if( layer.invalid ){ return; } // save cycles
+ 
+   var lvl = layer.level;
