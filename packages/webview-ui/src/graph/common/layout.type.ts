@@ -50,6 +50,9 @@ export type LayoutResult = {
 };
 
 export type LayoutRunner = {
-  /** Resolves `null` when a newer run started before this one settled. */
-  readonly run: (hash: string, graph: ElkNode) => Promise<LayoutResult | null>;
+  /**
+   * Resolves `null` when a newer run started before this one settled. `isForced` (Re-layout, Retry) tries ELK on a graph
+   * past `ELK_NODES_MAX` too.
+   */
+  readonly run: (hash: string, graph: ElkNode, isForced?: boolean) => Promise<LayoutResult | null>;
 };
