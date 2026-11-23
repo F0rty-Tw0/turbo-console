@@ -112,6 +112,38 @@ describe('FEATURE: breadthfirstPositions', () => {
     });
   });
 
+  describe('GIVEN one package with sixteen dependencies', () => {
+    const names = Array.from({ length: 16 }, (_, index): string => `dep${index}`);
+    const fanOut = graphOf(['app', ...names], names.map((name): ElkEdge => edgeOf('app', name)));
+    const extentOf = (values: number[]): number => Math.max(...values) - Math.min(...values);
+
+    it('WHEN laid out THEN the graph is no more than twice as wide as it is tall', () => {
+      const positions = Object.values(breadthfirstPositions(fanOut));
+
+      const width = extentOf(positions.map((position): number => position.x));
+      const height = extentOf(positions.map((position): number => position.y));
+
+      expect(width).toBeLessThanOrEqual(height * 2);
+    });
+
+    it('WHEN laid out THEN every dependency still sits below the package', () => {
+      const positions = breadthfirstPositions(fanOut);
+
+      const app = positionIn(positions, 'app').y;
+      const dependencies = names.map((name): number => positionIn(positions, name).y);
+
+      expect(Math.min(...dependencies)).toBeGreaterThan(app);
+    });
+
+    it('WHEN laid out THEN no two packages share a position', () => {
+      const positions = Object.values(breadthfirstPositions(fanOut));
+
+      const spots = new Set(positions.map((position): string => `${position.x},${position.y}`));
+
+      expect(spots.size).toBe(17);
+    });
+  });
+
   describe('GIVEN no children', () => {
     it('WHEN laid out THEN there are no positions', () => {
       const positions = breadthfirstPositions({ id: 'root' });
