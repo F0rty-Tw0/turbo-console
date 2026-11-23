@@ -290,4 +290,15 @@ describe('FEATURE: GraphTaskMode across page states', () => {
       expect(rig.controls.setProjects).toHaveBeenLastCalledWith(expect.objectContaining({ rootLabel: null }));
     });
   });
+
+  describe('GIVEN task mode shown', () => {
+    it('WHEN it is left toward modules THEN the mode is modules and onExit hears modules', () => {
+      open(taskSavedOf({}, 'packages'));
+      mode.received(TASK_STATE_STUB, 7);
+      mode.enter(8);
+      mode.leave('modules');
+
+      expect([rig.modes.mode(), rig.onExit.mock.calls]).toStrictEqual(['modules', [['modules']]]);
+    });
+  });
 });

@@ -1,5 +1,7 @@
+import { NODE_SIZE_STUB } from './node-size.stub.ts';
 import type { ModuleCounts, ModulesFound } from '../../../bridge/common/graph-modules.type.ts';
-import type { ModuleShown } from '../../common/module-scene.type.ts';
+import type { ModuleMeasures, ModuleShown } from '../../common/module-scene.type.ts';
+import type { NodeSize } from '../../common/node-size.type.ts';
 
 const NO_COUNTS: ModuleCounts = { unresolved: 0, external: 0, assets: 0, self: 0 };
 
@@ -29,3 +31,9 @@ export const MODULES_FOUND_STUB: ModulesFound = {
 };
 
 export const ALL_SHOWN_STUB: ModuleShown = { types: true, tests: true, lazies: true };
+
+/** Every card `NODE_SIZE_STUB`, every box title 40 px wide. */
+export const MODULE_MEASURES_STUB: ModuleMeasures = {
+  sizeOf: (): NodeSize => NODE_SIZE_STUB,
+  titleWidthOf: (): number => 40
+};

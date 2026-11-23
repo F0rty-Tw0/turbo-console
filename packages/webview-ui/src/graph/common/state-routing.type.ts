@@ -8,6 +8,12 @@ export type RoutedTaskMode = {
   readonly enter: (at: number) => void;
 };
 
+/** What the state routing asks of modules mode: whether it owns the canvas, and the read of every graph state, which may leave it. */
+export type RoutedModuleMode = {
+  readonly isActive: () => boolean;
+  readonly received: (state: GraphReady) => void;
+};
+
 /** What the state routing asks of the package side. */
 export type RoutedPackageSide = {
   readonly show: (state: GraphState, at: number) => void;
@@ -15,12 +21,13 @@ export type RoutedPackageSide = {
   readonly drawnHash: () => string | null;
   /** Draws the package graph drawn before again, with the saved package view. */
   readonly redraw: () => void;
-  /** Task mode is being left: a mode button with focus hands it to `modeFocusOf` once the package graph shows. */
+  /** Task or modules mode is being left for packages: a mode button with focus hands it to `modeFocusOf` once the package graph shows. */
   readonly keepModeFocus: () => void;
 };
 
 export type StateRoutingDeps = {
   readonly tasks: RoutedTaskMode;
+  readonly modules: RoutedModuleMode;
   readonly packages: RoutedPackageSide;
   /** Hides the Packages/Tasks group for a single-package root, shows it otherwise. */
   readonly hideModes: (isHidden: boolean) => void;

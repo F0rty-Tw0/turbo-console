@@ -44,6 +44,8 @@ type PackageParts = {
   readonly startTrace: HTMLButtonElement;
   /** Hidden for a package with no visible task. */
   readonly showTasks: HTMLButtonElement;
+  /** Always shown: every listed package, `//` included, can open its modules. */
+  readonly showModules: HTMLButtonElement;
   readonly dependencies: NeighbourItem[];
   readonly dependents: NeighbourItem[];
 };

@@ -37,7 +37,8 @@ export const GRAPH_ICON_IDS = [
   'unfold',
   'play',
   'debug-rerun',
-  'history'
+  'history',
+  'list-tree'
 ] as const;
 
 /** The one icon per action that menus, Details buttons and Controls toggles draw (spec D10). */
@@ -47,6 +48,7 @@ export const ACTION_ICONS: Readonly<Record<ActionIconKey, GraphIconId>> = {
   clearFocus: 'close',
   startTrace: 'git-commit',
   showTasks: 'tasklist',
+  showModules: 'list-tree',
   exclude: 'eye-closed',
   showAll: 'eye',
   collapse: 'fold',

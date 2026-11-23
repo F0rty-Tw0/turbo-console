@@ -1,46 +1,22 @@
-import type { Position } from '../../bridge/common/graph-state.type.ts';
+import { readModules } from './modules-view-state.util.ts';
+import { isFiniteNumber, isNameList, readCamera } from './saved-fields.util.ts';
 import type {
   GraphFocus,
   GraphLinkRef,
   GraphTraceRef,
   GraphViewMode,
   GraphViewState,
+  ModulesViewState,
   PanelWidths,
   TaskViewState
 } from '../../bridge/common/graph-view-state.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-import type { Viewport } from '../common/graph-page.type.ts';
 import { DEFAULT_TASK_DEPTH, MAX_TASK_DEPTH, MIN_TASK_DEPTH } from '../common/graph-task.const.ts';
 import { DEFAULT_DEPTH, MAX_DEPTH, MIN_DEPTH } from '../common/graph.const.ts';
-
-const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
-
-const readPosition = (raw: unknown): Position | null => {
-  if (!isRecord(raw)) return null;
-
-  const { x, y } = raw;
-
-  if (!isFiniteNumber(x) || !isFiniteNumber(y)) return null;
-
-  const position: Position = { x, y };
-
-  return position;
-};
 
 const readControlsOpen = (value: unknown): boolean => (typeof value === 'boolean' ? value : true);
 
 const readString = (value: unknown): string => (typeof value === 'string' ? value : '');
-
-const readCamera = (zoom: unknown, rawPan: unknown): Viewport | null => {
-  const pan = readPosition(rawPan);
-  const isZoomValid = isFiniteNumber(zoom) && zoom > 0;
-
-  if (!isZoomValid || pan === null) return null;
-
-  const camera: Viewport = { zoom, pan };
-
-  return camera;
-};
 
 const readFitted = (value: unknown): boolean => value === true;
 
@@ -82,8 +58,6 @@ const readFocus = (value: unknown): GraphFocus | null => {
 
   return null;
 };
-
-const isNameList = (value: unknown): value is string[] => Array.isArray(value) && value.every((entry) => typeof entry === 'string');
 
 const readNames = (value: unknown): string[] => {
   const isList = isNameList(value);
@@ -143,11 +117,14 @@ const readTask = (raw: unknown): TaskViewState | null => {
   return task;
 };
 
-/** Task mode only with a task view to show; anything else reads as package mode. */
-const readMode = (value: unknown, task: TaskViewState | null): GraphViewMode => {
+/** Task mode only with a task view to show, modules mode only with a modules view; anything else reads as package mode. */
+const readMode = (value: unknown, task: TaskViewState | null, modules: ModulesViewState | null): GraphViewMode => {
   const isTaskMode = value === 'tasks' && task !== null;
+  const isModulesMode = value === 'modules' && modules !== null;
 
-  return isTaskMode ? 'tasks' : 'packages';
+  if (isTaskMode) return 'tasks';
+
+  return isModulesMode ? 'modules' : 'packages';
 };
 
 const isPositiveNumber = (value: unknown): value is number => isFiniteNumber(value) && value > 0;
@@ -168,7 +145,7 @@ const readPanelWidths = (raw: unknown): PanelWidths | null => {
 /** Whether `raw` holds a grouping choice; a state saved before folders existed has none, and reads as grouped. */
 export const hasSavedGrouping = (raw: unknown): boolean => isRecord(raw) && typeof raw['grouped'] === 'boolean';
 
-/** The saved camera, selection, controls, inspection, mode, task view and panel widths, rebuilt field by field; `null` when the camera or selection is off, a bad controls, inspection or task field takes its default. */
+/** The saved camera, selection, controls, inspection, mode, task view, modules view and panel widths, rebuilt field by field; `null` when the camera or selection is off, a bad controls, inspection or task field takes its default. */
 export const readGraphViewState = (raw: unknown): GraphViewState | null => {
   if (!isRecord(raw)) return null;
 
@@ -181,6 +158,7 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
   if (!areFieldsValid || camera === null) return null;
 
   const task = readTask(raw['task']);
+  const modules = readModules(raw['modules']);
   const state: GraphViewState = {
     hash,
     ...camera,
@@ -198,8 +176,9 @@ export const readGraphViewState = (raw: unknown): GraphViewState | null => {
     folder: readFolder(raw['folder']),
     grouped: readGrouped(raw['grouped']),
     collapsed: readNames(raw['collapsed']),
-    mode: readMode(raw['mode'], task),
+    mode: readMode(raw['mode'], task, modules),
     task,
+    modules,
     panelWidths: readPanelWidths(raw['panelWidths'])
   };
 

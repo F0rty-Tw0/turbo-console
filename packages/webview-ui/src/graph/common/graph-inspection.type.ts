@@ -100,6 +100,8 @@ export type GraphInspectionDeps = {
   readonly onShowTasks: (name: string) => void;
   /** Whether `name` has a visible task, so Show tasks is offered. */
   readonly hasTasks: (name: string) => boolean;
+  /** Show modules: modules mode on `name`. */
+  readonly onShowModules: (name: string) => void;
 };
 
 /** What the keep-clear pan reads: the canvas, the page's container, the details aside, the inspection, its drawn ghosts and the package "…". */

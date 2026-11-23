@@ -1,10 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildLegend, renderLegend } from './legend-elements.ts';
-import type { GraphViewMode } from '../../bridge/common/graph-view-state.type.ts';
 import { FALLBACK_COLORS } from '../common/graph.const.ts';
 import { LEGEND_HEADING_ID, LEGEND_ID, LEGEND_LABEL, LEGEND_ROWS, LEGEND_TITLE } from '../common/legend.const.ts';
-import type { LegendElements } from '../common/legend.type.ts';
+import type { LegendElements, LegendMode } from '../common/legend.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 
 type ToggleState = 'open' | 'closed';
@@ -122,7 +121,7 @@ describe('FEATURE: legend elements', () => {
       renderLegend(elements, FALLBACK_COLORS, null);
     });
 
-    const termsOf = (mode: GraphViewMode): (string | undefined)[] => {
+    const termsOf = (mode: LegendMode): (string | undefined)[] => {
       const rows = Array.from(elements.legendLists[mode].children);
 
       return rows.map((row): string | undefined => row.children[0]?.textContent);

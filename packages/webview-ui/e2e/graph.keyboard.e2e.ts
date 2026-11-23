@@ -50,6 +50,7 @@ const SELECTION_STOPS: FocusStep[] = tabStopsOf([
   'Focus',
   'Exclude',
   'Start trace',
+  'Show modules',
   'config',
   'Explain core → config',
   'data',

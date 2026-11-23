@@ -1,6 +1,8 @@
 import { buildDetailsBar } from './details-bar.ts';
 import { buildFlowCanvas } from './flow-canvas.ts';
+import { textButton } from './icon-button.ts';
 import { buildLocation } from './location-elements.ts';
+import { buildModulesBar } from './modules-bar-elements.ts';
 import { buildPanelSashes } from './panel-sash.ts';
 import { trackPointerFocus } from './pointer-focus.ts';
 import { buildToolbar } from './toolbar-elements.ts';
@@ -10,16 +12,6 @@ import type { TaskScreenElements } from '../common/graph-task.type.ts';
 import { FALLBACK_NOTICE_TEXT, GRAPH_LABEL, RELOAD_LABEL, RETRY_LABEL } from '../common/graph.const.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import type { PanelSashes } from '../common/panel-sash.type.ts';
-
-/** A text button: its visible text is its accessible name and its hover title. */
-const textButton = (label: string): HTMLButtonElement => {
-  const button = textElement('button', 'text-button', label);
-
-  button.type = 'button';
-  button.title = label;
-
-  return button;
-};
 
 const graphContainer = (): HTMLElement => {
   const container = textElement('div', 'graph-container', '');
@@ -96,12 +88,13 @@ const graphBody = (sashes: PanelSashes, container: HTMLElement, flow: HTMLCanvas
 
 /**
  * The page in its pre-state: toolbar and the body with the empty container shown, every toolbar button disabled, the
- * notice, task mode's lines, the message block, the location bar and the Details bar hidden. DOM order is the Tab order:
- * toolbar, notice, task notice, cap banner, prompt, message, location bar, then the body. The Details bar joins the DOM
- * with the first Details aside.
+ * modules bar (shown by CSS in modules mode only), the notice, task mode's lines, the message block, the location bar
+ * and the Details bar hidden. DOM order is the Tab order: toolbar, modules bar, notice, task notice, cap banner, prompt,
+ * message, location bar, then the body. The Details bar joins the DOM with the first Details aside.
  */
 export const buildPage = (): PageElements => {
   const tools = buildToolbar();
+  const modules = buildModulesBar();
   const { bar, summary, clear } = buildDetailsBar();
   const retry = textButton(RETRY_LABEL);
   const noticeText = textElement('p', 'graph-notice-text', FALLBACK_NOTICE_TEXT);
@@ -118,10 +111,11 @@ export const buildPage = (): PageElements => {
   const body = graphBody(sashes, container, flow, widgets);
   const root = textElement('main', 'graph-page', '');
 
-  root.append(tools.toolbar, notice, tasks.notice, tasks.banner, tasks.prompt, message, location.nav, body);
+  root.append(tools.toolbar, modules.bar, notice, tasks.notice, tasks.banner, tasks.prompt, message, location.nav, body);
 
   const page: PageElements = {
     ...tools,
+    modules,
     clear,
     detailsBar: bar,
     detailsSummary: summary,

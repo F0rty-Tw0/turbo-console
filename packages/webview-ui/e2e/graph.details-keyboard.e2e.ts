@@ -139,7 +139,8 @@ test.describe('FEATURE: graph details panel by keyboard', () => {
 
       await test.step('THEN web is inspected', async (): Promise<void> => graphDetails.expectInspection(packageInspection('web')));
 
-      await test.step('WHEN Tab reaches Start trace', async (): Promise<void> => graphKeys.tabTo('Start trace'));
+      await test.step('WHEN Tab reaches Show modules, the last action button', async (): Promise<void> =>
+        graphKeys.tabTo('Show modules'));
 
       const walked = await test.step('AND Tab is pressed three times', async (): Promise<FocusStep[]> =>
         graphKeys.walk(NEIGHBOUR_STOPS));

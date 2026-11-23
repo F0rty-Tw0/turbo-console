@@ -46,6 +46,7 @@ const M4_1_RESTORED: GraphViewState = {
   collapsed: [],
   mode: 'packages',
   task: null,
+  modules: null,
   panelWidths: null
 };
 

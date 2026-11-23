@@ -2,6 +2,7 @@ import type { Css, StylesheetJson } from 'cytoscape';
 
 import { BOX_TITLE } from './graph-box-title-style.ts';
 import { dimmedBoxRulesOf } from './graph-dimmed-box-style.ts';
+import { moduleRulesOf } from './graph-module-style.ts';
 import { routeRulesOf } from './graph-route-style.ts';
 import { selectionRulesOf } from './graph-selection-style.ts';
 import { cardColourRulesOf, cardRulesOf, selectedCardRunRulesOf } from './graph-task-card-style.ts';
@@ -151,7 +152,8 @@ const nodeStyleOf = (colors: ThemeColors, fontFamily: string): Css.Node => {
  * `GraphView.setGhosts` applies; a press draws no overlay on a node or edge and no circle on the
  * background; `taskRulesOf` adds the task mode rules and `selectionRulesOf` the selected border and fill and the bold focus target.
  * The folder pass draws `folder-node` (a collapsed folder, its label wrapped only while exporting or `row-less`) and
- * `folder-link`, fades a box with `dimmed-box` and hides with `folder-hidden`, last so nothing shows it. Every colour
+ * `folder-link`, fades a box with `dimmed-box`; `moduleRulesOf` adds the modules mode stub and link rules (count label,
+ * dotted lazy, dashed type-only); `folder-hidden` hides, last so nothing shows it. Every colour
  * comes from `colors`. With `glyphs` the task and file nodes draw a state glyph from the codicon font before their name, and a package
  * task box draws the package glyph before its title; the base node rule keeps `fontFamily`. A plain task's `task-card`
  * label (`cardRulesOf`, after the task rules) draws two rows and takes its margin from `measures`; umbrellas keep the
@@ -172,6 +174,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
   const selectionRules = selectionRulesOf(colors);
   const routeRules = routeRulesOf();
   const dimmedBoxRules = dimmedBoxRulesOf(colors);
+  const moduleRules = moduleRulesOf(colors, fontFamily);
   const style: StylesheetJson = [
     { selector: 'node', style: node },
     { selector: 'node[label]', style: LABELLED_NODE },
@@ -195,6 +198,7 @@ export const graphStyleOf = (colors: ThemeColors, fontFamily: string, glyphs: bo
     { selector: FOLDER_NODE_LABELLED_SELECTOR, style: FOLDER_NODE_LABELLED },
     { selector: `edge.${FOLDER_LINK_CLASS}`, style: folderLinkStyleOf(colors, fontFamily) },
     ...dimmedBoxRules,
+    ...moduleRules,
     { selector: `.${FOLDER_HIDDEN_CLASS}`, style: HIDDEN }
   ];
 
