@@ -1,7 +1,14 @@
 import { join } from 'node:path';
 
 import type { PackageImportScan } from '@turbo-console/core';
-import type { EdgeImportsResult, GraphPackageModulesMessage, GraphState, ImportSite, ModulesFound, ModulesResult } from '@turbo-console/webview-ui';
+import type {
+  EdgeImportsResult,
+  GraphPackageModulesMessage,
+  GraphState,
+  ImportSite,
+  ModulesFound,
+  ModulesResult
+} from '@turbo-console/webview-ui';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
