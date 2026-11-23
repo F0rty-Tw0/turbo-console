@@ -245,12 +245,29 @@ describe('FEATURE: themeColorsOf', () => {
   });
 
   describe('GIVEN an input border with alpha', () => {
-    it('WHEN the colours are read THEN the card frame reads as the rgba Cytoscape parses', () => {
-      const translucent = { ...DARK, '--vscode-input-border': '#d8d8d866' };
+    it.each([
+      ['Light 2026', '#D8D8D866', '#ffffff', 'rgb(239, 239, 239)'],
+      ['Light 2026 as VS Code hands it to a webview', 'rgba(216, 216, 216, 0.4)', '#ffffff', 'rgb(239, 239, 239)'],
+      ['dark', '#d8d8d866', '#1f1f1f', 'rgb(105, 105, 105)']
+    ])('WHEN the %s border %s over %s is read THEN the card frame is the opaque %s', (_, border, background, expected) => {
+      const translucent = { ...DARK, '--vscode-input-border': border, '--vscode-editor-background': background };
 
       const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
-      expect(colors.cardFrame).toBe('rgba(216, 216, 216, 0.4)');
+      expect(colors.cardFrame).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a focus border with alpha', () => {
+    it.each([
+      ['Dark 2026', '#3994BCB3', '#121314', 'rgb(45, 110, 138)'],
+      ['Dark 2026 as VS Code hands it to a webview', 'rgba(57, 148, 188, 0.7)', '#121314', 'rgb(45, 109, 138)']
+    ])('WHEN the %s border %s over %s is read THEN selected is the opaque %s', (_, border, background, expected) => {
+      const translucent = { ...DARK, '--vscode-focusBorder': border, '--vscode-editor-background': background };
+
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+      expect(colors.selected).toBe(expected);
     });
   });
 
