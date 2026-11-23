@@ -29,6 +29,9 @@ const PANELS = { description: '2026-11-22-modules-panels spec 10.1', type: 'requ
 
 const OPEN_INDEX: GraphOpenImportMessage = { type: 'openImport', packageName: 'app', file: 'index.ts', line: 0 };
 
+/** The package inspection of app, picked before Show modules. */
+const APP_STATUS = 'app · 2 dependencies, 1 direct · 0 dependents, 0 direct';
+
 test.describe('FEATURE: package modules panels', () => {
   test(
     'GIVEN app shown in modules mode, the toggles open and close the module asides, each with its sash (AC 1, 2, 14)',
@@ -248,6 +251,28 @@ test.describe('FEATURE: package modules panels', () => {
 
       await test.step('AND keyboard focus moves from the hidden Clear selection to the empty hint', async (): Promise<void> =>
         graphModuleDetails.expectEmptyFocused());
+    }
+  );
+
+  test(
+    "GIVEN index.ts selected in modules mode, Back gives the Details bar back to app's inspection, without the module's path (spec §6.3)",
+    { annotation: PANELS },
+    async ({ graphCanvas, graphDetailsBar, graphModuleDetails, graphModules, shownModules }): Promise<void> => {
+      await test.step('WHEN app is shown at D9 and index.ts is tapped', async (): Promise<void> => {
+        await shownModules();
+        await graphCanvas.tapNode('file:index.ts');
+        await graphModuleDetails.expectTitle('index.ts');
+      });
+
+      await test.step('AND Back is pressed', async (): Promise<void> => graphModules.pressBar(BACK_LABEL));
+
+      await test.step('THEN the Details bar is back in the package aside, with Clear selection for app still picked', async (): Promise<void> => {
+        await graphDetailsBar.expectFirstIn('graph-details');
+        await graphDetailsBar.expectClearShown();
+      });
+
+      await test.step("AND its summary names app's inspection, not index.ts's path", async (): Promise<void> =>
+        graphDetailsBar.expectSummary(APP_STATUS));
     }
   );
 
