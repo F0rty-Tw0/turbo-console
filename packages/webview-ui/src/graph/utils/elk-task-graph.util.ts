@@ -107,16 +107,18 @@ const rootChildrenOf = (
   return [...atRoot, ...folderBoxes];
 };
 
-/** How many titled-row boxes `drawn` makes: each adds a title-slot leaf; a package has a Scripts box exactly when it has a script. */
-const titleSlotCountOf = (drawn: GraphTask[], titleWidths: ReadonlyMap<string, number>): number => {
-  const hasTitleSlot = (packageName: string): boolean => {
-    const own = drawn.filter((task) => task.packageName === packageName);
+/**
+ * How many titled-row boxes the drawn tasks, keyed by package in `byPackage`, make: each adds a title-slot leaf; a
+ * package has a Scripts box exactly when it has a script.
+ */
+const titleSlotCountOf = (byPackage: ReadonlyMap<string, GraphTask[]>, titleWidths: ReadonlyMap<string, number>): number => {
+  const hasTitleSlot = ([packageName, own]: [string, GraphTask[]]): boolean => {
     const turboTasks = own.filter((task) => task.isTurboTask);
     const scripts = own.filter((task) => !task.isTurboTask);
 
     return isTitledRow(titleWidths.get(packageName), turboTasks, scripts);
   };
-  const titled = sortedPackagesOf(drawn).filter(hasTitleSlot);
+  const titled = Array.from(byPackage).filter(hasTitleSlot);
 
   return titled.length;
 };
@@ -133,8 +135,9 @@ const titleSlotCountOf = (drawn: GraphTask[], titleWidths: ReadonlyMap<string, n
 export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkNode => {
   const { tasks, shown, sizes, titleWidths, naming } = request;
   const drawn = tasks.filter((task) => shown.has(task.id));
+  const byPackage = Map.groupBy(drawn, (task) => task.packageName);
   const layering = taskLayeringOf(naming);
-  const leafCount = drawn.length + titleSlotCountOf(drawn, titleWidths);
+  const leafCount = drawn.length + titleSlotCountOf(byPackage, titleWidths);
   const base = paddedOptionsOf(leafCount, layering);
   const leafOf = (task: GraphTask): ElkNode => {
     const { width, height } = sizes.get(task.id) ?? sizeOf(task.name);
@@ -143,7 +146,7 @@ export const elkTaskGraphOf = (request: TaskGraphInput, sizeOf: NodeSizer): ElkN
     return leaf;
   };
   const compoundOf = (packageName: string): ElkNode => {
-    const own = drawn.filter((task) => task.packageName === packageName);
+    const own = byPackage.get(packageName) ?? [];
     const turboLeaves = own.filter((task) => task.isTurboTask).map(leafOf);
     const scriptLeaves = own.filter((task) => !task.isTurboTask).map(leafOf);
     const scriptsBoxes = scriptsBoxesOf(packageName, scriptLeaves, titleWidths, base);
