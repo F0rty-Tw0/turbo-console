@@ -1,5 +1,5 @@
 import { readModules } from './modules-view-state.util.ts';
-import { isFiniteNumber, isNameList, readCamera } from './saved-fields.util.ts';
+import { depthWithin, isFiniteNumber, isNameList, readCamera, readDepth } from './saved-fields.util.ts';
 import type {
   GraphFocus,
   GraphLinkRef,
@@ -12,24 +12,12 @@ import type {
 } from '../../bridge/common/graph-view-state.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { DEFAULT_TASK_DEPTH, MAX_TASK_DEPTH, MIN_TASK_DEPTH } from '../common/graph-task.const.ts';
-import { DEFAULT_DEPTH, MAX_DEPTH, MIN_DEPTH } from '../common/graph.const.ts';
 
 const readControlsOpen = (value: unknown): boolean => (typeof value === 'boolean' ? value : true);
 
 const readString = (value: unknown): string => (typeof value === 'string' ? value : '');
 
 const readFitted = (value: unknown): boolean => value === true;
-
-const depthWithin = (value: unknown, min: number, max: number): number | null => {
-  const isInRange = typeof value === 'number' && value >= min && value <= max;
-  const isWhole = Number.isInteger(value);
-
-  if (!isInRange || !isWhole) return null;
-
-  return value;
-};
-
-const readDepth = (value: unknown): number => depthWithin(value, MIN_DEPTH, MAX_DEPTH) ?? DEFAULT_DEPTH;
 
 const readTaskDepth = (value: unknown): number => depthWithin(value, MIN_TASK_DEPTH, MAX_TASK_DEPTH) ?? DEFAULT_TASK_DEPTH;
 
