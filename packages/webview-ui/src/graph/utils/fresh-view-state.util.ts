@@ -35,9 +35,17 @@ export const freshViewStateOf = (hash: string): GraphViewState => {
   return state;
 };
 
-/** The modules view of `packageName` with nothing saved: the expansion not set up yet, every kind but test files shown and a camera that fits. */
+/** The modules view of `packageName` with nothing saved: the expansion not set up yet, every kind but test files shown, a camera that fits, nothing selected or focused and the default depth. */
 export const freshModulesViewOf = (packageName: string): ModulesViewState => {
-  const modules: ModulesViewState = { packageName, expanded: null, shown: FRESH_MODULES_SHOWN, camera: null };
+  const modules: ModulesViewState = {
+    packageName,
+    expanded: null,
+    shown: FRESH_MODULES_SHOWN,
+    camera: null,
+    selected: null,
+    focus: null,
+    depth: DEFAULT_DEPTH
+  };
 
   return modules;
 };

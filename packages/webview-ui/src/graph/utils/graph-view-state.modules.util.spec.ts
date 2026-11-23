@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { freshViewStateOf } from './fresh-view-state.util.ts';
 import { readGraphViewState } from './graph-view-state.util.ts';
-import type { GraphViewState, ModulesCamera, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type {
+  GraphViewState,
+  ModuleSelection,
+  ModulesCamera,
+  ModulesViewState
+} from '../../bridge/common/graph-view-state.type.ts';
 
 const SAVED_SHOWN = { types: false, tests: true, lazies: true };
 
@@ -10,12 +15,19 @@ const SAVED_PAN = { x: 5, y: 6 };
 
 const SAVED_CAMERA = { zoom: 2, pan: SAVED_PAN };
 
+const SAVED_LINK: ModuleSelection = { kind: 'link', source: 'file:src/a.ts', target: 'dir:src/lib' };
+
 const SAVED_MODULES: ModulesViewState = {
   packageName: 'web',
   expanded: ['src', 'src/lib'],
   shown: SAVED_SHOWN,
-  camera: SAVED_CAMERA
+  camera: SAVED_CAMERA,
+  selected: SAVED_LINK,
+  focus: 'pkg:@s/x',
+  depth: 3
 };
+
+const OLD_SAVE = { packageName: 'web', expanded: ['src'], shown: SAVED_SHOWN, camera: SAVED_CAMERA };
 
 const FRESH_H1 = freshViewStateOf('h1');
 
@@ -118,6 +130,69 @@ describe('FEATURE: readGraphViewState modules view', () => {
       const state = readGraphViewState(rawOf('tasks', SAVED_MODULES));
 
       expect([state?.mode, state?.modules]).toStrictEqual(['packages', SAVED_MODULES]);
+    });
+  });
+
+  describe('GIVEN a modules view saved before selection, focus and depth existed', () => {
+    it('WHEN it is read THEN nothing is selected or focused and the depth is 1', () => {
+      const state = readGraphViewState(rawOf('modules', OLD_SAVE));
+
+      expect(state?.modules).toStrictEqual({ ...OLD_SAVE, selected: null, focus: null, depth: 1 });
+    });
+  });
+
+  describe.each<[string, unknown, ModuleSelection | null]>([
+    ['a file node', { kind: 'node', id: 'file:src/a.ts' }, { kind: 'node', id: 'file:src/a.ts' }],
+    ['a stub node', { kind: 'node', id: 'pkg:@s/x' }, { kind: 'node', id: 'pkg:@s/x' }],
+    ['a folder node (R1: never the selection)', { kind: 'node', id: 'dir:src/lib' }, null],
+    ['a node with an extra key', { kind: 'node', id: 'file:a.ts', extra: 1 }, { kind: 'node', id: 'file:a.ts' }],
+    [
+      'a link',
+      { kind: 'link', source: 'file:src/a.ts', target: 'dir:src/lib' },
+      { kind: 'link', source: 'file:src/a.ts', target: 'dir:src/lib' }
+    ],
+    ['the root box', { kind: 'node', id: 'dir:' }, null],
+    ['a link to the root box', { kind: 'link', source: 'file:src/a.ts', target: 'dir:' }, null],
+    ['an id with no prefix', { kind: 'node', id: 'src/a.ts' }, null],
+    ['a numeric id', { kind: 'node', id: 7 }, null],
+    ['a link with no target', { kind: 'link', source: 'file:src/a.ts' }, null],
+    ['a link with a bare end', { kind: 'link', source: 'file:a.ts', target: 'lib' }, null],
+    ['an unknown kind', { kind: 'edge', id: 'file:a.ts' }, null],
+    ['a bare string', 'file:src/a.ts', null]
+  ])('GIVEN a saved selection that is %s', (_name, selected, expected) => {
+    it('WHEN it is read THEN the selection reads as expected and the rest is kept', () => {
+      const state = readGraphViewState(rawOf('modules', { ...SAVED_MODULES, selected }));
+
+      expect(state?.modules).toStrictEqual({ ...SAVED_MODULES, selected: expected });
+    });
+  });
+
+  describe.each<[unknown, string | null]>([
+    ['file:src/a.ts', 'file:src/a.ts'],
+    ['pkg:@s/x', 'pkg:@s/x'],
+    ['dir:src', null],
+    [3, null],
+    ['', null]
+  ])('GIVEN a saved focus of %j', (focus, expected) => {
+    it('WHEN it is read THEN the focus reads as expected and the rest is kept', () => {
+      const state = readGraphViewState(rawOf('modules', { ...SAVED_MODULES, focus }));
+
+      expect(state?.modules).toStrictEqual({ ...SAVED_MODULES, focus: expected });
+    });
+  });
+
+  describe.each<[unknown, number]>([
+    [3, 3],
+    [5, 5],
+    [0, 1],
+    [6, 1],
+    [2.5, 1],
+    ['2', 1]
+  ])('GIVEN a saved depth of %j', (depth, expected) => {
+    it('WHEN it is read THEN the depth reads as expected and the rest is kept', () => {
+      const state = readGraphViewState(rawOf('modules', { ...SAVED_MODULES, depth }));
+
+      expect(state?.modules).toStrictEqual({ ...SAVED_MODULES, depth: expected });
     });
   });
 });
