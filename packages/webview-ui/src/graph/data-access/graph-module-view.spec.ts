@@ -16,17 +16,21 @@ const MODULE_STYLE_CLASSES = [MODULE_LAZY_CLASS, MODULE_TYPE_CLASS];
 
 const TREE = moduleTreeOf(MODULES_FOUND_STUB.files);
 
-const SCENE: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src'], shown: ALL_SHOWN_STUB });
+const SCENE: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src'], shown: ALL_SHOWN_STUB, focus: null });
 
-const LIB_OPEN: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src', 'src/lib'], shown: ALL_SHOWN_STUB });
+const LIB_OPEN: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, {
+  expanded: ['src', 'src/lib'],
+  shown: ALL_SHOWN_STUB,
+  focus: null
+});
 
 const TESTS_HIDDEN: ModuleShown = { ...ALL_SHOWN_STUB, tests: false };
 
-const NO_TESTS: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src'], shown: TESTS_HIDDEN });
+const NO_TESTS: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src'], shown: TESTS_HIDDEN, focus: null });
 
-const ROOT_ONLY: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [], shown: ALL_SHOWN_STUB });
+const ROOT_ONLY: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [], shown: ALL_SHOWN_STUB, focus: null });
 
-const ROOT_ONLY_NO_TESTS: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [], shown: TESTS_HIDDEN });
+const ROOT_ONLY_NO_TESTS: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [], shown: TESTS_HIDDEN, focus: null });
 
 /** No centre listed: every card is drawn at the origin. */
 const AT_ORIGIN: Positions = {};

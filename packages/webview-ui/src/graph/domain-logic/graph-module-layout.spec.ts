@@ -94,8 +94,25 @@ describe('FEATURE: GraphModuleLayout', () => {
       await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'first' });
 
       expect(runner.run.mock.calls[0]?.[0]).toBe(
-        'modules:web:{"expanded":["src"],"shown":{"types":true,"tests":false,"lazies":true}}'
+        'modules:web:{"expanded":["src"],"shown":{"types":true,"tests":false,"lazies":true},"focus":null}'
       );
+    });
+  });
+
+  describe('GIVEN a first draw with a focus', () => {
+    it('WHEN a.ts is focused at depth 2 THEN the runner key names the focus target and depth', async () => {
+      await layout.draw(MODULES_FOUND_STUB, { ...WEB_VIEW, focus: 'file:src/a.ts', depth: 2 }, { kind: 'first' });
+
+      expect(runner.run.mock.calls[0]?.[0]).toBe(
+        'modules:web:{"expanded":["src"],"shown":{"types":true,"tests":false,"lazies":true},"focus":{"target":"file:src/a.ts","depth":2}}'
+      );
+    });
+
+    it('WHEN only the depth changes with no focus THEN the runner key stays the same', async () => {
+      await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'first' });
+      await layout.draw(MODULES_FOUND_STUB, { ...WEB_VIEW, depth: 3 }, { kind: 'first' });
+
+      expect(runner.run.mock.calls[1]?.[0]).toBe(runner.run.mock.calls[0]?.[0]);
     });
   });
 

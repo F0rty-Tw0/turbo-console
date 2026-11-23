@@ -19,10 +19,14 @@ export type ModuleFocusSet = {
   readonly stubs: Set<string>;
 };
 
-/** `expanded` lists folder paths; the root is always expanded and never listed. */
+/**
+ * `expanded` lists folder paths; the root is always expanded and never listed. With a `focus`, the scene draws only the
+ * focus set, with every ancestor folder of its files open as well.
+ */
 export type ModuleSceneView = {
   readonly expanded: string[];
   readonly shown: ModuleShown;
+  readonly focus: ModuleFocus | null;
 };
 
 /** An expanded folder drawn as a compound; the root box is id 'dir:' with path '' and name ''. */

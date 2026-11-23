@@ -9,7 +9,7 @@ import { ALL_SHOWN_STUB, MODULES_FOUND_STUB } from '../test/stubs/module-scene.s
 type LinkRow = [source: string, target: string, statics: number, types: number, lazies: number];
 
 const sceneOf = (data: ModulesFound, expanded: string[], shown: ModuleShown = ALL_SHOWN_STUB): ModuleScene =>
-  moduleSceneOf(moduleTreeOf(data.files), data, { expanded, shown });
+  moduleSceneOf(moduleTreeOf(data.files), data, { expanded, shown, focus: null });
 
 const idsOf = (scene: ModuleScene): string[] => scene.leaves.map((leaf) => leaf.id);
 

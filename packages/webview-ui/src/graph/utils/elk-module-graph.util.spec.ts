@@ -67,7 +67,7 @@ const MEASURES: ModuleMeasures = {
 };
 
 const sceneOf = (data: ModulesFound, expanded: string[]): ModuleScene =>
-  moduleSceneOf(moduleTreeOf(data.files), data, { expanded, shown: ALL_SHOWN_STUB });
+  moduleSceneOf(moduleTreeOf(data.files), data, { expanded, shown: ALL_SHOWN_STUB, focus: null });
 
 const SCENE = sceneOf(MODULES_FOUND_STUB, ['src', 'src/lib']);
 

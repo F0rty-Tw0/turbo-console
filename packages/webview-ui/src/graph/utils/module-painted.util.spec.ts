@@ -11,7 +11,7 @@ const TREE = moduleTreeOf(MODULES_FOUND_STUB.files);
 const NO_TESTS: ModuleShown = { ...ALL_SHOWN_STUB, tests: false };
 
 const sceneOf = (expanded: string[], shown: ModuleShown = ALL_SHOWN_STUB): ModuleScene =>
-  moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded, shown });
+  moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded, shown, focus: null });
 
 const SRC_OPEN = sceneOf(['src']);
 

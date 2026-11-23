@@ -1,12 +1,5 @@
 import { DIR_PREFIX, FILE_PREFIX } from '../common/graph-module.const.ts';
-import type {
-  ModuleBox,
-  ModuleDirLeaf,
-  ModuleDrawn,
-  ModuleFileLeaf,
-  ModuleLeaf,
-  ModuleSceneView
-} from '../common/module-scene.type.ts';
+import type { ModuleBox, ModuleDirLeaf, ModuleDrawn, ModuleFileLeaf, ModuleLeaf } from '../common/module-scene.type.ts';
 import type { ModuleDir, ModuleTree } from '../common/module-tree.type.ts';
 
 /** The walk's inputs, and what it collects: boxes and leaves in pre-order, and the drawn id of each drawn file. */
@@ -18,8 +11,6 @@ type ModuleWalk = {
   readonly leaves: ModuleLeaf[];
   readonly drawnOf: Map<number, string>;
 };
-
-const NO_FILES: number[] = [];
 
 /** The indexes of the files under `dir`, nested ones included, that are not hidden. */
 const liveFilesOf = (dir: ModuleDir, hidden: ReadonlySet<number>): number[] => {
@@ -79,15 +70,14 @@ const drawBox = (dir: ModuleDir, parent: string | null, walk: ModuleWalk): void 
 };
 
 /**
- * The tree walked pre-order from the root box, child folders before files: an expanded folder is a box, a collapsed one a
- * leaf for every file under it. `tests` are left out unless `view.shown.tests`; a folder with no file left is dropped.
+ * The tree walked pre-order from the root box, child folders before files: a folder listed in `expanded` is a box, a
+ * collapsed one a leaf for every file under it. `hidden` file indexes are left out; a folder with no file left is dropped.
  */
-export const moduleDrawnOf = (tree: ModuleTree, tests: number[], view: ModuleSceneView): ModuleDrawn => {
-  const hiddenTests = view.shown.tests ? NO_FILES : tests;
+export const moduleDrawnOf = (tree: ModuleTree, expanded: string[], hidden: ReadonlySet<number>): ModuleDrawn => {
   const walk: ModuleWalk = {
     files: tree.files,
-    expanded: new Set(view.expanded),
-    hidden: new Set(hiddenTests),
+    expanded: new Set(expanded),
+    hidden,
     boxes: [],
     leaves: [],
     drawnOf: new Map()
