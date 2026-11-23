@@ -137,15 +137,15 @@ describe('FEATURE: themeColorsOf', () => {
   });
 
   describe.each([
-    ['#9d9d9d80', 'rgba(157, 157, 157, 0.5)'],
-    ['#ccc8', 'rgba(204, 204, 204, 0.53)']
-  ])('GIVEN the stopped colour %s with alpha', (hex, rgba) => {
-    it(`WHEN the colours are read THEN it reads as ${rgba}, which Cytoscape parses`, () => {
+    ['#9d9d9d80', 'rgb(94, 94, 94)'],
+    ['#ccc8', 'rgb(123, 123, 123)']
+  ])('GIVEN the stopped colour %s with alpha', (hex, opaque) => {
+    it(`WHEN the colours are read THEN it reads as ${opaque}, laid over the editor background`, () => {
       const translucent = { ...DARK, '--vscode-descriptionForeground': hex };
 
       const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
-      expect(colors.runs.stopped).toBe(rgba);
+      expect(colors.runs.stopped).toBe(opaque);
     });
   });
 
@@ -268,6 +268,32 @@ describe('FEATURE: themeColorsOf', () => {
       const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
       expect(colors.selected).toBe(expected);
+    });
+  });
+
+  describe('GIVEN the high contrast description colour, the foreground at 0.7, as VS Code hands it to a webview', () => {
+    const translucent = { ...HC_STUB, '--vscode-descriptionForeground': 'rgba(255, 255, 255, 0.7)' };
+
+    it('WHEN the colours are read THEN the edge is the opaque blend over the black editor', () => {
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+      expect(colors.edge).toBe('rgb(179, 179, 179)');
+    });
+
+    it('WHEN the colours are read THEN stopped is the opaque blend over the black editor', () => {
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+      expect(colors.runs.stopped).toBe('rgb(179, 179, 179)');
+    });
+  });
+
+  describe('GIVEN the Dark+ panel border #80808059', () => {
+    it('WHEN the colours are read THEN the frame is the opaque blend over the dark editor', () => {
+      const translucent = { ...DARK, '--vscode-panel-border': '#80808059' };
+
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+      expect(colors.frame).toBe('rgb(65, 65, 65)');
     });
   });
 

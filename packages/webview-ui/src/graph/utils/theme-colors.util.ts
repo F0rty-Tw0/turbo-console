@@ -18,18 +18,13 @@ const cytoscapeColourOf = (value: string): string => {
   return `rgba(${red}, ${green}, ${blue}, ${opacity})`;
 };
 
-/**
- * The list's active selection as a selected node's fill and label; `null` unless the theme sets both. A fill with alpha,
- * as Dark 2026 and Light 2026 set, is laid over `background` first: Cytoscape 3.35 draws its alpha, but the graph keeps
- * the theme's opaque look, as VS Code itself shows the selection.
- */
-const selectionOf = (fill: string, label: string, background: string): SelectionColors | null => {
+/** The list's active selection as a selected node's fill and label; `null` unless the theme sets both. */
+const selectionOf = (fill: string, label: string): SelectionColors | null => {
   const isUnset = fill === '' || label === '';
 
   if (isUnset) return null;
 
-  const opaqueFill = opaqueColourOf(fill, background);
-  const selection: SelectionColors = { fill: cytoscapeColourOf(opaqueFill), label };
+  const selection: SelectionColors = { fill, label };
 
   return selection;
 };
@@ -44,44 +39,37 @@ const opaqueVariableOf = (read: CssVariableReader, name: string, fallback: strin
 
 /**
  * The graph colours from the theme variables, each trimmed (`getPropertyValue` keeps the leading space), a blank one
- * replaced by its `FALLBACK_COLORS` entry. VS Code sets `--vscode-contrastBorder` only in high contrast themes, so the
- * node frame takes it there and `--vscode-panel-border` everywhere else, and dimmed elements rise from 0.25 until they keep
- * 3:1 against the background there. Run outlines take the Tasks tree's status colours; a cached Atomizer file takes the chart purple; the affected halo takes the git modified colour.
- * A selected node takes the list's active selection colours when the theme sets both, as high contrast themes do not;
- * the fill is read unrounded, so its alpha blends over the editor background at full precision.
- * Cytoscape 3.35 draws a colour's alpha, so the selected border (`--vscode-focusBorder`, 0.7 in Dark 2026) and a task
- * card's input background and input border (`#D8D8D866` in Light 2026) are read unrounded and laid over the editor
- * background the same way; the card frame is the contrast border in a high contrast theme.
+ * replaced by its `FALLBACK_COLORS` entry. Cytoscape 3.35 draws a colour's alpha, but the graph keeps the theme's opaque
+ * look, as VS Code itself shows it: every colour but the editor background is read unrounded and laid over it.
+ * VS Code sets `--vscode-contrastBorder` only in high contrast themes, so the node frame and the card frame take it there
+ * and `--vscode-panel-border` and `--vscode-input-border` everywhere else, and dimmed elements rise from 0.25 until they
+ * keep 3:1 against the background there. Run outlines take the Tasks tree's status colours; a cached Atomizer file takes
+ * the chart purple; the affected halo takes the git modified colour. A selected node takes the list's active selection
+ * colours when the theme sets both, as high contrast themes do not.
  */
 export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
-  const valueOf = (name: string, fallback: string): string => {
-    const value = read(name).trim();
-
-    if (value === '') return fallback;
-
-    return cytoscapeColourOf(value);
-  };
-  const contrastBorder = valueOf('--vscode-contrastBorder', '');
-  const panelBorder = valueOf('--vscode-panel-border', FALLBACK_COLORS.frame);
+  const editorBackground = read('--vscode-editor-background').trim() || FALLBACK_COLORS.background;
+  const background = cytoscapeColourOf(editorBackground);
+  const opaqueValueOf = (name: string, fallback: string): string => opaqueVariableOf(read, name, fallback, background);
+  const contrastBorder = opaqueValueOf('--vscode-contrastBorder', '');
+  const panelBorder = opaqueValueOf('--vscode-panel-border', FALLBACK_COLORS.frame);
   const frame = contrastBorder === '' ? panelBorder : contrastBorder;
   const fallbackRuns = FALLBACK_COLORS.runs;
   const runs: ThemeColors['runs'] = {
-    running: valueOf('--vscode-charts-yellow', fallbackRuns.running),
-    continuous: valueOf('--vscode-charts-green', fallbackRuns.continuous),
-    passed: valueOf('--vscode-testing-iconPassed', fallbackRuns.passed),
-    failed: valueOf('--vscode-testing-iconFailed', fallbackRuns.failed),
-    stopped: valueOf('--vscode-descriptionForeground', fallbackRuns.stopped),
-    'failed-to-start': valueOf('--vscode-errorForeground', fallbackRuns['failed-to-start'])
+    running: opaqueValueOf('--vscode-charts-yellow', fallbackRuns.running),
+    continuous: opaqueValueOf('--vscode-charts-green', fallbackRuns.continuous),
+    passed: opaqueValueOf('--vscode-testing-iconPassed', fallbackRuns.passed),
+    failed: opaqueValueOf('--vscode-testing-iconFailed', fallbackRuns.failed),
+    stopped: opaqueValueOf('--vscode-descriptionForeground', fallbackRuns.stopped),
+    'failed-to-start': opaqueValueOf('--vscode-errorForeground', fallbackRuns['failed-to-start'])
   };
-  const background = valueOf('--vscode-editor-background', FALLBACK_COLORS.background);
-  const label = valueOf('--vscode-foreground', FALLBACK_COLORS.label);
-  const edge = valueOf('--vscode-descriptionForeground', FALLBACK_COLORS.edge);
+  const label = opaqueValueOf('--vscode-foreground', FALLBACK_COLORS.label);
+  const edge = opaqueValueOf('--vscode-descriptionForeground', FALLBACK_COLORS.edge);
   const highContrastDim = dimmedOpacityOf(background, [label, edge, frame]);
   const dimmedOpacity = contrastBorder === '' ? FALLBACK_COLORS.dimmedOpacity : highContrastDim;
-  const opaqueValueOf = (name: string, fallback: string): string => opaqueVariableOf(read, name, fallback, background);
-  const selectionFill = read('--vscode-list-activeSelectionBackground').trim();
-  const selectionLabel = valueOf('--vscode-list-activeSelectionForeground', '');
-  const selection = selectionOf(selectionFill, selectionLabel, background);
+  const selectionFill = opaqueValueOf('--vscode-list-activeSelectionBackground', '');
+  const selectionLabel = opaqueValueOf('--vscode-list-activeSelectionForeground', '');
+  const selection = selectionOf(selectionFill, selectionLabel);
   const cardFill = opaqueValueOf('--vscode-input-background', background);
   const inputBorder = opaqueValueOf('--vscode-input-border', frame);
   const cardFrame = contrastBorder === '' ? inputBorder : contrastBorder;
@@ -90,13 +78,13 @@ export const themeColorsOf = (read: CssVariableReader): ThemeColors => {
     label,
     edge,
     selected: opaqueValueOf('--vscode-focusBorder', FALLBACK_COLORS.selected),
-    highlighted: valueOf('--vscode-charts-blue', FALLBACK_COLORS.highlighted),
+    highlighted: opaqueValueOf('--vscode-charts-blue', FALLBACK_COLORS.highlighted),
     frame,
-    cached: valueOf('--vscode-charts-purple', FALLBACK_COLORS.cached),
+    cached: opaqueValueOf('--vscode-charts-purple', FALLBACK_COLORS.cached),
     runs,
     selection,
     dimmedOpacity,
-    affected: valueOf('--vscode-gitDecoration-modifiedResourceForeground', FALLBACK_COLORS.affected),
+    affected: opaqueValueOf('--vscode-gitDecoration-modifiedResourceForeground', FALLBACK_COLORS.affected),
     cardFill,
     cardFrame
   };
