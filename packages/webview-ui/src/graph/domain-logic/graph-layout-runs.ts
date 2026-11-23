@@ -26,8 +26,8 @@ export class GraphLayoutRuns {
     this.running = null;
   }
 
-  /** Lays the drawn graph out in `mode`; `null` when nothing is drawn or a newer run dropped this one. */
-  public async run(mode: LayoutGrouping): Promise<LayoutResult | null> {
+  /** Lays the drawn graph out in `mode`, `isForced` as the runner takes it; `null` when nothing is drawn or a newer run dropped this one. */
+  public async run(mode: LayoutGrouping, isForced = false): Promise<LayoutResult | null> {
     const drawn = this.deps.drawn();
 
     if (drawn === null) return null;
@@ -40,7 +40,7 @@ export class GraphLayoutRuns {
 
     this.running = mode;
 
-    const result = await this.deps.runner.run(drawn.hash, graph);
+    const result = await this.deps.runner.run(drawn.hash, graph, isForced);
 
     if (ticket === this.ticket) this.running = null;
 

@@ -209,7 +209,7 @@ export class GraphTaskMode {
     const current = this.deps.modes.current();
 
     this.hasEntered = true;
-    this.deps.screen.showGraph(this.layout.engine() === 'fallback');
+    this.deps.screen.showGraph(this.layout.fallbackCause());
     this.panel.enter();
     this.controls.enter(this.memory.view(), current?.controlsOpen ?? true);
     this.selection.enter(current?.detailsOpen ?? true);

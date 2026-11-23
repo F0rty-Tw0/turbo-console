@@ -116,7 +116,7 @@ export type OpenSample = {
   readonly fit: StretchFit;
 };
 
-/** One 10k open: the first frame in ms and the engine that laid it out (`fallback` once ELK ran past its timeout). */
+/** One 10k open: the first frame in ms and the engine that laid it out (`fallback` once the graph was past `ELK_NODES_MAX` or ELK ran past its timeout). */
 export type TenKOpen = {
   readonly firstFrameMs: number;
   readonly engine: LayoutEngine;

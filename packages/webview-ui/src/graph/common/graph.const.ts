@@ -37,6 +37,9 @@ export const LAYOUT_FAILED_TEXT = 'The package graph could not be drawn';
 
 export const FALLBACK_NOTICE_TEXT = 'Simplified layout: the layout worker failed';
 
+/** The notice of a graph past `ELK_NODES_MAX`, laid out without ELK; its Retry forces ELK. */
+export const OVERSIZE_NOTICE_TEXT = 'Simplified layout: this graph is too large for the full layout';
+
 /** The notice while the first grouped layout runs and the flat graph stays on screen. */
 export const LAYING_OUT_FOLDERS_TEXT = 'Laying out folders…';
 
@@ -46,6 +49,8 @@ export const LAYING_OUT_GRAPH_TEXT = 'Laying out the graph…';
 export const NO_NOTICE: LayoutNotice = { kind: 'none' };
 
 export const FALLBACK_NOTICE: LayoutNotice = { kind: 'fallback' };
+
+export const OVERSIZE_NOTICE: LayoutNotice = { kind: 'oversize' };
 
 export const FIT_LABEL = 'Fit';
 
@@ -108,6 +113,14 @@ export const FALLBACK_COLORS: ThemeColors = {
 export const ELK_POLICY_NAME = 'tc-elk';
 
 export const FALLBACK_TIMEOUT_MS = 5000;
+
+/**
+ * The most nodes, at any depth and compounds included, a run hands ELK unless the user asked for it (Re-layout, Retry);
+ * a larger graph goes straight to the fallback, since ELK never lays out 10,000 packages within `FALLBACK_TIMEOUT_MS`.
+ * The Modules view at its 5000-file cap sends about 5350 even with every folder open (5000 files, 250 folders, the root
+ * box, 50 stubs and the pack wrappers in the cap fixture), so 8000 keeps it on ELK with room for deeper folder trees.
+ */
+export const ELK_NODES_MAX = 8000;
 
 /** Starts every edge id, in Cytoscape and ELK alike: no package name holds a NUL, so no edge id is ever a node id. */
 export const EDGE_ID_PREFIX = '\u0000';
