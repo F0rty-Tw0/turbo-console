@@ -47,12 +47,12 @@ export type ModuleDetailsBlock = {
 };
 
 /**
- * One built module Details view: its root `section.details-view`, its heading and Focus button (`null` where the kind
- * draws none: Focus for a link, both for the empty and loading leads), and its imports blocks in draw order.
+ * One built module Details view: its root `section.details-view`, its heading (the title, or the empty or loading lead),
+ * which focus can land on, its Focus button (`null` for a link and the leads), and its imports blocks in draw order.
  */
 export type ModuleDetailsElements = {
   readonly root: HTMLElement;
-  readonly heading: HTMLHeadingElement | null;
+  readonly heading: HTMLElement;
   readonly focus: HTMLButtonElement | null;
   readonly blocks: ModuleDetailsBlock[];
 };

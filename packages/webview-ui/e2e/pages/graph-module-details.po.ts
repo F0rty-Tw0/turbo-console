@@ -51,6 +51,11 @@ export class GraphModuleDetailsPage {
     await expect(this.rows).toHaveCount(0);
   }
 
+  /** The empty hint holds keyboard focus. */
+  public async expectEmptyFocused(): Promise<void> {
+    await expect(this.content.locator('.details-lead')).toBeFocused();
+  }
+
   /** The blocks shown are exactly these, in order, each by its `h3` heading. */
   public async expectBlocks(headings: string[]): Promise<void> {
     const patterns = headings.map(headingPatternOf);

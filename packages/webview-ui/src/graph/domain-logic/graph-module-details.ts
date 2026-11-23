@@ -13,7 +13,7 @@ import type {
 } from '../common/module-details.type.ts';
 import { closestButtonOf } from '../utils/closest-button.util.ts';
 import { modeFocusOf } from '../utils/mode-focus.util.ts';
-import { focusKeyOf, focusTargetOf, isFocusedOf, twinOf } from '../utils/module-details-focus.util.ts';
+import { focusKeyOf, focusTargetOf, isFocusedOf, isSelectionOf, refocusOf } from '../utils/module-details-focus.util.ts';
 
 type RowsByButton = Map<HTMLButtonElement, ImportRowElements>;
 
@@ -32,9 +32,6 @@ const rowsOf = (elements: ModuleDetailsElements): RowsByButton => {
 
   return new Map(pairs);
 };
-
-/** A file, stub or link is a selection: Clear selection acts on it and the Details bar shows its name. */
-const isSelectionOf = (view: ModuleDetailsView): boolean => view.kind !== 'empty' && view.kind !== 'loading';
 
 /** The Details bar summary: the path, package name or link title; empty while nothing is selected. */
 const summaryOf = (view: ModuleDetailsView): string => {
@@ -99,18 +96,22 @@ export class GraphModuleDetails {
     if (hadFocus) modeFocusOf(page).focus();
   }
 
-  /** Shows `view` in place of the shown one; keyboard focus inside the old view moves to its twin in `view`, if any. */
+  /**
+   * Shows `view` in place of the shown one; keyboard focus inside the old view moves to its twin in `view`, and focus on
+   * Clear selection, which hides with nothing selected, moves to the new view's heading. Other focus stays.
+   */
   public show(view: ModuleDetailsView): void {
-    const key = focusKeyOf(this.draw.elements, document.activeElement);
+    const { activeElement } = document;
+    const key = focusKeyOf(this.draw.elements, activeElement);
+    const isSelection = isSelectionOf(view);
+    const isClearHiding = !isSelection && activeElement === this.deps.page.clear;
 
     this.draw = this.drawn(view);
     this.renderBar();
 
-    if (key === null) return;
+    const target = refocusOf(this.draw.elements, key, isClearHiding);
 
-    const twin = twinOf(this.draw.elements, key);
-
-    twin?.focus();
+    target?.focus();
   }
 
   /** Keeps the saved focus; a shown file or stub whose Focus face changes with it is shown again. */

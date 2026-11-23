@@ -63,12 +63,17 @@ describe('FEATURE: module Details views', () => {
     it('WHEN the empty view is built THEN it reads the empty hint and has no block and no Focus', () => {
       const elements = buildModuleDetailsView({ kind: 'empty' }, false);
 
-      expect([textsWith(elements.root, 'details-lead'), elements.focus, elements.heading, elements.blocks]).toStrictEqual([
+      expect([textsWith(elements.root, 'details-lead'), elements.focus, elements.blocks]).toStrictEqual([
         ['Select a file, package or link to see its imports.'],
-        null,
         null,
         []
       ]);
+    });
+
+    it('WHEN the empty view is built THEN its hint is the heading, which focus can land on (tabIndex -1)', () => {
+      const elements = buildModuleDetailsView({ kind: 'empty' }, false);
+
+      expect([elements.heading.className, elements.heading.tabIndex]).toStrictEqual(['details-lead', -1]);
     });
 
     it('WHEN the loading view of web is built THEN it reads "Scanning web…"', () => {
@@ -82,7 +87,7 @@ describe('FEATURE: module Details views', () => {
       const blockRoots = elements.blocks.map((block) => block.details.root);
       const [, ...belowTitle] = Array.from(elements.root.children);
 
-      expect([elements.root.dataset['view'], elements.heading?.textContent, elements.heading?.tabIndex]).toStrictEqual([
+      expect([elements.root.dataset['view'], elements.heading.textContent, elements.heading.tabIndex]).toStrictEqual([
         'file',
         'src/a.ts',
         -1
@@ -100,7 +105,7 @@ describe('FEATURE: module Details views', () => {
     it('WHEN a stub view is built THEN it has Focus and only the importedBy block', () => {
       const elements = buildModuleDetailsView(STUB_X_VIEW_STUB, false);
 
-      expect([elements.heading?.textContent, focusTextOf(elements), listsOf(elements)]).toStrictEqual([
+      expect([elements.heading.textContent, focusTextOf(elements), listsOf(elements)]).toStrictEqual([
         '@s/x',
         ['Focus'],
         ['importedBy']
@@ -110,7 +115,7 @@ describe('FEATURE: module Details views', () => {
     it('WHEN a link view is built THEN its heading is the title, there is no Focus, and its one block is listed as imports', () => {
       const elements = buildModuleDetailsView(LINK_A_B_VIEW_STUB, true);
 
-      expect([elements.heading?.textContent, elements.focus, listsOf(elements)]).toStrictEqual([
+      expect([elements.heading.textContent, elements.focus, listsOf(elements)]).toStrictEqual([
         'src/a.ts → src/b.ts',
         null,
         ['imports']

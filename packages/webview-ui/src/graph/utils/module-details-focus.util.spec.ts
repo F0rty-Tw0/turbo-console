@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { focusKeyOf, focusTargetOf, isFocusedOf, twinOf } from './module-details-focus.util.ts';
+import { focusKeyOf, focusTargetOf, isFocusedOf, isSelectionOf, refocusOf, twinOf } from './module-details-focus.util.ts';
 import type { ImportGroupModel, ImportRowModel, ImportsViewModel } from '../common/details-imports.type.ts';
 import type { ImportsDetails } from '../common/details-view.type.ts';
 import type {
@@ -162,10 +162,26 @@ describe('FEATURE: module Details focus', () => {
   });
 
   describe('GIVEN the empty view', () => {
-    it('WHEN any key is matched THEN it has no twin', () => {
+    it('WHEN any key is matched THEN its hint, the heading, is the twin', () => {
       const elements = build({ kind: 'empty' });
 
-      expect([twinOf(elements, ROW_KEY), twinOf(elements, HEADING_KEY)]).toStrictEqual([null, null]);
+      expect([twinOf(elements, ROW_KEY), twinOf(elements, HEADING_KEY)]).toStrictEqual([elements.heading, elements.heading]);
+    });
+
+    it('WHEN Clear selection hides THEN the hint takes focus, else focus outside the old view stays', () => {
+      const elements = build({ kind: 'empty' });
+
+      expect([refocusOf(elements, null, true), refocusOf(elements, null, false)]).toStrictEqual([elements.heading, null]);
+    });
+
+    it('WHEN it or the loading view is read THEN neither is a selection, while a file view is', () => {
+      const loading: ModuleDetailsView = { kind: 'loading', packageName: 'web' };
+
+      expect([isSelectionOf({ kind: 'empty' }), isSelectionOf(loading), isSelectionOf(FILE_A_VIEW_STUB)]).toStrictEqual([
+        false,
+        false,
+        true
+      ]);
     });
   });
 });

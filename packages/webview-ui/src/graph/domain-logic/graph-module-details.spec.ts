@@ -1,36 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Mock, Mocked } from 'vitest';
 
 import { GraphModuleDetails } from './graph-module-details.ts';
-import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ImportsViewModel } from '../common/details-imports.type.ts';
-import type { ImportsDetails } from '../common/details-view.type.ts';
-import type { TaskModes } from '../common/graph-task.type.ts';
-import type {
-  ModuleDetailsActions,
-  ModuleDetailsDeps,
-  ModuleDetailsElements,
-  ModuleDetailsList,
-  ModuleDetailsView
-} from '../common/module-details.type.ts';
+import type { ModuleDetailsView } from '../common/module-details.type.ts';
+import type { ModuleDetailsRig } from '../test/common/graph-module-details.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { moduleDetailsViewsMock } from '../test/mocks/module-panel-views.mock.ts';
 import { FILE_A_VIEW_STUB, IMPORTED_BY_MODEL_STUB, IMPORTS_MODEL_STUB, STUB_X_VIEW_STUB } from '../test/stubs/module-details.stub.ts';
 import { textsWith } from '../test/utils/class-elements.spec.util.ts';
+import { blockOf, firstRowOf, focusOf, latestOf, moduleDetailsRigOf } from '../test/utils/graph-module-details.spec.util.ts';
 import { stubElementClass } from '../test/utils/graph-package-side.spec.util.ts';
 import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
-
-type ModuleDetailsRig = {
-  readonly deps: ModuleDetailsDeps;
-  readonly post: Mock<Bridge['post']>;
-  readonly savePanels: Mock<TaskModes['savePanels']>;
-  readonly actions: Mocked<ModuleDetailsActions>;
-  readonly panel: HTMLElement;
-  readonly packageAside: HTMLElement;
-  /** The views built so far, the latest last. */
-  readonly built: ModuleDetailsElements[];
-};
 
 const FRESH_WEB: ModulesViewState = freshModulesViewOf('web');
 
@@ -47,77 +27,6 @@ const FILE_A_SCANNING: ModuleDetailsView = {
   importedBy: IMPORTED_BY_MODEL_STUB
 };
 
-const latestOf = (built: ModuleDetailsElements[]): ModuleDetailsElements => {
-  const latest = built.at(-1);
-
-  if (latest === undefined) throw new Error('no module Details view was built');
-
-  return latest;
-};
-
-const blockOf = (elements: ModuleDetailsElements, list: ModuleDetailsList): ImportsDetails => {
-  const block = elements.blocks.find((each) => each.list === list);
-
-  if (block === undefined) throw new Error(`no ${list} block`);
-
-  return block.details;
-};
-
-/** The first row button of the view's Imports block: `src/b.ts` line 4. */
-const firstRowOf = (elements: ModuleDetailsElements): HTMLButtonElement => {
-  const [row] = blockOf(elements, 'imports').rows;
-
-  if (row === undefined) throw new Error('no import row');
-
-  return row.button;
-};
-
-const focusOf = (elements: ModuleDetailsElements): HTMLButtonElement => {
-  const { focus } = elements;
-
-  if (focus === null) throw new Error('no Focus button');
-
-  return focus;
-};
-
-const rigOf = (packageName: string | null, hasPackageAside = true): ModuleDetailsRig => {
-  const button = (): HTMLButtonElement => document.createElement('button');
-  const packageAside = document.createElement('aside');
-  const detailsBar = document.createElement('div');
-  const page = {
-    body: document.createElement('div'),
-    details: button(),
-    clear: button(),
-    detailsBar,
-    detailsSummary: document.createElement('span'),
-    packagesMode: button(),
-    modeGroup: document.createElement('div'),
-    controls: button()
-  };
-  const { views, panel, built } = moduleDetailsViewsMock();
-  const post = vi.fn<Bridge['post']>();
-  const savePanels = vi.fn<TaskModes['savePanels']>();
-  const actions: Mocked<ModuleDetailsActions> = { onClear: vi.fn(), onScanAgain: vi.fn(), onFocus: vi.fn(), onFold: vi.fn() };
-  const bridge = { post };
-  const modes = { savePanels };
-  const deps: ModuleDetailsDeps = {
-    page,
-    views,
-    bridge,
-    modes,
-    packageName: (): string | null => packageName,
-    packageAside: (): HTMLElement | null => (hasPackageAside ? packageAside : null),
-    actions
-  };
-  const rig: ModuleDetailsRig = { deps, post, savePanels, actions, panel: panel.panel, packageAside, built };
-
-  packageAside.id = 'graph-details';
-  packageAside.prepend(detailsBar);
-  page.body.append(packageAside);
-
-  return rig;
-};
-
 describe('FEATURE: module Details panel', () => {
   let rig: ModuleDetailsRig;
   let details: GraphModuleDetails;
@@ -125,7 +34,7 @@ describe('FEATURE: module Details panel', () => {
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
     stubElementClass();
-    rig = rigOf('web');
+    rig = moduleDetailsRigOf('web');
     details = new GraphModuleDetails(rig.deps);
   });
 
@@ -297,7 +206,7 @@ describe('FEATURE: module Details panel', () => {
 
   describe('GIVEN no package on screen', () => {
     beforeEach(() => {
-      rig = rigOf(null);
+      rig = moduleDetailsRigOf(null);
       details = new GraphModuleDetails(rig.deps);
       details.enter(true);
       details.show(FILE_A_VIEW_STUB);
@@ -312,7 +221,7 @@ describe('FEATURE: module Details panel', () => {
 
   describe('GIVEN no package Details aside built yet', () => {
     beforeEach(() => {
-      rig = rigOf('web', false);
+      rig = moduleDetailsRigOf('web', false);
       details = new GraphModuleDetails(rig.deps);
       details.enter(true);
     });

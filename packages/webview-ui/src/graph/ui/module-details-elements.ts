@@ -52,13 +52,15 @@ const rootOf = (kind: ModuleDetailsKind): HTMLElement => {
   return root;
 };
 
+/** The empty or loading lead, which stands as the heading (`tabIndex = -1`), so focus from a dropped view lands on it. */
 const leadViewOf = (kind: ModuleDetailsKind, text: string): ModuleDetailsElements => {
   const root = rootOf(kind);
   const lead = leadOf(text);
 
+  lead.tabIndex = -1;
   root.append(lead);
 
-  const elements: ModuleDetailsElements = { root, heading: null, focus: null, blocks: [] };
+  const elements: ModuleDetailsElements = { root, heading: lead, focus: null, blocks: [] };
 
   return elements;
 };

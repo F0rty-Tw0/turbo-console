@@ -238,13 +238,16 @@ test.describe('FEATURE: package modules panels', () => {
         await graphModuleDetails.expectTitle('lib');
       });
 
-      await test.step('WHEN Clear selection is pressed', async (): Promise<void> => graphDetailsBar.pressClear());
+      await test.step('WHEN Clear selection is pressed by key', async (): Promise<void> => graphDetailsBar.pressClearByKey());
 
       await test.step('THEN Details shows the empty hint, nothing more is asked and no selection is saved', async (): Promise<void> => {
         await graphModuleDetails.expectEmpty();
         await graphModuleSitesHost.expectSitesAsked([INDEX_ASK_STUB, LIB_ASK_STUB]);
         await graphModulesHost.expectModulesSaved({ selected: null });
       });
+
+      await test.step('AND keyboard focus moves from the hidden Clear selection to the empty hint', async (): Promise<void> =>
+        graphModuleDetails.expectEmptyFocused());
     }
   );
 

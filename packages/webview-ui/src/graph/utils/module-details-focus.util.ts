@@ -75,10 +75,9 @@ const rowTwinOf = (details: ImportsDetails | null, key: ModuleDetailsFocusKey): 
 
 /**
  * The element of `elements` that takes focus held at `key` in the view it replaced: the same row of the same list, else
- * the first row past the fold for Show more, else that list's Scan again, else Focus, else the heading; `null` when the
- * view draws none of them.
+ * the first row past the fold for Show more, else that list's Scan again, else Focus, else the heading.
  */
-export const twinOf = (elements: ModuleDetailsElements, key: ModuleDetailsFocusKey): HTMLElement | null => {
+export const twinOf = (elements: ModuleDetailsElements, key: ModuleDetailsFocusKey): HTMLElement => {
   const { focus, heading } = elements;
 
   if (key.part === 'heading') return heading;
@@ -86,7 +85,26 @@ export const twinOf = (elements: ModuleDetailsElements, key: ModuleDetailsFocusK
   const details = blockDetailsOf(elements, key.list);
   const row = rowTwinOf(details, key);
   const scanAgain = details?.scanAgain ?? null;
-  const candidates = [row, scanAgain, focus, heading];
+  const candidates = [row, scanAgain, focus];
 
-  return candidates.find((candidate) => candidate !== null) ?? null;
+  return candidates.find((candidate) => candidate !== null) ?? heading;
+};
+
+/** A file, stub or link is a selection: Clear selection acts on it and the Details bar shows its name. */
+export const isSelectionOf = (view: ModuleDetailsView): boolean => view.kind !== 'empty' && view.kind !== 'loading';
+
+/**
+ * What takes focus once `elements` replaces a view: the twin of `key`, focus held in the old view, or the heading when
+ * Clear selection held it and hides; `null` keeps focus where it is.
+ */
+export const refocusOf = (
+  elements: ModuleDetailsElements,
+  key: ModuleDetailsFocusKey | null,
+  isClearHiding: boolean
+): HTMLElement | null => {
+  if (isClearHiding) return elements.heading;
+
+  if (key === null) return null;
+
+  return twinOf(elements, key);
 };
