@@ -15,9 +15,11 @@ describe('FEATURE: viewHandlersOf in modules mode', () => {
     let selectTask: Mock<(id: string) => void>;
     let modules: Mocked<HandledModules>;
     let handlers: GraphViewHandlers;
+    let isTaskMode: boolean;
 
     beforeEach((): void => {
       calls = [];
+      isTaskMode = false;
       tap = vi.fn<(input: InspectionInput) => void>();
       toggle = vi.fn<(folder: string) => void>();
       taskSaveCamera = vi.fn<() => void>();
@@ -44,7 +46,7 @@ describe('FEATURE: viewHandlersOf in modules mode', () => {
       const selection = { tapNode: selectTask, clear: vi.fn(), rendered: record('task rendered'), keepClear: vi.fn(), hover: vi.fn() };
       const atoms = { toggle: vi.fn(), rendered: record('atoms rendered') };
       const layout = { atoms, dragged: vi.fn() };
-      const tasks = { isActive: (): boolean => false, saveCamera: taskSaveCamera, selection, layout };
+      const tasks = { isActive: (): boolean => isTaskMode, saveCamera: taskSaveCamera, selection, layout };
       const flow = { viewportChanged: record('flow cleared') };
 
       modules = {
@@ -96,10 +98,12 @@ describe('FEATURE: viewHandlersOf in modules mode', () => {
       expect(toggle).not.toHaveBeenCalled();
     });
 
-    it('WHEN a task id is tapped THEN task mode selects nothing', () => {
+    it('WHEN task mode also reads active and a task id is tapped THEN modules mode gets it and task mode selects nothing', () => {
+      isTaskMode = true;
+
       handlers.onTapNode('web#build');
 
-      expect(selectTask).not.toHaveBeenCalled();
+      expect([modules.tapNode.mock.calls, selectTask.mock.calls]).toStrictEqual([[['web#build']], []]);
     });
 
     it('WHEN a frame renders THEN the frame clock marks it and neither side renders', () => {
