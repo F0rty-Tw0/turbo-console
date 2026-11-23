@@ -6,9 +6,6 @@ const MODULES = { description: '2026-11-22-package-modules-graph spec 7.4', type
 
 const GRAPH_ID = 'dir:src/graph';
 
-/** The expanded folders: the package root, src, and src/graph. Links enter these; they must not cross any other card. */
-const BOX_IDS = ['dir:', 'dir:src', GRAPH_ID];
-
 const LAYERS = ['common', 'data-access', 'domain-logic', 'feature', 'test', 'ui', 'utils'];
 
 const LAYER_IDS = LAYERS.map((name): string => `${GRAPH_ID}/${name}`);
@@ -35,11 +32,11 @@ const DENSE_IDS = [...SRC_IDS, GRAPH_ID, 'file:src/graph/graph.ts', ...LAYER_IDS
 /** The links `MODULES_DENSE_STUB` rolls up to between the cards drawn with src/graph expanded. */
 const DENSE_LINK_COUNT = 33;
 
-test.describe('FEATURE: package modules link routes', () => {
+test.describe('FEATURE: package modules links draw as plain lines', () => {
   test(
-    'GIVEN a dense package with its graph folder expanded, every link runs on its ELK route and crosses no card but its ends',
+    'GIVEN a dense package with its graph folder expanded, every link is a bezier at card depth, as a package edge',
     { annotation: MODULES },
-    async ({ graphCanvas, graphHost, graphList, graphModules, graphModulesHost, graphModulesRoutes, graphPage }): Promise<void> => {
+    async ({ graphCanvas, graphHost, graphList, graphModules, graphModulesHost, graphModulesLinks, graphPage }): Promise<void> => {
       await test.step('WHEN the dense app is shown in modules mode', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(TASK_MODE_STATE_STUB);
@@ -59,11 +56,8 @@ test.describe('FEATURE: package modules link routes', () => {
       await test.step('THEN its seven layer folders are drawn as cards inside it', async (): Promise<void> =>
         graphModules.expectIds(DENSE_IDS));
 
-      await test.step('AND every link is drawn on its route', async (): Promise<void> =>
-        graphModulesRoutes.expectEveryLinkRouted(DENSE_LINK_COUNT));
-
-      await test.step('AND no link crosses a card that is neither of its ends', async (): Promise<void> =>
-        graphModulesRoutes.expectNoLinkThroughCards(BOX_IDS));
+      await test.step('AND every link is drawn as a plain bezier at card depth', async (): Promise<void> =>
+        graphModulesLinks.expectEveryLinkPlain(DENSE_LINK_COUNT));
     }
   );
 });

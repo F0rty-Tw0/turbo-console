@@ -1,7 +1,7 @@
 import { D9_IDS } from './common/graph-modules.const.ts';
 import { test as base } from './graph-task.fixture.ts';
 import { GraphModulesHost } from './pages/graph-modules-host.po.ts';
-import { GraphModulesRoutes } from './pages/graph-modules-routes.po.ts';
+import { GraphModulesLinks } from './pages/graph-modules-links.po.ts';
 import { GraphModulesTiming } from './pages/graph-modules-timing.po.ts';
 import { GraphModulesPage } from './pages/graph-modules.po.ts';
 import { MODULES_APP_STUB } from './test/stubs/graph-modules.stub.ts';
@@ -13,12 +13,12 @@ type ShownModules = () => Promise<void>;
 type GraphModulesFixtures = {
   readonly graphModules: GraphModulesPage;
   readonly graphModulesHost: GraphModulesHost;
-  readonly graphModulesRoutes: GraphModulesRoutes;
+  readonly graphModulesLinks: GraphModulesLinks;
   readonly graphModulesTiming: GraphModulesTiming;
   readonly shownModules: ShownModules;
 };
 
-/** The task fixtures plus modules mode's page parts, its host side, its link routes and the reply-to-frame timing. */
+/** The task fixtures plus modules mode's page parts, its host side, its drawn links and the reply-to-frame timing. */
 export const test = base.extend<GraphModulesFixtures>({
   graphModules: async ({ page }, use): Promise<void> => {
     await use(new GraphModulesPage(page));
@@ -26,8 +26,8 @@ export const test = base.extend<GraphModulesFixtures>({
   graphModulesHost: async ({ page }, use): Promise<void> => {
     await use(new GraphModulesHost(page));
   },
-  graphModulesRoutes: async ({ page }, use): Promise<void> => {
-    await use(new GraphModulesRoutes(page));
+  graphModulesLinks: async ({ page }, use): Promise<void> => {
+    await use(new GraphModulesLinks(page));
   },
   graphModulesTiming: async ({ page }, use): Promise<void> => {
     await use(new GraphModulesTiming(page));
