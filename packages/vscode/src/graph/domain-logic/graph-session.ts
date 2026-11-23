@@ -195,6 +195,9 @@ export class GraphSession {
         await this.images.save(message.png);
 
         return;
+      case 'scanModuleSites':
+        // The host schema has no `scanModuleSites` yet, so a parsed message never carries this type.
+        return;
     }
   }
 

@@ -9,6 +9,7 @@ import {
   isRunsRecord,
   isTaskIdList
 } from './graph-task-shape.util.ts';
+import { isModuleSitesMessage } from './module-sites.util.ts';
 import { isPackageModules } from './package-modules.util.ts';
 import type { UnknownRecord } from '../../bridge/common/bridge.type.ts';
 import { TASK_COUNT_MAX } from '../../bridge/common/graph-message.const.ts';
@@ -107,6 +108,8 @@ const isModulesMessage = (value: UnknownRecord): boolean => {
       return isPackageModules(value);
     case 'showModules':
       return isString(value['name']);
+    case 'moduleSites':
+      return isModuleSitesMessage(value);
     default:
       return false;
   }
@@ -117,7 +120,8 @@ const isModulesMessage = (value: UnknownRecord): boolean => {
  * task count, each edge end, each task's fields, each atom group's files and the two shown flags; to an `edgeExplained` or
  * `edgeImports` message by its names and whole result; to a `runs` message by its run states, its optional owners and its optional elapsed; to a
  * `showTasks` message by its task ids; to a `showPackage` or `showModules` message by its package name; to a `packageModules`
- * message by its package name and whole result, down to every index, count and cap; or to an `atoms` message by its counts
+ * message by its package name and whole result, down to every index, count and cap; to a `moduleSites` message by its package
+ * name, both ends and whole result, down to every site; or to an `atoms` message by its counts
  * numbers and the four outcome words. Anything else is ignored. The payload itself comes from the extension host, which builds it.
  */
 export const isGraphHostMessage = (value: unknown): value is GraphHostMessage => {

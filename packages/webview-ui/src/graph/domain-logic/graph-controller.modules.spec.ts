@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGraphController } from './graph-controller.ts';
 import { GraphModuleMode } from './graph-module-mode.ts';
+import type { GraphModuleSitesMessage, ModuleEnd } from '../../bridge/common/graph-module-sites.type.ts';
 import type { GraphPackageModulesMessage } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphViewState, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { MODULES_DROPPED_WARNING, MODULES_MODE_CLASS, SHOW_MODULES_LABEL } from '../common/graph-module.const.ts';
@@ -10,6 +11,7 @@ import type { MenuElements, MenuItemModel } from '../common/widget-menu.type.ts'
 import type { RectPx, WidgetRects, WidgetViews } from '../common/widget.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
+import { MODULE_SITES_FOUND_STUB } from '../test/stubs/graph-host-message.stub.ts';
 import { FLAT_POSITIONS_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
@@ -26,6 +28,16 @@ const FRESH_WEB: ModulesViewState = freshModulesViewOf('web');
 const SAVED_ON_WEB: GraphViewState = { ...FRESH_STATE, mode: 'modules', modules: FRESH_WEB };
 
 const WEB_FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
+
+const FROM_A: ModuleEnd = { kind: 'file', path: 'src/a.ts' };
+
+const WEB_SITES: GraphModuleSitesMessage = {
+  type: 'moduleSites',
+  packageName: 'web',
+  from: FROM_A,
+  to: null,
+  result: MODULE_SITES_FOUND_STUB
+};
 
 /** The selected package's drawn rect, so a menu opened without a shown "…" has somewhere to anchor. */
 const WEB_RECT: RectPx = { x1: 0, y1: 0, x2: 100, y2: 32 };
@@ -104,6 +116,15 @@ describe('FEATURE: createGraphController modules messages', () => {
       controller.receive({ type: 'showModules' });
 
       expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('WHEN a valid moduleSites answer arrives THEN the modules mode does not receive it', () => {
+      const received = vi.spyOn(GraphModuleMode.prototype, 'receive');
+      const controller = createGraphController(mock.deps);
+
+      controller.receive(WEB_SITES);
+
+      expect(received).not.toHaveBeenCalled();
     });
   });
 

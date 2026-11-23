@@ -71,6 +71,15 @@ export type {
 } from './bridge/common/graph-modules.type.ts';
 
 export type {
+  GraphModuleSitesMessage,
+  GraphScanModuleSitesMessage,
+  ModuleEnd,
+  ModuleSite,
+  ModuleSitesFound,
+  ModuleSitesResult
+} from './bridge/common/graph-module-sites.type.ts';
+
+export type {
   EdgeRoute,
   GraphAtomFile,
   GraphAtomGroup,

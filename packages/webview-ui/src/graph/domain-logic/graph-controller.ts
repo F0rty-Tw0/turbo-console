@@ -113,6 +113,7 @@ class GraphPageController {
     this.clock.shown();
   }
 
+  // eslint-disable-next-line complexity -- one flat case per host message type, kept exhaustive by switch-exhaustiveness-check.
   private route(message: GraphHostMessage, at: number): void {
     switch (message.type) {
       case 'state':
@@ -139,6 +140,9 @@ class GraphPageController {
       case 'packageModules':
       case 'showModules':
         this.modules.receive(message, at);
+        break;
+      case 'moduleSites':
+        // Nothing on the page shows module sites yet, so the answer is dropped.
         break;
     }
   }

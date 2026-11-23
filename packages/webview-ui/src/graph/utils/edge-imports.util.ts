@@ -11,11 +11,14 @@ import { isCount, isManifestLine } from '../../bridge/utils/number.util.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
 import { isShortString, isString } from '../../bridge/utils/string.util.ts';
 
-const isWordOf = (table: Readonly<Record<string, true>>, value: unknown): boolean => isString(value) && Object.hasOwn(table, value);
+/** Whether `value` is one of the words `table` keys. */
+export const isWordOf = (table: Readonly<Record<string, true>>, value: unknown): boolean => isString(value) && Object.hasOwn(table, value);
 
-const isLimit = (limit: unknown): boolean => limit === null || isWordOf(IMPORT_LIMITS, limit);
+/** Whether `limit` is `null` or one of the `IMPORT_LIMITS` words. */
+export const isLimit = (limit: unknown): boolean => limit === null || isWordOf(IMPORT_LIMITS, limit);
 
-const isFile = (file: unknown): boolean => isShortString(file, MANIFEST_FILE_MAX) && file !== '';
+/** Whether `file` is a non-empty path of at most `MANIFEST_FILE_MAX` characters. */
+export const isFile = (file: unknown): boolean => isShortString(file, MANIFEST_FILE_MAX) && file !== '';
 
 const isSite = (value: unknown): boolean => {
   if (!isRecord(value)) return false;

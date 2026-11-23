@@ -1,9 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import { isGraphHostMessage } from './graph-host-message.util.ts';
-import { MODULES_FOUND_STUB } from '../test/stubs/graph-host-message.stub.ts';
+import { MODULES_FOUND_STUB, MODULE_SITES_FOUND_STUB } from '../test/stubs/graph-host-message.stub.ts';
 
 const REPEATED_TESTS = { ...MODULES_FOUND_STUB, tests: [1, 1] };
+
+const FROM_FILE = { kind: 'file', path: 'src/a.ts' };
+
+const FOUND_SITES_MESSAGE = { type: 'moduleSites', packageName: 'web', from: FROM_FILE, to: null, result: MODULE_SITES_FOUND_STUB };
+
+const DIR_TARGET = { kind: 'dir', path: 'src' };
+
+const DIR_TARGET_SITE = { ...MODULE_SITES_FOUND_STUB.imports[0], target: DIR_TARGET };
+
+const DIR_TARGET_RESULT = { ...MODULE_SITES_FOUND_STUB, imports: [DIR_TARGET_SITE] };
+
+const DIR_TARGET_MESSAGE = { ...FOUND_SITES_MESSAGE, result: DIR_TARGET_RESULT };
 
 const FOUND_MODULES_MESSAGE = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
 
@@ -19,6 +31,20 @@ describe('FEATURE: isGraphHostMessage, package modules', () => {
 
     it('WHEN its test indexes repeat THEN it is rejected', () => {
       const isMessage = isGraphHostMessage(REPEATED_TESTS_MESSAGE);
+
+      expect(isMessage).toBe(false);
+    });
+  });
+
+  describe('GIVEN a moduleSites message', () => {
+    it('WHEN it carries a found result THEN it is accepted', () => {
+      const isMessage = isGraphHostMessage(FOUND_SITES_MESSAGE);
+
+      expect(isMessage).toBe(true);
+    });
+
+    it('WHEN a site targets a dir THEN it is rejected', () => {
+      const isMessage = isGraphHostMessage(DIR_TARGET_MESSAGE);
 
       expect(isMessage).toBe(false);
     });

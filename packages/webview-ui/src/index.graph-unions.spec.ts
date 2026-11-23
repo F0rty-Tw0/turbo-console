@@ -4,6 +4,7 @@ import type {
   GraphAtomsMessage,
   GraphEdgeImportsMessage,
   GraphHostMessage,
+  GraphModuleSitesMessage,
   GraphPackageModulesMessage,
   GraphRunsMessage,
   GraphShowModulesMessage,
@@ -50,6 +51,7 @@ describe('FEATURE: webview-ui package entry, graph message unions', () => {
         | GraphAtomsMessage
         | GraphPackageModulesMessage
         | GraphShowModulesMessage
+        | GraphModuleSitesMessage
       >();
       expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<
         | 'ready'
@@ -68,6 +70,7 @@ describe('FEATURE: webview-ui package entry, graph message unions', () => {
         | 'shownTaskPackages'
         | 'setViewToggle'
         | 'scanModules'
+        | 'scanModuleSites'
       >();
     });
   });
