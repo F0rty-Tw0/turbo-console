@@ -44,8 +44,9 @@ const blendOf = (foreground: Rgba, background: Rgba, opacity: number): Rgba => {
 const byteOf = (unit: number): number => Math.round(unit * 255);
 
 /**
- * `colour` laid over the opaque `background` as an opaque `rgb()`, since Cytoscape drops a fill's own alpha; an opaque
- * colour, or a pair that does not parse, is kept as given.
+ * `colour` laid over the opaque `background` as an opaque `rgb()`: Cytoscape 3.35 draws a colour's own alpha, but the
+ * graph keeps the theme's opaque look, as VS Code itself shows it; an opaque colour, or a pair that does not parse, is
+ * kept as given.
  */
 export const opaqueColourOf = (colour: string, background: string): string => {
   const foreground = rgbaOf(colour);

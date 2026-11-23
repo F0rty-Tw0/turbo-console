@@ -20,7 +20,8 @@ const cytoscapeColourOf = (value: string): string => {
 
 /**
  * The list's active selection as a selected node's fill and label; `null` unless the theme sets both. A fill with alpha,
- * as Dark 2026 and Light 2026 set, is laid over `background` first, since Cytoscape would paint it opaque.
+ * as Dark 2026 and Light 2026 set, is laid over `background` first: Cytoscape 3.35 draws its alpha, but the graph keeps
+ * the theme's opaque look, as VS Code itself shows the selection.
  */
 const selectionOf = (fill: string, label: string, background: string): SelectionColors | null => {
   const isUnset = fill === '' || label === '';
