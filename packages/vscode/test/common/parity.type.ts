@@ -18,8 +18,12 @@ export type ProcessExit = {
   readonly code: number | undefined;
 };
 
-/** What the suite saw of one run all task: the args of its process once it started, its exit once it ended. */
+/**
+ * What the suite saw of one run all task: whether VS Code started the task, the args of its process once it started,
+ * its exit once it ended.
+ */
 export type AllRunWatch = {
+  readonly isTaskStarted: () => boolean;
   readonly startedArgs: () => string[] | null;
   readonly exit: () => ProcessExit | null;
   readonly dispose: () => void;
