@@ -11,6 +11,7 @@ const PACKAGE_ITEMS: [string, GraphIconId][] = [
   ['View Package Details', 'file-text'],
   ['Focus', 'target'],
   ['Start trace', 'git-commit'],
+  ['Show modules', 'list-tree'],
   ['Exclude', 'eye-closed']
 ];
 
@@ -25,7 +26,7 @@ test.describe('FEATURE: widget menu icons', () => {
         await graphMenus.openPackageMenu('web');
       });
 
-      await test.step('THEN it lists View Package Details, Focus, Start trace and Exclude', async (): Promise<void> =>
+      await test.step('THEN it lists View Package Details, Focus, Start trace, Show modules and Exclude', async (): Promise<void> =>
         graphMenus.expectItems(PACKAGE_ITEMS.map(([name]): string => name)));
 
       for (const [name, id] of PACKAGE_ITEMS) {

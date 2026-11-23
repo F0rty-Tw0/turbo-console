@@ -17,7 +17,7 @@ const typescriptFiles = {
 
 /**
  * webview-ui code is for the webview page; the extension bundle may take its types, the two HTML-shell helpers, the two
- * pure duration formatters, the pure hidden-scripts hint and the icon-id pattern, tool-icon prefix and graph limit, import-site cap, layout version and route bend limit constants only.
+ * pure duration formatters, the pure hidden-scripts hint and the icon-id pattern, tool-icon prefix and graph limit, import-site cap, module caps, layout version and route bend limit constants only.
  */
 const webviewHostImports: FlatConfig.Config = {
   name: 'vscode/webview-host-imports',
@@ -39,6 +39,9 @@ const webviewHostImports: FlatConfig.Config = {
               'MANIFEST_FIELDS',
               'MANIFEST_FILE_MAX',
               'MANIFEST_LINE_MAX',
+              'MODULE_FILES_MAX',
+              'MODULE_LINKS_MAX',
+              'MODULE_STUB_NAME_MAX',
               'ROOT_TASKS_TITLE',
               'ROOT_TASK_PACKAGE',
               'ROUTE_BENDS_MAX',
@@ -55,7 +58,7 @@ const webviewHostImports: FlatConfig.Config = {
               'webviewCsp'
             ],
             message:
-              'Types, HTML-shell helpers, pure text formatters, the edge-id function and the icon-id pattern, tool-icon prefix and graph limit, import-site cap, layout version and route bend limit constants only: webview code must not enter the extension bundle.'
+              'Types, HTML-shell helpers, pure text formatters, the edge-id function and the icon-id pattern, tool-icon prefix and graph limit, import-site cap, module caps, layout version and route bend limit constants only: webview code must not enter the extension bundle.'
           }
         ]
       }

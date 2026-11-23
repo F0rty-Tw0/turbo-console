@@ -3,6 +3,7 @@ import type { Locator } from '@playwright/test';
 import { expect, test } from './graph-task.fixture.ts';
 import { TASK_MODE_NEW_HASH_STUB, TASK_MODE_STATE_STUB } from './test/stubs/graph-task-mode.stub.ts';
 import { EXCLUDE_LABEL, FOCUS_LABEL, START_TRACE_LABEL } from '../src/graph/common/details.const.ts';
+import { SHOW_MODULES_LABEL } from '../src/graph/common/graph-module.const.ts';
 import { SHOW_TASKS_LABEL } from '../src/graph/common/graph-task.const.ts';
 
 const D5 = { description: 'M5-1 U3d1 D5', type: 'requirement' };
@@ -12,11 +13,12 @@ const PACKAGES = ['app', 'lib', 'ui'];
 /** Rendering rounds a grid track to a sub-pixel, so two equal columns may differ by a fraction. */
 const TOLERANCE = 1;
 
-const TWO_BY_TWO = { focusOverStartTrace: true, excludeOverShowTasks: true, isSameWidth: true, isStartTraceBelow: true };
+const TWO_BY_TWO = { focusOverStartTrace: true, excludeOverFourth: true, isSameWidth: true, isStartTraceBelow: true };
 
-const ORPHAN_SPAN = { isFocusBesideExclude: true, isStartTraceRowWide: true, isStartTraceBelow: true };
+const ORPHAN_SPAN = { isFirstBesideSecond: true, isLastRowWide: true, isLastBelow: true };
 
-const SHARED_ROW = { isStartTraceBesideExclude: true, isSameWidth: true };
+/** The three buttons left shown once Focus is hidden too, in grid order. */
+const SHIFTED_LABELS: [string, string, string] = [EXCLUDE_LABEL, START_TRACE_LABEL, SHOW_MODULES_LABEL];
 
 /** The Details panel's button named exactly `name`. */
 type ButtonOf = (name: string) => Locator;
@@ -39,42 +41,31 @@ const boxOf = async (buttonOf: ButtonOf, name: string): Promise<Box> => {
   return box;
 };
 
-/** Four buttons in two equal columns: Focus over Start trace, Exclude over Show tasks. */
-const twoByTwoOf = async (buttonOf: ButtonOf): Promise<Checks> => {
+/** Four buttons in two equal columns: Focus over Start trace, Exclude over the fourth, Show tasks unless named. */
+const twoByTwoOf = async (buttonOf: ButtonOf, fourthLabel = SHOW_TASKS_LABEL): Promise<Checks> => {
   const focus = await boxOf(buttonOf, FOCUS_LABEL);
   const exclude = await boxOf(buttonOf, EXCLUDE_LABEL);
   const startTrace = await boxOf(buttonOf, START_TRACE_LABEL);
-  const showTasks = await boxOf(buttonOf, SHOW_TASKS_LABEL);
-  const widths = [exclude.width, startTrace.width, showTasks.width];
+  const fourth = await boxOf(buttonOf, fourthLabel);
+  const widths = [exclude.width, startTrace.width, fourth.width];
   const isSameWidth = widths.every((width) => isNear(width, focus.width));
   const focusOverStartTrace = isNear(focus.x, startTrace.x);
-  const excludeOverShowTasks = isNear(exclude.x, showTasks.x);
-  const checks: Checks = { focusOverStartTrace, excludeOverShowTasks, isSameWidth, isStartTraceBelow: startTrace.y > focus.y };
+  const excludeOverFourth = isNear(exclude.x, fourth.x);
+  const checks: Checks = { focusOverStartTrace, excludeOverFourth, isSameWidth, isStartTraceBelow: startTrace.y > focus.y };
 
   return checks;
 };
 
-/** Three buttons: Focus and Exclude share the first row, Start trace spans both columns below them. */
-const orphanSpanOf = async (buttonOf: ButtonOf): Promise<Checks> => {
-  const focus = await boxOf(buttonOf, FOCUS_LABEL);
-  const exclude = await boxOf(buttonOf, EXCLUDE_LABEL);
-  const startTrace = await boxOf(buttonOf, START_TRACE_LABEL);
-  const rowWidth = exclude.x + exclude.width - focus.x;
-  const isFocusBesideExclude = isNear(focus.y, exclude.y);
-  const isStartTraceRowWide = isNear(startTrace.width, rowWidth);
-  const checks: Checks = { isFocusBesideExclude, isStartTraceRowWide, isStartTraceBelow: startTrace.y > focus.y };
-
-  return checks;
-};
-
-/** Two shown buttons, Exclude then Start trace: an even count, so Start trace keeps its column beside Exclude. */
-const sharedRowOf = async (buttonOf: ButtonOf): Promise<Checks> => {
-  const exclude = await boxOf(buttonOf, EXCLUDE_LABEL);
-  const startTrace = await boxOf(buttonOf, START_TRACE_LABEL);
-  const checks: Checks = {
-    isStartTraceBesideExclude: isNear(exclude.y, startTrace.y),
-    isSameWidth: isNear(exclude.width, startTrace.width)
-  };
+/** Three shown buttons: the first two share the first row, the last spans both columns below them. */
+const orphanSpanOf = async (buttonOf: ButtonOf, labels: [string, string, string]): Promise<Checks> => {
+  const [firstLabel, secondLabel, lastLabel] = labels;
+  const first = await boxOf(buttonOf, firstLabel);
+  const second = await boxOf(buttonOf, secondLabel);
+  const last = await boxOf(buttonOf, lastLabel);
+  const rowWidth = second.x + second.width - first.x;
+  const isFirstBesideSecond = isNear(first.y, second.y);
+  const isLastRowWide = isNear(last.width, rowWidth);
+  const checks: Checks = { isFirstBesideSecond, isLastRowWide, isLastBelow: last.y > first.y };
 
   return checks;
 };
@@ -86,7 +77,7 @@ const hideButton = async (button: Locator): Promise<void> => {
 
 test.describe('FEATURE: Details package buttons in one grid', () => {
   test(
-    'GIVEN app, a package with tasks, picked, its four action buttons sit in two equal columns',
+    'GIVEN app, a package with tasks, picked, its first four action buttons sit in two equal columns',
     { annotation: D5 },
     async ({ graphDetailsCard, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
       const buttonOf = (name: string): Locator => graphDetailsCard.button(name);
@@ -106,7 +97,7 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
   );
 
   test(
-    'GIVEN docs, a package with no task, picked, Start trace spans the row under Focus and Exclude',
+    'GIVEN docs, a package with no task, picked, Start trace sits beside Show modules under Focus and Exclude',
     { annotation: D5 },
     async ({ graphDetailsCard, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
       const buttonOf = (name: string): Locator => graphDetailsCard.button(name);
@@ -121,14 +112,17 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
 
       await test.step('THEN Show tasks is hidden', async (): Promise<void> => expect(showTasks).toBeHidden());
 
-      await test.step('AND Start trace is as wide as Focus and Exclude together, on its own row', async (): Promise<void> =>
-        expect.poll(async (): Promise<Checks> => orphanSpanOf(buttonOf)).toStrictEqual(ORPHAN_SPAN));
+      await test.step('AND Focus sits over Start trace and Exclude over Show modules, all four as wide', async (): Promise<void> =>
+        expect.poll(async (): Promise<Checks> => twoByTwoOf(buttonOf, SHOW_MODULES_LABEL)).toStrictEqual(TWO_BY_TWO));
 
       await test.step('WHEN Focus is hidden as well, before the hidden Show tasks', async (): Promise<void> =>
         hideButton(buttonOf(FOCUS_LABEL)));
 
-      await test.step('THEN Start trace, the second shown button, sits beside Exclude at its width', async (): Promise<void> =>
-        expect.poll(async (): Promise<Checks> => sharedRowOf(buttonOf)).toStrictEqual(SHARED_ROW));
+      await test.step('THEN Exclude and Start trace share the first row and Show modules spans the row below', async (): Promise<void> => {
+        const shifted = async (): Promise<Checks> => orphanSpanOf(buttonOf, SHIFTED_LABELS);
+
+        await expect.poll(shifted).toStrictEqual(ORPHAN_SPAN);
+      });
     }
   );
 

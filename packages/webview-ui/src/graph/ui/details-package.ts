@@ -6,6 +6,7 @@ import type { NeighbourItem, PackageDetails } from '../common/details-view.type.
 import { EXCLUDE_LABEL, NONE_TEXT, NO_TAGS_TEXT, START_TRACE_LABEL, START_TRACE_TITLE } from '../common/details.const.ts';
 import type { NeighbourModel, PackageViewModel } from '../common/details.type.ts';
 import { ACTION_ICONS } from '../common/graph-icon.const.ts';
+import { SHOW_MODULES_LABEL } from '../common/graph-module.const.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
 import { TAGS_LABEL } from '../common/graph.const.ts';
 import {
@@ -33,6 +34,7 @@ type PackageActions = {
   readonly exclude: HTMLButtonElement;
   readonly startTrace: HTMLButtonElement;
   readonly showTasks: HTMLButtonElement;
+  readonly showModules: HTMLButtonElement;
 };
 
 const tagOf = (tag: string): HTMLElement => textElement('li', 'details-tag', tag);
@@ -70,14 +72,15 @@ const actionsOf = (model: PackageViewModel): PackageActions => {
   const exclude = iconTextButton(ACTION_ICONS.exclude, EXCLUDE_LABEL, EXCLUDE_LABEL);
   const startTrace = iconTextButton(ACTION_ICONS.startTrace, START_TRACE_LABEL, START_TRACE_TITLE);
   const showTasks = iconTextButton(ACTION_ICONS.showTasks, SHOW_TASKS_LABEL, SHOW_TASKS_LABEL);
+  const showModules = iconTextButton(ACTION_ICONS.showModules, SHOW_MODULES_LABEL, SHOW_MODULES_LABEL);
   const row = textElement('div', 'details-row', '');
 
   if (model.isFocused) exclude.setAttribute('aria-disabled', 'true');
 
-  row.append(focus, exclude, startTrace, showTasks);
+  row.append(focus, exclude, startTrace, showTasks, showModules);
   actions.append(openDetails, row);
 
-  const parts: PackageActions = { actions, openLabel, openDetails, focus, exclude, startTrace, showTasks };
+  const parts: PackageActions = { actions, openLabel, openDetails, focus, exclude, startTrace, showTasks, showModules };
 
   return parts;
 };

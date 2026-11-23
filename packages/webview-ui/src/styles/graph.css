@@ -210,7 +210,8 @@ p {
 }
 
 .graph-notice-text,
-.graph-task-banner-text {
+.graph-task-banner-text,
+.modules-bar-banner-text {
   flex: 1 1 auto;
 }
 
@@ -236,6 +237,64 @@ p {
 .task-mode .widget-row,
 .task-mode .widget-toolbar-package {
   display: none;
+}
+
+/*
+ * Modules mode draws one package's modules: the package Controls, Details and widgets have nothing to act on, so they
+ * go. Modules mode has its own Controls and Details asides, which the toolbar's Panels group toggles, and its own sash
+ * rules below, so the Panels group stays. It has no legend either, so the Legend button goes, and a Legend left open (a
+ * host showModules does not close it) is hidden. The location bar goes too: its trail and crumbs belong to the package
+ * graph, and the modules bar names the package.
+ */
+.modules-mode #graph-controls,
+.modules-mode #graph-details,
+.modules-mode .widget-row,
+.modules-mode .widget-toolbar-package,
+.modules-mode .legend-button,
+.modules-mode .graph-legend,
+.modules-mode .graph-location {
+  display: none;
+}
+
+/* The toolbar's Show modules opens the root's modules, so it has nothing to do once they show. */
+.modules-mode .toolbar-group[aria-label='Show modules'] {
+  display: none;
+}
+
+/* The modules bar: Back, the title, Refresh and the counts on one wrapping row, then the View group; the banner and the slow notice take rows of their own. */
+#graph-modules-bar {
+  display: none;
+}
+
+.modules-mode #graph-modules-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.modules-bar-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modules-bar-status,
+.modules-bar-slow {
+  margin: 0;
+  color: var(--vscode-descriptionForeground);
+}
+
+.modules-bar-banner,
+.modules-bar-slow {
+  flex-basis: 100%;
+}
+
+.modules-bar-banner {
+  box-sizing: border-box;
+  margin: 0;
 }
 
 /* A Projects grid of hundreds of rows lays out and paints only the rows near the viewport; 19px is a task or project row, and `auto` keeps each row's last rendered height. */
@@ -996,10 +1055,16 @@ kbd {
   user-select: none;
 }
 
-.graph-page:not(.task-mode) .graph-body:has(> #graph-controls:not([hidden])) > .graph-sash-controls,
-.graph-page.task-mode .graph-body:has(> #graph-task-controls:not([hidden])) > .graph-sash-controls,
-.graph-page:not(.task-mode) .graph-body:has(> #graph-details:not([hidden])) > .graph-sash-details,
-.graph-page.task-mode .graph-body:has(> #graph-task-details:not([hidden])) > .graph-sash-details {
+/*
+ * A sash shows beside its open panel, for the mode on screen. Modules mode hides the package and task panels and has its
+ * own asides, so it shows its sashes beside those only.
+ */
+.graph-page:not(.task-mode, .modules-mode) .graph-body:has(> #graph-controls:not([hidden])) > .graph-sash-controls,
+.graph-page.task-mode:not(.modules-mode) .graph-body:has(> #graph-task-controls:not([hidden])) > .graph-sash-controls,
+.graph-page.modules-mode .graph-body:has(> #graph-module-controls:not([hidden])) > .graph-sash-controls,
+.graph-page:not(.task-mode, .modules-mode) .graph-body:has(> #graph-details:not([hidden])) > .graph-sash-details,
+.graph-page.task-mode:not(.modules-mode) .graph-body:has(> #graph-task-details:not([hidden])) > .graph-sash-details,
+.graph-page.modules-mode .graph-body:has(> #graph-module-details:not([hidden])) > .graph-sash-details {
   display: block;
 }
 
@@ -1201,12 +1266,17 @@ kbd {
 
 /*
  * A Details panel sashed towards its 200px minimum has no room for three folder labels a row, nor for an icon beside a
- * package label such as "Start trace": the icons go and the labels keep the word wrap above. At the default 280px
- * (255px of content) three folder labels and a package icon with its label still fit in common UI fonts.
+ * package label such as "Start trace": the icons go and the labels keep the word wrap above. A half column there is
+ * too narrow for "Show modules" on one line, so the package buttons stack in one column. At the default 280px (255px
+ * of content) three folder labels and a package icon with its label still fit in common UI fonts.
  */
 @container (width < 240px) {
   .details-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .details-view[data-view='package'] .details-row {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .details-view[data-view='package'] .details-row .codicon {

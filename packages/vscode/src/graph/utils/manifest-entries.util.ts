@@ -161,16 +161,7 @@ const aliasKeysOfField = (fieldObject: Node | null, dependency: string): string[
   return keys;
 };
 
-/**
- * The raw keys of `text`'s `MANIFEST_FIELDS` entries that alias `dependency` under another name (`npm:` / `workspace:`), in
- * field order, each once, at most `MANIFEST_ENTRIES_MAX`; `[]` when the text has no object root. Never cut: the import
- * matcher compares them with specifiers (spec D5 rule 2).
- */
-export const aliasKeysOf = (text: string, dependency: string): string[] => {
-  const root = parsedRootOf(text);
-
-  if (root === null) return [];
-
+const aliasKeysOfRoot = (root: Node, dependency: string): string[] => {
   const keys = new Set<string>();
 
   for (const field of MANIFEST_FIELDS) {
@@ -185,11 +176,39 @@ export const aliasKeysOf = (text: string, dependency: string): string[] => {
   return listed.slice(0, MANIFEST_ENTRIES_MAX);
 };
 
-/** The target's name, then the source's raw keys that alias it; just the target's name when the source's `package.json` is unreadable. */
-export const namesOf = (target: string, text: string | null): string[] => {
-  if (text === null) return [target];
+/** The object root of a source's `package.json` text; `null` when it is unreadable or has none. */
+const readRootOf = (text: string | null): Node | null => {
+  if (text === null) return null;
 
-  const aliases = aliasKeysOf(text, target);
-
-  return [target, ...aliases];
+  return parsedRootOf(text);
 };
+
+/**
+ * The raw keys of `text`'s `MANIFEST_FIELDS` entries that alias `dependency` under another name (`npm:` / `workspace:`), in
+ * field order, each once, at most `MANIFEST_ENTRIES_MAX`; `[]` when the text has no object root. Never cut: the import
+ * matcher compares them with specifiers (spec D5 rule 2).
+ */
+export const aliasKeysOf = (text: string, dependency: string): string[] => {
+  const root = parsedRootOf(text);
+
+  if (root === null) return [];
+
+  return aliasKeysOfRoot(root, dependency);
+};
+
+/** `namesOf` for many targets of one source's `package.json` text, parsed once. */
+export const namesOfEach = (text: string | null): ((target: string) => string[]) => {
+  const root = readRootOf(text);
+  const namesOfTarget = (target: string): string[] => {
+    if (root === null) return [target];
+
+    const aliases = aliasKeysOfRoot(root, target);
+
+    return [target, ...aliases];
+  };
+
+  return namesOfTarget;
+};
+
+/** The target's name, then the source's raw keys that alias it; just the target's name when the source's `package.json` is unreadable. */
+export const namesOf = (target: string, text: string | null): string[] => namesOfEach(text)(target);

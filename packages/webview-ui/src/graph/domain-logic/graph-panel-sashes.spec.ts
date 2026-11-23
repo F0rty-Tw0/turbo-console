@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { wirePanelSashes } from './graph-panel-sashes.ts';
 import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
+import { MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
 import { TASK_MODE_CLASS } from '../common/graph-task.const.ts';
 import type { PanelSashPageMock } from '../test/common/panel-sash-page.type.ts';
 import { panelSashPageMock } from '../test/mocks/panel-sash-page.mock.ts';
@@ -97,6 +98,30 @@ describe('FEATURE: GraphPanelSashes', () => {
         expect(sashes.controls.getAttribute('aria-controls')).toBe('graph-task-controls');
         expect(sashes.details.getAttribute('aria-controls')).toBe('graph-task-details');
         expect(sashes.controls.getAttribute('aria-valuenow')).toBe('380');
+      });
+    });
+
+    describe('WHEN the root gets the modules mode class', () => {
+      it('THEN the sashes point at graph-module-controls and graph-module-details', () => {
+        const page = squeezedPage();
+        const { root, sashes } = page.deps;
+
+        root.classList.add(MODULES_MODE_CLASS);
+        page.mutateRoot();
+
+        expect(sashes.controls.getAttribute('aria-controls')).toBe('graph-module-controls');
+        expect(sashes.details.getAttribute('aria-controls')).toBe('graph-module-details');
+      });
+
+      it('THEN the module ids win over a task mode class there too', () => {
+        const page = squeezedPage();
+        const { root, sashes } = page.deps;
+
+        root.classList.add(TASK_MODE_CLASS, MODULES_MODE_CLASS);
+        page.mutateRoot();
+
+        expect(sashes.controls.getAttribute('aria-controls')).toBe('graph-module-controls');
+        expect(sashes.details.getAttribute('aria-controls')).toBe('graph-module-details');
       });
     });
 

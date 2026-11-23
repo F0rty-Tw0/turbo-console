@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 
 import type { PackageImportScan } from '@turbo-console/core';
+import type { ModuleEnd } from '@turbo-console/webview-ui';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 
@@ -20,6 +21,14 @@ const SCAN_WEB_A: LookupRequest = { type: 'scanImports', source: 'web', target: 
 const SCAN_WEB_X: LookupRequest = { type: 'scanImports', source: 'web', target: '@org/x' };
 const SCAN_GHOST_A: LookupRequest = { type: 'scanImports', source: 'ghost', target: 'a' };
 const OPEN_IMPORT_WEB: LookupRequest = { type: 'openImport', packageName: 'web', file: 'src/x.ts', line: 4 };
+const SCAN_MODULES_WEB: LookupRequest = { type: 'scanModules', packageName: 'web' };
+const SCAN_MODULES_GHOST: LookupRequest = { type: 'scanModules', packageName: 'ghost' };
+const X_END: ModuleEnd = { kind: 'file', path: 'src/x.ts' };
+const SCAN_SITES_WEB: LookupRequest = { type: 'scanModuleSites', packageName: 'web', from: X_END, to: null };
+const SCAN_SITES_GHOST: LookupRequest = { type: 'scanModuleSites', packageName: 'ghost', from: X_END, to: null };
+const FAILED_RESULT = { kind: 'failed' };
+const FAILED_GHOST = { type: 'packageModules', packageName: 'ghost', result: FAILED_RESULT };
+const FAILED_SITES_GHOST = { type: 'moduleSites', packageName: 'ghost', from: X_END, to: null, result: FAILED_RESULT };
 
 describe('FEATURE: graph lookups', () => {
   let ports: GraphPorts;
@@ -142,6 +151,32 @@ describe('FEATURE: graph lookups', () => {
     });
   });
 
+  describe('GIVEN a scanModules for an unlisted package', () => {
+    it('WHEN it arrives THEN failed is posted and nothing is dropped', async () => {
+      await lookups.receive(SCAN_MODULES_GHOST, 'ghost');
+
+      expect(ports.post).toHaveBeenCalledExactlyOnceWith(FAILED_GHOST);
+      expect(drop).not.toHaveBeenCalled();
+    });
+
+    it('WHEN it arrives after dispose THEN nothing is posted or dropped', async () => {
+      lookups.dispose();
+      await lookups.receive(SCAN_MODULES_GHOST, 'late');
+
+      expect(ports.post).not.toHaveBeenCalled();
+      expect(drop).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a scanModuleSites for an unlisted package', () => {
+    it('WHEN it arrives THEN failed is posted and nothing is dropped', async () => {
+      await lookups.receive(SCAN_SITES_GHOST, 'ghost');
+
+      expect(ports.post).toHaveBeenCalledExactlyOnceWith(FAILED_SITES_GHOST);
+      expect(drop).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GIVEN a scanImports after dispose', () => {
     it('WHEN it names an unlisted edge THEN nothing is scanned or dropped', async () => {
       lookups.dispose();
@@ -178,7 +213,9 @@ describe('FEATURE: graph lookups', () => {
 
     it.each([
       ['a scanImports', SCAN_WEB_A],
-      ['an openImport', OPEN_IMPORT_WEB]
+      ['an openImport', OPEN_IMPORT_WEB],
+      ['a scanModules', SCAN_MODULES_WEB],
+      ['a scanModuleSites', SCAN_SITES_WEB]
     ])('WHEN it is %s THEN it is a lookup', (_label, message) => {
       const isLookup = isLookupMessage(message);
 

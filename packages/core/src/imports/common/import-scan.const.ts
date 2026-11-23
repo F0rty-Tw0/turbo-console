@@ -22,3 +22,12 @@ export const TSCONFIG_NAME = 'tsconfig.json';
 
 /** D6: candidate lists one chain read pops, A's own included, each opening at most one file (OQ1). */
 export const TSCONFIG_CHAIN_MAX = 8;
+
+/** TS `pathIsRelative`: the names TS never maps through `paths`, so a backslash after the dots (`.\x`) counts too. */
+export const PATHS_SKIPPED = /^\.\.?(?:$|[\\/])/;
+
+/** A file basename that marks a test, spec, e2e or bench file. */
+export const TEST_FILE_SUFFIX = /\.(spec|test|e2e|bench)\.[cm]?[jt]sx?$/;
+
+/** Dir names that make every file beneath them, at any depth, a test file. */
+export const TEST_DIR_NAMES: ReadonlySet<string> = new Set(['test', 'tests', '__tests__', 'e2e']);

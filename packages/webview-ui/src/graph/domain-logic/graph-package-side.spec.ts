@@ -54,7 +54,7 @@ const RECOUNTED: GraphReady = { ...STATE_STUB, packages: PACKAGES };
 const rigOf = (saved: GraphViewState | null, hasGrouping?: boolean): PackageSideRig => {
   const mock = packageSideDepsMock();
   const hasTasks = vi.fn<(name: string) => boolean>(() => false);
-  const tasks = { onShowTasks: vi.fn(), hasTasks };
+  const tasks = { onShowTasks: vi.fn(), hasTasks, onShowModules: vi.fn() };
   const modes = new ViewStateModes(mock.saver, saved, hasGrouping);
   const frames = new GraphFrames(mock.deps.now);
   const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced, onLocation: mock.onLocation };

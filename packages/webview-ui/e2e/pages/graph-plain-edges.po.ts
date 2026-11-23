@@ -3,16 +3,15 @@ import { expect, test } from '@playwright/test';
 
 import { GraphFoldersPage } from './graph-folders.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
-import type { ProbeEdge, ProbeFolderLink } from '../../src/graph/common/graph-probe.type.ts';
+import type { ProbeEdge } from '../../src/graph/common/graph-probe.type.ts';
 import type { FolderLinksShown } from '../common/graph-folder-links.type.ts';
+import { PLAIN_LINE } from '../common/graph-plain-lines.const.ts';
 import type { Rgb } from '../common/graph-title-chip.type.ts';
 import type { ViewportPoint } from '../common/playwright.type.ts';
 import { foreignBoxHitsOf, readFolders } from '../test/utils/graph-foreign-boxes.spec.util.ts';
 import { clipAround, inkTowardOf, pixelsOfPng } from '../test/utils/graph-line-ink.spec.util.ts';
 import { lineMidpointOf, readEdgeLines } from '../test/utils/graph-lines.spec.util.ts';
-
-/** How every package edge and folder link draws: a plain bezier at card depth, over every folder box. */
-const PLAIN_LINE = 'bezier auto';
+import { drawnStyleOf, isDrawn } from '../test/utils/graph-plain-lines.spec.util.ts';
 
 /** How far around a line's midpoint the screen is read, so a rounding of the midpoint cannot miss a 1 px line. */
 const INK_RADIUS_PX = 2;
@@ -23,13 +22,7 @@ const MIN_INK = 0.25;
 /** The distinct drawn folder link styles while folder links show, and while none do. */
 const LINK_STYLES: Record<FolderLinksShown, string[]> = { some: [PLAIN_LINE], none: [] };
 
-type DrawnStyle = Pick<ProbeEdge, 'curveStyle' | 'zCompoundDepth'>;
-
 type EdgeEnds = Pick<ProbeEdge, 'source' | 'target'>;
-
-const drawnStyleOf = (edge: DrawnStyle): string => `${edge.curveStyle} ${edge.zCompoundDepth}`;
-
-const isDrawn = (edge: ProbeEdge | ProbeFolderLink): boolean => edge.isDrawn;
 
 /** How the page draws its package edges and folder links: their style, the boxes they cross and the ink they leave. */
 export class GraphPlainEdges {

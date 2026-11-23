@@ -19,9 +19,18 @@ export const scannedFileOf = (file: string, imports: SourceImport[]): ScannedFil
   return scanned;
 };
 
-/** A scan that finished: every file counted as scanned, nothing skipped, no limit. */
+/** A scan that finished: every file walked and counted as scanned, nothing skipped, no limit. */
 export const importScanOf = (files: ScannedFile[], patch: Partial<PackageImportScan> = {}): PackageImportScan => {
-  const scan: PackageImportScan = { files, tsconfigPaths: null, scanned: files.length, skipped: 0, limit: null, ...patch };
+  const walkedFiles = files.map((entry) => entry.file);
+  const scan: PackageImportScan = {
+    files,
+    walkedFiles,
+    tsconfigPaths: null,
+    scanned: files.length,
+    skipped: 0,
+    limit: null,
+    ...patch
+  };
 
   return scan;
 };

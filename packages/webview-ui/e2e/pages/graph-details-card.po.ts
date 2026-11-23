@@ -2,16 +2,17 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { EXCLUDE_LABEL, FOCUS_LABEL, START_TRACE_LABEL } from '../../src/graph/common/details.const.ts';
+import { SHOW_MODULES_LABEL } from '../../src/graph/common/graph-module.const.ts';
 import { SHOW_TASKS_LABEL } from '../../src/graph/common/graph-task.const.ts';
 import { DETAILS_LABEL } from '../../src/graph/common/graph.const.ts';
 
-const ROW_LABELS = [FOCUS_LABEL, EXCLUDE_LABEL, START_TRACE_LABEL, SHOW_TASKS_LABEL];
+const ROW_LABELS = [FOCUS_LABEL, EXCLUDE_LABEL, START_TRACE_LABEL, SHOW_TASKS_LABEL, SHOW_MODULES_LABEL];
 
 const markKept = (element: Element): void => element.setAttribute('data-kept', 'yes');
 
 /**
  * The Details card: its own heading element, told from a rebuilt one by a mark that only a kept element carries, and
- * its package action buttons Focus, Exclude, Start trace and Show tasks.
+ * its package action buttons Focus, Exclude, Start trace, Show tasks and Show modules.
  */
 export class GraphDetailsCard {
   public readonly heading: Locator;

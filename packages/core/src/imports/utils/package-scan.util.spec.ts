@@ -39,6 +39,7 @@ describe('FEATURE: assemble a package scan', () => {
 
       expect(scan).toStrictEqual({
         files: listed,
+        walkedFiles: ['a.ts', 'b.ts', 'c.ts', 'd.ts'],
         tsconfigPaths: null,
         scanned: 2,
         skipped: 1,
@@ -90,6 +91,17 @@ describe('FEATURE: assemble a package scan', () => {
       const listed = scan.files.map((entry) => entry.file);
 
       expect(listed).toStrictEqual(['c.ts', 'a.ts', 'b.ts']);
+    });
+  });
+
+  describe('GIVEN walk order c, a, b where only a has imports, b is skipped and c is unreached', () => {
+    it('WHEN assembled THEN walkedFiles lists all three in walk order', () => {
+      const walk = withNames(['c.ts', 'a.ts', 'b.ts']);
+      const outcomes: FileOutcome[] = [{ kind: 'unreached' }, { kind: 'scanned', cached: CACHED_FILE_STUB }, { kind: 'skipped' }];
+
+      const { scan } = packageScanOf(walk, outcomes, 'time', NO_CACHE);
+
+      expect(scan.walkedFiles).toStrictEqual(['c.ts', 'a.ts', 'b.ts']);
     });
   });
 

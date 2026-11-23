@@ -31,6 +31,7 @@ export const SAVED_BASE_STUB: GraphViewState = {
   collapsed: [],
   mode: 'packages',
   task: null,
+  modules: null,
   panelWidths: null
 };
 

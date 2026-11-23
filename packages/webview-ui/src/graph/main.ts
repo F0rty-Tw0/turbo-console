@@ -21,7 +21,7 @@ import { GraphFlow } from './domain-logic/graph-flow.ts';
 import { GraphLegend } from './domain-logic/graph-legend.ts';
 import { buildControls } from './ui/controls-elements.ts';
 import { fitFlowCanvas } from './ui/flow-canvas.ts';
-import { detailsViews, taskDetailsViews, taskViews, widgetViews } from './ui/graph-views.ts';
+import { detailsViews, moduleViews, taskDetailsViews, taskViews, widgetViews } from './ui/graph-views.ts';
 import { renderLegend } from './ui/legend-elements.ts';
 import { buildPage } from './ui/page-elements.ts';
 import { codiconReadyOf } from './utils/codicon-ready.util.ts';
@@ -102,6 +102,7 @@ const controllerOf = (glyphs: boolean): GraphController => {
     widgetViews,
     taskViews,
     taskDetailsViews,
+    moduleViews,
     overlay,
     background
   });

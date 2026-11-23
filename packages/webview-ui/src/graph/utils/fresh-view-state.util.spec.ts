@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { freshTaskViewOf, freshViewStateOf } from './fresh-view-state.util.ts';
+import { freshModulesViewOf, freshTaskViewOf, freshViewStateOf } from './fresh-view-state.util.ts';
 
 const ORIGIN = { x: 0, y: 0 };
+
+const TESTS_HIDDEN = { types: true, tests: false, lazies: true };
 
 describe('FEATURE: freshViewStateOf', () => {
   describe('GIVEN a graph hash with no saved state', () => {
@@ -29,6 +31,7 @@ describe('FEATURE: freshViewStateOf', () => {
         collapsed: [],
         mode: 'packages',
         task: null,
+        modules: null,
         panelWidths: null
       });
     });
@@ -48,6 +51,20 @@ describe('FEATURE: freshViewStateOf', () => {
         pan: ORIGIN,
         fitted: false,
         layoutKey: ''
+      });
+    });
+  });
+
+  describe('GIVEN the package web with no modules view saved', () => {
+    it('WHEN its fresh modules view is built THEN nothing is expanded yet, every kind but test files shows, the camera fits, nothing selected or focused, depth 1', () => {
+      expect(freshModulesViewOf('web')).toStrictEqual({
+        packageName: 'web',
+        expanded: null,
+        shown: TESTS_HIDDEN,
+        camera: null,
+        selected: null,
+        focus: null,
+        depth: 1
       });
     });
   });

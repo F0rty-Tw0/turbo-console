@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { focusingShowTasksOf, packageActionsOf } from './package-actions.ts';
+import { focusingModeSwitchesOf, packageActionsOf } from './package-actions.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { packageActionsDepsMock, packageActionsMock, packageInspectionActionsMock } from '../test/mocks/widget-menu.mock.ts';
 import { callCountOf } from '../test/utils/widget-menu.spec.util.ts';
@@ -76,6 +76,16 @@ describe('FEATURE: package actions', () => {
       expect(deps.onShowTasks).toHaveBeenCalledWith('docs');
       expect(callCountOf(deps) + callCountOf(inspection)).toBe(1);
     });
+
+    it('WHEN showModules runs for docs THEN only onShowModules is called with docs', () => {
+      const deps = packageActionsDepsMock('web');
+      const inspection = packageInspectionActionsMock();
+
+      packageActionsOf(deps, inspection).showModules('docs');
+
+      expect(deps.onShowModules).toHaveBeenCalledWith('docs');
+      expect(callCountOf(deps) + callCountOf(inspection)).toBe(1);
+    });
   });
 
   describe('GIVEN no focused package', () => {
@@ -104,16 +114,25 @@ describe('FEATURE: package actions', () => {
     it('WHEN showTasks runs for docs THEN the actions show docs tasks and the container has focus', () => {
       const actions = packageActionsMock();
 
-      focusingShowTasksOf(actions, container).showTasks('docs');
+      focusingModeSwitchesOf(actions, container).showTasks('docs');
 
       expect(actions.showTasks).toHaveBeenCalledWith('docs');
+      expect(document.activeElement).toBe(container);
+    });
+
+    it('WHEN showModules runs for docs THEN the actions show docs modules and the container has focus', () => {
+      const actions = packageActionsMock();
+
+      focusingModeSwitchesOf(actions, container).showModules('docs');
+
+      expect(actions.showModules).toHaveBeenCalledWith('docs');
       expect(document.activeElement).toBe(container);
     });
 
     it('WHEN focus runs for docs THEN the actions focus docs and the container does not take focus', () => {
       const actions = packageActionsMock();
 
-      focusingShowTasksOf(actions, container).focus('docs');
+      focusingModeSwitchesOf(actions, container).focus('docs');
 
       expect(actions.focus).toHaveBeenCalledWith('docs');
       expect(document.activeElement).not.toBe(container);

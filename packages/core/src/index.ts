@@ -43,6 +43,20 @@ export { scanPackageImports } from './imports/domain-logic/scan-package-imports.
 
 export { isSourceName } from './imports/utils/import-walk.util.ts';
 
+export { PATHS_SKIPPED } from './imports/common/import-scan.const.ts';
+
+export { aliasTargetsOf } from './imports/utils/alias-targets.util.ts';
+
+export { isNameOf } from './imports/utils/specifier-name.util.ts';
+
+export { moduleGraphOf } from './imports/utils/module-graph.util.ts';
+
+export type { ModuleCounts, ModuleGraph, ModuleGraphInput, ModuleLink, WorkspaceTarget } from './imports/common/module-graph.type.ts';
+
+export { moduleSitesOf } from './imports/utils/module-sites.util.ts';
+
+export type { ModuleSiteRow, ModuleSites, ModuleSitesQuery } from './imports/common/module-sites.type.ts';
+
 export type {
   CachedFile,
   ImportScanCaps,

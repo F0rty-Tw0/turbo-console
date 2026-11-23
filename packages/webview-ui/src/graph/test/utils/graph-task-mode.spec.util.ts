@@ -102,7 +102,7 @@ export const taskModeRigOf = (modes: TaskModes, chips = atomChipsMock()): TaskMo
   const runs = layoutRunsMock();
   const screen = layoutScreenMock();
   const parts = taskPartsMockOf();
-  const onExit = vi.fn<() => void>();
+  const onExit = vi.fn<(to: 'packages' | 'modules') => void>();
   const onFailure = vi.fn<(error: unknown) => void>();
   const flow = flowControlMock();
   const selectedPackage = vi.fn<TaskModeDeps['selectedPackage']>(() => null);

@@ -16,7 +16,8 @@ export const packageActionsMock = (): PackageActions => {
     clearFocus: vi.fn(),
     startTrace: vi.fn(),
     setShown: vi.fn(),
-    showTasks: vi.fn()
+    showTasks: vi.fn(),
+    showModules: vi.fn()
   };
 
   return actions;
@@ -29,7 +30,8 @@ export const packageActionsDepsMock = (focused: string | null): PackageActionsDe
     onFocusOn: vi.fn(),
     onExclude: vi.fn(),
     onShow: vi.fn(),
-    onShowTasks: vi.fn()
+    onShowTasks: vi.fn(),
+    onShowModules: vi.fn()
   };
 
   return deps;

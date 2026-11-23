@@ -8,6 +8,8 @@ import {
   literal,
   lte,
   maxLength,
+  minLength,
+  nullable,
   number,
   object,
   optional,
@@ -41,6 +43,22 @@ const openManifestSchema = object({
 });
 
 const scanImportsSchema = object({ type: literal('scanImports'), source: packageNameSchema, target: packageNameSchema });
+
+const scanModulesSchema = object({ type: literal('scanModules'), packageName: packageNameSchema });
+
+/** A drawn module end: a file or a non-empty folder path relative to the package dir, or another workspace package. */
+const moduleEndSchema = discriminatedUnion('kind', [
+  object({ kind: literal('file'), path: string().check(maxLength(MANIFEST_FILE_MAX)) }),
+  object({ kind: literal('dir'), path: string().check(minLength(1), maxLength(MANIFEST_FILE_MAX)) }),
+  object({ kind: literal('stub'), name: packageNameSchema })
+]);
+
+const scanModuleSitesSchema = object({
+  type: literal('scanModuleSites'),
+  packageName: packageNameSchema,
+  from: moduleEndSchema,
+  to: nullable(moduleEndSchema)
+});
 
 const openImportSchema = object({
   type: literal('openImport'),
@@ -100,6 +118,8 @@ export const graphMessageSchema = discriminatedUnion('type', [
   explainEdgeSchema,
   openManifestSchema,
   scanImportsSchema,
+  scanModulesSchema,
+  scanModuleSitesSchema,
   openImportSchema,
   exportImageSchema,
   runTaskSchema,

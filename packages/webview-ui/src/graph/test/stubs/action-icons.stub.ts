@@ -7,6 +7,7 @@ export const SWAPPED_ACTION_ICONS_STUB: Readonly<Record<ActionIconKey, GraphIcon
   clearFocus: 'warning',
   startTrace: 'filter',
   showTasks: 'refresh',
+  showModules: 'history',
   exclude: 'eye',
   showAll: 'eye-closed',
   collapse: 'unfold',

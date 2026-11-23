@@ -42,8 +42,8 @@ export type PackageModes = {
   readonly isGroupingSaved: () => boolean;
 };
 
-/** The package graph's way into task mode: Show tasks chooses every task of the package the host sent. */
-export type PackageTasks = Pick<GraphInspectionDeps, 'onShowTasks' | 'hasTasks'>;
+/** The package graph's way into task mode (Show tasks chooses every task of the package the host sent) and into modules mode. */
+export type PackageTasks = Pick<GraphInspectionDeps, 'onShowTasks' | 'hasTasks' | 'onShowModules'>;
 
 /** What the controller hands the package side besides its own deps and the view on screen. */
 export type PackageSideHooks = {
@@ -133,8 +133,8 @@ type TaskModeOwnDeps = {
   readonly screen: LayoutScreen;
   readonly modes: TaskModes;
   readonly frames: Pick<FrameClock, 'start' | 'arm'>;
-  /** Task mode was left: the controller shows the package graph again. */
-  readonly onExit: () => void;
+  /** Task mode was left for `to`: the controller shows the package graph again, or nothing for modules. */
+  readonly onExit: (to: 'packages' | 'modules') => void;
   /** The shown tasks or the mode changed: the location bar reads them again. */
   readonly onLocation: () => void;
   /** A task layout threw: the page shows the reason, and the next graph state shows the task graph afresh. */
@@ -179,7 +179,7 @@ export type TaskKeyMode = {
 export type TaskModeHooks = {
   readonly modes: TaskModes;
   readonly frames: FrameClock;
-  readonly onExit: () => void;
+  readonly onExit: (to: 'packages' | 'modules') => void;
   readonly onLocation: () => void;
   /** The page now shows a message instead of the graph, as `PackageSideHooks.onMessage`. */
   readonly onMessage: () => void;

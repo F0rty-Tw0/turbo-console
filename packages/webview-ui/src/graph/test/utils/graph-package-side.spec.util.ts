@@ -1,5 +1,7 @@
 import { vi } from 'vitest';
 
+import type { ModuleControlsElements } from '../../common/module-controls.type.ts';
+import type { PackageSideDepsMock } from '../common/graph-package-side.type.ts';
 import { fakeDocumentMock } from '../mocks/fake-document.mock.ts';
 
 const ignore = (): void => undefined;
@@ -22,6 +24,15 @@ export const stubElementClass = (): void => {
   const probe = document.createElement('span');
 
   vi.stubGlobal('Element', probe.constructor);
+};
+
+/** The module Controls panel the controller built; throws when none was built, so a spec reads it without a guard. */
+export const moduleControlsOf = (mock: Pick<PackageSideDepsMock, 'moduleControls'>): ModuleControlsElements => {
+  const [built] = mock.moduleControls;
+
+  if (built === undefined) throw new Error('no module Controls were built');
+
+  return built;
 };
 
 /** Resolves after the timers queued so far: the package side's first draw has settled. */

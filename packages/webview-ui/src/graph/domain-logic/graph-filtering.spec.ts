@@ -34,7 +34,7 @@ const GROUPED_STATE: GraphReady = { ...STATE_STUB, folderPositions: GROUPED_POSI
 /** A `GraphPackageSide` over the mocked deps with h1 drawn from `saved`: `web` (in `apps`) > `ui` > `core`. */
 const drawnRigOf = async (saved: GraphViewState, state: GraphReady = STATE_STUB): Promise<FilteringRig> => {
   const mock = packageSideDepsMock();
-  const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false };
+  const tasks = { onShowTasks: vi.fn(), hasTasks: (): boolean => false, onShowModules: vi.fn() };
   const modes = new ViewStateModes(mock.saver, saved);
   const frames = new GraphFrames(mock.deps.now);
   const hooks = { frames, modes, tasks, onMessage: mock.onMessage, onPlaced: mock.onPlaced, onLocation: mock.onLocation };

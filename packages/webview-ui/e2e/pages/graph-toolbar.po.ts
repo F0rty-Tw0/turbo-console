@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import type { GraphIconId } from '../../src/graph/common/graph-icon.type.ts';
-import { CONTROLS_LABEL, FILTERS_ON_TEXT, PANELS_LABEL } from '../../src/graph/common/graph.const.ts';
+import { CONTROLS_LABEL, DETAILS_LABEL, FILTERS_ON_TEXT, PANELS_LABEL } from '../../src/graph/common/graph.const.ts';
 import type { InputOptionColors, ToolbarGroup } from '../common/graph.type.ts';
 import { CODICON_LOADED } from '../common/shell.const.ts';
 import { codiconClassOf } from '../test/utils/codicon-class.spec.util.ts';
@@ -56,6 +56,19 @@ export class GraphToolbar {
   /** No button is the toolbar's own child: Clear selection lives in the Details bar. */
   public async expectNoLoneButton(): Promise<void> {
     await expect(this.toolbar.locator(':scope > button')).toHaveCount(0);
+  }
+
+  /**
+   * The Panels group's Controls and Details toggles both show, or both are hidden (both show in every mode). Hidden
+   * elements count their `aria-hidden` icon glyph in the name, so the names match as substrings.
+   */
+  public async expectPanelToggles(isShown: boolean): Promise<void> {
+    const panels = this.page.getByRole('group', { name: PANELS_LABEL, exact: true, includeHidden: true });
+    const controls = panels.getByRole('button', { name: CONTROLS_LABEL, includeHidden: true });
+    const details = panels.getByRole('button', { name: DETAILS_LABEL, includeHidden: true });
+
+    await expect(controls).toBeVisible({ visible: isShown });
+    await expect(details).toBeVisible({ visible: isShown });
   }
 
   /** The status line is visually hidden, a 1 px box, while screen readers still read it. */

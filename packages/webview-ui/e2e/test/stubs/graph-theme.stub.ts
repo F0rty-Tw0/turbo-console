@@ -75,7 +75,9 @@ export const THEME_LIGHT_STUB: ThemeStub = { bodyClass: 'vscode-light', vars: LI
 /**
  * `--vscode-input-*` are the hcDark defaults of https://raw.githubusercontent.com/microsoft/vscode/main/src/vs/platform/theme/common/colors/inputColors.ts
  * (`input.background` black, `input.border` the contrast border; `hc_black.json` sets neither), fetched 2026-11-13.
- * `--vscode-panel-border` is set too, and must lose to `--vscode-contrastBorder`; no list selection colours, as VS Code's High Contrast sets none. */
+ * `--vscode-panel-border` is set too, and must lose to `--vscode-contrastBorder`; no list selection colours, as VS Code's High Contrast sets none.
+ * `--vscode-checkbox-*` resolve through the same file's `dropdown.*` hcDark defaults (background black, foreground white,
+ * border the contrast border); a webview gets every registered colour the theme resolves. */
 const HC_VARS: Readonly<Record<string, string>> = {
   '--vscode-editor-background': '#000000',
   '--vscode-foreground': '#ffffff',
@@ -93,7 +95,10 @@ const HC_VARS: Readonly<Record<string, string>> = {
   '--vscode-badge-background': '#000000',
   '--vscode-badge-foreground': '#ffffff',
   '--vscode-input-background': '#000000',
-  '--vscode-input-border': '#6fc3df'
+  '--vscode-input-border': '#6fc3df',
+  '--vscode-checkbox-background': '#000000',
+  '--vscode-checkbox-foreground': '#ffffff',
+  '--vscode-checkbox-border': '#6fc3df'
 };
 
 const HC_COLORS: ExpectedThemeColors = {

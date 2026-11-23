@@ -193,8 +193,6 @@ export class GraphSession {
         return;
       case 'exportImage':
         await this.images.save(message.png);
-
-        return;
     }
   }
 

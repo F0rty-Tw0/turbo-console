@@ -3,6 +3,7 @@ import { iconButton, iconTextButton } from './icon-button.ts';
 import { buildLegend } from './legend-elements.ts';
 import { textElement } from '../../shared/ui/text-element.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
+import { SHOW_MODULES_LABEL } from '../common/graph-module.const.ts';
 import {
   MODE_LABEL,
   PACKAGES_MODE_LABEL,
@@ -107,9 +108,9 @@ const statusLine = (): HTMLElement => {
 };
 
 /**
- * The toolbar in its pre-state, every button disabled: the Mode group (Packages, Tasks), the Panels group (Controls, Details),
- * the View group (Fit, Re-layout, Export image, Legend), the hidden status line, then the closed Legend popover. DOM order
- * is the Tab order.
+ * The toolbar in its pre-state, every button disabled: the Mode group (Packages, Tasks), the hidden Show modules group
+ * a single-package root shows, the Panels group (Controls, Details), the View group (Fit, Re-layout, Export image,
+ * Legend), the hidden status line, then the closed Legend popover. DOM order is the Tab order.
  */
 export const buildToolbar = (): ToolbarElements => {
   const packagesMode = pressToggle('type-hierarchy', PACKAGES_MODE_LABEL, PACKAGES_MODE_TITLE, true);
@@ -122,20 +123,25 @@ export const buildToolbar = (): ToolbarElements => {
   const exportImage = viewAction('desktop-download', EXPORT_LABEL, EXPORT_TITLE);
   const status = statusLine();
   const legend = buildLegend();
+  const rootModules = iconTextButton('list-tree', SHOW_MODULES_LABEL, SHOW_MODULES_LABEL);
   const modeGroup = toolbarGroup(MODE_LABEL, packagesMode, taskMode);
   const modeEnd = separator();
+  const rootModulesGroup = toolbarGroup(SHOW_MODULES_LABEL, rootModules);
   const panels = toolbarGroup(PANELS_LABEL, controls, details);
   const panelsEnd = separator();
   const view = toolbarGroup(VIEW_LABEL, fit, relayout, exportImage, legend.legend);
   const toolbar = textElement('header', 'graph-toolbar', '');
 
   controls.append(filtersOn);
-  toolbar.append(modeGroup, modeEnd, panels, panelsEnd, view, status, legend.legendPanel);
+  rootModulesGroup.hidden = true;
+  toolbar.append(modeGroup, modeEnd, rootModulesGroup, panels, panelsEnd, view, status, legend.legendPanel);
 
   const elements: ToolbarElements = {
     toolbar,
     modeGroup,
     modeEnd,
+    rootModulesGroup,
+    rootModules,
     packagesMode,
     taskMode,
     controls,

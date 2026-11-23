@@ -39,3 +39,19 @@ export type RevealDeps = {
   readonly inspection: RevealInspection;
   readonly view: Pick<GraphView, 'viewport' | 'setViewport'>;
 };
+
+/** The package side's filtering as `packageRevealOf` reads it: the reveal's filtering, and the inspection it selects in. */
+type RevealPackageFiltering = RevealFiltering & Pick<RevealDeps, 'inspection'>;
+
+/** The package side as `packageRevealOf` reads it: its layouts, its drawn graph and its filtering. */
+export type RevealPackageSide = {
+  readonly layouts: RevealLayouts;
+  readonly drawnGraph: () => DrawnGraph | null;
+  readonly filtering: RevealPackageFiltering;
+};
+
+/** The package reveal as the page controller holds it: the host's `showPackage` request, and the place it waits for. */
+export type PageReveal = {
+  readonly request: (name: string) => void;
+  readonly placed: () => void;
+};

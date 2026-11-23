@@ -10,6 +10,7 @@ import { flowEdgesOf } from './graph-flow-edges.ts';
 import { createFoldersView } from './graph-folders-view.ts';
 import { setGhosts } from './graph-ghosts.ts';
 import { listen } from './graph-listen.ts';
+import { createModuleCanvas } from './graph-module-view.ts';
 import { packageWritersOf } from './graph-package-nodes.ts';
 import { applyFocusTarget, applyPaint } from './graph-paint.ts';
 import { placeNodes } from './graph-place.ts';
@@ -81,6 +82,7 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
   const folders = createFoldersView(cy);
   const tasks = createTaskCanvas(cy);
   const atoms = createAtomCanvas(cy);
+  const modules = createModuleCanvas(cy);
   const { setGraph, setLabels } = packageWritersOf(cy);
   const view: GraphView = {
     setGraph,
@@ -110,7 +112,8 @@ export const createGraphView = (container: HTMLElement, handlers: GraphViewHandl
     flowEdges: (): FlowEdgeGeometry[] => flowEdgesOf(cy),
     cy: (): Core => cy,
     tasks,
-    atoms
+    atoms,
+    modules
   };
 
   new ResizeObserver(camera.resized).observe(container);

@@ -16,6 +16,7 @@ export type ActionIconKey =
   | 'clearFocus'
   | 'startTrace'
   | 'showTasks'
+  | 'showModules'
   | 'exclude'
   | 'showAll'
   | 'collapse'

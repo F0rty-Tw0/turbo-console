@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { aliasTargetsOf } from './alias-targets.util.ts';
+import { aliasTargetsOf, isCatchAllOf } from './alias-targets.util.ts';
 
 type AliasRow = {
   readonly label: string;
   readonly paths: Record<string, string[]>;
   readonly specifier: string;
   readonly targets: string[];
+};
+
+type CatchAllRow = {
+  readonly label: string;
+  readonly paths: Record<string, string[]>;
+  readonly specifier: string;
+  readonly isCatchAll: boolean;
 };
 
 const EXACT: Record<string, string[]> = { '@b': ['b/index.ts'] };
@@ -41,12 +48,25 @@ const ROWS: AliasRow[] = [
   { label: 'a wildcard key whose target has no star', paths: FIXED, specifier: '@b/x', targets: ['b/fixed.ts'] }
 ];
 
+const CATCH_ALL_ROWS: CatchAllRow[] = [
+  { label: 'only the catch-all', paths: CATCH_ALL, specifier: 'react', isCatchAll: true },
+  { label: 'an exact key beside the catch-all', paths: CATCH_ALL, specifier: '@b', isCatchAll: false },
+  { label: 'a prefixed key', paths: WILDCARD, specifier: '@b/x', isCatchAll: false },
+  { label: 'no key', paths: WILDCARD, specifier: 'react', isCatchAll: false }
+];
+
 describe('FEATURE: tsconfig paths targets of a specifier', () => {
   describe('GIVEN the tsconfig paths keys of A', () => {
     it.each(ROWS)('WHEN $specifier is picked from $label THEN the targets are $targets', ({ paths, specifier, targets }) => {
       const picked = aliasTargetsOf(specifier, paths);
 
       expect(picked).toStrictEqual(targets);
+    });
+
+    it.each(CATCH_ALL_ROWS)('WHEN $specifier matches $label THEN isCatchAll is $isCatchAll', ({ paths, specifier, isCatchAll }) => {
+      const picked = isCatchAllOf(specifier, paths);
+
+      expect(picked).toBe(isCatchAll);
     });
   });
 });

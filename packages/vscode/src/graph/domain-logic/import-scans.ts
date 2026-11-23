@@ -1,11 +1,12 @@
 import { ImportFileCache } from '@turbo-console/core';
 import type { ImportScanInput } from '@turbo-console/core';
-import type { EdgeImportsResult, GraphEdgeImportsMessage } from '@turbo-console/webview-ui';
+import type { EdgeImportsResult, GraphEdgeImportsMessage, ModuleEnd } from '@turbo-console/webview-ui';
 
 import { textOf } from './graph-read.ts';
+import { askModuleSites, askModules } from './module-asks.ts';
 import { logTextOf } from '../../shared/utils/log-text.util.ts';
 import type { ExplainContext, ScanGate } from '../common/graph.type.ts';
-import type { AnsweredOutcome, ImportEdge, ScanDirs, ScanOutcome, ScanRun } from '../common/import-match.type.ts';
+import type { AnsweredOutcome, ImportEdge, ModuleAskPort, ScanDirs, ScanOutcome, ScanRun } from '../common/import-match.type.ts';
 import { hasEdge, manifestFilesOf, packagesByName } from '../utils/graph-package.util.ts';
 import { answerImports } from '../utils/import-answer.util.ts';
 import { namesOf } from '../utils/manifest-entries.util.ts';
@@ -17,18 +18,35 @@ const FAILED_REPLY: EdgeImportsResult = { kind: 'failed' };
 
 /**
  * The import scans of one panel (spec D10 T2): one scan in flight; an ask for the package being scanned joins it, an ask for
- * another package aborts it; an aborted scan posts nothing. One `ImportFileCache` for the panel's life (D9). An ask for an edge
- * the run in flight is already asked for returns at once: it joins the pending ask, which posts the one reply with the names it
- * read when it started. A run is dropped once it settles, so the next ask for that edge starts a fresh run.
+ * another package aborts it; an aborted scan posts nothing. One `ImportFileCache` for the panel's life (D9). An edge ask, a
+ * modules ask and a sites ask of one package share its run, and each posts its own reply. An ask the run in flight is already asked for
+ * returns at once: it joins the pending ask, which posts the one reply with the names it read when it started. A run is
+ * dropped once it settles, so the next ask starts a fresh run.
  */
 export class ImportScans {
   private readonly gate: ScanGate;
+  private readonly port: ModuleAskPort;
   private readonly cache = new ImportFileCache();
   private running: ScanRun | undefined;
   private isDisposed = false;
 
+  /** A log that throws is dropped: the asks and `settle` never reject, and a failing log must not undo that. */
+  private readonly report = (error: unknown): void => {
+    try {
+      this.gate.ports.log(logTextOf(error));
+    } catch {
+      return;
+    }
+  };
+
   public constructor(gate: ScanGate) {
     this.gate = gate;
+    this.port = {
+      gate,
+      runFor: (dirs: ScanDirs): ScanRun => this.runFor(dirs),
+      report: this.report,
+      isDisposed: (): boolean => this.isDisposed
+    };
   }
 
   /**
@@ -73,6 +91,23 @@ export class ImportScans {
     this.reply(source, target, result);
 
     return true;
+  }
+
+  /**
+   * Posts one `packageModules` for `packageName` (spec §6.1, §6.2): `failed` at once when the graph does not list it; else
+   * the reply once the scan of its dir settled, held back when the scan was aborted or the package is no longer listed.
+   */
+  public async askModules(packageName: string): Promise<void> {
+    await askModules(this.port, packageName);
+  }
+
+  /**
+   * Posts one `moduleSites` for the end or link `from` → `to` of `packageName` (spec §5.4, §8): `failed` at once when the graph
+   * does not list it; else the reply once the scan of its dir settled, held back when the scan was aborted or the package is no
+   * longer listed.
+   */
+  public async askModuleSites(packageName: string, from: ModuleEnd, to: ModuleEnd | null): Promise<void> {
+    await askModuleSites(this.port, packageName, from, to);
   }
 
   public dispose(): void {
@@ -156,15 +191,6 @@ export class ImportScans {
       this.gate.ports.post(message);
     } catch (error: unknown) {
       this.report(error);
-    }
-  }
-
-  /** A log that throws is dropped: `ask` and `settle` never reject, and a failing log must not undo that. */
-  private report(error: unknown): void {
-    try {
-      this.gate.ports.log(logTextOf(error));
-    } catch {
-      return;
     }
   }
 }

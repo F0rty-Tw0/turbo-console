@@ -1,5 +1,5 @@
 import { wireWidgets } from './graph-widgets-wire.ts';
-import { focusingShowTasksOf, packageActionsOf } from './package-actions.ts';
+import { focusingModeSwitchesOf, packageActionsOf } from './package-actions.ts';
 import type { FolderActions } from '../common/folder-actions.type.ts';
 import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { WidgetHostDeps } from '../common/graph-controls.type.ts';
@@ -85,7 +85,7 @@ export const widgetsOf = (
   controls: WidgetFilters
 ): WidgetWiring => {
   const { page, view, widgetViews, overlay, canAct, canActOnPackage, onLocation } = deps;
-  const packageActions = focusingShowTasksOf(packageActionsOf(deps, inspection), page.container);
+  const packageActions = focusingModeSwitchesOf(packageActionsOf(deps, inspection), page.container);
   const menuActions: MenuActions = { package: packageActions, folder: inspection.folderActions() };
   const state = (): WidgetState => {
     const selected = inspection.selected();

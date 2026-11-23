@@ -22,6 +22,15 @@ export const MANIFEST_FILE_MAX = 1_024;
 /** The most import sites one `edgeImports` reply carries; the rest count only in `total` (spec D8, D11). */
 export const IMPORT_SITES_MAX = 200;
 
+/** The most files one `packageModules` reply lists; the host leaves out the rest and counts them in `dropped`. */
+export const MODULE_FILES_MAX = 5000;
+
+/** The most `fileLinks` and `stubLinks` together one `packageModules` reply carries; the host counts the rest in `dropped`. */
+export const MODULE_LINKS_MAX = 50_000;
+
+/** The longest stub name a `packageModules` reply carries: npm's package name limit, equal to the host's `PACKAGE_NAME_MAX`. */
+export const MODULE_STUB_NAME_MAX = 214;
+
 /** The import kinds a site may carry; a `Record`, so a new kind must be added here. */
 export const IMPORT_KINDS: Readonly<Record<ImportKind, true>> = { static: true, reexport: true, dynamic: true, require: true };
 

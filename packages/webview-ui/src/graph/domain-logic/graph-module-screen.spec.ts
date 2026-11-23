@@ -1,0 +1,172 @@
+import type { Mock, Mocked } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { moduleScreenOf } from './graph-module-screen.ts';
+import type { ModuleCounts, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
+import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { MODULE_SLOW_TEXT } from '../common/graph-module.const.ts';
+import type { ModuleScreen, ModuleScreenLayout } from '../common/module-mode.type.ts';
+import type { ModuleFileLeaf, ModuleLeaf, ModuleScene, ModuleShown } from '../common/module-scene.type.ts';
+import type { PageElements } from '../common/page-elements.type.ts';
+import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
+import { pageMock } from '../test/mocks/page.mock.ts';
+import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
+import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
+
+const COUNTS: ModuleCounts = { unresolved: 4, external: 3, assets: 2, self: 1 };
+
+const FOUND: ModulesFound = { ...MODULES_FOUND_STUB, counts: COUNTS };
+
+const FRESH_WEB: ModulesViewState = freshModulesViewOf('web');
+
+const TYPES_OFF: ModuleShown = { types: false, tests: true, lazies: true };
+
+const WEB_TYPES_OFF: ModulesViewState = { ...FRESH_WEB, shown: TYPES_OFF };
+
+const fileLeafOf = (_: unknown, index: number): ModuleLeaf => {
+  const leaf: ModuleFileLeaf = { kind: 'file', id: `file:f${index}.ts`, path: `f${index}.ts`, label: `f${index}.ts`, parent: 'dir:' };
+
+  return leaf;
+};
+
+const LEAVES_301: ModuleLeaf[] = Array.from({ length: 301 }, fileLeafOf);
+
+const FILE_IDS_301 = LEAVES_301.map((leaf) => leaf.id);
+
+const SCENE_OF_301: ModuleScene = { boxes: [], leaves: LEAVES_301, links: [], leafCount: 301, fileIds: FILE_IDS_301 };
+
+describe('FEATURE: moduleScreenOf', () => {
+  let page: PageElements;
+  let layout: Mocked<ModuleScreenLayout>;
+  let screen: ModuleScreen;
+  let onDrawn: Mock<(scene: ModuleScene) => void>;
+
+  beforeEach(() => {
+    vi.stubGlobal('document', fakeDocumentMock());
+    page = pageMock();
+    layout = { draw: vi.fn(async (): Promise<void> => Promise.resolve()), scene: vi.fn(() => SCENE_OF_301), clear: vi.fn() };
+    onDrawn = vi.fn<(scene: ModuleScene) => void>();
+    screen = moduleScreenOf({ page, layout, showGraph: vi.fn(), onDrawn });
+    screen.enter();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN the screen entered on web', () => {
+    it('WHEN it is scanning THEN the bar reads Modules of web and Scanning web…, with Refresh shown and no banner', () => {
+      screen.scanning('web');
+
+      expect([
+        page.modules.title.textContent,
+        page.modules.status.textContent,
+        page.modules.refresh.hidden,
+        page.modules.banner.hidden
+      ]).toStrictEqual(['Modules of web', 'Scanning web…', false, true]);
+    });
+
+    it('WHEN it fails THEN the banner reads Could not scan web. with Retry shown', () => {
+      screen.failed('web');
+
+      expect([page.modules.bannerText.textContent, page.modules.banner.hidden, page.modules.retry.hidden]).toStrictEqual([
+        'Could not scan web.',
+        false,
+        false
+      ]);
+    });
+
+    it('WHEN web is shown with Type-only imports off THEN the status and tooltip follow and Retry stays hidden', async () => {
+      screen.shown('web', FOUND, WEB_TYPES_OFF, { kind: 'first' });
+      await vi.waitFor(() => expect(layout.draw).toHaveBeenCalledOnce());
+
+      expect([page.modules.status.textContent, page.modules.status.title, page.modules.retry.hidden]).toStrictEqual([
+        '6 files · 9 imports · 4 unresolved',
+        '3 external · 2 assets · 1 self',
+        true
+      ]);
+    });
+
+    it('WHEN 301 leaves are drawn THEN the slow notice shows MODULE_SLOW_TEXT', async () => {
+      screen.shown('web', FOUND, FRESH_WEB, { kind: 'first' });
+      await vi.waitFor(() => expect(page.modules.slow.hidden).toBe(false));
+
+      expect(page.modules.slow.textContent).toBe(MODULE_SLOW_TEXT);
+    });
+
+    it('WHEN a draw lands THEN onDrawn gets layout.scene()', async () => {
+      screen.shown('web', FOUND, FRESH_WEB, { kind: 'first' });
+      await vi.waitFor(() => expect(onDrawn).toHaveBeenCalledOnce());
+
+      expect(onDrawn.mock.calls).toStrictEqual([[SCENE_OF_301]]);
+    });
+  });
+
+  describe('GIVEN web scanning with no graph drawn', () => {
+    beforeEach(() => {
+      layout.scene.mockReturnValue(null);
+      screen.scanning('web');
+    });
+
+    it('WHEN it fails THEN the bar no longer reads Scanning web…', () => {
+      screen.failed('web');
+
+      expect([page.modules.status.textContent, page.modules.status.title]).toStrictEqual(['', '']);
+    });
+
+    it('WHEN it fails THEN the layout is cleared once more, so a first draw still in flight lands on nothing', () => {
+      screen.failed('web');
+
+      expect(layout.clear).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN it is read THEN nothing is drawn', () => {
+      expect(screen.isDrawn()).toBe(false);
+    });
+
+    it('WHEN a draw lands on nothing THEN onDrawn is not called', async () => {
+      screen.drawAgain(FOUND, FRESH_WEB, { kind: 'keep' });
+      await new Promise<void>((resolve): void => {
+        setTimeout(resolve, 0);
+      });
+
+      expect(onDrawn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN web failed on Refresh with its graph still drawn', () => {
+    beforeEach(() => {
+      screen.failed('web');
+    });
+
+    it('WHEN it is read THEN a graph is drawn', () => {
+      expect(screen.isDrawn()).toBe(true);
+    });
+
+    it('WHEN it is drawn again THEN the view is laid out and the banner still reads Could not scan web. with Retry', () => {
+      screen.drawAgain(FOUND, WEB_TYPES_OFF, { kind: 'keep' });
+
+      expect([layout.draw.mock.calls, page.modules.bannerText.textContent, page.modules.retry.hidden]).toStrictEqual([
+        [[FOUND, WEB_TYPES_OFF, { kind: 'keep' }]],
+        'Could not scan web.',
+        false
+      ]);
+    });
+  });
+
+  describe('GIVEN web shown with 301 leaves, then failed on Refresh', () => {
+    it('WHEN it is scanning again THEN the banner, Retry and slow notice hide and the canvas is cleared', async () => {
+      screen.shown('web', FOUND, FRESH_WEB, { kind: 'first' });
+      await vi.waitFor(() => expect(page.modules.slow.hidden).toBe(false));
+      screen.failed('web');
+      screen.scanning('web');
+
+      expect([
+        page.modules.banner.hidden,
+        page.modules.retry.hidden,
+        page.modules.slow.hidden,
+        layout.clear.mock.calls.length
+      ]).toStrictEqual([true, true, true, 1]);
+    });
+  });
+});

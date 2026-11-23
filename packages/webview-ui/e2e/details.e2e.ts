@@ -46,6 +46,7 @@ const ALL_ACTIONS_POSTED: WebviewMessage[] = [
   { type: 'refresh', scope: 'dryRun' },
   { type: 'openPackageJson' },
   { type: 'focusInGraph' },
+  { type: 'showModules' },
   { type: 'showOutput' }
 ];
 
@@ -266,6 +267,8 @@ test.describe('FEATURE: package details page', () => {
     await test.step('AND Open package.json is clicked', async (): Promise<void> => detailsPage.pressButton('Open package.json'));
 
     await test.step('AND Focus on graph is clicked', async (): Promise<void> => detailsPage.pressButton('Focus on graph'));
+
+    await test.step('AND Show modules is clicked', async (): Promise<void> => detailsPage.pressButton('Show modules'));
 
     await test.step('AND Show Output is clicked', async (): Promise<void> => detailsPage.pressButton('Show Output'));
 

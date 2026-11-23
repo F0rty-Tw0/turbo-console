@@ -57,7 +57,7 @@ const IMPORT_B = "import b from 'B';";
 
 describe('FEATURE: stop a package import scan at the D8 limits', () => {
   let dir = '';
-  let scan: PackageImportScan = { files: [], tsconfigPaths: null, scanned: 0, skipped: 0, limit: null };
+  let scan: PackageImportScan = { files: [], walkedFiles: [], tsconfigPaths: null, scanned: 0, skipped: 0, limit: null };
   let cached: string[] = [];
 
   /** Scans `dir` with `patch` over a fresh cache, keeping the result and the cached file names. */
@@ -101,6 +101,10 @@ describe('FEATURE: stop a package import scan at the D8 limits', () => {
     it('WHEN scanned THEN the cache holds those two', () => {
       expect(cached).toStrictEqual(['a.ts', 'b.ts']);
     });
+
+    it('WHEN scanned THEN walkedFiles holds the two walked files', () => {
+      expect(scan.walkedFiles).toStrictEqual(['a.ts', 'b.ts']);
+    });
   });
 
   describe('GIVEN caps.entries 2 over a.ts, b.png, c.ts', () => {
@@ -140,6 +144,10 @@ describe('FEATURE: stop a package import scan at the D8 limits', () => {
 
     it('WHEN scanned THEN the cache holds both', () => {
       expect(cached).toStrictEqual(['a.ts', 'b.ts']);
+    });
+
+    it('WHEN scanned THEN walkedFiles still lists all three files', () => {
+      expect(scan.walkedFiles).toStrictEqual(['a.ts', 'b.ts', 'c.ts']);
     });
   });
 

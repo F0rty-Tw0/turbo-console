@@ -1,10 +1,11 @@
-import type { Mock } from 'vitest';
+import type { Mock, Mocked } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { viewHandlersOf } from './graph-view-handlers.ts';
 import type { Position, Positions } from '../../bridge/common/graph-state.type.ts';
 import type { GraphDrag, GraphViewHandlers } from '../common/graph-page.type.ts';
 import type { InspectionInput } from '../common/inspection.type.ts';
+import type { HandledModules } from '../common/module-canvas.type.ts';
 import { collapsedIdOf } from '../utils/folder-id.util.ts';
 
 const WEB_AT: Position = { x: 1, y: 2 };
@@ -80,8 +81,23 @@ describe('FEATURE: viewHandlersOf', () => {
         calls.push('flow cleared');
       };
       const flow = { viewportChanged };
+      const modules: Mocked<HandledModules> = {
+        isActive: vi.fn(() => false),
+        tapNode: vi.fn(),
+        tapLink: vi.fn(),
+        doubleTapNode: vi.fn(),
+        tapBackground: vi.fn(),
+        saveCamera: vi.fn()
+      };
 
-      handlers = viewHandlersOf({ frames, filtering: () => filtering, layouts: () => layouts, tasks: () => tasks, flow: () => flow });
+      handlers = viewHandlersOf({
+        frames,
+        filtering: () => filtering,
+        layouts: () => layouts,
+        tasks: () => tasks,
+        modules: () => modules,
+        flow: () => flow
+      });
     });
 
     it('WHEN a frame renders THEN the frame clock is marked before the filtering hears of it', () => {

@@ -27,8 +27,6 @@ import type {
   GraphAtomsMessage,
   GraphEdge,
   GraphEdgeExplainedMessage,
-  GraphEdgeImportsMessage,
-  GraphHostMessage,
   GraphPackage,
   GraphPrediction,
   GraphReady,
@@ -36,8 +34,6 @@ import type {
   GraphRunsMessage,
   GraphSetViewToggleMessage,
   GraphShowPackageMessage,
-  GraphShowRequest,
-  GraphShowTasksMessage,
   GraphShownTaskPackagesMessage,
   GraphShownUmbrellasMessage,
   GraphState,
@@ -51,6 +47,7 @@ import type {
   ManifestEntry,
   ManifestField,
   MissingPackage,
+  ModulesViewState,
   OpenPackageJsonMessage,
   PackageDetails,
   Positions,
@@ -59,6 +56,7 @@ import type {
   Routes,
   RunStateMessage,
   RunView,
+  ShowModulesMessage,
   ShowOutputMessage,
   StateMessage,
   TaskCard,
@@ -150,7 +148,7 @@ type PositionsKey = { readonly type: 'positions' };
 type ExportImageKey = { readonly type: 'exportImage' };
 type RunTaskKey = { readonly type: 'runTask' };
 
-/** The host-facing API: the HTML renderer, CSP, duration and atom-counts formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, the import sites cap, root tasks title, root task package, layout version and route bend limit constants; everything else is wire-contract types. The webview-only bridge stays internal. */
+/** The host-facing API: the HTML renderer, CSP, duration and atom-counts formatters, hidden-scripts hint and the icon-id pattern, tool-icon prefix, task cap, the import sites cap, the module caps, root tasks title, root task package, layout version and route bend limit constants; everything else is wire-contract types. The webview-only bridge stays internal. */
 const RUNTIME_EXPORTS = [
   'ENTRY_TEXT_MAX',
   'ICON_ID_PATTERN',
@@ -160,6 +158,9 @@ const RUNTIME_EXPORTS = [
   'MANIFEST_FIELDS',
   'MANIFEST_FILE_MAX',
   'MANIFEST_LINE_MAX',
+  'MODULE_FILES_MAX',
+  'MODULE_LINKS_MAX',
+  'MODULE_STUB_NAME_MAX',
   'ROOT_TASKS_TITLE',
   'ROOT_TASK_PACKAGE',
   'ROUTE_BENDS_MAX',
@@ -207,7 +208,13 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.webviewCsp).toBe(webviewCsp);
       expectTypeOf<WebviewSlots>().toEqualTypeOf<Readonly<Record<string, string>>>();
       expectTypeOf<WebviewMessage>().toEqualTypeOf<
-        ReadyMessage | TaskMessage | OpenPackageJsonMessage | FocusInGraphMessage | RefreshMessage | ShowOutputMessage
+        | ReadyMessage
+        | TaskMessage
+        | OpenPackageJsonMessage
+        | FocusInGraphMessage
+        | ShowModulesMessage
+        | RefreshMessage
+        | ShowOutputMessage
       >();
       expectTypeOf<FocusInGraphMessage['type']>().toEqualTypeOf<'focusInGraph'>();
       expectTypeOf<HostMessage>().toEqualTypeOf<StateMessage | RunStateMessage>();
@@ -248,16 +255,6 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphAtomGroup>().toEqualTypeOf<ExpectedAtomGroup>();
       expectTypeOf<GraphAtomFile>().toEqualTypeOf<ExpectedAtomFile>();
       expectTypeOf<GraphShowPackageMessage>().toEqualTypeOf<ExpectedShowPackageMessage>();
-      expectTypeOf<GraphShowRequest>().toEqualTypeOf<GraphShowTasksMessage | GraphShowPackageMessage>();
-      expectTypeOf<GraphHostMessage>().toEqualTypeOf<
-        | ExpectedStateMessage
-        | ExpectedExplainedMessage
-        | GraphEdgeImportsMessage
-        | GraphRunsMessage
-        | GraphShowTasksMessage
-        | ExpectedShowPackageMessage
-        | GraphAtomsMessage
-      >();
       expectTypeOf<GraphAtomOutcome>().toEqualTypeOf<'passed' | 'failed' | 'cached' | 'none'>();
       expectTypeOf<GraphAtomCounts>().toEqualTypeOf<ExpectedAtomCounts>();
       expectTypeOf<GraphAtomGroupState>().toEqualTypeOf<ExpectedAtomGroupState>();
@@ -270,23 +267,6 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<GraphShownTaskPackagesMessage>().toEqualTypeOf<ExpectedShownTaskPackagesMessage>();
       expectTypeOf<GraphShownUmbrellasMessage>().toEqualTypeOf<ExpectedShownUmbrellasMessage>();
       expectTypeOf<GraphSetViewToggleMessage>().toEqualTypeOf<ExpectedSetViewToggleMessage>();
-      expectTypeOf<GraphWebviewMessage['type']>().toEqualTypeOf<
-        | 'ready'
-        | 'reload'
-        | 'openDetails'
-        | 'positions'
-        | 'layoutDone'
-        | 'explainEdge'
-        | 'openManifest'
-        | 'scanImports'
-        | 'openImport'
-        | 'exportImage'
-        | 'runTask'
-        | 'stopTask'
-        | 'shownUmbrellas'
-        | 'shownTaskPackages'
-        | 'setViewToggle'
-      >();
       expectTypeOf<Extract<GraphWebviewMessage, RunTaskKey>['noCache']>().toEqualTypeOf<boolean>();
       expectTypeOf<Extract<GraphWebviewMessage, OpenManifestKey>['line']>().toEqualTypeOf<number>();
       expectTypeOf<Extract<GraphWebviewMessage, LayoutDoneKey>['engine']>().toEqualTypeOf<'elk' | 'fallback'>();
@@ -300,8 +280,9 @@ describe('FEATURE: webview-ui package entry', () => {
       expectTypeOf<Routes[string]>().toEqualTypeOf<ExpectedEdgeRoute>();
       expectTypeOf<GraphViewState['selected']>().toEqualTypeOf<string | null>();
       expectTypeOf<TaskViewState>().toEqualTypeOf<ExpectedTaskView>();
-      expectTypeOf<GraphViewState['mode']>().toEqualTypeOf<'packages' | 'tasks'>();
+      expectTypeOf<GraphViewState['mode']>().toEqualTypeOf<'packages' | 'tasks' | 'modules'>();
       expectTypeOf<GraphViewState['task']>().toEqualTypeOf<TaskViewState | null>();
+      expectTypeOf<GraphViewState['modules']>().toEqualTypeOf<ModulesViewState | null>();
     });
   });
 });

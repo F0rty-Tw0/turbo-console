@@ -46,7 +46,23 @@ const FOUND_ONE = { kind: 'found', total: 1 };
 
 const edgeImportsOf = (ports: GraphPorts): GraphHostMessage[] => postedOf(ports).filter((message) => message.type === 'edgeImports');
 
+const packageModulesOf = (ports: GraphPorts): GraphHostMessage[] =>
+  postedOf(ports).filter((message) => message.type === 'packageModules');
+
+const MODULES_OF_WEB = { type: 'packageModules', packageName: 'web' };
+
 describe('FEATURE: graph session import requests (spec D10, D12)', () => {
+  describe('GIVEN a scanModules request', () => {
+    it('WHEN web arrives after ready THEN exactly one packageModules for web is posted', async () => {
+      const { session, ports } = shownSession();
+
+      await session.receive({ type: 'ready' });
+      await session.receive({ type: 'scanModules', packageName: 'web' });
+
+      expect(packageModulesOf(ports)).toMatchObject([MODULES_OF_WEB]);
+    });
+  });
+
   describe('GIVEN a scanImports request', () => {
     it('WHEN web → a arrives after ready THEN apps/web is scanned once and an edgeImports for web → a is posted last', async () => {
       const { session, ports } = shownSession();

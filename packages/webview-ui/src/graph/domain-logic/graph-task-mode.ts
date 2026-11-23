@@ -115,9 +115,9 @@ export class GraphTaskMode {
     this.render(at, null);
   }
 
-  /** Task mode → package mode with the task camera saved; in package mode it does nothing. */
-  public leave(): void {
-    if (this.isActive()) this.hidePage();
+  /** Task mode → package or modules mode with the task camera saved; outside task mode it does nothing. */
+  public leave(to: 'packages' | 'modules' = 'packages'): void {
+    if (this.isActive()) this.hidePage(to);
   }
 
   /** Chooses the known ones of `taskIds` from either mode; with none known the page stays as it is and says so. */
@@ -215,17 +215,17 @@ export class GraphTaskMode {
     this.selection.enter(current?.detailsOpen ?? true);
   }
 
-  /** Saves the task camera, empties the canvas and hands the page back to the package graph. */
-  private hidePage(): void {
+  /** Saves the task camera, empties the canvas and hands the page to mode `to`. */
+  private hidePage(to: 'packages' | 'modules'): void {
     this.saveCamera();
-    this.deps.modes.setMode('packages', this.memory.hash());
+    this.deps.modes.setMode(to, this.memory.hash());
     this.layout.clear();
     this.hasEntered = false;
     this.panel.exit();
     this.controls.exit();
     this.selection.exit();
     this.deps.view.resize();
-    this.deps.onExit();
+    this.deps.onExit(to);
     this.deps.onLocation();
   }
 }

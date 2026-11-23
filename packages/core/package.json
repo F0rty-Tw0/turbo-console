@@ -32,6 +32,7 @@
     "@turbo-console/tools": "workspace:*",
     "lint-suite": "catalog:dev",
     "turbo": "catalog:dev",
+    "typescript": "catalog:dev",
     "typescript-eslint": "catalog:dev",
     "vitest": "catalog:dev"
   }

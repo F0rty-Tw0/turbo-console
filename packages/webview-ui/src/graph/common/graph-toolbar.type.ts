@@ -7,6 +7,8 @@ export type ToolbarElements = Pick<
   | 'toolbar'
   | 'modeGroup'
   | 'modeEnd'
+  | 'rootModulesGroup'
+  | 'rootModules'
   | 'packagesMode'
   | 'taskMode'
   | 'controls'

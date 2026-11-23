@@ -175,6 +175,9 @@ test.describe('FEATURE: graph panel sashes', () => {
       await test.step('THEN ArrowUp left Details at 280', async (): Promise<void> =>
         graphSashes.expectPanelWidth('graph-details', 280));
 
+      await test.step('AND the four shown web actions sit two by two', async (): Promise<void> =>
+        graphSashes.expectDetailsRowGrid(2, 2));
+
       await test.step('WHEN Details gets Home', async (): Promise<void> => graphSashes.press('details', 'Home'));
 
       await test.step('THEN Details is 200px wide', async (): Promise<void> => graphSashes.expectPanelWidth('graph-details', 200));
@@ -184,6 +187,9 @@ test.describe('FEATURE: graph panel sashes', () => {
 
       await test.step('AND every Details action label sits on one line', async (): Promise<void> =>
         graphSashes.expectDetailsLabelsOnOneLine());
+
+      await test.step('AND the four shown web actions stack in one column', async (): Promise<void> =>
+        graphSashes.expectDetailsRowGrid(1, 4));
 
       await test.step('WHEN Controls gets ArrowRight, ArrowLeft and ArrowDown', async (): Promise<void> => {
         await graphSashes.press('controls', 'ArrowRight');

@@ -6,6 +6,7 @@ export type {
   ReadyMessage,
   RefreshMessage,
   RunStateMessage,
+  ShowModulesMessage,
   ShowOutputMessage,
   StateMessage,
   TaskMessage,
@@ -61,6 +62,25 @@ export type {
 } from './bridge/common/graph-imports.type.ts';
 
 export type {
+  GraphPackageModulesMessage,
+  GraphScanModulesMessage,
+  GraphShowModulesMessage,
+  ModuleCounts,
+  ModuleLink,
+  ModulesFound,
+  ModulesResult
+} from './bridge/common/graph-modules.type.ts';
+
+export type {
+  GraphModuleSitesMessage,
+  GraphScanModuleSitesMessage,
+  ModuleEnd,
+  ModuleSite,
+  ModuleSitesFound,
+  ModuleSitesResult
+} from './bridge/common/graph-module-sites.type.ts';
+
+export type {
   EdgeRoute,
   GraphAtomFile,
   GraphAtomGroup,
@@ -75,7 +95,7 @@ export type {
   Routes
 } from './bridge/common/graph-state.type.ts';
 
-export type { GraphViewState, TaskViewState } from './bridge/common/graph-view-state.type.ts';
+export type { GraphViewState, ModulesViewState, TaskViewState } from './bridge/common/graph-view-state.type.ts';
 
 export type { WebviewSlots } from './shell/common/webview-html.type.ts';
 
@@ -86,6 +106,9 @@ export {
   MANIFEST_FIELDS,
   MANIFEST_FILE_MAX,
   MANIFEST_LINE_MAX,
+  MODULE_FILES_MAX,
+  MODULE_LINKS_MAX,
+  MODULE_STUB_NAME_MAX,
   TASK_COUNT_MAX
 } from './bridge/common/graph-message.const.ts';
 

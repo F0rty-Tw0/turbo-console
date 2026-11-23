@@ -299,9 +299,9 @@ test.describe('FEATURE: folder widget menus', () => {
         await graphMenus.openPackageMenu('web');
       });
 
-      await test.step('THEN the menu is named for web and lists View Package Details, Focus, Start trace and Exclude', async (): Promise<void> => {
+      await test.step('THEN the menu is named for web and lists View Package Details, Focus, Start trace, Show modules and Exclude', async (): Promise<void> => {
         await graphMenus.expectPackageMenuNamed('web');
-        await graphMenus.expectItems(['View Package Details', 'Focus', 'Start trace', 'Exclude']);
+        await graphMenus.expectItems(['View Package Details', 'Focus', 'Start trace', 'Show modules', 'Exclude']);
       });
 
       await test.step('WHEN View Package Details is chosen', async (): Promise<void> =>
