@@ -48,6 +48,7 @@ const portsOf = (pickMany: Mock<RootPickPorts['pickMany']>, scriptsShown = false
     rootOf: () => '/ws',
     pick: vi.fn(),
     pickMany,
+    pickOne: vi.fn(),
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),

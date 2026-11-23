@@ -8,6 +8,8 @@ const openPackageJsonSchema = object({ type: literal('openPackageJson') });
 
 const focusInGraphSchema = object({ type: literal('focusInGraph') });
 
+const showModulesSchema = object({ type: literal('showModules') });
+
 const refreshSchema = object({ type: literal('refresh'), scope: zodEnum(['dryRun', 'root']) });
 
 const showOutputSchema = object({ type: literal('showOutput') });
@@ -21,6 +23,7 @@ export const webviewMessageSchema = discriminatedUnion('type', [
   taskSchema,
   openPackageJsonSchema,
   focusInGraphSchema,
+  showModulesSchema,
   refreshSchema,
   showOutputSchema
 ]);

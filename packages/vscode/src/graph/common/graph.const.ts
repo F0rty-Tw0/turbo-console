@@ -11,6 +11,10 @@ export const SHOW_ALL_TASK_GRAPHS_COMMAND = 'turboConsole.showAllTaskGraphs';
 
 export const FOCUS_PACKAGE_COMMAND = 'turboConsole.focusPackageInGraph';
 
+export const SHOW_MODULES_COMMAND = 'turboConsole.showPackageModules';
+
+export const MODULES_PICK_PLACEHOLDER = 'Choose a package to show its modules';
+
 export const GRAPH_CACHE_KEY_PREFIX = 'turboConsole.graphLayout:';
 
 export const GRAPH_FOLDERS_CACHE_KEY_PREFIX = 'turboConsole.graphLayout.folders:';
