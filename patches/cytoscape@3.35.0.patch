@@ -1,5 +1,5 @@
 diff --git a/dist/cytoscape.cjs.js b/dist/cytoscape.cjs.js
-index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..852e9c4b70f2d59ccd54bc2512569be255fac23e 100644
+index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..508fb513f6453b00c631637a73f2f141304ecac2 100644
 --- a/dist/cytoscape.cjs.js
 +++ b/dist/cytoscape.cjs.js
 @@ -12141,6 +12141,10 @@ elesfn$b.boundingBox = function (options) {
@@ -41,7 +41,87 @@ index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..852e9c4b70f2d59ccd54bc2512569be2
        if (!parentOk(parent)) {
          return false;
        }
-@@ -20823,7 +20825,7 @@ BreadthFirstLayout.prototype.run = function () {
+@@ -16228,7 +16230,19 @@ styfn$8.apply = function (eles) {
+       continue;
+     }
+     var cxtStyle = self.getContextStyle(cxtMeta);
+-    var app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
++    // patched: collect this element's style triggers, then run each effect once after all its properties are applied
++    var outerDefer = _p.deferTriggers;
++    var defer = _p.deferTriggers = {
++      ele: ele,
++      list: []
++    };
++    var app;
++    try {
++      app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
++    } finally {
++      _p.deferTriggers = outerDefer;
++    }
++    self.flushTriggers(ele, defer.list);
+     if (ele._private.appliedInitStyle) {
+       self.updateTransitions(ele, app.diffProps);
+     } else {
+@@ -16969,12 +16983,58 @@ styfn$8.checkParallelEdgesBoundsTrigger = function (ele, name, fromValue, toValu
+   });
+ };
+ styfn$8.checkTriggers = function (ele, name, fromValue, toValue) {
++  // patched: inside styfn.apply, queue the trigger so flushTriggers runs each effect once per element
++  var defer = this._private.deferTriggers;
++  if (defer && defer.ele === ele) {
++    defer.list.push(name, fromValue, toValue);
++    return;
++  }
+   ele.dirtyStyleCache();
+   this.checkZOrderTrigger(ele, name, fromValue, toValue);
+   this.checkBoundsTrigger(ele, name, fromValue, toValue);
+   this.checkConnectedEdgesBoundsTrigger(ele, name, fromValue, toValue);
+   this.checkParallelEdgesBoundsTrigger(ele, name, fromValue, toValue);
+ };
++// patched: the four trigger effects depend only on the element, so one run of each matches one run per property
++styfn$8.flushTriggers = function (ele, list) {
++  if (list.length === 0) {
++    return;
++  }
++  ele.dirtyStyleCache();
++  if (ele.removed()) {
++    return;
++  }
++  var z = false;
++  var b = false;
++  var c = false;
++  var p = false;
++  for (var i = 0; i < list.length; i += 3) {
++    var prop = this.properties[list[i]];
++    var from = list[i + 1];
++    var to = list[i + 2];
++    z = z || prop.triggersZOrder != null && prop.triggersZOrder(from, to, ele);
++    b = b || prop.triggersBounds != null && prop.triggersBounds(from, to, ele);
++    c = c || prop.triggersBoundsOfConnectedEdges != null && prop.triggersBoundsOfConnectedEdges(from, to, ele);
++    p = p || prop.triggersBoundsOfParallelEdges != null && prop.triggersBoundsOfParallelEdges(from, to, ele);
++  }
++  if (z) {
++    this._private.cy.notify('zorder', ele);
++  }
++  if (b) {
++    ele.dirtyCompoundBoundsCache();
++    ele.dirtyBoundingBoxCache();
++  }
++  if (c) {
++    ele.connectedEdges().forEach(function (edge) {
++      edge.dirtyBoundingBoxCache();
++    });
++  }
++  if (p) {
++    ele.parallelEdges().forEach(function (pllEdge) {
++      pllEdge.dirtyBoundingBoxCache();
++    });
++  }
++};
+ 
+ var styfn$7 = {};
+ 
+@@ -20823,7 +20883,7 @@ BreadthFirstLayout.prototype.run = function () {
    // get the weighted percent for an element based on its connectivity to other levels
    var cachedWeightedPercent = {};
    var getWeightedPercent = function getWeightedPercent(ele) {
@@ -50,7 +130,7 @@ index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..852e9c4b70f2d59ccd54bc2512569be2
        return cachedWeightedPercent[ele.id()];
      }
      var eleDepth = getInfo(ele).depth;
-@@ -25847,8 +25849,10 @@ BRp$7.registerCalculationListeners = function () {
+@@ -25847,8 +25907,10 @@ BRp$7.registerCalculationListeners = function () {
            fn(willDraw, elesToUpdate);
          }
        }
@@ -63,7 +143,7 @@ index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..852e9c4b70f2d59ccd54bc2512569be2
    };
    r.flushRenderedStyleQueue = function () {
 diff --git a/dist/cytoscape.esm.mjs b/dist/cytoscape.esm.mjs
-index 4b7cd162da9d60f25702153f09b6f3876de94e80..5cf3ed42f0812037158f3958b59520e32233771d 100644
+index 4b7cd162da9d60f25702153f09b6f3876de94e80..f60129616532824cab633791d542ce245b94fc23 100644
 --- a/dist/cytoscape.esm.mjs
 +++ b/dist/cytoscape.esm.mjs
 @@ -12139,6 +12139,10 @@ elesfn$b.boundingBox = function (options) {
@@ -105,7 +185,87 @@ index 4b7cd162da9d60f25702153f09b6f3876de94e80..5cf3ed42f0812037158f3958b59520e3
        if (!parentOk(parent)) {
          return false;
        }
-@@ -20821,7 +20823,7 @@ BreadthFirstLayout.prototype.run = function () {
+@@ -16226,7 +16228,19 @@ styfn$8.apply = function (eles) {
+       continue;
+     }
+     var cxtStyle = self.getContextStyle(cxtMeta);
+-    var app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
++    // patched: collect this element's style triggers, then run each effect once after all its properties are applied
++    var outerDefer = _p.deferTriggers;
++    var defer = _p.deferTriggers = {
++      ele: ele,
++      list: []
++    };
++    var app;
++    try {
++      app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
++    } finally {
++      _p.deferTriggers = outerDefer;
++    }
++    self.flushTriggers(ele, defer.list);
+     if (ele._private.appliedInitStyle) {
+       self.updateTransitions(ele, app.diffProps);
+     } else {
+@@ -16967,12 +16981,58 @@ styfn$8.checkParallelEdgesBoundsTrigger = function (ele, name, fromValue, toValu
+   });
+ };
+ styfn$8.checkTriggers = function (ele, name, fromValue, toValue) {
++  // patched: inside styfn.apply, queue the trigger so flushTriggers runs each effect once per element
++  var defer = this._private.deferTriggers;
++  if (defer && defer.ele === ele) {
++    defer.list.push(name, fromValue, toValue);
++    return;
++  }
+   ele.dirtyStyleCache();
+   this.checkZOrderTrigger(ele, name, fromValue, toValue);
+   this.checkBoundsTrigger(ele, name, fromValue, toValue);
+   this.checkConnectedEdgesBoundsTrigger(ele, name, fromValue, toValue);
+   this.checkParallelEdgesBoundsTrigger(ele, name, fromValue, toValue);
+ };
++// patched: the four trigger effects depend only on the element, so one run of each matches one run per property
++styfn$8.flushTriggers = function (ele, list) {
++  if (list.length === 0) {
++    return;
++  }
++  ele.dirtyStyleCache();
++  if (ele.removed()) {
++    return;
++  }
++  var z = false;
++  var b = false;
++  var c = false;
++  var p = false;
++  for (var i = 0; i < list.length; i += 3) {
++    var prop = this.properties[list[i]];
++    var from = list[i + 1];
++    var to = list[i + 2];
++    z = z || prop.triggersZOrder != null && prop.triggersZOrder(from, to, ele);
++    b = b || prop.triggersBounds != null && prop.triggersBounds(from, to, ele);
++    c = c || prop.triggersBoundsOfConnectedEdges != null && prop.triggersBoundsOfConnectedEdges(from, to, ele);
++    p = p || prop.triggersBoundsOfParallelEdges != null && prop.triggersBoundsOfParallelEdges(from, to, ele);
++  }
++  if (z) {
++    this._private.cy.notify('zorder', ele);
++  }
++  if (b) {
++    ele.dirtyCompoundBoundsCache();
++    ele.dirtyBoundingBoxCache();
++  }
++  if (c) {
++    ele.connectedEdges().forEach(function (edge) {
++      edge.dirtyBoundingBoxCache();
++    });
++  }
++  if (p) {
++    ele.parallelEdges().forEach(function (pllEdge) {
++      pllEdge.dirtyBoundingBoxCache();
++    });
++  }
++};
+ 
+ var styfn$7 = {};
+ 
+@@ -20821,7 +20881,7 @@ BreadthFirstLayout.prototype.run = function () {
    // get the weighted percent for an element based on its connectivity to other levels
    var cachedWeightedPercent = {};
    var getWeightedPercent = function getWeightedPercent(ele) {
@@ -114,7 +274,7 @@ index 4b7cd162da9d60f25702153f09b6f3876de94e80..5cf3ed42f0812037158f3958b59520e3
        return cachedWeightedPercent[ele.id()];
      }
      var eleDepth = getInfo(ele).depth;
-@@ -25845,8 +25847,10 @@ BRp$7.registerCalculationListeners = function () {
+@@ -25845,8 +25905,10 @@ BRp$7.registerCalculationListeners = function () {
            fn(willDraw, elesToUpdate);
          }
        }
@@ -127,7 +287,7 @@ index 4b7cd162da9d60f25702153f09b6f3876de94e80..5cf3ed42f0812037158f3958b59520e3
    };
    r.flushRenderedStyleQueue = function () {
 diff --git a/dist/cytoscape.umd.js b/dist/cytoscape.umd.js
-index af67ea46e043233d17eacc6979a22157f7b90425..694dee38021e90bbeff3141444be9954b546e234 100644
+index af67ea46e043233d17eacc6979a22157f7b90425..c8b500b24780b05b3cae0d0211723c0cde555e25 100644
 --- a/dist/cytoscape.umd.js
 +++ b/dist/cytoscape.umd.js
 @@ -12145,6 +12145,10 @@
@@ -169,7 +329,87 @@ index af67ea46e043233d17eacc6979a22157f7b90425..694dee38021e90bbeff3141444be9954
          if (!parentOk(parent)) {
            return false;
          }
-@@ -20827,7 +20829,7 @@
+@@ -16232,7 +16234,19 @@
+         continue;
+       }
+       var cxtStyle = self.getContextStyle(cxtMeta);
+-      var app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
++      // patched: collect this element's style triggers, then run each effect once after all its properties are applied
++      var outerDefer = _p.deferTriggers;
++      var defer = _p.deferTriggers = {
++        ele: ele,
++        list: []
++      };
++      var app;
++      try {
++        app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
++      } finally {
++        _p.deferTriggers = outerDefer;
++      }
++      self.flushTriggers(ele, defer.list);
+       if (ele._private.appliedInitStyle) {
+         self.updateTransitions(ele, app.diffProps);
+       } else {
+@@ -16973,12 +16987,58 @@
+     });
+   };
+   styfn$8.checkTriggers = function (ele, name, fromValue, toValue) {
++    // patched: inside styfn.apply, queue the trigger so flushTriggers runs each effect once per element
++    var defer = this._private.deferTriggers;
++    if (defer && defer.ele === ele) {
++      defer.list.push(name, fromValue, toValue);
++      return;
++    }
+     ele.dirtyStyleCache();
+     this.checkZOrderTrigger(ele, name, fromValue, toValue);
+     this.checkBoundsTrigger(ele, name, fromValue, toValue);
+     this.checkConnectedEdgesBoundsTrigger(ele, name, fromValue, toValue);
+     this.checkParallelEdgesBoundsTrigger(ele, name, fromValue, toValue);
+   };
++  // patched: the four trigger effects depend only on the element, so one run of each matches one run per property
++  styfn$8.flushTriggers = function (ele, list) {
++    if (list.length === 0) {
++      return;
++    }
++    ele.dirtyStyleCache();
++    if (ele.removed()) {
++      return;
++    }
++    var z = false;
++    var b = false;
++    var c = false;
++    var p = false;
++    for (var i = 0; i < list.length; i += 3) {
++      var prop = this.properties[list[i]];
++      var from = list[i + 1];
++      var to = list[i + 2];
++      z = z || prop.triggersZOrder != null && prop.triggersZOrder(from, to, ele);
++      b = b || prop.triggersBounds != null && prop.triggersBounds(from, to, ele);
++      c = c || prop.triggersBoundsOfConnectedEdges != null && prop.triggersBoundsOfConnectedEdges(from, to, ele);
++      p = p || prop.triggersBoundsOfParallelEdges != null && prop.triggersBoundsOfParallelEdges(from, to, ele);
++    }
++    if (z) {
++      this._private.cy.notify('zorder', ele);
++    }
++    if (b) {
++      ele.dirtyCompoundBoundsCache();
++      ele.dirtyBoundingBoxCache();
++    }
++    if (c) {
++      ele.connectedEdges().forEach(function (edge) {
++        edge.dirtyBoundingBoxCache();
++      });
++    }
++    if (p) {
++      ele.parallelEdges().forEach(function (pllEdge) {
++        pllEdge.dirtyBoundingBoxCache();
++      });
++    }
++  };
+ 
+   var styfn$7 = {};
+ 
+@@ -20827,7 +20887,7 @@
      // get the weighted percent for an element based on its connectivity to other levels
      var cachedWeightedPercent = {};
      var getWeightedPercent = function getWeightedPercent(ele) {
@@ -178,7 +418,7 @@ index af67ea46e043233d17eacc6979a22157f7b90425..694dee38021e90bbeff3141444be9954
          return cachedWeightedPercent[ele.id()];
        }
        var eleDepth = getInfo(ele).depth;
-@@ -25851,8 +25853,10 @@ var printLayoutInfo;
+@@ -25851,8 +25911,10 @@ var printLayoutInfo;
              fn(willDraw, elesToUpdate);
            }
          }
@@ -269,3 +509,90 @@ index 563b687e07e212a17e4728c3ad88dd4ef540251d..cb8d862e6c525d1dd0d6657874a79c8f
      }
    };
  
+diff --git a/src/style/apply.mjs b/src/style/apply.mjs
+index b04c993f3f6462c84f6f57b7393d87ced7c03b62..79a20b7c7b02dca0f07c245b21bbee3a1d384323 100644
+--- a/src/style/apply.mjs
++++ b/src/style/apply.mjs
+@@ -27,7 +27,18 @@ styfn.apply = function( eles ){
+     }
+ 
+     let cxtStyle = self.getContextStyle( cxtMeta );
+-    let app = self.applyContextStyle( cxtMeta, cxtStyle, ele );
++    // patched: collect this element's style triggers, then run each effect once after all its properties are applied
++    let outerDefer = _p.deferTriggers;
++    let defer = _p.deferTriggers = { ele, list: [] };
++    let app;
++
++    try {
++      app = self.applyContextStyle( cxtMeta, cxtStyle, ele );
++    } finally {
++      _p.deferTriggers = outerDefer;
++    }
++
++    self.flushTriggers( ele, defer.list );
+ 
+     if( ele._private.appliedInitStyle ){
+       self.updateTransitions( ele, app.diffProps );
+@@ -838,6 +849,15 @@ styfn.checkParallelEdgesBoundsTrigger = function( ele, name, fromValue, toValue
+ };
+ 
+ styfn.checkTriggers = function( ele, name, fromValue, toValue ){
++  // patched: inside styfn.apply, queue the trigger so flushTriggers runs each effect once per element
++  let defer = this._private.deferTriggers;
++
++  if( defer && defer.ele === ele ){
++    defer.list.push( name, fromValue, toValue );
++
++    return;
++  }
++
+   ele.dirtyStyleCache();
+ 
+   this.checkZOrderTrigger( ele, name, fromValue, toValue );
+@@ -846,4 +866,46 @@ styfn.checkTriggers = function( ele, name, fromValue, toValue ){
+   this.checkParallelEdgesBoundsTrigger( ele, name, fromValue, toValue );
+ };
+ 
++// patched: the four trigger effects depend only on the element, so one run of each matches one run per property
++styfn.flushTriggers = function( ele, list ){
++  if( list.length === 0 ){ return; }
++
++  ele.dirtyStyleCache();
++
++  if( ele.removed() ){ return; }
++
++  let z = false;
++  let b = false;
++  let c = false;
++  let p = false;
++
++  for( let i = 0; i < list.length; i += 3 ){
++    let prop = this.properties[ list[ i ] ];
++    let from = list[ i + 1 ];
++    let to = list[ i + 2 ];
++
++    z = z || ( prop.triggersZOrder != null && prop.triggersZOrder( from, to, ele ) );
++    b = b || ( prop.triggersBounds != null && prop.triggersBounds( from, to, ele ) );
++    c = c || ( prop.triggersBoundsOfConnectedEdges != null && prop.triggersBoundsOfConnectedEdges( from, to, ele ) );
++    p = p || ( prop.triggersBoundsOfParallelEdges != null && prop.triggersBoundsOfParallelEdges( from, to, ele ) );
++  }
++
++  if( z ){
++    this._private.cy.notify('zorder', ele);
++  }
++
++  if( b ){
++    ele.dirtyCompoundBoundsCache();
++    ele.dirtyBoundingBoxCache();
++  }
++
++  if( c ){
++    ele.connectedEdges().forEach( edge => edge.dirtyBoundingBoxCache() );
++  }
++
++  if( p ){
++    ele.parallelEdges().forEach( pllEdge => pllEdge.dirtyBoundingBoxCache() );
++  }
++};
++
+ export default styfn;
