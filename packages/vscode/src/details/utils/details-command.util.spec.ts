@@ -69,6 +69,15 @@ describe('FEATURE: details panel commands', () => {
     });
   });
 
+  describe('GIVEN showModules', () => {
+    it('WHEN mapped THEN it shows the modules of the panel package row', () => {
+      const command = commandOf({ type: 'showModules' }, KEY);
+      const arg = { kind: 'pkg', root: KEY.root, packageName: KEY.packageName };
+
+      expect(command).toStrictEqual({ command: 'turboConsole.showPackageModules', arg });
+    });
+  });
+
   describe('GIVEN showOutput', () => {
     it('WHEN mapped THEN it shows the output with no argument', () => {
       expect(commandOf({ type: 'showOutput' }, KEY)).toStrictEqual({ command: 'turboConsole.showOutput', arg: undefined });

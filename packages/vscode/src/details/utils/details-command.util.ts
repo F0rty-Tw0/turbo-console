@@ -1,6 +1,6 @@
 import type { TaskMessage } from '@turbo-console/webview-ui';
 
-import { FOCUS_PACKAGE_COMMAND, SHOW_TASK_GRAPH_COMMAND } from '../../graph/common/graph.const.ts';
+import { FOCUS_PACKAGE_COMMAND, SHOW_MODULES_COMMAND, SHOW_TASK_GRAPH_COMMAND } from '../../graph/common/graph.const.ts';
 import type { CommandMessage, DetailsCommand, PanelKey } from '../common/details.type.ts';
 
 const TASK_COMMANDS: Readonly<Record<TaskMessage['type'], string>> = {
@@ -10,9 +10,10 @@ const TASK_COMMANDS: Readonly<Record<TaskMessage['type'], string>> = {
   showInTaskGraph: SHOW_TASK_GRAPH_COMMAND
 };
 
-const PACKAGE_COMMANDS: Readonly<Record<'openPackageJson' | 'focusInGraph', string>> = {
+const PACKAGE_COMMANDS: Readonly<Record<'openPackageJson' | 'focusInGraph' | 'showModules', string>> = {
   openPackageJson: 'turboConsole.openPackageJson',
-  focusInGraph: FOCUS_PACKAGE_COMMAND
+  focusInGraph: FOCUS_PACKAGE_COMMAND,
+  showModules: SHOW_MODULES_COMMAND
 };
 
 /**
@@ -26,7 +27,7 @@ export const commandOf = (message: CommandMessage, key: PanelKey): DetailsComman
     return show;
   }
 
-  if (message.type === 'openPackageJson' || message.type === 'focusInGraph') {
+  if (message.type === 'openPackageJson' || message.type === 'focusInGraph' || message.type === 'showModules') {
     const packageRow = { kind: 'pkg', root: key.root, packageName: key.packageName };
     const packageCommand: DetailsCommand = { command: PACKAGE_COMMANDS[message.type], arg: packageRow };
 

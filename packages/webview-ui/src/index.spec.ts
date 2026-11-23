@@ -55,6 +55,7 @@ import type {
   Routes,
   RunStateMessage,
   RunView,
+  ShowModulesMessage,
   ShowOutputMessage,
   StateMessage,
   TaskCard,
@@ -206,7 +207,13 @@ describe('FEATURE: webview-ui package entry', () => {
       expect(entry.webviewCsp).toBe(webviewCsp);
       expectTypeOf<WebviewSlots>().toEqualTypeOf<Readonly<Record<string, string>>>();
       expectTypeOf<WebviewMessage>().toEqualTypeOf<
-        ReadyMessage | TaskMessage | OpenPackageJsonMessage | FocusInGraphMessage | RefreshMessage | ShowOutputMessage
+        | ReadyMessage
+        | TaskMessage
+        | OpenPackageJsonMessage
+        | FocusInGraphMessage
+        | ShowModulesMessage
+        | RefreshMessage
+        | ShowOutputMessage
       >();
       expectTypeOf<FocusInGraphMessage['type']>().toEqualTypeOf<'focusInGraph'>();
       expectTypeOf<HostMessage>().toEqualTypeOf<StateMessage | RunStateMessage>();
