@@ -19,6 +19,10 @@ import type {
   ImportScanInput,
   ImportScanLimit,
   LockfileName,
+  ModuleCounts,
+  ModuleGraph,
+  ModuleGraphInput,
+  ModuleLink,
   PackageEdge,
   PackageGraph,
   PackageImportScan,
@@ -42,13 +46,15 @@ import type {
   TurboBinary,
   TurboErrorKind,
   TurboVersionRange,
-  WorkspaceModel
+  WorkspaceModel,
+  WorkspaceTarget
 } from './index.ts';
 
 /**
  * The runtime exports: the readers, `TurboException`, the text cleaners `plainLine` and `plainLines`, the import scan
  * (`scanPackageImports` and the `ImportFileCache` it reads and fills, and `isSourceName`, which the host's `openImport`
- * checks), the alias helpers the host's import match uses (`aliasTargetsOf`, `PATHS_SKIPPED`, `isNameOf`), and the run
+ * checks), the alias helpers the host's import match uses (`aliasTargetsOf`, `PATHS_SKIPPED`, `isNameOf`), the module
+ * graph fold `moduleGraphOf` the host's modules mode draws from, and the run
  * option words `turboOptionArgs` with the patterns their checks use (`BARE`,
  * `BARE_FIRST_BLOCKED`, `CONCURRENCY_VALUE`). The
  * task-name check `assertTaskName` and the boundary check `isWithin` are public: the vscode run flow uses them.
@@ -83,6 +89,7 @@ const RUNTIME_EXPORTS = [
   'isWithin',
   'loadWorkspace',
   'matchRunTasks',
+  'moduleGraphOf',
   'packageGraphSchema',
   'plainLine',
   'plainLines',
@@ -153,6 +160,11 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<CachedFile>().toHaveProperty('mtimeMs');
       expectTypeOf<ImportScanInput>().toHaveProperty('signal');
       expectTypeOf<ImportFileCache>().toExtend<ImportScanInput['cache']>();
+      expectTypeOf<WorkspaceTarget>().toHaveProperty('names');
+      expectTypeOf<ModuleGraphInput>().toHaveProperty('others');
+      expectTypeOf<ModuleLink>().toEqualTypeOf<readonly [from: number, to: number, statics: number, types: number, lazies: number]>();
+      expectTypeOf<ModuleCounts>().toHaveProperty('unresolved');
+      expectTypeOf<ModuleGraph>().toHaveProperty('stubLinks');
     });
 
     it('WHEN TurboErrorKind is imported THEN it is the exact kind union', () => {

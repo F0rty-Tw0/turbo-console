@@ -30,6 +30,7 @@
   "devDependencies": {
     "@turbo-console/repo-gen": "workspace:*",
     "@turbo-console/tools": "workspace:*",
-    "turbo": "catalog:dev"
+    "turbo": "catalog:dev",
+    "typescript": "catalog:dev"
   }
 }
