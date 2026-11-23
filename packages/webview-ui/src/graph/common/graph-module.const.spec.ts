@@ -4,7 +4,11 @@ import {
   MODULES_DROPPED_WARNING,
   MODULES_MODE_CLASS,
   MODULE_CONTROLS_ID,
+  MODULE_DETAILS_EMPTY_TEXT,
+  MODULE_DETAILS_ID,
   MODULE_FOCUS_SECTION_TITLE,
+  MODULE_IMPORTED_BY_HEADING,
+  MODULE_IMPORTS_HEADING,
   MODULE_NO_FOCUS_TEXT,
   MODULE_SHOWN_CAP,
   MODULE_SLOW_TEXT
@@ -31,6 +35,17 @@ describe('FEATURE: module constants', () => {
         'graph-module-controls',
         'Focus',
         'None'
+      ]);
+    });
+  });
+
+  describe('GIVEN the module Details values (§6.3)', () => {
+    it('WHEN read THEN the panel id, the two list headings and the empty hint are verbatim', () => {
+      expect([MODULE_DETAILS_ID, MODULE_IMPORTS_HEADING, MODULE_IMPORTED_BY_HEADING, MODULE_DETAILS_EMPTY_TEXT]).toStrictEqual([
+        'graph-module-details',
+        'Imports',
+        'Imported by',
+        'Select a file, package or link to see its imports.'
       ]);
     });
   });
