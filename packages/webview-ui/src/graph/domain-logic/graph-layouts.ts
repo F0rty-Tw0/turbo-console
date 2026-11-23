@@ -99,9 +99,9 @@ export class GraphLayouts {
     await this.layOut(next);
   }
 
-  /** Re-layout and Retry: a fresh run of the checkbox's mode; a switch still waiting stays waiting until it lands. */
+  /** Re-layout and Retry: a fresh, forced run of the checkbox's mode; a switch still waiting stays waiting until it lands. */
   public async relayout(): Promise<void> {
-    await this.layOut(this.checked);
+    await this.layOut(this.checked, true);
   }
 
   /** Leaving task mode: draws the mode `saved` holds (else the checkbox's) afresh as `show` does, then restores `saved`. */
@@ -143,8 +143,8 @@ export class GraphLayouts {
     await this.layOut(mode);
   }
 
-  private async layOut(mode: LayoutGrouping): Promise<void> {
-    const result = await this.runs.run(mode);
+  private async layOut(mode: LayoutGrouping, isForced = false): Promise<void> {
+    const result = await this.runs.run(mode, isForced);
 
     if (result !== null) this.arrive(result, mode);
   }
