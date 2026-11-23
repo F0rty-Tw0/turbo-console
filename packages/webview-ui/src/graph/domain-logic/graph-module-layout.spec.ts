@@ -87,7 +87,7 @@ describe('FEATURE: GraphModuleLayout', () => {
     it('WHEN it is drawn THEN the frame clock is armed and the graph view shown without the fallback notice', async () => {
       await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'first' });
 
-      expect([arm.mock.calls.length, showGraph.mock.calls]).toStrictEqual([1, [[false]]]);
+      expect([arm.mock.calls.length, showGraph.mock.calls]).toStrictEqual([1, [[null]]]);
     });
 
     it('WHEN it is drawn THEN the runner key names the package, its expansion and its shown kinds', async () => {
@@ -122,7 +122,30 @@ describe('FEATURE: GraphModuleLayout', () => {
 
       await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'keep' });
 
-      expect(showGraph.mock.calls).toStrictEqual([[true]]);
+      expect(showGraph.mock.calls).toStrictEqual([['failure']]);
+    });
+
+    it('WHEN it lands as oversize THEN the graph view is shown with the oversize notice', async () => {
+      runner.run.mockResolvedValueOnce(resultOf('modules', {}, 'fallback', 'oversize'));
+
+      await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'keep' });
+
+      expect(showGraph.mock.calls).toStrictEqual([['oversize']]);
+    });
+  });
+
+  describe('GIVEN a Re-layout or Retry redraw', () => {
+    it('WHEN it is drawn THEN its run is forced and pan and zoom are left alone', async () => {
+      await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'relayout' });
+
+      expect(runner.run.mock.lastCall?.[2]).toBe(true);
+      expect([view.setViewport.mock.calls, view.fit.mock.calls, view.open.mock.calls]).toStrictEqual([[], [], []]);
+    });
+
+    it('WHEN a keep redraw is drawn instead THEN its run is not forced', async () => {
+      await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'keep' });
+
+      expect(runner.run.mock.lastCall?.[2]).toBe(false);
     });
   });
 

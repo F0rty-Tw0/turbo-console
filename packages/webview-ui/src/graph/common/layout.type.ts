@@ -39,6 +39,9 @@ export type BoxFrame = {
 /** The frames of the titled-row boxes of a layout, by box id. */
 export type BoxFrames = Readonly<Record<string, BoxFrame>>;
 
+/** Why a run fell back: the graph was past `ELK_NODES_MAX` so ELK never ran, or ELK failed or timed out. */
+export type FallbackCause = 'oversize' | 'failure';
+
 export type LayoutResult = {
   readonly hash: string;
   readonly positions: Positions;
@@ -46,10 +49,15 @@ export type LayoutResult = {
   /** The frames of the titled-row boxes; none for the fallback and for package graphs. Never posted to the host. */
   readonly boxFrames: BoxFrames;
   readonly engine: 'elk' | 'fallback';
+  /** Why the fallback ran; `null` for an ELK layout. */
+  readonly fallbackCause: FallbackCause | null;
   readonly ms: number;
 };
 
 export type LayoutRunner = {
-  /** Resolves `null` when a newer run started before this one settled. */
-  readonly run: (hash: string, graph: ElkNode) => Promise<LayoutResult | null>;
+  /**
+   * Resolves `null` when a newer run started before this one settled. `isForced` (Re-layout, Retry) tries ELK on a graph
+   * past `ELK_NODES_MAX` too.
+   */
+  readonly run: (hash: string, graph: ElkNode, isForced?: boolean) => Promise<LayoutResult | null>;
 };

@@ -86,7 +86,7 @@ export const moduleScreenOf = (deps: ModuleScreenDeps): ModuleScreen => {
     bar.status.textContent = '';
     bar.status.title = '';
   };
-  const reshow = (): void => deps.showGraph(false);
+  const reshow = (): void => deps.showGraph(null);
   const exit = (): void => {
     layout.clear();
     page.root.classList.remove(MODULES_MODE_CLASS);

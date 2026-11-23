@@ -79,7 +79,8 @@ export class GraphModuleLayout {
     const scene = moduleSceneOf(tree, found, sceneViewOf(view));
     const graph = elkModuleGraphOf(scene, this.deps.measures);
     const key = layoutKeyOf(view);
-    const result = await this.deps.runner.run(key, graph);
+    const isForced = redraw.kind === 'relayout';
+    const result = await this.deps.runner.run(key, graph, isForced);
     const isOvertaken = ticket !== this.ticket;
 
     if (result === null || isOvertaken) return;
@@ -97,12 +98,12 @@ export class GraphModuleLayout {
 
     modules.show({ scene, positions: result.positions, measures: this.deps.measures });
     this.drawn = scene;
-    this.deps.showGraph(result.engine === 'fallback');
+    this.deps.showGraph(result.fallbackCause);
     this.placeCamera(view, redraw, before);
     this.deps.frames.arm();
   }
 
-  /** `first`: the saved camera, else open; `keep`: as it is; `anchor`: the folder's centre stays put; `fit`: a fit. */
+  /** `first`: the saved camera, else open; `keep` and `relayout`: as it is; `anchor`: the folder's centre stays put; `fit`: a fit. */
   private placeCamera(view: ModulesViewState, redraw: ModuleRedraw, before: Position | null): void {
     const { camera } = view;
 
@@ -112,6 +113,7 @@ export class GraphModuleLayout {
         else this.deps.view.setViewport(camera.zoom, camera.pan);
         break;
       case 'keep':
+      case 'relayout':
         break;
       case 'anchor':
         this.anchor(redraw.id, before);

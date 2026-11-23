@@ -11,7 +11,7 @@ import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
 import { modeGroupsOf } from '../utils/folder-group.util.ts';
 import { freshViewStateOf } from '../utils/fresh-view-state.util.ts';
-import { arrivalOf, engineNoticeOf, groupingOf, progressNoticeOf, switchPlanOf } from '../utils/layout-plan.util.ts';
+import { arrivalOf, fallbackNoticeOf, groupingOf, progressNoticeOf, switchPlanOf } from '../utils/layout-plan.util.ts';
 
 /**
  * The flat and the grouped layout of the drawn hash: a snapshot and an engine per mode, the checkbox's mode and the
@@ -99,9 +99,9 @@ export class GraphLayouts {
     await this.layOut(next);
   }
 
-  /** Re-layout and Retry: a fresh run of the checkbox's mode; a switch still waiting stays waiting until it lands. */
+  /** Re-layout and Retry: a fresh, forced run of the checkbox's mode; a switch still waiting stays waiting until it lands. */
   public async relayout(): Promise<void> {
-    await this.layOut(this.checked);
+    await this.layOut(this.checked, true);
   }
 
   /** Leaving task mode: draws the mode `saved` holds (else the checkbox's) afresh as `show` does, then restores `saved`. */
@@ -143,8 +143,8 @@ export class GraphLayouts {
     await this.layOut(mode);
   }
 
-  private async layOut(mode: LayoutGrouping): Promise<void> {
-    const result = await this.runs.run(mode);
+  private async layOut(mode: LayoutGrouping, isForced = false): Promise<void> {
+    const result = await this.runs.run(mode, isForced);
 
     if (result !== null) this.arrive(result, mode);
   }
@@ -190,9 +190,9 @@ export class GraphLayouts {
   private draw(drawn: DrawnGraph, positions: Positions, mode: LayoutGrouping): void {
     const { view } = this.deps;
     const groups = modeGroupsOf(drawn.infos, mode);
-    const isFallback = this.snapshots.engineOf(mode) === 'fallback';
+    const fallbackCause = this.snapshots.fallbackCauseOf(mode);
 
-    this.deps.screen.showGraph(isFallback);
+    this.deps.screen.showGraph(fallbackCause);
     view.setGraph(drawn.packages, drawn.edges, positions, this.deps.sizeOf);
 
     if (groups !== null) view.setGrouping(groups);
@@ -210,8 +210,8 @@ export class GraphLayouts {
   }
 
   private noticeOf(mode: LayoutGrouping): LayoutNotice {
-    const engine = this.snapshots.engineOf(mode);
+    const fallbackCause = this.snapshots.fallbackCauseOf(mode);
 
-    return engineNoticeOf(engine);
+    return fallbackNoticeOf(fallbackCause);
   }
 }

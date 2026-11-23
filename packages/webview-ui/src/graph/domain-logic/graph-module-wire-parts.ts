@@ -2,7 +2,7 @@ import { resetView, toggleShown } from './graph-module-view-edits.ts';
 import type { GraphModuleSitesMessage } from '../../bridge/common/graph-module-sites.type.ts';
 import type { GraphPackageModulesMessage, GraphShowModulesMessage } from '../../bridge/common/graph-modules.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-import { MODULES_DROPPED_WARNING, MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
+import { MODULES_DROPPED_WARNING, MODULE_REDRAW_RELAYOUT } from '../common/graph-module.const.ts';
 import type { GraphControllerDeps } from '../common/graph-page.type.ts';
 import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
 import type { ModuleControlsActions, ModuleViewEditMode } from '../common/module-controls.type.ts';
@@ -23,11 +23,11 @@ export const measuresOf = (deps: GraphControllerDeps): ModuleMeasures => {
   return measures;
 };
 
-/** Re-layout while Shown, or Failed over a kept graph: the saved view drawn again, the camera kept. */
+/** Re-layout while Shown, or Failed over a kept graph: the saved view drawn again, the camera kept, ELK forced. */
 export const relayoutOf = (mode: Pick<ModuleInputMode, 'view' | 'update'>): void => {
   const view = mode.view();
 
-  if (view !== null) mode.update(view, MODULE_REDRAW_KEEP);
+  if (view !== null) mode.update(view, MODULE_REDRAW_RELAYOUT);
 };
 
 /** The modules bar drives the mode: Back leaves, Refresh and Retry scan again; the toolbar's root entry opens `//`. */

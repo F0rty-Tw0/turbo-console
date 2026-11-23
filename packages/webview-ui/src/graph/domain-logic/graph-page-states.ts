@@ -1,7 +1,9 @@
 import type { GraphReady, GraphState } from '../../bridge/common/graph-state.type.ts';
 import type { LayoutNotice, LayoutScreen } from '../common/graph-layouts.type.ts';
-import { FALLBACK_NOTICE, FALLBACK_NOTICE_TEXT, LAYOUT_FAILED_TEXT, LOADING_TEXT, NO_NOTICE } from '../common/graph.const.ts';
+import { FALLBACK_NOTICE_TEXT, LAYOUT_FAILED_TEXT, LOADING_TEXT, OVERSIZE_NOTICE_TEXT } from '../common/graph.const.ts';
+import type { FallbackCause } from '../common/layout.type.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
+import { fallbackNoticeOf } from '../utils/layout-plan.util.ts';
 
 type MessageState = Exclude<GraphState, GraphReady>;
 
@@ -53,12 +55,25 @@ export const showFailure = (page: PageElements, error: unknown): void => {
   showMessage(page, `${LAYOUT_FAILED_TEXT}: ${reason}`, false);
 };
 
-/** The notice line: hidden for `none`; the simplified-layout copy with Retry for `fallback`; a progress text without Retry. */
+const noticeTextOf = (notice: LayoutNotice): string => {
+  switch (notice.kind) {
+    case 'progress':
+      return notice.text;
+    case 'oversize':
+      return OVERSIZE_NOTICE_TEXT;
+    case 'fallback':
+    case 'none':
+      return FALLBACK_NOTICE_TEXT;
+  }
+};
+
+/** The notice line: hidden for `none`; a simplified-layout copy with Retry for `fallback` and `oversize`; a progress text without Retry. */
 const showLayoutNotice = (page: PageElements, notice: LayoutNotice): void => {
-  const text = notice.kind === 'progress' ? notice.text : FALLBACK_NOTICE_TEXT;
+  const text = noticeTextOf(notice);
+  const hasRetry = notice.kind === 'fallback' || notice.kind === 'oversize';
 
   page.noticeText.textContent = text;
-  page.retry.hidden = notice.kind !== 'fallback';
+  page.retry.hidden = !hasRetry;
   page.notice.hidden = notice.kind === 'none';
 };
 
@@ -78,9 +93,9 @@ const restoreBodyFocus = (page: PageElements): void => {
   if (wasHidingFocus && isFocusLost && isPageFocused) page.container.focus();
 };
 
-/** Toolbar, location bar and body shown with the mode buttons, Controls, Details, Fit, Re-layout, Export image and Legend enabled; the notice only for a fallback layout. Focus the body held when it hid returns to the container. */
-const showGraphView = (page: PageElements, isFallback: boolean): void => {
-  const notice: LayoutNotice = isFallback ? FALLBACK_NOTICE : NO_NOTICE;
+/** Toolbar, location bar and body shown with the mode buttons, Controls, Details, Fit, Re-layout, Export image and Legend enabled; the notice only for a fallback layout, by its cause. Focus the body held when it hid returns to the container. */
+const showGraphView = (page: PageElements, fallbackCause: FallbackCause | null): void => {
+  const notice = fallbackNoticeOf(fallbackCause);
 
   page.message.hidden = true;
   page.toolbar.hidden = false;
@@ -101,7 +116,7 @@ const showGraphView = (page: PageElements, isFallback: boolean): void => {
 export const layoutScreenOf = (page: PageElements): LayoutScreen => {
   const screen: LayoutScreen = {
     showLoading: (): void => showMessage(page, LOADING_TEXT, false),
-    showGraph: (isFallback: boolean): void => showGraphView(page, isFallback),
+    showGraph: (fallbackCause: FallbackCause | null): void => showGraphView(page, fallbackCause),
     showNotice: (notice: LayoutNotice): void => showLayoutNotice(page, notice)
   };
 
