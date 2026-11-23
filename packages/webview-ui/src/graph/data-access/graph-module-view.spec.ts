@@ -8,6 +8,7 @@ import { MODULE_LAZY_CLASS, MODULE_TYPE_CLASS } from '../common/graph-module.con
 import type { ModuleCanvas, ModuleDrawing } from '../common/module-canvas.type.ts';
 import type { ModuleScene, ModuleShown } from '../common/module-scene.type.ts';
 import { ALL_SHOWN_STUB, MODULES_FOUND_STUB, MODULE_MEASURES_STUB } from '../test/stubs/module-scene.stub.ts';
+import { link, node } from '../test/utils/module-selections.spec.util.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { moduleSceneOf } from '../utils/module-scene.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
@@ -42,6 +43,12 @@ const LIB_ID = 'dir:src/lib';
 const B_ID = 'file:src/lib/b.ts';
 
 const SPEC_ID = 'file:src/a.spec.ts';
+
+const C_ID = 'file:src/lib/c.ts';
+
+const A_LIB_ID = edgeIdOf({ source: A_ID, target: LIB_ID });
+
+const INDEX_A_ID = edgeIdOf({ source: 'file:index.ts', target: A_ID });
 
 const drawingOf = (scene: ModuleScene): ModuleDrawing => {
   const drawing: ModuleDrawing = { scene, positions: AT_ORIGIN, measures: MODULE_MEASURES_STUB };
@@ -109,7 +116,7 @@ describe('FEATURE: createModuleCanvas', () => {
     });
 
     it('WHEN a.ts is painted THEN it is selected, its neighbours lit and an unrelated card dimmed', () => {
-      canvas.paint('file:src/a.ts');
+      canvas.paint(node(A_ID));
 
       expect([
         cy.$id('file:src/a.ts').hasClass('selected'),
@@ -119,35 +126,93 @@ describe('FEATURE: createModuleCanvas', () => {
     });
 
     it('WHEN a.ts is painted and then nothing THEN every card is normal again', () => {
-      canvas.paint('file:src/a.ts');
+      canvas.paint(node(A_ID));
       canvas.paint(null);
 
       expect([cy.$id('file:src/a.ts').hasClass('normal'), cy.$id('dir:src/ui').hasClass('normal')]).toStrictEqual([true, true]);
     });
 
     it('WHEN a.ts is painted and src/lib is opened THEN a.ts stays selected with its new neighbour b.ts lit', () => {
-      canvas.paint(A_ID);
+      canvas.paint(node(A_ID));
       canvas.show(drawingOf(LIB_OPEN));
 
       expect([cy.$id(A_ID).hasClass('selected'), cy.$id(B_ID).hasClass('highlighted')]).toStrictEqual([true, true]);
     });
 
     it('WHEN b.ts inside the collapsed src/lib is painted THEN the src/lib card is selected', () => {
-      canvas.paint(B_ID);
+      canvas.paint(node(B_ID));
 
-      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([LIB_ID]);
+      expect(cy.$('.selected').map((element) => element.id())).toStrictEqual([LIB_ID]);
     });
 
     it('WHEN b.ts inside the collapsed src/lib is painted and src/lib opened THEN b.ts is selected, as it stayed the choice', () => {
-      canvas.paint(B_ID);
+      canvas.paint(node(B_ID));
       canvas.show(drawingOf(LIB_OPEN));
 
-      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([B_ID]);
+      expect(cy.$('.selected').map((element) => element.id())).toStrictEqual([B_ID]);
     });
 
     it('WHEN a.ts is painted, the canvas cleared and the scene drawn again THEN nothing is selected', () => {
-      canvas.paint(A_ID);
+      canvas.paint(node(A_ID));
       canvas.clear();
+      canvas.show(drawingOf(SCENE));
+
+      expect(cy.$('.selected')).toHaveLength(0);
+    });
+
+    it('WHEN the link a.ts → src/lib is painted THEN the link is selected, its ends lit and the rest dimmed', () => {
+      canvas.paint(link(A_ID, LIB_ID));
+
+      expect([
+        cy.$id(A_LIB_ID).hasClass('selected'),
+        cy.$id(A_ID).hasClass('highlighted'),
+        cy.$id(LIB_ID).hasClass('highlighted'),
+        cy.$id('dir:src/ui').hasClass('dimmed'),
+        cy.$id(INDEX_A_ID).hasClass('dimmed')
+      ]).toStrictEqual([true, true, true, true, true]);
+    });
+
+    it('WHEN the link a.ts → src/lib is painted THEN it is the choice', () => {
+      canvas.paint(link(A_ID, LIB_ID));
+
+      expect(canvas.selected()).toStrictEqual(link(A_ID, LIB_ID));
+    });
+
+    it.each([
+      ['nothing is painted', (): void => canvas.paint(null)],
+      ['the canvas is cleared', (): void => canvas.clear()]
+    ])('WHEN the link a.ts → src/lib is painted and then %s THEN nothing is chosen', (_name, forget) => {
+      canvas.paint(link(A_ID, LIB_ID));
+      forget();
+
+      expect(canvas.selected()).toBeNull();
+    });
+
+    it('WHEN the link a.ts → src/lib is painted and src/lib opened into a box THEN nothing is selected and the link stays the choice', () => {
+      canvas.paint(link(A_ID, LIB_ID));
+      canvas.show(drawingOf(LIB_OPEN));
+
+      expect([cy.$('.selected').length, canvas.selected()]).toStrictEqual([0, link(A_ID, LIB_ID)]);
+    });
+
+    it('WHEN the link a.ts → src/lib is painted and src/lib opened and closed again THEN the link is selected again', () => {
+      canvas.paint(link(A_ID, LIB_ID));
+      canvas.show(drawingOf(LIB_OPEN));
+      canvas.show(drawingOf(SCENE));
+
+      expect(cy.$id(A_LIB_ID).hasClass('selected')).toBe(true);
+    });
+
+    it('WHEN the link a.spec.ts → a.ts is painted and test files hidden THEN nothing is chosen', () => {
+      canvas.paint(link(SPEC_ID, A_ID));
+      canvas.show(drawingOf(NO_TESTS));
+
+      expect(canvas.selected()).toBeNull();
+    });
+
+    it('WHEN the link a.spec.ts → a.ts is painted and test files hidden and shown again THEN nothing is selected', () => {
+      canvas.paint(link(SPEC_ID, A_ID));
+      canvas.show(drawingOf(NO_TESTS));
       canvas.show(drawingOf(SCENE));
 
       expect(cy.$('.selected')).toHaveLength(0);
@@ -157,26 +222,35 @@ describe('FEATURE: createModuleCanvas', () => {
   describe('GIVEN web drawn with src/lib open and b.ts painted', () => {
     beforeEach(() => {
       canvas.show(drawingOf(LIB_OPEN));
-      canvas.paint(B_ID);
+      canvas.paint(node(B_ID));
     });
 
     it('WHEN src/lib is closed THEN the src/lib card that now holds b.ts is selected', () => {
       canvas.show(drawingOf(SCENE));
 
-      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([LIB_ID]);
+      expect(cy.$('.selected').map((element) => element.id())).toStrictEqual([LIB_ID]);
     });
 
     it('WHEN src/lib is closed and opened again THEN b.ts is selected again', () => {
       canvas.show(drawingOf(SCENE));
       canvas.show(drawingOf(LIB_OPEN));
 
-      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([B_ID]);
+      expect(cy.$('.selected').map((element) => element.id())).toStrictEqual([B_ID]);
+    });
+
+    it('WHEN the link b.ts → c.ts is painted and src/lib closed THEN the src/lib card is selected and the link stays the choice', () => {
+      const chosen = link(B_ID, C_ID);
+
+      canvas.paint(chosen);
+      canvas.show(drawingOf(SCENE));
+
+      expect([cy.$('.selected').map((element) => element.id()), canvas.selected()]).toStrictEqual([[LIB_ID], chosen]);
     });
   });
 
   describe('GIVEN web drawn with src open and the test file a.spec.ts painted', () => {
     beforeEach(() => {
-      canvas.paint(SPEC_ID);
+      canvas.paint(node(SPEC_ID));
     });
 
     it('WHEN test files are hidden and shown again THEN nothing is selected, as hiding dropped the choice', () => {

@@ -126,7 +126,7 @@ describe('FEATURE: moduleInputOf', () => {
       canvas.kindOf.mockReturnValue('file');
       input.tapNode('file:src/a.ts');
 
-      expect(canvas.paint).toHaveBeenCalledWith('file:src/a.ts');
+      expect(canvas.paint).toHaveBeenCalledWith({ kind: 'node', id: 'file:src/a.ts' });
     });
 
     it.each([

@@ -53,7 +53,7 @@ export const moduleInputOf = (deps: ModuleInputDeps): HandledModules => {
     container.focus();
 
     if (isCard) {
-      canvas.paint(id);
+      canvas.paint({ kind: 'node', id });
 
       return;
     }

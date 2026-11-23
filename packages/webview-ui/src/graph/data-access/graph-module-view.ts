@@ -4,11 +4,12 @@ import { moduleLinkDefinitionOf } from './graph-module-links.ts';
 import { paintModules } from './graph-module-paint.ts';
 import { positionOf } from './graph-place.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
+import type { ModuleSelection } from '../../bridge/common/graph-view-state.type.ts';
 import { MODULE_BOX_CLASS, MODULE_DIR_CLASS, MODULE_FILE_CLASS, MODULE_STUB_CLASS } from '../common/graph-module.const.ts';
 import { TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
 import type { ModuleCanvas, ModuleDrawing, ModuleElementKind } from '../common/module-canvas.type.ts';
 import type { ModuleBox, ModuleLeaf, ModuleScene } from '../common/module-scene.type.ts';
-import { paintTargetOf } from '../utils/module-painted.util.ts';
+import { keepsSelection, paintTargetOf } from '../utils/module-painted.util.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 
 type KindClass = [ModuleElementKind, string];
@@ -86,10 +87,10 @@ const drawModules = (cy: Core, drawing: ModuleDrawing): void => {
 };
 
 /**
- * The card to paint for `chosen` in `scene`: the card that holds it, or `null` when none does or nothing is chosen. With
- * no scene drawn yet, `chosen` itself, which paints nothing on the empty core.
+ * What to paint for `chosen` in `scene`: its `paintTargetOf`, or `null` when it has none or nothing is chosen. With no
+ * scene drawn yet, `chosen` itself, which paints nothing on the empty core.
  */
-const paintedOf = (chosen: string | null, scene: ModuleScene | null): string | null => {
+const paintedOf = (chosen: ModuleSelection | null, scene: ModuleScene | null): ModuleSelection | null => {
   if (chosen === null || scene === null) return chosen;
 
   const target = paintTargetOf(chosen, scene);
@@ -97,43 +98,50 @@ const paintedOf = (chosen: string | null, scene: ModuleScene | null): string | n
   return target;
 };
 
+/** The choice a redraw of `scene` keeps: `chosen` while `keepsSelection` holds, else `null`. */
+const keptOf = (chosen: ModuleSelection | null, scene: ModuleScene): ModuleSelection | null => {
+  if (chosen === null) return null;
+
+  const isKept = keepsSelection(chosen, scene);
+
+  return isKept ? chosen : null;
+};
+
 /**
  * The modules graph on `cy`, the core the package and task graphs share; showing it removes what they drew. It keeps
- * the chosen card apart from what it paints, the card that holds it in the scene drawn last: a redraw keeps the choice
- * while a card holds it and paints that card, the folder collapsed over it or the card itself once the folder opens
- * again, so a folder tap never changes the choice; `clear` forgets it and the scene.
+ * the choice apart from what it paints in the scene drawn last: a redraw keeps the choice while `keepsSelection` holds
+ * and paints its target, the folder collapsed over a card or the card itself once the folder opens again, so a folder
+ * tap never changes the choice; a kept link with an end in an open box paints nothing until that box closes. `clear`
+ * forgets the choice and the scene.
  */
 export const createModuleCanvas = (cy: Core): ModuleCanvas => {
-  let chosen: string | null = null;
+  let chosen: ModuleSelection | null = null;
   let scene: ModuleScene | null = null;
-  const paint = (id: string | null): void => {
-    const target = paintedOf(id, scene);
+  const paint = (sel: ModuleSelection | null): void => {
+    const target = paintedOf(sel, scene);
 
-    chosen = id;
+    chosen = sel;
     paintModules(cy, target);
   };
   const show = (drawing: ModuleDrawing): void => {
-    const target = paintedOf(chosen, drawing.scene);
+    const kept = keptOf(chosen, drawing.scene);
+    const target = paintedOf(kept, drawing.scene);
 
     drawModules(cy, drawing);
     scene = drawing.scene;
+    chosen = kept;
 
-    if (target === null) {
-      chosen = null;
-
-      return;
-    }
-
-    paintModules(cy, target);
+    if (target !== null) paintModules(cy, target);
   };
   const clear = (): void => {
     chosen = null;
     scene = null;
     cy.elements().remove();
   };
+  const selected = (): ModuleSelection | null => chosen;
   const kindOf = (id: string): ModuleElementKind | null => kindOfNode(cy.getElementById(id));
   const renderedCentre = (id: string): Position | null => renderedCentreOf(cy, id);
-  const canvas: ModuleCanvas = { show, clear, paint, kindOf, renderedCentre };
+  const canvas: ModuleCanvas = { show, clear, paint, selected, kindOf, renderedCentre };
 
   return canvas;
 };
