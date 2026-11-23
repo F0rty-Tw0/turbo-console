@@ -142,6 +142,7 @@ export class GraphModuleMode {
 
     this.current = { kind: 'failed', name: current.name, found: kept };
     this.deps.screen.failed(current.name);
+    this.deps.panels.failed();
   }
 
   /** Refresh and Retry ask again; nothing is asked while Waiting, which asks on the first graph state. */

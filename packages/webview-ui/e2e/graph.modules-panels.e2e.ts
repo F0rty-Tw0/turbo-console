@@ -212,8 +212,12 @@ test.describe('FEATURE: package modules panels', () => {
       graphModulesHost,
       shownModules
     }): Promise<void> => {
+      await test.step('WHEN app is shown at D9', async (): Promise<void> => shownModules());
+
+      await test.step('THEN Details shows the empty hint, not the scan line', async (): Promise<void> =>
+        graphModuleDetails.expectEmpty());
+
       await test.step('WHEN index.ts is tapped and its sites arrive', async (): Promise<void> => {
-        await shownModules();
         await graphCanvas.tapNode('file:index.ts');
         await graphModuleSitesHost.answerSites(INDEX_ASK_STUB, INDEX_SITES_STUB);
         await graphModuleDetails.expectRowCount(1);

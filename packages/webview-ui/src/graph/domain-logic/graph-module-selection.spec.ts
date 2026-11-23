@@ -57,6 +57,8 @@ const WEB: ModulesViewState = { ...FRESH_WEB, expanded: ['src'] };
 
 const SHOWN: ModulePhase = { kind: 'shown', name: 'web', found: MODULES_FOUND_STUB };
 
+const LOADING: ModulePhase = { kind: 'loading', name: 'web' };
+
 const TREE = moduleTreeOf(MODULES_FOUND_STUB.files);
 
 const SCENE: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src'], shown: ALL_SHOWN_STUB, focus: null });
@@ -248,6 +250,32 @@ describe('FEATURE: module selection and lookups', () => {
         [{ ...WEB, selected: B, focus: null }, FIT],
         [detailsViewOf(B, FOUND_STATE, CLOSED)]
       ]);
+    });
+
+    it('WHEN the scan fails THEN the shown b.ts view is kept', () => {
+      selection.failed();
+
+      expect(rig.show).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN scanning web, nothing saved', () => {
+    beforeEach(() => {
+      selection.scanning('web');
+      rig.setPhase(LOADING);
+      vi.clearAllMocks();
+    });
+
+    it('WHEN found THEN the empty view shows and nothing is asked', () => {
+      selection.found(MODULES_FOUND_STUB);
+
+      expect([rig.show.mock.calls, rig.post.mock.calls]).toStrictEqual([[[{ kind: 'empty' }]], []]);
+    });
+
+    it('WHEN the scan fails THEN the empty view shows', () => {
+      selection.failed();
+
+      expect(rig.show.mock.calls).toStrictEqual([[{ kind: 'empty' }]]);
     });
   });
 });

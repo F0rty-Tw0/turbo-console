@@ -3,11 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGraphController } from './graph-controller.ts';
 import type { GraphPackageModulesMessage, ModulesResult } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphState } from '../../bridge/common/graph-state.type.ts';
-import { MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
+import { MODULES_MODE_CLASS, MODULE_DETAILS_EMPTY_TEXT } from '../common/graph-module.const.ts';
 import type { GraphController } from '../common/graph-page.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
+import { textOf, withClassIn } from '../test/utils/class-elements.spec.util.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { WEB_LISTED } from '../test/utils/graph-module-mode.spec.util.ts';
 import { moduleControlsOf, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
@@ -21,6 +22,13 @@ const WEB_FAILED: GraphPackageModulesMessage = { type: 'packageModules', package
 const WEB_SCAN = { type: 'scanModules', packageName: 'web' };
 
 const HOST_ERROR: GraphState = { kind: 'error', message: 'host failed' };
+
+/** The lead lines of the module Details aside: its empty hint or its scan line. */
+const detailsLeadsOf = (mock: PackageSideDepsMock): (string | null)[] => {
+  const leads = withClassIn(mock.page.body, 'graph-module-details', 'details-lead');
+
+  return leads.map(textOf);
+};
 
 describe('FEATURE: modules wiring after a failed scan or a host error', () => {
   let mock: PackageSideDepsMock;
@@ -36,6 +44,20 @@ describe('FEATURE: modules wiring after a failed scan or a host error', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN web entered fresh, its Details reading "Scanning web…"', () => {
+    it('WHEN the scan fails THEN Details reads the empty hint', () => {
+      controller.receive(WEB_FAILED);
+
+      expect(detailsLeadsOf(mock)).toStrictEqual([MODULE_DETAILS_EMPTY_TEXT]);
+    });
+
+    it('WHEN web is found THEN Details reads the empty hint', () => {
+      controller.receive(WEB_FOUND);
+
+      expect(detailsLeadsOf(mock)).toStrictEqual([MODULE_DETAILS_EMPTY_TEXT]);
+    });
   });
 
   describe('GIVEN web Loading, then a host error in place of the graph', () => {

@@ -68,7 +68,7 @@ export const moduleModeRigOf = (modes: ModuleModes, isTaskMode = false): ModuleM
   const start = vi.fn<FrameClock['start']>();
   const frames = { start };
   const onView = vi.fn<(view: ModulesViewState) => void>();
-  const panels: Mocked<ModulePanelHooks> = { enter: vi.fn(), scanning: vi.fn(), exit: vi.fn() };
+  const panels: Mocked<ModulePanelHooks> = { enter: vi.fn(), scanning: vi.fn(), failed: vi.fn(), exit: vi.fn() };
   const onFound = vi.fn<(found: ModulesFound) => void>();
   const deps: ModuleModeDeps = { modes, bridge, screen, tasks: taskSide, onExit, notice, viewport, frames, onView, panels, onFound };
   const rig: ModuleModeRig = { deps, post, screen, tasks, onExit, notice, start, onView, panels, onFound };

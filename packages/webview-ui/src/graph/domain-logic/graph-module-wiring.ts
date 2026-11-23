@@ -48,8 +48,9 @@ type ModulePanelsRef = { current: ModulePanelsBuilt | null };
 type ModuleReports = Pick<ModuleModeDeps, 'onView' | 'onFound'> & Pick<ModuleScreenDeps, 'onDrawn'> & ModuleDetailsSink;
 
 /**
- * The panels as modules mode calls them: each enters on the saved view, open unless saved closed (spec §6.8), and a
- * scan or an exit resets the selection. `built` is read per call: it holds the panels once they are built, after the mode.
+ * The panels as modules mode calls them: each enters on the saved view, open unless saved closed (spec §6.8), a scan or
+ * an exit resets the selection, and a failed scan tells it. `built` is read per call: it holds the panels once they are
+ * built, after the mode.
  */
 const panelHooksOf = (built: ModulePanelsRef, modes: ModuleHookModes): ModulePanelHooks => {
   const enter = (): void => {
@@ -64,12 +65,15 @@ const panelHooksOf = (built: ModulePanelsRef, modes: ModuleHookModes): ModulePan
   const scanning = (name: string): void => {
     built.current?.selection.scanning(name);
   };
+  const failed = (): void => {
+    built.current?.selection.failed();
+  };
   const exit = (): void => {
     built.current?.selection.exit();
     built.current?.controls.exit();
     built.current?.details.exit();
   };
-  const hooks: ModulePanelHooks = { enter, scanning, exit };
+  const hooks: ModulePanelHooks = { enter, scanning, failed, exit };
 
   return hooks;
 };

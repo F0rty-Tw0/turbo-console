@@ -81,7 +81,10 @@ export class GraphModuleSelection {
     else if (chosen === null) this.drop(view);
   }
 
-  /** A found scan, before it is drawn: what it no longer holds is dropped; a kept selection is asked about again. */
+  /**
+   * A found scan, before it is drawn: what it no longer holds is dropped; a kept selection is asked about again, and with
+   * none Details leaves the loading view for the empty one.
+   */
   public found(found: ModulesFound): void {
     const view = this.deps.mode.view();
 
@@ -94,6 +97,7 @@ export class GraphModuleSelection {
 
     if (kept.selected !== null) this.ask(view.packageName, kept.selected);
     else if (view.selected !== null) this.unpaint();
+    else this.forget();
   }
 
   /** The host's sites answer; only the pending lookup's, while Shown or Failed on its package, is shown (spec §6.5). */
@@ -149,6 +153,11 @@ export class GraphModuleSelection {
 
     this.reset();
     this.deps.details.show(loading);
+  }
+
+  /** A failed scan: the loading view gives way to the empty one; a shown lookup stays, as its reply still applies (C14). */
+  public failed(): void {
+    if (this.shown === null) this.deps.details.show(EMPTY);
   }
 
   public exit(): void {
