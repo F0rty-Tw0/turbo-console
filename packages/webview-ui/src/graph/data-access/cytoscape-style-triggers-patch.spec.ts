@@ -1,17 +1,15 @@
 import cytoscape from 'cytoscape';
-import type { BoundingBox12, Core, Css, ElementDefinition, StylesheetJson } from 'cytoscape';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Mock } from 'vitest';
+import type { BoundingBox12, CollectionReturnValue, Core, Css, ElementDefinition, StylesheetJson } from 'cytoscape';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { canvasEdgeOf, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
+import { isStyleDirty, recordFirstArgs, spyOnOwn } from '../test/utils/cytoscape-internals.spec.util.ts';
 
 type GraphState = {
   readonly childVisible: boolean;
   readonly edgeVisible: boolean;
   readonly parentBox: BoundingBox12;
 };
-
-type Method = (...args: unknown[]) => unknown;
 
 const NODE_STYLE: Css.Node = {
   width: 30,
@@ -35,7 +33,9 @@ const HIDDEN_RULE = { selector: '.hidden', style: HIDDEN_STYLE };
 
 const STYLE: StylesheetJson = [NODE_RULE, EDGE_RULE, HIDDEN_RULE];
 
-const EDGE_ID = canvasEdgeOf('a', 'c').data.id ?? '';
+const CHILD_EDGE = canvasEdgeOf('a', 'c');
+
+const CHILD_EDGE_ID = CHILD_EDGE.data.id ?? '';
 
 const FIRST_EDGE = canvasEdgeOf('a', 'b');
 
@@ -45,43 +45,23 @@ const CHILD_DATA = { id: 'a', parent: 'p' };
 
 const PARALLEL_DATA = { id: 'a-b-2', source: 'a', target: 'b' };
 
-/** Replaces `method` on `target` with a mock that records each call, then calls through. */
-const spyOnOwn = (target: object, method: string): Mock<Method> => {
-  const original: unknown = Reflect.get(target, method);
-
-  if (typeof original !== 'function') throw new Error(`spec: no ${method} to spy on`);
-  const spy = vi.fn(function (this: unknown, ...args: unknown[]): unknown {
-    return Reflect.apply(original, this, args);
-  });
-
-  Reflect.set(target, method, spy);
-
-  return spy;
-};
-
-/** Whether Cytoscape still owes `target` a style apply. */
-const isStyleDirty = (target: object): boolean => {
-  const internals: unknown = Reflect.get(target, '_private');
-
-  if (typeof internals !== 'object' || internals === null) throw new Error('spec: no internals on the element');
-
-  return Reflect.get(internals, 'styleDirty') === true;
-};
-
 /** A styled headless graph: compound `p` holds `a`, which links to `c`. */
 const compoundGraphOf = (childClasses: string): Core => {
   const parent = canvasNodeOf('p');
   const child: ElementDefinition = { data: CHILD_DATA, classes: childClasses };
-  const elements = [parent, child, canvasNodeOf('c'), canvasEdgeOf('a', 'c')];
+  const elements = [parent, child, canvasNodeOf('c'), CHILD_EDGE];
 
   return cytoscape({ headless: true, styleEnabled: true, style: STYLE, elements });
 };
 
 /** What the trigger effects decide: visibility of the child and its edge, and the compound's bounds. */
 const graphStateOf = (cy: Core): GraphState => {
-  const childVisible = cy.$id('a').visible();
-  const edgeVisible = cy.$id(EDGE_ID).visible();
-  const parentBox = cy.$id('p').boundingBox();
+  const child = cy.$id('a');
+  const edge = cy.$id(CHILD_EDGE_ID);
+  const parent = cy.$id('p');
+  const childVisible = child.visible();
+  const edgeVisible = edge.visible();
+  const parentBox = parent.boundingBox();
   const state: GraphState = { childVisible, edgeVisible, parentBox };
 
   return state;
@@ -89,6 +69,7 @@ const graphStateOf = (cy: Core): GraphState => {
 
 describe('FEATURE: the cytoscape style triggers patch', () => {
   let cy: Core;
+  let child: CollectionReturnValue;
   let fresh: Core | undefined;
 
   afterEach(() => {
@@ -98,20 +79,33 @@ describe('FEATURE: the cytoscape style triggers patch', () => {
   });
 
   describe('GIVEN a styled child of a compound whose style was never applied', () => {
-    it('WHEN nothing has read its style THEN Cytoscape still owes it the first apply', () => {
+    beforeEach(() => {
       cy = compoundGraphOf('');
-
-      expect(isStyleDirty(cy.$id('a'))).toBe(true);
+      child = cy.$id('a');
     });
 
-    it('WHEN its width is read THEN its style cache is dirtied once for the whole apply', () => {
-      cy = compoundGraphOf('');
-      const child = cy.$id('a');
-      const dirtyStyleCache = spyOnOwn(child, 'dirtyStyleCache');
+    it('WHEN nothing has read its style THEN Cytoscape still owes it the first apply', () => {
+      const dirty = isStyleDirty(child);
 
-      child.style('width');
+      expect(dirty).toBe(true);
+    });
 
-      expect(dirtyStyleCache).toHaveBeenCalledTimes(1);
+    describe('WHEN its width is read', () => {
+      it('THEN its style cache is dirtied once for the whole apply', () => {
+        const dirtyStyleCache = spyOnOwn(child, 'dirtyStyleCache');
+
+        child.style('width');
+
+        expect(dirtyStyleCache).toHaveBeenCalledTimes(1);
+      });
+
+      it('THEN the renderer is told its z-order changed', () => {
+        const notices = recordFirstArgs(cy, 'notify');
+
+        child.style('width');
+
+        expect(notices).toContain('zorder');
+      });
     });
   });
 
@@ -123,10 +117,9 @@ describe('FEATURE: the cytoscape style triggers patch', () => {
       const first = cy.$id(FIRST_EDGE_ID);
 
       first.style('curve-style');
-      const dirtyBoundingBoxCache = spyOnOwn(first, 'dirtyBoundingBoxCache');
       const added = cy.add({ data: PARALLEL_DATA });
+      const dirtyBoundingBoxCache = spyOnOwn(first, 'dirtyBoundingBoxCache');
 
-      dirtyBoundingBoxCache.mockClear();
       added.style('display');
 
       expect(dirtyBoundingBoxCache).toHaveBeenCalled();
@@ -134,13 +127,40 @@ describe('FEATURE: the cytoscape style triggers patch', () => {
   });
 
   describe('GIVEN a hidden child of a compound with an edge, all styles applied', () => {
-    it('WHEN the child is shown THEN visibility and compound bounds match a graph built shown', () => {
-      cy = compoundGraphOf('hidden');
-      graphStateOf(cy);
-      cy.$id('a').removeClass('hidden');
-      fresh = compoundGraphOf('');
+    let hidden: GraphState;
 
-      expect(graphStateOf(cy)).toStrictEqual(graphStateOf(fresh));
+    beforeEach(() => {
+      cy = compoundGraphOf('hidden');
+      child = cy.$id('a');
+      hidden = graphStateOf(cy);
+    });
+
+    it('WHEN nothing changes THEN the child reads hidden', () => {
+      const childVisible = hidden.childVisible;
+
+      expect(childVisible).toBe(false);
+    });
+
+    it('WHEN the child is shown and its display read THEN its edge bounds are dirtied', () => {
+      const edge = cy.$id(CHILD_EDGE_ID);
+      const dirtyBoundingBoxCache = spyOnOwn(edge, 'dirtyBoundingBoxCache');
+
+      child.removeClass('hidden');
+
+      child.style('display');
+
+      expect(dirtyBoundingBoxCache).toHaveBeenCalled();
+    });
+
+    it('WHEN the child is shown THEN visibility and compound bounds match a graph built shown', () => {
+      fresh = compoundGraphOf('');
+      const built = graphStateOf(fresh);
+
+      child.removeClass('hidden');
+
+      const shown = graphStateOf(cy);
+
+      expect(shown).toStrictEqual(built);
     });
   });
 });
