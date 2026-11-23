@@ -69,11 +69,11 @@ export class GraphTaskLayout {
     await this.guard(request, async (): Promise<void> => this.placeOrLayOut(request));
   }
 
-  /** Re-layout and Retry: a fresh run of the key asked for, then a fit. */
+  /** Re-layout and Retry: a fresh, forced run of the key asked for, then a fit. */
   public async relayout(): Promise<void> {
     const request = this.wanted;
 
-    if (request !== null) await this.guard(request, async (): Promise<void> => this.layOut(request, false));
+    if (request !== null) await this.guard(request, async (): Promise<void> => this.layOut(request, false, true));
   }
 
   /** The state's Atomizer groups and cache prediction toggle. */
@@ -144,11 +144,11 @@ export class GraphTaskLayout {
     if (isFull && oldest !== undefined) this.memory.delete(oldest);
   }
 
-  private async layOut(request: TaskLayoutRequest, canRestore: boolean): Promise<void> {
+  private async layOut(request: TaskLayoutRequest, canRestore: boolean, isForced = false): Promise<void> {
     const titleWidths = titleWidthsOf(request, this.deps.textSizeOf, this.deps.boxTitleSizeOf, this.deps.rootLabel());
     const input = { ...request, titleWidths };
     const graph = elkTaskGraphOf(input, this.deps.cardSizeOf);
-    const result = await this.deps.runner.run(request.key, graph);
+    const result = await this.deps.runner.run(request.key, graph, isForced);
     const wantedKey = this.key();
 
     if (result === null) return;
