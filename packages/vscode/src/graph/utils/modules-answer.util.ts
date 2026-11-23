@@ -5,7 +5,7 @@ import type { ModuleGraph, ModuleGraphInput, PackageImportScan, WorkspaceTarget 
 import { MANIFEST_FILE_MAX, MODULE_FILES_MAX, MODULE_LINKS_MAX, MODULE_STUB_NAME_MAX } from '@turbo-console/webview-ui';
 import type { GraphPackage, ModuleLink, ModulesFound, ModulesResult } from '@turbo-console/webview-ui';
 
-import { namesOf } from './manifest-entries.util.ts';
+import { namesOfEach } from './manifest-entries.util.ts';
 import { isRecord } from './record.util.ts';
 import type { ModulesContext } from '../common/import-match.type.ts';
 
@@ -55,8 +55,8 @@ const selfNameOf = (ctx: ModulesContext): string => {
   return self?.path === '' ? '' : ctx.packageName;
 };
 
-const targetOf = (ctx: ModulesContext, pkg: GraphPackage): WorkspaceTarget => {
-  const names = namesOf(pkg.name, ctx.manifestText);
+const targetOf = (ctx: ModulesContext, namesOfTarget: (target: string) => string[], pkg: GraphPackage): WorkspaceTarget => {
+  const names = namesOfTarget(pkg.name);
   const packageDir = join(ctx.root, pkg.path);
   const dir = pkg.path === '' ? null : packageDir;
   const target: WorkspaceTarget = { name: pkg.name, names, dir };
@@ -139,7 +139,8 @@ const trimmedModulesOf = (graph: ModuleGraph): TrimmedModules => {
  */
 export const answerModules = (scan: PackageImportScan, ctx: ModulesContext): ModulesResult => {
   const isOther = (pkg: GraphPackage): boolean => pkg.name !== ctx.packageName;
-  const others = ctx.packages.filter(isOther).map((pkg) => targetOf(ctx, pkg));
+  const namesOfTarget = namesOfEach(ctx.manifestText);
+  const others = ctx.packages.filter(isOther).map((pkg) => targetOf(ctx, namesOfTarget, pkg));
   const input: ModuleGraphInput = { dir: ctx.dir, selfName: selfNameOf(ctx), scan, others };
   const graph = moduleGraphOf(input);
   const { files, tests, stubs, fileLinks, stubLinks, dropped } = trimmedModulesOf(graph);
