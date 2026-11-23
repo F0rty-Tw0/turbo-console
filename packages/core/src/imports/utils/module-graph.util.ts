@@ -1,6 +1,6 @@
 import { join, posix } from 'node:path';
 
-import { resolveSpecifierOf } from './module-resolve.util.ts';
+import { memoTargetOf } from './module-target.util.ts';
 import { isTestFile } from './test-file.util.ts';
 import type { ScannedFile, SourceImport } from '../common/import-scan.type.ts';
 import type {
@@ -44,16 +44,6 @@ const addLink = (rows: LinkRows, from: number, to: number, column: 2 | 3 | 4): v
   rows.set(key, row);
 };
 
-const targetOf = (fold: ModuleFold, fromDir: string, specifier: string): ModuleTarget => {
-  const targets = fold.memo.get(fromDir) ?? new Map<string, ModuleTarget>();
-  const target = targets.get(specifier) ?? resolveSpecifierOf(specifier, fromDir, fold.context);
-
-  targets.set(specifier, target);
-  fold.memo.set(fromDir, targets);
-
-  return target;
-};
-
 const stubRowsOf = (fold: ModuleFold, name: string): LinkRows => {
   const rows: LinkRows = fold.stubRows.get(name) ?? new Map<string, LinkRow>();
 
@@ -69,7 +59,7 @@ const foldFile = (fold: ModuleFold, scanned: ScannedFile): void => {
   if (from === undefined) return;
 
   for (const source of scanned.imports) {
-    const target = targetOf(fold, fromDir, source.specifier);
+    const target = memoTargetOf(fold.memo, fold.context, fromDir, source.specifier);
     const column = columnOf(source);
 
     if (target.kind === 'stub') {
