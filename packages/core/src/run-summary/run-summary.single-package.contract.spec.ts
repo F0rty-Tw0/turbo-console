@@ -17,7 +17,7 @@ const TURBO = devTurboPath();
 
 const BUILD: TaskNode = { ...TASK_NODE_STUB, id: '//#build', name: 'build', command: null };
 
-describe('FEATURE: runs in a single-package repo against turbo 2.11.7', () => {
+describe('FEATURE: runs in a single-package repo against the dev turbo', () => {
   describe('GIVEN a run of the build task', () => {
     let repo: SinglePackageRepo | undefined;
     let dir = '';

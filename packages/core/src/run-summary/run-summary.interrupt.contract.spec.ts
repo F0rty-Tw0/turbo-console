@@ -55,7 +55,7 @@ const printed = async (child: ChildProcess, text: string): Promise<void> => {
   }
 };
 
-describe.skipIf(process.platform === 'win32')('FEATURE: a turbo 2.11.7 run interrupted by SIGINT (Ctrl+C in its terminal)', () => {
+describe.skipIf(process.platform === 'win32')('FEATURE: a dev turbo run interrupted by SIGINT (Ctrl+C in its terminal)', () => {
   let dir = '';
   let child: ChildProcess | null = null;
   let run: RunToMatch;
