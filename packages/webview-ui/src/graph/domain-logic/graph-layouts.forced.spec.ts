@@ -5,8 +5,8 @@ import { GraphLayouts } from './graph-layouts.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { LayoutRunner } from '../common/layout.type.ts';
 import type { LayoutsRig } from '../test/common/graph-layouts.type.ts';
-import { STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
-import { layoutsRigOf } from '../test/utils/graph-layouts.spec.util.ts';
+import { GROUPED_POSITIONS_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
+import { layoutsRigOf, resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 
 const UNCACHED: GraphReady = { ...STATE_STUB, positions: null };
 
@@ -35,6 +35,12 @@ describe('FEATURE: GraphLayouts forced runs', () => {
       void layouts.relayout();
 
       expect(run).toHaveBeenLastCalledWith(UNCACHED.hash, expect.anything(), true);
+    });
+
+    it('WHEN its run falls back as oversize THEN the graph shows with the oversize notice', async () => {
+      await rig.runs.settle(0, resultOf(UNCACHED.hash, GROUPED_POSITIONS_STUB, 'fallback', 'oversize'));
+
+      expect(rig.screen.showGraph).toHaveBeenCalledExactlyOnceWith('oversize');
     });
   });
 });

@@ -61,4 +61,17 @@ describe('FEATURE: GraphTaskLayout forced runs', () => {
       expect(run).toHaveBeenLastCalledWith('k0', expect.anything(), true);
     });
   });
+
+  describe('GIVEN a key laid out as the oversize fallback', () => {
+    beforeEach(async (): Promise<void> => {
+      const shown = layout.show(REQUEST);
+
+      await rig.runs.settle(0, resultOf('k0', POSITIONS, 'fallback', 'oversize'));
+      await shown;
+    });
+
+    it('THEN the oversize notice shows and the layout reports its cause', () => {
+      expect([rig.screen.showNotice.mock.lastCall, layout.fallbackCause()]).toStrictEqual([[{ kind: 'oversize' }], 'oversize']);
+    });
+  });
 });

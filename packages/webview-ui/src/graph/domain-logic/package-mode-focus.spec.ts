@@ -41,7 +41,7 @@ describe('FEATURE: PackageModeFocus', () => {
     describe('WHEN focus is lost and the graph shows', () => {
       beforeEach(() => {
         dropFocus();
-        shown.showGraph(false);
+        shown.showGraph(null);
       });
 
       it('THEN Packages has focus', () => {
@@ -49,13 +49,13 @@ describe('FEATURE: PackageModeFocus', () => {
       });
 
       it('THEN the screen showed the graph', () => {
-        expect(screen.showGraph).toHaveBeenCalledWith(false);
+        expect(screen.showGraph).toHaveBeenCalledWith(null);
       });
 
       it('THEN a second loss of focus and a second show do not give focus back', () => {
         page.details.focus();
         dropFocus();
-        shown.showGraph(false);
+        shown.showGraph(null);
 
         expect(doc.activeElement).toBe(page.details);
       });
@@ -63,7 +63,7 @@ describe('FEATURE: PackageModeFocus', () => {
 
     it('WHEN focus moved to the details and the graph shows THEN the details keep focus', () => {
       page.details.focus();
-      shown.showGraph(true);
+      shown.showGraph('failure');
 
       expect(doc.activeElement).toBe(page.details);
     });
@@ -77,7 +77,7 @@ describe('FEATURE: PackageModeFocus', () => {
 
     it('WHEN focus is lost and the graph shows THEN the details keep focus', () => {
       dropFocus();
-      shown.showGraph(false);
+      shown.showGraph(null);
 
       expect(doc.activeElement).toBe(page.details);
     });
