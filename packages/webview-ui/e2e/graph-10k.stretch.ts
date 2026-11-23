@@ -18,7 +18,7 @@ type TenKCase = {
   readonly measure: (browser: Browser) => Promise<number>;
 };
 
-/** Notes the engine behind an open (`fallback` means ELK ran past `FALLBACK_TIMEOUT_MS`) and returns its first frame. */
+/** Notes the engine behind an open (`fallback` means the graph was past `ELK_NODES_MAX` or ELK ran past `FALLBACK_TIMEOUT_MS`) and returns its first frame. */
 const openedMs = (row: BenchRowDef, open: TenKOpen): number => {
   recordNote(`${row.name} layout ${open.engine}`);
 

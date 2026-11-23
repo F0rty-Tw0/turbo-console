@@ -1,10 +1,12 @@
 import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
+import { ELK_NODES_MAX } from '../common/graph.const.ts';
 import type { BoxFrames, ElkLike, LayoutResult, LayoutRunner, LayoutRunnerDeps } from '../common/layout.type.ts';
 import { nestedCentresOf } from '../utils/elk-centres.util.ts';
 import { flatElkGraphOf } from '../utils/elk-flat-graph.util.ts';
 import { boxFramesOf } from '../utils/elk-frames.util.ts';
+import { elkNodeCountOf } from '../utils/elk-node-count.util.ts';
 import { routesOf } from '../utils/elk-routes.util.ts';
 import { gridPositions } from '../utils/grid-layout.util.ts';
 
@@ -45,7 +47,8 @@ const fallbackPositions = (fallback: LayoutRunnerDeps['fallback'], graph: ElkNod
 
 /**
  * Lays graphs out on one reused ELK. Any failure of the current run (no ELK, worker error, rejected layout, timeout)
- * drops that ELK and returns `deps.fallback` positions; the next run creates a fresh one.
+ * drops that ELK and returns `deps.fallback` positions; the next run creates a fresh one. A graph of more than
+ * `ELK_NODES_MAX` nodes goes to the fallback without ELK unless the run `isForced` (Re-layout, Retry).
  * A run that a newer run overtook resolves `null` whatever its outcome and touches nothing, so a stale timeout never
  * terminates the worker the newer run is using. A run that starts while another is in flight terminates that ELK and
  * lays out on a fresh one, because ELK works one job at a time: queued behind the stale job, the new run's timeout
@@ -61,7 +64,7 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
     busy.terminate();
     elk = null;
   };
-  const run = async (hash: string, graph: ElkNode): Promise<LayoutResult | null> => {
+  const run = async (hash: string, graph: ElkNode, isForced = false): Promise<LayoutResult | null> => {
     latest += 1;
 
     const ticket = latest;
@@ -79,6 +82,11 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
     };
 
     dropBusyElk();
+
+    const nodeCount = elkNodeCountOf(graph);
+    const isOversize = !isForced && nodeCount > ELK_NODES_MAX;
+
+    if (isOversize) return fallbackResult();
 
     try {
       elk ??= deps.createElk();

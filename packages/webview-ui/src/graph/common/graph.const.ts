@@ -109,6 +109,14 @@ export const ELK_POLICY_NAME = 'tc-elk';
 
 export const FALLBACK_TIMEOUT_MS = 5000;
 
+/**
+ * The most nodes, at any depth and compounds included, a run hands ELK unless the user asked for it (Re-layout, Retry);
+ * a larger graph goes straight to the fallback, since ELK never lays out 10,000 packages within `FALLBACK_TIMEOUT_MS`.
+ * The Modules view at its 5000-file cap sends about 5350 even with every folder open (5000 files, 250 folders, the root
+ * box, 50 stubs and the pack wrappers in the cap fixture), so 8000 keeps it on ELK with room for deeper folder trees.
+ */
+export const ELK_NODES_MAX = 8000;
+
 /** Starts every edge id, in Cytoscape and ELK alike: no package name holds a NUL, so no edge id is ever a node id. */
 export const EDGE_ID_PREFIX = '\u0000';
 
