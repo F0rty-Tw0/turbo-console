@@ -222,13 +222,9 @@ export class GraphModuleMode {
     this.isSuspended = false;
 
     if (current.kind === 'shown' && view !== null) this.update(view, MODULE_REDRAW_KEEP);
-    else if (current.kind === 'failed') this.deps.screen.reshow();
-    else if (current.kind === 'loading') this.reask(current.name);
-  }
+    else if (current.kind === 'failed' || current.kind === 'loading') this.deps.screen.reshow();
 
-  private reask(packageName: string): void {
-    this.deps.screen.reshow();
-    this.ask(packageName);
+    if (current.kind === 'loading') this.ask(current.name);
   }
 
   /** Entering from package or task mode: task mode is parked toward modules, then the page shows the modules screen. */

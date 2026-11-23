@@ -1,12 +1,15 @@
 import type { ModuleCanvas } from './module-canvas.type.ts';
-import type { ModuleDetailsList, ModuleDetailsView } from './module-details.type.ts';
+import type { ModuleDetailsList, ModuleDetailsView, ModuleSitesState } from './module-details.type.ts';
 import type { ModuleInputMode } from './module-mode.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { GraphModuleSitesMessage, ModuleEnd } from '../../bridge/common/graph-module-sites.type.ts';
-import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { ModuleSelection, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** One sites lookup: the package and the end it asks about, or the two ends of a link (`to` set). */
 export type ModuleAsk = { readonly packageName: string; readonly from: ModuleEnd; readonly to: ModuleEnd | null };
+
+/** The selection Details shows, the lookup it asked last and that lookup's state. */
+export type ModuleShownLookup = { readonly sel: ModuleSelection; readonly ask: ModuleAsk; readonly state: ModuleSitesState };
 
 /** Which Details blocks show every row past `IMPORTS_FOLD_AT`; a re-ask of the same lookup keeps them (C19). */
 export type ModuleFolds = { readonly imports: boolean; readonly importedBy: boolean };

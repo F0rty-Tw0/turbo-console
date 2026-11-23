@@ -41,34 +41,33 @@ type ModulePanelsBuilt = {
   readonly selection: GraphModuleSelection;
 };
 
+/** The panels and the selection: `null` until `moduleModeOf` builds them, after the mode that reports to them. */
+type ModulePanelsRef = { current: ModulePanelsBuilt | null };
+
 /** What the mode and the screen report, and the Details view the selection shows. */
 type ModuleReports = Pick<ModuleModeDeps, 'onView' | 'onFound'> & Pick<ModuleScreenDeps, 'onDrawn'> & ModuleDetailsSink;
 
 /**
  * The panels as modules mode calls them: each enters on the saved view, open unless saved closed (spec §6.8), and a
- * scan or an exit resets the selection. `built` is read per call: it gets the panels once they are built, after the mode.
+ * scan or an exit resets the selection. `built` is read per call: it holds the panels once they are built, after the mode.
  */
-const panelHooksOf = (built: ModulePanelsBuilt[], modes: ModuleHookModes): ModulePanelHooks => {
+const panelHooksOf = (built: ModulePanelsRef, modes: ModuleHookModes): ModulePanelHooks => {
   const enter = (): void => {
     const view = modes.modules();
     const saved = modes.current();
 
     if (view === null) return;
 
-    for (const { controls, details } of built) {
-      controls.enter(view, saved?.controlsOpen ?? true);
-      details.enter(saved?.detailsOpen ?? true);
-    }
+    built.current?.controls.enter(view, saved?.controlsOpen ?? true);
+    built.current?.details.enter(saved?.detailsOpen ?? true);
   };
   const scanning = (name: string): void => {
-    for (const { selection } of built) selection.scanning(name);
+    built.current?.selection.scanning(name);
   };
   const exit = (): void => {
-    for (const { controls, details, selection } of built) {
-      selection.exit();
-      controls.exit();
-      details.exit();
-    }
+    built.current?.selection.exit();
+    built.current?.controls.exit();
+    built.current?.details.exit();
   };
   const hooks: ModulePanelHooks = { enter, scanning, exit };
 
@@ -76,21 +75,19 @@ const panelHooksOf = (built: ModulePanelsBuilt[], modes: ModuleHookModes): Modul
 };
 
 /** What the mode, the screen and the selection report, passed on once the panels and the selection are built. */
-const reportsOf = (built: ModulePanelsBuilt[]): ModuleReports => {
+const reportsOf = (built: ModulePanelsRef): ModuleReports => {
   const onView = (view: ModulesViewState): void => {
-    for (const { controls, details } of built) {
-      controls.setView(view);
-      details.setView(view);
-    }
+    built.current?.controls.setView(view);
+    built.current?.details.setView(view);
   };
   const onFound = (found: ModulesFound): void => {
-    for (const { selection } of built) selection.found(found);
+    built.current?.selection.found(found);
   };
   const onDrawn = (scene: ModuleScene): void => {
-    for (const { selection } of built) selection.drawn(scene);
+    built.current?.selection.drawn(scene);
   };
   const show = (shown: ModuleDetailsView): void => {
-    for (const { details } of built) details.show(shown);
+    built.current?.details.show(shown);
   };
   const reports: ModuleReports = { onView, onFound, onDrawn, show };
 
@@ -120,7 +117,7 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
   const measures = measuresOf(deps);
   const onFailure = (error: unknown): void => showFailure(page, error);
   const layout = new GraphModuleLayout({ view, runner, measures, frames, showGraph, onFailure });
-  const built: ModulePanelsBuilt[] = [];
+  const built: ModulePanelsRef = { current: null };
   const { onView, onFound, onDrawn, show } = reportsOf(built);
   const screen = moduleScreenOf({ page, layout, showGraph, onDrawn });
   const panels = panelHooksOf(built, modes);
@@ -146,7 +143,7 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
     input
   };
 
-  built.push({ controls, details, selection });
+  built.current = { controls, details, selection };
   page.packagesMode.addEventListener('click', leave);
   page.taskMode.addEventListener('click', leave);
   wireBar(page, mode);

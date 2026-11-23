@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { askOf, isSameAsk, isSameSelection, scanningStateOf, sitesStateOf } from './module-ask.util.ts';
+import { askOf, isSameAsk, isSameSelection, lastStateOf, scanningStateOf, sitesStateOf } from './module-ask.util.ts';
 import type { ModuleEnd } from '../../bridge/common/graph-module-sites.type.ts';
 import type { ModuleSelection } from '../../bridge/common/graph-view-state.type.ts';
 import type { ModuleSitesState } from '../common/module-details.type.ts';
-import type { ModuleAsk } from '../common/module-selection.type.ts';
+import type { ModuleAsk, ModuleShownLookup } from '../common/module-selection.type.ts';
 import { MODULE_SITES_FOUND_STUB } from '../test/stubs/graph-host-message.stub.ts';
 import { link, node } from '../test/utils/module-selections.spec.util.ts';
 
@@ -29,6 +29,10 @@ const X_STUB: ModuleEnd = { kind: 'stub', name: '@s/x' };
 const A_TO_LIB: ModuleAsk = { packageName: 'web', from: A_FILE, to: LIB_DIR };
 
 const FOUND: ModuleSitesState = { kind: 'found', result: MODULE_SITES_FOUND_STUB };
+
+const A_TO_LIB_LINK: ModuleSelection = link('file:src/a.ts', 'dir:src/lib');
+
+const A_TO_LIB_SHOWN: ModuleShownLookup = { sel: A_TO_LIB_LINK, ask: A_TO_LIB, state: FOUND };
 
 describe('FEATURE: module asks', () => {
   describe('GIVEN package web', () => {
@@ -108,6 +112,16 @@ describe('FEATURE: module asks', () => {
       ['again over a failure', { kind: 'failed' }, { kind: 'scanning', previous: null }]
     ])('WHEN it is %s THEN it scans as %j', (_name, last, expected) => {
       expect(scanningStateOf(last)).toStrictEqual(expected);
+    });
+  });
+
+  describe('GIVEN the src/a.ts → src/lib lookup shown, found', () => {
+    it.each<[string, ModuleShownLookup | null, ModuleAsk, ModuleSitesState | null]>([
+      ['the same lookup asked again', A_TO_LIB_SHOWN, { ...A_TO_LIB }, FOUND],
+      ['another lookup asked', A_TO_LIB_SHOWN, { ...A_TO_LIB, to: null }, null],
+      ['a lookup asked with nothing shown', null, A_TO_LIB, null]
+    ])('WHEN %s THEN its last state reads %j', (_name, last, next, expected) => {
+      expect(lastStateOf(last, next)).toStrictEqual(expected);
     });
   });
 });

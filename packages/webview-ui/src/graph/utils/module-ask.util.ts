@@ -2,7 +2,7 @@ import { endOf } from './module-end.util.ts';
 import type { ModuleEnd, ModuleSitesResult } from '../../bridge/common/graph-module-sites.type.ts';
 import type { ModuleSelection } from '../../bridge/common/graph-view-state.type.ts';
 import type { ModuleSitesState } from '../common/module-details.type.ts';
-import type { ModuleAsk } from '../common/module-selection.type.ts';
+import type { ModuleAsk, ModuleShownLookup } from '../common/module-selection.type.ts';
 
 const FAILED: ModuleSitesState = { kind: 'failed' };
 
@@ -63,4 +63,13 @@ export const scanningStateOf = (last: ModuleSitesState | null): ModuleSitesState
   const scanning: ModuleSitesState = { kind: 'scanning', previous };
 
   return scanning;
+};
+
+/** The state of the `shown` lookup when `next` asks it again, else `null`. */
+export const lastStateOf = (shown: ModuleShownLookup | null, next: ModuleAsk): ModuleSitesState | null => {
+  if (shown === null) return null;
+
+  const isAgain = isSameAsk(shown.ask, next);
+
+  return isAgain ? shown.state : null;
 };

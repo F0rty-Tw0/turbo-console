@@ -44,7 +44,7 @@ const isSites = (sites: unknown, total: unknown): boolean => {
 
   const isTotal = isCount(total) && total >= sites.length;
 
-  return isTotal && Array.from(sites).every(isSite);
+  return isTotal && sites.every(isSite);
 };
 
 const isFound = (result: UnknownRecord): boolean => {

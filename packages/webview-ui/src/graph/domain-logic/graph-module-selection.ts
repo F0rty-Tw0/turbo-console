@@ -2,16 +2,13 @@ import { depthEdited, focusCleared, focusToggled } from './graph-module-view-edi
 import type { GraphModuleSitesMessage, GraphScanModuleSitesMessage } from '../../bridge/common/graph-module-sites.type.ts';
 import type { ModulesFound } from '../../bridge/common/graph-modules.type.ts';
 import type { ModuleSelection, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
-import type { ModuleDetailsList, ModuleDetailsView, ModuleSitesState } from '../common/module-details.type.ts';
+import type { ModuleDetailsList, ModuleDetailsView } from '../common/module-details.type.ts';
 import type { ModuleScene } from '../common/module-scene.type.ts';
-import type { ModuleAsk, ModuleFolds, ModuleSelectionDeps } from '../common/module-selection.type.ts';
-import { askOf, isSameAsk, isSameSelection, scanningStateOf, sitesStateOf } from '../utils/module-ask.util.ts';
+import type { ModuleAsk, ModuleFolds, ModuleSelectionDeps, ModuleShownLookup } from '../common/module-selection.type.ts';
+import { askOf, isSameAsk, isSameSelection, lastStateOf, scanningStateOf, sitesStateOf } from '../utils/module-ask.util.ts';
 import { detailsViewOf } from '../utils/module-details-view.util.ts';
 import { keepsSelection } from '../utils/module-painted.util.ts';
 import { keptViewOf } from '../utils/module-selection.util.ts';
-
-/** The selection Details shows, the lookup it asked last and that lookup's state. */
-type ModuleShownLookup = { readonly sel: ModuleSelection; readonly ask: ModuleAsk; readonly state: ModuleSitesState };
 
 const EMPTY: ModuleDetailsView = { kind: 'empty' };
 
@@ -109,9 +106,10 @@ export class GraphModuleSelection {
     if (!isAsked || pending === null || shown === null) return;
 
     const isPending = isSameAsk(pending, message);
-    const state = sitesStateOf(message.result);
 
     if (!isPending) return;
+
+    const state = sitesStateOf(message.result);
 
     this.pending = null;
     this.shown = { ...shown, state };
@@ -190,7 +188,7 @@ export class GraphModuleSelection {
    */
   private ask(packageName: string, sel: ModuleSelection): void {
     const next = askOf(packageName, sel);
-    const last = this.lastStateOf(next);
+    const last = lastStateOf(this.shown, next);
     const state = scanningStateOf(last);
     const message: GraphScanModuleSitesMessage = { type: 'scanModuleSites', ...next };
 
@@ -200,17 +198,6 @@ export class GraphModuleSelection {
     this.shown = { sel, ask: next, state };
     this.deps.bridge.post(message);
     this.showLookup();
-  }
-
-  /** The shown lookup's state when it is `next` again, else null. */
-  private lastStateOf(next: ModuleAsk): ModuleSitesState | null {
-    const { shown } = this;
-
-    if (shown === null) return null;
-
-    const isAgain = isSameAsk(shown.ask, next);
-
-    return isAgain ? shown.state : null;
   }
 
   private showLookup(): void {
