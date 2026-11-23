@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { arrivalOf, engineNoticeOf, groupingOf, progressNoticeOf, switchPlanOf } from './layout-plan.util.ts';
+import { arrivalOf, fallbackNoticeOf, groupingOf, progressNoticeOf, switchPlanOf } from './layout-plan.util.ts';
 import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { LayoutNotice } from '../common/graph-layouts.type.ts';
-import type { LayoutEngine } from '../common/graph-probe.type.ts';
+import type { FallbackCause } from '../common/layout.type.ts';
 
 type ArrivalCase = {
   readonly resultHash: string;
@@ -15,7 +15,7 @@ type ArrivalCase = {
 
 type SwitchCase = [LayoutGrouping, LayoutGrouping, boolean, string];
 
-type EngineCase = [LayoutEngine | null, LayoutNotice];
+type CauseCase = [FallbackCause | null, LayoutNotice];
 
 type ProgressCase = [LayoutGrouping, string];
 
@@ -33,10 +33,9 @@ const SWITCH_CASES: SwitchCase[] = [
   ['flat', 'folders', false, 'layOut']
 ];
 
-const ENGINE_CASES: EngineCase[] = [
-  ['fallback', { kind: 'fallback' }],
-  ['elk', { kind: 'none' }],
-  ['cache', { kind: 'none' }],
+const CAUSE_CASES: CauseCase[] = [
+  ['failure', { kind: 'fallback' }],
+  ['oversize', { kind: 'oversize' }],
   [null, { kind: 'none' }]
 ];
 
@@ -65,9 +64,9 @@ describe('FEATURE: layout plan', () => {
     });
   });
 
-  describe.each(ENGINE_CASES)('GIVEN the engine %j on screen', (engine, expected) => {
-    it(`WHEN its notice is chosen THEN the engine notice is ${JSON.stringify(expected)}`, () => {
-      const notice = engineNoticeOf(engine);
+  describe.each(CAUSE_CASES)('GIVEN a layout on screen with the fallback cause %j', (fallbackCause, expected) => {
+    it(`WHEN its notice is chosen THEN the notice is ${JSON.stringify(expected)}`, () => {
+      const notice = fallbackNoticeOf(fallbackCause);
 
       expect(notice).toStrictEqual(expected);
     });

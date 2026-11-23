@@ -1,4 +1,5 @@
 import type { LayoutScreen } from '../common/graph-layouts.type.ts';
+import type { FallbackCause } from '../common/layout.type.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import { modeFocusOf } from '../utils/mode-focus.util.ts';
 
@@ -24,17 +25,18 @@ export class PackageModeFocus {
 
   /** The screen, its `showGraph` giving the kept focus back once the graph shows. */
   public screenOf(screen: LayoutScreen): LayoutScreen {
-    const focused: LayoutScreen = { ...screen, showGraph: (isFallback: boolean): void => this.showGraph(screen, isFallback) };
+    const showGraph = (fallbackCause: FallbackCause | null): void => this.showGraph(screen, fallbackCause);
+    const focused: LayoutScreen = { ...screen, showGraph };
 
     return focused;
   }
 
-  private showGraph(screen: LayoutScreen, isFallback: boolean): void {
+  private showGraph(screen: LayoutScreen, fallbackCause: FallbackCause | null): void {
     const { activeElement, body } = document;
     const isFocusLost = activeElement === null || activeElement === body;
     const isRefocus = this.isKept && isFocusLost;
 
-    screen.showGraph(isFallback);
+    screen.showGraph(fallbackCause);
     this.isKept = false;
 
     if (isRefocus) modeFocusOf(this.page).focus();

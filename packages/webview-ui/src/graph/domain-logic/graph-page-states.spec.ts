@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { layoutScreenOf, showFailure, showStateMessage } from './graph-page-states.ts';
+import { FALLBACK_NOTICE_TEXT, OVERSIZE_NOTICE_TEXT } from '../common/graph.const.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
 import { pageMock } from '../test/mocks/page.mock.ts';
@@ -37,7 +38,7 @@ describe('FEATURE: layoutScreenOf', () => {
 
   describe('GIVEN the pre-state', () => {
     it('WHEN the graph shows THEN the Legend button is enabled', () => {
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
 
       expect(page.legend.disabled).toBe(false);
     });
@@ -51,7 +52,7 @@ describe('FEATURE: layoutScreenOf', () => {
     });
 
     it('WHEN the graph shows THEN the location bar shows with the body', () => {
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
 
       expect([page.location.nav.hidden, page.body.hidden]).toStrictEqual([false, false]);
     });
@@ -59,7 +60,7 @@ describe('FEATURE: layoutScreenOf', () => {
 
   describe('GIVEN the graph shown', () => {
     beforeEach(() => {
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
     });
 
     it.each([
@@ -69,6 +70,25 @@ describe('FEATURE: layoutScreenOf', () => {
       show();
 
       expect([page.location.nav.hidden, page.body.hidden]).toStrictEqual([true, true]);
+    });
+  });
+
+  describe.each([
+    ['failure', FALLBACK_NOTICE_TEXT],
+    ['oversize', OVERSIZE_NOTICE_TEXT]
+  ] as const)('GIVEN a fallback layout of cause %j', (fallbackCause, text) => {
+    it(`WHEN the graph shows THEN the notice reads ${JSON.stringify(text)} with Retry`, () => {
+      layoutScreenOf(page).showGraph(fallbackCause);
+
+      expect([page.notice.hidden, page.noticeText.textContent, page.retry.hidden]).toStrictEqual([false, text, false]);
+    });
+  });
+
+  describe('GIVEN an ELK layout', () => {
+    it('WHEN the graph shows THEN the notice and Retry are hidden', () => {
+      layoutScreenOf(page).showGraph(null);
+
+      expect([page.notice.hidden, page.retry.hidden]).toStrictEqual([true, true]);
     });
   });
 
@@ -82,21 +102,21 @@ describe('FEATURE: layoutScreenOf', () => {
     });
 
     it('WHEN the graph shows THEN the container has focus', () => {
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
 
       expect(document.activeElement).toBe(page.container);
     });
 
     it('WHEN focus moved to the Controls button before the graph shows THEN it stays there', () => {
       page.controls.focus();
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
 
       expect(document.activeElement).toBe(page.controls);
     });
 
     it('WHEN a page failure shows over it before the graph shows THEN the container has focus', () => {
       showFailure(page, new Error('boom'));
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
 
       expect(document.activeElement).toBe(page.container);
     });
@@ -104,10 +124,10 @@ describe('FEATURE: layoutScreenOf', () => {
     it('WHEN the graph shows, focus leaves for the body and loading hides it again THEN the next graph leaves focus on the body', () => {
       const screen = layoutScreenOf(page);
 
-      screen.showGraph(false);
+      screen.showGraph(null);
       document.body.focus();
       screen.showLoading();
-      screen.showGraph(false);
+      screen.showGraph(null);
 
       expect(document.activeElement).toBe(document.body);
     });
@@ -119,7 +139,7 @@ describe('FEATURE: layoutScreenOf', () => {
       page.container.focus();
       layoutScreenOf(page).showLoading();
       document.body.focus();
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
 
       expect(document.activeElement).toBe(document.body);
     });
@@ -132,7 +152,7 @@ describe('FEATURE: layoutScreenOf', () => {
       hasFocus.mockReturnValue(true);
       showFailure(page, new Error('boom'));
       document.body.focus();
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
 
       expect(document.activeElement).toBe(document.body);
     });
@@ -146,7 +166,7 @@ describe('FEATURE: layoutScreenOf', () => {
       layoutScreenOf(page).showLoading();
       document.body.focus();
       hasFocus.mockReturnValue(false);
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
 
       expect(document.activeElement).toBe(document.body);
     });
@@ -157,7 +177,7 @@ describe('FEATURE: layoutScreenOf', () => {
       page.details.focus();
       layoutScreenOf(page).showLoading();
       document.body.focus();
-      layoutScreenOf(page).showGraph(false);
+      layoutScreenOf(page).showGraph(null);
 
       expect(document.activeElement).toBe(document.body);
     });

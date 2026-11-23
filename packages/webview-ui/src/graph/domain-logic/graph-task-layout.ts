@@ -5,9 +5,9 @@ import type { TaskViewState } from '../../bridge/common/graph-view-state.type.ts
 import type { LayoutEngine } from '../common/graph-probe.type.ts';
 import { TASK_LAYOUT_MEMORY } from '../common/graph-task.const.ts';
 import type { TaskLayoutDeps, TaskLayoutRequest } from '../common/graph-task.type.ts';
-import type { LayoutResult } from '../common/layout.type.ts';
+import type { FallbackCause, LayoutResult } from '../common/layout.type.ts';
 import { elkTaskGraphOf } from '../utils/elk-task-graph.util.ts';
-import { engineNoticeOf } from '../utils/layout-plan.util.ts';
+import { fallbackNoticeOf } from '../utils/layout-plan.util.ts';
 import { titleWidthsOf } from '../utils/task-title-width.util.ts';
 
 /**
@@ -63,6 +63,11 @@ export class GraphTaskLayout {
     return this.placed?.engine ?? null;
   }
 
+  /** Why the layout on screen fell back; `null` for an ELK layout or none. */
+  public fallbackCause(): FallbackCause | null {
+    return this.placed?.fallbackCause ?? null;
+  }
+
   /** Places the key's layout from memory at once, or lays it out; the saved camera returns only for the key it was saved with. */
   public async show(request: TaskLayoutRequest): Promise<void> {
     this.wanted = request;
@@ -72,8 +77,10 @@ export class GraphTaskLayout {
   /** Re-layout and Retry: a fresh, forced run of the key asked for, then a fit. */
   public async relayout(): Promise<void> {
     const request = this.wanted;
+    const canRestore = false;
+    const isForced = true;
 
-    if (request !== null) await this.guard(request, async (): Promise<void> => this.layOut(request, false, true));
+    if (request !== null) await this.guard(request, async (): Promise<void> => this.layOut(request, canRestore, isForced));
   }
 
   /** The state's Atomizer groups and cache prediction toggle. */
@@ -189,7 +196,7 @@ export class GraphTaskLayout {
     this.placed = result;
     this.atoms.placed(request.shown, result, request.sizes, request.tasks);
     this.predictions.placed(request.tasks);
-    screen.showNotice(engineNoticeOf(result.engine));
+    screen.showNotice(fallbackNoticeOf(result.fallbackCause));
 
     if (isSavedCamera) view.setViewport(saved.zoom, saved.pan);
     else if (isOpen) view.open();

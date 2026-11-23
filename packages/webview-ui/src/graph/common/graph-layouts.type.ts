@@ -1,6 +1,6 @@
 import type { DrawnGraph, GraphView, NodeSizer } from './graph-page.type.ts';
 import type { LayoutEngine } from './graph-probe.type.ts';
-import type { LayoutRunner } from './layout.type.ts';
+import type { FallbackCause, LayoutRunner } from './layout.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
 import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
@@ -10,8 +10,14 @@ type NoNotice = {
   readonly kind: 'none';
 };
 
+/** A fallback layout after ELK failed or timed out. */
 type FallbackNotice = {
   readonly kind: 'fallback';
+};
+
+/** A fallback layout of a graph past `ELK_NODES_MAX`, where ELK never ran. */
+type OversizeNotice = {
+  readonly kind: 'oversize';
 };
 
 /** A layout of the checkbox's mode in flight while the other mode stays on screen; Retry hidden. */
@@ -20,13 +26,13 @@ type ProgressNotice = {
   readonly text: string;
 };
 
-/** The notice line above the canvas: hidden, the simplified-layout copy with Retry, or a progress text. */
-export type LayoutNotice = NoNotice | FallbackNotice | ProgressNotice;
+/** The notice line above the canvas: hidden, a simplified-layout copy with Retry, or a progress text. */
+export type LayoutNotice = NoNotice | FallbackNotice | OversizeNotice | ProgressNotice;
 
-/** What the layouts show around the canvas: the Loading message, the graph view, the notice. */
+/** What the layouts show around the canvas: the Loading message, the graph view with its fallback's notice, the notice. */
 export type LayoutScreen = {
   readonly showLoading: () => void;
-  readonly showGraph: (isFallback: boolean) => void;
+  readonly showGraph: (fallbackCause: FallbackCause | null) => void;
   readonly showNotice: (notice: LayoutNotice) => void;
 };
 

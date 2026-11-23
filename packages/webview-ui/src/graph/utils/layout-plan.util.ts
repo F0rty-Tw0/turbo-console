@@ -1,7 +1,7 @@
 import type { LayoutGrouping } from '../../bridge/common/graph-message.type.ts';
 import type { LayoutNotice } from '../common/graph-layouts.type.ts';
-import type { LayoutEngine } from '../common/graph-probe.type.ts';
-import { FALLBACK_NOTICE, LAYING_OUT_FOLDERS_TEXT, LAYING_OUT_GRAPH_TEXT, NO_NOTICE } from '../common/graph.const.ts';
+import { FALLBACK_NOTICE, LAYING_OUT_FOLDERS_TEXT, LAYING_OUT_GRAPH_TEXT, NO_NOTICE, OVERSIZE_NOTICE } from '../common/graph.const.ts';
+import type { FallbackCause } from '../common/layout.type.ts';
 
 type LayoutArrival = 'ignore' | 'place' | 'store';
 
@@ -31,9 +31,16 @@ export const switchPlanOf = (next: LayoutGrouping, drawnMode: LayoutGrouping, ha
   return hasSnapshot ? 'place' : 'layOut';
 };
 
-/** The notice of a layout on screen: the simplified-layout notice only for a fallback. */
-export const engineNoticeOf = (engine: LayoutEngine | null): LayoutNotice => {
-  return engine === 'fallback' ? FALLBACK_NOTICE : NO_NOTICE;
+/** The notice of a layout on screen: none without a fallback, else the simplified-layout notice of its cause. */
+export const fallbackNoticeOf = (fallbackCause: FallbackCause | null): LayoutNotice => {
+  switch (fallbackCause) {
+    case null:
+      return NO_NOTICE;
+    case 'oversize':
+      return OVERSIZE_NOTICE;
+    case 'failure':
+      return FALLBACK_NOTICE;
+  }
 };
 
 /** The notice while the first layout of `mode` runs and the other mode stays on screen. */

@@ -97,7 +97,7 @@ export class GraphModuleLayout {
 
     modules.show({ scene, positions: result.positions, measures: this.deps.measures });
     this.drawn = scene;
-    this.deps.showGraph(result.engine === 'fallback');
+    this.deps.showGraph(result.fallbackCause);
     this.placeCamera(view, redraw, before);
     this.deps.frames.arm();
   }

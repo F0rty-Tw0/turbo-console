@@ -92,4 +92,32 @@ describe('FEATURE: GraphLayoutSnapshots', () => {
       expect(snapshots.engineOf('folders')).toBe('fallback');
     });
   });
+
+  describe('GIVEN a grouped layout that fell back as oversize', () => {
+    beforeEach(() => {
+      snapshots.keep('folders', resultOf('h1', GROUPED_POSITIONS_STUB, 'fallback', 'oversize'));
+    });
+
+    it('THEN its fallback cause is oversize', () => {
+      expect(snapshots.fallbackCauseOf('folders')).toBe('oversize');
+    });
+
+    it('WHEN an ELK layout replaces it THEN it has no fallback cause', () => {
+      snapshots.keep('folders', resultOf('h1', GROUPED_POSITIONS_STUB));
+
+      expect(snapshots.fallbackCauseOf('folders')).toBeNull();
+    });
+
+    it('WHEN the host cache seeds the mode THEN it has no fallback cause', () => {
+      snapshots.seed('folders', GROUPED_POSITIONS_STUB, null);
+
+      expect(snapshots.fallbackCauseOf('folders')).toBeNull();
+    });
+
+    it('WHEN cleared THEN it has no fallback cause', () => {
+      snapshots.clear();
+
+      expect(snapshots.fallbackCauseOf('folders')).toBeNull();
+    });
+  });
 });
