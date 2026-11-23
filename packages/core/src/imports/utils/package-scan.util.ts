@@ -5,7 +5,8 @@ import type { FileOutcome, ImportWalk, PackageScanResult } from '../common/impor
  * Folds the outcome of each walked file (`outcomes[i]` belongs to `walk.files[i]`) into the cache map the scan leaves
  * and the scan result. A scanned file is cached and counted, and listed only when it has imports (OQ9); a skipped one
  * is counted; an unreached one is neither, but keeps its `previous` entry so the next scan need not re-read it.
- * `tsconfigPaths` is `null` here; `scanPackageImports` sets it.
+ * `walkedFiles` lists every walked file whatever its outcome. `tsconfigPaths` is `null` here; `scanPackageImports`
+ * sets it.
  */
 export const packageScanOf = (
   walk: ImportWalk,
@@ -37,7 +38,8 @@ export const packageScanOf = (
     if (imports.length > 0) files.push({ file: walked.file, imports });
   }
 
-  const scan: PackageImportScan = { files, tsconfigPaths: null, scanned, skipped, limit };
+  const walkedFiles = walk.files.map((walked) => walked.file);
+  const scan: PackageImportScan = { files, walkedFiles, tsconfigPaths: null, scanned, skipped, limit };
   const result: PackageScanResult = { scan, cached };
 
   return result;

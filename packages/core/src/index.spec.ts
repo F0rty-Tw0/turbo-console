@@ -48,7 +48,8 @@ import type {
 /**
  * The runtime exports: the readers, `TurboException`, the text cleaners `plainLine` and `plainLines`, the import scan
  * (`scanPackageImports` and the `ImportFileCache` it reads and fills, and `isSourceName`, which the host's `openImport`
- * checks), and the run option words `turboOptionArgs` with the patterns their checks use (`BARE`,
+ * checks), the alias helpers the host's import match uses (`aliasTargetsOf`, `PATHS_SKIPPED`, `isNameOf`), and the run
+ * option words `turboOptionArgs` with the patterns their checks use (`BARE`,
  * `BARE_FIRST_BLOCKED`, `CONCURRENCY_VALUE`). The
  * task-name check `assertTaskName` and the boundary check `isWithin` are public: the vscode run flow uses them.
  * Spawning, model building and the turbo-name check (`runTurbo`, `queryTurbo`, `buildWorkspaceModel`,
@@ -62,6 +63,7 @@ const RUNTIME_EXPORTS = [
   'ImportFileCache',
   'PACKAGE_GRAPH_QUERY',
   'PACKAGE_NAME',
+  'PATHS_SKIPPED',
   'ROOT_NAME',
   'RUN_LOG_OBJECT_MAX',
   'RUN_LOG_PROBE',
@@ -70,10 +72,12 @@ const RUNTIME_EXPORTS = [
   'SUPPORTED_TURBO_RANGE',
   'TurboException',
   'affectedTasksSchema',
+  'aliasTargetsOf',
   'assertRunExtras',
   'assertTaskName',
   'atomGroupsOf',
   'dryRunSchema',
+  'isNameOf',
   'isSourceName',
   'isUnknownRunLog',
   'isWithin',
@@ -143,6 +147,7 @@ describe('FEATURE: core package entry', () => {
       expectTypeOf<ImportScanLimit>().toEqualTypeOf<'files' | 'entries' | 'time'>();
       expectTypeOf<SourceImport['kind']>().toEqualTypeOf<'static' | 'reexport' | 'dynamic' | 'require'>();
       expectTypeOf<PackageImportScan['tsconfigPaths']>().toEqualTypeOf<TsconfigPaths | null>();
+      expectTypeOf<PackageImportScan['walkedFiles']>().toEqualTypeOf<string[]>();
       expectTypeOf<ScannedFile>().toHaveProperty('imports');
       expectTypeOf<ImportScanCaps>().toHaveProperty('reads');
       expectTypeOf<CachedFile>().toHaveProperty('mtimeMs');

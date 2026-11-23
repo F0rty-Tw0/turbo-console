@@ -75,7 +75,14 @@ describe('FEATURE: scan one package for its imports', () => {
 
       const scan = await scanPackageImports(inputOf(dir, new ImportFileCache()));
 
-      expect(scan).toStrictEqual({ files: listed, tsconfigPaths: null, scanned: 2, skipped: 0, limit: null });
+      expect(scan).toStrictEqual({
+        files: listed,
+        walkedFiles: ['src/a.ts', 'src/b.ts'],
+        tsconfigPaths: null,
+        scanned: 2,
+        skipped: 0,
+        limit: null
+      });
     });
   });
 
