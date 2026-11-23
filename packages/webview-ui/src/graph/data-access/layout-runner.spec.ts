@@ -54,6 +54,7 @@ describe('FEATURE: createLayoutRunner', () => {
         routes: {},
         boxFrames: {},
         engine: 'elk',
+        fallbackCause: null,
         ms: 40
       });
     });
@@ -113,7 +114,7 @@ describe('FEATURE: createLayoutRunner', () => {
 
       const result = await runner.run('h1', ELK_GRAPH_STUB);
 
-      expect(result).toMatchObject({ hash: 'h1', engine: 'fallback', positions: FALLBACK_POSITIONS_STUB });
+      expect(result).toMatchObject({ hash: 'h1', engine: 'fallback', fallbackCause: 'failure', positions: FALLBACK_POSITIONS_STUB });
     });
 
     it('WHEN a run starts THEN the fallback result has no routes', async () => {
@@ -173,7 +174,7 @@ describe('FEATURE: createLayoutRunner', () => {
     it('THEN the result is the fallback', async () => {
       const result = await pending;
 
-      expect(result).toMatchObject({ hash: 'h1', engine: 'fallback', positions: FALLBACK_POSITIONS_STUB });
+      expect(result).toMatchObject({ hash: 'h1', engine: 'fallback', fallbackCause: 'failure', positions: FALLBACK_POSITIONS_STUB });
     });
 
     it('THEN the worker is terminated once', async () => {

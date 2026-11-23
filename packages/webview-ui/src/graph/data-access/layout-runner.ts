@@ -2,7 +2,7 @@ import type { ElkNode } from 'elkjs/lib/elk-api.js';
 
 import type { Positions, Routes } from '../../bridge/common/graph-state.type.ts';
 import { ELK_NODES_MAX } from '../common/graph.const.ts';
-import type { BoxFrames, ElkLike, LayoutResult, LayoutRunner, LayoutRunnerDeps } from '../common/layout.type.ts';
+import type { BoxFrames, ElkLike, FallbackCause, LayoutResult, LayoutRunner, LayoutRunnerDeps } from '../common/layout.type.ts';
 import { nestedCentresOf } from '../utils/elk-centres.util.ts';
 import { flatElkGraphOf } from '../utils/elk-flat-graph.util.ts';
 import { boxFramesOf } from '../utils/elk-frames.util.ts';
@@ -34,6 +34,10 @@ const layoutWithin = async (elk: ElkLike, graph: ElkNode, timeoutMs: number): Pr
 
 const failed = (): null => null;
 
+const engineOf = (fallbackCause: FallbackCause | null): LayoutResult['engine'] => {
+  return fallbackCause === null ? 'elk' : 'fallback';
+};
+
 /** The fallback's positions, or a plain grid when the fallback throws too, so a run always ends with a layout. */
 const fallbackPositions = (fallback: LayoutRunnerDeps['fallback'], graph: ElkNode): Positions => {
   const flat = flatElkGraphOf(graph);
@@ -47,8 +51,9 @@ const fallbackPositions = (fallback: LayoutRunnerDeps['fallback'], graph: ElkNod
 
 /**
  * Lays graphs out on one reused ELK. Any failure of the current run (no ELK, worker error, rejected layout, timeout)
- * drops that ELK and returns `deps.fallback` positions; the next run creates a fresh one. A graph of more than
- * `ELK_NODES_MAX` nodes goes to the fallback without ELK unless the run `isForced` (Re-layout, Retry).
+ * drops that ELK and returns `deps.fallback` positions, cause `failure`; the next run creates a fresh one. A graph of
+ * more than `ELK_NODES_MAX` nodes goes to the fallback, cause `oversize`, without ELK unless the run `isForced`
+ * (Re-layout, Retry).
  * A run that a newer run overtook resolves `null` whatever its outcome and touches nothing, so a stale timeout never
  * terminates the worker the newer run is using. A run that starts while another is in flight terminates that ELK and
  * lays out on a fresh one, because ELK works one job at a time: queued behind the stale job, the new run's timeout
@@ -69,16 +74,16 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
 
     const ticket = latest;
     const start = performance.now();
-    const resultOf = (positions: Positions, routes: Routes, engine: LayoutResult['engine'], boxFrames: BoxFrames): LayoutResult => {
+    const resultOf = (positions: Positions, routes: Routes, boxFrames: BoxFrames, cause: FallbackCause | null): LayoutResult => {
       const ms = Math.round(performance.now() - start);
-      const result: LayoutResult = { hash, positions, routes, boxFrames, engine, ms };
+      const result: LayoutResult = { hash, positions, routes, boxFrames, engine: engineOf(cause), fallbackCause: cause, ms };
 
       return result;
     };
-    const fallbackResult = (): LayoutResult => {
+    const fallbackResult = (cause: FallbackCause): LayoutResult => {
       const positions = fallbackPositions(deps.fallback, graph);
 
-      return resultOf(positions, {}, 'fallback', {});
+      return resultOf(positions, {}, {}, cause);
     };
 
     dropBusyElk();
@@ -86,12 +91,12 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
     const nodeCount = elkNodeCountOf(graph);
     const isOversize = !isForced && nodeCount > ELK_NODES_MAX;
 
-    if (isOversize) return fallbackResult();
+    if (isOversize) return fallbackResult('oversize');
 
     try {
       elk ??= deps.createElk();
     } catch {
-      return fallbackResult();
+      return fallbackResult('failure');
     }
 
     const current = elk;
@@ -111,13 +116,13 @@ export const createLayoutRunner = (deps: LayoutRunnerDeps): LayoutRunner => {
       current.terminate();
       elk = null;
 
-      return fallbackResult();
+      return fallbackResult('failure');
     }
 
     const positions = nestedCentresOf(laidOut);
     const routes = routesOf(laidOut);
 
-    return resultOf(positions, routes, 'elk', boxFramesOf(laidOut));
+    return resultOf(positions, routes, boxFramesOf(laidOut), null);
   };
   const runner: LayoutRunner = { run };
 
