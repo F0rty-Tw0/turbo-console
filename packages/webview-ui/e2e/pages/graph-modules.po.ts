@@ -45,7 +45,7 @@ export class GraphModulesPage {
   }
 
   public async setShown(label: string, isChecked: boolean): Promise<void> {
-    await this.bar.getByRole('checkbox', { name: label, exact: true }).setChecked(isChecked);
+    await this.checkOf(label).setChecked(isChecked);
   }
 
   /**
@@ -101,7 +101,12 @@ export class GraphModulesPage {
   }
 
   public async expectChecked(label: string, isChecked: boolean): Promise<void> {
-    await expect(this.bar.getByRole('checkbox', { name: label, exact: true })).toBeChecked({ checked: isChecked });
+    await expect(this.checkOf(label)).toBeChecked({ checked: isChecked });
+  }
+
+  /** The View checkbox `label` draws its box frame in `colour`, an `rgb(...)` string. */
+  public async expectCheckFrame(label: string, colour: string): Promise<void> {
+    await expect(this.checkOf(label)).toHaveCSS('border-top-color', colour);
   }
 
   public async expectCamera(camera: Camera): Promise<void> {
@@ -145,6 +150,10 @@ export class GraphModulesPage {
     const camera: Camera = { zoom, pan };
 
     return camera;
+  }
+
+  private checkOf(label: string): Locator {
+    return this.bar.getByRole('checkbox', { name: label, exact: true });
   }
 
   private async edgeLines(): Promise<string[]> {

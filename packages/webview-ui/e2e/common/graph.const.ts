@@ -27,19 +27,6 @@ export const EDGE_CLEARANCE_PX = 14;
 /** The package count of `largeState` by default. */
 export const LARGE_PACKAGE_COUNT = 300;
 
-/** Every `--vscode-*` name the theme stubs set, so `applyTheme` can clear them between themes. */
-export const THEME_VAR_NAMES = [
-  '--vscode-editor-background',
-  '--vscode-foreground',
-  '--vscode-panel-border',
-  '--vscode-contrastBorder',
-  '--vscode-widget-border',
-  '--vscode-descriptionForeground',
-  '--vscode-focusBorder',
-  '--vscode-list-activeSelectionBackground',
-  '--vscode-list-activeSelectionForeground'
-];
-
 /** Init script: opts the page into exposing `window.tcGraphProbe`. */
 export const PROBE_WANTED = 'window.tcGraphProbeWanted = true;';
 
