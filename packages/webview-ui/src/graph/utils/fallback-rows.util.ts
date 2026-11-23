@@ -40,9 +40,9 @@ const idRanksOf = (count: number): Int32Array => {
   const byText = (a: number, b: number): number => ((texts[a] ?? '') < (texts[b] ?? '') ? -1 : 1);
   const ranks = new Int32Array(count);
 
-  indices.sort(byText).forEach((index: number, rank: number): void => {
-    ranks[index] = rank;
-  });
+  indices.sort(byText);
+
+  for (const [rank, index] of indices.entries()) ranks[index] = rank;
 
   return ranks;
 };
@@ -51,14 +51,14 @@ const idRanksOf = (count: number): Int32Array => {
 const reachedRowsOf = (depths: Int32Array): number[][] => {
   const rows: number[][] = [];
 
-  depths.forEach((depth: number, index: number): void => {
-    if (depth === UNREACHED) return;
+  for (const [index, depth] of depths.entries()) {
+    if (depth === UNREACHED) continue;
 
     const row = rows[depth] ?? [];
 
     row.push(index);
     rows[depth] = row;
-  });
+  }
 
   return rows;
 };
@@ -66,9 +66,7 @@ const reachedRowsOf = (depths: Int32Array): number[][] => {
 const unreachedOf = (depths: Int32Array): number[] => {
   const unreached: number[] = [];
 
-  depths.forEach((depth: number, index: number): void => {
-    if (depth === UNREACHED) unreached.push(index);
-  });
+  for (const [index, depth] of depths.entries()) if (depth === UNREACHED) unreached.push(index);
 
   return unreached;
 };
@@ -110,14 +108,13 @@ export const fallbackRowsOf = (links: FallbackLinks): number[][] => {
     return diff === 0 ? idOrder : diff;
   };
 
-  rows.forEach((row: number[], depth: number): void => {
-    row.forEach((node: number): void => {
-      percents[node] = percentOf(node, depth);
-    });
-    row.sort(byPercentThenId).forEach((node: number, place: number): void => {
-      places[node] = place;
-    });
-  });
+  for (const [depth, row] of rows.entries()) {
+    for (const node of row) percents[node] = percentOf(node, depth);
+
+    row.sort(byPercentThenId);
+
+    for (const [place, node] of row.entries()) places[node] = place;
+  }
 
   const unreached = unreachedOf(depths);
 
