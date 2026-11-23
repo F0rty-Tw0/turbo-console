@@ -251,7 +251,7 @@ catalogs:
       version: 4.6.7
 
 patchedDependencies:
-  cytoscape@3.35.0: 50e7b776bad866a836147ca1e3efb282870018319d99cf215a2d87763ee5d401
+  cytoscape@3.35.0: 97cfc0bc4f94d98e7575f3713df6737f5d5f4d0d8dceaaccd39b788f5e9b4006
 
 importers:
 
@@ -405,7 +405,7 @@ importers:
     dependencies:
       cytoscape:
         specifier: catalog:runtime
-        version: 3.35.0(patch_hash=50e7b776bad866a836147ca1e3efb282870018319d99cf215a2d87763ee5d401)
+        version: 3.35.0(patch_hash=97cfc0bc4f94d98e7575f3713df6737f5d5f4d0d8dceaaccd39b788f5e9b4006)
       elkjs:
         specifier: catalog:runtime
         version: 0.12.1
@@ -5177,7 +5177,7 @@ snapshots:
 
   cubic2quad@1.2.1: {}
 
-  cytoscape@3.35.0(patch_hash=50e7b776bad866a836147ca1e3efb282870018319d99cf215a2d87763ee5d401): {}
+  cytoscape@3.35.0(patch_hash=97cfc0bc4f94d98e7575f3713df6737f5d5f4d0d8dceaaccd39b788f5e9b4006): {}
 
   debug@3.2.7(supports-color@10.2.2):
     dependencies:

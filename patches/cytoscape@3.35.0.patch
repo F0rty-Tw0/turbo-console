@@ -1,5 +1,5 @@
 diff --git a/dist/cytoscape.cjs.js b/dist/cytoscape.cjs.js
-index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..ae6b382ddb1ee190eb02b9a537e306059a1312c9 100644
+index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..852e9c4b70f2d59ccd54bc2512569be255fac23e 100644
 --- a/dist/cytoscape.cjs.js
 +++ b/dist/cytoscape.cjs.js
 @@ -12141,6 +12141,10 @@ elesfn$b.boundingBox = function (options) {
@@ -41,6 +41,15 @@ index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..ae6b382ddb1ee190eb02b9a537e30605
        if (!parentOk(parent)) {
          return false;
        }
+@@ -20823,7 +20825,7 @@ BreadthFirstLayout.prototype.run = function () {
+   // get the weighted percent for an element based on its connectivity to other levels
+   var cachedWeightedPercent = {};
+   var getWeightedPercent = function getWeightedPercent(ele) {
+-    if (cachedWeightedPercent[ele.id()]) {
++    if (cachedWeightedPercent[ele.id()] !== undefined) {
+       return cachedWeightedPercent[ele.id()];
+     }
+     var eleDepth = getInfo(ele).depth;
 @@ -25847,8 +25849,10 @@ BRp$7.registerCalculationListeners = function () {
            fn(willDraw, elesToUpdate);
          }
@@ -54,7 +63,7 @@ index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..ae6b382ddb1ee190eb02b9a537e30605
    };
    r.flushRenderedStyleQueue = function () {
 diff --git a/dist/cytoscape.esm.mjs b/dist/cytoscape.esm.mjs
-index 4b7cd162da9d60f25702153f09b6f3876de94e80..fc886b4c9728440892090423593ac97e2000d496 100644
+index 4b7cd162da9d60f25702153f09b6f3876de94e80..5cf3ed42f0812037158f3958b59520e32233771d 100644
 --- a/dist/cytoscape.esm.mjs
 +++ b/dist/cytoscape.esm.mjs
 @@ -12139,6 +12139,10 @@ elesfn$b.boundingBox = function (options) {
@@ -96,6 +105,15 @@ index 4b7cd162da9d60f25702153f09b6f3876de94e80..fc886b4c9728440892090423593ac97e
        if (!parentOk(parent)) {
          return false;
        }
+@@ -20821,7 +20823,7 @@ BreadthFirstLayout.prototype.run = function () {
+   // get the weighted percent for an element based on its connectivity to other levels
+   var cachedWeightedPercent = {};
+   var getWeightedPercent = function getWeightedPercent(ele) {
+-    if (cachedWeightedPercent[ele.id()]) {
++    if (cachedWeightedPercent[ele.id()] !== undefined) {
+       return cachedWeightedPercent[ele.id()];
+     }
+     var eleDepth = getInfo(ele).depth;
 @@ -25845,8 +25847,10 @@ BRp$7.registerCalculationListeners = function () {
            fn(willDraw, elesToUpdate);
          }
@@ -109,7 +127,7 @@ index 4b7cd162da9d60f25702153f09b6f3876de94e80..fc886b4c9728440892090423593ac97e
    };
    r.flushRenderedStyleQueue = function () {
 diff --git a/dist/cytoscape.umd.js b/dist/cytoscape.umd.js
-index af67ea46e043233d17eacc6979a22157f7b90425..a0a4cca432578b54ecd6bc85f01f1c69f207be9e 100644
+index af67ea46e043233d17eacc6979a22157f7b90425..694dee38021e90bbeff3141444be9954b546e234 100644
 --- a/dist/cytoscape.umd.js
 +++ b/dist/cytoscape.umd.js
 @@ -12145,6 +12145,10 @@
@@ -151,6 +169,15 @@ index af67ea46e043233d17eacc6979a22157f7b90425..a0a4cca432578b54ecd6bc85f01f1c69
          if (!parentOk(parent)) {
            return false;
          }
+@@ -20827,7 +20829,7 @@
+     // get the weighted percent for an element based on its connectivity to other levels
+     var cachedWeightedPercent = {};
+     var getWeightedPercent = function getWeightedPercent(ele) {
+-      if (cachedWeightedPercent[ele.id()]) {
++      if (cachedWeightedPercent[ele.id()] !== undefined) {
+         return cachedWeightedPercent[ele.id()];
+       }
+       var eleDepth = getInfo(ele).depth;
 @@ -25851,8 +25853,10 @@ var printLayoutInfo;
              fn(willDraw, elesToUpdate);
            }
@@ -210,6 +237,19 @@ index 1639068d7b96c2247f37be84144fcdf912fbcc5f..70df55114c5c0e4c1dde99fe22d071c5
 +  if( _p.data.parent ){ for( let parent = _p.parent; parent; parent = parent._private.parent ){
      if( !parentOk( parent ) ){ return false; }
    } }
+ 
+diff --git a/src/extensions/layout/breadthfirst.mjs b/src/extensions/layout/breadthfirst.mjs
+index d77165e672842d92af17fb8ae1e4311978b1e5ed..94468f7dd37a8e48ba26ebabfa2e3ba670eafe6f 100644
+--- a/src/extensions/layout/breadthfirst.mjs
++++ b/src/extensions/layout/breadthfirst.mjs
+@@ -228,7 +228,7 @@ BreadthFirstLayout.prototype.run = function(){
+   // get the weighted percent for an element based on its connectivity to other levels
+   const cachedWeightedPercent = {};
+   const getWeightedPercent = function( ele ){
+-    if( cachedWeightedPercent[ ele.id() ] ){
++    if( cachedWeightedPercent[ ele.id() ] !== undefined ){
+       return cachedWeightedPercent[ ele.id() ];
+     }
  
 diff --git a/src/extensions/renderer/base/coord-ele-math/rendered-style.mjs b/src/extensions/renderer/base/coord-ele-math/rendered-style.mjs
 index 563b687e07e212a17e4728c3ad88dd4ef540251d..cb8d862e6c525d1dd0d6657874a79c8f99d2971f 100644
