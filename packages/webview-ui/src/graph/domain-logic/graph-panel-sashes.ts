@@ -1,5 +1,6 @@
 import { wireSashInput } from './graph-sash-input.ts';
 import type { PanelWidths } from '../../bridge/common/graph-view-state.type.ts';
+import { MODULES_MODE_CLASS, MODULE_CONTROLS_ID, MODULE_DETAILS_ID } from '../common/graph-module.const.ts';
 import { TASK_CONTROLS_ID, TASK_DETAILS_ID, TASK_MODE_CLASS } from '../common/graph-task.const.ts';
 import { CONTROLS_ID, DEFAULT_PANEL_WIDTHS, DETAILS_ID } from '../common/graph.const.ts';
 import type { PanelSashDeps, PanelSide } from '../common/panel-sash.type.ts';
@@ -9,7 +10,19 @@ const PACKAGE_PANEL_IDS: Readonly<Record<PanelSide, string>> = { controls: CONTR
 
 const TASK_PANEL_IDS: Readonly<Record<PanelSide, string>> = { controls: TASK_CONTROLS_ID, details: TASK_DETAILS_ID };
 
+const MODULE_PANEL_IDS: Readonly<Record<PanelSide, string>> = { controls: MODULE_CONTROLS_ID, details: MODULE_DETAILS_ID };
+
 const SIDES: PanelSide[] = ['controls', 'details'];
+
+/** The panels of the mode on screen; modules mode is checked first, so it wins over a task mode class. */
+const panelIdsOf = (root: Element): Readonly<Record<PanelSide, string>> => {
+  const isModulesMode = root.classList.contains(MODULES_MODE_CLASS);
+  const isTaskMode = root.classList.contains(TASK_MODE_CLASS);
+
+  if (isModulesMode) return MODULE_PANEL_IDS;
+
+  return isTaskMode ? TASK_PANEL_IDS : PACKAGE_PANEL_IDS;
+};
 
 /** What the widths are clamped to: the body's width and whether Details floats over the canvas. */
 type BodyBox = { readonly width: number; readonly isOverlay: boolean };
@@ -113,8 +126,7 @@ class GraphPanelSashes {
   private describe(side: PanelSide, drawn: PanelWidths, box: BodyBox): void {
     const { root, sashes } = this.deps;
     const max = maxWidthOf(side, this.preferred, box.width, box.isOverlay);
-    const isTaskMode = root.classList.contains(TASK_MODE_CLASS);
-    const ids = isTaskMode ? TASK_PANEL_IDS : PACKAGE_PANEL_IDS;
+    const ids = panelIdsOf(root);
     const sash = sashes[side];
 
     sash.setAttribute('aria-valuenow', String(drawn[side]));
