@@ -37,6 +37,18 @@ export const recordFirstArgs = (target: object, method: string): unknown[] => {
   return firstArgs;
 };
 
+/** Replaces `method` on `target` with one that calls through, then throws `message`. */
+export const throwAfterOwn = (target: object, method: string, message: string): void => {
+  const original = methodOf(target, method);
+  const failing = (...args: unknown[]): never => {
+    original(...args);
+
+    throw new Error(message);
+  };
+
+  Reflect.set(target, method, failing);
+};
+
 /** Whether Cytoscape still owes `target` a style apply. */
 export const isStyleDirty = (target: object): boolean => {
   const internals: unknown = Reflect.get(target, '_private');

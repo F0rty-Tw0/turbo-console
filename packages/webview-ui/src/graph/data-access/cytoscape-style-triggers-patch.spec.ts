@@ -3,7 +3,7 @@ import type { BoundingBox12, CollectionReturnValue, Core, Css, ElementDefinition
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { canvasEdgeOf, canvasNodeOf } from '../test/utils/canvas-elements.spec.util.ts';
-import { isStyleDirty, recordFirstArgs, spyOnOwn } from '../test/utils/cytoscape-internals.spec.util.ts';
+import { isStyleDirty, recordFirstArgs, spyOnOwn, throwAfterOwn } from '../test/utils/cytoscape-internals.spec.util.ts';
 
 type GraphState = {
   readonly childVisible: boolean;
@@ -44,6 +44,8 @@ const FIRST_EDGE_ID = FIRST_EDGE.data.id ?? '';
 const CHILD_DATA = { id: 'a', parent: 'p' };
 
 const PARALLEL_DATA = { id: 'a-b-2', source: 'a', target: 'b' };
+
+const APPLY_FAILURE = 'spec: apply failed';
 
 /** A styled headless graph: compound `p` holds `a`, which links to `c`. */
 const compoundGraphOf = (childClasses: string): Core => {
@@ -106,6 +108,17 @@ describe('FEATURE: the cytoscape style triggers patch', () => {
 
         expect(notices).toContain('zorder');
       });
+    });
+
+    it('WHEN its apply throws after every property is set THEN its style cache is still dirtied', () => {
+      const style: object = cy.style();
+      const dirtyStyleCache = spyOnOwn(child, 'dirtyStyleCache');
+      const readWidth = (): unknown => child.style('width');
+
+      throwAfterOwn(style, 'applyContextStyle', APPLY_FAILURE);
+
+      expect(readWidth).toThrow(APPLY_FAILURE);
+      expect(dirtyStyleCache).toHaveBeenCalledTimes(1);
     });
   });
 

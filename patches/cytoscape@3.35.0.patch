@@ -1,5 +1,5 @@
 diff --git a/dist/cytoscape.cjs.js b/dist/cytoscape.cjs.js
-index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..508fb513f6453b00c631637a73f2f141304ecac2 100644
+index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..e83d419b6d62d32c840e6c328c64cfdf4810e127 100644
 --- a/dist/cytoscape.cjs.js
 +++ b/dist/cytoscape.cjs.js
 @@ -12141,6 +12141,10 @@ elesfn$b.boundingBox = function (options) {
@@ -46,7 +46,7 @@ index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..508fb513f6453b00c631637a73f2f141
      }
      var cxtStyle = self.getContextStyle(cxtMeta);
 -    var app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
-+    // patched: collect this element's style triggers, then run each effect once after all its properties are applied
++    // patched: collect this element's style triggers, then run each effect once after its properties are applied, or after a throw
 +    var outerDefer = _p.deferTriggers;
 +    var defer = _p.deferTriggers = {
 +      ele: ele,
@@ -57,8 +57,8 @@ index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..508fb513f6453b00c631637a73f2f141
 +      app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
 +    } finally {
 +      _p.deferTriggers = outerDefer;
++      self.flushTriggers(ele, defer.list);
 +    }
-+    self.flushTriggers(ele, defer.list);
      if (ele._private.appliedInitStyle) {
        self.updateTransitions(ele, app.diffProps);
      } else {
@@ -143,7 +143,7 @@ index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..508fb513f6453b00c631637a73f2f141
    };
    r.flushRenderedStyleQueue = function () {
 diff --git a/dist/cytoscape.esm.mjs b/dist/cytoscape.esm.mjs
-index 4b7cd162da9d60f25702153f09b6f3876de94e80..f60129616532824cab633791d542ce245b94fc23 100644
+index 4b7cd162da9d60f25702153f09b6f3876de94e80..41a225457cea7a265ecc77bfbaf70655f1a84857 100644
 --- a/dist/cytoscape.esm.mjs
 +++ b/dist/cytoscape.esm.mjs
 @@ -12139,6 +12139,10 @@ elesfn$b.boundingBox = function (options) {
@@ -190,7 +190,7 @@ index 4b7cd162da9d60f25702153f09b6f3876de94e80..f60129616532824cab633791d542ce24
      }
      var cxtStyle = self.getContextStyle(cxtMeta);
 -    var app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
-+    // patched: collect this element's style triggers, then run each effect once after all its properties are applied
++    // patched: collect this element's style triggers, then run each effect once after its properties are applied, or after a throw
 +    var outerDefer = _p.deferTriggers;
 +    var defer = _p.deferTriggers = {
 +      ele: ele,
@@ -201,8 +201,8 @@ index 4b7cd162da9d60f25702153f09b6f3876de94e80..f60129616532824cab633791d542ce24
 +      app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
 +    } finally {
 +      _p.deferTriggers = outerDefer;
++      self.flushTriggers(ele, defer.list);
 +    }
-+    self.flushTriggers(ele, defer.list);
      if (ele._private.appliedInitStyle) {
        self.updateTransitions(ele, app.diffProps);
      } else {
@@ -287,7 +287,7 @@ index 4b7cd162da9d60f25702153f09b6f3876de94e80..f60129616532824cab633791d542ce24
    };
    r.flushRenderedStyleQueue = function () {
 diff --git a/dist/cytoscape.umd.js b/dist/cytoscape.umd.js
-index af67ea46e043233d17eacc6979a22157f7b90425..c8b500b24780b05b3cae0d0211723c0cde555e25 100644
+index af67ea46e043233d17eacc6979a22157f7b90425..521ae92984c3cf9764297ce658f28c843a2539ad 100644
 --- a/dist/cytoscape.umd.js
 +++ b/dist/cytoscape.umd.js
 @@ -12145,6 +12145,10 @@
@@ -334,7 +334,7 @@ index af67ea46e043233d17eacc6979a22157f7b90425..c8b500b24780b05b3cae0d0211723c0c
        }
        var cxtStyle = self.getContextStyle(cxtMeta);
 -      var app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
-+      // patched: collect this element's style triggers, then run each effect once after all its properties are applied
++      // patched: collect this element's style triggers, then run each effect once after its properties are applied, or after a throw
 +      var outerDefer = _p.deferTriggers;
 +      var defer = _p.deferTriggers = {
 +        ele: ele,
@@ -345,8 +345,8 @@ index af67ea46e043233d17eacc6979a22157f7b90425..c8b500b24780b05b3cae0d0211723c0c
 +        app = self.applyContextStyle(cxtMeta, cxtStyle, ele);
 +      } finally {
 +        _p.deferTriggers = outerDefer;
++        self.flushTriggers(ele, defer.list);
 +      }
-+      self.flushTriggers(ele, defer.list);
        if (ele._private.appliedInitStyle) {
          self.updateTransitions(ele, app.diffProps);
        } else {
@@ -510,15 +510,15 @@ index 563b687e07e212a17e4728c3ad88dd4ef540251d..cb8d862e6c525d1dd0d6657874a79c8f
    };
  
 diff --git a/src/style/apply.mjs b/src/style/apply.mjs
-index b04c993f3f6462c84f6f57b7393d87ced7c03b62..79a20b7c7b02dca0f07c245b21bbee3a1d384323 100644
+index b04c993f3f6462c84f6f57b7393d87ced7c03b62..ac6889d3ca78943fd672b858fd8c0a17d7014475 100644
 --- a/src/style/apply.mjs
 +++ b/src/style/apply.mjs
-@@ -27,7 +27,18 @@ styfn.apply = function( eles ){
+@@ -27,7 +27,17 @@ styfn.apply = function( eles ){
      }
  
      let cxtStyle = self.getContextStyle( cxtMeta );
 -    let app = self.applyContextStyle( cxtMeta, cxtStyle, ele );
-+    // patched: collect this element's style triggers, then run each effect once after all its properties are applied
++    // patched: collect this element's style triggers, then run each effect once after its properties are applied, or after a throw
 +    let outerDefer = _p.deferTriggers;
 +    let defer = _p.deferTriggers = { ele, list: [] };
 +    let app;
@@ -527,13 +527,12 @@ index b04c993f3f6462c84f6f57b7393d87ced7c03b62..79a20b7c7b02dca0f07c245b21bbee3a
 +      app = self.applyContextStyle( cxtMeta, cxtStyle, ele );
 +    } finally {
 +      _p.deferTriggers = outerDefer;
++      self.flushTriggers( ele, defer.list );
 +    }
-+
-+    self.flushTriggers( ele, defer.list );
  
      if( ele._private.appliedInitStyle ){
        self.updateTransitions( ele, app.diffProps );
-@@ -838,6 +849,15 @@ styfn.checkParallelEdgesBoundsTrigger = function( ele, name, fromValue, toValue
+@@ -838,6 +848,15 @@ styfn.checkParallelEdgesBoundsTrigger = function( ele, name, fromValue, toValue
  };
  
  styfn.checkTriggers = function( ele, name, fromValue, toValue ){
@@ -549,7 +548,7 @@ index b04c993f3f6462c84f6f57b7393d87ced7c03b62..79a20b7c7b02dca0f07c245b21bbee3a
    ele.dirtyStyleCache();
  
    this.checkZOrderTrigger( ele, name, fromValue, toValue );
-@@ -846,4 +866,46 @@ styfn.checkTriggers = function( ele, name, fromValue, toValue ){
+@@ -846,4 +865,46 @@ styfn.checkTriggers = function( ele, name, fromValue, toValue ){
    this.checkParallelEdgesBoundsTrigger( ele, name, fromValue, toValue );
  };
  
