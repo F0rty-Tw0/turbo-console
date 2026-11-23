@@ -20,17 +20,17 @@ export const breadthfirstPositions = (graph: ElkNode): Positions => {
   const pitch = cellPitchOf(children);
   const links = fallbackLinksOf(graph);
   const rows = fallbackRowsOf(links);
-  const cells: Position[] = children.map((): Position => ORIGIN);
+  const cells: Position[] = [];
 
-  rows.forEach((row: number[], depth: number): void => {
+  for (const [depth, row] of rows.entries()) {
     const y = unitOffsetOf(depth, rows.length) * pitch.y;
 
-    row.forEach((node: number, place: number): void => {
+    for (const [place, node] of row.entries()) {
       const x = unitOffsetOf(place, row.length) * pitch.x;
 
       cells[node] = { x, y };
-    });
-  });
+    }
+  }
 
   const entryOf = (child: ElkNode, index: number): [string, Position] => [child.id, cells[index] ?? ORIGIN];
   const entries = children.map(entryOf);

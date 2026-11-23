@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
+import type { ElkNode } from 'elkjs/lib/elk-api.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { breadthfirstPositions } from './fallback-layout.ts';
 import { FALLBACK_SPACING_FACTOR, NODE_HEIGHT } from '../common/graph.const.ts';
@@ -21,7 +22,11 @@ vi.mock('cytoscape', () => {
 
 describe('FEATURE: breadthfirstPositions without a headless Cytoscape', () => {
   describe('GIVEN Cytoscape throws when created, and a chain a > b > c', () => {
-    const chain = fallbackGraphOf(CHAIN, [edgeOf('a', 'b'), edgeOf('b', 'c')]);
+    let chain: ElkNode;
+
+    beforeEach(() => {
+      chain = fallbackGraphOf(CHAIN, [edgeOf('a', 'b'), edgeOf('b', 'c')]);
+    });
 
     it('WHEN laid out THEN every child gets a position', () => {
       const positions = breadthfirstPositions(chain);
