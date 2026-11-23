@@ -8,6 +8,18 @@ const OPEN_IMPORT_BASE = { type: 'openImport', packageName: 'web', file: 'src/x.
 
 const OVERSIZE_NOT_BASE64 = `!${'A'.repeat(EXPORT_PNG_MAX)}`;
 
+const X_END = { kind: 'file', path: 'src/x.ts' };
+const SITES_BASE = { type: 'scanModuleSites', packageName: 'web', from: X_END, to: null };
+const SITES_NO_TO = { type: 'scanModuleSites', packageName: 'web', from: X_END };
+const SITES_NO_PACKAGE = { type: 'scanModuleSites', from: X_END, to: null };
+const DIR_A_END = { kind: 'dir', path: 'src/a' };
+const DIR_A_END_EXTRA = { ...DIR_A_END, extra: 1 };
+const STUB_B_END = { kind: 'stub', name: '@s/b' };
+const EMPTY_DIR_END = { kind: 'dir', path: '' };
+const LONG_FILE_END = { kind: 'file', path: 'a'.repeat(MANIFEST_FILE_MAX + 1) };
+const LONG_STUB_END = { kind: 'stub', name: 'a'.repeat(PACKAGE_NAME_MAX + 1) };
+const FOLDER_END = { kind: 'folder', path: 'src' };
+
 describe('FEATURE: graph message schema', () => {
   describe('GIVEN an exportImage png past the cap that is not base64 either', () => {
     it('WHEN parsed THEN the only issue is too_big, so the base64 pattern never scans it', () => {
@@ -125,6 +137,34 @@ describe('FEATURE: graph message schema', () => {
       ['a packageName past PACKAGE_NAME_MAX', { packageName: 'a'.repeat(PACKAGE_NAME_MAX + 1) }]
     ])('WHEN it has %s THEN parse fails', (_label, fields) => {
       const parsed = graphMessageSchema.safeParse({ type: 'scanModules', ...fields });
+
+      expect(parsed.success).toBe(false);
+    });
+  });
+
+  describe('GIVEN a scanModuleSites message', () => {
+    it('WHEN it names a package and one end THEN it parses to them and an unknown key is stripped', () => {
+      const parsed = graphMessageSchema.safeParse({ ...SITES_BASE, extra: 1 });
+
+      expect(parsed.data).toStrictEqual(SITES_BASE);
+    });
+
+    it('WHEN it names a link from a dir to a stub THEN it parses to them and an unknown key inside an end is stripped', () => {
+      const parsed = graphMessageSchema.safeParse({ ...SITES_BASE, from: DIR_A_END_EXTRA, to: STUB_B_END });
+
+      expect(parsed.data).toStrictEqual({ ...SITES_BASE, from: DIR_A_END, to: STUB_B_END });
+    });
+
+    it.each([
+      ['an empty dir path', { ...SITES_BASE, from: EMPTY_DIR_END }],
+      ['a file path past MANIFEST_FILE_MAX', { ...SITES_BASE, from: LONG_FILE_END }],
+      ['a stub name past PACKAGE_NAME_MAX', { ...SITES_BASE, to: LONG_STUB_END }],
+      ["a from of kind 'folder'", { ...SITES_BASE, from: FOLDER_END }],
+      ['no to', SITES_NO_TO],
+      ["a to of 'src' (a string)", { ...SITES_BASE, to: 'src' }],
+      ['no packageName', SITES_NO_PACKAGE]
+    ])('WHEN it has %s THEN parse fails', (_label, message) => {
+      const parsed = graphMessageSchema.safeParse(message);
 
       expect(parsed.success).toBe(false);
     });
