@@ -23,9 +23,15 @@ const pickTasks = async (items: PickItem[], placeHolder: string): Promise<string
   return picked?.map((item) => item.value);
 };
 
+const pickPackage = async (items: PickItem[], placeHolder: string): Promise<string | undefined> => {
+  const picked = await vscode.window.showQuickPick(items, { matchOnDescription: true, placeHolder });
+
+  return picked?.value;
+};
+
 /**
  * The editor effects of the Show Package Graph command: the active manifest (`fileOf` is the run pickers'
- * `manifestFile`), the folder of a file, a folder pick, a multi-pick, an info, a warning with buttons and an error message, `log` (the output channel) and `scriptsShown` (the tree's scripts toggle, as the caller reads it).
+ * `manifestFile`), the folder of a file, a folder pick, a multi-pick, a single pick, an info, a warning with buttons and an error message, `log` (the output channel) and `scriptsShown` (the tree's scripts toggle, as the caller reads it).
  */
 export const editorGraphCommandPorts = (
   fileOf: (arg: unknown) => string | null,
@@ -38,6 +44,7 @@ export const editorGraphCommandPorts = (
     rootOf,
     pick: pickRoot,
     pickMany: pickTasks,
+    pickOne: pickPackage,
     info: (text) => {
       void vscode.window.showInformationMessage(text);
     },

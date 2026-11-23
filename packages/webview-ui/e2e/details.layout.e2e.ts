@@ -19,8 +19,15 @@ const RED = 'rgb(255, 0, 0)';
 
 const GREEN = 'rgb(0, 255, 0)';
 
-/** Copy and Show in task graph sit beside Run on every card; Refresh, Open package.json and Focus on graph sit in the page header. */
-const ICON_BUTTON_LABELS = ['Copy command for build', 'Show in task graph: build', 'Refresh', 'Open package.json', 'Focus on graph'];
+/** Copy and Show in task graph sit beside Run on every card; Refresh, Open package.json, Focus on graph and Show modules sit in the page header. */
+const ICON_BUTTON_LABELS = [
+  'Copy command for build',
+  'Show in task graph: build',
+  'Refresh',
+  'Open package.json',
+  'Focus on graph',
+  'Show modules'
+];
 
 const LONG_TITLE = 'a-thirty-character-task-name-x';
 
