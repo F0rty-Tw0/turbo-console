@@ -92,19 +92,27 @@ describe('FEATURE: list the import lines behind a module end or link', () => {
       const input: ModuleGraphInput = { dir: A_DIR, selfName: '@s/a', scan, others: [] };
       const sites = moduleSitesOf(input, queryOf(fileEndOf('src/t.ts'), null));
 
-      expect(textsOf(sites.importedBy)).toStrictEqual(['src/B.ts:0 src/t.ts', 'src/p.ts:3 src/t.ts', 'src/q.ts:1 src/t.ts', 'src/q.ts:5 src/t.ts']);
+      expect(textsOf(sites.importedBy)).toStrictEqual([
+        'src/B.ts:0 src/t.ts',
+        'src/p.ts:3 src/t.ts',
+        'src/q.ts:1 src/t.ts',
+        'src/q.ts:5 src/t.ts'
+      ]);
     });
   });
 
   describe('GIVEN package a at a native win32 dir with src/a/x.ts importing ../lib/c', () => {
-    it.runIf(process.platform === 'win32')('WHEN the package dir is a native win32 path THEN posix query paths still match the walked files', () => {
-      const scan = moduleScanOf(['src/a/x.ts', 'src/lib/c.ts'], { 'src/a/x.ts': [importOf('../lib/c')] });
-      const input: ModuleGraphInput = { dir: 'C:\\ws\\a', selfName: '@s/a', scan, others: [] };
-      const byDir = moduleSitesOf(input, queryOf(dirEndOf('src/lib'), null));
-      const byLink = moduleSitesOf(input, queryOf(fileEndOf('src/a/x.ts'), dirEndOf('src/lib')));
+    it.runIf(process.platform === 'win32')(
+      'WHEN the package dir is a native win32 path THEN posix query paths still match the walked files',
+      () => {
+        const scan = moduleScanOf(['src/a/x.ts', 'src/lib/c.ts'], { 'src/a/x.ts': [importOf('../lib/c')] });
+        const input: ModuleGraphInput = { dir: 'C:\\ws\\a', selfName: '@s/a', scan, others: [] };
+        const byDir = moduleSitesOf(input, queryOf(dirEndOf('src/lib'), null));
+        const byLink = moduleSitesOf(input, queryOf(fileEndOf('src/a/x.ts'), dirEndOf('src/lib')));
 
-      expect(textsOf(byDir.importedBy)).toStrictEqual(['src/a/x.ts:0 src/lib/c.ts']);
-      expect(textsOf(byLink.imports)).toStrictEqual(['src/a/x.ts:0 src/lib/c.ts']);
-    });
+        expect(textsOf(byDir.importedBy)).toStrictEqual(['src/a/x.ts:0 src/lib/c.ts']);
+        expect(textsOf(byLink.imports)).toStrictEqual(['src/a/x.ts:0 src/lib/c.ts']);
+      }
+    );
   });
 });
