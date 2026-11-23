@@ -53,6 +53,10 @@ const AT_Y = aliasedBy({ '@y/*': ['../../y/src/*'] });
 const ALIAS_INTO_Y: Partial<ModuleResolveContext> = { ...AT_Y, ...SIBLING_Y };
 const WORKSPACE_B: Partial<ModuleResolveContext> = { others: [B_TARGET] };
 const NO_SELF: Partial<ModuleResolveContext> = { selfName: '' };
+const STAR = aliasedBy({ '*': ['types/*'] });
+const STAR_WORKSPACE_B: Partial<ModuleResolveContext> = { ...STAR, ...WORKSPACE_B };
+const AT_S = aliasedBy({ '@s/*': ['src/*'] });
+const AT_S_WORKSPACE_B: Partial<ModuleResolveContext> = { ...AT_S, ...WORKSPACE_B };
 
 const ROWS: ResolveRow[] = [
   { label: 'a `./` path', walked: ['src/b.ts'], specifier: './b.js', fromDir: SRC_DIR, patch: {}, target: fileOf('src/b.ts') },
@@ -129,6 +133,46 @@ const ROWS: ResolveRow[] = [
     fromDir: SRC_DIR,
     patch: ALIAS_INTO_Y,
     target: stubOf('y')
+  },
+  {
+    label: 'a `*` catch-all that misses on a workspace name',
+    walked: [],
+    specifier: '@s/b/sub',
+    fromDir: SRC_DIR,
+    patch: STAR_WORKSPACE_B,
+    target: stubOf('@s/b')
+  },
+  {
+    label: 'a `*` catch-all that misses on an npm name',
+    walked: [],
+    specifier: 'react',
+    fromDir: SRC_DIR,
+    patch: STAR,
+    target: EXTERNAL
+  },
+  {
+    label: "a `*` catch-all that misses on the package's own name",
+    walked: [],
+    specifier: '@s/a/x',
+    fromDir: SRC_DIR,
+    patch: STAR,
+    target: SELF
+  },
+  {
+    label: 'a `*` catch-all that hits',
+    walked: ['types/react.ts'],
+    specifier: 'react',
+    fromDir: SRC_DIR,
+    patch: STAR,
+    target: fileOf('types/react.ts')
+  },
+  {
+    label: 'a prefixed alias that misses on a workspace name',
+    walked: [],
+    specifier: '@s/b',
+    fromDir: SRC_DIR,
+    patch: AT_S_WORKSPACE_B,
+    target: stubOf('@s/b')
   },
   {
     label: 'no tsconfig paths, so the alias step is skipped',
