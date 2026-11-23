@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGraphController } from './graph-controller.ts';
 import type { GraphPackageModulesMessage, ModulesResult } from '../../bridge/common/graph-modules.type.ts';
+import type { GraphState } from '../../bridge/common/graph-state.type.ts';
+import { MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
 import type { GraphController } from '../common/graph-page.type.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
 import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
@@ -16,7 +18,11 @@ const FAILED_RESULT: ModulesResult = { kind: 'failed' };
 
 const WEB_FAILED: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: FAILED_RESULT };
 
-describe('FEATURE: modules wiring after a failed scan', () => {
+const WEB_SCAN = { type: 'scanModules', packageName: 'web' };
+
+const HOST_ERROR: GraphState = { kind: 'error', message: 'host failed' };
+
+describe('FEATURE: modules wiring after a failed scan or a host error', () => {
   let mock: PackageSideDepsMock;
   let controller: GraphController;
 
@@ -30,6 +36,31 @@ describe('FEATURE: modules wiring after a failed scan', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  describe('GIVEN web Loading, then a host error in place of the graph', () => {
+    beforeEach(() => {
+      controller.receive({ type: 'state', state: HOST_ERROR });
+    });
+
+    it('WHEN a graph state listing web arrives THEN scanModules for web is posted again', () => {
+      const post = vi.mocked(mock.deps.bridge.post);
+      const posts = post.mock.calls.length;
+
+      controller.receive({ type: 'state', state: WEB_LISTED });
+
+      expect([post.mock.calls.length, post.mock.lastCall]).toStrictEqual([posts + 1, [WEB_SCAN]]);
+    });
+
+    it('WHEN a graph state listing web arrives THEN the graph view is back with the modules bar', () => {
+      controller.receive({ type: 'state', state: WEB_LISTED });
+
+      expect([mock.page.message.hidden, mock.page.body.hidden, mock.page.root.classList.contains(MODULES_MODE_CLASS)]).toStrictEqual([
+        true,
+        false,
+        true
+      ]);
+    });
   });
 
   describe('GIVEN web found, its first layout still running, then failed on Refresh', () => {

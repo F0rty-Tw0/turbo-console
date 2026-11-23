@@ -178,11 +178,20 @@ describe('FEATURE: GraphModuleMode scan results', () => {
   });
 
   describe('GIVEN Loading web replaced by a host message', () => {
-    it('WHEN a state lists web THEN nothing is drawn or shown until its scan lands', () => {
+    beforeEach(() => {
       mode.suspend();
+    });
+
+    it('WHEN a state lists web THEN scanModules is posted again, as the host drops a reply while its state is not a graph', () => {
       mode.received(WEB_LISTED);
 
-      expect([rig.screen.shown.mock.calls, rig.screen.reshow.mock.calls]).toStrictEqual([[], []]);
+      expect([rig.post.mock.calls.length, mode.phase().kind]).toStrictEqual([2, 'loading']);
+    });
+
+    it('WHEN a state lists web THEN the graph view shows again with nothing drawn', () => {
+      mode.received(WEB_LISTED);
+
+      expect([rig.screen.reshow.mock.calls.length, rig.screen.shown.mock.calls]).toStrictEqual([1, []]);
     });
   });
 

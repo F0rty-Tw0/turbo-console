@@ -196,7 +196,11 @@ export class GraphModuleMode {
     this.deps.screen.drawAgain(found, view, redraw);
   }
 
-  /** After a host message: Shown draws the saved view again with the camera kept, Failed shows the graph view again; Waiting and Loading come back with their draw. */
+  /**
+   * After a host message: Shown draws the saved view again with the camera kept, Failed shows the graph view again, and
+   * Loading shows it and asks again, as the host drops a reply that lands while its state is not a graph; Waiting asks on
+   * this state.
+   */
   private resume(current: ModulePhase): void {
     const view = this.view();
 
@@ -204,6 +208,12 @@ export class GraphModuleMode {
 
     if (current.kind === 'shown' && view !== null) this.update(view, KEEP);
     else if (current.kind === 'failed') this.deps.screen.reshow();
+    else if (current.kind === 'loading') this.reask(current.name);
+  }
+
+  private reask(packageName: string): void {
+    this.deps.screen.reshow();
+    this.ask(packageName);
   }
 
   /** Entering from package or task mode: task mode is parked toward modules, then the page shows the modules screen. */
