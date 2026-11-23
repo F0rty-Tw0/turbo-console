@@ -2,14 +2,8 @@ import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
 import { GraphProbePage } from './graph-probe.po.ts';
-import type { ProbeEdge } from '../../src/graph/common/graph-probe.type.ts';
-
-/** How a package edge draws, and so every module link: a plain bezier at card depth, over every folder box. */
-const PLAIN_LINE = 'bezier auto';
-
-const drawnStyleOf = (edge: ProbeEdge): string => `${edge.curveStyle} ${edge.zCompoundDepth}`;
-
-const isDrawn = (edge: ProbeEdge): boolean => edge.isDrawn;
+import { PLAIN_LINE } from '../common/graph-plain-lines.const.ts';
+import { drawnStyleOf, isDrawn } from '../test/utils/graph-plain-lines.spec.util.ts';
 
 /** How the drawn module links run: as plain beziers from card to card, like package edges. */
 export class GraphModulesLinks {
