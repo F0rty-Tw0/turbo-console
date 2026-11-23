@@ -130,9 +130,11 @@ export const paintTargetOf = (sel: ModuleSelection, scene: ModuleScene): ModuleS
  * closes again.
  */
 export const keepsSelection = (sel: ModuleSelection, scene: ModuleScene): boolean => {
-  const target = paintTargetOf(sel, scene);
+  if (sel.kind === 'node') {
+    const target = paintTargetOf(sel, scene);
 
-  if (sel.kind === 'node') return target !== null;
+    return target !== null;
+  }
 
   const sourceHeld = heldOf(sel.source, scene);
   const targetHeld = heldOf(sel.target, scene);
