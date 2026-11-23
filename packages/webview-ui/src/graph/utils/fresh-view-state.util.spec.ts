@@ -56,12 +56,15 @@ describe('FEATURE: freshViewStateOf', () => {
   });
 
   describe('GIVEN the package web with no modules view saved', () => {
-    it('WHEN its fresh modules view is built THEN nothing is expanded yet, every kind but test files shows and the camera fits', () => {
+    it('WHEN its fresh modules view is built THEN nothing is expanded yet, every kind but test files shows, the camera fits, nothing selected or focused, depth 1', () => {
       expect(freshModulesViewOf('web')).toStrictEqual({
         packageName: 'web',
         expanded: null,
         shown: TESTS_HIDDEN,
-        camera: null
+        camera: null,
+        selected: null,
+        focus: null,
+        depth: 1
       });
     });
   });

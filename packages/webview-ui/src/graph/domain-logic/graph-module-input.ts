@@ -20,7 +20,7 @@ const shownViewOf = (mode: ModuleInputMode): ModulesViewState | null => {
  * The expansion after a folder tap, toggled by the saved list rather than the drawn kind, which lags until the anchored
  * redraw lands: a folder not listed opens, a listed one other than the root closes (folders expanded inside it stay
  * listed, never drawn while it is closed, spec §7.3). So a double tap opens and closes, and no path is listed twice;
- * `null` for the root box and for a card that is no folder.
+ * `null` for the root box, for a card that is no folder, and while a focus is set, since the focus opens its own folders (C12).
  */
 const expandedAfterTap = (view: ModulesViewState, kind: ModuleElementKind | null, id: string): string[] | null => {
   const expanded = view.expanded ?? [];
@@ -29,7 +29,7 @@ const expandedAfterTap = (view: ModulesViewState, kind: ModuleElementKind | null
   const isFolder = kind === 'dir' || kind === 'box';
   const isListed = expanded.includes(path);
 
-  if (!isFolder || id === ROOT_BOX_ID) return null;
+  if (!isFolder || id === ROOT_BOX_ID || view.focus !== null) return null;
 
   if (isListed) return expanded.filter(isOther);
 
@@ -38,7 +38,7 @@ const expandedAfterTap = (view: ModulesViewState, kind: ModuleElementKind | null
 
 /**
  * The canvas events in modules mode (spec §7.4), each ignored unless Shown: a folder tap toggles it and redraws anchored
- * on it, a file or stub tap paints it; a file double tap opens it, a stub double tap enters that package. A node tap
+ * on it (not while a focus is set), a file or stub tap paints it; a file double tap opens it, a stub double tap enters that package. A node tap
  * then focuses the container, as in package mode, since Cytoscape blurs it on the press.
  */
 export const moduleInputOf = (deps: ModuleInputDeps): HandledModules => {
@@ -53,7 +53,7 @@ export const moduleInputOf = (deps: ModuleInputDeps): HandledModules => {
     container.focus();
 
     if (isCard) {
-      canvas.paint(id);
+      canvas.paint({ kind: 'node', id });
 
       return;
     }

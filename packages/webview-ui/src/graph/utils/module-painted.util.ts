@@ -1,5 +1,6 @@
+import type { ModuleSelection } from '../../bridge/common/graph-view-state.type.ts';
 import { DIR_PREFIX, FILE_PREFIX } from '../common/graph-module.const.ts';
-import type { ModuleBox, ModuleLeaf, ModuleScene } from '../common/module-scene.type.ts';
+import type { ModuleBox, ModuleLeaf, ModuleScene, ModuleSceneLink } from '../common/module-scene.type.ts';
 
 const PATH_SEPARATOR = '/';
 
@@ -68,9 +69,8 @@ export const heldOf = (id: string, scene: ModuleScene): string | null => {
   return held;
 };
 
-/** The card to paint for the chosen `id` in `scene`: the card that holds it; `null` when a box or nothing does. */
-export const paintTargetOf = (id: string, scene: ModuleScene): string | null => {
-  const cardIds = scene.leaves.map(idOfElement);
+/** The card that holds `id` in `scene`; `null` when a box or nothing does. */
+const cardOf = (id: string, scene: ModuleScene, cardIds: string[]): string | null => {
   const held = heldAmongOf(id, scene, cardIds);
 
   if (held === null) return null;
@@ -80,9 +80,64 @@ export const paintTargetOf = (id: string, scene: ModuleScene): string | null => 
   return isCard ? held : null;
 };
 
-/** Whether the chosen `id` stays chosen once `scene` is drawn: a card holds it, so a folder tap never drops it. */
-export const keepsSelection = (id: string, scene: ModuleScene): boolean => {
-  const target = paintTargetOf(id, scene);
+/** The node selection of `card`; `null` with no card. */
+const cardPaintOf = (card: string | null): ModuleSelection | null => {
+  if (card === null) return null;
 
-  return target !== null;
+  const painted: ModuleSelection = { kind: 'node', id: card };
+
+  return painted;
+};
+
+/** What joins the cards `source` and `target`: the one card when both are it, else the scene's link between them. */
+const linkPaintOf = (source: string | null, target: string | null, scene: ModuleScene): ModuleSelection | null => {
+  if (source === null || target === null) return null;
+
+  if (source === target) return cardPaintOf(source);
+
+  const isLinkBetween = (link: ModuleSceneLink): boolean => link.source === source && link.target === target;
+  const isDrawn = scene.links.some(isLinkBetween);
+  const painted: ModuleSelection = { kind: 'link', source, target };
+
+  return isDrawn ? painted : null;
+};
+
+/**
+ * What to paint for the chosen `sel` in `scene`. A node: the card that holds it. A link: the one card that holds both its
+ * ends, or the scene's link between the two cards that hold them. `null` when a box or nothing holds an end, or no link
+ * joins the two cards, as for a type-only link with types hidden.
+ */
+export const paintTargetOf = (sel: ModuleSelection, scene: ModuleScene): ModuleSelection | null => {
+  const cardIds = scene.leaves.map(idOfElement);
+
+  if (sel.kind === 'node') {
+    const card = cardOf(sel.id, scene, cardIds);
+    const painted = cardPaintOf(card);
+
+    return painted;
+  }
+
+  const source = cardOf(sel.source, scene, cardIds);
+  const target = cardOf(sel.target, scene, cardIds);
+  const painted = linkPaintOf(source, target, scene);
+
+  return painted;
+};
+
+/**
+ * Whether the chosen `sel` stays chosen once `scene` is drawn. A node: a card holds it, so a folder tap never drops it. A
+ * link: something holds each end, a box included, so a folder opened over an end keeps it, unpainted until that folder
+ * closes again.
+ */
+export const keepsSelection = (sel: ModuleSelection, scene: ModuleScene): boolean => {
+  if (sel.kind === 'node') {
+    const target = paintTargetOf(sel, scene);
+
+    return target !== null;
+  }
+
+  const sourceHeld = heldOf(sel.source, scene);
+  const targetHeld = heldOf(sel.target, scene);
+
+  return sourceHeld !== null && targetHeld !== null;
 };

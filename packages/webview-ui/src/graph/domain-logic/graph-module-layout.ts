@@ -3,20 +3,31 @@ import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { LayoutResult } from '../common/layout.type.ts';
 import type { ModuleLayoutDeps, ModuleRedraw } from '../common/module-mode.type.ts';
-import type { ModuleScene, ModuleSceneView } from '../common/module-scene.type.ts';
+import type { ModuleFocus, ModuleScene, ModuleSceneView } from '../common/module-scene.type.ts';
 import { elkModuleGraphOf } from '../utils/elk-module-graph.util.ts';
 import { moduleSceneOf } from '../utils/module-scene.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
 
-/** The runner key of a view: its package, expansion and shown kinds, so a toggle lays out afresh. */
+/** The scene's focus: `null` with no focus target, so the depth alone changes nothing drawn. */
+const sceneFocusOf = (view: ModulesViewState): ModuleFocus | null => {
+  if (view.focus === null) return null;
+
+  const focus: ModuleFocus = { target: view.focus, depth: view.depth };
+
+  return focus;
+};
+
+/** The runner key of a view: its package, expansion, shown kinds and focus, so a toggle or a refocus lays out afresh. */
 const layoutKeyOf = (view: ModulesViewState): string => {
-  const drawn = { expanded: view.expanded, shown: view.shown };
+  const focus = sceneFocusOf(view);
+  const drawn = { expanded: view.expanded, shown: view.shown, focus };
 
   return `modules:${view.packageName}:${JSON.stringify(drawn)}`;
 };
 
 const sceneViewOf = (view: ModulesViewState): ModuleSceneView => {
-  const sceneView: ModuleSceneView = { expanded: view.expanded ?? [], shown: view.shown };
+  const focus = sceneFocusOf(view);
+  const sceneView: ModuleSceneView = { expanded: view.expanded ?? [], shown: view.shown, focus };
 
   return sceneView;
 };

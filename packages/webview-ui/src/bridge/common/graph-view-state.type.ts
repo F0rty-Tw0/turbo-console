@@ -36,18 +36,32 @@ export type TaskViewState = {
 /** The modules camera; the bridge restates `Viewport` so it imports nothing from `graph/`. */
 export type ModulesCamera = { readonly zoom: number; readonly pan: Position };
 
+/** A selected file or stub card: `'file:<path>'` or `'pkg:<name>'`, never a folder (C4). */
+type ModuleNodeSelection = { readonly kind: 'node'; readonly id: string };
+
+/** A selected link between two drawn end ids, importer → imported. */
+type ModuleLinkSelection = { readonly kind: 'link'; readonly source: string; readonly target: string };
+
+/** What the modules view has selected: a file or stub card, or a link between two drawn ends. */
+export type ModuleSelection = ModuleNodeSelection | ModuleLinkSelection;
+
 /** Which kinds of module the modules graph draws. */
-type ModulesShown = { readonly types: boolean; readonly tests: boolean; readonly lazies: boolean };
+export type ModulesShown = { readonly types: boolean; readonly tests: boolean; readonly lazies: boolean };
 
 /**
  * The saved modules view (spec §7.1): `expanded` lists folder paths, never the root; `null` means not set up yet, so the
- * first Shown applies `defaultExpandedOf`. `camera: null` fits on the first Shown.
+ * first Shown applies `defaultExpandedOf`. `camera: null` fits on the first Shown. `selected` and `focus` read `null` and
+ * `depth` reads `DEFAULT_DEPTH` from an old save; `focus` holds only a `'file:'` or `'pkg:'` id.
  */
 export type ModulesViewState = {
   readonly packageName: string;
   readonly expanded: string[] | null;
   readonly shown: ModulesShown;
   readonly camera: ModulesCamera | null;
+  readonly selected: ModuleSelection | null;
+  readonly focus: string | null;
+  /** `MIN_DEPTH..MAX_DEPTH`; out of range reads `DEFAULT_DEPTH`. */
+  readonly depth: number;
 };
 
 /** Panel widths in px: the preferred pair when saved, the drawn pair when painted. */

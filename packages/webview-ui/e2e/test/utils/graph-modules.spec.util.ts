@@ -1,6 +1,7 @@
 import { savedWith } from './graph-saved-state.spec.util.ts';
 import type { ModuleLink, ModulesFound } from '../../../src/bridge/common/graph-modules.type.ts';
 import type { GraphViewState, ModulesViewState } from '../../../src/bridge/common/graph-view-state.type.ts';
+import { DEFAULT_DEPTH } from '../../../src/graph/common/graph.const.ts';
 import { MODULES_APP_STUB } from '../stubs/graph-modules.stub.ts';
 import { TASK_MODE_STATE_STUB } from '../stubs/graph-task-mode.stub.ts';
 
@@ -59,7 +60,15 @@ const ALL_SHOWN: ModulesViewState['shown'] = { types: true, tests: true, lazies:
 
 /** A saved view of `TASK_MODE_STATE_STUB`'s hash in modules mode on `packageName`, not set up yet: D9 and a fit on first Shown. */
 export const modulesSavedState = (packageName: string): GraphViewState => {
-  const modules: ModulesViewState = { packageName, expanded: null, shown: ALL_SHOWN, camera: null };
+  const modules: ModulesViewState = {
+    packageName,
+    expanded: null,
+    shown: ALL_SHOWN,
+    camera: null,
+    selected: null,
+    focus: null,
+    depth: DEFAULT_DEPTH
+  };
 
   return savedWith(TASK_MODE_STATE_STUB.hash, { mode: 'modules', modules });
 };
