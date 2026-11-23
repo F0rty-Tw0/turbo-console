@@ -3,7 +3,7 @@
 import type { Page } from '@playwright/test';
 
 import type { Positions, Routes } from '../../../src/bridge/common/graph-state.type.ts';
-import type { ProbeEdgeLine, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
+import type { LayoutEngine, ProbeEdgeLine, ProbeNode } from '../../../src/graph/common/graph-probe.type.ts';
 import type { ElementRect } from '../../common/playwright.type.ts';
 import type { GraphCanvas } from '../../pages/graph-canvas.po.ts';
 import type { GraphFoldersPage } from '../../pages/graph-folders.po.ts';
@@ -114,6 +114,18 @@ export type StretchFit = {
 export type OpenSample = {
   readonly firstFrameMs: number;
   readonly fit: StretchFit;
+};
+
+/** One 10k open: the first frame in ms and the engine that laid it out (`fallback` once ELK ran past its timeout). */
+export type TenKOpen = {
+  readonly firstFrameMs: number;
+  readonly engine: LayoutEngine;
+};
+
+/** One 10k pan or zoom: the engine that laid the graph out and the p95 frame and longest long task while it moved. */
+export type TenKPan = {
+  readonly engine: LayoutEngine;
+  readonly pan: StretchPan;
 };
 
 export type PanSample = {
