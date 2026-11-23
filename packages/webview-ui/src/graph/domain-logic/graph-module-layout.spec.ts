@@ -134,6 +134,20 @@ describe('FEATURE: GraphModuleLayout', () => {
     });
   });
 
+  describe('GIVEN a Re-layout or Retry redraw', () => {
+    it('WHEN it is drawn THEN its run is forced and pan and zoom are left alone', async () => {
+      await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'relayout' });
+
+      expect(runner.run.mock.lastCall?.[2]).toBe(true);
+      expect([view.setViewport.mock.calls, view.fit.mock.calls, view.open.mock.calls]).toStrictEqual([[], [], []]);
+    });
+
+    it('WHEN a keep redraw is drawn instead THEN its run is not forced', async () => {
+      await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'keep' });
+
+      expect(runner.run.mock.lastCall?.[2]).toBe(false);
+    });
+  });
 
   describe('GIVEN a toggle redraw', () => {
     it('WHEN it is drawn with keep THEN pan and zoom are left alone', async () => {
