@@ -68,6 +68,23 @@ describe('FEATURE: Atomizer task classification', () => {
     });
   });
 
+  describe('GIVEN a task with no command whose package script is the empty string', () => {
+    const commandless = graphTask('a#lint', null, [], ['a#build']);
+    const emptyScript: GraphTask = { ...commandless, script: '' };
+
+    it('WHEN classified THEN it is dropped like a phantom', () => {
+      const result = classifyTasks([BUILD, emptyScript]);
+
+      expect(rowsOf(result)).toStrictEqual([['a#build', 'task', null]]);
+    });
+
+    it('WHEN classified THEN its raw dependencies are kept for the pass-through', () => {
+      const result = classifyTasks([BUILD, emptyScript]);
+
+      expect(result.phantoms.get('a#lint')).toStrictEqual(['a#build']);
+    });
+  });
+
   describe('GIVEN a user dependsOn-only ci task with no command', () => {
     it('WHEN classified THEN it is dropped like a phantom', () => {
       const ci = graphTask('a#ci', null, [], ['a#build']);
