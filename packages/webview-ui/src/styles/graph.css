@@ -297,11 +297,15 @@ p {
   margin: 0;
 }
 
-/* A Projects grid of hundreds of rows lays out and paints only the rows near the viewport; 19px is a task or project row, and `auto` keeps each row's last rendered height. */
+/*
+ * A Projects grid of hundreds of rows lays out and paints only the rows near the viewport; 19px is a task or project row, and `auto` keeps each row's last rendered height.
+ * content-visibility clips paint to the row, so a 2px clip margin keeps the 1px focus and hover outlines at their 1px offset.
+ */
 #graph-task-controls .controls-row {
   padding-inline-start: 0;
   content-visibility: auto;
   contain-intrinsic-size: auto 19px;
+  overflow-clip-margin: 2px;
 }
 
 #graph-task-controls .controls-row[data-kind='folder'] {
@@ -862,8 +866,15 @@ p {
   font-weight: 600;
 }
 
+/*
+ * A package list of thousands of rows lays out and paints only the rows near the viewport; 24px is a row's icon button pitch, and `auto` keeps each row's last rendered height.
+ * content-visibility clips paint to the row, so a 2px clip margin keeps the 1px focus and hover outlines at their 1px offset.
+ */
 .controls-row {
   padding-inline-start: var(--space-3);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 24px;
+  overflow-clip-margin: 2px;
 }
 
 .controls-cell {
