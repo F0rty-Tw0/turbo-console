@@ -15,9 +15,9 @@ const renderedOf = (point: Position, zoom: number, offset: Position): Position =
   return rendered;
 };
 
-/** The model points of the drawn path: the source end, the bends (a routed link's segment points), the target end. */
+/** The model points of the drawn path: the source end, the bends, the target end. */
 const pathOf = (edge: ProbeLineSource): Position[] => {
-  const bends = edge.segmentPoints() ?? drawnBendsOf(edge);
+  const bends = drawnBendsOf(edge);
   const path = [edge.sourceEndpoint(), ...bends, edge.targetEndpoint()];
 
   return path;
