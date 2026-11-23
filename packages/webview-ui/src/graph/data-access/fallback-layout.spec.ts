@@ -112,8 +112,21 @@ describe('FEATURE: breadthfirstPositions', () => {
     });
   });
 
-  describe('GIVEN one package with sixteen dependencies', () => {
-    const names = Array.from({ length: 16 }, (_, index): string => `dep${index}`);
+  describe('GIVEN one package with five dependencies', () => {
+    const names = ['dep0', 'dep1', 'dep2', 'dep3', 'dep4'];
+    const fan = graphOf(['app', ...names], names.map((name): ElkEdge => edgeOf('app', name)));
+
+    it('WHEN laid out THEN the dependencies share one row', () => {
+      const positions = breadthfirstPositions(fan);
+
+      const rows = new Set(names.map((name): number => positionIn(positions, name).y));
+
+      expect(rows.size).toBe(1);
+    });
+  });
+
+  describe('GIVEN one package with four hundred dependencies, more than the column floor squares to', () => {
+    const names = Array.from({ length: 400 }, (_, index): string => `dep${index}`);
     const fanOut = graphOf(['app', ...names], names.map((name): ElkEdge => edgeOf('app', name)));
     const extentOf = (values: number[]): number => Math.max(...values) - Math.min(...values);
 
@@ -140,7 +153,7 @@ describe('FEATURE: breadthfirstPositions', () => {
 
       const spots = new Set(positions.map((position): string => `${position.x},${position.y}`));
 
-      expect(spots.size).toBe(17);
+      expect(spots.size).toBe(401);
     });
   });
 

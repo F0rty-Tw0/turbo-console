@@ -2,33 +2,40 @@ import { describe, expect, it } from 'vitest';
 
 import { squareColumnsOf, wrappedCellsOf } from './wrapped-rows.util.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
+import { MIN_FALLBACK_COLUMNS } from '../common/graph.const.ts';
 
 const cellOf = (id: string, x: number, y: number): [string, Position] => [id, { x, y }];
 
 describe('FEATURE: wrapped rows', () => {
   describe('GIVEN a node count and a cell pitch', () => {
     it('WHEN the pitch is square THEN the columns are the square root of the count', () => {
-      const columns = squareColumnsOf(100, { x: 10, y: 10 });
+      const columns = squareColumnsOf(10_000, { x: 10, y: 10 });
 
-      expect(columns).toBe(10);
+      expect(columns).toBe(100);
     });
 
     it('WHEN cells are four times wider than tall THEN half as many columns are used', () => {
-      const columns = squareColumnsOf(100, { x: 40, y: 10 });
+      const columns = squareColumnsOf(10_000, { x: 40, y: 10 });
 
-      expect(columns).toBe(5);
+      expect(columns).toBe(50);
     });
 
     it('WHEN the count has no whole root THEN the columns round up', () => {
-      const columns = squareColumnsOf(10, { x: 10, y: 10 });
+      const columns = squareColumnsOf(10_001, { x: 10, y: 10 });
 
-      expect(columns).toBe(4);
+      expect(columns).toBe(101);
     });
 
-    it('WHEN there are no nodes THEN one column is used', () => {
+    it('WHEN the square grid is narrower than the floor THEN the floor is used', () => {
+      const columns = squareColumnsOf(5, { x: 10, y: 10 });
+
+      expect(columns).toBe(MIN_FALLBACK_COLUMNS);
+    });
+
+    it('WHEN there are no nodes THEN the floor is used', () => {
       const columns = squareColumnsOf(0, { x: 10, y: 10 });
 
-      expect(columns).toBe(1);
+      expect(columns).toBe(MIN_FALLBACK_COLUMNS);
     });
   });
 

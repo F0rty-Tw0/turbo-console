@@ -42,7 +42,8 @@ const edgesOf = (edge: ElkEdge, idsByName: Map<string, string>): ElementDefiniti
  * Cytoscape's `breadthfirst` on the main thread, for when ELK fails: dependents above their dependencies.
  * Headless nodes are 1 px square, so with `spacingFactor: 1` the layout returns a unit grid (column, depth). Each depth
  * row is wrapped into sub-rows so the whole graph is about square (one 10k-node row is too wide for Cytoscape's texture
- * cache), then scaled to the widest node and to `FALLBACK_SPACING_FACTOR` node heights per row.
+ * cache), never under `MIN_FALLBACK_COLUMNS` columns so a small graph keeps one row per depth, then scaled to the widest
+ * node and to `FALLBACK_SPACING_FACTOR` node heights per row.
  */
 export const breadthfirstPositions = (graph: ElkNode): Positions => {
   const children = graph.children ?? [];

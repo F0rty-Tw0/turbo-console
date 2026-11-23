@@ -1,4 +1,5 @@
 import type { Position } from '../../bridge/common/graph-state.type.ts';
+import { MIN_FALLBACK_COLUMNS } from '../common/graph.const.ts';
 
 /** A node id and its cell: column across, depth down. */
 type Cell = readonly [id: string, cell: Position];
@@ -23,11 +24,11 @@ const bandCellsOf = (band: Cell[], top: number, columns: number): Cell[] => {
   return band.map(cellAt);
 };
 
-/** The column count that makes `count` cells of `pitch` about as wide as they are tall; never fewer than one. */
+/** The column count that makes `count` cells of `pitch` about as wide as they are tall; never fewer than `MIN_FALLBACK_COLUMNS`. */
 export const squareColumnsOf = (count: number, pitch: Position): number => {
   const columns = Math.ceil(Math.sqrt((count * pitch.y) / pitch.x));
 
-  return Math.max(1, columns);
+  return Math.max(columns, MIN_FALLBACK_COLUMNS);
 };
 
 /**

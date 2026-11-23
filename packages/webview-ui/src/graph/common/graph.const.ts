@@ -115,6 +115,12 @@ export const EDGE_ID_PREFIX = '\u0000';
 /** Fallback row pitch in node heights. */
 export const FALLBACK_SPACING_FACTOR = 3;
 
+/**
+ * The fewest columns a fallback depth row wraps at. Depth bands sit with no gap between them, so a sub-row reads as one
+ * more depth: a small graph keeps each depth on one row, and only a graph whose square grid is wider than this wraps.
+ */
+export const MIN_FALLBACK_COLUMNS = 12;
+
 /** Starts every folder box id, in Cytoscape and ELK alike; package names never start with U+0001. */
 export const FOLDER_ID_PREFIX = '\u0001';
 
