@@ -154,7 +154,10 @@ export class GraphSashes {
     await expect.poll(wrappedOf).toEqual([]);
   }
 
-  /** The shown buttons of the Details row sit in this many columns and rows, read from their distinct left and top edges. */
+  /**
+   * The Details row shows `columns * rows` buttons, sitting in this many columns and rows, read from their distinct left
+   * and top edges.
+   */
   public async expectDetailsRowGrid(columns: number, rows: number): Promise<void> {
     const buttons = this.page.locator('#graph-details .details-row button:not([hidden])');
     const gridOf = async (): Promise<number[]> => {
@@ -170,7 +173,7 @@ export class GraphSashes {
       return counts;
     };
 
-    await expect(buttons.first()).toBeVisible();
+    await expect(buttons).toHaveCount(columns * rows);
     await expect.poll(gridOf).toEqual([columns, rows]);
   }
 

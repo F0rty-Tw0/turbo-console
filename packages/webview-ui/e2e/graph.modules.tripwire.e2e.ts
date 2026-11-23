@@ -32,7 +32,7 @@ test.describe('FEATURE: package modules tripwires', () => {
         await graphModules.expectSlow(false);
       });
 
-      await test.step('AND the measured frame started at the reply', async (): Promise<void> =>
+      await test.step('AND the measured frame started no earlier than the reply', async (): Promise<void> =>
         graphModulesTiming.expectFrameFromAnswer());
 
       await test.step(`AND the first frame came in under ${MODULES_FIRST_FRAME_MS} ms`, async (): Promise<void> =>
