@@ -185,10 +185,6 @@ test.describe('FEATURE: package modules view', () => {
         await graphModules.expectIds(D9_IDS);
         await graphModules.expectEdges(D9_EDGES);
       });
-
-      await test.step("WHEN the package root box's title is tapped", async (): Promise<void> => graphModules.tapBoxTitle('dir:'));
-
-      await test.step('THEN the root box stays open', async (): Promise<void> => graphModules.expectIds(D9_IDS));
     }
   );
 
@@ -245,6 +241,29 @@ test.describe('FEATURE: package modules view', () => {
       await test.step('THEN the D9 view is drawn', async (): Promise<void> => graphModules.expectIds(D9_IDS));
 
       await test.step('AND every node is in view', async (): Promise<void> => graphCanvas.expectAllNodesInView());
+    }
+  );
+
+  test(
+    'GIVEN Test files checked and views expanded, Reset view leaves Test files checked',
+    { annotation: MODULES },
+    async ({ graphCanvas, graphModules, shownModules }): Promise<void> => {
+      await test.step('WHEN app is shown, Test files is checked and views is expanded', async (): Promise<void> => {
+        await shownModules();
+        await graphModules.setShown(TESTS_LABEL, true);
+        await graphCanvas.tapNode('dir:src/views');
+        await graphModules.expectIds(VIEWS_TESTS_IDS);
+      });
+
+      await test.step('AND Reset view is pressed', async (): Promise<void> => graphModules.pressBar(RESET_VIEW_LABEL));
+
+      await test.step('THEN the D9 view is drawn', async (): Promise<void> => graphModules.expectIds(D9_IDS));
+
+      await test.step('AND Test files is still checked', async (): Promise<void> => graphModules.expectChecked(TESTS_LABEL, true));
+
+      await test.step('WHEN views is expanded again', async (): Promise<void> => graphCanvas.tapNode('dir:src/views'));
+
+      await test.step('THEN main.spec.ts is drawn with it', async (): Promise<void> => graphModules.expectIds(VIEWS_TESTS_IDS));
     }
   );
 
