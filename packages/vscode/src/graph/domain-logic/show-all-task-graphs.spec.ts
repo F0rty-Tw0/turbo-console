@@ -70,6 +70,7 @@ const fixtureOf = (): Fixture => {
     rootOf: () => ROOT,
     pick: vi.fn(),
     pickMany,
+    pickOne: vi.fn(),
     info,
     error: vi.fn(),
     warn,

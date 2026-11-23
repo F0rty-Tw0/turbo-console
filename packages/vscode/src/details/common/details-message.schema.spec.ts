@@ -9,6 +9,7 @@ const EVERY_VARIANT: WebviewMessage[] = [
   { type: 'run', taskId: 'a#build' },
   { type: 'openPackageJson' },
   { type: 'focusInGraph' },
+  { type: 'showModules' },
   { type: 'refresh', scope: 'dryRun' },
   { type: 'showOutput' }
 ];
@@ -28,6 +29,12 @@ describe('FEATURE: webview message schema', () => {
       const parsed = webviewMessageSchema.safeParse({ type: 'focusInGraph', extra: 1 });
 
       expect(parsed.data).toStrictEqual({ type: 'focusInGraph' });
+    });
+
+    it('WHEN showModules carries an extra field THEN it parses with only its type', () => {
+      const parsed = webviewMessageSchema.safeParse({ type: 'showModules', extra: 1 });
+
+      expect(parsed.data).toStrictEqual({ type: 'showModules' });
     });
   });
 });

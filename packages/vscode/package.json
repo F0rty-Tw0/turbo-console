@@ -259,6 +259,11 @@
         "icon": "$(target)"
       },
       {
+        "command": "turboConsole.showPackageModules",
+        "title": "Show Package Modules",
+        "category": "Turbo Console"
+      },
+      {
         "command": "turboConsole.openPackageJson",
         "title": "Open package.json",
         "category": "Turbo Console",
@@ -431,6 +436,11 @@
           "group": "2_open@2"
         },
         {
+          "command": "turboConsole.showPackageModules",
+          "when": "view == turboConsole.tree && viewItem == turboPackage",
+          "group": "2_open@3"
+        },
+        {
           "command": "turboConsole.openPackageJson",
           "when": "view == turboConsole.tree && viewItem =~ /^turbo(Task|Script)/",
           "group": "2_open@1"
@@ -461,6 +471,10 @@
         },
         {
           "command": "turboConsole.showAllTaskGraphs",
+          "when": "turboConsole.active"
+        },
+        {
+          "command": "turboConsole.showPackageModules",
           "when": "turboConsole.active"
         },
         {

@@ -1,3 +1,4 @@
+import { singlePackageModulesCase } from '../utils/graph-modules-cases.spec.util.ts';
 import { detailsCase, lensCase } from '../utils/single-package-details.spec.util.ts';
 import { flagCase } from '../utils/single-package-flag.spec.util.ts';
 import { runFromGraphCase, taskGraphCase } from '../utils/single-package-graph.spec.util.ts';
@@ -26,6 +27,7 @@ export const run = async (): Promise<void> => {
   await predictionCase(api, env.turboPath);
   await taskGraphCase(api, root);
   await runFromGraphCase(api, root);
+  await singlePackageModulesCase(api, root);
   await flagCase(api, root, env.budgetFactor);
   await themeIconCase(api, root);
   await markDone(env);
