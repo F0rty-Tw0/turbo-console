@@ -46,7 +46,7 @@ type ModuleLinkSelection = { readonly kind: 'link'; readonly source: string; rea
 export type ModuleSelection = ModuleNodeSelection | ModuleLinkSelection;
 
 /** Which kinds of module the modules graph draws. */
-type ModulesShown = { readonly types: boolean; readonly tests: boolean; readonly lazies: boolean };
+export type ModulesShown = { readonly types: boolean; readonly tests: boolean; readonly lazies: boolean };
 
 /**
  * The saved modules view (spec §7.1): `expanded` lists folder paths, never the root; `null` means not set up yet, so the

@@ -7,6 +7,18 @@ export type ModuleShown = {
   readonly lazies: boolean;
 };
 
+/** A focus target, a `'file:'` or `'pkg:'` id, and how many link hops from it the focus reaches. */
+export type ModuleFocus = {
+  readonly target: string;
+  readonly depth: number;
+};
+
+/** What a focus keeps: file indexes into `found.files` and stub names from `found.stubs`. */
+export type ModuleFocusSet = {
+  readonly files: Set<number>;
+  readonly stubs: Set<string>;
+};
+
 /** `expanded` lists folder paths; the root is always expanded and never listed. */
 export type ModuleSceneView = {
   readonly expanded: string[];
