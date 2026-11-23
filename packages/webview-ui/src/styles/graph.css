@@ -240,16 +240,14 @@ p {
 }
 
 /*
- * Modules mode draws one package's modules: the package Controls, Details and widgets have nothing to act on, so the
- * toolbar's Panels group (the Controls and Details toggles) goes with its separator, and so do the panel sashes (their
- * rules below skip modules mode). It has no legend either, so the Legend button goes, and a Legend left open (a host
- * showModules does not close it) is hidden. The location bar goes too: its trail and crumbs belong to the package graph,
- * and the modules bar names the package.
+ * Modules mode draws one package's modules: the package Controls, Details and widgets have nothing to act on, so they
+ * go. Modules mode has its own Controls and Details asides, which the toolbar's Panels group toggles, and its own sash
+ * rules below, so the Panels group stays. It has no legend either, so the Legend button goes, and a Legend left open (a
+ * host showModules does not close it) is hidden. The location bar goes too: its trail and crumbs belong to the package
+ * graph, and the modules bar names the package.
  */
 .modules-mode #graph-controls,
 .modules-mode #graph-details,
-.modules-mode .toolbar-group[aria-label='Panels'],
-.modules-mode .toolbar-group[aria-label='Panels'] + .toolbar-separator,
 .modules-mode .widget-row,
 .modules-mode .widget-toolbar-package,
 .modules-mode .legend-button,
@@ -1057,11 +1055,16 @@ kbd {
   user-select: none;
 }
 
-/* A sash shows beside its open panel; modules mode hides the panels, so it shows no sash. */
+/*
+ * A sash shows beside its open panel, for the mode on screen. Modules mode hides the package and task panels and has its
+ * own asides, so it shows its sashes beside those only.
+ */
 .graph-page:not(.task-mode, .modules-mode) .graph-body:has(> #graph-controls:not([hidden])) > .graph-sash-controls,
 .graph-page.task-mode:not(.modules-mode) .graph-body:has(> #graph-task-controls:not([hidden])) > .graph-sash-controls,
+.graph-page.modules-mode .graph-body:has(> #graph-module-controls:not([hidden])) > .graph-sash-controls,
 .graph-page:not(.task-mode, .modules-mode) .graph-body:has(> #graph-details:not([hidden])) > .graph-sash-details,
-.graph-page.task-mode:not(.modules-mode) .graph-body:has(> #graph-task-details:not([hidden])) > .graph-sash-details {
+.graph-page.task-mode:not(.modules-mode) .graph-body:has(> #graph-task-details:not([hidden])) > .graph-sash-details,
+.graph-page.modules-mode .graph-body:has(> #graph-module-details:not([hidden])) > .graph-sash-details {
   display: block;
 }
 

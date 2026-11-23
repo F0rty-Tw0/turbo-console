@@ -16,4 +16,19 @@ describe('FEATURE: graph.css modules mode', () => {
       expect(allDeclarationsOf(css, `.modules-mode ${part}`)).toContain('display: none');
     });
   });
+
+  describe('GIVEN the Panels group rule', () => {
+    it('WHEN it is read THEN modules mode does not hide it', () => {
+      expect(allDeclarationsOf(css, ".modules-mode .toolbar-group[aria-label='Panels']")).not.toContain('display: none');
+    });
+  });
+
+  describe.each([
+    '.graph-page.modules-mode .graph-body:has(> #graph-module-controls:not([hidden])) > .graph-sash-controls',
+    '.graph-page.modules-mode .graph-body:has(> #graph-module-details:not([hidden])) > .graph-sash-details'
+  ])('GIVEN the sash rule %s', (selector) => {
+    it('WHEN it is read THEN it shows the sash', () => {
+      expect(allDeclarationsOf(css, selector)).toContain('display: block');
+    });
+  });
 });
