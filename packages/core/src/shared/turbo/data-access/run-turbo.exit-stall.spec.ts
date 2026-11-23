@@ -63,7 +63,14 @@ const STALL_MS = 200;
 /** For stubs that exit by themselves: longer than a loaded host takes from their last write to their exit. */
 const EXITING_STALL_MS = 500;
 
+/** Also the start budget of every stub: a cold `node` start on a loaded macOS runner can take over a second. */
 const TIMEOUT_MS = 3000;
+
+/**
+ * Above TIMEOUT_MS plus runTurbo's 5 s default kill grace, so a slow host fails on runTurbo's own result, not on
+ * vitest's 5 s default; `held-exit-3` alone needs two cold node starts plus its 1500 ms hold.
+ */
+const CASE_TIMEOUT_MS = 10_000;
 
 const GUARDED: RunTurboOptions = { exitStallCheck: JSON_CHECK, exitStallMs: STALL_MS, timeoutMs: TIMEOUT_MS, platform: 'win32' };
 
@@ -91,9 +98,19 @@ const waitForFile = async (path: string, tries: number): Promise<void> => {
   await waitForFile(path, tries - 1);
 };
 
-/** Runs `stub` until runTurbo settles; whether its node process still exists is probed as the result lands. */
-const runStub = async (stub: StubName, options: RunTurboOptions): Promise<RunOutcome> => {
+/** Runs `stub` until runTurbo settles; whatever it settled with. */
+const runStub = async (stub: StubName, options: RunTurboOptions): Promise<unknown> => {
   const settled = await runTurbo(stubPath(stub), [], stubDir, options).then(settledOf, settledOf);
+
+  return settled;
+};
+
+/**
+ * `runStub`, then whether the stub's node process still exists as the result lands. Only for a run that settles after
+ * the stub printed: its pid file is written first, so a stub killed before it ran has none.
+ */
+const runPrintingStub = async (stub: StubName, options: RunTurboOptions): Promise<RunOutcome> => {
+  const settled = await runStub(stub, options);
   const pidText = await readFile(`${stubPath(stub)}.pid`, 'utf8');
   const isStubAlive = isAlive(Number(pidText));
   const outcome: RunOutcome = { settled, isStubAlive };
@@ -102,7 +119,7 @@ const runStub = async (stub: StubName, options: RunTurboOptions): Promise<RunOut
 };
 
 // The stubs are node scripts run through their shebang, which Windows cannot exec; `platform` stands in for win32.
-describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guard', () => {
+describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guard', { timeout: CASE_TIMEOUT_MS }, () => {
   beforeAll(async () => {
     stubDir = await mkdtemp(join(tmpdir(), 'run-turbo-exit-stall-'));
     await Promise.all(Object.entries(STUB_BODIES).map(writeStub));
@@ -117,7 +134,7 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guar
       let outcome: RunOutcome;
 
       beforeAll(async () => {
-        outcome = await runStub('complete-hang', GUARDED);
+        outcome = await runPrintingStub('complete-hang', GUARDED);
       });
 
       it('THEN runTurbo resolves with its stdout and exit code 0', () => {
@@ -133,59 +150,58 @@ describe.skipIf(process.platform === 'win32')('FEATURE: runTurbo exit-stall guar
   });
 
   describe('GIVEN a binary that prints half a JSON object, then never exits', () => {
-    it('WHEN the guard runs on win32 THEN runTurbo rejects with the timeout, as without the guard', async () => {
-      const options: RunTurboOptions = { ...GUARDED, timeoutMs: 1000 };
-      const outcome = await runStub('half-hang', options);
+    it('WHEN the guard runs on win32 THEN runTurbo rejects with the timeout and the half object, as without the guard', async () => {
+      const settled = await runStub('half-hang', GUARDED);
 
-      expect(outcome.settled).toMatchObject(TIMEOUT_ABORT);
+      expect(settled).toMatchObject({ ...TIMEOUT_ABORT, stdout: '{"tasks":[' });
     });
   });
 
   describe('GIVEN a binary whose stdout ends like JSON but does not parse, then never exits', () => {
     it('WHEN the guard stops it THEN runTurbo rejects with the kill error, as for any killed turbo', async () => {
-      const outcome = await runStub('broken-hang', GUARDED);
+      const settled = await runStub('broken-hang', GUARDED);
 
-      expect(outcome.settled).toMatchObject({ signal: 'SIGTERM', stderr: '' });
+      expect(settled).toMatchObject({ signal: 'SIGTERM', stderr: '' });
     });
   });
 
   describe('GIVEN a binary that prints "{", then "}" after 400 ms, then never exits', () => {
     it('WHEN the guard runs with a 200 ms stall THEN the late output re-arms it and runTurbo resolves with exit code 0', async () => {
-      const outcome = await runStub('late-end-hang', GUARDED);
+      const settled = await runStub('late-end-hang', GUARDED);
 
-      expect(outcome.settled).toMatchObject({ stdout: '{}\n', exitCode: 0 });
+      expect(settled).toMatchObject({ stdout: '{}\n', exitCode: 0 });
     });
   });
 
   describe('GIVEN a binary that prints complete JSON and exits 3', () => {
     it('WHEN the guard runs on win32 THEN runTurbo resolves with exit code 3, as without the guard', async () => {
-      const outcome = await runStub('complete-exit-3', { ...GUARDED, exitStallMs: EXITING_STALL_MS });
+      const settled = await runStub('complete-exit-3', { ...GUARDED, exitStallMs: EXITING_STALL_MS });
 
-      expect(outcome.settled).toMatchObject({ stdout: '{}\n', exitCode: 3 });
+      expect(settled).toMatchObject({ stdout: '{}\n', exitCode: 3 });
     });
   });
 
   describe('GIVEN a binary that prints complete JSON, then exits 1 on SIGTERM, as taskkill /F leaves turbo', () => {
     it('WHEN the guard stops it THEN runTurbo resolves with the exit code its stdout gives, not the 1', async () => {
-      const outcome = await runStub('complete-term-exit-1', GUARDED);
+      const settled = await runStub('complete-term-exit-1', GUARDED);
 
-      expect(outcome.settled).toStrictEqual({ stdout: '{}\n', stderr: '', exitCode: 0 });
+      expect(settled).toStrictEqual({ stdout: '{}\n', stderr: '', exitCode: 0 });
     });
   });
 
   describe('GIVEN a binary that prints broken JSON, then exits 0 on SIGTERM', () => {
     it('WHEN the guard stops it THEN runTurbo resolves with exit code 0, as a turbo that exited by itself', async () => {
-      const outcome = await runStub('broken-term-exit-0', GUARDED);
+      const settled = await runStub('broken-term-exit-0', GUARDED);
 
-      expect(outcome.settled).toMatchObject({ stdout: '{"tasks":]}\n', exitCode: 0 });
+      expect(settled).toMatchObject({ stdout: '{"tasks":]}\n', exitCode: 0 });
     });
   });
 
   describe('GIVEN a binary that prints complete JSON and exits 3 while a grandchild holds its stdout', () => {
     it('WHEN the stall time passes before the output closes THEN runTurbo still resolves with exit code 3', async () => {
-      const outcome = await runStub('held-exit-3', { ...GUARDED, exitStallMs: EXITING_STALL_MS });
+      const settled = await runStub('held-exit-3', { ...GUARDED, exitStallMs: EXITING_STALL_MS });
 
-      expect(outcome.settled).toMatchObject({ stdout: '{}\n', exitCode: 3 });
+      expect(settled).toMatchObject({ stdout: '{}\n', exitCode: 3 });
     });
   });
 
