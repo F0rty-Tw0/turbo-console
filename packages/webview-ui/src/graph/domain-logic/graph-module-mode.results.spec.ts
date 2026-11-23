@@ -93,6 +93,15 @@ describe('FEATURE: GraphModuleMode scan results', () => {
 
       expect(modes.modules()?.camera).toBeNull();
     });
+
+    it('WHEN web is found and Back is pressed before its draw lands THEN no camera is saved', () => {
+      rig.screen.isDrawn.mockReturnValue(false);
+
+      mode.scanned(FOUND, REPLY_AT);
+      mode.leave();
+
+      expect(modes.modules()?.camera).toBeNull();
+    });
   });
 
   describe('GIVEN Shown web', () => {

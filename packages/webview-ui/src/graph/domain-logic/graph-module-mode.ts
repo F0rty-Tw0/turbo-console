@@ -151,10 +151,15 @@ export class GraphModuleMode {
     else this.scanned(message, at);
   }
 
+  /**
+   * Saves the camera while Shown, once a module draw has landed: before that, and after a first layout that threw or was
+   * dropped, the shared core still holds the package or task camera.
+   */
   public saveCamera(): void {
     const view = this.view();
+    const isDrawn = this.deps.screen.isDrawn();
 
-    if (this.current.kind !== 'shown' || view === null) return;
+    if (this.current.kind !== 'shown' || view === null || !isDrawn) return;
 
     const camera = this.deps.viewport();
     const saved: ModulesViewState = { ...view, camera };
