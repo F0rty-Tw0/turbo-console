@@ -8,7 +8,7 @@ import type { GraphReady, Positions } from '../../../bridge/common/graph-state.t
 import type { GraphLayoutsDeps } from '../../common/graph-layouts.type.ts';
 import type { DrawnGraph } from '../../common/graph-page.type.ts';
 import { FOLDER_ID_PREFIX } from '../../common/graph.const.ts';
-import type { LayoutResult } from '../../common/layout.type.ts';
+import type { FallbackCause, LayoutResult } from '../../common/layout.type.ts';
 import type { NodeSize } from '../../common/node-size.type.ts';
 import { drawnGraphOf } from '../../utils/drawn-graph.util.ts';
 import type { LayoutsRig } from '../common/graph-layouts.type.ts';
@@ -58,8 +58,15 @@ export const layoutsRigOf = (): LayoutsRig => {
   return rig;
 };
 
-export const resultOf = (hash: string, positions: Positions, engine: LayoutResult['engine'] = 'elk'): LayoutResult => {
-  const result: LayoutResult = { hash, positions, routes: {}, boxFrames: {}, engine, ms: 5 };
+/** A layout of `engine`; a fallback one falls back for `cause`, a worker failure unless given. */
+export const resultOf = (
+  hash: string,
+  positions: Positions,
+  engine: LayoutResult['engine'] = 'elk',
+  cause: FallbackCause = 'failure'
+): LayoutResult => {
+  const fallbackCause = engine === 'fallback' ? cause : null;
+  const result: LayoutResult = { hash, positions, routes: {}, boxFrames: {}, engine, fallbackCause, ms: 5 };
 
   return result;
 };

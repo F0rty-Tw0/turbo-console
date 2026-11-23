@@ -58,12 +58,24 @@ describe('FEATURE: createLayoutRunner, a graph past ELK_NODES_MAX', () => {
       expect(createElk).not.toHaveBeenCalled();
     });
 
-    it('WHEN it runs forced THEN ELK lays it out', async () => {
+    it('WHEN it runs THEN the fallback cause is oversize', async () => {
+      await expect(runner.run('h1', PAST_MAX_NESTED)).resolves.toMatchObject({ fallbackCause: 'oversize' });
+    });
+
+    it('WHEN it runs forced THEN ELK lays it out with no fallback cause', async () => {
       const pending = runner.run('h1', PAST_MAX_NESTED, true);
 
       mock.resolveLayout(LAID_OUT_STUB);
 
-      await expect(pending).resolves.toMatchObject({ engine: 'elk' });
+      await expect(pending).resolves.toMatchObject({ engine: 'elk', fallbackCause: null });
+    });
+
+    it('WHEN it runs forced and ELK fails THEN the fallback cause is failure', async () => {
+      const pending = runner.run('h1', PAST_MAX_NESTED, true);
+
+      mock.rejectLayout(new Error('too big'));
+
+      await expect(pending).resolves.toMatchObject({ engine: 'fallback', fallbackCause: 'failure' });
     });
   });
 
