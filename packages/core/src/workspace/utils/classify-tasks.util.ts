@@ -92,8 +92,9 @@ const rawDependenciesOf = (task: GraphTask): string[] => task.directDependencies
 /**
  * Rules 2.2–2.4 and 3 for one non-carrier task; `null` drops it. A file task with two group tags adds a warning. A plain
  * task with neither a command nor a script is a phantom (rule 3): dropped, and its raw dependencies are kept in
- * `phantoms`; a script set to `""` counts as no script, since turbo runs nothing for it (`<NONEXISTENT>`). A task with a
- * script but no command is one turbo 2.11.11+ opts out: kept, its script as its command.
+ * `phantoms`; a script set to `""` counts as no script, since turbo runs nothing for it (`<NONEXISTENT>`). A task
+ * with a script but no command is one turbo 2.11.11+ opts out: kept, its script as its command. A scriptless atom
+ * umbrella or aggregate turbo opts out looks like any other one in `turbo query`, so it is not detected.
  */
 const classifyTask = (task: GraphTask, packageName: string, packageGroups: Set<string>, sink: ClassifySink): ClassifiedTask | null => {
   const name = nameOf(packageName, task.fullName);

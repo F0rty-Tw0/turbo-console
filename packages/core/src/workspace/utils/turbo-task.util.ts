@@ -141,12 +141,14 @@ const applyTasks = (tasks: Map<string, TurboTaskFacts>, config: TurboConfigOk): 
  * entry for a name decides presence, in this order: the package's own config, the root config's bare and
  * `<pkg>#<task>` keys, then the parent chain of `chainOf`; an entry of exactly `{ "extends": false }` drops the task.
  * So a parent's exclusion hides only a task another parent package defines, never a root task. Applied last-wins from
- * the lowest priority up. Turbo 2.11.7 runs every task defined here; 2.11.11+ defines the same tasks but also opts out
- * one its own exclusion walk hits (a parent's entry outranks the root's), and `turbo query` reports such a task with no
- * command, which `classifyTasks` marks `optedOut`, so no version check is needed here. `turbo query` lists a package
- * script with no such key all the same, and
- * `turbo run` of a name no config defines exits 1 (a single-package turbo runs it uncached). `null` when it cannot tell:
- * no parsed root config, or a chain `chainOf` cannot build.
+ * the lowest priority up. `turbo query` lists a package script with no such key all the same, and `turbo run` of a name
+ * no config defines exits 1 (a single-package turbo runs it uncached). `null` when it cannot tell: no parsed root
+ * config, or a chain `chainOf` cannot build.
+ *
+ * Turbo 2.11.7 runs every task defined here; 2.11.11+ defines the same tasks but also opts out one its own exclusion
+ * walk hits (a parent's entry outranks the root's). `turbo query` reports an opted-out task that has a script with no
+ * command, which `classifyTasks` marks `optedOut`, so that case needs no version check here. A scriptless one, such as
+ * an atom umbrella or aggregate, looks like any other in `turbo query`: it is not detected and keeps `isTurboTask`.
  *
  * Runs once per package, so a package with no config and no `<pkg>#` root key gets the root index's shared `bareTasks`,
  * never a copy. The root package never does: its dir `.` always holds the root config.
