@@ -1,11 +1,11 @@
 import type { Core, NodeSingular } from 'cytoscape';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { packageNodes, setBoxes } from './graph-boxes.ts';
 import { boxedCyMock } from '../test/mocks/folder-boxes.mock.ts';
 import { BOX_GROUPS_STUB, BOX_IDS_STUB, GONE_GROUP_STUB, PROTO_NAMES_GROUP_STUB } from '../test/stubs/folder-boxes.stub.ts';
 import { CANVAS_FRAME_RGB } from '../test/utils/canvas-elements.spec.util.ts';
-import { styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
+import { moveSpyOf, styleTextOf } from '../test/utils/folder-boxes.spec.util.ts';
 
 const BOUNDS = { includeLabels: false, includeOverlays: false };
 
@@ -42,6 +42,7 @@ describe('FEATURE: setBoxes', () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     cy.destroy();
   });
 
@@ -74,6 +75,24 @@ describe('FEATURE: setBoxes', () => {
       const ids = packageNodes(cy).map(idOf);
 
       expect(ids.sort()).toStrictEqual(['__proto__', 'a', 'b', 'c', 'd']);
+    });
+
+    it('WHEN the boxes are set on a flat graph THEN each group moves its packages in one call', () => {
+      const move = moveSpyOf(cy);
+
+      setBoxes(cy, BOX_GROUPS_STUB);
+
+      expect(move).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('GIVEN no boxes', () => {
+    it('WHEN null is set THEN no package moves', () => {
+      const move = moveSpyOf(cy);
+
+      setBoxes(cy, null);
+
+      expect(move).not.toHaveBeenCalled();
     });
   });
 
