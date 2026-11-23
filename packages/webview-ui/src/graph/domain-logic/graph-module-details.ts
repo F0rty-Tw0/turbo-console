@@ -13,7 +13,7 @@ import type {
 } from '../common/module-details.type.ts';
 import { closestButtonOf } from '../utils/closest-button.util.ts';
 import { modeFocusOf } from '../utils/mode-focus.util.ts';
-import { focusKeyOf, focusTargetOf, isFocusedOf, isSelectionOf, refocusOf } from '../utils/module-details-focus.util.ts';
+import { focusKeyOf, focusTargetOf, isFocusedOf, isSelectionOf, moduleRefocusOf } from '../utils/module-details-focus.util.ts';
 
 type RowsByButton = Map<HTMLButtonElement, ImportRowElements>;
 
@@ -109,7 +109,7 @@ export class GraphModuleDetails {
     this.draw = this.drawn(view);
     this.renderBar();
 
-    const target = refocusOf(this.draw.elements, key, isClearHiding);
+    const target = moduleRefocusOf(this.draw.elements, key, isClearHiding);
 
     target?.focus();
   }

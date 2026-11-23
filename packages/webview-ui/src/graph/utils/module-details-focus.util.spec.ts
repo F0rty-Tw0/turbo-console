@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { focusKeyOf, focusTargetOf, isFocusedOf, isSelectionOf, refocusOf, twinOf } from './module-details-focus.util.ts';
+import { focusKeyOf, focusTargetOf, isFocusedOf, isSelectionOf, moduleRefocusOf, twinOf } from './module-details-focus.util.ts';
 import type { ImportGroupModel, ImportRowModel, ImportsViewModel } from '../common/details-imports.type.ts';
 import type { ImportsDetails } from '../common/details-view.type.ts';
 import type {
@@ -171,7 +171,7 @@ describe('FEATURE: module Details focus', () => {
     it('WHEN Clear selection hides THEN the hint takes focus, else focus outside the old view stays', () => {
       const elements = build({ kind: 'empty' });
 
-      expect([refocusOf(elements, null, true), refocusOf(elements, null, false)]).toStrictEqual([elements.heading, null]);
+      expect([moduleRefocusOf(elements, null, true), moduleRefocusOf(elements, null, false)]).toStrictEqual([elements.heading, null]);
     });
 
     it('WHEN it or the loading view is read THEN neither is a selection, while a file view is', () => {

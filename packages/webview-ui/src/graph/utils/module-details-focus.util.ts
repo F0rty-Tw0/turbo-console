@@ -97,7 +97,7 @@ export const isSelectionOf = (view: ModuleDetailsView): boolean => view.kind !==
  * What takes focus once `elements` replaces a view: the twin of `key`, focus held in the old view, or the heading when
  * Clear selection held it and hides; `null` keeps focus where it is.
  */
-export const refocusOf = (
+export const moduleRefocusOf = (
   elements: ModuleDetailsElements,
   key: ModuleDetailsFocusKey | null,
   isClearHiding: boolean
