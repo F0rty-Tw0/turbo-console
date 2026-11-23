@@ -80,3 +80,9 @@ export const MODULE_COUNT_FONT_PX = 10;
 
 /** Below this rendered size the count label is not drawn, so it hides below zoom 0.5 (`min-zoomed-font-size`). */
 export const MODULE_COUNT_MIN_ZOOMED_PX = 5;
+
+/** The space between a count and its chip's frame, so two nearby counts never read as one number. */
+export const MODULE_COUNT_PADDING_PX = '2px';
+
+/** The width of a count chip's frame. */
+export const MODULE_COUNT_BORDER_PX = 1;

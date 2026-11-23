@@ -1,8 +1,10 @@
 import type { StylesheetStyle } from 'cytoscape';
 
 import {
+  MODULE_COUNT_BORDER_PX,
   MODULE_COUNT_FONT_PX,
   MODULE_COUNT_MIN_ZOOMED_PX,
+  MODULE_COUNT_PADDING_PX,
   MODULE_LAZY_CLASS,
   MODULE_LINK_CLASS,
   MODULE_STUB_CLASS,
@@ -18,9 +20,9 @@ const LAZY_LINK = { 'line-style': 'dotted' } as const;
 const TYPE_LINK = { 'line-style': 'dashed', 'line-dash-pattern': DASHED_LINE_PX } as const;
 
 /**
- * The modules mode rules: a stub card drawn dashed; a module link labelled with its import count on the canvas
- * background, the label hidden below zoom 0.5 (`min-zoomed-font-size`); a lazy-only link dotted and a type-only link
- * dashed. No rule sets a link's `curve-style` or `z-compound-depth`, so a module link draws as the base edge rule's
+ * The modules mode rules: a stub card drawn dashed; a module link labelled with its import count in a chip of its own
+ * (canvas background, padded, framed in the edge colour), so counts of nearby links never fuse into one number, the
+ * label hidden below zoom 0.5 (`min-zoomed-font-size`); a lazy-only link dotted and a type-only link dashed. No rule sets a link's `curve-style` or `z-compound-depth`, so a module link draws as the base edge rule's
  * plain bezier at card depth, like a package edge. Boxes take the task folder box rule and cards the base node rule.
  */
 export const moduleRulesOf = (colors: ThemeColors, fontFamily: string): StylesheetStyle[] => {
@@ -31,7 +33,12 @@ export const moduleRulesOf = (colors: ThemeColors, fontFamily: string): Styleshe
     'font-family': fontFamily,
     color: colors.label,
     'text-background-color': colors.background,
-    'text-background-opacity': 1
+    'text-background-opacity': 1,
+    'text-background-shape': 'roundrectangle',
+    'text-background-padding': MODULE_COUNT_PADDING_PX,
+    'text-border-width': MODULE_COUNT_BORDER_PX,
+    'text-border-opacity': 1,
+    'text-border-color': colors.edge
   } as const;
   const rules: StylesheetStyle[] = [
     { selector: `node.${MODULE_STUB_CLASS}`, style: STUB_NODE },

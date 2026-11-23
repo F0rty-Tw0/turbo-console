@@ -45,7 +45,12 @@ describe('FEATURE: moduleRulesOf, alone and in the graph stylesheet', () => {
       ['edge.module-type', 'line-style', 'dashed'],
       ['node.module-stub', 'border-style', 'dashed'],
       ['edge.module-link', 'label', 'data(count)'],
-      ['edge.module-link', 'min-zoomed-font-size', 5]
+      ['edge.module-link', 'min-zoomed-font-size', 5],
+      ['edge.module-link', 'text-background-shape', 'roundrectangle'],
+      ['edge.module-link', 'text-background-padding', '2px'],
+      ['edge.module-link', 'text-border-width', 1],
+      ['edge.module-link', 'text-border-opacity', 1],
+      ['edge.module-link', 'text-border-color', THEME_COLORS_STUB.edge]
     ])('WHEN %s is read THEN %s is %s', (selector, property, value) => {
       const rule = moduleRulesOf(THEME_COLORS_STUB, 'sans').find((entry) => entry.selector === selector);
       const style = new Map(Object.entries(rule?.style ?? {}));
@@ -72,5 +77,11 @@ describe('FEATURE: moduleRulesOf, alone and in the graph stylesheet', () => {
         expect(drawnStyleOf(cy, id)).toStrictEqual(['bezier', 'auto']);
       }
     );
+
+    it('WHEN the solid link is styled THEN its count chip is framed in the line colour', () => {
+      const edge = cy.getElementById('solid');
+
+      expect(edge.style('text-border-color')).toBe(edge.style('line-color'));
+    });
   });
 });
