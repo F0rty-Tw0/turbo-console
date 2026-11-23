@@ -18,10 +18,16 @@ const isPackageEdge = (edge: EdgeSingular): boolean => edge.id().startsWith(EDGE
 export const packageEdges = (cy: Core): EdgeCollection => cy.edges().filter(isPackageEdge);
 
 const clearBoxes = (cy: Core): void => {
+  const boxes = cy.nodes().filter(isBoxNode);
+  const isFlat = boxes.empty();
+
+  if (isFlat) return;
+
   packageNodes(cy).move({ parent: null });
-  cy.nodes().filter(isBoxNode).remove();
+  boxes.remove();
 };
 
+/** Moves the group's drawn packages in one call: each `move` rescans the whole graph for compound nodes. */
 const fillBox = (cy: Core, group: FolderGroup): void => {
   const parent = folderIdOf(group.folder);
 
@@ -29,12 +35,11 @@ const fillBox = (cy: Core, group: FolderGroup): void => {
 
   cy.add({ data });
 
-  for (const { name } of group.packages) {
-    const node = cy.getElementById(name);
-    const isDrawn = node.nonempty();
+  const drawn = cy.collection();
 
-    if (isDrawn) node.move({ parent });
-  }
+  for (const { name } of group.packages) drawn.merge(cy.getElementById(name));
+
+  drawn.move({ parent });
 };
 
 /** Replaces the folder boxes: one compound per group holding its packages, or none for `null`; no position changes. */
