@@ -1,11 +1,8 @@
 import { collapsedIdOf } from './folder-id.util.ts';
+import { mergedLinksOf } from './merged-links.util.ts';
 import type { GraphEdge } from '../../bridge/common/graph-state.type.ts';
 import type { FolderLink, FolderScene } from '../common/folder-scene.type.ts';
-
-type DrawnEnds = {
-  readonly source: string;
-  readonly target: string;
-};
+import type { DrawnEnds, MergedLink } from '../common/merged-links.type.ts';
 
 const endOf = (name: string, folder: string, collapsed: ReadonlySet<string>): string => {
   const isCollapsed = collapsed.has(folder);
@@ -38,6 +35,20 @@ const endsOf = (edge: GraphEdge, folderOf: ReadonlyMap<string, string>, collapse
   return ends;
 };
 
+const withEdge = (acc: GraphEdge[] | null, edge: GraphEdge): GraphEdge[] => {
+  if (acc === null) return [edge];
+
+  acc.push(edge);
+
+  return acc;
+};
+
+const folderLinkFrom = (merged: MergedLink<GraphEdge[]>): FolderLink => {
+  const link: FolderLink = { source: merged.source, target: merged.target, links: merged.value };
+
+  return link;
+};
+
 /** The visible package links that touch a collapsed folder, merged per drawn (source, target) pair in first-appearance order. */
 export const folderLinksOf = (
   edges: GraphEdge[],
@@ -45,35 +56,12 @@ export const folderLinksOf = (
   folderOf: ReadonlyMap<string, string>,
   collapsed: ReadonlySet<string>
 ): FolderLink[] => {
-  const byPair = new Map<string, FolderLink>();
+  const isShown = (edge: GraphEdge): boolean => visible.has(edge.source) && visible.has(edge.target);
+  const drawnEndsOf = (edge: GraphEdge): DrawnEnds | null => endsOf(edge, folderOf, collapsed);
+  const shown = edges.filter(isShown);
+  const merged = mergedLinksOf(shown, drawnEndsOf, withEdge);
 
-  for (const edge of edges) {
-    const isSourceVisible = visible.has(edge.source);
-    const isTargetVisible = visible.has(edge.target);
-    const isShown = isSourceVisible && isTargetVisible;
-
-    if (!isShown) continue;
-
-    const ends = endsOf(edge, folderOf, collapsed);
-
-    if (ends === null) continue;
-
-    const key = JSON.stringify([ends.source, ends.target]);
-    const existing = byPair.get(key);
-
-    if (existing !== undefined) {
-      existing.links.push(edge);
-      continue;
-    }
-
-    const link: FolderLink = { source: ends.source, target: ends.target, links: [edge] };
-
-    byPair.set(key, link);
-  }
-
-  const links = byPair.values();
-
-  return [...links];
+  return merged.map(folderLinkFrom);
 };
 
 /** The folder link runs from `source` to `target`, matched by its ends, not by reference. */
