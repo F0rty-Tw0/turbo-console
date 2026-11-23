@@ -16,5 +16,9 @@ describe('FEATURE: graph.css list rows', () => {
     it(`WHEN it is read THEN it holds ${intrinsicSize}`, () => {
       expect(declarations).toContain(intrinsicSize);
     });
+
+    it('WHEN it is read THEN its paint clip leaves room for a focus outline', () => {
+      expect(declarations).toContain('overflow-clip-margin: 2px');
+    });
   });
 });
