@@ -40,7 +40,10 @@ const ROOT_PACKAGES: GraphPackage[] = FIRST_PACKAGE.map(rootOf);
 /** A single-package root listing only `//`. */
 export const ROOT_LISTED: GraphReady = { ...STATE_STUB, singlePackage: true, rootLabel: 'single-app', packages: ROOT_PACKAGES };
 
-/** Modules mode's deps over `modes`, with task mode in `isTaskMode` and a view whose camera is `RIG_CAMERA`. */
+/**
+ * Modules mode's deps over `modes`, with task mode in `isTaskMode`, a view whose camera is `RIG_CAMERA` and a screen
+ * that reads every draw as landed.
+ */
 export const moduleModeRigOf = (modes: ModuleModes, isTaskMode = false): ModuleModeRig => {
   const post = vi.fn<Bridge['post']>();
   const bridge = { post };
@@ -48,6 +51,8 @@ export const moduleModeRigOf = (modes: ModuleModes, isTaskMode = false): ModuleM
     enter: vi.fn(),
     scanning: vi.fn(),
     shown: vi.fn(),
+    drawAgain: vi.fn(),
+    isDrawn: vi.fn(() => true),
     failed: vi.fn(),
     reshow: vi.fn(),
     exit: vi.fn()

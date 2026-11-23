@@ -45,7 +45,14 @@ export type ModuleScreen = {
   /** Waiting and Loading: empty canvas, "Scanning <P>…", Refresh visible, the View boxes set from `view`. */
   readonly scanning: (name: string, view: ModulesViewState) => void;
   readonly shown: (name: string, found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => void;
-  /** Keeps the old graph drawn, if any, and shows "Could not scan <P>." with Retry; with none, the status is emptied. */
+  /** Failed with the old graph kept: draws `view` again placed by `redraw`, leaving the bar and its failed banner as they are. */
+  readonly drawAgain: (found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => void;
+  /** A module draw has landed and is on screen; false before the first one lands and after the canvas is cleared. */
+  readonly isDrawn: () => boolean;
+  /**
+   * Keeps the old graph drawn, if any, and shows "Could not scan <P>." with Retry; with none, the status is emptied and a
+   * draw still in flight is dropped.
+   */
   readonly failed: (name: string) => void;
   /** Failed after a host message: the graph view shows again over whatever canvas was kept. */
   readonly reshow: () => void;
@@ -132,11 +139,10 @@ export type ModuleScreenLayout = {
   readonly clear: () => void;
 };
 
-/** What the modules screen writes to: the page's root, mode buttons and modules bar, the layout, the canvas and the graph view. */
+/** What the modules screen writes to: the page's root, mode buttons and modules bar, the layout and the graph view. */
 export type ModuleScreenDeps = {
   readonly page: Pick<PageElements, 'root' | 'packagesMode' | 'taskMode' | 'modules'>;
   readonly layout: ModuleScreenLayout;
-  readonly canvas: Pick<ModuleCanvas, 'clear'>;
   readonly showGraph: LayoutScreen['showGraph'];
 };
 
