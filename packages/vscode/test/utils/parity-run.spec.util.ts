@@ -54,9 +54,15 @@ const argsOf = (task: vscode.Task): string[] | null => {
 
 /** Watches the process of the run all task of `taskName` in `root`, with the given `affected` flag, from its start and end events. */
 export const watchAllRun = (root: string, taskName: string, affected: boolean): AllRunWatch => {
+  let isTaskStarted = false;
   let started: string[] | null = null;
   let ended: ProcessExit | null = null;
 
+  const onTaskStart = ({ execution }: vscode.TaskStartEvent): void => {
+    const isWatchedTask = isWatched(execution.task, root, taskName, affected);
+
+    if (isWatchedTask) isTaskStarted = true;
+  };
   const onStart = ({ execution }: vscode.TaskProcessStartEvent): void => {
     const isWatchedTask = isWatched(execution.task, root, taskName, affected);
 
@@ -67,8 +73,12 @@ export const watchAllRun = (root: string, taskName: string, affected: boolean): 
 
     if (isWatchedTask) ended = { code: exitCode };
   };
-  const listeners = vscode.Disposable.from(vscode.tasks.onDidStartTaskProcess(onStart), vscode.tasks.onDidEndTaskProcess(onEnd));
+  const taskStarts = vscode.tasks.onDidStartTask(onTaskStart);
+  const processStarts = vscode.tasks.onDidStartTaskProcess(onStart);
+  const processEnds = vscode.tasks.onDidEndTaskProcess(onEnd);
+  const listeners = vscode.Disposable.from(taskStarts, processStarts, processEnds);
   const watch: AllRunWatch = {
+    isTaskStarted: () => isTaskStarted,
     startedArgs: () => started,
     exit: () => ended,
     dispose: () => {
@@ -79,9 +89,25 @@ export const watchAllRun = (root: string, taskName: string, affected: boolean): 
   return watch;
 };
 
+/**
+ * Waits for the watched process to start; a start that never comes fails naming whether VS Code started the task at
+ * all (none: the command launched nothing, so the pick closed or it returned early) or only not its process (a slow
+ * terminal).
+ */
+const processStarted = async (watch: AllRunWatch, name: string): Promise<void> => {
+  try {
+    await waitFor(`${name} process start`, () => watch.startedArgs() !== null, START_LIMIT_MS);
+  } catch (error) {
+    const isTaskStarted = watch.isTaskStarted();
+    const seen = isTaskStarted ? 'VS Code started its task, not its process' : 'VS Code started no task';
+
+    throw new Error(`${String(error)} (${seen})`, { cause: error });
+  }
+};
+
 /** Waits for the watched process to start and end; returns the args it started with and its exit code. */
 export const finishedAllRun = async (watch: AllRunWatch, name: string): Promise<[string[], number | undefined]> => {
-  await waitFor(`${name} process start`, () => watch.startedArgs() !== null, START_LIMIT_MS);
+  await processStarted(watch, name);
   await waitFor(`${name} process end`, () => watch.exit() !== null, RUN_LIMIT_MS);
 
   const args = watch.startedArgs();
