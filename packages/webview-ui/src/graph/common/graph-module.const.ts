@@ -1,7 +1,11 @@
+import type { ModuleRedraw } from './module-mode.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** The kinds a modules view with nothing saved shows: every kind but test files. */
 export const FRESH_MODULES_SHOWN: ModulesViewState['shown'] = { types: true, tests: false, lazies: true };
+
+/** A module redraw that leaves the camera as it is. */
+export const MODULE_REDRAW_KEEP: ModuleRedraw = { kind: 'keep' };
 
 /** The id prefix of a folder, drawn as a box or a card; the root box's id is the prefix alone. */
 export const DIR_PREFIX = 'dir:';

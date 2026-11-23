@@ -1,3 +1,4 @@
+import { DIR_PREFIX, FILE_PREFIX } from '../common/graph-module.const.ts';
 import type {
   ModuleBox,
   ModuleDirLeaf,
@@ -33,7 +34,7 @@ const drawCollapsed = (dir: ModuleDir, parent: string, walk: ModuleWalk): void =
 
   if (under.length === 0) return;
 
-  const id = `dir:${dir.path}`;
+  const id = `${DIR_PREFIX}${dir.path}`;
   const leaf: ModuleDirLeaf = { kind: 'dir', id, path: dir.path, label: `${dir.name}/`, fileCount: under.length, parent };
 
   walk.leaves.push(leaf);
@@ -47,7 +48,7 @@ const drawFile = (index: number, parent: string, walk: ModuleWalk): void => {
   if (isHidden) return;
 
   const path = walk.files[index] ?? '';
-  const id = `file:${path}`;
+  const id = `${FILE_PREFIX}${path}`;
   const slash = path.lastIndexOf('/');
   const label = path.slice(slash + 1);
   const leaf: ModuleFileLeaf = { kind: 'file', id, path, label, parent };
@@ -58,7 +59,7 @@ const drawFile = (index: number, parent: string, walk: ModuleWalk): void => {
 
 /** Draws `dir` as a box and walks it; a box that ends up with no leaf under it is taken back, nested boxes included. */
 const drawBox = (dir: ModuleDir, parent: string | null, walk: ModuleWalk): void => {
-  const id = `dir:${dir.path}`;
+  const id = `${DIR_PREFIX}${dir.path}`;
   const box: ModuleBox = { id, path: dir.path, name: dir.name, parent };
   const at = walk.boxes.length;
   const before = walk.leaves.length;

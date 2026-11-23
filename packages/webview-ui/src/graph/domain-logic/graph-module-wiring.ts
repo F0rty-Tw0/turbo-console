@@ -7,7 +7,7 @@ import type { GraphPackageModulesMessage, GraphShowModulesMessage } from '../../
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-import { MODULES_DROPPED_WARNING } from '../common/graph-module.const.ts';
+import { MODULES_DROPPED_WARNING, MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
 import type { GraphControllerDeps, GraphView, Viewport } from '../common/graph-page.type.ts';
 import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
 import type { ModuleHookModes, ModuleModeHooks, ModuleRedraw, PageModuleMode } from '../common/module-mode.type.ts';
@@ -19,8 +19,6 @@ import type { PageTaskMode } from '../common/page-task-mode.type.ts';
 import { defaultExpandedOf } from '../utils/module-expand.util.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
-
-const KEEP: ModuleRedraw = { kind: 'keep' };
 
 const FIT: ModuleRedraw = { kind: 'fit' };
 
@@ -37,7 +35,7 @@ const measuresOf = (deps: GraphControllerDeps): ModuleMeasures => {
 const relayoutOf = (mode: GraphModuleMode): void => {
   const view = mode.view();
 
-  if (view !== null) mode.update(view, KEEP);
+  if (view !== null) mode.update(view, MODULE_REDRAW_KEEP);
 };
 
 /** A View box changed: the saved view shows the kinds the three boxes read, drawn again with the camera kept; nothing is posted. */
@@ -49,7 +47,7 @@ const toggleShown = (mode: GraphModuleMode, bar: ModulesBarElements): void => {
   const shown: ModuleShown = { types: bar.types.checked, tests: bar.tests.checked, lazies: bar.lazies.checked };
   const toggled: ModulesViewState = { ...view, shown };
 
-  mode.update(toggled, KEEP);
+  mode.update(toggled, MODULE_REDRAW_KEEP);
 };
 
 /** Reset view while Shown: the shown package's default expansion, then a fit. */

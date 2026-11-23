@@ -1,7 +1,7 @@
 import { mergedLinksOf } from './merged-links.util.ts';
 import { moduleDrawnOf } from './module-drawn.util.ts';
 import type { ModuleLink, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
-import { FILE_PREFIX } from '../common/graph-module.const.ts';
+import { FILE_PREFIX, STUB_PREFIX } from '../common/graph-module.const.ts';
 import type { DrawnEnds, MergedLink } from '../common/merged-links.type.ts';
 import type { ModuleScene, ModuleSceneLink, ModuleSceneView, ModuleShown, ModuleStubLeaf } from '../common/module-scene.type.ts';
 import type { ModuleTree } from '../common/module-tree.type.ts';
@@ -33,7 +33,7 @@ const stubEndsOf = (link: ModuleLink, drawnOf: ReadonlyMap<number, string>, stub
 
   if (source === undefined || name === undefined) return null;
 
-  const ends: DrawnEnds = { source, target: `pkg:${name}` };
+  const ends: DrawnEnds = { source, target: `${STUB_PREFIX}${name}` };
 
   return ends;
 };
@@ -82,7 +82,7 @@ const sceneLinkOf = (merged: MergedLink<ModuleLinkCounts>): ModuleSceneLink => {
 const hasImports = (link: ModuleSceneLink): boolean => link.statics + link.types + link.lazies > 0;
 
 const stubLeafOf = (name: string): ModuleStubLeaf => {
-  const leaf: ModuleStubLeaf = { kind: 'stub', id: `pkg:${name}`, name, label: name, parent: null };
+  const leaf: ModuleStubLeaf = { kind: 'stub', id: `${STUB_PREFIX}${name}`, name, label: name, parent: null };
 
   return leaf;
 };
@@ -99,7 +99,7 @@ export const moduleSceneOf = (tree: ModuleTree, data: ModulesFound, view: Module
   const all = merged.map(sceneLinkOf);
   const links = all.filter(hasImports);
   const targets = new Set(links.map((link) => link.target));
-  const drawnStubs = data.stubs.filter((name) => targets.has(`pkg:${name}`));
+  const drawnStubs = data.stubs.filter((name) => targets.has(`${STUB_PREFIX}${name}`));
   const stubs = drawnStubs.map(stubLeafOf);
   const leaves = [...drawn.leaves, ...stubs];
   const isIncludedAt = (_: string, index: number): boolean => drawn.drawnOf.has(index);

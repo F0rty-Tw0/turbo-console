@@ -1,6 +1,7 @@
 import type { GraphPackageModulesMessage, GraphShowModulesMessage, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
 import type { ModuleExit, ModuleModeDeps, ModulePhase, ModuleRedraw } from '../common/module-mode.type.ts';
 import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
 import { defaultExpandedOf } from '../utils/module-expand.util.ts';
@@ -10,8 +11,6 @@ import { moduleTreeOf } from '../utils/module-tree.util.ts';
 const OFF: ModulePhase = { kind: 'off' };
 
 const FIRST: ModuleRedraw = { kind: 'first' };
-
-const KEEP: ModuleRedraw = { kind: 'keep' };
 
 /**
  * One package's modules (spec §7.1, §7.2): Waiting for the first graph state, Loading its scan, Shown or Failed. It keeps
@@ -184,7 +183,7 @@ export class GraphModuleMode {
     const view: ModulesViewState = { ...saved, expanded };
 
     this.current = { kind: 'shown', name, found };
-    this.update(view, wasShown ? KEEP : FIRST);
+    this.update(view, wasShown ? MODULE_REDRAW_KEEP : FIRST);
   }
 
   /** Failed over a kept graph that is on screen: drawn again, so a View box or folder tap shows, the failed banner kept. */
@@ -206,7 +205,7 @@ export class GraphModuleMode {
 
     this.isSuspended = false;
 
-    if (current.kind === 'shown' && view !== null) this.update(view, KEEP);
+    if (current.kind === 'shown' && view !== null) this.update(view, MODULE_REDRAW_KEEP);
     else if (current.kind === 'failed') this.deps.screen.reshow();
     else if (current.kind === 'loading') this.reask(current.name);
   }
