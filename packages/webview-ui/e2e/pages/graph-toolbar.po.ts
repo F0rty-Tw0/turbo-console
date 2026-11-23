@@ -59,7 +59,7 @@ export class GraphToolbar {
   }
 
   /**
-   * The Panels group's Controls and Details toggles both show, or both are hidden (modules mode has no panels). Hidden
+   * The Panels group's Controls and Details toggles both show, or both are hidden (both show in every mode). Hidden
    * elements count their `aria-hidden` icon glyph in the name, so the names match as substrings.
    */
   public async expectPanelToggles(isShown: boolean): Promise<void> {
