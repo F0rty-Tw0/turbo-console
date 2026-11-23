@@ -48,6 +48,7 @@ const PACKAGE_ITEMS = [
   'turboConsole.openPackageJson inline@1',
   'turboConsole.openPackageJson 2_open@1',
   'turboConsole.revealInExplorer 2_open@2',
+  'turboConsole.showPackageModules 2_open@3',
   'turboConsole.copyPath 3_copy'
 ];
 
@@ -261,6 +262,18 @@ describe('FEATURE: tree menus by context value (spec 1c-a §4.12)', () => {
     it(`WHEN the command palette is read THEN Show All Task Graphs shows as ${JSON.stringify(expected)}`, () => {
       const keys = { 'turboConsole.active': active };
       const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('AllTaskGraphs') && whenMatches(entry.when, keys));
+
+      expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
+    });
+  });
+
+  describe.each([
+    [true, ['turboConsole.showPackageModules']],
+    [false, []]
+  ])('GIVEN the extension active is %s', (active, expected) => {
+    it(`WHEN the command palette is read THEN Show Package Modules shows as ${JSON.stringify(expected)}`, () => {
+      const keys = { 'turboConsole.active': active };
+      const shown = MENUS.commandPalette.filter((entry) => entry.command.endsWith('PackageModules') && whenMatches(entry.when, keys));
 
       expect(shown.map((entry) => entry.command)).toStrictEqual(expected);
     });

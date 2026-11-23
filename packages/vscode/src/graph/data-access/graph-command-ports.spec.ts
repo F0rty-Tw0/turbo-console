@@ -117,6 +117,24 @@ describe('FEATURE: the editor effects of Show Package Graph', () => {
 
       expect(picked).toBeUndefined();
     });
+
+    it('WHEN the user picks the second of a single pick THEN the result is its value', async () => {
+      editor.showQuickPick.mockImplementation(pickSecond);
+      const ports = portsOf();
+
+      const picked = await ports.pickOne(TASK_ITEMS, 'p');
+
+      expect(picked).toBe('api#build');
+    });
+
+    it('WHEN a single pick is shown THEN it matches descriptions, carries the placeholder and allows one row', async () => {
+      editor.showQuickPick.mockResolvedValue(undefined);
+      const ports = portsOf();
+
+      await ports.pickOne(TASK_ITEMS, 'p');
+
+      expect(editor.showQuickPick).toHaveBeenCalledExactlyOnceWith(TASK_ITEMS, { matchOnDescription: true, placeHolder: 'p' });
+    });
   });
 
   describe('GIVEN the active file', () => {

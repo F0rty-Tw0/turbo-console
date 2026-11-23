@@ -7,17 +7,19 @@ import {
   GRAPH_COMMAND,
   GRAPH_OPEN_FAILED_TEXT,
   SHOW_ALL_TASK_GRAPHS_COMMAND,
+  SHOW_MODULES_COMMAND,
   SHOW_TASK_GRAPH_COMMAND
 } from '../common/graph.const.ts';
 import { focusPackageInGraph } from '../domain-logic/focus-package-graph.ts';
 import { graphRootOf } from '../domain-logic/graph-root.ts';
 import { showAllTaskGraphs } from '../domain-logic/show-all-task-graphs.ts';
+import { showPackageModules } from '../domain-logic/show-package-modules.ts';
 import { showTaskGraph } from '../domain-logic/show-task-graph.ts';
 
 /**
  * `turboConsole.openPackageGraph`: opens the graph of the resolved root, nothing when none resolves. A panel that cannot
  * be opened is logged and the user told to see Output. `turboConsole.showTaskGraph` opens it on chosen tasks
- * (`showTaskGraph`); `turboConsole.showAllTaskGraphs` opens it on every task (`showAllTaskGraphs`). `turboConsole.focusPackageInGraph` opens it on one package (`focusPackageInGraph`). `dispose` removes
+ * (`showTaskGraph`); `turboConsole.showAllTaskGraphs` opens it on every task (`showAllTaskGraphs`). `turboConsole.focusPackageInGraph` opens it on one package (`focusPackageInGraph`). `turboConsole.showPackageModules` opens it on the modules of one package (`showPackageModules`). `dispose` removes
  * the commands and closes every panel.
  */
 export const registerGraph = (panels: GraphOpener, roots: Roots, ports: RootPickPorts, register: CommandRegistry): Disposed => {
@@ -42,15 +44,20 @@ export const registerGraph = (panels: GraphOpener, roots: Roots, ports: RootPick
   const focusPackage = (arg: unknown): void => {
     focusPackageInGraph(arg, { panels, ports });
   };
+  const showModules = async (arg: unknown): Promise<void> => {
+    await showPackageModules(arg, { roots, ports, panels });
+  };
   const command = register(GRAPH_COMMAND, openGraph);
   const taskCommand = register(SHOW_TASK_GRAPH_COMMAND, showTasks);
   const allTasksCommand = register(SHOW_ALL_TASK_GRAPHS_COMMAND, showAllTasks);
   const focusCommand = register(FOCUS_PACKAGE_COMMAND, focusPackage);
+  const modulesCommand = register(SHOW_MODULES_COMMAND, showModules);
   const dispose = (): void => {
     command.dispose();
     taskCommand.dispose();
     allTasksCommand.dispose();
     focusCommand.dispose();
+    modulesCommand.dispose();
     panels.dispose();
   };
   const registered: Disposed = { dispose };

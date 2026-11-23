@@ -6,6 +6,7 @@ export type {
   ReadyMessage,
   RefreshMessage,
   RunStateMessage,
+  ShowModulesMessage,
   ShowOutputMessage,
   StateMessage,
   TaskMessage,
