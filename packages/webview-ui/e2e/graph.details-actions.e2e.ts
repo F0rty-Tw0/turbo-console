@@ -10,8 +10,6 @@ const D5 = { description: 'M5-1 U3d1 D5', type: 'requirement' };
 
 const PACKAGES = ['app', 'lib', 'ui'];
 
-const ROW_LABELS = [FOCUS_LABEL, EXCLUDE_LABEL, START_TRACE_LABEL, SHOW_TASKS_LABEL, SHOW_MODULES_LABEL];
-
 /** Rendering rounds a grid track to a sub-pixel, so two equal columns may differ by a fraction. */
 const TOLERANCE = 1;
 
@@ -77,28 +75,20 @@ const hideButton = async (button: Locator): Promise<void> => {
   await button.evaluate((element): void => element.setAttribute('hidden', ''));
 };
 
-/** Each row button's icon is shown, or each is hidden. */
-const expectRowIcons = async (buttonOf: ButtonOf, isShown: boolean): Promise<void> => {
-  for (const label of ROW_LABELS) {
-    const icon = buttonOf(label).locator('.codicon');
-
-    await expect(icon, `the ${label} icon`).toBeVisible({ visible: isShown });
-  }
-};
-
 test.describe('FEATURE: Details package buttons in one grid', () => {
   test(
     'GIVEN app, a package with tasks, picked, its first four action buttons sit in two equal columns',
     { annotation: D5 },
-    async ({ graphHost, graphList, graphPage, graphProbe, graphTask }): Promise<void> => {
-      const buttonOf = (name: string): Locator => graphTask.detailsButton(name);
+    async ({ graphDetailsCard, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
+      const buttonOf = (name: string): Locator => graphDetailsCard.button(name);
+      const showTasks = buttonOf(SHOW_TASKS_LABEL);
 
       await test.step('WHEN the package graph is drawn and app is picked', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(TASK_MODE_STATE_STUB);
         await graphProbe.expectNodeIds(PACKAGES);
         await graphList.pick('app');
-        await expect(graphTask.showTasksButton).toBeVisible();
+        await expect(showTasks).toBeVisible();
       });
 
       await test.step('THEN Focus sits over Start trace and Exclude over Show tasks, all four as wide', async (): Promise<void> =>
@@ -109,8 +99,9 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
   test(
     'GIVEN docs, a package with no task, picked, Start trace sits beside Show modules under Focus and Exclude',
     { annotation: D5 },
-    async ({ graphHost, graphList, graphPage, graphProbe, graphTask }): Promise<void> => {
-      const buttonOf = (name: string): Locator => graphTask.detailsButton(name);
+    async ({ graphDetailsCard, graphHost, graphList, graphPage, graphProbe }): Promise<void> => {
+      const buttonOf = (name: string): Locator => graphDetailsCard.button(name);
+      const showTasks = buttonOf(SHOW_TASKS_LABEL);
 
       await test.step('WHEN the package graph with docs is drawn and docs is picked', async (): Promise<void> => {
         await graphPage.open();
@@ -119,7 +110,7 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
         await graphList.pick('docs');
       });
 
-      await test.step('THEN Show tasks is hidden', async (): Promise<void> => expect(graphTask.showTasksButton).toBeHidden());
+      await test.step('THEN Show tasks is hidden', async (): Promise<void> => expect(showTasks).toBeHidden());
 
       await test.step('AND Focus sits over Start trace and Exclude over Show modules, all four as wide', async (): Promise<void> =>
         expect.poll(async (): Promise<Checks> => twoByTwoOf(buttonOf, SHOW_MODULES_LABEL)).toStrictEqual(TWO_BY_TWO));
@@ -138,9 +129,7 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
   test(
     'GIVEN app picked, the action icons show at the default Details width and hide at its 200px minimum',
     { annotation: D5 },
-    async ({ graphHost, graphList, graphPage, graphProbe, graphSashes, graphTask }): Promise<void> => {
-      const buttonOf = (name: string): Locator => graphTask.detailsButton(name);
-
+    async ({ graphDetailsCard, graphHost, graphList, graphPage, graphProbe, graphSashes }): Promise<void> => {
       await test.step('WHEN the package graph is drawn and app is picked', async (): Promise<void> => {
         await graphPage.open();
         await graphHost.sendState(TASK_MODE_STATE_STUB);
@@ -149,18 +138,16 @@ test.describe('FEATURE: Details package buttons in one grid', () => {
         await graphSashes.expectPanelWidth('graph-details', 280);
       });
 
-      await test.step('THEN each row button shows its icon', async (): Promise<void> => expectRowIcons(buttonOf, true));
+      await test.step('THEN each row button shows its icon', async (): Promise<void> => graphDetailsCard.expectRowIcons(true));
 
       await test.step('WHEN Details gets Home', async (): Promise<void> => {
         await graphSashes.press('details', 'Home');
         await graphSashes.expectPanelWidth('graph-details', 200);
       });
 
-      await test.step('THEN each row button hides its icon', async (): Promise<void> => expectRowIcons(buttonOf, false));
+      await test.step('THEN each row button hides its icon', async (): Promise<void> => graphDetailsCard.expectRowIcons(false));
 
-      await test.step('AND each row button keeps its label', async (): Promise<void> => {
-        for (const label of ROW_LABELS) await expect(buttonOf(label)).toBeVisible();
-      });
+      await test.step('AND each row button keeps its label', async (): Promise<void> => graphDetailsCard.expectRowLabels());
     }
   );
 });

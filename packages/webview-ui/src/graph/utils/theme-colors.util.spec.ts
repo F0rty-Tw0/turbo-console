@@ -137,15 +137,15 @@ describe('FEATURE: themeColorsOf', () => {
   });
 
   describe.each([
-    ['#9d9d9d80', 'rgba(157, 157, 157, 0.5)'],
-    ['#ccc8', 'rgba(204, 204, 204, 0.53)']
-  ])('GIVEN the stopped colour %s with alpha', (hex, rgba) => {
-    it(`WHEN the colours are read THEN it reads as ${rgba}, which Cytoscape parses`, () => {
+    ['#9d9d9d80', 'rgb(94, 94, 94)'],
+    ['#ccc8', 'rgb(123, 123, 123)']
+  ])('GIVEN the stopped colour %s with alpha', (hex, opaque) => {
+    it(`WHEN the colours are read THEN it reads as ${opaque}, laid over the editor background`, () => {
       const translucent = { ...DARK, '--vscode-descriptionForeground': hex };
 
       const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
-      expect(colors.runs.stopped).toBe(rgba);
+      expect(colors.runs.stopped).toBe(opaque);
     });
   });
 
@@ -245,12 +245,55 @@ describe('FEATURE: themeColorsOf', () => {
   });
 
   describe('GIVEN an input border with alpha', () => {
-    it('WHEN the colours are read THEN the card frame reads as the rgba Cytoscape parses', () => {
-      const translucent = { ...DARK, '--vscode-input-border': '#d8d8d866' };
+    it.each([
+      ['Light 2026', '#D8D8D866', '#ffffff', 'rgb(239, 239, 239)'],
+      ['Light 2026 as VS Code hands it to a webview', 'rgba(216, 216, 216, 0.4)', '#ffffff', 'rgb(239, 239, 239)'],
+      ['dark', '#d8d8d866', '#1f1f1f', 'rgb(105, 105, 105)']
+    ])('WHEN the %s border %s over %s is read THEN the card frame is the opaque %s', (_, border, background, expected) => {
+      const translucent = { ...DARK, '--vscode-input-border': border, '--vscode-editor-background': background };
 
       const colors = themeColorsOf(cssVariableReaderMock(translucent));
 
-      expect(colors.cardFrame).toBe('rgba(216, 216, 216, 0.4)');
+      expect(colors.cardFrame).toBe(expected);
+    });
+  });
+
+  describe('GIVEN a focus border with alpha', () => {
+    it.each([
+      ['Dark 2026', '#3994BCB3', '#121314', 'rgb(45, 110, 138)'],
+      ['Dark 2026 as VS Code hands it to a webview', 'rgba(57, 148, 188, 0.7)', '#121314', 'rgb(45, 109, 138)']
+    ])('WHEN the %s border %s over %s is read THEN selected is the opaque %s', (_, border, background, expected) => {
+      const translucent = { ...DARK, '--vscode-focusBorder': border, '--vscode-editor-background': background };
+
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+      expect(colors.selected).toBe(expected);
+    });
+  });
+
+  describe('GIVEN the high contrast description colour, the foreground at 0.7, as VS Code hands it to a webview', () => {
+    const translucent = { ...HC_STUB, '--vscode-descriptionForeground': 'rgba(255, 255, 255, 0.7)' };
+
+    it('WHEN the colours are read THEN the edge is the opaque blend over the black editor', () => {
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+      expect(colors.edge).toBe('rgb(179, 179, 179)');
+    });
+
+    it('WHEN the colours are read THEN stopped is the opaque blend over the black editor', () => {
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+      expect(colors.runs.stopped).toBe('rgb(179, 179, 179)');
+    });
+  });
+
+  describe('GIVEN the Dark+ panel border #80808059', () => {
+    it('WHEN the colours are read THEN the frame is the opaque blend over the dark editor', () => {
+      const translucent = { ...DARK, '--vscode-panel-border': '#80808059' };
+
+      const colors = themeColorsOf(cssVariableReaderMock(translucent));
+
+      expect(colors.frame).toBe('rgb(65, 65, 65)');
     });
   });
 

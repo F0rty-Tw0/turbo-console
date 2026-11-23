@@ -72,7 +72,13 @@ export const createRunScratch = async (): Promise<RunScratch> => {
 };
 
 /**
- * A user-data dir under the scratch dir whose user settings hold the launch's `preset` settings and set
+ * User settings every launch starts from. VS Code 1.146 starts its chat and agent host at window open, which made the
+ * Windows timing budgets measure VS Code's startup rather than ours (activation 30 → 310 ms, warm tree 0.1 → 1.6 s).
+ */
+const BASE_SETTINGS: Readonly<Record<string, string | boolean>> = { 'chat.disableAIFeatures': true };
+
+/**
+ * A user-data dir under the scratch dir whose user settings hold `BASE_SETTINGS`, then the launch's `preset` settings, and set
  * `turboConsole.turboPath` unless it is `null`; it is a `machine`-scoped setting that a workspace's settings cannot set.
  * Writing it again for a launch that reuses the dir keeps its other state.
  */
@@ -84,7 +90,7 @@ export const userDataDirFor = async (
 ): Promise<string> => {
   const userDataDir = join(scratch.dir, name);
   const userDir = join(userDataDir, 'User');
-  const settings: Record<string, string> = { ...preset };
+  const settings: Record<string, string | boolean> = { ...BASE_SETTINGS, ...preset };
 
   if (turboPath !== null) settings['turboConsole.turboPath'] = turboPath;
 

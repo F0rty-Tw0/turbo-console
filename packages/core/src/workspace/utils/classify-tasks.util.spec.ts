@@ -40,6 +40,51 @@ describe('FEATURE: Atomizer task classification', () => {
     });
   });
 
+  describe('GIVEN a task turbo opts out: no command but a package script', () => {
+    const commandless = graphTask('a#lint', null, [], ['a#build']);
+    const optedOut: GraphTask = { ...commandless, script: COMMAND };
+
+    it('WHEN classified THEN it stays a plain task whose command is its script, marked opted out', () => {
+      const expected: ClassifiedTask = {
+        id: 'a#lint',
+        name: 'lint',
+        command: COMMAND,
+        tags: [],
+        rawDependencies: ['a#build'],
+        kind: 'task',
+        atom: null,
+        optedOut: true
+      };
+
+      const result = classifyTasks([optedOut]);
+
+      expect(result.packages[0]?.tasks).toStrictEqual([expected]);
+    });
+
+    it('WHEN classified THEN it is no phantom', () => {
+      const result = classifyTasks([BUILD, optedOut]);
+
+      expect(result.phantoms.size).toBe(0);
+    });
+  });
+
+  describe('GIVEN a task with no command whose package script is the empty string', () => {
+    const commandless = graphTask('a#lint', null, [], ['a#build']);
+    const emptyScript: GraphTask = { ...commandless, script: '' };
+
+    it('WHEN classified THEN it is dropped like a phantom', () => {
+      const result = classifyTasks([BUILD, emptyScript]);
+
+      expect(rowsOf(result)).toStrictEqual([['a#build', 'task', null]]);
+    });
+
+    it('WHEN classified THEN its raw dependencies are kept for the pass-through', () => {
+      const result = classifyTasks([BUILD, emptyScript]);
+
+      expect(result.phantoms.get('a#lint')).toStrictEqual(['a#build']);
+    });
+  });
+
   describe('GIVEN a user dependsOn-only ci task with no command', () => {
     it('WHEN classified THEN it is dropped like a phantom', () => {
       const ci = graphTask('a#ci', null, [], ['a#build']);
@@ -69,7 +114,8 @@ describe('FEATURE: Atomizer task classification', () => {
         tags: [GROUP_TAG],
         rawDependencies: ['a#build'],
         kind: 'atom-file',
-        atom: NOT_LIVE
+        atom: NOT_LIVE,
+        optedOut: false
       };
 
       const result = classifyTasks([FILE_TASK]);
@@ -107,7 +153,8 @@ describe('FEATURE: Atomizer task classification', () => {
         tags: [],
         rawDependencies: [],
         kind: 'task',
-        atom: null
+        atom: null,
+        optedOut: false
       };
 
       const result = classifyPackages([pkg]);

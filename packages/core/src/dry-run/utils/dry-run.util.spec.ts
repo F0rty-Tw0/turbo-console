@@ -14,6 +14,8 @@ const MISS = { status: 'MISS' } as const;
 
 const NONEXISTENT = '<NONEXISTENT>';
 
+const OPT_OUT = '<OPT OUT>';
+
 const INVALID_ARGUMENT = { kind: 'invalid-argument' };
 
 /** turbo's resolved definition, with a key `TaskDefinition` does not keep. */
@@ -60,6 +62,8 @@ const WEB_LINT = dryRunTask('web', 'lint', null, MISS);
 const WEB_TYPECHECK = dryRunTask('web', 'typecheck', 'b3', MISS);
 
 const WEB_PHANTOM: DryRunTask = { ...WEB_TYPECHECK, command: NONEXISTENT };
+
+const WEB_OPTED_OUT: DryRunTask = { ...WEB_TYPECHECK, command: OPT_OUT };
 
 const dryRunOf = (tasks: DryRunTask[], monorepo = true): DryRun => {
   const json: DryRun = { monorepo, tasks };
@@ -148,6 +152,16 @@ describe('FEATURE: dry-run util', () => {
         const states = toDryRunStates(json);
 
         expect(states).toStrictEqual(SORTED_STATES);
+      });
+    });
+
+    describe('GIVEN turbo lists a task its configs opt out', () => {
+      it('WHEN converted THEN the opted-out task is dropped', () => {
+        const json = dryRunOf([WEB_OPTED_OUT, WEB_BUILD]);
+
+        const states = toDryRunStates(json);
+
+        expect(states.map((state) => state.id)).toStrictEqual(['web#build']);
       });
     });
 

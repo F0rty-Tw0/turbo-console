@@ -24,6 +24,14 @@ export const commandTaskNames = (graph: PackageGraph): string[] => {
   return names.toSorted();
 };
 
+/** Sorted `fullName`s of the tasks turbo reports with a command or a script: from turbo 2.11.11 an opted-out task has only the script. */
+export const scriptedTaskNames = (graph: PackageGraph): string[] => {
+  const isScripted = (task: TurboTaskRef): boolean => task.command !== null || task.script !== null;
+  const names = graphTasks(graph).filter(isScripted).map(fullNameOf);
+
+  return names.toSorted();
+};
+
 /** Sorted `fullName`s of the tasks turbo reports with neither a command nor a script. */
 export const commandlessTaskNames = (graph: PackageGraph): string[] => {
   const isCommandless = (task: TurboTaskRef): boolean => task.command === null && task.script === null;

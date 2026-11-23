@@ -264,7 +264,7 @@ jobs:
     timeout-minutes: 20
     # Tag = catalogs.dev['@playwright/test'] in pnpm-workspace.yaml; tools/src/ci/feature/playwright-image.guard.spec.ts fails when they differ.
     container:
-      image: mcr.microsoft.com/playwright:v1.64.0-noble
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
       options: --ipc=host
     permissions:
       contents: read

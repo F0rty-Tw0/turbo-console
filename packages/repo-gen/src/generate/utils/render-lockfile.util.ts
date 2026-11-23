@@ -35,7 +35,7 @@ const importerBlock = (importer: LockfilePackage, pathByName: Map<string, string
 };
 
 /**
- * `pnpm-lock.yaml` in the shape pnpm 12.11.2 leaves after a run: its env-lockfile document, then one importer per
+ * `pnpm-lock.yaml` in the shape pnpm 12.21.0 leaves after a run: its env-lockfile document, then one importer per
  * package, sorted by path, with a `link:` entry per workspace dependency. Takes every workspace package, so atom packages can be added.
  */
 export const renderLockfile = (packages: LockfilePackage[]): FixtureFile => {

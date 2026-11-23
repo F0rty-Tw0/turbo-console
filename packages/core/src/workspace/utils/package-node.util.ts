@@ -32,15 +32,18 @@ const withoutSelf = (ids: string[], self: string): string[] => {
   return ids.filter(isOther);
 };
 
-/** `dependencies` are already resolved (rule 4). `toSorted` only: `task.tags` is the parsed graph's own array. */
+/**
+ * `dependencies` are already resolved (rule 4). `toSorted` only: `task.tags` is the parsed graph's own array. A task
+ * turbo opts out is a plain script whatever its configs say: turbo's own output outranks `turboTasksOf`.
+ */
 const toTaskNode = (
   task: ClassifiedTask,
   dependencies: string[],
   description: string | null,
   facts: TurboTaskFacts | undefined
 ): TaskNode => {
-  const isTurboTask = facts !== undefined;
-  const persistent = facts?.persistent ?? false;
+  const isTurboTask = facts !== undefined && !task.optedOut;
+  const persistent = isTurboTask && facts.persistent;
   const tags = task.tags.toSorted();
   const { id, name, command, kind, atom } = task;
   const node: TaskNode = { id, name, command, description, tags, dependencies, kind, atom, isTurboTask, persistent };

@@ -9,12 +9,15 @@ import type { DryRunRequest, DryRunState, TaskDefinition } from '../common/dry-r
 
 type DryRunTask = DryRun['tasks'][number];
 
-/** turbo's `command` for a task with no script: phantom, umbrella and aggregate tasks. */
-const NONEXISTENT = '<NONEXISTENT>';
+/**
+ * turbo's `command` for a task that does not run: `<NONEXISTENT>` for one with no script (phantom, umbrella and
+ * aggregate tasks), and from turbo 2.11.11 `<OPT OUT>` for one an `extends: false` entry of its configs opts out.
+ */
+const NOT_RUN_COMMANDS = ['<NONEXISTENT>', '<OPT OUT>'];
 
 const compareIds = (left: DryRunState, right: DryRunState): number => compareText(left.id, right.id);
 
-const hasCommand = (task: DryRunTask): boolean => task.command !== NONEXISTENT;
+const hasCommand = (task: DryRunTask): boolean => !NOT_RUN_COMMANDS.includes(task.command);
 
 const toTaskDefinition = (task: DryRunTask): TaskDefinition => {
   const { inputs, outputs, dependsOn, cache, persistent, env } = task.resolvedTaskDefinition;

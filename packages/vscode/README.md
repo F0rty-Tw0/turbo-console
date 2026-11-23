@@ -44,4 +44,4 @@ Show Affected, after an edit in one package:
 
 ## Requirements
 
-VS Code 1.139 or later. turbo 2.11.7 or a later 2.11 release, installed in the workspace (`node_modules/turbo`) or set in `turboConsole.turboPath`.
+VS Code 1.144 or later. turbo 2.11.7 or a later 2.11 release, installed in the workspace (`node_modules/turbo`) or set in `turboConsole.turboPath`.

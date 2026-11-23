@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { GraphDetailsCard } from './graph-details-card.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import {
@@ -14,7 +15,6 @@ import {
   SHOW_TASKS_LABEL,
   TASKS_MODE_LABEL
 } from '../../src/graph/common/graph-task.const.ts';
-import { DETAILS_LABEL } from '../../src/graph/common/graph.const.ts';
 import { readGraphViewState } from '../../src/graph/utils/graph-view-state.util.ts';
 import { tasksHiddenText } from '../../src/graph/utils/task-text.util.ts';
 
@@ -25,7 +25,7 @@ export class GraphTask {
   public readonly showTasksButton: Locator;
 
   private readonly page: Page;
-  private readonly aside: Locator;
+  private readonly detailsCard: GraphDetailsCard;
   private readonly menuList: Locator;
   private readonly probe: GraphProbePage;
   private readonly prompt: Locator;
@@ -48,14 +48,14 @@ export class GraphTask {
     this.bannerText = page.getByRole('status').and(page.locator('.graph-task-banner-text'));
     this.showAll = page.getByRole('button', { name: SHOW_ALL_TASKS_LABEL, exact: true });
     this.notice = page.locator('.graph-task-notice');
-    this.aside = page.getByRole('complementary', { name: DETAILS_LABEL, exact: true });
+    this.detailsCard = new GraphDetailsCard(page);
     this.showTasksButton = this.detailsButton(SHOW_TASKS_LABEL);
     this.menuList = page.getByRole('menu');
   }
 
-  /** The details panel's button named exactly `name`. */
+  /** The details panel's button named exactly `name`, owned by `GraphDetailsCard`. */
   public detailsButton(name: string): Locator {
-    return this.aside.getByRole('button', { name, exact: true });
+    return this.detailsCard.button(name);
   }
 
   /** Presses the selected task's "…" and waits for its menu. */

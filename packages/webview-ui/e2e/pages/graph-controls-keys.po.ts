@@ -67,6 +67,12 @@ export class GraphControlsKeys {
     return walked;
   }
 
+  /** Tab reaches the control named `name`: presses Tab until it holds focus, fails after 25 presses, then asserts its name. */
+  public async expectTabReaches(name: string): Promise<void> {
+    await this.tabTo(name);
+    await this.expectFocusedName(name);
+  }
+
   public async expectFocusedName(name: string): Promise<void> {
     await expect(this.focused).toHaveAccessibleName(name);
   }

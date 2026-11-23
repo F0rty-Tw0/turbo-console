@@ -129,7 +129,7 @@ const recordedCommandOf = (launched: Launched | null): string => {
   return runCommandOf(launched.run);
 };
 
-describe('FEATURE: run options against turbo 2.11.7', () => {
+describe('FEATURE: run options against the dev turbo', () => {
   const fixture = fixtureHook(TARGET_LIKE);
 
   beforeAll(async () => {

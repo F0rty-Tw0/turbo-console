@@ -65,6 +65,11 @@ export class GraphTaskAffected {
     await expect.poll(async (): Promise<number> => this.haloOf(id)).toBeCloseTo(opacity, HALO_DIGITS);
   }
 
+  /** Polls until the halo under each task in `ids` has `opacity`, one task after the other. */
+  public async expectHalos(ids: string[], opacity: number): Promise<void> {
+    for (const id of ids) await this.expectHalo(id, opacity);
+  }
+
   private async haloOf(id: string): Promise<number> {
     const nodes = await this.probe.nodes();
     const node = nodes.find((candidate) => candidate.id === id);

@@ -21,3 +21,4 @@ This build is published as `turbo-console-dev.turbo-console`. A later Marketplac
 - Show Cache Prediction and Show Affected: overlays that mark which tasks turbo would replay from cache and which packages your changes affect.
 - Copy Command puts the turbo command for a task on the clipboard, quoted for your terminal's shell.
 - Help and Feedback view: links to the project page, the bug tracker and the Turborepo docs.
+- Requires VS Code 1.144 or later.

@@ -170,10 +170,9 @@ test.describe('FEATURE: folder header toggle', () => {
       await graphGrouping.expectGrouped(false);
     });
 
-    await test.step('THEN the list is one Tab stop and Tab reaches the first group checkbox again', async (): Promise<void> => {
-      await graphKeys.expectListTabStops(1);
-      await graphKeys.tabTo('apps (2)');
-    });
+    await test.step('THEN the list is one Tab stop', async (): Promise<void> => graphKeys.expectListTabStops(1));
+
+    await test.step('AND Tab reaches apps (2) again', async (): Promise<void> => graphKeys.expectTabReaches('apps (2)'));
   });
 
   test(

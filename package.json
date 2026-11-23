@@ -15,11 +15,12 @@
     "jiti": "catalog:dev",
     "lint-suite": "catalog:dev",
     "prettier": "catalog:dev",
+    "supports-color": "catalog:dev",
     "turbo": "catalog:dev",
     "typescript": "catalog:dev",
     "typescript-eslint": "catalog:dev",
     "typescript7": "catalog:dev",
     "vitest": "catalog:dev"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.21.0"
 }

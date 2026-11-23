@@ -12,6 +12,6 @@ What it does, with more screenshots: [packages/vscode/README.md](packages/vscode
 
 ## Developer notes
 
-- `engines.vscode`: `^1.139.0` (VS Code stable 1.141.0 minus two minors, checked 2026-10-11)
-- `@types/vscode`: `1.138.0` (no 1.139.x release exists; 1.138.0 is the newest that does not exceed `engines.vscode`)
-- `@types/vscode` is pinned literally (not via the catalog) because vsce 4.0.0 cannot parse `catalog:` and fails with "Failed to parse semver of @types/vscode".
+- `engines.vscode`: `^1.144.0` (VS Code stable 1.146.0 minus two minors, checked 2026-11-22; 1.147.0 was 5 days old)
+- `@types/vscode`: `1.144.0` (matches `engines.vscode`; vsce rejects `@types/vscode` newer than the engine)
+- `@types/vscode` is pinned literally (not via the catalog) because vsce 4.1.1 cannot parse `catalog:` and fails with "Failed to parse semver of @types/vscode".

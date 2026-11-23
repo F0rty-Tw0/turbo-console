@@ -18,7 +18,7 @@ export const DEFINITIONS_TAG = 'atomizer:definitions';
 
 export const LIVE_TAG = 'atomizer:live';
 
-export const FIXTURE_PACKAGE_MANAGER = 'pnpm@12.11.2';
+export const FIXTURE_PACKAGE_MANAGER = 'pnpm@12.21.0';
 
 /**
  * Folded into the fixture cache key next to the rendered files. Bump it whenever the git step changes (branch, commit

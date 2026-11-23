@@ -10,13 +10,25 @@ import type { PersistentVariant } from './test/common/persistent-fixture.type.ts
 import { writePersistentFixture } from './test/utils/persistent-fixture.spec.util.ts';
 import { queryTurbo } from '../shared/turbo/data-access/query-turbo.ts';
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
-import { commandTaskNames } from '../shared/turbo/test/utils/package-graph.spec.util.ts';
+import { scriptedTaskNames } from '../shared/turbo/test/utils/package-graph.spec.util.ts';
+import { optsOutExcludedTasks } from '../shared/turbo/test/utils/turbo-opt-out.spec.util.ts';
 
 /** Every task name a fixture package has a script for: one dry run of all of them covers every package. */
 const ALL_TASKS = ['build', 'dev', 'serve', 'watch', 'lint', 'start', 'zap', 'keep', 'z2', 'z3'];
 
 /** Scripts whose task an `extends: false` entry of the target's chain drops: turbo query lists them, turbo run does not. */
 const NOT_TURBO_IDS = ['web1#zap', 'web2#zap', 'web4#zap', 'web7#z3', 'web8#z2'];
+
+/** Tasks the chain defines that turbo 2.11.11+ opts out, since a parent's `extends: false` outranks the root's key. */
+const OPTED_OUT_IDS = ['web1#lint', 'web3#zap', 'web5#lint', 'web7#z2', 'web8#z3'];
+
+const notTurboIdsOf = (binary: TurboBinary): string[] => {
+  const optsOut = optsOutExcludedTasks(binary.version);
+  const withOptedOut = [...NOT_TURBO_IDS, ...OPTED_OUT_IDS];
+  const ids = optsOut ? withOptedOut : NOT_TURBO_IDS;
+
+  return ids.toSorted();
+};
 
 /** The task P1d's root `@p/b#dev` key changes: `true` from the bare root `dev` in P1, `false` from the key in P1d. */
 const P1D_TASK_ID = '@p/b#dev';
@@ -45,7 +57,7 @@ const taskPersistent = (task: TaskNode): [string, boolean] => [task.id, task.per
 
 const statePersistent = (state: DryRunState): [string, boolean] => [state.id, state.definition.persistent];
 
-describe('FEATURE: persistent and isTurboTask against turbo 2.11.7', () => {
+describe('FEATURE: persistent and isTurboTask against the dev turbo', () => {
   let tempDir = '';
 
   beforeAll(async () => {
@@ -57,14 +69,15 @@ describe('FEATURE: persistent and isTurboTask against turbo 2.11.7', () => {
   });
 
   describe.each(VARIANTS)('GIVEN the spec §5.2 probe fixture with the %s root config', (variant, bDevPersistent) => {
+    let binary: TurboBinary;
     let graph: PackageGraph;
     let model: WorkspaceModel;
     let states: DryRunState[];
 
     beforeAll(async () => {
       const root = await writePersistentFixture(tempDir, variant);
-      const binary = await resolveTurbo(root, { trusted: true, overridePath: devTurboPath() });
 
+      binary = await resolveTurbo(root, { trusted: true, overridePath: devTurboPath() });
       graph = await graphOf(binary);
       model = await loadWorkspace(binary);
       states = await readDryRun(binary, { tasks: ALL_TASKS });
@@ -73,7 +86,7 @@ describe('FEATURE: persistent and isTurboTask against turbo 2.11.7', () => {
     it('WHEN loaded THEN the model holds every task the package-graph query lists', () => {
       const ids = tasksOf(model).map(idOf);
 
-      expect(ids.toSorted()).toStrictEqual(commandTaskNames(graph));
+      expect(ids.toSorted()).toStrictEqual(scriptedTaskNames(graph));
     });
 
     it('WHEN loaded THEN the turbo tasks are the ones a dry run of every name returns', () => {
@@ -83,10 +96,10 @@ describe('FEATURE: persistent and isTurboTask against turbo 2.11.7', () => {
       expect(ids.toSorted()).toStrictEqual(stateIds.toSorted());
     });
 
-    it('WHEN loaded THEN only the scripts a chain excludes are not turbo tasks', () => {
+    it('WHEN loaded THEN only the scripts a chain excludes, or turbo opts out, are not turbo tasks', () => {
       const ids = tasksOf(model).filter(isNotTurbo).map(idOf);
 
-      expect(ids.toSorted()).toStrictEqual(NOT_TURBO_IDS.toSorted());
+      expect(ids.toSorted()).toStrictEqual(notTurboIdsOf(binary));
     });
 
     it('WHEN loaded THEN each turbo task is persistent exactly when the dry run resolves it so', () => {

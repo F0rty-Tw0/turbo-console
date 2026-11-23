@@ -53,10 +53,10 @@ const PAN_FRAMES = 120;
 const GROUPED_FIRST_FRAME_MS = IS_WINDOWS_RUNNER || IS_MAC_RUNNER ? 3000 : 2000;
 
 /**
- * About 320 ms pinned with tracing off; Cytoscape 3.34.4 unpatched reads about 1500 ms (folder boxes re-styled every
- * frame), so the budget sits between them with room for CI runners that measure up to 3.4x slower (macOS reads up to
- * 4.4x, see `IS_MAC_RUNNER`). The 120 px box zoom (about 0.21) is below the header rows' 0.5 floor, so no widget moves
- * in this pan.
+ * About 320 ms pinned with tracing off; Cytoscape 3.34.4 unpatched read about 1500 ms (folder boxes re-styled every
+ * frame, fixed upstream in 3.35.0), so the budget sits between them with room for CI runners that measure up to 3.4x
+ * slower (macOS reads up to 4.4x, see `IS_MAC_RUNNER`). The 120 px box zoom (about 0.21) is below the header rows' 0.5
+ * floor, so no widget moves in this pan.
  */
 const GROUPED_PAN_MS = IS_MAC_RUNNER ? 2400 : 1100;
 
@@ -102,11 +102,11 @@ test.describe('FEATURE: graph tripwires', () => {
 
     await test.step('AND the target-like state is sent', async (): Promise<void> => graphHost.sendState(targetLikeState()));
 
-    await test.step('THEN the first frame came in under 2000 ms', async (): Promise<void> =>
-      graphLook.expectFirstFrameUnder(FLAT_FIRST_FRAME_MS));
-
     await test.step('AND the ELK time and the main.js size are recorded', async (): Promise<void> =>
       graphHost.recordBundleAndLayout());
+
+    await test.step('THEN the first frame came in under 2000 ms', async (): Promise<void> =>
+      graphLook.expectFirstFrameUnder(FLAT_FIRST_FRAME_MS));
   });
 
   test('GIVEN a target-like graph, the median of three scripted 2 s pans uses under 1.5 s of main-thread CPU and a median costliest step under 50 ms', async ({

@@ -38,7 +38,7 @@ const buildIn = async (dir: string, options: RunTaskOptions): Promise<RunToMatch
   return run;
 };
 
-describe('FEATURE: a forced run against turbo 2.11.7', () => {
+describe('FEATURE: a forced run against the dev turbo', () => {
   let dir = '';
   let plainRun: RunToMatch;
   let second: RunMatch | null = null;

@@ -148,7 +148,7 @@ test.describe('FEATURE: graph task flow', () => {
 
         await test.step('AND the OS asks for reduced motion', async (): Promise<void> => graphFlow.reduceMotion());
 
-        await test.step('THEN the overlay clears', async (): Promise<void> => graphFlow.waitForClear());
+        await test.step('THEN the overlay clears', async (): Promise<void> => graphFlow.expectClearedByTicks());
       }
     );
 

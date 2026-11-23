@@ -1,8 +1,8 @@
 diff --git a/dist/cytoscape.cjs.js b/dist/cytoscape.cjs.js
-index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..7ff3d4755b785577b4c7d8ca3e2ae849f93b228b 100644
+index a2562b845cc8a80a9ae16ac0fabf34331fb3534f..ae6b382ddb1ee190eb02b9a537e306059a1312c9 100644
 --- a/dist/cytoscape.cjs.js
 +++ b/dist/cytoscape.cjs.js
-@@ -11983,6 +11983,10 @@ elesfn$b.boundingBox = function (options) {
+@@ -12141,6 +12141,10 @@ elesfn$b.boundingBox = function (options) {
      this.edges().forEach(isDirty);
      this.nodes().forEach(isDirty);
      if (styleEnabled) {
@@ -13,7 +13,7 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..7ff3d4755b785577b4c7d8ca3e2ae849
        this.recalculateRenderedStyle(useCache);
      }
      this.updateCompoundBounds(!useCache);
-@@ -13611,10 +13615,9 @@ var elesfn$4 = {
+@@ -13887,10 +13891,9 @@ var elesfn$4 = {
        if (!hasCompoundNodes) {
          return parentOpacity;
        }
@@ -27,7 +27,7 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..7ff3d4755b785577b4c7d8ca3e2ae849
            var opacity = parent.pstyle('opacity').value;
            parentOpacity = opacity * parentOpacity;
          }
-@@ -13648,10 +13651,9 @@ var elesfn$4 = {
+@@ -13924,10 +13927,9 @@ var elesfn$4 = {
  };
  function checkCompound(ele, parentOk) {
    var _p = ele._private;
@@ -41,25 +41,7 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..7ff3d4755b785577b4c7d8ca3e2ae849
        if (!parentOk(parent)) {
          return false;
        }
-@@ -14743,7 +14745,7 @@ elesfn$1.remove = function () {
-   var removeFromPool = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-   var self = this;
-   var elesToRemove = [];
--  var elesToRemoveIds = {};
-+  var elesToRemoveIds = Object.create(null); // patched: an id such as `constructor` or `__proto__` must not read an inherited key
-   var cy = self._private.cy;
- 
-   // add connected edges
-@@ -14797,7 +14799,7 @@ elesfn$1.remove = function () {
-     pllEdge.clearTraversalCache();
-   }
-   var alteredParents = [];
--  alteredParents.ids = {};
-+  alteredParents.ids = Object.create(null); // patched, as above
-   function removeChildRef(parent, ele) {
-     ele = ele[0];
-     parent = parent[0];
-@@ -25461,8 +25463,10 @@ BRp$7.registerCalculationListeners = function () {
+@@ -25847,8 +25849,10 @@ BRp$7.registerCalculationListeners = function () {
            fn(willDraw, elesToUpdate);
          }
        }
@@ -71,20 +53,11 @@ index 56e9ecb3ff885fc79708f1a0f54d99b44604794d..7ff3d4755b785577b4c7d8ca3e2ae849
      }
    };
    r.flushRenderedStyleQueue = function () {
-@@ -30804,6 +30808,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
-     var prevBging = _p.backgrounding;
-     var totalCompleted = 0;
-     for (var _i = 0; _i < image.length; _i++) {
-+      // patched: a 'none' url is not an image; counting it in the outside pass flips backgrounding and re-styles every frame
-+      if (!urlDefined[_i]) continue;
-       var bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', _i);
-       if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
-         totalCompleted++;
 diff --git a/dist/cytoscape.esm.mjs b/dist/cytoscape.esm.mjs
-index 98ca0ed0a971159db005a0ae80da1dac080d9ade..fc4a0670c8fcbf8fcd6ad1e0aa4ce540911991f7 100644
+index 4b7cd162da9d60f25702153f09b6f3876de94e80..fc886b4c9728440892090423593ac97e2000d496 100644
 --- a/dist/cytoscape.esm.mjs
 +++ b/dist/cytoscape.esm.mjs
-@@ -11981,6 +11981,10 @@ elesfn$b.boundingBox = function (options) {
+@@ -12139,6 +12139,10 @@ elesfn$b.boundingBox = function (options) {
      this.edges().forEach(isDirty);
      this.nodes().forEach(isDirty);
      if (styleEnabled) {
@@ -95,7 +68,7 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..fc4a0670c8fcbf8fcd6ad1e0aa4ce540
        this.recalculateRenderedStyle(useCache);
      }
      this.updateCompoundBounds(!useCache);
-@@ -13609,10 +13613,9 @@ var elesfn$4 = {
+@@ -13885,10 +13889,9 @@ var elesfn$4 = {
        if (!hasCompoundNodes) {
          return parentOpacity;
        }
@@ -109,7 +82,7 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..fc4a0670c8fcbf8fcd6ad1e0aa4ce540
            var opacity = parent.pstyle('opacity').value;
            parentOpacity = opacity * parentOpacity;
          }
-@@ -13646,10 +13649,9 @@ var elesfn$4 = {
+@@ -13922,10 +13925,9 @@ var elesfn$4 = {
  };
  function checkCompound(ele, parentOk) {
    var _p = ele._private;
@@ -123,25 +96,7 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..fc4a0670c8fcbf8fcd6ad1e0aa4ce540
        if (!parentOk(parent)) {
          return false;
        }
-@@ -14741,7 +14743,7 @@ elesfn$1.remove = function () {
-   var removeFromPool = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-   var self = this;
-   var elesToRemove = [];
--  var elesToRemoveIds = {};
-+  var elesToRemoveIds = Object.create(null); // patched: an id such as `constructor` or `__proto__` must not read an inherited key
-   var cy = self._private.cy;
- 
-   // add connected edges
-@@ -14795,7 +14797,7 @@ elesfn$1.remove = function () {
-     pllEdge.clearTraversalCache();
-   }
-   var alteredParents = [];
--  alteredParents.ids = {};
-+  alteredParents.ids = Object.create(null); // patched, as above
-   function removeChildRef(parent, ele) {
-     ele = ele[0];
-     parent = parent[0];
-@@ -25459,8 +25461,10 @@ BRp$7.registerCalculationListeners = function () {
+@@ -25845,8 +25847,10 @@ BRp$7.registerCalculationListeners = function () {
            fn(willDraw, elesToUpdate);
          }
        }
@@ -153,20 +108,11 @@ index 98ca0ed0a971159db005a0ae80da1dac080d9ade..fc4a0670c8fcbf8fcd6ad1e0aa4ce540
      }
    };
    r.flushRenderedStyleQueue = function () {
-@@ -30802,6 +30806,8 @@ CRp$6.drawNode = function (context, node, shiftToOriginWithBb) {
-     var prevBging = _p.backgrounding;
-     var totalCompleted = 0;
-     for (var _i = 0; _i < image.length; _i++) {
-+      // patched: a 'none' url is not an image; counting it in the outside pass flips backgrounding and re-styles every frame
-+      if (!urlDefined[_i]) continue;
-       var bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', _i);
-       if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
-         totalCompleted++;
 diff --git a/dist/cytoscape.umd.js b/dist/cytoscape.umd.js
-index b7d4dabff383755c8cda3021b719b2f0064e8896..48cb5daa379ac39a5c04a0dba58d610ae2adb5ae 100644
+index af67ea46e043233d17eacc6979a22157f7b90425..a0a4cca432578b54ecd6bc85f01f1c69f207be9e 100644
 --- a/dist/cytoscape.umd.js
 +++ b/dist/cytoscape.umd.js
-@@ -11987,6 +11987,10 @@
+@@ -12145,6 +12145,10 @@
        this.edges().forEach(isDirty);
        this.nodes().forEach(isDirty);
        if (styleEnabled) {
@@ -177,7 +123,7 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..48cb5daa379ac39a5c04a0dba58d610a
          this.recalculateRenderedStyle(useCache);
        }
        this.updateCompoundBounds(!useCache);
-@@ -13615,10 +13619,9 @@
+@@ -13891,10 +13895,9 @@
          if (!hasCompoundNodes) {
            return parentOpacity;
          }
@@ -191,7 +137,7 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..48cb5daa379ac39a5c04a0dba58d610a
              var opacity = parent.pstyle('opacity').value;
              parentOpacity = opacity * parentOpacity;
            }
-@@ -13652,10 +13655,9 @@
+@@ -13928,10 +13931,9 @@
    };
    function checkCompound(ele, parentOk) {
      var _p = ele._private;
@@ -205,25 +151,7 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..48cb5daa379ac39a5c04a0dba58d610a
          if (!parentOk(parent)) {
            return false;
          }
-@@ -14747,7 +14749,7 @@
-     var removeFromPool = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-     var self = this;
-     var elesToRemove = [];
--    var elesToRemoveIds = {};
-+    var elesToRemoveIds = Object.create(null); // patched: an id such as `constructor` or `__proto__` must not read an inherited key
-     var cy = self._private.cy;
- 
-     // add connected edges
-@@ -14801,7 +14803,7 @@
-       pllEdge.clearTraversalCache();
-     }
-     var alteredParents = [];
--    alteredParents.ids = {};
-+    alteredParents.ids = Object.create(null); // patched, as above
-     function removeChildRef(parent, ele) {
-       ele = ele[0];
-       parent = parent[0];
-@@ -25465,8 +25467,10 @@ var printLayoutInfo;
+@@ -25851,8 +25853,10 @@ var printLayoutInfo;
              fn(willDraw, elesToUpdate);
            }
          }
@@ -235,20 +163,11 @@ index b7d4dabff383755c8cda3021b719b2f0064e8896..48cb5daa379ac39a5c04a0dba58d610a
        }
      };
      r.flushRenderedStyleQueue = function () {
-@@ -30808,6 +30812,8 @@ var printLayoutInfo;
-       var prevBging = _p.backgrounding;
-       var totalCompleted = 0;
-       for (var _i = 0; _i < image.length; _i++) {
-+        // patched: a 'none' url is not an image; counting it in the outside pass flips backgrounding and re-styles every frame
-+        if (!urlDefined[_i]) continue;
-         var bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', _i);
-         if (inside && bgContainment === 'over' || !inside && bgContainment === 'inside') {
-           totalCompleted++;
 diff --git a/src/collection/dimensions/bounds.mjs b/src/collection/dimensions/bounds.mjs
-index 490e0f171d554051523595d9c7d9c92ac2ff5f11..40bacb71fc5088165a5d63981460b596cd66f66b 100644
+index 465e702bf70b29a2acbb3af672604290b8fad2fe..24915adc9f4f294b42d4cda35df85bd4b2bb3898 100644
 --- a/src/collection/dimensions/bounds.mjs
 +++ b/src/collection/dimensions/bounds.mjs
-@@ -935,6 +935,10 @@ elesfn.boundingBox = function( options ){
+@@ -1012,6 +1012,10 @@ elesfn.boundingBox = function( options ){
      this.nodes().forEach(isDirty);
  
      if(styleEnabled) {
@@ -259,28 +178,6 @@ index 490e0f171d554051523595d9c7d9c92ac2ff5f11..40bacb71fc5088165a5d63981460b596
        this.recalculateRenderedStyle(useCache);
      }
  
-diff --git a/src/collection/index.mjs b/src/collection/index.mjs
-index 0330661a8d2a5af043d0594a1c84782a7e193c20..fa25df6ef16015f7bb7903a869c2e087f67175a6 100644
---- a/src/collection/index.mjs
-+++ b/src/collection/index.mjs
-@@ -586,7 +586,7 @@ elesfn.inside = function(){
- elesfn.remove = function( notifyRenderer = true, removeFromPool = true ){
-   let self = this;
-   let elesToRemove = [];
--  let elesToRemoveIds = {};
-+  let elesToRemoveIds = Object.create(null); // patched, see dist
-   let cy = self._private.cy;
- 
-   // add connected edges
-@@ -648,7 +648,7 @@ elesfn.remove = function( notifyRenderer = true, removeFromPool = true ){
-   }
- 
-   let alteredParents = [];
--  alteredParents.ids = {};
-+  alteredParents.ids = Object.create(null); // patched, see dist
- 
-   function removeChildRef( parent, ele ){
-     ele = ele[0];
 diff --git a/src/collection/style.mjs b/src/collection/style.mjs
 index 1639068d7b96c2247f37be84144fcdf912fbcc5f..70df55114c5c0e4c1dde99fe22d071c544b2aa64 100644
 --- a/src/collection/style.mjs
@@ -332,15 +229,3 @@ index 563b687e07e212a17e4728c3ad88dd4ef540251d..cb8d862e6c525d1dd0d6657874a79c8f
      }
    };
  
-diff --git a/src/extensions/renderer/canvas/drawing-nodes.mjs b/src/extensions/renderer/canvas/drawing-nodes.mjs
-index 18b0f33b9d79fc0257a66803aa774052bf693211..3ad02769b9b3384e4d114bed00e3dac108b9de07 100644
---- a/src/extensions/renderer/canvas/drawing-nodes.mjs
-+++ b/src/extensions/renderer/canvas/drawing-nodes.mjs
-@@ -177,6 +177,7 @@ CRp.drawNode = function( context, node, shiftToOriginWithBb, drawLabel = true, s
-     let totalCompleted = 0;
- 
-     for( let i = 0; i < image.length; i++ ){
-+      if( !urlDefined[i] ){ continue; } // patched, see dist
-       const bgContainment = node.cy().style().getIndexedStyle(node, 'background-image-containment', 'value', i);
-       if( inside && bgContainment === 'over' || !inside && bgContainment === 'inside' ){
-         totalCompleted++;

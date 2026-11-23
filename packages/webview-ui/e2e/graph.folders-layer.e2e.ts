@@ -37,13 +37,16 @@ test.describe('FEATURE: folder widget layer', () => {
     async ({ graphFolderInspect, graphWidgets }): Promise<void> => {
       await test.step('WHEN the grouped boards page is opened', async (): Promise<void> => graphFolderInspect.open(grouped(), BOARDS));
 
-      for (const folder of ['apps', 'packages']) {
-        await test.step(`THEN the ${folder} chevron is 8 px from the left and 4 px below the top`, async (): Promise<void> =>
-          graphWidgets.expectChevronOnBox(folder));
+      await test.step('THEN the apps chevron is 8 px from the left and 4 px below the top', async (): Promise<void> =>
+        graphWidgets.expectChevronOnBox('apps'));
 
-        await test.step(`AND the ${folder} "…" is 8 px from the right`, async (): Promise<void> =>
-          graphWidgets.expectEllipsisOnBox(folder));
-      }
+      await test.step('AND the apps "…" is 8 px from the right', async (): Promise<void> => graphWidgets.expectEllipsisOnBox('apps'));
+
+      await test.step('AND the packages chevron is 8 px from the left and 4 px below the top', async (): Promise<void> =>
+        graphWidgets.expectChevronOnBox('packages'));
+
+      await test.step('AND the packages "…" is 8 px from the right', async (): Promise<void> =>
+        graphWidgets.expectEllipsisOnBox('packages'));
     }
   );
 

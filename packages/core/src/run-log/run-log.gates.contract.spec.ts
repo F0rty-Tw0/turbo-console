@@ -31,7 +31,7 @@ const LIB_SEEN: RunLogEvent = { kind: 'seen', taskId: LIB_BUILD };
 const POLL = { timeout: 30_000, interval: 100 };
 const IS_WINDOWS = process.platform === 'win32';
 
-describe('FEATURE: turbo 2.11.7 structured log gates for live run progress (U7 D2)', () => {
+describe('FEATURE: structured log gates for live run progress against the dev turbo (U7 D2)', () => {
   const repos: RunLogRepo[] = [];
 
   const newRepo = async (): Promise<RunLogRepo> => {

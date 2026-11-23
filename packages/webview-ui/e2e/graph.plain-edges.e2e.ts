@@ -1,5 +1,3 @@
-import { expect } from '@playwright/test';
-
 import type { PlainEdgeState } from './common/graph-folder-links.type.ts';
 import { test as base } from './graph.fixture.ts';
 import { GraphPlainEdges } from './pages/graph-plain-edges.po.ts';
@@ -33,9 +31,6 @@ const BOX_FILL = rgbOfHex(THEME_DARK_STUB.vars['--vscode-editor-background'] ?? 
 
 const EDGE_INK = rgbOfHex(THEME_DARK_STUB.vars['--vscode-descriptionForeground'] ?? '');
 
-/** The least share of the way from the box fill to the edge colour the line's inkiest pixel reaches: a 0.75 px line is anti-aliased. */
-const MIN_INK = 0.25;
-
 const STATES: PlainEdgeState[] = [
   { name: 'every folder expanded', collapsed: [], shown: 'none' },
   { name: 'libs/ui alone collapsed', collapsed: [LIBS_UI], shown: 'some' }
@@ -66,15 +61,8 @@ test.describe('FEATURE: every edge draws as a plain bezier over the folder boxes
       await test.step('THEN every drawn package edge and folder link is a bezier at card depth', async (): Promise<void> =>
         graphPlainEdges.expectEveryLinePlain(shown));
 
-      await test.step('AND the data-queue to data-cache line shows over the libs box fill', async (): Promise<void> => {
-        const inkOf = async (): Promise<number> => graphPlainEdges.inkOnEdge(INNER.source, INNER.target, BOX_FILL, EDGE_INK);
-
-        await expect.poll(inkOf, { message: 'no edge ink at the line midpoint inside the libs box' }).toBeGreaterThanOrEqual(MIN_INK);
-
-        const ink = await inkOf();
-
-        test.info().annotations.push({ type: 'edge-ink', description: `${name}: ${ink.toFixed(2)}` });
-      });
+      await test.step('AND the data-queue to data-cache line shows over the libs box fill', async (): Promise<void> =>
+        graphPlainEdges.expectInkOnEdge(INNER, BOX_FILL, EDGE_INK, name));
     });
 
   test('GIVEN the U0 workspace grouped with every folder expanded THEN some package edge crosses a folder box that holds neither of its ends', async ({

@@ -132,10 +132,9 @@ test.describe('FEATURE: folder names and keys', () => {
 
     await test.step('WHEN Group by folder is unchecked', async (): Promise<void> => graphGrouping.setGrouped(false));
 
-    await test.step('THEN the list is one Tab stop and Tab reaches the apps group checkbox again', async (): Promise<void> => {
-      await graphKeys.expectListTabStops(1);
-      await graphKeys.tabTo('apps (2)');
-    });
+    await test.step('THEN the list is one Tab stop', async (): Promise<void> => graphKeys.expectListTabStops(1));
+
+    await test.step('AND Tab reaches apps (2) again', async (): Promise<void> => graphKeys.expectTabReaches('apps (2)'));
   });
 
   test(

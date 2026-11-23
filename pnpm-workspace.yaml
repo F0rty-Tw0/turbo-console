@@ -4,59 +4,60 @@ packages:
 
 catalogs:
   runtime:
-    cytoscape: '3.34.4'
-    elkjs: '0.12.0'
+    cytoscape: '3.35.0'
+    elkjs: '0.12.1'
     jsonc-parser: '^3.3.1'
     yaml: '^2.9.1'
-    zod: '^4.6.5'
+    zod: '^4.6.7'
   peer:
     '@playwright/test': '>=1.56.0'
     turbo: '>=2.11.7 <2.12.0'
   dev:
-    '@playwright/test': '1.64.0'
+    '@playwright/test': '1.65.1'
     '@types/node': '24.19.2'
     '@types/svg2ttf': '5.0.3'
     '@vscode/codicons': '0.0.45'
     '@vscode/test-electron': '3.1.0'
-    '@vscode/vsce': '4.0.0'
+    '@vscode/vsce': '4.1.1'
     esbuild: '0.28.2'
-    eslint: '10.12.0'
+    eslint: '10.15.0'
     jiti: '2.7.0'
-    lint-suite: '2.2.0'
-    ovsx: '1.3.0'
-    prettier: '3.9.10'
-    simple-icons: '16.35.0'
+    lint-suite: '3.0.2'
+    ovsx: '1.4.0'
+    prettier: '3.10.1'
+    simple-icons: '16.37.0'
     svg2ttf: '6.1.0'
     svgicons2svgfont: '16.0.0'
-    turbo: '2.11.7'
+    # Root-only pin for debug's optional supports-color peer. chalk 4 brings 7.2.0 and stylelint's supports-hyperlinks
+    # brings 10.2.2, so without it the root and the packages resolved different peers and eslint, typescript-eslint,
+    # lint-suite and stylelint installed twice. Peers resolve from the workspace root first, so one variant installs.
+    supports-color: '10.2.2'
+    turbo: '2.11.13'
     # TS 6 stays for typescript-eslint and editors; TS 7 runs typecheck and declaration emit.
     typescript: '6.0.3'
     typescript7: 'npm:typescript@7.0.2'
-    # Matches lint-suite 2.2.0's own pin, so one copy is installed.
-    typescript-eslint: '8.69.0'
-    vitest: '5.0.3'
+    # Matches lint-suite 3.0.2's own pin, so one copy is installed.
+    typescript-eslint: '8.71.1'
+    vitest: '5.1.0'
 
 catalogMode: strict
 
 allowBuilds:
   esbuild: true
-  # nx still arrives through lint-suite -> @nx/eslint-plugin; removing this entry fails install with ERR_PNPM_IGNORED_BUILDS.
-  nx: false
   unrs-resolver: true
-  # @vscode/vsce 4.0.0 packages without its postinstall; without this entry adding @vscode/vsce fails with ERR_PNPM_IGNORED_BUILDS.
+  # @vscode/vsce 4.1.1 packages without its postinstall; without this entry adding @vscode/vsce fails with ERR_PNPM_IGNORED_BUILDS.
   '@vscode/vsce-sign': false
 
 patchedDependencies:
-  # drawImages counts a `background-image: none` slot as loaded in its outside pass only, so `backgrounding` flips and
-  # every directly drawn node (folder boxes) re-styles itself each frame; a grouped pan cost twice the CPU of a flat one.
-  # remove() keeps its ids in plain objects, so an element named `constructor` or `__proto__` was skipped by `remove()`
-  # and `move()` (it never joined its folder box); the patch makes both maps prototype-free.
-  # visible(), takesUpSpace(), interactive() and effectiveOpacity() built a parents() collection per element read, the
-  # largest part of a profiled 632 ms `:visible` framed set on the stretch S open; the patch walks the same parent refs.
-  # The rendered style flush emptied its queue after recalculating, dropping the nodes a compound bounds update re-queued
-  # meanwhile, so their edges stayed dirty and every endpoint read on the u9 hover recomputed projections (+21 % hover
-  # CPU); the patch takes the queue before recalculating, so they flush next time.
-  # boundingBox() recalculated the rendered style before it dirtied style-dirty elements, so a label changed in the same
-  # tick kept its old label bounds (a card's label box stayed narrower than its two rows); the patch unCleans them first.
-  # Drop the patch once a cytoscape release fixes all five; a version bump fails install until then.
-  cytoscape@3.34.4: patches/cytoscape@3.34.4.patch
+  # https://github.com/cytoscape/cytoscape.js/issues/3599: visible(), takesUpSpace(), interactive() and
+  # effectiveOpacity() built a parents() collection per element read, the largest part of a profiled 632 ms `:visible`
+  # framed set on the stretch S open; the patch walks the same parent refs.
+  # https://github.com/cytoscape/cytoscape.js/issues/3600: the rendered style flush emptied its queue after
+  # recalculating, dropping the nodes a compound bounds update re-queued meanwhile, so their edges stayed dirty and every
+  # endpoint read on the u9 hover recomputed projections (+21 % hover CPU); the patch takes the queue before
+  # recalculating, so they flush next time.
+  # https://github.com/cytoscape/cytoscape.js/issues/3601: boundingBox() recalculated the rendered style before it
+  # dirtied style-dirty elements, so a label changed in the same tick kept its old label bounds (a card's label box
+  # stayed narrower than its two rows); the patch unCleans them first.
+  # Drop the patch once a cytoscape release fixes all three; a version bump fails install until then.
+  cytoscape@3.35.0: patches/cytoscape@3.35.0.patch

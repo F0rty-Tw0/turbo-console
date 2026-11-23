@@ -11,6 +11,7 @@ import type { DryRunState, TaskNode, TurboBinary, WorkspaceModel } from '../inde
 import { devTurboPath } from '../shared/turbo/test/utils/dev-turbo.spec.util.ts';
 import { fixtureHook } from '../shared/turbo/test/utils/fixture-hook.spec.util.ts';
 import { leafPackage } from '../shared/turbo/test/utils/manifest.spec.util.ts';
+import { optsOutExcludedTasks } from '../shared/turbo/test/utils/turbo-opt-out.spec.util.ts';
 
 /** A package.json script no turbo.json names: `turbo query` still lists it as a task. */
 const ADHOC = 'adhoc';
@@ -153,24 +154,37 @@ describe('FEATURE: turbo tasks of a real workspace', () => {
       model = await loadWorkspace(binary);
     });
 
-    it('WHEN loaded THEN a child keeps the root task its parent excludes and inherits the grandparent task', () => {
+    it('WHEN loaded THEN a child keeps the root task its parent excludes until turbo opts it out, and inherits the grandparent task', () => {
+      const keepsRootTask = !optsOutExcludedTasks(binary.version);
       const flags = [turboFlagOf(model, keepChild.name, ROOT_TASK), turboFlagOf(model, keepChild.name, GRAND_TASK)];
 
-      expect(flags).toStrictEqual([true, true]);
+      expect(flags).toStrictEqual([keepsRootTask, true]);
     });
 
     it('WHEN loaded THEN a child loses the grandparent task its parent excludes', () => {
       expect(turboFlagOf(model, loseChild.name, GRAND_TASK)).toBe(false);
     });
 
-    it('WHEN the keeping child runs both tasks dry THEN turbo returns a state for each', async () => {
-      const taskIds = [`${keepChild.name}#${ROOT_TASK}`, `${keepChild.name}#${GRAND_TASK}`];
+    it('WHEN the keeping child runs both tasks dry THEN turbo returns the grandparent task state', async () => {
+      const grandId = `${keepChild.name}#${GRAND_TASK}`;
 
       const states = await readDryRun(binary, { tasks: [ROOT_TASK, GRAND_TASK], packages: [keepChild.name] });
 
       const stateIds = states.map((state) => state.id);
 
-      expect(stateIds).toStrictEqual(expect.arrayContaining(taskIds));
+      expect(stateIds).toContain(grandId);
+    });
+
+    it('WHEN the keeping child runs both tasks dry THEN turbo returns the root task state unless it opts it out', async () => {
+      const rootId = `${keepChild.name}#${ROOT_TASK}`;
+      const expectsRootState = !optsOutExcludedTasks(binary.version);
+
+      const states = await readDryRun(binary, { tasks: [ROOT_TASK, GRAND_TASK], packages: [keepChild.name] });
+
+      const stateIds = states.map((state) => state.id);
+      const hasRootState = stateIds.includes(rootId);
+
+      expect(hasRootState).toBe(expectsRootState);
     });
 
     it('WHEN the losing child runs both tasks dry THEN turbo returns the root task state but none for the grandparent task', async () => {

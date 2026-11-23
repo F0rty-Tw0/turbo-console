@@ -1,8 +1,9 @@
 import type { Page } from '@playwright/test';
-import { expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { GraphFoldersPage } from './graph-folders.po.ts';
 import { GraphProbePage } from './graph-probe.po.ts';
+import type { ProbeEdge } from '../../src/graph/common/graph-probe.type.ts';
 import type { FolderLinksShown } from '../common/graph-folder-links.type.ts';
 import { PLAIN_LINE } from '../common/graph-plain-lines.const.ts';
 import type { Rgb } from '../common/graph-title-chip.type.ts';
@@ -15,8 +16,13 @@ import { drawnStyleOf, isDrawn } from '../test/utils/graph-plain-lines.spec.util
 /** How far around a line's midpoint the screen is read, so a rounding of the midpoint cannot miss a 1 px line. */
 const INK_RADIUS_PX = 2;
 
+/** The least share of the way from the box fill to the edge colour the line's inkiest pixel reaches: a 0.75 px line is anti-aliased. */
+const MIN_INK = 0.25;
+
 /** The distinct drawn folder link styles while folder links show, and while none do. */
 const LINK_STYLES: Record<FolderLinksShown, string[]> = { some: [PLAIN_LINE], none: [] };
+
+type EdgeEnds = Pick<ProbeEdge, 'source' | 'target'>;
 
 /** How the page draws its package edges and folder links: their style, the boxes they cross and the ink they leave. */
 export class GraphPlainEdges {
@@ -40,6 +46,24 @@ export class GraphPlainEdges {
     await expect.poll(async (): Promise<number> => this.foreignBoxHitCount()).toBeGreaterThan(0);
   }
 
+  /**
+   * Polls until the line between `ends` reaches `MIN_INK` over the box `fill` toward `edgeInk` (`inkOnEdge`), then
+   * records the read that passed as an `edge-ink` annotation for `label`.
+   */
+  public async expectInkOnEdge(ends: EdgeEnds, fill: Rgb, edgeInk: Rgb, label: string): Promise<void> {
+    const { source, target } = ends;
+    let ink = 0;
+    const inkOf = async (): Promise<number> => {
+      ink = await this.inkOnEdge(source, target, fill, edgeInk);
+
+      return ink;
+    };
+
+    await expect.poll(inkOf, { message: `no edge ink at the ${source} to ${target} midpoint` }).toBeGreaterThanOrEqual(MIN_INK);
+
+    test.info().annotations.push({ type: 'edge-ink', description: `${label}: ${ink.toFixed(2)}` });
+  }
+
   /** The midpoint of the drawn package edge from `source` to `target`, in page px. */
   public async midpointOf(source: string, target: string): Promise<ViewportPoint> {
     const lines = await readEdgeLines(this.page);
@@ -47,13 +71,13 @@ export class GraphPlainEdges {
     return lineMidpointOf(lines, source, target);
   }
 
-  /** How far the screen around the midpoint of the drawn package edge from `source` to `target` has moved from the box `fill` toward the `edge` colour, 0 to 1 (`inkTowardOf`). */
-  public async inkOnEdge(source: string, target: string, fill: Rgb, edge: Rgb): Promise<number> {
+  /** How far the screen around the midpoint of the drawn package edge from `source` to `target` has moved from the box `fill` toward the `edgeInk` colour, 0 to 1 (`inkTowardOf`). */
+  public async inkOnEdge(source: string, target: string, fill: Rgb, edgeInk: Rgb): Promise<number> {
     const midpoint = await this.midpointOf(source, target);
     const png = await this.page.screenshot({ clip: clipAround(midpoint, INK_RADIUS_PX) });
     const pixels = await this.page.evaluate(pixelsOfPng, png.toString('base64'));
 
-    return inkTowardOf(pixels, fill, edge);
+    return inkTowardOf(pixels, fill, edgeInk);
   }
 
   /** The distinct drawn styles of the drawn package edges, then of the drawn folder links. */

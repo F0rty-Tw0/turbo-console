@@ -17,9 +17,7 @@ test.describe('FEATURE: graph cache prediction', () => {
     async ({ graphPrediction, graphTaskHost, graphGlyphs, graphTask }): Promise<void> => {
       await test.step('WHEN the page is opened with predictionShown true', async () => graphPrediction.open(true));
 
-      await test.step('THEN the three tasks start blank', async () => {
-        for (const id of TASK_IDS) await graphGlyphs.expectFirstChar(id, BLANK);
-      });
+      await test.step('THEN the three tasks start blank', async (): Promise<void> => graphGlyphs.expectFirstChars(TASK_IDS, BLANK));
 
       await test.step('WHEN the host sends runs with the three predictions', async () => graphTaskHost.sendRuns({}, PREDICTIONS));
 
@@ -50,9 +48,7 @@ test.describe('FEATURE: graph cache prediction', () => {
 
       await test.step('WHEN the host sends runs with no run and predictions {}', async () => graphTaskHost.sendRuns({}, {}));
 
-      await test.step('THEN all three are blank again', async () => {
-        for (const id of TASK_IDS) await graphGlyphs.expectFirstChar(id, BLANK);
-      });
+      await test.step('THEN all three are blank again', async (): Promise<void> => graphGlyphs.expectFirstChars(TASK_IDS, BLANK));
     }
   );
 
