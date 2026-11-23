@@ -1,4 +1,4 @@
-import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
+import type { Core, ElementDefinition, EventObjectNode, NodeSingular } from 'cytoscape';
 
 import { moduleLinkDefinitionOf, unrouteDragged } from './graph-module-links.ts';
 import { paintModules } from './graph-module-paint.ts';
@@ -99,16 +99,20 @@ const paintedOf = (chosen: string | null, scene: ModuleScene | null): string | n
 
 /**
  * The modules graph on `cy`, the core the package and task graphs share; showing it removes what they drew. A drag
- * unroutes only module links, so it leaves the other modes' edges as they are. It keeps the chosen card apart from what
+ * unroutes module links only while a modules scene is drawn, so the other modes' drags do no work. It keeps the chosen card apart from what
  * it paints, the card that holds it in the scene drawn last: a redraw keeps the choice while a card holds it and paints
  * that card, the folder collapsed over it or the card itself once the folder opens again, so a folder tap never changes
  * the choice; `clear` forgets it and the scene.
  */
 export const createModuleCanvas = (cy: Core): ModuleCanvas => {
-  cy.on('drag', 'node', unrouteDragged);
-
   let chosen: string | null = null;
   let scene: ModuleScene | null = null;
+  const unroute = (event: EventObjectNode): void => {
+    if (scene !== null) unrouteDragged(event);
+  };
+
+  cy.on('drag', 'node', unroute);
+
   const paint = (id: string | null): void => {
     const target = paintedOf(id, scene);
 

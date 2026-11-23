@@ -51,13 +51,12 @@ export const moduleLinkDefinitionOf = (link: ModuleSceneLink, drawing: ModuleDra
 };
 
 /**
- * The links of a dragged card, or of every card in a dragged box, leave their routes and draw plain: each route was laid
- * out for where the cards were. The next draw routes them again.
+ * The links of a dragged card leave their routes and draw plain: each route was laid out for where the cards were. The
+ * next draw routes them again. Cytoscape emits `drag` on every element it moves, a dragged box's descendants included,
+ * so each handles only its own links and a frame costs the moved links, not a walk of the box per descendant.
  */
 export const unrouteDragged = (event: EventObjectNode): void => {
-  const node = event.target;
-  const moved = node.union(node.descendants());
-  const routed = moved.connectedEdges(ROUTED_SELECTOR);
+  const routed = event.target.connectedEdges(ROUTED_SELECTOR);
 
   routed.removeClass(MODULE_ROUTED_CLASS);
 };

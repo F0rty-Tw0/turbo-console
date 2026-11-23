@@ -1,5 +1,5 @@
 import cytoscape from 'cytoscape';
-import type { Core } from 'cytoscape';
+import type { Core, ElementDefinition } from 'cytoscape';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createModuleCanvas } from './graph-module-view.ts';
@@ -71,6 +71,15 @@ const LIB_X_ROUTE: EdgeRoute = { start: LIB_RIGHT, bends: [], end: X_LEFT };
 const ROUTES: Routes = { [A_LIB_ID]: A_LIB_ROUTE, [LIB_X_ID]: LIB_X_ROUTE };
 
 const ROUTED_IDS = Object.keys(ROUTES).toSorted();
+
+const P_DATA = { id: 'p' };
+
+const Q_DATA = { id: 'q' };
+
+const PQ_DATA = { id: 'pq', source: 'p', target: 'q' };
+
+/** Another mode's two nodes and an edge that happens to carry the routed class. */
+const OTHER_MODE_ELEMENTS: ElementDefinition[] = [{ data: P_DATA }, { data: Q_DATA }, { data: PQ_DATA, classes: MODULE_ROUTED_CLASS }];
 
 const drawingOf = (scene: ModuleScene): ModuleDrawing => {
   const drawing: ModuleDrawing = { scene, positions: AT_ORIGIN, routes: {}, measures: MODULE_MEASURES_STUB };
@@ -265,9 +274,26 @@ describe('FEATURE: createModuleCanvas', () => {
     });
 
     it('WHEN the src box is dragged THEN the links of every card in it draw plain', () => {
-      cy.$id('dir:src').emit('drag');
+      const box = cy.$id('dir:src');
+
+      box.union(box.descendants()).emit('drag');
 
       expect(cy.edges(`.${MODULE_ROUTED_CLASS}`)).toHaveLength(0);
+    });
+
+    it('WHEN only the src box gets a drag event THEN its cards keep their routes, as each dragged card gets its own', () => {
+      cy.$id('dir:src').emit('drag');
+
+      expect(cy.edges(`.${MODULE_ROUTED_CLASS}`)).toHaveLength(ROUTED_IDS.length);
+    });
+
+    it('WHEN the canvas is cleared for another mode and its card is dragged THEN its routed edge stays routed', () => {
+      canvas.clear();
+      cy.add(OTHER_MODE_ELEMENTS);
+
+      cy.$id('p').emit('drag');
+
+      expect(cy.$id('pq').hasClass(MODULE_ROUTED_CLASS)).toBe(true);
     });
   });
 });
