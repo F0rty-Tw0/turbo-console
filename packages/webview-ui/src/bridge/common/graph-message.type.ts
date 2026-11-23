@@ -1,6 +1,7 @@
 import type { GraphAffected } from './graph-affected.type.ts';
 import type { GraphAtomsMessage } from './graph-atoms-message.type.ts';
 import type { GraphEdgeImportsMessage, GraphOpenImportMessage, GraphScanImportsMessage } from './graph-imports.type.ts';
+import type { GraphModuleSitesMessage, GraphScanModuleSitesMessage } from './graph-module-sites.type.ts';
 import type { GraphPackageModulesMessage, GraphScanModulesMessage, GraphShowModulesMessage } from './graph-modules.type.ts';
 import type { GraphRunState, GraphState, Positions, Routes } from './graph-state.type.ts';
 
@@ -109,7 +110,8 @@ export type GraphHostMessage =
   | GraphShowPackageMessage
   | GraphAtomsMessage
   | GraphPackageModulesMessage
-  | GraphShowModulesMessage;
+  | GraphShowModulesMessage
+  | GraphModuleSitesMessage;
 
 type GraphReadyMessage = { readonly type: 'ready' };
 
@@ -206,4 +208,5 @@ export type GraphWebviewMessage =
   | GraphShownUmbrellasMessage
   | GraphShownTaskPackagesMessage
   | GraphSetViewToggleMessage
-  | GraphScanModulesMessage;
+  | GraphScanModulesMessage
+  | GraphScanModuleSitesMessage;

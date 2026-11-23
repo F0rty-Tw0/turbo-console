@@ -19,7 +19,8 @@ const LOOKUP_TYPES: Readonly<Record<LookupRequest['type'], true>> = {
   openManifest: true,
   scanImports: true,
   openImport: true,
-  scanModules: true
+  scanModules: true,
+  scanModuleSites: true
 };
 
 export function isLookupMessage(message: GraphWebviewMessage): message is LookupRequest {
@@ -57,6 +58,7 @@ export class GraphLookups {
       case 'scanImports':
       case 'openImport':
       case 'scanModules':
+      case 'scanModuleSites':
         await this.receiveImport(request, value);
     }
   }
@@ -66,7 +68,7 @@ export class GraphLookups {
     this.scans.dispose();
   }
 
-  /** A `scanModules` is never dropped: `askModules` answers every one, `failed` included. */
+  /** A `scanModules` or `scanModuleSites` is never dropped: `askModules` and `askModuleSites` answer every one, `failed` included. */
   private async receiveImport(request: ImportLookup, value: unknown): Promise<void> {
     if (this.isDisposed) return;
 
@@ -87,6 +89,10 @@ export class GraphLookups {
       }
       case 'scanModules':
         await this.scans.askModules(request.packageName);
+
+        return;
+      case 'scanModuleSites':
+        await this.scans.askModuleSites(request.packageName, request.from, request.to);
     }
   }
 

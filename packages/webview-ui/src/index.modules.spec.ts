@@ -6,9 +6,58 @@ import type {
   GraphPackageModulesMessage,
   GraphShowRequest,
   GraphWebviewMessage,
+  ModuleEnd,
   ModuleLink,
+  ModuleSitesResult,
   ModulesResult
 } from './index.ts';
+
+type ExpectedFileEnd = { readonly kind: 'file'; readonly path: string };
+
+type ExpectedDirEnd = { readonly kind: 'dir'; readonly path: string };
+
+type ExpectedStubEnd = { readonly kind: 'stub'; readonly name: string };
+
+type ExpectedEnd = ExpectedFileEnd | ExpectedDirEnd | ExpectedStubEnd;
+
+type ExpectedTarget = ExpectedFileEnd | ExpectedStubEnd;
+
+type ExpectedSite = {
+  readonly file: string;
+  readonly line: number;
+  readonly text: string;
+  readonly kind: 'static' | 'dynamic' | 'require' | 'reexport';
+  readonly isType: boolean;
+  readonly target: ExpectedTarget;
+};
+
+type ExpectedSitesFound = {
+  readonly kind: 'found';
+  readonly imports: ExpectedSite[];
+  readonly importsTotal: number;
+  readonly importedBy: ExpectedSite[];
+  readonly importedByTotal: number;
+  readonly limit: 'files' | 'entries' | 'time' | null;
+};
+
+type ModuleSitesKey = { readonly type: 'moduleSites' };
+
+type ScanModuleSitesKey = { readonly type: 'scanModuleSites' };
+
+type ExpectedModuleSites = {
+  readonly type: 'moduleSites';
+  readonly packageName: string;
+  readonly from: ExpectedEnd;
+  readonly to: ExpectedEnd | null;
+  readonly result: ExpectedSitesFound | ExpectedFailed;
+};
+
+type ExpectedScanModuleSites = {
+  readonly type: 'scanModuleSites';
+  readonly packageName: string;
+  readonly from: ExpectedEnd;
+  readonly to: ExpectedEnd | null;
+};
 
 type ExpectedCounts = {
   readonly unresolved: number;
@@ -61,6 +110,14 @@ describe('FEATURE: webview-ui package entry, modules contract', () => {
       expectTypeOf<Extract<GraphWebviewMessage, ScanModulesKey>>().toEqualTypeOf<ExpectedScanModules>();
       expectTypeOf<Extract<GraphShowRequest, ShowModulesKey>>().toEqualTypeOf<ExpectedShowModules>();
       expectTypeOf<Extract<GraphHostMessage, ShowModulesKey>>().toEqualTypeOf<ExpectedShowModules>();
+    });
+
+    // eslint-disable-next-line vitest/expect-expect -- type-only pins: the `expectTypeOf` checks fail in typecheck, not at run time.
+    it('WHEN the module sites contract is read THEN each module sites type has its exact shape', () => {
+      expectTypeOf<ModuleEnd>().toEqualTypeOf<ExpectedEnd>();
+      expectTypeOf<ModuleSitesResult>().toEqualTypeOf<ExpectedSitesFound | ExpectedFailed>();
+      expectTypeOf<Extract<GraphHostMessage, ModuleSitesKey>>().toEqualTypeOf<ExpectedModuleSites>();
+      expectTypeOf<Extract<GraphWebviewMessage, ScanModuleSitesKey>>().toEqualTypeOf<ExpectedScanModuleSites>();
     });
   });
 });
