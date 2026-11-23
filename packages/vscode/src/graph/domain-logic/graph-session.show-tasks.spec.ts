@@ -239,7 +239,8 @@ describe('FEATURE: graph session showTasks', () => {
       await session.receive({ type: 'ready' });
 
       expect(postedShowsOf(ports)).toStrictEqual([SHOW_ROOT_MODULES]);
-      expect(ports.log).not.toHaveBeenCalledWith('Ignored showPackage: a single-package root has no package graph');
+      expect(postedTypesOf(ports)).toStrictEqual(['state', 'runs', 'showModules']);
+      expect(ports.log).not.toHaveBeenCalled();
     });
   });
 });
