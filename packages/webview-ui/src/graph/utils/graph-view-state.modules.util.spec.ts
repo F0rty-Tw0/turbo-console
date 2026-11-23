@@ -71,9 +71,26 @@ describe('FEATURE: readGraphViewState modules view', () => {
   });
 
   describe('GIVEN a shown flag that is not a boolean', () => {
-    it('WHEN it is read THEN that flag reads true and the others are kept', () => {
-      const shown = { types: 'no', tests: false, lazies: true };
+    it('WHEN it is read THEN that flag reads as a fresh view shows it and the others are kept', () => {
+      const shown = { types: 'no', tests: false, lazies: false };
       const state = readGraphViewState(rawOf('modules', { ...SAVED_MODULES, shown }));
+
+      expect(state?.modules?.shown).toStrictEqual({ types: true, tests: false, lazies: false });
+    });
+  });
+
+  describe('GIVEN a tests flag that is not a boolean', () => {
+    it('WHEN it is read THEN test files read hidden, as in a fresh view', () => {
+      const shown = { types: false, tests: 'yes', lazies: false };
+      const state = readGraphViewState(rawOf('modules', { ...SAVED_MODULES, shown }));
+
+      expect(state?.modules?.shown).toStrictEqual({ types: false, tests: false, lazies: false });
+    });
+  });
+
+  describe('GIVEN a modules view with no shown flags', () => {
+    it('WHEN it is read THEN shown reads as a fresh view, test files hidden', () => {
+      const state = readGraphViewState(rawOf('modules', { ...SAVED_MODULES, shown: undefined }));
 
       expect(state?.modules?.shown).toStrictEqual({ types: true, tests: false, lazies: true });
     });

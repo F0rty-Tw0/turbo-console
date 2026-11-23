@@ -66,3 +66,14 @@ export const aliasTargetsOf = (specifier: string, paths: Readonly<Record<string,
 
   return best.targets.map(substitute);
 };
+
+/** True when the key TS picks for `specifier` has nothing before its `*` (`"*"`, `"*.svg"`), so it claims no namespace. */
+export const isCatchAllOf = (specifier: string, paths: Readonly<Record<string, string[]>>): boolean => {
+  const isExact = Object.hasOwn(paths, specifier);
+
+  if (isExact) return false;
+
+  const best = longestMatchOf(specifier, paths);
+
+  return best?.prefixLength === 0;
+};

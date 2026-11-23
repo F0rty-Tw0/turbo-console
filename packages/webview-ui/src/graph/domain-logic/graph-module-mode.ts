@@ -1,6 +1,7 @@
 import type { GraphPackageModulesMessage, GraphShowModulesMessage, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
 import type { ModuleExit, ModuleModeDeps, ModulePhase, ModuleRedraw } from '../common/module-mode.type.ts';
 import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
 import { defaultExpandedOf } from '../utils/module-expand.util.ts';
@@ -10,8 +11,6 @@ import { moduleTreeOf } from '../utils/module-tree.util.ts';
 const OFF: ModulePhase = { kind: 'off' };
 
 const FIRST: ModuleRedraw = { kind: 'first' };
-
-const KEEP: ModuleRedraw = { kind: 'keep' };
 
 /**
  * One package's modules (spec §7.1, §7.2): Waiting for the first graph state, Loading its scan, Shown or Failed. It keeps
@@ -54,7 +53,7 @@ export class GraphModuleMode {
     const view = saved?.packageName === packageName ? saved : fresh;
 
     deps.modes.saveModules(view, this.hash());
-    deps.screen.scanning(packageName);
+    deps.screen.scanning(packageName, view);
 
     if (this.latest === null) {
       this.current = { kind: 'waiting', name: packageName };
@@ -113,8 +112,11 @@ export class GraphModuleMode {
     this.ask(current.name);
   }
 
-  /** The host's scan of the package on screen; a reply for another package, or before any ask, is ignored. */
-  public scanned(message: GraphPackageModulesMessage): void {
+  /**
+   * The host's scan of the package on screen, received at `at`; a reply for another package, or before any ask, is
+   * ignored. A found scan starts the frame clock at `at`, so its draw's first frame is timed from the reply.
+   */
+  public scanned(message: GraphPackageModulesMessage, at: number): void {
     const { current } = this;
     const isAsked = current.kind === 'loading' || current.kind === 'shown' || current.kind === 'failed';
 
@@ -123,6 +125,7 @@ export class GraphModuleMode {
     const { result } = message;
 
     if (result.kind === 'found') {
+      this.deps.frames.start(at);
       this.show(current.name, result, current.kind === 'shown');
 
       return;
@@ -142,15 +145,20 @@ export class GraphModuleMode {
     if (isAsked) this.ask(current.name);
   }
 
-  public receive(message: GraphPackageModulesMessage | GraphShowModulesMessage): void {
+  public receive(message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number): void {
     if (message.type === 'showModules') this.enter(message.name);
-    else this.scanned(message);
+    else this.scanned(message, at);
   }
 
+  /**
+   * Saves the camera while Shown, once a module draw has landed: before that, and after a first layout that threw or was
+   * dropped, the shared core still holds the package or task camera.
+   */
   public saveCamera(): void {
     const view = this.view();
+    const isDrawn = this.deps.screen.isDrawn();
 
-    if (this.current.kind !== 'shown' || view === null) return;
+    if (this.current.kind !== 'shown' || view === null || !isDrawn) return;
 
     const camera = this.deps.viewport();
     const saved: ModulesViewState = { ...view, camera };
@@ -158,13 +166,14 @@ export class GraphModuleMode {
     this.deps.modes.saveModules(saved, this.hash());
   }
 
-  /** Saves `view` and, while Shown, draws it again placed by `redraw`. */
+  /** Saves `view` and, while Shown or Failed with the old graph still drawn, draws it again placed by `redraw`. */
   public update(view: ModulesViewState, redraw: ModuleRedraw): void {
     const { current } = this;
 
     this.deps.modes.saveModules(view, this.hash());
 
     if (current.kind === 'shown') this.deps.screen.shown(current.name, current.found, view, redraw);
+    else if (current.kind === 'failed') this.drawKept(current.found, view, redraw);
   }
 
   /** A found scan: the default expansion is saved the first time, then it is drawn, keeping the camera when it was Shown. */
@@ -174,17 +183,36 @@ export class GraphModuleMode {
     const view: ModulesViewState = { ...saved, expanded };
 
     this.current = { kind: 'shown', name, found };
-    this.update(view, wasShown ? KEEP : FIRST);
+    this.update(view, wasShown ? MODULE_REDRAW_KEEP : FIRST);
   }
 
-  /** After a host message: Shown draws the saved view again with the camera kept, Failed shows the graph view again; Waiting and Loading come back with their draw. */
+  /** Failed over a kept graph that is on screen: drawn again, so a View box or folder tap shows, the failed banner kept. */
+  private drawKept(found: ModulesFound | null, view: ModulesViewState, redraw: ModuleRedraw): void {
+    const isDrawn = this.deps.screen.isDrawn();
+
+    if (found === null || !isDrawn) return;
+
+    this.deps.screen.drawAgain(found, view, redraw);
+  }
+
+  /**
+   * After a host message: Shown draws the saved view again with the camera kept, Failed shows the graph view again, and
+   * Loading shows it and asks again, as the host drops a reply that lands while its state is not a graph; Waiting asks on
+   * this state.
+   */
   private resume(current: ModulePhase): void {
     const view = this.view();
 
     this.isSuspended = false;
 
-    if (current.kind === 'shown' && view !== null) this.update(view, KEEP);
+    if (current.kind === 'shown' && view !== null) this.update(view, MODULE_REDRAW_KEEP);
     else if (current.kind === 'failed') this.deps.screen.reshow();
+    else if (current.kind === 'loading') this.reask(current.name);
+  }
+
+  private reask(packageName: string): void {
+    this.deps.screen.reshow();
+    this.ask(packageName);
   }
 
   /** Entering from package or task mode: task mode is parked toward modules, then the page shows the modules screen. */

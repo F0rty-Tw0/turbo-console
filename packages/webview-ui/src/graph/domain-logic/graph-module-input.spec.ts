@@ -12,7 +12,7 @@ import type { ModuleRedraw } from '../common/module-mode.type.ts';
 import type { ModuleModeRig } from '../test/common/graph-module-mode.type.ts';
 import { moduleCanvasMock } from '../test/mocks/module-canvas.mock.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
-import { RIG_CAMERA, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
+import { REPLY_AT, RIG_CAMERA, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
 import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
 
 const FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
@@ -30,6 +30,7 @@ describe('FEATURE: moduleInputOf', () => {
   let modes: ViewStateModes;
   let mode: GraphModuleMode;
   let canvas: Mocked<ModuleCanvas>;
+  let container: Mocked<Pick<HTMLElement, 'focus'>>;
   let input: HandledModules;
 
   /** Modules mode over a real `ViewStateModes` with web saved as `src` and `src/lib` expanded, Loading web. */
@@ -41,7 +42,8 @@ describe('FEATURE: moduleInputOf', () => {
     rig = moduleModeRigOf(modes);
     mode = new GraphModuleMode(rig.deps);
     canvas = moduleCanvasMock();
-    input = moduleInputOf({ mode, canvas, bridge: rig.deps.bridge });
+    container = { focus: vi.fn() };
+    input = moduleInputOf({ mode, canvas, container, bridge: rig.deps.bridge });
     mode.received(WEB_LISTED);
     mode.enter('web');
   });
@@ -54,6 +56,13 @@ describe('FEATURE: moduleInputOf', () => {
       expect(canvas.paint).not.toHaveBeenCalled();
     });
 
+    it('WHEN a file is tapped THEN the canvas does not take focus', () => {
+      canvas.kindOf.mockReturnValue('file');
+      input.tapNode('file:src/a.ts');
+
+      expect(container.focus).not.toHaveBeenCalled();
+    });
+
     it('WHEN a file is double-tapped THEN nothing goes out but the scan ask', () => {
       canvas.kindOf.mockReturnValue('file');
       input.doubleTapNode('file:src/a.ts');
@@ -64,7 +73,7 @@ describe('FEATURE: moduleInputOf', () => {
 
   describe('GIVEN Shown web with src expanded', () => {
     beforeEach(() => {
-      mode.scanned(FOUND);
+      mode.scanned(FOUND, REPLY_AT);
       mode.update(WEB_SRC_OPEN, KEEP);
     });
 
@@ -93,11 +102,13 @@ describe('FEATURE: moduleInputOf', () => {
 
     it('WHEN the root box is tapped THEN nothing is saved or drawn', () => {
       canvas.kindOf.mockReturnValue('box');
-      const before = rig.screen.shown.mock.calls.length;
+      const saved = modes.modules();
+      const drawn = rig.screen.shown.mock.calls.length;
 
       input.tapNode('dir:');
 
-      expect(rig.screen.shown.mock.calls).toHaveLength(before);
+      expect(modes.modules()).toBe(saved);
+      expect(rig.screen.shown.mock.calls).toHaveLength(drawn);
     });
 
     it('WHEN a.ts is tapped THEN it is painted with its neighbours', () => {
@@ -105,6 +116,17 @@ describe('FEATURE: moduleInputOf', () => {
       input.tapNode('file:src/a.ts');
 
       expect(canvas.paint).toHaveBeenCalledWith('file:src/a.ts');
+    });
+
+    it.each([
+      ['the collapsed folder src/lib', 'dir', 'dir:src/lib'],
+      ['the src box', 'box', 'dir:src'],
+      ['a.ts', 'file', 'file:src/a.ts']
+    ] as const)('WHEN %s is tapped THEN the canvas takes focus back from the tap, which blurs it', (_, kind, id) => {
+      canvas.kindOf.mockReturnValue(kind);
+      input.tapNode(id);
+
+      expect(container.focus).toHaveBeenCalledOnce();
     });
 
     it('WHEN the background is tapped THEN the paint is cleared', () => {
@@ -139,7 +161,7 @@ describe('FEATURE: moduleInputOf', () => {
 
   describe('GIVEN Shown web with src and src/lib expanded', () => {
     beforeEach(() => {
-      mode.scanned(FOUND);
+      mode.scanned(FOUND, REPLY_AT);
     });
 
     it('WHEN src is collapsed THEN src/lib stays listed, to show again when src opens', () => {

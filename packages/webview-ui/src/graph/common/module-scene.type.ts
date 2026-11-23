@@ -67,12 +67,16 @@ export type ModuleDrawn = {
   readonly drawnOf: ReadonlyMap<number, string>;
 };
 
-/** What the module view draws;`leafCount` counts leaves only, so expanded boxes are not counted (D10). */
+/**
+ * What the module view draws; `leafCount` counts leaves only, so expanded boxes are not counted (D10). `fileIds` are the
+ * `file:` ids of every file the view includes, drawn as a card or folded into a folder card, so a hidden test is not one.
+ */
 export type ModuleScene = {
   readonly boxes: ModuleBox[];
   readonly leaves: ModuleLeaf[];
   readonly links: ModuleSceneLink[];
   readonly leafCount: number;
+  readonly fileIds: string[];
 };
 
 /** How the page sizes module nodes: each leaf's card, and each box's title width in px (no padding). */

@@ -7,7 +7,7 @@ import type { GraphPackageModulesMessage, GraphShowModulesMessage } from '../../
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-import { MODULES_DROPPED_WARNING } from '../common/graph-module.const.ts';
+import { MODULES_DROPPED_WARNING, MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
 import type { GraphControllerDeps, GraphView, Viewport } from '../common/graph-page.type.ts';
 import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
 import type { ModuleHookModes, ModuleModeHooks, ModuleRedraw, PageModuleMode } from '../common/module-mode.type.ts';
@@ -20,8 +20,6 @@ import { defaultExpandedOf } from '../utils/module-expand.util.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
 
-const KEEP: ModuleRedraw = { kind: 'keep' };
-
 const FIT: ModuleRedraw = { kind: 'fit' };
 
 /** A card is sized from its drawn label, a box title from its folder name. */
@@ -33,11 +31,11 @@ const measuresOf = (deps: GraphControllerDeps): ModuleMeasures => {
   return measures;
 };
 
-/** Re-layout and Retry while Shown: the saved view drawn again, the camera kept. */
+/** Re-layout while Shown, or Failed over a kept graph: the saved view drawn again, the camera kept. */
 const relayoutOf = (mode: GraphModuleMode): void => {
   const view = mode.view();
 
-  if (view !== null) mode.update(view, KEEP);
+  if (view !== null) mode.update(view, MODULE_REDRAW_KEEP);
 };
 
 /** A View box changed: the saved view shows the kinds the three boxes read, drawn again with the camera kept; nothing is posted. */
@@ -49,7 +47,7 @@ const toggleShown = (mode: GraphModuleMode, bar: ModulesBarElements): void => {
   const shown: ModuleShown = { types: bar.types.checked, tests: bar.tests.checked, lazies: bar.lazies.checked };
   const toggled: ModulesViewState = { ...view, shown };
 
-  mode.update(toggled, KEEP);
+  mode.update(toggled, MODULE_REDRAW_KEEP);
 };
 
 /** Reset view while Shown: the shown package's default expansion, then a fit. */
@@ -98,22 +96,23 @@ export const modeGroupHiderOf = (
 /** Modules mode over the page; Packages and Tasks leave it, wired before task mode's listeners, so they run first. */
 export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: ModuleModeHooks): PageModuleMode => {
   const { page, bridge, runner } = deps;
+  const { frames, modes, onExit, tasks } = hooks;
   const notice = (text: string): void => hooks.tasks().notice(text);
   const viewport = (): Viewport => view.viewport();
   const { showGraph } = layoutScreenOf(page);
   const measures = measuresOf(deps);
   const onFailure = (error: unknown): void => showFailure(page, error);
-  const layout = new GraphModuleLayout({ view, runner, measures, frames: hooks.frames, showGraph, onFailure });
-  const screen = moduleScreenOf({ page, layout, canvas: view.modules, showGraph });
-  const mode = new GraphModuleMode({ modes: hooks.modes, bridge, screen, tasks: hooks.tasks, onExit: hooks.onExit, notice, viewport });
-  const input = moduleInputOf({ mode, canvas: view.modules, bridge });
+  const layout = new GraphModuleLayout({ view, runner, measures, frames, showGraph, onFailure });
+  const screen = moduleScreenOf({ page, layout, showGraph });
+  const mode = new GraphModuleMode({ modes, bridge, screen, tasks, onExit, notice, viewport, frames });
+  const input = moduleInputOf({ mode, canvas: view.modules, container: page.container, bridge });
   const leave = (): void => mode.leave();
   const modules: PageModuleMode = {
     isActive: (): boolean => mode.isActive(),
     received: (state: GraphReady): void => mode.received(state),
     enter: (packageName: string): void => mode.enter(packageName),
     leave,
-    receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage): void => mode.receive(message),
+    receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number): void => mode.receive(message, at),
     suspend: (): void => mode.suspend(),
     relayout: (): void => relayoutOf(mode),
     input

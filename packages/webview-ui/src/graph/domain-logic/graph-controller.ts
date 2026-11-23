@@ -138,7 +138,7 @@ class GraphPageController {
         break;
       case 'packageModules':
       case 'showModules':
-        this.modules.receive(message);
+        this.modules.receive(message, at);
         break;
     }
   }

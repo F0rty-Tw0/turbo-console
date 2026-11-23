@@ -93,7 +93,9 @@ describe('FEATURE: GraphModuleLayout', () => {
     it('WHEN it is drawn THEN the runner key names the package, its expansion and its shown kinds', async () => {
       await layout.draw(MODULES_FOUND_STUB, WEB_VIEW, { kind: 'first' });
 
-      expect(runner.run.mock.calls[0]?.[0]).toBe('modules:web:{"expanded":["src"],"shown":{"types":true,"tests":true,"lazies":true}}');
+      expect(runner.run.mock.calls[0]?.[0]).toBe(
+        'modules:web:{"expanded":["src"],"shown":{"types":true,"tests":false,"lazies":true}}'
+      );
     });
   });
 

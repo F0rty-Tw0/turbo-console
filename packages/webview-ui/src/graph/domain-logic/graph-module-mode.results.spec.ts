@@ -5,9 +5,10 @@ import { ViewStateModes } from './view-state-modes.ts';
 import type { GraphPackageModulesMessage, ModulesResult } from '../../bridge/common/graph-modules.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
+import type { ModuleRedraw } from '../common/module-mode.type.ts';
 import type { ModuleModeRig } from '../test/common/graph-module-mode.type.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
-import { RIG_CAMERA, WEB_GONE, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
+import { REPLY_AT, RIG_CAMERA, WEB_GONE, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
 import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
 import { defaultExpandedOf } from '../utils/module-expand.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
@@ -28,6 +29,8 @@ const WEB_BACK: ModulesViewState = { ...FRESH_WEB, expanded: DEFAULT_EXPANDED, c
 
 const WEB_SRC_OPEN: ModulesViewState = { ...FRESH_WEB, expanded: ['src'] };
 
+const KEEP: ModuleRedraw = { kind: 'keep' };
+
 describe('FEATURE: GraphModuleMode scan results', () => {
   let rig: ModuleModeRig;
   let modes: ViewStateModes;
@@ -46,24 +49,36 @@ describe('FEATURE: GraphModuleMode scan results', () => {
 
   describe('GIVEN Loading web with no expansion set up', () => {
     it('WHEN web is found THEN it is Shown, saves the default expansion and draws with the first camera', () => {
-      mode.scanned(FOUND);
+      mode.scanned(FOUND, REPLY_AT);
 
       expect(mode.phase()).toStrictEqual({ kind: 'shown', name: 'web', found: MODULES_FOUND_STUB });
       expect(modes.modules()?.expanded).toStrictEqual(DEFAULT_EXPANDED);
       expect(rig.screen.shown.mock.calls).toStrictEqual([['web', MODULES_FOUND_STUB, modes.modules(), { kind: 'first' }]]);
     });
 
-    it('WHEN a reply for ui arrives THEN it is ignored', () => {
-      mode.scanned(OTHER);
+    it('WHEN web is found at time 10 THEN the frame clock starts at 10 before the draw', () => {
+      mode.scanned(FOUND, REPLY_AT);
 
-      expect([mode.phase(), rig.screen.shown.mock.calls]).toStrictEqual([{ kind: 'loading', name: 'web' }, []]);
+      const [startOrder] = rig.start.mock.invocationCallOrder;
+      const [shownOrder] = rig.screen.shown.mock.invocationCallOrder;
+
+      expect(rig.start.mock.calls).toStrictEqual([[REPLY_AT]]);
+      expect(startOrder).toBeLessThan(shownOrder ?? 0);
     });
 
-    it('WHEN web fails THEN it is Failed with no graph kept', () => {
-      mode.scanned(FAILED);
+    it('WHEN a reply for ui arrives THEN it is ignored', () => {
+      mode.scanned(OTHER, REPLY_AT);
+
+      expect([mode.phase(), rig.screen.shown.mock.calls]).toStrictEqual([{ kind: 'loading', name: 'web' }, []]);
+      expect(rig.start).not.toHaveBeenCalled();
+    });
+
+    it('WHEN web fails THEN it is Failed with no graph kept and the frame clock is not started', () => {
+      mode.scanned(FAILED, REPLY_AT);
 
       expect(mode.phase()).toStrictEqual({ kind: 'failed', name: 'web', found: null });
       expect(rig.screen.failed).toHaveBeenCalledWith('web');
+      expect(rig.start).not.toHaveBeenCalled();
     });
 
     it('WHEN Refresh is pressed THEN scanModules is posted again and it stays Loading', () => {
@@ -78,21 +93,30 @@ describe('FEATURE: GraphModuleMode scan results', () => {
 
       expect(modes.modules()?.camera).toBeNull();
     });
+
+    it('WHEN web is found and Back is pressed before its draw lands THEN no camera is saved', () => {
+      rig.screen.isDrawn.mockReturnValue(false);
+
+      mode.scanned(FOUND, REPLY_AT);
+      mode.leave();
+
+      expect(modes.modules()?.camera).toBeNull();
+    });
   });
 
   describe('GIVEN Shown web', () => {
     beforeEach(() => {
-      mode.scanned(FOUND);
+      mode.scanned(FOUND, REPLY_AT);
     });
 
     it('WHEN web is found again THEN it redraws keeping the camera', () => {
-      mode.scanned(FOUND);
+      mode.scanned(FOUND, REPLY_AT);
 
       expect(rig.screen.shown.mock.calls[1]?.[3]).toStrictEqual({ kind: 'keep' });
     });
 
     it('WHEN web fails THEN it is Failed and keeps the old graph', () => {
-      mode.scanned(FAILED);
+      mode.scanned(FAILED, REPLY_AT);
 
       expect(mode.phase()).toStrictEqual({ kind: 'failed', name: 'web', found: MODULES_FOUND_STUB });
     });
@@ -129,7 +153,7 @@ describe('FEATURE: GraphModuleMode scan results', () => {
 
   describe('GIVEN Shown web replaced by a host message', () => {
     beforeEach(() => {
-      mode.scanned(FOUND);
+      mode.scanned(FOUND, REPLY_AT);
       mode.suspend();
     });
 
@@ -154,17 +178,26 @@ describe('FEATURE: GraphModuleMode scan results', () => {
   });
 
   describe('GIVEN Loading web replaced by a host message', () => {
-    it('WHEN a state lists web THEN nothing is drawn or shown until its scan lands', () => {
+    beforeEach(() => {
       mode.suspend();
+    });
+
+    it('WHEN a state lists web THEN scanModules is posted again, as the host drops a reply while its state is not a graph', () => {
       mode.received(WEB_LISTED);
 
-      expect([rig.screen.shown.mock.calls, rig.screen.reshow.mock.calls]).toStrictEqual([[], []]);
+      expect([rig.post.mock.calls.length, mode.phase().kind]).toStrictEqual([2, 'loading']);
+    });
+
+    it('WHEN a state lists web THEN the graph view shows again with nothing drawn', () => {
+      mode.received(WEB_LISTED);
+
+      expect([rig.screen.reshow.mock.calls.length, rig.screen.shown.mock.calls]).toStrictEqual([1, []]);
     });
   });
 
   describe('GIVEN Failed web', () => {
     beforeEach(() => {
-      mode.scanned(FAILED);
+      mode.scanned(FAILED, REPLY_AT);
     });
 
     it('WHEN web is entered again THEN it is Loading and posts', () => {
@@ -174,7 +207,7 @@ describe('FEATURE: GraphModuleMode scan results', () => {
     });
 
     it('WHEN web is found THEN it is Shown', () => {
-      mode.scanned(FOUND);
+      mode.scanned(FOUND, REPLY_AT);
 
       expect(mode.phase().kind).toBe('shown');
     });
@@ -189,7 +222,31 @@ describe('FEATURE: GraphModuleMode scan results', () => {
     it('WHEN a view is updated THEN it is saved but nothing is drawn', () => {
       mode.update(WEB_SRC_OPEN, { kind: 'fit' });
 
-      expect([mode.view(), rig.screen.shown.mock.calls]).toStrictEqual([WEB_SRC_OPEN, []]);
+      expect([mode.view(), rig.screen.shown.mock.calls, rig.screen.drawAgain.mock.calls]).toStrictEqual([WEB_SRC_OPEN, [], []]);
+    });
+  });
+
+  describe('GIVEN Shown web, then failed on Refresh with its graph kept', () => {
+    beforeEach(() => {
+      mode.scanned(FOUND, REPLY_AT);
+      mode.scanned(FAILED, REPLY_AT);
+    });
+
+    it('WHEN a view is updated THEN it is drawn again without writing the bar', () => {
+      mode.update(WEB_SRC_OPEN, KEEP);
+
+      expect([rig.screen.drawAgain.mock.calls, rig.screen.shown.mock.calls.length]).toStrictEqual([
+        [[MODULES_FOUND_STUB, WEB_SRC_OPEN, KEEP]],
+        1
+      ]);
+    });
+
+    it('WHEN a view is updated while no graph is on screen THEN nothing is drawn again', () => {
+      rig.screen.isDrawn.mockReturnValue(false);
+
+      mode.update(WEB_SRC_OPEN, KEEP);
+
+      expect(rig.screen.drawAgain).not.toHaveBeenCalled();
     });
   });
 });

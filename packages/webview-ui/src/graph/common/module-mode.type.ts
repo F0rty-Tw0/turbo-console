@@ -42,10 +42,17 @@ export type ModuleRedraw = ModuleRedrawFirst | ModuleRedrawKeep | ModuleRedrawAn
 /** What the mode asks of the page: the canvas, the modules bar and its banners. */
 export type ModuleScreen = {
   readonly enter: () => void;
-  /** Waiting and Loading: empty canvas, "Scanning <P>…", Refresh visible. */
-  readonly scanning: (name: string) => void;
+  /** Waiting and Loading: empty canvas, "Scanning <P>…", Refresh visible, the View boxes set from `view`. */
+  readonly scanning: (name: string, view: ModulesViewState) => void;
   readonly shown: (name: string, found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => void;
-  /** Keeps the old graph drawn, if any, and shows "Could not scan <P>." with Retry; with none, the status is emptied. */
+  /** Failed with the old graph kept: draws `view` again placed by `redraw`, leaving the bar and its failed banner as they are. */
+  readonly drawAgain: (found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => void;
+  /** A module draw has landed and is on screen; false before the first one lands and after the canvas is cleared. */
+  readonly isDrawn: () => boolean;
+  /**
+   * Keeps the old graph drawn, if any, and shows "Could not scan <P>." with Retry; with none, the status is emptied and a
+   * draw still in flight is dropped.
+   */
   readonly failed: (name: string) => void;
   /** Failed after a host message: the graph view shows again over whatever canvas was kept. */
   readonly reshow: () => void;
@@ -74,6 +81,8 @@ export type ModuleModeDeps = {
   readonly onExit: (to: ModuleExit) => void;
   readonly notice: (text: string) => void;
   readonly viewport: () => Viewport;
+  /** Started at a found scan's receive time, so the module draw's first frame is timed from the host's reply. */
+  readonly frames: Pick<FrameClock, 'start'>;
 };
 
 /** `ModuleModes` plus the mode, which tells `resumeModules` a reload left the page in modules mode. */
@@ -88,8 +97,8 @@ export type ModuleModeHooks = {
   /** Read per call: task mode is built after modules mode. */
   readonly tasks: () => ModuleHookTasks;
   readonly onExit: (to: ModuleExit) => void;
-  /** Armed after each module draw, so the next frame is timed. */
-  readonly frames: Pick<FrameClock, 'arm'>;
+  /** Started at a found scan's receive time and armed after each module draw, so the next frame is timed. */
+  readonly frames: Pick<FrameClock, 'arm' | 'start'>;
 };
 
 /**
@@ -101,10 +110,11 @@ export type PageModuleMode = {
   readonly received: (state: GraphReady) => void;
   readonly enter: (packageName: string) => void;
   readonly leave: () => void;
-  readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage) => void;
+  /** A host message received at `at`. */
+  readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number) => void;
   /** A host message replaced the page; the next graph state still listing the package takes it back. */
   readonly suspend: () => void;
-  /** Draws the saved view again with the camera kept; Shown only. */
+  /** Draws the saved view again with the camera kept; Shown, or Failed over a kept graph, only. */
   readonly relayout: () => void;
   readonly input: HandledModules;
 };
@@ -129,11 +139,10 @@ export type ModuleScreenLayout = {
   readonly clear: () => void;
 };
 
-/** What the modules screen writes to: the page's root, mode buttons and modules bar, the layout, the canvas and the graph view. */
+/** What the modules screen writes to: the page's root, mode buttons and modules bar, the layout and the graph view. */
 export type ModuleScreenDeps = {
   readonly page: Pick<PageElements, 'root' | 'packagesMode' | 'taskMode' | 'modules'>;
   readonly layout: ModuleScreenLayout;
-  readonly canvas: Pick<ModuleCanvas, 'clear'>;
   readonly showGraph: LayoutScreen['showGraph'];
 };
 
@@ -150,5 +159,7 @@ export type ModuleInputMode = {
 export type ModuleInputDeps = {
   readonly mode: ModuleInputMode;
   readonly canvas: ModuleCanvas;
+  /** The graph container a canvas tap hands focus back to, as Cytoscape blurs it on every press. */
+  readonly container: Pick<HTMLElement, 'focus'>;
   readonly bridge: Pick<Bridge, 'post'>;
 };

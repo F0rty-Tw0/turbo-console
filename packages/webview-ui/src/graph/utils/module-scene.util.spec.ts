@@ -136,6 +136,16 @@ describe('FEATURE: module scene', () => {
     it('WHEN only the root is open THEN the src card counts four files', () => {
       expect(sceneOf(MODULES_FOUND_STUB, [], NO_TESTS).leaves[0]).toMatchObject({ id: 'dir:src', fileCount: 4 });
     });
+
+    it('WHEN only the root is open THEN the files it includes are every file but a.spec.ts, folded ones too', () => {
+      expect(sceneOf(MODULES_FOUND_STUB, [], NO_TESTS).fileIds).toStrictEqual([
+        'file:index.ts',
+        'file:src/a.ts',
+        'file:src/lib/b.ts',
+        'file:src/lib/c.ts',
+        'file:src/ui/d.ts'
+      ]);
+    });
   });
 
   describe('GIVEN a folder that holds only test files', () => {
@@ -163,7 +173,7 @@ describe('FEATURE: module scene', () => {
     it('WHEN tests are hidden THEN the scene is empty, root box included', () => {
       const data: ModulesFound = { ...MODULES_FOUND_STUB, files: ['a.spec.ts'], tests: [0], stubs: [], fileLinks: [], stubLinks: [] };
 
-      expect(sceneOf(data, [], NO_TESTS)).toStrictEqual({ boxes: [], leaves: [], links: [], leafCount: 0 });
+      expect(sceneOf(data, [], NO_TESTS)).toStrictEqual({ boxes: [], leaves: [], links: [], leafCount: 0, fileIds: [] });
     });
   });
 });

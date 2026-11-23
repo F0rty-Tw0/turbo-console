@@ -1,5 +1,6 @@
 import type { Position } from '../../bridge/common/graph-state.type.ts';
 import type { GraphViewState, ModulesViewState, TaskViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { FRESH_MODULES_SHOWN } from '../common/graph-module.const.ts';
 import { DEFAULT_TASK_DEPTH } from '../common/graph-task.const.ts';
 import { DEFAULT_DEPTH } from '../common/graph.const.ts';
 
@@ -34,11 +35,9 @@ export const freshViewStateOf = (hash: string): GraphViewState => {
   return state;
 };
 
-const ALL_SHOWN: ModulesViewState['shown'] = { types: true, tests: true, lazies: true };
-
-/** The modules view of `packageName` with nothing saved: the expansion not set up yet, every kind shown and a camera that fits. */
+/** The modules view of `packageName` with nothing saved: the expansion not set up yet, every kind but test files shown and a camera that fits. */
 export const freshModulesViewOf = (packageName: string): ModulesViewState => {
-  const modules: ModulesViewState = { packageName, expanded: null, shown: ALL_SHOWN, camera: null };
+  const modules: ModulesViewState = { packageName, expanded: null, shown: FRESH_MODULES_SHOWN, camera: null };
 
   return modules;
 };

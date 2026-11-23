@@ -1,21 +1,14 @@
 import type { Core, ElementDefinition, NodeSingular } from 'cytoscape';
 
+import { moduleLinkDefinitionOf } from './graph-module-links.ts';
 import { paintModules } from './graph-module-paint.ts';
 import { positionOf } from './graph-place.ts';
 import type { Position } from '../../bridge/common/graph-state.type.ts';
-import {
-  MODULE_BOX_CLASS,
-  MODULE_DIR_CLASS,
-  MODULE_FILE_CLASS,
-  MODULE_LAZY_CLASS,
-  MODULE_LINK_CLASS,
-  MODULE_STUB_CLASS,
-  MODULE_TYPE_CLASS
-} from '../common/graph-module.const.ts';
+import { MODULE_BOX_CLASS, MODULE_DIR_CLASS, MODULE_FILE_CLASS, MODULE_STUB_CLASS } from '../common/graph-module.const.ts';
 import { TASK_FOLDER_CLASS } from '../common/graph-task.const.ts';
 import type { ModuleCanvas, ModuleDrawing, ModuleElementKind } from '../common/module-canvas.type.ts';
-import type { ModuleBox, ModuleLeaf, ModuleSceneLink } from '../common/module-scene.type.ts';
-import { edgeIdOf } from '../utils/edge-id.util.ts';
+import type { ModuleBox, ModuleLeaf, ModuleScene } from '../common/module-scene.type.ts';
+import { paintTargetOf } from '../utils/module-painted.util.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 
 type KindClass = [ModuleElementKind, string];
@@ -31,12 +24,6 @@ const KIND_CLASSES: KindClass[] = [
   ['dir', MODULE_DIR_CLASS],
   ['stub', MODULE_STUB_CLASS]
 ];
-
-const SOLID_LINK_CLASSES = MODULE_LINK_CLASS;
-
-const LAZY_LINK_CLASSES = `${MODULE_LINK_CLASS} ${MODULE_LAZY_CLASS}`;
-
-const TYPE_LINK_CLASSES = `${MODULE_LINK_CLASS} ${MODULE_TYPE_CLASS}`;
 
 /** A box titled with its folder name, at least as wide as that title; the root box has no parent. */
 const boxDefinitionOf = (box: ModuleBox, drawing: ModuleDrawing): ElementDefinition => {
@@ -60,37 +47,12 @@ const leafDefinitionOf = (leaf: ModuleLeaf, drawing: ModuleDrawing): ElementDefi
   return definition;
 };
 
-/** Solid while the link carries a static import; else dotted with a lazy one, else dashed (types only). */
-const linkClassesOf = (link: ModuleSceneLink): string => {
-  if (link.statics > 0) return SOLID_LINK_CLASSES;
-
-  if (link.lazies > 0) return LAZY_LINK_CLASSES;
-
-  return TYPE_LINK_CLASSES;
-};
-
-/** The link's import count as its label, none for a single import. */
-const countOf = (link: ModuleSceneLink): string => {
-  const total = link.statics + link.types + link.lazies;
-
-  if (total > 1) return String(total);
-
-  return '';
-};
-
-const linkDefinitionOf = (link: ModuleSceneLink): ElementDefinition => {
-  const data = { id: edgeIdOf(link), source: link.source, target: link.target, count: countOf(link) };
-  const definition: ElementDefinition = { data, classes: linkClassesOf(link) };
-
-  return definition;
-};
-
 /** Boxes first in pre-order, so each child's parent exists as it is added, then the leaves, then the links. */
 const elementsOf = (drawing: ModuleDrawing): ElementDefinition[] => {
   const { boxes, leaves, links } = drawing.scene;
   const boxNodes = boxes.map((box) => boxDefinitionOf(box, drawing));
   const leafNodes = leaves.map((leaf) => leafDefinitionOf(leaf, drawing));
-  const edges = links.map(linkDefinitionOf);
+  const edges = links.map(moduleLinkDefinitionOf);
 
   return [...boxNodes, ...leafNodes, ...edges];
 };
@@ -123,11 +85,52 @@ const drawModules = (cy: Core, drawing: ModuleDrawing): void => {
   cy.add(elements);
 };
 
-/** The modules graph on `cy`, the core the package and task graphs share; showing it removes what they drew. */
+/**
+ * The card to paint for `chosen` in `scene`: the card that holds it, or `null` when none does or nothing is chosen. With
+ * no scene drawn yet, `chosen` itself, which paints nothing on the empty core.
+ */
+const paintedOf = (chosen: string | null, scene: ModuleScene | null): string | null => {
+  if (chosen === null || scene === null) return chosen;
+
+  const target = paintTargetOf(chosen, scene);
+
+  return target;
+};
+
+/**
+ * The modules graph on `cy`, the core the package and task graphs share; showing it removes what they drew. It keeps
+ * the chosen card apart from what it paints, the card that holds it in the scene drawn last: a redraw keeps the choice
+ * while a card holds it and paints that card, the folder collapsed over it or the card itself once the folder opens
+ * again, so a folder tap never changes the choice; `clear` forgets it and the scene.
+ */
 export const createModuleCanvas = (cy: Core): ModuleCanvas => {
-  const show = (drawing: ModuleDrawing): void => drawModules(cy, drawing);
-  const clear = (): void => void cy.elements().remove();
-  const paint = (id: string | null): void => paintModules(cy, id);
+  let chosen: string | null = null;
+  let scene: ModuleScene | null = null;
+  const paint = (id: string | null): void => {
+    const target = paintedOf(id, scene);
+
+    chosen = id;
+    paintModules(cy, target);
+  };
+  const show = (drawing: ModuleDrawing): void => {
+    const target = paintedOf(chosen, drawing.scene);
+
+    drawModules(cy, drawing);
+    scene = drawing.scene;
+
+    if (target === null) {
+      chosen = null;
+
+      return;
+    }
+
+    paintModules(cy, target);
+  };
+  const clear = (): void => {
+    chosen = null;
+    scene = null;
+    cy.elements().remove();
+  };
   const kindOf = (id: string): ModuleElementKind | null => kindOfNode(cy.getElementById(id));
   const renderedCentre = (id: string): Position | null => renderedCentreOf(cy, id);
   const canvas: ModuleCanvas = { show, clear, paint, kindOf, renderedCentre };

@@ -135,7 +135,7 @@ describe('FEATURE: nested ELK module graph', () => {
 
   describe('GIVEN an empty scene', () => {
     it('WHEN the ELK input is built THEN the root has no children and no edges', () => {
-      const graph = elkModuleGraphOf({ boxes: [], leaves: [], links: [], leafCount: 0 }, MEASURES);
+      const graph = elkModuleGraphOf({ boxes: [], leaves: [], links: [], leafCount: 0, fileIds: [] }, MEASURES);
 
       expect(graph.children).toStrictEqual([]);
       expect(graph.edges).toStrictEqual([]);

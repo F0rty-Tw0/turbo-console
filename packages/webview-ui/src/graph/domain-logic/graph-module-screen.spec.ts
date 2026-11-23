@@ -5,12 +5,10 @@ import { moduleScreenOf } from './graph-module-screen.ts';
 import type { ModuleCounts, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { MODULE_SLOW_TEXT } from '../common/graph-module.const.ts';
-import type { ModuleCanvas } from '../common/module-canvas.type.ts';
 import type { ModuleScreen, ModuleScreenLayout } from '../common/module-mode.type.ts';
 import type { ModuleFileLeaf, ModuleLeaf, ModuleScene, ModuleShown } from '../common/module-scene.type.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import { fakeDocumentMock } from '../test/mocks/fake-document.mock.ts';
-import { moduleCanvasMock } from '../test/mocks/module-canvas.mock.ts';
 import { pageMock } from '../test/mocks/page.mock.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
@@ -33,20 +31,20 @@ const fileLeafOf = (_: unknown, index: number): ModuleLeaf => {
 
 const LEAVES_301: ModuleLeaf[] = Array.from({ length: 301 }, fileLeafOf);
 
-const SCENE_OF_301: ModuleScene = { boxes: [], leaves: LEAVES_301, links: [], leafCount: 301 };
+const FILE_IDS_301 = LEAVES_301.map((leaf) => leaf.id);
+
+const SCENE_OF_301: ModuleScene = { boxes: [], leaves: LEAVES_301, links: [], leafCount: 301, fileIds: FILE_IDS_301 };
 
 describe('FEATURE: moduleScreenOf', () => {
   let page: PageElements;
-  let canvas: Mocked<ModuleCanvas>;
   let layout: Mocked<ModuleScreenLayout>;
   let screen: ModuleScreen;
 
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
     page = pageMock();
-    canvas = moduleCanvasMock();
     layout = { draw: vi.fn(async (): Promise<void> => Promise.resolve()), scene: vi.fn(() => SCENE_OF_301), clear: vi.fn() };
-    screen = moduleScreenOf({ page, layout, canvas, showGraph: vi.fn() });
+    screen = moduleScreenOf({ page, layout, showGraph: vi.fn() });
     screen.enter();
   });
 
@@ -56,7 +54,7 @@ describe('FEATURE: moduleScreenOf', () => {
 
   describe('GIVEN the screen entered on web', () => {
     it('WHEN it is scanning THEN the bar reads Modules of web and Scanning web…, with Refresh shown and no banner', () => {
-      screen.scanning('web');
+      screen.scanning('web', FRESH_WEB);
 
       expect([
         page.modules.title.textContent,
@@ -64,6 +62,12 @@ describe('FEATURE: moduleScreenOf', () => {
         page.modules.refresh.hidden,
         page.modules.banner.hidden
       ]).toStrictEqual(['Modules of web', 'Scanning web…', false, true]);
+    });
+
+    it('WHEN a fresh view is scanning THEN the View boxes read it, Test files unchecked', () => {
+      screen.scanning('web', FRESH_WEB);
+
+      expect([page.modules.types.checked, page.modules.tests.checked, page.modules.lazies.checked]).toStrictEqual([true, false, true]);
     });
 
     it('WHEN it fails THEN the banner reads Could not scan web. with Retry shown', () => {
@@ -97,12 +101,45 @@ describe('FEATURE: moduleScreenOf', () => {
   });
 
   describe('GIVEN web scanning with no graph drawn', () => {
-    it('WHEN it fails THEN the bar no longer reads Scanning web…', () => {
+    beforeEach(() => {
       layout.scene.mockReturnValue(null);
-      screen.scanning('web');
+      screen.scanning('web', FRESH_WEB);
+    });
+
+    it('WHEN it fails THEN the bar no longer reads Scanning web…', () => {
       screen.failed('web');
 
       expect([page.modules.status.textContent, page.modules.status.title]).toStrictEqual(['', '']);
+    });
+
+    it('WHEN it fails THEN the layout is cleared once more, so a first draw still in flight lands on nothing', () => {
+      screen.failed('web');
+
+      expect(layout.clear).toHaveBeenCalledTimes(2);
+    });
+
+    it('WHEN it is read THEN nothing is drawn', () => {
+      expect(screen.isDrawn()).toBe(false);
+    });
+  });
+
+  describe('GIVEN web failed on Refresh with its graph still drawn', () => {
+    beforeEach(() => {
+      screen.failed('web');
+    });
+
+    it('WHEN it is read THEN a graph is drawn', () => {
+      expect(screen.isDrawn()).toBe(true);
+    });
+
+    it('WHEN it is drawn again THEN the view is laid out and the banner still reads Could not scan web. with Retry', () => {
+      screen.drawAgain(FOUND, WEB_TYPES_OFF, { kind: 'keep' });
+
+      expect([layout.draw.mock.calls, page.modules.bannerText.textContent, page.modules.retry.hidden]).toStrictEqual([
+        [[FOUND, WEB_TYPES_OFF, { kind: 'keep' }]],
+        'Could not scan web.',
+        false
+      ]);
     });
   });
 
@@ -111,7 +148,7 @@ describe('FEATURE: moduleScreenOf', () => {
       screen.shown('web', FOUND, FRESH_WEB, { kind: 'first' });
       await vi.waitFor(() => expect(page.modules.slow.hidden).toBe(false));
       screen.failed('web');
-      screen.scanning('web');
+      screen.scanning('web', FRESH_WEB);
 
       expect([
         page.modules.banner.hidden,

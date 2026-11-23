@@ -4,7 +4,7 @@ import { freshModulesViewOf, freshTaskViewOf, freshViewStateOf } from './fresh-v
 
 const ORIGIN = { x: 0, y: 0 };
 
-const ALL_SHOWN = { types: true, tests: true, lazies: true };
+const TESTS_HIDDEN = { types: true, tests: false, lazies: true };
 
 describe('FEATURE: freshViewStateOf', () => {
   describe('GIVEN a graph hash with no saved state', () => {
@@ -56,11 +56,11 @@ describe('FEATURE: freshViewStateOf', () => {
   });
 
   describe('GIVEN the package web with no modules view saved', () => {
-    it('WHEN its fresh modules view is built THEN nothing is expanded yet, every kind shows and the camera fits', () => {
+    it('WHEN its fresh modules view is built THEN nothing is expanded yet, every kind but test files shows and the camera fits', () => {
       expect(freshModulesViewOf('web')).toStrictEqual({
         packageName: 'web',
         expanded: null,
-        shown: ALL_SHOWN,
+        shown: TESTS_HIDDEN,
         camera: null
       });
     });

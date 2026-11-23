@@ -124,16 +124,16 @@ describe('FEATURE: widget menu model', () => {
       expect(startTrace.title).toBe(START_TRACE_TITLE);
     });
 
-    it('WHEN it is listed THEN it reads View Package Details, Focus, Start trace, Show tasks, a separator and Exclude', () => {
+    it('WHEN it is listed THEN it reads View Package Details, Focus, Start trace, Show tasks, Show modules, a separator and Exclude', () => {
       const labels = labelsOf(model);
 
-      expect(labels).toStrictEqual(['View Package Details', 'Focus', 'Start trace', 'Show tasks', '---', 'Exclude']);
+      expect(labels).toStrictEqual(['View Package Details', 'Focus', 'Start trace', 'Show tasks', 'Show modules', '---', 'Exclude']);
     });
 
     it('WHEN its icons are read THEN they follow spec D6', () => {
       const icons = iconsOf(model);
 
-      expect(icons).toStrictEqual(['file-text', 'target', 'git-commit', 'tasklist', '---', 'eye-closed']);
+      expect(icons).toStrictEqual(['file-text', 'target', 'git-commit', 'tasklist', 'list-tree', '---', 'eye-closed']);
     });
 
     it('WHEN Exclude is read THEN it is enabled', () => {
@@ -149,7 +149,7 @@ describe('FEATURE: widget menu model', () => {
     it('WHEN it is listed THEN Focus reads Clear focus', () => {
       const labels = labelsOf(model);
 
-      expect(labels).toStrictEqual(['View Package Details', 'Clear focus', 'Start trace', '---', 'Exclude']);
+      expect(labels).toStrictEqual(['View Package Details', 'Clear focus', 'Start trace', 'Show modules', '---', 'Exclude']);
     });
 
     it('WHEN Clear focus is read THEN it draws the clear focus icon', () => {
@@ -166,11 +166,15 @@ describe('FEATURE: widget menu model', () => {
   });
 
   describe.each([
-    { title: 'no visible task', hasTasks: false, expected: ['View Package Details', 'Focus', 'Start trace', '---', 'Exclude'] },
+    {
+      title: 'no visible task',
+      hasTasks: false,
+      expected: ['View Package Details', 'Focus', 'Start trace', 'Show modules', '---', 'Exclude']
+    },
     {
       title: 'a visible task',
       hasTasks: true,
-      expected: ['View Package Details', 'Focus', 'Start trace', 'Show tasks', '---', 'Exclude']
+      expected: ['View Package Details', 'Focus', 'Start trace', 'Show tasks', 'Show modules', '---', 'Exclude']
     }
   ])('GIVEN a package with $title', ({ hasTasks, expected }) => {
     it(`WHEN it is listed THEN it reads ${JSON.stringify(expected)}`, () => {
@@ -187,7 +191,8 @@ describe('FEATURE: widget menu model', () => {
       { label: 'Clear focus', state: packageStateOf({ isFocus: true }), action: 'clearFocus', args: [] },
       { label: 'Start trace', state: packageStateOf(), action: 'startTrace', args: [] },
       { label: 'Exclude', state: packageStateOf(), action: 'setShown', args: [name, false] },
-      { label: 'Show tasks', state: packageStateOf({ hasTasks: true }), action: 'showTasks', args: [name] }
+      { label: 'Show tasks', state: packageStateOf({ hasTasks: true }), action: 'showTasks', args: [name] },
+      { label: 'Show modules', state: packageStateOf(), action: 'showModules', args: [name] }
     ] as const)('WHEN $label runs from $state THEN only $action is called with $args', ({ label, state, action, args }) => {
       const actions = packageActionsMock();
       const model: MenuItemModel[] = packageMenuOf(name, state, actions);
@@ -294,12 +299,12 @@ describe('FEATURE: widget menu model', () => {
       {
         title: 'with a visible task, not the focus',
         state: packageStateOf({ hasTasks: true }),
-        icons: [SWAPPED.openDetails, SWAPPED.focus, SWAPPED.startTrace, SWAPPED.showTasks, '---', SWAPPED.exclude]
+        icons: [SWAPPED.openDetails, SWAPPED.focus, SWAPPED.startTrace, SWAPPED.showTasks, SWAPPED.showModules, '---', SWAPPED.exclude]
       },
       {
         title: 'that is the focus',
         state: packageStateOf({ isFocus: true }),
-        icons: [SWAPPED.openDetails, SWAPPED.clearFocus, SWAPPED.startTrace, '---', SWAPPED.exclude]
+        icons: [SWAPPED.openDetails, SWAPPED.clearFocus, SWAPPED.startTrace, SWAPPED.showModules, '---', SWAPPED.exclude]
       }
     ])('WHEN the menu of a package $title is built THEN its icons follow the table', async ({ state, icons }) => {
       const swapped = await import('./widget-menu-model.util.ts');

@@ -3,8 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createGraphController } from './graph-controller.ts';
 import type { GraphPackageModulesMessage, ModulesResult } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphState } from '../../bridge/common/graph-state.type.ts';
+import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
-import type { GraphController } from '../common/graph-page.type.ts';
+import type { GraphController, GraphViewHandlers, ViewStateSaver } from '../common/graph-page.type.ts';
 import { TASK_MODE_CLASS } from '../common/graph-task.const.ts';
 import { LAYOUT_FAILED_TEXT } from '../common/graph.const.ts';
 import type { PackageSideDepsMock } from '../test/common/graph-package-side.type.ts';
@@ -31,6 +32,28 @@ const ELK_FAILED = new Error('elk failed');
 const WEB_TREE = moduleTreeOf(MODULES_FOUND_STUB.files);
 
 const DEFAULT_EXPANDED: string[] = defaultExpandedOf(WEB_TREE);
+
+const LIB_ID = 'dir:src/lib';
+
+const LIB_EXPANDED: string[] = [...DEFAULT_EXPANDED, 'src/lib'];
+
+/** The handlers the controller gave the view it built. */
+const handlersOf = (mock: PackageSideDepsMock): GraphViewHandlers => {
+  const handlers = vi.mocked(mock.deps.createView).mock.calls[0]?.[1];
+
+  if (handlers === undefined) throw new Error('no view was built');
+
+  return handlers;
+};
+
+/** The modules view in the last save scheduled. */
+const lastSavedOf = (saver: ViewStateSaver): ModulesViewState | null => {
+  const call = vi.mocked(saver.schedule).mock.lastCall;
+
+  if (call === undefined) return null;
+
+  return call[0].modules;
+};
 
 describe('FEATURE: modules bar wiring', () => {
   let mock: PackageSideDepsMock;
@@ -85,6 +108,24 @@ describe('FEATURE: modules bar wiring', () => {
     });
   });
 
+  describe('GIVEN a multi-package graph with web entered fresh and its scan not back yet', () => {
+    beforeEach(() => {
+      controller.receive({ type: 'state', state: WEB_LISTED });
+      controller.receive({ type: 'showModules', name: 'web' });
+    });
+
+    it('WHEN Type-only imports is unchecked THEN the saved view still hides test files', () => {
+      mock.page.modules.types.checked = false;
+      mock.page.modules.types.dispatchEvent(new Event('change'));
+
+      expect(vi.mocked(mock.saver.schedule).mock.lastCall?.[0].modules?.shown).toStrictEqual({
+        types: false,
+        tests: false,
+        lazies: true
+      });
+    });
+  });
+
   describe('GIVEN a multi-package graph with web shown in modules mode', () => {
     beforeEach(() => {
       controller.receive({ type: 'state', state: WEB_LISTED });
@@ -129,15 +170,6 @@ describe('FEATURE: modules bar wiring', () => {
       expect([post.mock.calls.length, post.mock.lastCall]).toStrictEqual([posts + 1, [WEB_SCAN]]);
     });
 
-    it('WHEN Reset view is pressed THEN the default expansion is saved again', () => {
-      const schedule = vi.mocked(mock.saver.schedule);
-      const saves = schedule.mock.calls.length;
-
-      mock.page.modules.reset.click();
-
-      expect([schedule.mock.calls.length, schedule.mock.lastCall?.[0].modules?.expanded]).toStrictEqual([saves + 1, DEFAULT_EXPANDED]);
-    });
-
     it('WHEN Reset view is pressed and its layout lands THEN the view fits', async () => {
       mock.page.modules.reset.click();
       await mock.runs.settle(mock.runs.count() - 1, resultOf('modules', {}));
@@ -155,6 +187,32 @@ describe('FEATURE: modules bar wiring', () => {
       mock.page.packagesMode.click();
 
       expect(mock.page.root.classList.contains(MODULES_MODE_CLASS)).toBe(false);
+    });
+  });
+
+  describe('GIVEN web shown with src/lib opened and Test files checked', () => {
+    beforeEach(() => {
+      controller.receive({ type: 'state', state: WEB_LISTED });
+      controller.receive({ type: 'showModules', name: 'web' });
+      controller.receive(WEB_FOUND);
+      vi.mocked(mock.view.modules.kindOf).mockReturnValue('dir');
+      handlersOf(mock).onTapNode(LIB_ID);
+      mock.page.modules.tests.checked = true;
+      mock.page.modules.tests.dispatchEvent(new Event('change'));
+    });
+
+    it('WHEN Reset view is pressed THEN the default expansion is saved in place of the opened one', () => {
+      const before = lastSavedOf(mock.saver)?.expanded;
+
+      mock.page.modules.reset.click();
+
+      expect([before, lastSavedOf(mock.saver)?.expanded]).toStrictEqual([LIB_EXPANDED, DEFAULT_EXPANDED]);
+    });
+
+    it('WHEN Reset view is pressed THEN Test files stays checked and the saved view still shows tests', () => {
+      mock.page.modules.reset.click();
+
+      expect([mock.page.modules.tests.checked, lastSavedOf(mock.saver)?.shown.tests]).toStrictEqual([true, true]);
     });
   });
 

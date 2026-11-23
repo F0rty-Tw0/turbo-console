@@ -11,10 +11,15 @@ export type PackageActions = {
   readonly setShown: (name: string, isShown: boolean) => void;
   /** The details panel's Show tasks: task mode on every visible task of `name`. */
   readonly showTasks: (name: string) => void;
+  /** The details panel's Show modules: modules mode on `name`. */
+  readonly showModules: (name: string) => void;
 };
 
-/** The inspection's list and task hooks the package actions go through. */
-export type PackageActionsDeps = Pick<GraphInspectionDeps, 'focus' | 'onFocusOn' | 'onExclude' | 'onShow' | 'onShowTasks'>;
+/** The inspection's list, task and modules hooks the package actions go through. */
+export type PackageActionsDeps = Pick<
+  GraphInspectionDeps,
+  'focus' | 'onFocusOn' | 'onExclude' | 'onShow' | 'onShowTasks' | 'onShowModules'
+>;
 
 /** The inspection's own actions the package actions go through. */
 export type PackageInspectionActions = Pick<InspectionActions, 'openDetailsOf' | 'input'>;

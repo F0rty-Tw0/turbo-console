@@ -5,8 +5,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createModuleCanvas } from './graph-module-view.ts';
 import type { Positions } from '../../bridge/common/graph-state.type.ts';
 import { MODULE_LAZY_CLASS, MODULE_TYPE_CLASS } from '../common/graph-module.const.ts';
-import type { ModuleCanvas } from '../common/module-canvas.type.ts';
-import type { ModuleScene } from '../common/module-scene.type.ts';
+import type { ModuleCanvas, ModuleDrawing } from '../common/module-canvas.type.ts';
+import type { ModuleScene, ModuleShown } from '../common/module-scene.type.ts';
 import { ALL_SHOWN_STUB, MODULES_FOUND_STUB, MODULE_MEASURES_STUB } from '../test/stubs/module-scene.stub.ts';
 import { edgeIdOf } from '../utils/edge-id.util.ts';
 import { moduleSceneOf } from '../utils/module-scene.util.ts';
@@ -18,8 +18,32 @@ const TREE = moduleTreeOf(MODULES_FOUND_STUB.files);
 
 const SCENE: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src'], shown: ALL_SHOWN_STUB });
 
+const LIB_OPEN: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src', 'src/lib'], shown: ALL_SHOWN_STUB });
+
+const TESTS_HIDDEN: ModuleShown = { ...ALL_SHOWN_STUB, tests: false };
+
+const NO_TESTS: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: ['src'], shown: TESTS_HIDDEN });
+
+const ROOT_ONLY: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [], shown: ALL_SHOWN_STUB });
+
+const ROOT_ONLY_NO_TESTS: ModuleScene = moduleSceneOf(TREE, MODULES_FOUND_STUB, { expanded: [], shown: TESTS_HIDDEN });
+
 /** No centre listed: every card is drawn at the origin. */
 const AT_ORIGIN: Positions = {};
+
+const A_ID = 'file:src/a.ts';
+
+const LIB_ID = 'dir:src/lib';
+
+const B_ID = 'file:src/lib/b.ts';
+
+const SPEC_ID = 'file:src/a.spec.ts';
+
+const drawingOf = (scene: ModuleScene): ModuleDrawing => {
+  const drawing: ModuleDrawing = { scene, positions: AT_ORIGIN, measures: MODULE_MEASURES_STUB };
+
+  return drawing;
+};
 
 describe('FEATURE: createModuleCanvas', () => {
   let cy: Core;
@@ -95,6 +119,78 @@ describe('FEATURE: createModuleCanvas', () => {
       canvas.paint(null);
 
       expect([cy.$id('file:src/a.ts').hasClass('normal'), cy.$id('dir:src/ui').hasClass('normal')]).toStrictEqual([true, true]);
+    });
+
+    it('WHEN a.ts is painted and src/lib is opened THEN a.ts stays selected with its new neighbour b.ts lit', () => {
+      canvas.paint(A_ID);
+      canvas.show(drawingOf(LIB_OPEN));
+
+      expect([cy.$id(A_ID).hasClass('selected'), cy.$id(B_ID).hasClass('highlighted')]).toStrictEqual([true, true]);
+    });
+
+    it('WHEN b.ts inside the collapsed src/lib is painted THEN the src/lib card is selected', () => {
+      canvas.paint(B_ID);
+
+      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([LIB_ID]);
+    });
+
+    it('WHEN b.ts inside the collapsed src/lib is painted and src/lib opened THEN b.ts is selected, as it stayed the choice', () => {
+      canvas.paint(B_ID);
+      canvas.show(drawingOf(LIB_OPEN));
+
+      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([B_ID]);
+    });
+
+    it('WHEN a.ts is painted, the canvas cleared and the scene drawn again THEN nothing is selected', () => {
+      canvas.paint(A_ID);
+      canvas.clear();
+      canvas.show(drawingOf(SCENE));
+
+      expect(cy.$('.selected')).toHaveLength(0);
+    });
+  });
+
+  describe('GIVEN web drawn with src/lib open and b.ts painted', () => {
+    beforeEach(() => {
+      canvas.show(drawingOf(LIB_OPEN));
+      canvas.paint(B_ID);
+    });
+
+    it('WHEN src/lib is closed THEN the src/lib card that now holds b.ts is selected', () => {
+      canvas.show(drawingOf(SCENE));
+
+      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([LIB_ID]);
+    });
+
+    it('WHEN src/lib is closed and opened again THEN b.ts is selected again', () => {
+      canvas.show(drawingOf(SCENE));
+      canvas.show(drawingOf(LIB_OPEN));
+
+      expect(cy.$('.selected').map((node) => node.id())).toStrictEqual([B_ID]);
+    });
+  });
+
+  describe('GIVEN web drawn with src open and the test file a.spec.ts painted', () => {
+    beforeEach(() => {
+      canvas.paint(SPEC_ID);
+    });
+
+    it('WHEN test files are hidden and shown again THEN nothing is selected, as hiding dropped the choice', () => {
+      canvas.show(drawingOf(NO_TESTS));
+      canvas.show(drawingOf(SCENE));
+
+      expect(cy.$('.selected')).toHaveLength(0);
+    });
+
+    it.each([
+      { order: 'src is collapsed, then test files are hidden', scenes: [ROOT_ONLY, ROOT_ONLY_NO_TESTS] },
+      { order: 'test files are hidden, then src is collapsed', scenes: [NO_TESTS, ROOT_ONLY_NO_TESTS] }
+    ])('WHEN $order and test files are shown again THEN nothing is selected, as hiding dropped the choice', ({ scenes }) => {
+      for (const scene of scenes) canvas.show(drawingOf(scene));
+
+      canvas.show(drawingOf(ROOT_ONLY));
+
+      expect(cy.$('.selected')).toHaveLength(0);
     });
   });
 });

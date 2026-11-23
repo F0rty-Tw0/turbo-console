@@ -1,13 +1,8 @@
 import type { GraphOpenImportMessage } from '../../bridge/common/graph-imports.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import { DIR_PREFIX, FILE_PREFIX, STUB_PREFIX } from '../common/graph-module.const.ts';
 import type { HandledModules, ModuleElementKind } from '../common/module-canvas.type.ts';
 import type { ModuleInputDeps, ModuleInputMode, ModuleRedraw } from '../common/module-mode.type.ts';
-
-const DIR_PREFIX = 'dir:';
-
-const FILE_PREFIX = 'file:';
-
-const STUB_PREFIX = 'pkg:';
 
 const ROOT_BOX_ID = DIR_PREFIX;
 
@@ -43,16 +38,19 @@ const expandedAfterTap = (view: ModulesViewState, kind: ModuleElementKind | null
 
 /**
  * The canvas events in modules mode (spec §7.4), each ignored unless Shown: a folder tap toggles it and redraws anchored
- * on it, a file or stub tap paints it; a file double tap opens it, a stub double tap enters that package.
+ * on it, a file or stub tap paints it; a file double tap opens it, a stub double tap enters that package. A node tap
+ * then focuses the container, as in package mode, since Cytoscape blurs it on the press.
  */
 export const moduleInputOf = (deps: ModuleInputDeps): HandledModules => {
-  const { mode, canvas, bridge } = deps;
+  const { mode, canvas, container, bridge } = deps;
   const tapNode = (id: string): void => {
     const view = shownViewOf(mode);
     const kind = canvas.kindOf(id);
     const isCard = kind === 'file' || kind === 'stub';
 
     if (view === null) return;
+
+    container.focus();
 
     if (isCard) {
       canvas.paint(id);

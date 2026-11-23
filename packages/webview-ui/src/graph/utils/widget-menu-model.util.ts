@@ -18,6 +18,7 @@ import type { FolderScene } from '../common/folder-scene.type.ts';
 import type { GraphFilters } from '../common/graph-filters.type.ts';
 import { ACTION_ICONS } from '../common/graph-icon.const.ts';
 import type { GraphIconId } from '../common/graph-icon.type.ts';
+import { SHOW_MODULES_LABEL } from '../common/graph-module.const.ts';
 import { SHOW_TASKS_LABEL } from '../common/graph-task.const.ts';
 import type { Inspection } from '../common/inspection.type.ts';
 import type { PackageActions } from '../common/package-actions.type.ts';
@@ -62,8 +63,8 @@ export const folderMenuOf = (folder: string, state: FolderMenuState, actions: Fo
 };
 
 /**
- * View Package Details · Focus or Clear focus · Start trace · Show tasks, for a package with a visible task · separator
- * · Exclude, the list checkbox's untick, locked while focused.
+ * View Package Details · Focus or Clear focus · Start trace · Show tasks, for a package with a visible task · Show
+ * modules · separator · Exclude, the list checkbox's untick, locked while focused.
  */
 export const packageMenuOf = (name: string, state: PackageMenuState, actions: PackageActions): MenuItemModel[] => {
   const details = itemOf(OPEN_DETAILS_LABEL, ACTION_ICONS.openDetails, (): void => actions.openDetails(name));
@@ -74,9 +75,10 @@ export const packageMenuOf = (name: string, state: PackageMenuState, actions: Pa
   const showTasks = itemOf(SHOW_TASKS_LABEL, ACTION_ICONS.showTasks, (): void => actions.showTasks(name));
   const taskItems: MenuItemModel[] = [showTasks];
   const tasks = state.hasTasks ? taskItems : NO_ITEMS;
+  const showModules = itemOf(SHOW_MODULES_LABEL, ACTION_ICONS.showModules, (): void => actions.showModules(name));
   const excludeItem = itemOf(EXCLUDE_LABEL, ACTION_ICONS.exclude, (): void => actions.setShown(name, false));
   const exclude: MenuItem = { ...excludeItem, isDisabled: state.isFocus };
-  const model: MenuItemModel[] = [details, focus, trace, ...tasks, SEPARATOR, exclude];
+  const model: MenuItemModel[] = [details, focus, trace, ...tasks, showModules, SEPARATOR, exclude];
 
   return model;
 };

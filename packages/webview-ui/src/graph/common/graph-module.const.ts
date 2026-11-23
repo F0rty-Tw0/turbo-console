@@ -1,3 +1,21 @@
+import type { ModuleRedraw } from './module-mode.type.ts';
+import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+
+/** The kinds a modules view with nothing saved shows: every kind but test files. */
+export const FRESH_MODULES_SHOWN: ModulesViewState['shown'] = { types: true, tests: false, lazies: true };
+
+/** A module redraw that leaves the camera as it is. */
+export const MODULE_REDRAW_KEEP: ModuleRedraw = { kind: 'keep' };
+
+/** The id prefix of a folder, drawn as a box or a card; the root box's id is the prefix alone. */
+export const DIR_PREFIX = 'dir:';
+
+/** The id prefix of a file card. */
+export const FILE_PREFIX = 'file:';
+
+/** The id prefix of a stub, another workspace package. */
+export const STUB_PREFIX = 'pkg:';
+
 /** Past this many drawn leaves the module view warns that drawing can be slow (D10). */
 export const MODULE_SHOWN_CAP = 300;
 
@@ -62,3 +80,9 @@ export const MODULE_COUNT_FONT_PX = 10;
 
 /** Below this rendered size the count label is not drawn, so it hides below zoom 0.5 (`min-zoomed-font-size`). */
 export const MODULE_COUNT_MIN_ZOOMED_PX = 5;
+
+/** The space between a count and its chip's frame, so two nearby counts never read as one number. */
+export const MODULE_COUNT_PADDING_PX = '2px';
+
+/** The width of a count chip's frame. */
+export const MODULE_COUNT_BORDER_PX = 1;
