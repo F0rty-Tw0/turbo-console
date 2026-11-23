@@ -9,9 +9,10 @@ import type { ModuleMeasures, ModuleScene } from './module-scene.type.ts';
 import type { PageElements } from './page-elements.type.ts';
 import type { PageTaskMode } from './page-task-mode.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
+import type { GraphModuleSitesMessage } from '../../bridge/common/graph-module-sites.type.ts';
 import type { GraphPackageModulesMessage, GraphShowModulesMessage, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
-import type { GraphViewMode, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphViewMode, ModuleSelection, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** Where Back leaves to: tasks on a single-package repo, packages otherwise (spec §7.2 "Leave"). */
 export type ModuleExit = 'packages' | 'tasks';
@@ -119,8 +120,8 @@ export type PageModuleMode = {
   readonly received: (state: GraphReady) => void;
   readonly enter: (packageName: string) => void;
   readonly leave: () => void;
-  /** A host message received at `at`. */
-  readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number) => void;
+  /** A host message received at `at`; a sites answer goes to the selection. */
+  readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage | GraphModuleSitesMessage, at: number) => void;
   /** A host message replaced the page; the next graph state still listing the package takes it back. */
   readonly suspend: () => void;
   /** Draws the saved view again with the camera kept; Shown, or Failed over a kept graph, only. */
@@ -172,10 +173,22 @@ export type ModuleInputMode = {
   readonly saveCamera: () => void;
 };
 
+/** Modules mode as a host scan message reaches it (`GraphModuleMode`). */
+export type ModuleScanReceiver = {
+  readonly receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number) => void;
+};
+
+/** The selection as the canvas input drives it (`GraphModuleSelection`): a card or link tap selects, a background tap clears. */
+export type ModuleInputSelection = {
+  readonly select: (sel: ModuleSelection) => void;
+  readonly clear: () => void;
+};
+
 export type ModuleInputDeps = {
   readonly mode: ModuleInputMode;
   readonly canvas: ModuleCanvas;
   /** The graph container a canvas tap hands focus back to, as Cytoscape blurs it on every press. */
   readonly container: Pick<HTMLElement, 'focus'>;
   readonly bridge: Pick<Bridge, 'post'>;
+  readonly selection: ModuleInputSelection;
 };

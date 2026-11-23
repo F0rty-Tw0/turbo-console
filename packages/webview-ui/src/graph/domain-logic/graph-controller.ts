@@ -2,7 +2,8 @@ import { GraphCardClock } from './graph-card-clock.ts';
 import { probeFactsOf } from './graph-controller-facts.ts';
 import { GraphFrames } from './graph-frames.ts';
 import { graphLocationOf } from './graph-location.ts';
-import { messageSuspenderOf, modeGroupHiderOf, moduleModeOf, reportDropped, resumeModules } from './graph-module-wiring.ts';
+import { reportDropped } from './graph-module-wire-parts.ts';
+import { messageSuspenderOf, modeGroupHiderOf, moduleModeOf, resumeModules } from './graph-module-wiring.ts';
 import { GraphPackageSide } from './graph-package-side.ts';
 import { wirePanelSashes } from './graph-panel-sashes.ts';
 import { packageRevealOf } from './graph-reveal.ts';
@@ -139,10 +140,8 @@ class GraphPageController {
         break;
       case 'packageModules':
       case 'showModules':
-        this.modules.receive(message, at);
-        break;
       case 'moduleSites':
-        // Nothing on the page shows module sites yet, so the answer is dropped.
+        this.modules.receive(message, at);
         break;
     }
   }

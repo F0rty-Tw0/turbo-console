@@ -52,6 +52,7 @@ describe('FEATURE: viewHandlersOf in modules mode', () => {
       modules = {
         isActive: vi.fn(() => true),
         tapNode: vi.fn(),
+        tapLink: vi.fn(),
         doubleTapNode: vi.fn(),
         tapBackground: vi.fn(),
         saveCamera: vi.fn(record('modules camera'))
@@ -70,6 +71,13 @@ describe('FEATURE: viewHandlersOf in modules mode', () => {
       handlers.onTapNode('file:a.ts');
 
       expect(modules.tapNode).toHaveBeenCalledExactlyOnceWith('file:a.ts');
+      expect(tap).not.toHaveBeenCalled();
+    });
+
+    it('WHEN onTapEdge(src, tgt) fires THEN modules.tapLink gets (src, tgt) and the package inspection is not tapped', () => {
+      handlers.onTapEdge('file:a.ts', 'dir:lib');
+
+      expect(modules.tapLink).toHaveBeenCalledExactlyOnceWith('file:a.ts', 'dir:lib');
       expect(tap).not.toHaveBeenCalled();
     });
 

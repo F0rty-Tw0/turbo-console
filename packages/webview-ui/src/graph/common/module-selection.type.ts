@@ -2,7 +2,7 @@ import type { ModuleCanvas } from './module-canvas.type.ts';
 import type { ModuleDetailsList, ModuleDetailsView } from './module-details.type.ts';
 import type { ModuleInputMode } from './module-mode.type.ts';
 import type { Bridge } from '../../bridge/common/bridge.type.ts';
-import type { ModuleEnd } from '../../bridge/common/graph-module-sites.type.ts';
+import type { GraphModuleSitesMessage, ModuleEnd } from '../../bridge/common/graph-module-sites.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 
 /** One sites lookup: the package and the end it asks about, or the two ends of a link (`to` set). */
@@ -26,6 +26,9 @@ export type ModuleSelectionDeps = {
   readonly bridge: Pick<Bridge, 'post'>;
   readonly details: ModuleDetailsSink;
 };
+
+/** The selection as the host's sites answer reaches it (`GraphModuleSelection`). */
+export type ModuleSitesReceiver = { readonly replied: (message: GraphModuleSitesMessage) => void };
 
 /** The selection as the module panels report to it (`GraphModuleSelection`). */
 export type ModulePanelSelection = {

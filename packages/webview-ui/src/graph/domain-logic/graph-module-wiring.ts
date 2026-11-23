@@ -5,13 +5,19 @@ import { GraphModuleLayout } from './graph-module-layout.ts';
 import { GraphModuleMode } from './graph-module-mode.ts';
 import { moduleScreenOf } from './graph-module-screen.ts';
 import { GraphModuleSelection } from './graph-module-selection.ts';
-import { controlsActionsOf, detailsActionsOf, measuresOf, packageNameOf, relayoutOf, wireBar } from './graph-module-wire-parts.ts';
+import {
+  controlsActionsOf,
+  detailsActionsOf,
+  measuresOf,
+  moduleReceiverOf,
+  packageNameOf,
+  relayoutOf,
+  wireBar
+} from './graph-module-wire-parts.ts';
 import { layoutScreenOf, showFailure } from './graph-page-states.ts';
-import type { GraphPackageModulesMessage, GraphShowModulesMessage, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
+import type { ModulesFound } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
-import { isRecord } from '../../bridge/utils/record.util.ts';
-import { MODULES_DROPPED_WARNING } from '../common/graph-module.const.ts';
 import type { GraphControllerDeps, GraphView, Viewport } from '../common/graph-page.type.ts';
 import { DETAILS_ID } from '../common/graph.const.ts';
 import type { ModuleDetailsView } from '../common/module-details.type.ts';
@@ -127,14 +133,14 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
   const views = deps.moduleViews;
   const details = new GraphModuleDetails({ page, views, bridge, modes, packageName: shownPackage, packageAside, actions });
   const controls = new GraphModuleControls({ page, views, modes, actions: controlsActionsOf(mode, selection) });
-  const input = moduleInputOf({ mode, canvas: view.modules, container: page.container, bridge });
+  const input = moduleInputOf({ mode, canvas: view.modules, container: page.container, bridge, selection });
   const leave = (): void => mode.leave();
   const modules: PageModuleMode = {
     isActive: (): boolean => mode.isActive(),
     received: (state: GraphReady): void => mode.received(state),
     enter: (packageName: string): void => mode.enter(packageName),
     leave,
-    receive: (message: GraphPackageModulesMessage | GraphShowModulesMessage, at: number): void => mode.receive(message, at),
+    receive: moduleReceiverOf(mode, selection),
     suspend: (): void => mode.suspend(),
     relayout: (): void => relayoutOf(mode),
     input
@@ -167,11 +173,4 @@ export const resumeModules = (mode: Pick<PageModuleMode, 'enter'>, modes: Module
   const savedMode = modes.mode();
 
   if (savedMode === 'modules' && saved !== null) mode.enter(saved.packageName);
-};
-
-/** Spec §8: a `packageModules` the validator rejects changes nothing but a console warning; Refresh still asks again. */
-export const reportDropped = (message: unknown): void => {
-  const isModules = isRecord(message) && message['type'] === 'packageModules';
-
-  if (isModules) console.warn(MODULES_DROPPED_WARNING);
 };

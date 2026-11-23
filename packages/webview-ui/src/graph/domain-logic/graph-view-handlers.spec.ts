@@ -84,6 +84,7 @@ describe('FEATURE: viewHandlersOf', () => {
       const modules: Mocked<HandledModules> = {
         isActive: vi.fn(() => false),
         tapNode: vi.fn(),
+        tapLink: vi.fn(),
         doubleTapNode: vi.fn(),
         tapBackground: vi.fn(),
         saveCamera: vi.fn()

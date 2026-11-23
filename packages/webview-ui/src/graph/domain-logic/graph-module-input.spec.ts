@@ -8,7 +8,7 @@ import type { GraphPackageModulesMessage } from '../../bridge/common/graph-modul
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import type { HandledModules, ModuleCanvas } from '../common/module-canvas.type.ts';
-import type { ModuleRedraw } from '../common/module-mode.type.ts';
+import type { ModuleInputSelection, ModuleRedraw } from '../common/module-mode.type.ts';
 import type { ModuleModeRig } from '../test/common/graph-module-mode.type.ts';
 import { moduleCanvasMock } from '../test/mocks/module-canvas.mock.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
@@ -31,6 +31,7 @@ describe('FEATURE: moduleInputOf', () => {
   let mode: GraphModuleMode;
   let canvas: Mocked<ModuleCanvas>;
   let container: Mocked<Pick<HTMLElement, 'focus'>>;
+  let selection: Mocked<ModuleInputSelection>;
   let input: HandledModules;
 
   /** Modules mode over a real `ViewStateModes` with web saved as `src` and `src/lib` expanded, Loading web. */
@@ -43,7 +44,8 @@ describe('FEATURE: moduleInputOf', () => {
     mode = new GraphModuleMode(rig.deps);
     canvas = moduleCanvasMock();
     container = { focus: vi.fn() };
-    input = moduleInputOf({ mode, canvas, container, bridge: rig.deps.bridge });
+    selection = { select: vi.fn(), clear: vi.fn() };
+    input = moduleInputOf({ mode, canvas, container, bridge: rig.deps.bridge, selection });
     mode.received(WEB_LISTED);
     mode.enter('web');
   });
@@ -68,6 +70,19 @@ describe('FEATURE: moduleInputOf', () => {
       input.doubleTapNode('file:src/a.ts');
 
       expect(rig.post.mock.calls).toStrictEqual([[{ type: 'scanModules', packageName: 'web' }]]);
+    });
+
+    it('WHEN a link is tapped THEN select is not called and the container keeps its focus state', () => {
+      input.tapLink('file:src/a.ts', 'dir:src/lib');
+
+      expect(selection.select).not.toHaveBeenCalled();
+      expect(container.focus).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the background is tapped THEN clear is not called', () => {
+      input.tapBackground();
+
+      expect(selection.clear).not.toHaveBeenCalled();
     });
   });
 
@@ -122,11 +137,21 @@ describe('FEATURE: moduleInputOf', () => {
       expect(rig.screen.shown.mock.calls).toHaveLength(drawn);
     });
 
-    it('WHEN a.ts is tapped THEN it is painted with its neighbours', () => {
+    it('WHEN a.ts is tapped THEN select gets {kind: node, id: file:src/a.ts} and the canvas is not painted by the input', () => {
       canvas.kindOf.mockReturnValue('file');
       input.tapNode('file:src/a.ts');
 
-      expect(canvas.paint).toHaveBeenCalledWith({ kind: 'node', id: 'file:src/a.ts' });
+      expect(selection.select).toHaveBeenCalledExactlyOnceWith({ kind: 'node', id: 'file:src/a.ts' });
+      expect(canvas.paint).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the link src/a.ts → dir:src/lib is tapped THEN the container takes focus, then the link is selected', () => {
+      input.tapLink('file:src/a.ts', 'dir:src/lib');
+      const [focused] = container.focus.mock.invocationCallOrder;
+      const [selected] = selection.select.mock.invocationCallOrder;
+
+      expect(selection.select).toHaveBeenCalledExactlyOnceWith({ kind: 'link', source: 'file:src/a.ts', target: 'dir:src/lib' });
+      expect(focused).toBeLessThan(selected ?? 0);
     });
 
     it.each([
@@ -140,10 +165,11 @@ describe('FEATURE: moduleInputOf', () => {
       expect(container.focus).toHaveBeenCalledOnce();
     });
 
-    it('WHEN the background is tapped THEN the paint is cleared', () => {
+    it('WHEN the background is tapped THEN clear is called once', () => {
       input.tapBackground();
 
-      expect(canvas.paint).toHaveBeenCalledExactlyOnceWith(null);
+      expect(selection.clear).toHaveBeenCalledOnce();
+      expect(canvas.paint).not.toHaveBeenCalled();
     });
 
     it('WHEN a.ts is double-tapped THEN openImport goes out at line 0', () => {

@@ -38,11 +38,12 @@ const expandedAfterTap = (view: ModulesViewState, kind: ModuleElementKind | null
 
 /**
  * The canvas events in modules mode (spec §7.4), each ignored unless Shown: a folder tap toggles it and redraws anchored
- * on it (not while a focus is set), a file or stub tap paints it; a file double tap opens it, a stub double tap enters that package. A node tap
- * then focuses the container, as in package mode, since Cytoscape blurs it on the press.
+ * on it (not while a focus is set), a file or stub tap or a link tap selects it, a background tap clears the selection; a
+ * file double tap opens it, a stub double tap enters that package. A node or link tap first focuses the container, as in
+ * package mode, since Cytoscape blurs it on the press.
  */
 export const moduleInputOf = (deps: ModuleInputDeps): HandledModules => {
-  const { mode, canvas, container, bridge } = deps;
+  const { mode, canvas, container, bridge, selection } = deps;
   const tapNode = (id: string): void => {
     const view = shownViewOf(mode);
     const kind = canvas.kindOf(id);
@@ -53,7 +54,7 @@ export const moduleInputOf = (deps: ModuleInputDeps): HandledModules => {
     container.focus();
 
     if (isCard) {
-      canvas.paint({ kind: 'node', id });
+      selection.select({ kind: 'node', id });
 
       return;
     }
@@ -80,14 +81,22 @@ export const moduleInputOf = (deps: ModuleInputDeps): HandledModules => {
     if (kind === 'file') bridge.post(message);
     else if (kind === 'stub') mode.enter(stubName);
   };
+  const tapLink = (source: string, target: string): void => {
+    const view = shownViewOf(mode);
+
+    if (view === null) return;
+
+    container.focus();
+    selection.select({ kind: 'link', source, target });
+  };
   const tapBackground = (): void => {
     const view = shownViewOf(mode);
 
-    if (view !== null) canvas.paint(null);
+    if (view !== null) selection.clear();
   };
   const isActive = (): boolean => mode.isActive();
   const saveCamera = (): void => mode.saveCamera();
-  const handled: HandledModules = { isActive, tapNode, doubleTapNode, tapBackground, saveCamera };
+  const handled: HandledModules = { isActive, tapNode, tapLink, doubleTapNode, tapBackground, saveCamera };
 
   return handled;
 };

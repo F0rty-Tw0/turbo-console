@@ -1,12 +1,15 @@
 import { resetView, toggleShown } from './graph-module-view-edits.ts';
-import { MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
+import type { GraphModuleSitesMessage } from '../../bridge/common/graph-module-sites.type.ts';
+import type { GraphPackageModulesMessage, GraphShowModulesMessage } from '../../bridge/common/graph-modules.type.ts';
+import { isRecord } from '../../bridge/utils/record.util.ts';
+import { MODULES_DROPPED_WARNING, MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
 import type { GraphControllerDeps } from '../common/graph-page.type.ts';
 import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
 import type { ModuleControlsActions, ModuleViewEditMode } from '../common/module-controls.type.ts';
 import type { ModuleDetailsActions, ModuleDetailsList } from '../common/module-details.type.ts';
-import type { ModuleBarMode, ModuleInputMode } from '../common/module-mode.type.ts';
+import type { ModuleBarMode, ModuleInputMode, ModuleScanReceiver, PageModuleMode } from '../common/module-mode.type.ts';
 import type { ModuleBox, ModuleLeaf, ModuleMeasures, ModuleShown } from '../common/module-scene.type.ts';
-import type { ModulePanelSelection } from '../common/module-selection.type.ts';
+import type { ModulePanelSelection, ModuleSitesReceiver } from '../common/module-selection.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
@@ -55,6 +58,23 @@ export const controlsActionsOf = (mode: ModuleViewEditMode, selection: ModulePan
   };
 
   return actions;
+};
+
+/** A host message for modules mode: a sites answer goes to the selection, the scan messages to the mode. */
+export const moduleReceiverOf = (mode: ModuleScanReceiver, selection: ModuleSitesReceiver): PageModuleMode['receive'] => {
+  const receive = (message: GraphPackageModulesMessage | GraphShowModulesMessage | GraphModuleSitesMessage, at: number): void => {
+    if (message.type === 'moduleSites') selection.replied(message);
+    else mode.receive(message, at);
+  };
+
+  return receive;
+};
+
+/** Spec §8: a `packageModules` the validator rejects changes nothing but a console warning; Refresh still asks again. */
+export const reportDropped = (message: unknown): void => {
+  const isModules = isRecord(message) && message['type'] === 'packageModules';
+
+  if (isModules) console.warn(MODULES_DROPPED_WARNING);
 };
 
 /** The module Details report to the selection. */
