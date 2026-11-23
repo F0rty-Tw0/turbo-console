@@ -2,15 +2,12 @@ import type { Core, SingularElementArgument } from 'cytoscape';
 
 import { BOARDS_NAMES, boardsSceneOf } from './folder-boards.spec.util.ts';
 import { styleTextOf } from './folder-boxes.spec.util.ts';
+import { seededRandomOf } from './seeded-random.spec.util.ts';
 import type { Position, Positions } from '../../../bridge/common/graph-state.type.ts';
 import type { ElementSnapshot, FolderStep } from '../common/folder-history.type.ts';
 import { BOARDS_POSITIONS_STUB } from '../stubs/folder-boards.stub.ts';
 
 type Random = () => number;
-
-const MODULUS = 2147483647;
-
-const MULTIPLIER = 48271;
 
 const MOVE_CHANCE = 0.1;
 
@@ -25,18 +22,6 @@ const SPAN = 400;
 const boardsFolders = boardsSceneOf([]).members.keys();
 
 const BOARDS_FOLDERS: string[] = [...boardsFolders];
-
-/** A Park-Miller generator: numbers in [0, 1), the same for the same seed in [1, 2147483646]. */
-const seededRandomOf = (seed: number): Random => {
-  let state = seed;
-  const next = (): number => {
-    state = (state * MULTIPLIER) % MODULUS;
-
-    return (state - 1) / (MODULUS - 1);
-  };
-
-  return next;
-};
 
 const someOf = (names: string[], random: Random, chance: number): string[] => names.filter((): boolean => random() < chance);
 
