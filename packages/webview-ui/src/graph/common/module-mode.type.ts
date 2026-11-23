@@ -38,8 +38,14 @@ type ModuleRedrawAnchor = { readonly kind: 'anchor'; readonly id: string };
 
 type ModuleRedrawFit = { readonly kind: 'fit' };
 
-/** How a draw places the camera: the saved one or a fit, as it was, around a toggled folder, or a fresh fit (spec §7.4). */
-export type ModuleRedraw = ModuleRedrawFirst | ModuleRedrawKeep | ModuleRedrawAnchor | ModuleRedrawFit;
+/** Re-layout and Retry: the camera as it was, and ELK forced past `ELK_NODES_MAX`. */
+type ModuleRedrawRelayout = { readonly kind: 'relayout' };
+
+/**
+ * How a draw places the camera: the saved one or a fit, as it was, around a toggled folder, a fresh fit, or as it was
+ * on a forced Re-layout (spec §7.4).
+ */
+export type ModuleRedraw = ModuleRedrawFirst | ModuleRedrawKeep | ModuleRedrawAnchor | ModuleRedrawFit | ModuleRedrawRelayout;
 
 /** What the mode asks of the page: the canvas, the modules bar and its banners. */
 export type ModuleScreen = {
