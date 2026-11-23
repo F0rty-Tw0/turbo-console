@@ -5,6 +5,7 @@ import type { Mock } from 'vitest';
 
 import { showPackageModules } from './show-package-modules.ts';
 import type { Coordinator } from '../../roots/common/coordinator.type.ts';
+import type { LoadResult } from '../../roots/common/root.type.ts';
 import { RootStore } from '../../roots/domain-logic/root-store.ts';
 import { coordinatorMock } from '../../roots/test/mocks/coordinator.mock.ts';
 import { viewMock } from '../../shared/test/mocks/panel-view.mock.ts';
@@ -15,8 +16,10 @@ import { GRAPH_OPEN_FAILED_TEXT, MODULES_PICK_PLACEHOLDER } from '../common/grap
 import { GRAPH_LOADED_STUB, GRAPH_MODEL_STUB } from '../test/stubs/graph-model.stub.ts';
 
 const PACKAGE_ROW = { kind: 'pkg', root: '/ws', packageName: 'web' };
+const TASK_ROW = { kind: 'task', root: '/other', key: 'api#build', packageName: 'api' };
 const ROOT_PACKAGE: PackageNode = { ...PACKAGE_NODE_STUB, name: '//', path: '' };
 const SINGLE_PACKAGE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: true, packages: [ROOT_PACKAGE] };
+const ONE_PACKAGE_MODEL: WorkspaceModel = { ...GRAPH_MODEL_STUB, singlePackage: false, packages: [PACKAGE_NODE_STUB] };
 const PACKAGE_ITEMS = [
   { label: 'web', description: 'apps/web', root: '/ws', value: 'web' },
   { label: 'a', description: 'packages/a', root: '/ws', value: 'a' },
@@ -57,7 +60,8 @@ const portsOf = (pickOne: Mock<RootPickPorts['pickOne']>): RootPickPorts => {
   return ports;
 };
 
-const fixtureOf = (): Fixture => {
+/** A `/ws` store loaded with `loaded`, or with no model when `loaded` is `null`. */
+const fixtureOf = (loaded: LoadResult | null = GRAPH_LOADED_STUB): Fixture => {
   const store = new RootStore();
   const ensureLoaded = vi.fn<Coordinator['ensureLoaded']>().mockResolvedValue(undefined);
   const base = coordinatorMock();
@@ -68,7 +72,8 @@ const fixtureOf = (): Fixture => {
   const open = vi.fn<GraphOpener['open']>().mockReturnValue(panelOf(show));
 
   store.set([ROOT_FOLDER_STUB], make);
-  store.apply('/ws', GRAPH_LOADED_STUB);
+
+  if (loaded !== null) store.apply('/ws', loaded);
 
   const panels: ShowTaskGraphDeps['panels'] = { open };
   const deps: ShowTaskGraphDeps = { roots: store, ports: portsOf(pickOne), panels };
@@ -104,6 +109,67 @@ describe('FEATURE: the Show Package Modules command', () => {
 
       expect(fixture.deps.ports.log).toHaveBeenCalledExactlyOnceWith('ENOENT: index.html');
       expect(fixture.deps.ports.error).toHaveBeenCalledExactlyOnceWith(GRAPH_OPEN_FAILED_TEXT);
+    });
+
+    it('WHEN the root has no panel to open THEN nothing is shown and no error is reported', async () => {
+      fixture.open.mockReturnValue(null);
+
+      await showPackageModules(PACKAGE_ROW, fixture.deps);
+
+      expect(fixture.deps.ports.error).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN a task row', () => {
+    it('WHEN it runs THEN its root opens and showModules names its package with no pick', async () => {
+      await showPackageModules(TASK_ROW, fixture.deps);
+
+      expect(fixture.open).toHaveBeenCalledExactlyOnceWith('/other');
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showModules', name: 'api' });
+      expect(fixture.pickOne).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('GIVEN the palette on a root with no model', () => {
+    beforeEach(() => {
+      fixture = fixtureOf(null);
+    });
+
+    it('WHEN it runs THEN the panel opens alone with no pick', async () => {
+      await showPackageModules(undefined, fixture.deps);
+
+      expect(fixture.open).toHaveBeenCalledExactlyOnceWith('/ws');
+      expect(fixture.show).not.toHaveBeenCalled();
+      expect(fixture.pickOne).not.toHaveBeenCalled();
+    });
+
+    it('WHEN the panel cannot be opened THEN the error is logged and the user told to see Output', async () => {
+      fixture.open.mockImplementation(throwingOpen);
+
+      await showPackageModules(undefined, fixture.deps);
+
+      expect(fixture.deps.ports.log).toHaveBeenCalledExactlyOnceWith('ENOENT: index.html');
+      expect(fixture.deps.ports.error).toHaveBeenCalledExactlyOnceWith(GRAPH_OPEN_FAILED_TEXT);
+    });
+  });
+
+  describe('GIVEN the palette on a cold root whose model arrives with the load', () => {
+    beforeEach(() => {
+      fixture = fixtureOf(null);
+    });
+
+    it('WHEN it runs THEN the pick lists the loaded packages', async () => {
+      const { store } = fixture;
+      const loadLater = async (): Promise<void> => {
+        await Promise.resolve();
+        store.apply('/ws', GRAPH_LOADED_STUB);
+      };
+
+      fixture.ensureLoaded.mockImplementation(loadLater);
+
+      await showPackageModules(undefined, fixture.deps);
+
+      expect(fixture.pickOne).toHaveBeenCalledExactlyOnceWith(PACKAGE_ITEMS, MODULES_PICK_PLACEHOLDER);
     });
   });
 
@@ -146,6 +212,17 @@ describe('FEATURE: the Show Package Modules command', () => {
 
       expect(fixture.pickOne).not.toHaveBeenCalled();
       expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showModules', name: '//' });
+    });
+  });
+
+  describe('GIVEN the palette on a monorepo root of one package', () => {
+    it('WHEN it runs THEN nothing is asked and showModules names that package', async () => {
+      fixture.store.apply('/ws', { ...GRAPH_LOADED_STUB, model: ONE_PACKAGE_MODEL });
+
+      await showPackageModules(undefined, fixture.deps);
+
+      expect(fixture.pickOne).not.toHaveBeenCalled();
+      expect(fixture.show).toHaveBeenCalledExactlyOnceWith({ type: 'showModules', name: 'a' });
     });
   });
 });
