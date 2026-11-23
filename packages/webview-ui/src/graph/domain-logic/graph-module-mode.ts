@@ -189,8 +189,13 @@ export class GraphModuleMode {
     else if (current.kind === 'failed') this.drawKept(current.found, view, redraw);
   }
 
-  /** A found scan: the default expansion is saved the first time, then it is drawn, keeping the camera when it was Shown. */
+  /**
+   * A found scan: the selection drops what it no longer holds first, then the default expansion is saved the first time
+   * and it is drawn, keeping the camera when it was Shown.
+   */
   private show(name: string, found: ModulesFound, wasShown: boolean): void {
+    this.deps.onFound(found);
+
     const view = shownModulesViewOf(this.view(), name, found);
 
     this.current = { kind: 'shown', name, found };

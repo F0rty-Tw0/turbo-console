@@ -1,93 +1,94 @@
 import { GraphModuleControls } from './graph-module-controls.ts';
+import { GraphModuleDetails } from './graph-module-details.ts';
 import { moduleInputOf } from './graph-module-input.ts';
 import { GraphModuleLayout } from './graph-module-layout.ts';
 import { GraphModuleMode } from './graph-module-mode.ts';
 import { moduleScreenOf } from './graph-module-screen.ts';
-import { depthEdited, focusCleared, resetView, toggleShown } from './graph-module-view-edits.ts';
+import { GraphModuleSelection } from './graph-module-selection.ts';
+import { controlsActionsOf, detailsActionsOf, measuresOf, packageNameOf, relayoutOf, wireBar } from './graph-module-wire-parts.ts';
 import { layoutScreenOf, showFailure } from './graph-page-states.ts';
-import type { GraphPackageModulesMessage, GraphShowModulesMessage } from '../../bridge/common/graph-modules.type.ts';
+import type { GraphPackageModulesMessage, GraphShowModulesMessage, ModulesFound } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { isRecord } from '../../bridge/utils/record.util.ts';
-import { MODULES_DROPPED_WARNING, MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
+import { MODULES_DROPPED_WARNING } from '../common/graph-module.const.ts';
 import type { GraphControllerDeps, GraphView, Viewport } from '../common/graph-page.type.ts';
-import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
-import type { ModuleControlsActions } from '../common/module-controls.type.ts';
-import type { ModuleHookModes, ModuleModeHooks, PageModuleMode } from '../common/module-mode.type.ts';
+import { DETAILS_ID } from '../common/graph.const.ts';
+import type { ModuleDetailsView } from '../common/module-details.type.ts';
+import type {
+  ModuleHookModes,
+  ModuleModeDeps,
+  ModuleModeHooks,
+  ModuleScreenDeps,
+  PageModuleMode
+} from '../common/module-mode.type.ts';
 import type { ModulePanelHooks } from '../common/module-panels.type.ts';
-import type { ModuleBox, ModuleLeaf, ModuleMeasures, ModuleShown } from '../common/module-scene.type.ts';
-import type { NodeSize } from '../common/node-size.type.ts';
+import type { ModuleScene } from '../common/module-scene.type.ts';
+import type { ModuleDetailsSink } from '../common/module-selection.type.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import type { PageTaskMode } from '../common/page-task-mode.type.ts';
-import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
 
-/** A card is sized from its drawn label, a box title from its folder name. */
-const measuresOf = (deps: GraphControllerDeps): ModuleMeasures => {
-  const sizeOf = (leaf: ModuleLeaf): NodeSize => deps.sizeOf(moduleLeafLabelOf(leaf));
-  const titleWidthOf = (box: ModuleBox): number => deps.boxTitleSizeOf(box.name).width;
-  const measures: ModuleMeasures = { sizeOf, titleWidthOf };
-
-  return measures;
+/** The panels and the selection, built after the mode that reports to them. */
+type ModulePanelsBuilt = {
+  readonly controls: GraphModuleControls;
+  readonly details: GraphModuleDetails;
+  readonly selection: GraphModuleSelection;
 };
 
-/** Re-layout while Shown, or Failed over a kept graph: the saved view drawn again, the camera kept. */
-const relayoutOf = (mode: GraphModuleMode): void => {
-  const view = mode.view();
-
-  if (view !== null) mode.update(view, MODULE_REDRAW_KEEP);
-};
-
-/** The modules bar drives the mode: Back leaves, Refresh and Retry scan again; the toolbar's root entry opens `//`. */
-const wireBar = (page: PageElements, mode: GraphModuleMode): void => {
-  const bar = page.modules;
-  const refresh = (): void => mode.refresh();
-
-  bar.back.addEventListener('click', (): void => mode.leave());
-  bar.refresh.addEventListener('click', refresh);
-  bar.retry.addEventListener('click', refresh);
-  page.rootModules.addEventListener('click', (): void => mode.enter(ROOT_TASK_PACKAGE));
-};
-
-/** The module Controls edit the mode's saved view. */
-const controlsActionsOf = (mode: GraphModuleMode): ModuleControlsActions => {
-  const actions: ModuleControlsActions = {
-    onDepth: (depth: number): void => depthEdited(mode, depth),
-    onShown: (shown: ModuleShown): void => toggleShown(mode, shown),
-    onReset: (): void => resetView(mode),
-    onClearFocus: (): void => focusCleared(mode)
-  };
-
-  return actions;
-};
+/** What the mode and the screen report, and the Details view the selection shows. */
+type ModuleReports = Pick<ModuleModeDeps, 'onView' | 'onFound'> & Pick<ModuleScreenDeps, 'onDrawn'> & ModuleDetailsSink;
 
 /**
- * The panels as modules mode calls them: the Controls enter on the saved view, open unless saved closed (spec §6.8).
- * `built` is read per call: it gets the one Controls panel once that is built, after the mode it edits.
+ * The panels as modules mode calls them: each enters on the saved view, open unless saved closed (spec §6.8), and a
+ * scan or an exit resets the selection. `built` is read per call: it gets the panels once they are built, after the mode.
  */
-const panelHooksOf = (built: GraphModuleControls[], modes: ModuleHookModes): ModulePanelHooks => {
+const panelHooksOf = (built: ModulePanelsBuilt[], modes: ModuleHookModes): ModulePanelHooks => {
   const enter = (): void => {
     const view = modes.modules();
-    const isOpen = modes.current()?.controlsOpen ?? true;
+    const saved = modes.current();
 
     if (view === null) return;
 
-    for (const controls of built) controls.enter(view, isOpen);
+    for (const { controls, details } of built) {
+      controls.enter(view, saved?.controlsOpen ?? true);
+      details.enter(saved?.detailsOpen ?? true);
+    }
+  };
+  const scanning = (name: string): void => {
+    for (const { selection } of built) selection.scanning(name);
   };
   const exit = (): void => {
-    for (const controls of built) controls.exit();
+    for (const { controls, details, selection } of built) {
+      selection.exit();
+      controls.exit();
+      details.exit();
+    }
   };
-  const hooks: ModulePanelHooks = { enter, scanning: (): void => undefined, exit };
+  const hooks: ModulePanelHooks = { enter, scanning, exit };
 
   return hooks;
 };
 
-/** Every saved modules view reaches the Controls panel once it is built. */
-const viewSyncOf = (built: GraphModuleControls[]): ((view: ModulesViewState) => void) => {
+/** What the mode, the screen and the selection report, passed on once the panels and the selection are built. */
+const reportsOf = (built: ModulePanelsBuilt[]): ModuleReports => {
   const onView = (view: ModulesViewState): void => {
-    for (const controls of built) controls.setView(view);
+    for (const { controls, details } of built) {
+      controls.setView(view);
+      details.setView(view);
+    }
   };
+  const onFound = (found: ModulesFound): void => {
+    for (const { selection } of built) selection.found(found);
+  };
+  const onDrawn = (scene: ModuleScene): void => {
+    for (const { selection } of built) selection.drawn(scene);
+  };
+  const show = (shown: ModuleDetailsView): void => {
+    for (const { details } of built) details.show(shown);
+  };
+  const reports: ModuleReports = { onView, onFound, onDrawn, show };
 
-  return onView;
+  return reports;
 };
 
 /** The Packages/Tasks group shows unless the root is a single package, where the toolbar's Show modules shows instead. */
@@ -113,13 +114,19 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
   const measures = measuresOf(deps);
   const onFailure = (error: unknown): void => showFailure(page, error);
   const layout = new GraphModuleLayout({ view, runner, measures, frames, showGraph, onFailure });
-  const screen = moduleScreenOf({ page, layout, showGraph });
-  const built: GraphModuleControls[] = [];
-  const onView = viewSyncOf(built);
+  const built: ModulePanelsBuilt[] = [];
+  const { onView, onFound, onDrawn, show } = reportsOf(built);
+  const screen = moduleScreenOf({ page, layout, showGraph, onDrawn });
   const panels = panelHooksOf(built, modes);
-  const mode = new GraphModuleMode({ modes, bridge, screen, tasks, onExit, notice, viewport, frames, onView, panels });
-  const actions = controlsActionsOf(mode);
-  const controls = new GraphModuleControls({ page, views: deps.moduleViews, modes, actions });
+  const mode = new GraphModuleMode({ modes, bridge, screen, tasks, onExit, notice, viewport, frames, onView, panels, onFound });
+  const sink: ModuleDetailsSink = { show };
+  const selection = new GraphModuleSelection({ mode, canvas: view.modules, bridge, details: sink });
+  const shownPackage = (): string | null => packageNameOf(mode);
+  const packageAside = (): HTMLElement | null => document.getElementById(DETAILS_ID);
+  const actions = detailsActionsOf(selection);
+  const views = deps.moduleViews;
+  const details = new GraphModuleDetails({ page, views, bridge, modes, packageName: shownPackage, packageAside, actions });
+  const controls = new GraphModuleControls({ page, views, modes, actions: controlsActionsOf(mode, selection) });
   const input = moduleInputOf({ mode, canvas: view.modules, container: page.container, bridge });
   const leave = (): void => mode.leave();
   const modules: PageModuleMode = {
@@ -133,7 +140,7 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
     input
   };
 
-  built.push(controls);
+  built.push({ controls, details, selection });
   page.packagesMode.addEventListener('click', leave);
   page.taskMode.addEventListener('click', leave);
   wireBar(page, mode);

@@ -12,6 +12,7 @@ import { candidateItems, pickingView } from './details-picking.ts';
 import { stepItems, traceView } from './details-trace.ts';
 import { renderLocation, renderLocationLines } from './location-elements.ts';
 import { buildModuleControls } from './module-controls-elements.ts';
+import { buildModuleDetailsPanel, buildModuleDetailsView } from './module-details-elements.ts';
 import { buildTaskControls } from './task-controls-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from './task-details-elements.ts';
 import { buildProjectLine } from './task-grid-rows.ts';
@@ -61,4 +62,8 @@ export const taskDetailsViews: TaskDetailsViews = {
   view: buildTaskDetails
 };
 
-export const moduleViews: ModulePanelViews = { controls: buildModuleControls };
+export const moduleViews: ModulePanelViews = {
+  controls: buildModuleControls,
+  details: buildModuleDetailsPanel,
+  view: buildModuleDetailsView
+};

@@ -87,6 +87,8 @@ export type ModuleModeDeps = {
   /** Every saved modules view, so the panels read it (spec §6.5). */
   readonly onView: (view: ModulesViewState) => void;
   readonly panels: ModulePanelHooks;
+  /** A found scan, before its view is read, so what it no longer holds is dropped from the saved view first (spec §6.5). */
+  readonly onFound: (found: ModulesFound) => void;
 };
 
 /**
@@ -151,7 +153,14 @@ export type ModuleScreenDeps = {
   readonly page: Pick<PageElements, 'root' | 'packagesMode' | 'taskMode' | 'modules'>;
   readonly layout: ModuleScreenLayout;
   readonly showGraph: LayoutScreen['showGraph'];
+  /** Each draw that landed with a scene on screen. */
+  readonly onDrawn: (scene: ModuleScene) => void;
 };
+
+type ModuleRefresh = { readonly refresh: () => void };
+
+/** Modules mode as the modules bar drives it (`GraphModuleMode`): Back, Refresh and Retry, and the root entry. */
+export type ModuleBarMode = Pick<PageModuleMode, 'enter' | 'leave'> & ModuleRefresh;
 
 /** Modules mode as the canvas input drives it (`GraphModuleMode`). */
 export type ModuleInputMode = {

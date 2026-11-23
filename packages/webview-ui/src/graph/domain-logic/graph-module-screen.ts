@@ -23,7 +23,7 @@ const showFound = (bar: ModulesBarElements, name: string, found: ModulesFound): 
   showBanner(bar, banner, false);
 };
 
-/** Draws the view, then shows the slow notice when more than `MODULE_SHOWN_CAP` leaves are on screen. */
+/** Draws the view, then shows the slow notice when more than `MODULE_SHOWN_CAP` leaves are on screen and reports the scene drawn. */
 const drawAndWarn = async (
   deps: ModuleScreenDeps,
   found: ModulesFound,
@@ -38,6 +38,8 @@ const drawAndWarn = async (
   const leafCount = drawn?.leafCount ?? 0;
 
   page.modules.slow.hidden = leafCount <= MODULE_SHOWN_CAP;
+
+  if (drawn !== null) deps.onDrawn(drawn);
 };
 
 /**

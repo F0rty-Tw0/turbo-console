@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Mocked } from 'vitest';
 
-import { depthEdited, focusCleared, resetView, toggleShown } from './graph-module-view-edits.ts';
+import { depthEdited, focusCleared, focusToggled, resetView, toggleShown } from './graph-module-view-edits.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ModuleViewEditMode } from '../common/module-controls.type.ts';
 import type { ModulePhase } from '../common/module-mode.type.ts';
-import { ALL_SHOWN_STUB } from '../test/stubs/module-scene.stub.ts';
+import { ALL_SHOWN_STUB, MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
 
 type EditedMode = Mocked<ModuleViewEditMode>;
@@ -16,8 +16,10 @@ const WEB_FOCUSED: ModulesViewState = { ...FRESH_WEB, focus: 'file:src/a.ts' };
 
 const LOADING: ModulePhase = { kind: 'loading', name: 'web' };
 
-const modeOf = (view: ModulesViewState | null): EditedMode => {
-  const mode: EditedMode = { view: vi.fn(() => view), phase: vi.fn(() => LOADING), update: vi.fn(), save: vi.fn() };
+const SHOWN: ModulePhase = { kind: 'shown', name: 'web', found: MODULES_FOUND_STUB };
+
+const modeOf = (view: ModulesViewState | null, phase: ModulePhase = LOADING): EditedMode => {
+  const mode: EditedMode = { view: vi.fn(() => view), phase: vi.fn(() => phase), update: vi.fn(), save: vi.fn() };
 
   return mode;
 };
@@ -38,6 +40,30 @@ describe('FEATURE: module view edits', () => {
       focusCleared(mode);
 
       expect(mode.update.mock.calls).toStrictEqual([[FRESH_WEB, { kind: 'fit' }]]);
+    });
+
+    it('WHEN Focus is pressed on src/a.ts while Loading THEN nothing is drawn', () => {
+      const mode = modeOf(WEB_FOCUSED);
+
+      focusToggled(mode, 'file:src/a.ts');
+
+      expect(mode.update).not.toHaveBeenCalled();
+    });
+
+    it('WHEN Focus is pressed on src/a.ts while Shown THEN the focus is cleared with a fit', () => {
+      const mode = modeOf(WEB_FOCUSED, SHOWN);
+
+      focusToggled(mode, 'file:src/a.ts');
+
+      expect(mode.update.mock.calls).toStrictEqual([[FRESH_WEB, { kind: 'fit' }]]);
+    });
+
+    it('WHEN Focus is pressed on src/b.ts while Shown THEN src/b.ts is the focus, with a fit', () => {
+      const mode = modeOf(WEB_FOCUSED, SHOWN);
+
+      focusToggled(mode, 'file:src/b.ts');
+
+      expect(mode.update.mock.calls).toStrictEqual([[{ ...FRESH_WEB, focus: 'file:src/b.ts' }, { kind: 'fit' }]]);
     });
   });
 
@@ -74,6 +100,7 @@ describe('FEATURE: module view edits', () => {
       depthEdited(mode, 3);
       toggleShown(mode, ALL_SHOWN_STUB);
       focusCleared(mode);
+      focusToggled(mode, 'file:src/a.ts');
 
       expect([mode.update.mock.calls, mode.save.mock.calls]).toStrictEqual([[], []]);
     });

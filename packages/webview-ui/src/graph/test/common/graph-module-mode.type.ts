@@ -1,6 +1,7 @@
 import type { Mock, Mocked } from 'vitest';
 
 import type { Bridge } from '../../../bridge/common/bridge.type.ts';
+import type { ModulesFound } from '../../../bridge/common/graph-modules.type.ts';
 import type { ModulesViewState } from '../../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../../common/frame-clock.type.ts';
 import type { ModuleExit, ModuleModeDeps, ModuleScreen, ModuleTaskSide } from '../../common/module-mode.type.ts';
@@ -17,4 +18,5 @@ export type ModuleModeRig = {
   readonly start: Mock<FrameClock['start']>;
   readonly onView: Mock<(view: ModulesViewState) => void>;
   readonly panels: Mocked<ModulePanelHooks>;
+  readonly onFound: Mock<(found: ModulesFound) => void>;
 };

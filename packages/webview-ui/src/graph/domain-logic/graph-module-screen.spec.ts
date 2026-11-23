@@ -1,4 +1,4 @@
-import type { Mocked } from 'vitest';
+import type { Mock, Mocked } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { moduleScreenOf } from './graph-module-screen.ts';
@@ -39,12 +39,14 @@ describe('FEATURE: moduleScreenOf', () => {
   let page: PageElements;
   let layout: Mocked<ModuleScreenLayout>;
   let screen: ModuleScreen;
+  let onDrawn: Mock<(scene: ModuleScene) => void>;
 
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
     page = pageMock();
     layout = { draw: vi.fn(async (): Promise<void> => Promise.resolve()), scene: vi.fn(() => SCENE_OF_301), clear: vi.fn() };
-    screen = moduleScreenOf({ page, layout, showGraph: vi.fn() });
+    onDrawn = vi.fn<(scene: ModuleScene) => void>();
+    screen = moduleScreenOf({ page, layout, showGraph: vi.fn(), onDrawn });
     screen.enter();
   });
 
@@ -91,6 +93,13 @@ describe('FEATURE: moduleScreenOf', () => {
 
       expect(page.modules.slow.textContent).toBe(MODULE_SLOW_TEXT);
     });
+
+    it('WHEN a draw lands THEN onDrawn gets layout.scene()', async () => {
+      screen.shown('web', FOUND, FRESH_WEB, { kind: 'first' });
+      await vi.waitFor(() => expect(onDrawn).toHaveBeenCalledOnce());
+
+      expect(onDrawn.mock.calls).toStrictEqual([[SCENE_OF_301]]);
+    });
   });
 
   describe('GIVEN web scanning with no graph drawn', () => {
@@ -113,6 +122,15 @@ describe('FEATURE: moduleScreenOf', () => {
 
     it('WHEN it is read THEN nothing is drawn', () => {
       expect(screen.isDrawn()).toBe(false);
+    });
+
+    it('WHEN a draw lands on nothing THEN onDrawn is not called', async () => {
+      screen.drawAgain(FOUND, FRESH_WEB, { kind: 'keep' });
+      await new Promise<void>((resolve): void => {
+        setTimeout(resolve, 0);
+      });
+
+      expect(onDrawn).not.toHaveBeenCalled();
     });
   });
 

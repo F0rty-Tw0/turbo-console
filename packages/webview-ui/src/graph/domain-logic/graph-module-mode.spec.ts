@@ -24,6 +24,8 @@ const TESTS_SHOWN: ModulesViewState['shown'] = { ...FRESH_WEB.shown, tests: true
 
 const WEB_TESTS_SHOWN: ModulesViewState = { ...FRESH_WEB, shown: TESTS_SHOWN };
 
+const WEB_FOCUSED: ModulesViewState = { ...FRESH_WEB, focus: 'file:src/a.ts' };
+
 const FRESH_STATE: GraphViewState = freshViewStateOf('h1');
 
 const WEB_FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
@@ -209,6 +211,23 @@ describe('FEATURE: GraphModuleMode entry and package states', () => {
       mode.enter('@s/x');
 
       expect([rig.panels.enter.mock.calls, rig.panels.scanning.mock.calls]).toStrictEqual([[[]], [['web'], ['@s/x']]]);
+    });
+  });
+
+  describe('GIVEN web Loading with a focus saved', () => {
+    beforeEach(() => {
+      const saved: GraphViewState = { ...FRESH_STATE, mode: 'modules', modules: WEB_FOCUSED };
+
+      open(saved);
+      mode.received(WEB_LISTED);
+      mode.enter('web');
+      rig.onFound.mockImplementation((): void => modes.saveModules(FRESH_WEB, 'h1'));
+    });
+
+    it('WHEN a found answer arrives THEN onFound is called before the saved view is read', () => {
+      mode.scanned(WEB_FOUND, REPLY_AT);
+
+      expect([rig.onFound.mock.calls, rig.screen.shown.mock.lastCall?.[2].focus]).toStrictEqual([[[MODULES_FOUND_STUB]], null]);
     });
   });
 

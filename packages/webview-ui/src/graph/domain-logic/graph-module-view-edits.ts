@@ -45,6 +45,19 @@ export const depthEdited = (mode: ModuleViewEditMode, depth: number): void => {
   else mode.save(next);
 };
 
+/** Spec §6.5 focus, Shown only: focuses `target`, or clears the focus when it is already `target`, then fits. */
+export const focusToggled = (mode: ModuleViewEditMode, target: string): void => {
+  const view = mode.view();
+  const phase = mode.phase();
+
+  if (phase.kind !== 'shown' || view === null) return;
+
+  const focus = view.focus === target ? null : target;
+  const focused: ModulesViewState = { ...view, focus };
+
+  mode.update(focused, FIT);
+};
+
 /** Spec §6.5 clearFocus: saved with no focus in every phase, drawn again with a fit only while Shown (spec §7). */
 export const focusCleared = (mode: ModuleViewEditMode): void => {
   const view = mode.view();

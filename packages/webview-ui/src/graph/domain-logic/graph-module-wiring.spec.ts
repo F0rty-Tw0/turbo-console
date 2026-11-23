@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGraphController } from './graph-controller.ts';
+import type { WebviewMessage } from '../../bridge/common/details-message.type.ts';
+import type { GraphWebviewMessage } from '../../bridge/common/graph-message.type.ts';
+import type { GraphScanModuleSitesMessage, ModuleEnd } from '../../bridge/common/graph-module-sites.type.ts';
 import type { GraphPackageModulesMessage, ModulesResult } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphState } from '../../bridge/common/graph-state.type.ts';
-import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphViewState, ModuleSelection, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
 import type { GraphController, GraphViewHandlers, ViewStateSaver } from '../common/graph-page.type.ts';
 import { TASK_MODE_CLASS } from '../common/graph-task.const.ts';
@@ -14,6 +17,7 @@ import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { ROOT_LISTED, WEB_LISTED } from '../test/utils/graph-module-mode.spec.util.ts';
 import { moduleControlsOf, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { freshModulesViewOf, freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 import { defaultExpandedOf } from '../utils/module-expand.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
 
@@ -36,6 +40,24 @@ const DEFAULT_EXPANDED: string[] = defaultExpandedOf(WEB_TREE);
 const LIB_ID = 'dir:src/lib';
 
 const LIB_EXPANDED: string[] = [...DEFAULT_EXPANDED, 'src/lib'];
+
+const B_END: ModuleEnd = { kind: 'file', path: 'src/lib/b.ts' };
+
+const B_ASK: GraphScanModuleSitesMessage = { type: 'scanModuleSites', packageName: 'web', from: B_END, to: null };
+
+const B_SELECTED: ModuleSelection = { kind: 'node', id: 'file:src/lib/b.ts' };
+
+const FRESH_WEB: ModulesViewState = freshModulesViewOf('web');
+
+const WEB_ON_B: ModulesViewState = { ...FRESH_WEB, selected: B_SELECTED };
+
+const FRESH_STATE: GraphViewState = freshViewStateOf('h1');
+
+const SAVED_ON_B: GraphViewState = { ...FRESH_STATE, mode: 'modules', modules: WEB_ON_B };
+
+type PostedMessage = WebviewMessage | GraphWebviewMessage;
+
+const isSitesAsk = ([message]: [PostedMessage]): boolean => message.type === 'scanModuleSites';
 
 /** The handlers the controller gave the view it built. */
 const handlersOf = (mock: PackageSideDepsMock): GraphViewHandlers => {
@@ -187,6 +209,21 @@ describe('FEATURE: modules bar wiring', () => {
       mock.page.packagesMode.click();
 
       expect(mock.page.root.classList.contains(MODULES_MODE_CLASS)).toBe(false);
+    });
+  });
+
+  describe('GIVEN a reload saved in modules mode on web with b.ts selected', () => {
+    beforeEach(() => {
+      mock = packageSideDepsMock();
+      vi.mocked(mock.deps.bridge.savedState).mockReturnValue(SAVED_ON_B);
+      controller = createGraphController(mock.deps);
+      controller.receive({ type: 'state', state: WEB_LISTED });
+    });
+
+    it('WHEN the found answer lands THEN the sites of b.ts are asked once', () => {
+      controller.receive(WEB_FOUND);
+
+      expect(vi.mocked(mock.deps.bridge.post).mock.calls.filter(isSitesAsk)).toStrictEqual([[B_ASK]]);
     });
   });
 
