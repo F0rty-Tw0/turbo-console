@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { moduleGoneTextOf, moduleLeafLabelOf, scanningTextOf } from './module-text.util.ts';
+import { moduleFocusTextOf, moduleGoneTextOf, moduleIdLabelOf, moduleLeafLabelOf, scanningTextOf } from './module-text.util.ts';
 import type { ModuleLeaf } from '../common/module-scene.type.ts';
 
 const DIR_LEAF: ModuleLeaf = { kind: 'dir', id: 'dir:src/lib', path: 'src/lib', label: 'lib/', fileCount: 2, parent: 'dir:src' };
@@ -24,6 +24,25 @@ describe('FEATURE: module mode texts', () => {
       [FILE_LEAF, 'a.ts']
     ])('WHEN the label of %o is written THEN it reads %s', (leaf, label) => {
       expect(moduleLeafLabelOf(leaf)).toBe(label);
+    });
+  });
+
+  describe('GIVEN a file, a folder and a stub id', () => {
+    it.each([
+      ['file:src/a.ts', 'src/a.ts'],
+      ['dir:src/lib', 'src/lib/'],
+      ['pkg:@s/x', '@s/x']
+    ])('WHEN the label of %s is written THEN it reads %s', (id, label) => {
+      expect(moduleIdLabelOf(id)).toBe(label);
+    });
+  });
+
+  describe('GIVEN a Focus section line', () => {
+    it.each([
+      [null, 'None'],
+      ['pkg:@s/x', '@s/x']
+    ])('WHEN focus %s is written THEN it reads %s', (focus, text) => {
+      expect(moduleFocusTextOf(focus)).toBe(text);
     });
   });
 });

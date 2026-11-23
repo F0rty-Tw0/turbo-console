@@ -15,8 +15,4 @@ export type ModulesBarElements = {
   readonly retry: HTMLButtonElement;
   /** `MODULE_SLOW_TEXT`, hidden unless more than `MODULE_SHOWN_CAP` leaves are drawn. */
   readonly slow: HTMLElement;
-  readonly types: HTMLInputElement;
-  readonly tests: HTMLInputElement;
-  readonly lazies: HTMLInputElement;
-  readonly reset: HTMLButtonElement;
 };

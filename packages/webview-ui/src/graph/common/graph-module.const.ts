@@ -37,8 +37,29 @@ export const MODULES_REFRESH_LABEL = 'Refresh';
 
 export const MODULES_RETRY_LABEL = 'Retry';
 
-/** The name of the modules bar's group of kind toggles and Reset view. */
-export const MODULES_VIEW_LABEL = 'View';
+/** The module Controls panel's id, which the toolbar's Controls button points at while modules mode is on. */
+export const MODULE_CONTROLS_ID = 'graph-module-controls';
+
+/** The title of the module Controls section that names the focus target. */
+export const MODULE_FOCUS_SECTION_TITLE = 'Focus';
+
+/** What the Focus section reads while nothing is focused. */
+export const MODULE_NO_FOCUS_TEXT = 'None';
+
+/** The module Details panel's id, which the toolbar's Details button points at while modules mode is on. */
+export const MODULE_DETAILS_ID = 'graph-module-details';
+
+/** The heading of a module Details block that lists the lines an end imports with. */
+export const MODULE_IMPORTS_HEADING = 'Imports';
+
+/** The heading of a module Details block that lists the lines other files import an end with. */
+export const MODULE_IMPORTED_BY_HEADING = 'Imported by';
+
+/** What the module Details panel reads while nothing is selected (spec §6.3). */
+export const MODULE_DETAILS_EMPTY_TEXT = 'Select a file, package or link to see its imports.';
+
+/** The module depth hint's id; the package Controls, which stay in the DOM, use `DEPTH_HINT_ID`. */
+export const MODULE_DEPTH_HINT_ID = 'graph-module-depth-hint';
 
 export const MODULE_TYPES_LABEL = 'Type-only imports';
 

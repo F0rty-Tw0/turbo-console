@@ -7,6 +7,7 @@ import type {
   GraphShownUmbrellasMessage,
   GraphWebviewMessage
 } from '../../../src/bridge/common/graph-message.type.ts';
+import type { GraphScanModuleSitesMessage } from '../../../src/bridge/common/graph-module-sites.type.ts';
 import type { GraphScanModulesMessage } from '../../../src/bridge/common/graph-modules.type.ts';
 import type { Positions, Routes } from '../../../src/bridge/common/graph-state.type.ts';
 import type {
@@ -30,6 +31,8 @@ const isExplainEdge = (message: GraphWebviewMessage): message is ExplainEdgeMess
 const isScanImports = (message: GraphWebviewMessage): message is ScanImportsMessage => message.type === 'scanImports';
 
 const isScanModules = (message: GraphWebviewMessage): message is GraphScanModulesMessage => message.type === 'scanModules';
+
+const isScanModuleSites = (message: GraphWebviewMessage): message is GraphScanModuleSitesMessage => message.type === 'scanModuleSites';
 
 const isOpenManifest = (message: GraphWebviewMessage): message is OpenManifestMessage => message.type === 'openManifest';
 
@@ -56,6 +59,10 @@ export const scanImportsPosted = (posted: GraphWebviewMessage[]): ScanImportsMes
 
 /** The `scanModules` messages, oldest first. */
 export const scanModulesPosted = (posted: GraphWebviewMessage[]): GraphScanModulesMessage[] => posted.filter(isScanModules);
+
+/** The `scanModuleSites` messages, oldest first. */
+export const scanModuleSitesPosted = (posted: GraphWebviewMessage[]): GraphScanModuleSitesMessage[] =>
+  posted.filter(isScanModuleSites);
 
 export const openManifestPosted = (posted: GraphWebviewMessage[]): OpenManifestMessage[] => posted.filter(isOpenManifest);
 

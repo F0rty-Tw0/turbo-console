@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createGraphController } from './graph-controller.ts';
+import type { WebviewMessage } from '../../bridge/common/details-message.type.ts';
+import type { GraphWebviewMessage } from '../../bridge/common/graph-message.type.ts';
+import type { GraphScanModuleSitesMessage, ModuleEnd } from '../../bridge/common/graph-module-sites.type.ts';
 import type { GraphPackageModulesMessage, ModulesResult } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphState } from '../../bridge/common/graph-state.type.ts';
-import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
+import type { GraphViewState, ModuleSelection, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { MODULES_MODE_CLASS } from '../common/graph-module.const.ts';
 import type { GraphController, GraphViewHandlers, ViewStateSaver } from '../common/graph-page.type.ts';
 import { TASK_MODE_CLASS } from '../common/graph-task.const.ts';
@@ -13,7 +16,8 @@ import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { ROOT_LISTED, WEB_LISTED } from '../test/utils/graph-module-mode.spec.util.ts';
-import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { moduleControlsOf, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { freshModulesViewOf, freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 import { defaultExpandedOf } from '../utils/module-expand.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
 
@@ -36,6 +40,24 @@ const DEFAULT_EXPANDED: string[] = defaultExpandedOf(WEB_TREE);
 const LIB_ID = 'dir:src/lib';
 
 const LIB_EXPANDED: string[] = [...DEFAULT_EXPANDED, 'src/lib'];
+
+const B_END: ModuleEnd = { kind: 'file', path: 'src/lib/b.ts' };
+
+const B_ASK: GraphScanModuleSitesMessage = { type: 'scanModuleSites', packageName: 'web', from: B_END, to: null };
+
+const B_SELECTED: ModuleSelection = { kind: 'node', id: 'file:src/lib/b.ts' };
+
+const FRESH_WEB: ModulesViewState = freshModulesViewOf('web');
+
+const WEB_ON_B: ModulesViewState = { ...FRESH_WEB, selected: B_SELECTED };
+
+const FRESH_STATE: GraphViewState = freshViewStateOf('h1');
+
+const SAVED_ON_B: GraphViewState = { ...FRESH_STATE, mode: 'modules', modules: WEB_ON_B };
+
+type PostedMessage = WebviewMessage | GraphWebviewMessage;
+
+const isSitesAsk = ([message]: [PostedMessage]): boolean => message.type === 'scanModuleSites';
 
 /** The handlers the controller gave the view it built. */
 const handlersOf = (mock: PackageSideDepsMock): GraphViewHandlers => {
@@ -115,8 +137,8 @@ describe('FEATURE: modules bar wiring', () => {
     });
 
     it('WHEN Type-only imports is unchecked THEN the saved view still hides test files', () => {
-      mock.page.modules.types.checked = false;
-      mock.page.modules.types.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).types.checked = false;
+      moduleControlsOf(mock).types.dispatchEvent(new Event('change'));
 
       expect(vi.mocked(mock.saver.schedule).mock.lastCall?.[0].modules?.shown).toStrictEqual({
         types: false,
@@ -136,8 +158,8 @@ describe('FEATURE: modules bar wiring', () => {
     it('WHEN Test files is unchecked THEN the saved view hides tests and nothing is posted', () => {
       const posts = vi.mocked(mock.deps.bridge.post).mock.calls.length;
 
-      mock.page.modules.tests.checked = false;
-      mock.page.modules.tests.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).tests.checked = false;
+      moduleControlsOf(mock).tests.dispatchEvent(new Event('change'));
 
       expect(vi.mocked(mock.saver.schedule).mock.lastCall?.[0].modules?.shown.tests).toBe(false);
       expect(vi.mocked(mock.deps.bridge.post).mock.calls).toHaveLength(posts);
@@ -146,8 +168,8 @@ describe('FEATURE: modules bar wiring', () => {
     it('WHEN Test files is unchecked THEN the module graph is laid out again', () => {
       const runs = mock.runs.count();
 
-      mock.page.modules.tests.checked = false;
-      mock.page.modules.tests.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).tests.checked = false;
+      moduleControlsOf(mock).tests.dispatchEvent(new Event('change'));
 
       expect(mock.runs.count()).toBe(runs + 1);
     });
@@ -171,7 +193,7 @@ describe('FEATURE: modules bar wiring', () => {
     });
 
     it('WHEN Reset view is pressed and its layout lands THEN the view fits', async () => {
-      mock.page.modules.reset.click();
+      moduleControlsOf(mock).reset.click();
       await mock.runs.settle(mock.runs.count() - 1, resultOf('modules', {}));
 
       expect(mock.view.fit).toHaveBeenCalledOnce();
@@ -190,6 +212,21 @@ describe('FEATURE: modules bar wiring', () => {
     });
   });
 
+  describe('GIVEN a reload saved in modules mode on web with b.ts selected', () => {
+    beforeEach(() => {
+      mock = packageSideDepsMock();
+      vi.mocked(mock.deps.bridge.savedState).mockReturnValue(SAVED_ON_B);
+      controller = createGraphController(mock.deps);
+      controller.receive({ type: 'state', state: WEB_LISTED });
+    });
+
+    it('WHEN the found answer lands THEN the sites of b.ts are asked once', () => {
+      controller.receive(WEB_FOUND);
+
+      expect(vi.mocked(mock.deps.bridge.post).mock.calls.filter(isSitesAsk)).toStrictEqual([[B_ASK]]);
+    });
+  });
+
   describe('GIVEN web shown with src/lib opened and Test files checked', () => {
     beforeEach(() => {
       controller.receive({ type: 'state', state: WEB_LISTED });
@@ -197,22 +234,22 @@ describe('FEATURE: modules bar wiring', () => {
       controller.receive(WEB_FOUND);
       vi.mocked(mock.view.modules.kindOf).mockReturnValue('dir');
       handlersOf(mock).onTapNode(LIB_ID);
-      mock.page.modules.tests.checked = true;
-      mock.page.modules.tests.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).tests.checked = true;
+      moduleControlsOf(mock).tests.dispatchEvent(new Event('change'));
     });
 
     it('WHEN Reset view is pressed THEN the default expansion is saved in place of the opened one', () => {
       const before = lastSavedOf(mock.saver)?.expanded;
 
-      mock.page.modules.reset.click();
+      moduleControlsOf(mock).reset.click();
 
       expect([before, lastSavedOf(mock.saver)?.expanded]).toStrictEqual([LIB_EXPANDED, DEFAULT_EXPANDED]);
     });
 
     it('WHEN Reset view is pressed THEN Test files stays checked and the saved view still shows tests', () => {
-      mock.page.modules.reset.click();
+      moduleControlsOf(mock).reset.click();
 
-      expect([mock.page.modules.tests.checked, lastSavedOf(mock.saver)?.shown.tests]).toStrictEqual([true, true]);
+      expect([moduleControlsOf(mock).tests.checked, lastSavedOf(mock.saver)?.shown.tests]).toStrictEqual([true, true]);
     });
   });
 

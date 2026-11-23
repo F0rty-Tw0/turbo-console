@@ -1,4 +1,4 @@
-import type { Mocked } from 'vitest';
+import type { Mock, Mocked } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { moduleScreenOf } from './graph-module-screen.ts';
@@ -39,12 +39,14 @@ describe('FEATURE: moduleScreenOf', () => {
   let page: PageElements;
   let layout: Mocked<ModuleScreenLayout>;
   let screen: ModuleScreen;
+  let onDrawn: Mock<(scene: ModuleScene) => void>;
 
   beforeEach(() => {
     vi.stubGlobal('document', fakeDocumentMock());
     page = pageMock();
     layout = { draw: vi.fn(async (): Promise<void> => Promise.resolve()), scene: vi.fn(() => SCENE_OF_301), clear: vi.fn() };
-    screen = moduleScreenOf({ page, layout, showGraph: vi.fn() });
+    onDrawn = vi.fn<(scene: ModuleScene) => void>();
+    screen = moduleScreenOf({ page, layout, showGraph: vi.fn(), onDrawn });
     screen.enter();
   });
 
@@ -54,7 +56,7 @@ describe('FEATURE: moduleScreenOf', () => {
 
   describe('GIVEN the screen entered on web', () => {
     it('WHEN it is scanning THEN the bar reads Modules of web and Scanning web…, with Refresh shown and no banner', () => {
-      screen.scanning('web', FRESH_WEB);
+      screen.scanning('web');
 
       expect([
         page.modules.title.textContent,
@@ -62,12 +64,6 @@ describe('FEATURE: moduleScreenOf', () => {
         page.modules.refresh.hidden,
         page.modules.banner.hidden
       ]).toStrictEqual(['Modules of web', 'Scanning web…', false, true]);
-    });
-
-    it('WHEN a fresh view is scanning THEN the View boxes read it, Test files unchecked', () => {
-      screen.scanning('web', FRESH_WEB);
-
-      expect([page.modules.types.checked, page.modules.tests.checked, page.modules.lazies.checked]).toStrictEqual([true, false, true]);
     });
 
     it('WHEN it fails THEN the banner reads Could not scan web. with Retry shown', () => {
@@ -80,16 +76,15 @@ describe('FEATURE: moduleScreenOf', () => {
       ]);
     });
 
-    it('WHEN web is shown with Type-only imports off THEN the status, tooltip and checkboxes follow', async () => {
+    it('WHEN web is shown with Type-only imports off THEN the status and tooltip follow and Retry stays hidden', async () => {
       screen.shown('web', FOUND, WEB_TYPES_OFF, { kind: 'first' });
       await vi.waitFor(() => expect(layout.draw).toHaveBeenCalledOnce());
 
-      expect([
-        page.modules.status.textContent,
-        page.modules.status.title,
-        page.modules.types.checked,
-        page.modules.retry.hidden
-      ]).toStrictEqual(['6 files · 9 imports · 4 unresolved', '3 external · 2 assets · 1 self', false, true]);
+      expect([page.modules.status.textContent, page.modules.status.title, page.modules.retry.hidden]).toStrictEqual([
+        '6 files · 9 imports · 4 unresolved',
+        '3 external · 2 assets · 1 self',
+        true
+      ]);
     });
 
     it('WHEN 301 leaves are drawn THEN the slow notice shows MODULE_SLOW_TEXT', async () => {
@@ -98,12 +93,19 @@ describe('FEATURE: moduleScreenOf', () => {
 
       expect(page.modules.slow.textContent).toBe(MODULE_SLOW_TEXT);
     });
+
+    it('WHEN a draw lands THEN onDrawn gets layout.scene()', async () => {
+      screen.shown('web', FOUND, FRESH_WEB, { kind: 'first' });
+      await vi.waitFor(() => expect(onDrawn).toHaveBeenCalledOnce());
+
+      expect(onDrawn.mock.calls).toStrictEqual([[SCENE_OF_301]]);
+    });
   });
 
   describe('GIVEN web scanning with no graph drawn', () => {
     beforeEach(() => {
       layout.scene.mockReturnValue(null);
-      screen.scanning('web', FRESH_WEB);
+      screen.scanning('web');
     });
 
     it('WHEN it fails THEN the bar no longer reads Scanning web…', () => {
@@ -120,6 +122,15 @@ describe('FEATURE: moduleScreenOf', () => {
 
     it('WHEN it is read THEN nothing is drawn', () => {
       expect(screen.isDrawn()).toBe(false);
+    });
+
+    it('WHEN a draw lands on nothing THEN onDrawn is not called', async () => {
+      screen.drawAgain(FOUND, FRESH_WEB, { kind: 'keep' });
+      await new Promise<void>((resolve): void => {
+        setTimeout(resolve, 0);
+      });
+
+      expect(onDrawn).not.toHaveBeenCalled();
     });
   });
 
@@ -148,7 +159,7 @@ describe('FEATURE: moduleScreenOf', () => {
       screen.shown('web', FOUND, FRESH_WEB, { kind: 'first' });
       await vi.waitFor(() => expect(page.modules.slow.hidden).toBe(false));
       screen.failed('web');
-      screen.scanning('web', FRESH_WEB);
+      screen.scanning('web');
 
       expect([
         page.modules.banner.hidden,

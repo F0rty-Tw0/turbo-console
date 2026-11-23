@@ -3,10 +3,8 @@ import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
 import type { ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import { MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
 import type { ModuleExit, ModuleModeDeps, ModulePhase, ModuleRedraw } from '../common/module-mode.type.ts';
-import { freshModulesViewOf } from '../utils/fresh-view-state.util.ts';
-import { defaultExpandedOf } from '../utils/module-expand.util.ts';
 import { moduleGoneTextOf } from '../utils/module-text.util.ts';
-import { moduleTreeOf } from '../utils/module-tree.util.ts';
+import { enteredModulesViewOf, shownModulesViewOf } from '../utils/modules-view.util.ts';
 
 const OFF: ModulePhase = { kind: 'off' };
 
@@ -39,21 +37,29 @@ export class GraphModuleMode {
     return this.deps.modes.modules();
   }
 
-  /** Shows `packageName`'s modules, parking task mode first; the same package already waited on, loading or shown is ignored. */
+  /**
+   * Shows `packageName`'s modules, parking task mode first and entering the panels once the view is saved; the same
+   * package already waited on, loading or shown is ignored.
+   */
   public enter(packageName: string): void {
     const { current, deps } = this;
     const isSame = current.kind !== 'off' && current.kind !== 'failed' && current.name === packageName;
 
     if (isSame) return;
 
-    if (current.kind === 'off') this.parkOthers();
+    const wasOff = current.kind === 'off';
+
+    if (wasOff) this.parkOthers();
 
     const saved = deps.modes.modules();
-    const fresh = freshModulesViewOf(packageName);
-    const view = saved?.packageName === packageName ? saved : fresh;
+    const view = enteredModulesViewOf(saved, packageName);
 
-    deps.modes.saveModules(view, this.hash());
-    deps.screen.scanning(packageName, view);
+    this.save(view);
+
+    if (wasOff) deps.panels.enter();
+
+    deps.screen.scanning(packageName);
+    deps.panels.scanning(packageName);
 
     if (this.latest === null) {
       this.current = { kind: 'waiting', name: packageName };
@@ -79,6 +85,7 @@ export class GraphModuleMode {
     if (to === 'packages') this.deps.modes.setMode('packages', this.hash());
 
     this.deps.screen.exit();
+    this.deps.panels.exit();
     this.deps.onExit(to);
   }
 
@@ -135,6 +142,7 @@ export class GraphModuleMode {
 
     this.current = { kind: 'failed', name: current.name, found: kept };
     this.deps.screen.failed(current.name);
+    this.deps.panels.failed();
   }
 
   /** Refresh and Retry ask again; nothing is asked while Waiting, which asks on the first graph state. */
@@ -163,24 +171,33 @@ export class GraphModuleMode {
     const camera = this.deps.viewport();
     const saved: ModulesViewState = { ...view, camera };
 
-    this.deps.modes.saveModules(saved, this.hash());
+    this.save(saved);
+  }
+
+  /** Saves `view` and hands it to the panels, never drawing: the only path a modules view is saved by (spec §6.5). */
+  public save(view: ModulesViewState): void {
+    this.deps.modes.saveModules(view, this.hash());
+    this.deps.onView(view);
   }
 
   /** Saves `view` and, while Shown or Failed with the old graph still drawn, draws it again placed by `redraw`. */
   public update(view: ModulesViewState, redraw: ModuleRedraw): void {
     const { current } = this;
 
-    this.deps.modes.saveModules(view, this.hash());
+    this.save(view);
 
     if (current.kind === 'shown') this.deps.screen.shown(current.name, current.found, view, redraw);
     else if (current.kind === 'failed') this.drawKept(current.found, view, redraw);
   }
 
-  /** A found scan: the default expansion is saved the first time, then it is drawn, keeping the camera when it was Shown. */
+  /**
+   * A found scan: the selection drops what it no longer holds first, then the default expansion is saved the first time
+   * and it is drawn, keeping the camera when it was Shown.
+   */
   private show(name: string, found: ModulesFound, wasShown: boolean): void {
-    const saved = this.view() ?? freshModulesViewOf(name);
-    const expanded = saved.expanded ?? defaultExpandedOf(moduleTreeOf(found.files));
-    const view: ModulesViewState = { ...saved, expanded };
+    this.deps.onFound(found);
+
+    const view = shownModulesViewOf(this.view(), name, found);
 
     this.current = { kind: 'shown', name, found };
     this.update(view, wasShown ? MODULE_REDRAW_KEEP : FIRST);
@@ -206,13 +223,9 @@ export class GraphModuleMode {
     this.isSuspended = false;
 
     if (current.kind === 'shown' && view !== null) this.update(view, MODULE_REDRAW_KEEP);
-    else if (current.kind === 'failed') this.deps.screen.reshow();
-    else if (current.kind === 'loading') this.reask(current.name);
-  }
+    else if (current.kind === 'failed' || current.kind === 'loading') this.deps.screen.reshow();
 
-  private reask(packageName: string): void {
-    this.deps.screen.reshow();
-    this.ask(packageName);
+    if (current.kind === 'loading') this.ask(current.name);
   }
 
   /** Entering from package or task mode: task mode is parked toward modules, then the page shows the modules screen. */

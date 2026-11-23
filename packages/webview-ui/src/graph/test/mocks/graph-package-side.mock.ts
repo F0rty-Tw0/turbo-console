@@ -4,6 +4,7 @@ import { flowControlMock } from './graph-flow.mock.ts';
 import { graphViewMock } from './graph-view.mock.ts';
 import { layoutRunsMock } from './layout-runner.mock.ts';
 import { mediaQueryMock } from './media-query.mock.ts';
+import { modulePanelViewsMock } from './module-panel-views.mock.ts';
 import type { Bridge } from '../../../bridge/common/bridge.type.ts';
 import type { CardClockPorts } from '../../common/card-clock.type.ts';
 import type { BundleDetails, PackageDetails } from '../../common/details-view.type.ts';
@@ -39,6 +40,27 @@ import type { PackageSideDepsMock } from '../common/graph-package-side.type.ts';
 import { HOME_CAMERA_STUB } from '../stubs/layout.stub.ts';
 
 const NODE_SIZE: NodeSize = { width: 100, height: 32 };
+
+const sizeOfNode = (): NodeSize => NODE_SIZE;
+
+const lengthOf = (text: string): number => text.length;
+
+type MeasureDeps = Pick<
+  GraphControllerDeps,
+  'sizeOf' | 'taskSizeOf' | 'boxTitleSizeOf' | 'cardSizeOf' | 'chipMeasure' | 'glyphs' | 'measure' | 'now'
+>;
+
+/** Every label, task name, box title and card sizes to `NODE_SIZE`, text measures its length, no glyphs, time stays 0. */
+const MEASURES: MeasureDeps = {
+  sizeOf: sizeOfNode,
+  taskSizeOf: sizeOfNode,
+  boxTitleSizeOf: sizeOfNode,
+  cardSizeOf: sizeOfNode,
+  chipMeasure: lengthOf,
+  glyphs: false,
+  measure: lengthOf,
+  now: (): number => 0
+};
 
 /** The real details view builders, for specs that build a `GraphDetails` without importing `ui/`. */
 export const detailsViewsMock = (): DetailsViews => {
@@ -114,6 +136,7 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
 
     return built;
   };
+  const { views: moduleViews, moduleControls } = modulePanelViewsMock();
   const realViews = detailsViewsMock();
   const views: DetailsViews = { ...realViews, package: recordedPackageView, bundle: recordedBundleView };
   const deps: GraphControllerDeps = {
@@ -123,27 +146,22 @@ export const packageSideDepsMock = (): PackageSideDepsMock => {
     createFlow: flowControlMock,
     runner: runs.runner,
     saver,
-    sizeOf: (): NodeSize => NODE_SIZE,
-    taskSizeOf: (): NodeSize => NODE_SIZE,
-    boxTitleSizeOf: (): NodeSize => NODE_SIZE,
-    cardSizeOf: (): NodeSize => NODE_SIZE,
-    chipMeasure: (text: string): number => text.length,
-    glyphs: false,
-    measure: (text: string): number => text.length,
-    now: (): number => 0,
+    ...MEASURES,
     clockPorts: clockPortsMock(),
     build: buildControls,
     views,
     widgetViews: WIDGET_VIEWS,
     taskViews: TASK_VIEWS,
     taskDetailsViews: TASK_DETAILS_VIEWS,
+    moduleViews,
     overlay: mediaQueryMock(false),
     background: (): string => ''
   };
   const onMessage = vi.fn<PackageSideHooks['onMessage']>();
   const onPlaced = vi.fn<PackageSideHooks['onPlaced']>();
   const onLocation = vi.fn<PackageSideHooks['onLocation']>();
-  const mock: PackageSideDepsMock = { deps, page, view, runs, saver, onMessage, onPlaced, onLocation, packageViews, bundleViews };
+  const recorded = { packageViews, bundleViews, moduleControls };
+  const mock: PackageSideDepsMock = { deps, page, view, runs, saver, onMessage, onPlaced, onLocation, ...recorded };
 
   return mock;
 };

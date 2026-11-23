@@ -39,6 +39,8 @@ export type ModuleCanvas = {
 export type HandledModules = {
   readonly isActive: () => boolean;
   readonly tapNode: (id: string) => void;
+  /** A link tapped on the modules canvas; `source` imports from `target`. */
+  readonly tapLink: (source: string, target: string) => void;
   readonly doubleTapNode: (id: string) => void;
   readonly tapBackground: () => void;
   readonly saveCamera: () => void;

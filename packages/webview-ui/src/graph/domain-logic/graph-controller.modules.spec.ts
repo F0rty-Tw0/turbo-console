@@ -14,6 +14,7 @@ import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { MODULE_SITES_FOUND_STUB } from '../test/stubs/graph-host-message.stub.ts';
 import { FLAT_POSITIONS_STUB, STATE_STUB } from '../test/stubs/graph-layouts.stub.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
+import { withClassIn } from '../test/utils/class-elements.spec.util.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 import { freshModulesViewOf, freshViewStateOf } from '../utils/fresh-view-state.util.ts';
@@ -38,6 +39,12 @@ const WEB_SITES: GraphModuleSitesMessage = {
   to: null,
   result: MODULE_SITES_FOUND_STUB
 };
+
+const B_ID = 'file:src/lib/b.ts';
+
+const FROM_B: ModuleEnd = { kind: 'file', path: 'src/lib/b.ts' };
+
+const B_SITES: GraphModuleSitesMessage = { ...WEB_SITES, from: FROM_B };
 
 /** The selected package's drawn rect, so a menu opened without a shown "…" has somewhere to anchor. */
 const WEB_RECT: RectPx = { x1: 0, y1: 0, x2: 100, y2: 32 };
@@ -160,6 +167,26 @@ describe('FEATURE: createGraphController modules messages', () => {
       mock.page.packagesMode.click();
 
       expect(clear).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('GIVEN web Shown with b.ts selected and asked', () => {
+    let controller: GraphController;
+
+    beforeEach(async () => {
+      controller = createGraphController(mock.deps);
+      controller.receive({ type: 'showModules', name: 'web' });
+      controller.receive({ type: 'state', state: STATE_STUB });
+      controller.receive(WEB_FOUND);
+      await mock.runs.settle(mock.runs.count() - 1, resultOf('modules', {}));
+      vi.mocked(mock.view.modules.kindOf).mockReturnValue('file');
+      vi.mocked(mock.deps.createView).mock.calls[0]?.[1].onTapNode(B_ID);
+    });
+
+    it('WHEN a matching moduleSites arrives THEN the module Details lists its rows', () => {
+      controller.receive(B_SITES);
+
+      expect(withClassIn(mock.page.body, 'graph-module-details', 'import-row')).toHaveLength(2);
     });
   });
 

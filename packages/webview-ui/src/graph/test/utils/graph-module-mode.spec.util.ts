@@ -2,10 +2,13 @@ import { vi } from 'vitest';
 import type { Mocked } from 'vitest';
 
 import type { Bridge } from '../../../bridge/common/bridge.type.ts';
+import type { ModulesFound } from '../../../bridge/common/graph-modules.type.ts';
 import type { GraphPackage, GraphReady, Position } from '../../../bridge/common/graph-state.type.ts';
+import type { ModulesViewState } from '../../../bridge/common/graph-view-state.type.ts';
 import type { FrameClock } from '../../common/frame-clock.type.ts';
 import type { Viewport } from '../../common/graph-page.type.ts';
 import type { ModuleExit, ModuleModeDeps, ModuleModes, ModuleScreen, ModuleTaskSide } from '../../common/module-mode.type.ts';
+import type { ModulePanelHooks } from '../../common/module-panels.type.ts';
 import type { ModuleModeRig } from '../common/graph-module-mode.type.ts';
 import { STATE_STUB } from '../stubs/graph-layouts.stub.ts';
 
@@ -64,8 +67,11 @@ export const moduleModeRigOf = (modes: ModuleModes, isTaskMode = false): ModuleM
   const taskSide = (): ModuleTaskSide => tasks;
   const start = vi.fn<FrameClock['start']>();
   const frames = { start };
-  const deps: ModuleModeDeps = { modes, bridge, screen, tasks: taskSide, onExit, notice, viewport, frames };
-  const rig: ModuleModeRig = { deps, post, screen, tasks, onExit, notice, start };
+  const onView = vi.fn<(view: ModulesViewState) => void>();
+  const panels: Mocked<ModulePanelHooks> = { enter: vi.fn(), scanning: vi.fn(), failed: vi.fn(), exit: vi.fn() };
+  const onFound = vi.fn<(found: ModulesFound) => void>();
+  const deps: ModuleModeDeps = { modes, bridge, screen, tasks: taskSide, onExit, notice, viewport, frames, onView, panels, onFound };
+  const rig: ModuleModeRig = { deps, post, screen, tasks, onExit, notice, start, onView, panels, onFound };
 
   return rig;
 };

@@ -75,10 +75,20 @@ const byModeOf = (tasks: () => HandledTasks, modules: () => HandledModules): ByM
   return byMode;
 };
 
+/** A link tap: in package mode to the inspection, in modules mode to modules mode, in task mode to nothing. */
+const edgeTapOf = (byMode: ByMode, targets: ViewHandlerTargets): ((source: string, target: string) => void) => {
+  const { filtering, modules } = targets;
+  const tapLink = (source: string, target: string): void => filtering().inspection.tap({ kind: 'tapLink', source, target });
+  const tapModuleLink = (source: string, target: string): void => modules().tapLink(source, target);
+
+  return byMode(tapLink, NOTHING, tapModuleLink);
+};
+
 /**
  * Routes each Cytoscape event by mode: in package mode to the inspection, the folders or the layouts; in task mode a
  * drag, a camera move, a node tap, a background tap and a frame to task mode, and every other tap to nothing; in modules
- * mode a node tap or double tap, a background tap and a camera move to modules mode, and every other event to nothing.
+ * mode a node tap or double tap, a link tap, a background tap and a camera move to modules mode, and every other event to
+ * nothing.
  * Every frame marks the frame clock first; every camera move clears the flow overlay first.
  */
 export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers => {
@@ -101,7 +111,7 @@ export const viewHandlersOf = (targets: ViewHandlerTargets): GraphViewHandlers =
       (id: string): void => tasks().selection.tapNode(id),
       (id: string): void => modules().tapNode(id)
     ),
-    onTapEdge: byMode((source: string, target: string): void => filtering().inspection.tap({ kind: 'tapLink', source, target })),
+    onTapEdge: edgeTapOf(byMode, targets),
     onTapBundle: byMode((source: string, target: string): void => filtering().inspection.tap({ kind: 'tapBundle', source, target })),
     onTapBackground: byMode(
       (): void => filtering().inspection.input(BACKGROUND),

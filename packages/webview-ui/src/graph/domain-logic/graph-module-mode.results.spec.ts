@@ -81,6 +81,12 @@ describe('FEATURE: GraphModuleMode scan results', () => {
       expect(rig.start).not.toHaveBeenCalled();
     });
 
+    it('WHEN web fails THEN the panels are told once', () => {
+      mode.scanned(FAILED, REPLY_AT);
+
+      expect(rig.panels.failed).toHaveBeenCalledOnce();
+    });
+
     it('WHEN Refresh is pressed THEN scanModules is posted again and it stays Loading', () => {
       mode.refresh();
 

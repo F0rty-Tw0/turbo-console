@@ -11,6 +11,8 @@ import { packageView } from './details-package.ts';
 import { candidateItems, pickingView } from './details-picking.ts';
 import { stepItems, traceView } from './details-trace.ts';
 import { renderLocation, renderLocationLines } from './location-elements.ts';
+import { buildModuleControls } from './module-controls-elements.ts';
+import { buildModuleDetailsPanel, buildModuleDetailsView } from './module-details-elements.ts';
 import { buildTaskControls } from './task-controls-elements.ts';
 import { buildTaskDetails, buildTaskDetailsEmpty, buildTaskDetailsPanel } from './task-details-elements.ts';
 import { buildProjectLine } from './task-grid-rows.ts';
@@ -18,6 +20,7 @@ import { buildFolderRow, buildPackageToolbar, buildTaskToolbar } from './widget-
 import { buildMenu } from './widget-menu.ts';
 import type { DetailsViews } from '../common/details.type.ts';
 import type { LocationViews } from '../common/location.type.ts';
+import type { ModulePanelViews } from '../common/module-panels.type.ts';
 import type { TaskControlsViews } from '../common/task-controls.type.ts';
 import type { TaskDetailsViews } from '../common/task-details.type.ts';
 import type { WidgetViews } from '../common/widget.type.ts';
@@ -57,4 +60,10 @@ export const taskDetailsViews: TaskDetailsViews = {
   panel: buildTaskDetailsPanel,
   empty: buildTaskDetailsEmpty,
   view: buildTaskDetails
+};
+
+export const moduleViews: ModulePanelViews = {
+  controls: buildModuleControls,
+  details: buildModuleDetailsPanel,
+  view: buildModuleDetailsView
 };
