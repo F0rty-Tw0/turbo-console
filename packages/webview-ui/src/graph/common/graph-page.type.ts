@@ -11,6 +11,7 @@ import type { ProbeFacts } from './graph-probe.type.ts';
 import type { AnchorBox } from './keep-clear.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { ModuleCanvas } from './module-canvas.type.ts';
+import type { ModulePanelViews } from './module-panels.type.ts';
 import type { NodeSize } from './node-size.type.ts';
 import type { PageElements } from './page-elements.type.ts';
 import type { Paint } from './paint.type.ts';
@@ -205,6 +206,8 @@ type GraphControllerOwnDeps = {
   readonly taskViews: TaskControlsViews;
   /** The task side panel builders, handed in for the same reason. */
   readonly taskDetailsViews: TaskDetailsViews;
+  /** The module panel builders, handed in for the same reason. */
+  readonly moduleViews: ModulePanelViews;
   /** `window.matchMedia(OVERLAY_MEDIA_QUERY)`: while it matches, the details panel overlays the canvas. */
   readonly overlay: MediaQueryList;
   /** The computed `--vscode-editor-background` of `body`, read at each export. */

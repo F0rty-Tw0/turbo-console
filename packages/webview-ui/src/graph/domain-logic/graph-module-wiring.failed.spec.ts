@@ -10,7 +10,7 @@ import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { WEB_LISTED } from '../test/utils/graph-module-mode.spec.util.ts';
-import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { moduleControlsOf, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 
 const WEB_FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
 
@@ -87,15 +87,15 @@ describe('FEATURE: modules wiring after a failed scan or a host error', () => {
     it('WHEN Type-only imports is unchecked THEN the module graph is laid out again', () => {
       const runs = mock.runs.count();
 
-      mock.page.modules.types.checked = false;
-      mock.page.modules.types.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).types.checked = false;
+      moduleControlsOf(mock).types.dispatchEvent(new Event('change'));
 
       expect(mock.runs.count()).toBe(runs + 1);
     });
 
     it('WHEN Type-only imports is unchecked THEN the failed banner stays', () => {
-      mock.page.modules.types.checked = false;
-      mock.page.modules.types.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).types.checked = false;
+      moduleControlsOf(mock).types.dispatchEvent(new Event('change'));
 
       expect([mock.page.modules.banner.hidden, mock.page.modules.retry.hidden]).toStrictEqual([false, false]);
     });

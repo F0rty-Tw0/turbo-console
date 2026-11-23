@@ -1,7 +1,9 @@
+import { GraphModuleControls } from './graph-module-controls.ts';
 import { moduleInputOf } from './graph-module-input.ts';
 import { GraphModuleLayout } from './graph-module-layout.ts';
 import { GraphModuleMode } from './graph-module-mode.ts';
 import { moduleScreenOf } from './graph-module-screen.ts';
+import { depthEdited, focusCleared, resetView, toggleShown } from './graph-module-view-edits.ts';
 import { layoutScreenOf, showFailure } from './graph-page-states.ts';
 import type { GraphPackageModulesMessage, GraphShowModulesMessage } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphReady } from '../../bridge/common/graph-state.type.ts';
@@ -10,17 +12,14 @@ import { isRecord } from '../../bridge/utils/record.util.ts';
 import { MODULES_DROPPED_WARNING, MODULE_REDRAW_KEEP } from '../common/graph-module.const.ts';
 import type { GraphControllerDeps, GraphView, Viewport } from '../common/graph-page.type.ts';
 import { ROOT_TASK_PACKAGE } from '../common/graph-task.const.ts';
-import type { ModuleHookModes, ModuleModeHooks, ModuleRedraw, PageModuleMode } from '../common/module-mode.type.ts';
+import type { ModuleControlsActions } from '../common/module-controls.type.ts';
+import type { ModuleHookModes, ModuleModeHooks, PageModuleMode } from '../common/module-mode.type.ts';
+import type { ModulePanelHooks } from '../common/module-panels.type.ts';
 import type { ModuleBox, ModuleLeaf, ModuleMeasures, ModuleShown } from '../common/module-scene.type.ts';
-import type { ModulesBarElements } from '../common/modules-bar.type.ts';
 import type { NodeSize } from '../common/node-size.type.ts';
 import type { PageElements } from '../common/page-elements.type.ts';
 import type { PageTaskMode } from '../common/page-task-mode.type.ts';
-import { defaultExpandedOf } from '../utils/module-expand.util.ts';
 import { moduleLeafLabelOf } from '../utils/module-text.util.ts';
-import { moduleTreeOf } from '../utils/module-tree.util.ts';
-
-const FIT: ModuleRedraw = { kind: 'fit' };
 
 /** A card is sized from its drawn label, a box title from its folder name. */
 const measuresOf = (deps: GraphControllerDeps): ModuleMeasures => {
@@ -38,46 +37,57 @@ const relayoutOf = (mode: GraphModuleMode): void => {
   if (view !== null) mode.update(view, MODULE_REDRAW_KEEP);
 };
 
-/** A View box changed: the saved view shows the kinds the three boxes read, drawn again with the camera kept; nothing is posted. */
-const toggleShown = (mode: GraphModuleMode, bar: ModulesBarElements): void => {
-  const view = mode.view();
-
-  if (view === null) return;
-
-  const shown: ModuleShown = { types: bar.types.checked, tests: bar.tests.checked, lazies: bar.lazies.checked };
-  const toggled: ModulesViewState = { ...view, shown };
-
-  mode.update(toggled, MODULE_REDRAW_KEEP);
-};
-
-/** Reset view while Shown: the shown package's default expansion, then a fit. */
-const resetView = (mode: GraphModuleMode): void => {
-  const view = mode.view();
-  const phase = mode.phase();
-
-  if (view === null || phase.kind !== 'shown') return;
-
-  const tree = moduleTreeOf(phase.found.files);
-  const expanded = defaultExpandedOf(tree);
-  const reset: ModulesViewState = { ...view, expanded };
-
-  mode.update(reset, FIT);
-};
-
 /** The modules bar drives the mode: Back leaves, Refresh and Retry scan again; the toolbar's root entry opens `//`. */
 const wireBar = (page: PageElements, mode: GraphModuleMode): void => {
   const bar = page.modules;
   const refresh = (): void => mode.refresh();
-  const toggle = (): void => toggleShown(mode, bar);
-  const boxes = [bar.types, bar.tests, bar.lazies];
 
   bar.back.addEventListener('click', (): void => mode.leave());
   bar.refresh.addEventListener('click', refresh);
   bar.retry.addEventListener('click', refresh);
-  bar.reset.addEventListener('click', (): void => resetView(mode));
   page.rootModules.addEventListener('click', (): void => mode.enter(ROOT_TASK_PACKAGE));
+};
 
-  for (const box of boxes) box.addEventListener('change', toggle);
+/** The module Controls edit the mode's saved view. */
+const controlsActionsOf = (mode: GraphModuleMode): ModuleControlsActions => {
+  const actions: ModuleControlsActions = {
+    onDepth: (depth: number): void => depthEdited(mode, depth),
+    onShown: (shown: ModuleShown): void => toggleShown(mode, shown),
+    onReset: (): void => resetView(mode),
+    onClearFocus: (): void => focusCleared(mode)
+  };
+
+  return actions;
+};
+
+/**
+ * The panels as modules mode calls them: the Controls enter on the saved view, open unless saved closed (spec §6.8).
+ * `built` is read per call: it gets the one Controls panel once that is built, after the mode it edits.
+ */
+const panelHooksOf = (built: GraphModuleControls[], modes: ModuleHookModes): ModulePanelHooks => {
+  const enter = (): void => {
+    const view = modes.modules();
+    const isOpen = modes.current()?.controlsOpen ?? true;
+
+    if (view === null) return;
+
+    for (const controls of built) controls.enter(view, isOpen);
+  };
+  const exit = (): void => {
+    for (const controls of built) controls.exit();
+  };
+  const hooks: ModulePanelHooks = { enter, scanning: (): void => undefined, exit };
+
+  return hooks;
+};
+
+/** Every saved modules view reaches the Controls panel once it is built. */
+const viewSyncOf = (built: GraphModuleControls[]): ((view: ModulesViewState) => void) => {
+  const onView = (view: ModulesViewState): void => {
+    for (const controls of built) controls.setView(view);
+  };
+
+  return onView;
 };
 
 /** The Packages/Tasks group shows unless the root is a single package, where the toolbar's Show modules shows instead. */
@@ -104,7 +114,12 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
   const onFailure = (error: unknown): void => showFailure(page, error);
   const layout = new GraphModuleLayout({ view, runner, measures, frames, showGraph, onFailure });
   const screen = moduleScreenOf({ page, layout, showGraph });
-  const mode = new GraphModuleMode({ modes, bridge, screen, tasks, onExit, notice, viewport, frames });
+  const built: GraphModuleControls[] = [];
+  const onView = viewSyncOf(built);
+  const panels = panelHooksOf(built, modes);
+  const mode = new GraphModuleMode({ modes, bridge, screen, tasks, onExit, notice, viewport, frames, onView, panels });
+  const actions = controlsActionsOf(mode);
+  const controls = new GraphModuleControls({ page, views: deps.moduleViews, modes, actions });
   const input = moduleInputOf({ mode, canvas: view.modules, container: page.container, bridge });
   const leave = (): void => mode.leave();
   const modules: PageModuleMode = {
@@ -118,6 +133,7 @@ export const moduleModeOf = (deps: GraphControllerDeps, view: GraphView, hooks: 
     input
   };
 
+  built.push(controls);
   page.packagesMode.addEventListener('click', leave);
   page.taskMode.addEventListener('click', leave);
   wireBar(page, mode);

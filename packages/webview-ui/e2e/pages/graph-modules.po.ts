@@ -5,7 +5,7 @@ import { GraphProbePage } from './graph-probe.po.ts';
 import type { Position } from '../../src/bridge/common/graph-state.type.ts';
 import { MODULE_SLOW_TEXT } from '../../src/graph/common/graph-module.const.ts';
 import type { ProbeEdge, ProbeNode, ProbeState } from '../../src/graph/common/graph-probe.type.ts';
-import { MODULES_BAR, SHOW_MODULES_LABEL } from '../common/graph-modules.const.ts';
+import { MODULES_BAR, MODULE_CONTROLS, RESET_VIEW_LABEL, SHOW_MODULES_LABEL } from '../common/graph-modules.const.ts';
 import type { Camera } from '../common/graph.type.ts';
 
 /** This far outside a box's children, in CSS pixels, a tap lands on the box's own title band (spec §7.4). */
@@ -16,12 +16,16 @@ const CENTRE_TOLERANCE_PX = 2;
 
 const edgeLineOf = (edge: ProbeEdge): string => `${edge.source}→${edge.target} ${edge.lineStyle}`;
 
-/** Modules mode's page parts: the modules bar with its buttons, View boxes, banner and slow notice, and the drawn modules graph. */
+/**
+ * Modules mode's page parts: the modules bar with its buttons, banner and slow notice, the module Controls panel with its
+ * View boxes and Reset view, and the drawn modules graph.
+ */
 export class GraphModulesPage {
   public readonly bar: Locator;
 
   private readonly page: Page;
   private readonly probe: GraphProbePage;
+  private readonly controls: Locator;
   private readonly banner: Locator;
   private readonly slow: Locator;
 
@@ -29,12 +33,17 @@ export class GraphModulesPage {
     this.page = page;
     this.probe = new GraphProbePage(page);
     this.bar = page.locator(MODULES_BAR);
+    this.controls = page.locator(MODULE_CONTROLS);
     this.banner = this.bar.getByRole('status');
     this.slow = this.bar.getByText(MODULE_SLOW_TEXT, { exact: true });
   }
 
   public async pressBar(label: string): Promise<void> {
     await this.bar.getByRole('button', { name: label, exact: true }).click();
+  }
+
+  public async pressReset(): Promise<void> {
+    await this.controls.getByRole('button', { name: RESET_VIEW_LABEL, exact: true }).click();
   }
 
   /** Clicks the one Show modules on screen: the Details panel's, or the toolbar's on a single-package root. */
@@ -153,7 +162,7 @@ export class GraphModulesPage {
   }
 
   private checkOf(label: string): Locator {
-    return this.bar.getByRole('checkbox', { name: label, exact: true });
+    return this.controls.getByRole('checkbox', { name: label, exact: true });
   }
 
   private async edgeLines(): Promise<string[]> {

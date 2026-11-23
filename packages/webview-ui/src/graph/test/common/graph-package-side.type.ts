@@ -4,6 +4,7 @@ import type { LayoutRuns } from './graph-layouts.type.ts';
 import type { BundleDetails, PackageDetails } from '../../common/details-view.type.ts';
 import type { GraphControllerDeps, GraphView, ViewStateSaver } from '../../common/graph-page.type.ts';
 import type { PackageSideHooks } from '../../common/graph-task.type.ts';
+import type { ModuleControlsElements } from '../../common/module-controls.type.ts';
 import type { PageElements } from '../../common/page-elements.type.ts';
 
 /**
@@ -23,4 +24,6 @@ export type PackageSideDepsMock = {
   readonly packageViews: PackageDetails[];
   /** The bundle views built so far, the latest last. */
   readonly bundleViews: BundleDetails[];
+  /** The module Controls panels built so far, the latest last; the controller builds one. */
+  readonly moduleControls: ModuleControlsElements[];
 };

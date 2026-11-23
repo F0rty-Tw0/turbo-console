@@ -13,7 +13,7 @@ import { packageSideDepsMock } from '../test/mocks/graph-package-side.mock.ts';
 import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { resultOf } from '../test/utils/graph-layouts.spec.util.ts';
 import { ROOT_LISTED, WEB_LISTED } from '../test/utils/graph-module-mode.spec.util.ts';
-import { stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
+import { moduleControlsOf, stubPackageSideGlobals } from '../test/utils/graph-package-side.spec.util.ts';
 import { defaultExpandedOf } from '../utils/module-expand.util.ts';
 import { moduleTreeOf } from '../utils/module-tree.util.ts';
 
@@ -115,8 +115,8 @@ describe('FEATURE: modules bar wiring', () => {
     });
 
     it('WHEN Type-only imports is unchecked THEN the saved view still hides test files', () => {
-      mock.page.modules.types.checked = false;
-      mock.page.modules.types.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).types.checked = false;
+      moduleControlsOf(mock).types.dispatchEvent(new Event('change'));
 
       expect(vi.mocked(mock.saver.schedule).mock.lastCall?.[0].modules?.shown).toStrictEqual({
         types: false,
@@ -136,8 +136,8 @@ describe('FEATURE: modules bar wiring', () => {
     it('WHEN Test files is unchecked THEN the saved view hides tests and nothing is posted', () => {
       const posts = vi.mocked(mock.deps.bridge.post).mock.calls.length;
 
-      mock.page.modules.tests.checked = false;
-      mock.page.modules.tests.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).tests.checked = false;
+      moduleControlsOf(mock).tests.dispatchEvent(new Event('change'));
 
       expect(vi.mocked(mock.saver.schedule).mock.lastCall?.[0].modules?.shown.tests).toBe(false);
       expect(vi.mocked(mock.deps.bridge.post).mock.calls).toHaveLength(posts);
@@ -146,8 +146,8 @@ describe('FEATURE: modules bar wiring', () => {
     it('WHEN Test files is unchecked THEN the module graph is laid out again', () => {
       const runs = mock.runs.count();
 
-      mock.page.modules.tests.checked = false;
-      mock.page.modules.tests.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).tests.checked = false;
+      moduleControlsOf(mock).tests.dispatchEvent(new Event('change'));
 
       expect(mock.runs.count()).toBe(runs + 1);
     });
@@ -171,7 +171,7 @@ describe('FEATURE: modules bar wiring', () => {
     });
 
     it('WHEN Reset view is pressed and its layout lands THEN the view fits', async () => {
-      mock.page.modules.reset.click();
+      moduleControlsOf(mock).reset.click();
       await mock.runs.settle(mock.runs.count() - 1, resultOf('modules', {}));
 
       expect(mock.view.fit).toHaveBeenCalledOnce();
@@ -197,22 +197,22 @@ describe('FEATURE: modules bar wiring', () => {
       controller.receive(WEB_FOUND);
       vi.mocked(mock.view.modules.kindOf).mockReturnValue('dir');
       handlersOf(mock).onTapNode(LIB_ID);
-      mock.page.modules.tests.checked = true;
-      mock.page.modules.tests.dispatchEvent(new Event('change'));
+      moduleControlsOf(mock).tests.checked = true;
+      moduleControlsOf(mock).tests.dispatchEvent(new Event('change'));
     });
 
     it('WHEN Reset view is pressed THEN the default expansion is saved in place of the opened one', () => {
       const before = lastSavedOf(mock.saver)?.expanded;
 
-      mock.page.modules.reset.click();
+      moduleControlsOf(mock).reset.click();
 
       expect([before, lastSavedOf(mock.saver)?.expanded]).toStrictEqual([LIB_EXPANDED, DEFAULT_EXPANDED]);
     });
 
     it('WHEN Reset view is pressed THEN Test files stays checked and the saved view still shows tests', () => {
-      mock.page.modules.reset.click();
+      moduleControlsOf(mock).reset.click();
 
-      expect([mock.page.modules.tests.checked, lastSavedOf(mock.saver)?.shown.tests]).toStrictEqual([true, true]);
+      expect([moduleControlsOf(mock).tests.checked, lastSavedOf(mock.saver)?.shown.tests]).toStrictEqual([true, true]);
     });
   });
 

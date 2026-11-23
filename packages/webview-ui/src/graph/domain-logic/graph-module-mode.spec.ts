@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphModuleMode } from './graph-module-mode.ts';
 import { ViewStateModes } from './view-state-modes.ts';
-import type { GraphScanModulesMessage } from '../../bridge/common/graph-modules.type.ts';
+import type { GraphPackageModulesMessage, GraphScanModulesMessage } from '../../bridge/common/graph-modules.type.ts';
 import type { GraphViewState, ModulesViewState } from '../../bridge/common/graph-view-state.type.ts';
 import type { ViewStateSaver } from '../common/graph-page.type.ts';
 import type { ModuleModeRig } from '../test/common/graph-module-mode.type.ts';
+import { MODULES_FOUND_STUB } from '../test/stubs/module-scene.stub.ts';
 import { REPLY_AT, ROOT_LISTED, WEB_GONE, WEB_LISTED, moduleModeRigOf } from '../test/utils/graph-module-mode.spec.util.ts';
 import { freshModulesViewOf, freshViewStateOf } from '../utils/fresh-view-state.util.ts';
 
@@ -24,6 +25,8 @@ const TESTS_SHOWN: ModulesViewState['shown'] = { ...FRESH_WEB.shown, tests: true
 const WEB_TESTS_SHOWN: ModulesViewState = { ...FRESH_WEB, shown: TESTS_SHOWN };
 
 const FRESH_STATE: GraphViewState = freshViewStateOf('h1');
+
+const WEB_FOUND: GraphPackageModulesMessage = { type: 'packageModules', packageName: 'web', result: MODULES_FOUND_STUB };
 
 describe('FEATURE: GraphModuleMode entry and package states', () => {
   let rig: ModuleModeRig;
@@ -53,10 +56,32 @@ describe('FEATURE: GraphModuleMode entry and package states', () => {
       expect([modes.mode(), modes.modules()]).toStrictEqual(['modules', FRESH_WEB]);
     });
 
-    it('WHEN web is entered THEN the screen enters and shows the scan of web with the fresh view', () => {
+    it('WHEN web is entered THEN the screen and the panels enter and show the scan of web', () => {
       mode.enter('web');
 
-      expect([rig.screen.enter.mock.calls, rig.screen.scanning.mock.calls]).toStrictEqual([[[]], [['web', FRESH_WEB]]]);
+      expect([rig.screen.enter.mock.calls, rig.screen.scanning.mock.calls, rig.panels.scanning.mock.calls]).toStrictEqual([
+        [[]],
+        [['web']],
+        [['web']]
+      ]);
+    });
+
+    it('WHEN web is entered THEN the panels enter once, after the first save', () => {
+      const saveModules = vi.spyOn(modes, 'saveModules');
+
+      mode.enter('web');
+
+      const [saveOrder] = saveModules.mock.invocationCallOrder;
+      const [enterOrder] = rig.panels.enter.mock.invocationCallOrder;
+
+      expect(rig.panels.enter).toHaveBeenCalledOnce();
+      expect(saveOrder).toBeLessThan(enterOrder ?? 0);
+    });
+
+    it('WHEN web is entered THEN onView gets the fresh web view', () => {
+      mode.enter('web');
+
+      expect(rig.onView.mock.calls).toStrictEqual([[FRESH_WEB]]);
     });
 
     it('WHEN web is entered twice THEN the second enter is ignored', () => {
@@ -145,10 +170,45 @@ describe('FEATURE: GraphModuleMode entry and package states', () => {
       mode.received(WEB_LISTED);
     });
 
-    it('WHEN web is entered THEN the screen shows the scan of web with the saved view, not a fresh one', () => {
+    it('WHEN web is entered THEN onView gets the saved view, not a fresh one', () => {
       mode.enter('web');
 
-      expect(rig.screen.scanning.mock.calls).toStrictEqual([['web', WEB_TESTS_SHOWN]]);
+      expect(rig.onView.mock.lastCall).toStrictEqual([WEB_TESTS_SHOWN]);
+    });
+  });
+
+  describe('GIVEN web shown in modules mode', () => {
+    beforeEach(() => {
+      open();
+      mode.received(WEB_LISTED);
+      mode.enter('web');
+      mode.scanned(WEB_FOUND, REPLY_AT);
+    });
+
+    it('WHEN a view is saved THEN it is saved once and reaches onView, and nothing is drawn', () => {
+      const saveModules = vi.spyOn(modes, 'saveModules');
+      const draws = rig.screen.shown.mock.calls.length;
+
+      mode.save(WEB_TESTS_SHOWN);
+
+      expect([saveModules.mock.calls, rig.screen.shown.mock.calls.length]).toStrictEqual([[[WEB_TESTS_SHOWN, 'h1']], draws]);
+      expect(rig.onView.mock.lastCall).toStrictEqual([WEB_TESTS_SHOWN]);
+    });
+
+    it('WHEN Back is pressed THEN the panels exit before the mode exits', () => {
+      mode.leave();
+
+      const [exitOrder] = rig.panels.exit.mock.invocationCallOrder;
+      const [onExitOrder] = rig.onExit.mock.invocationCallOrder;
+
+      expect(rig.panels.exit).toHaveBeenCalledOnce();
+      expect(exitOrder).toBeLessThan(onExitOrder ?? 0);
+    });
+
+    it('WHEN a stub double tap enters @s/x THEN the panels enter once and show the scan of web, then of @s/x', () => {
+      mode.enter('@s/x');
+
+      expect([rig.panels.enter.mock.calls, rig.panels.scanning.mock.calls]).toStrictEqual([[[]], [['web'], ['@s/x']]]);
     });
   });
 

@@ -4,6 +4,7 @@ import type { GraphView, Viewport } from './graph-page.type.ts';
 import type { TaskModes } from './graph-task.type.ts';
 import type { LayoutRunner } from './layout.type.ts';
 import type { HandledModules, ModuleCanvas } from './module-canvas.type.ts';
+import type { ModulePanelHooks } from './module-panels.type.ts';
 import type { ModuleMeasures, ModuleScene } from './module-scene.type.ts';
 import type { PageElements } from './page-elements.type.ts';
 import type { PageTaskMode } from './page-task-mode.type.ts';
@@ -42,8 +43,8 @@ export type ModuleRedraw = ModuleRedrawFirst | ModuleRedrawKeep | ModuleRedrawAn
 /** What the mode asks of the page: the canvas, the modules bar and its banners. */
 export type ModuleScreen = {
   readonly enter: () => void;
-  /** Waiting and Loading: empty canvas, "Scanning <P>…", Refresh visible, the View boxes set from `view`. */
-  readonly scanning: (name: string, view: ModulesViewState) => void;
+  /** Waiting and Loading: empty canvas, "Scanning <P>…", Refresh visible. */
+  readonly scanning: (name: string) => void;
   readonly shown: (name: string, found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => void;
   /** Failed with the old graph kept: draws `view` again placed by `redraw`, leaving the bar and its failed banner as they are. */
   readonly drawAgain: (found: ModulesFound, view: ModulesViewState, redraw: ModuleRedraw) => void;
@@ -83,10 +84,16 @@ export type ModuleModeDeps = {
   readonly viewport: () => Viewport;
   /** Started at a found scan's receive time, so the module draw's first frame is timed from the host's reply. */
   readonly frames: Pick<FrameClock, 'start'>;
+  /** Every saved modules view, so the panels read it (spec §6.5). */
+  readonly onView: (view: ModulesViewState) => void;
+  readonly panels: ModulePanelHooks;
 };
 
-/** `ModuleModes` plus the mode, which tells `resumeModules` a reload left the page in modules mode. */
-export type ModuleHookModes = ModuleModes & Pick<TaskModes, 'mode'>;
+/**
+ * `ModuleModes` plus the mode, which tells `resumeModules` a reload left the page in modules mode, and the saved state and
+ * panel save the module Controls open state is read from and saved to (spec §6.8).
+ */
+export type ModuleHookModes = ModuleModes & Pick<TaskModes, 'mode' | 'current' | 'savePanels'>;
 
 /** Task mode as the module wiring reaches it: the side modules mode parks, and the notice line it writes "P gone" to. */
 type ModuleHookTasks = ModuleTaskSide & Pick<PageTaskMode, 'notice'>;

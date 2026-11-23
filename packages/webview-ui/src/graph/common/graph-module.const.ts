@@ -37,8 +37,17 @@ export const MODULES_REFRESH_LABEL = 'Refresh';
 
 export const MODULES_RETRY_LABEL = 'Retry';
 
-/** The name of the modules bar's group of kind toggles and Reset view. */
-export const MODULES_VIEW_LABEL = 'View';
+/** The module Controls panel's id, which the toolbar's Controls button points at while modules mode is on. */
+export const MODULE_CONTROLS_ID = 'graph-module-controls';
+
+/** The title of the module Controls section that names the focus target. */
+export const MODULE_FOCUS_SECTION_TITLE = 'Focus';
+
+/** What the Focus section reads while nothing is focused. */
+export const MODULE_NO_FOCUS_TEXT = 'None';
+
+/** The module depth hint's id; the package Controls, which stay in the DOM, use `DEPTH_HINT_ID`. */
+export const MODULE_DEPTH_HINT_ID = 'graph-module-depth-hint';
 
 export const MODULE_TYPES_LABEL = 'Type-only imports';
 

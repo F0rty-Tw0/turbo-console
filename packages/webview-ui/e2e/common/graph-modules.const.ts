@@ -1,6 +1,9 @@
 /** The modules bar, by the id spec §7.4 names. */
 export const MODULES_BAR = '#graph-modules-bar';
 
+/** The module Controls panel, which holds the View boxes and Reset view (spec §6.2). */
+export const MODULE_CONTROLS = '#graph-module-controls';
+
 export const BACK_LABEL = 'Back';
 
 export const REFRESH_LABEL = 'Refresh';
