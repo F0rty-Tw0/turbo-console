@@ -12,6 +12,9 @@ const NO_KEY_FILE = { formatVersion: CACHE_FORMAT_VERSION, keyedPaths: ['package
 
 const EXTRA_KEY_FILE = { ...FILE, extra: 1 };
 
+/** Written before tasks turbo 2.11.11+ opts out were kept as plain scripts: its model may lack them. */
+const PRE_OPT_OUT_FILE = { ...FILE, formatVersion: 10 };
+
 const EXTRA_KEY_MODEL = { ...WORKSPACE_MODEL_STUB, extra: 1 };
 
 /** A copy of the stub model whose first task has no `atom` key at all, where the stub holds `null`. */
@@ -127,6 +130,12 @@ describe('FEATURE: cache file schema', () => {
       const parsed = cacheFileSchema.parse(EXTRA_KEY_FILE);
 
       expect(parsed).toStrictEqual(FILE);
+    });
+
+    it('WHEN it was written before opted-out tasks were kept THEN it fails, so the cache misses', () => {
+      const result = cacheFileSchema.safeParse(PRE_OPT_OUT_FILE);
+
+      expect(result.success).toBe(false);
     });
   });
 });
