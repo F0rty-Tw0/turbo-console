@@ -61,5 +61,10 @@ patchedDependencies:
   # stayed narrower than its two rows); the patch unCleans them first.
   # breadthfirst cached each node's weighted percent but read a cached 0 as missing, so a row of roots re-read every
   # neighborhood on each sort comparison (~80k calls on a 10k-module fallback layout); the patch checks for undefined.
-  # Drop the patch once a cytoscape release fixes all four; a version bump fails install until then.
+  # An element's first style apply ran checkTriggers once per property, each rebuilding a dirtyStyleCache collection
+  # (~5.2 s of the grouped 10k open); the patch queues them in styfn.apply and runs each effect once per element.
+  # The layered texture cache gave up on any zoom level whose whole-graph layer passed 32767 px or 16 Mpx (the task
+  # graph at Fit), so every pan frame re-walked all elements and drew them one by one; the patch builds that level over
+  # a region about 3 viewports wide around the viewport instead. Graphs whose whole layer fits keep the old path.
+  # Drop the patch once a cytoscape release fixes all six; a version bump fails install until then.
   cytoscape@3.35.0: patches/cytoscape@3.35.0.patch
