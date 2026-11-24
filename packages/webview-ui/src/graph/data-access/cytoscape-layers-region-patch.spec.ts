@@ -25,6 +25,12 @@ const MAX_LAYER_DIM = 32_767;
 /** At most this many dequeues drain a spec graph; more means the queue never empties. */
 const MAX_DEQUEUES = 1000;
 
+/** Below the graph's row, inside the level -4 frame (y -600 to 1200). */
+const BELOW_Y = 500;
+
+/** Asked for after level -4: four levels in all, one more than the 3 the patch keeps regions for. */
+const LATER_LEVELS = [-3, -2, -1];
+
 /** Past cytoscape's 3.99 layer zoom limit, where getLayers returns before it looks at any level. */
 const PAST_MAX_ZOOM = 4;
 
@@ -68,6 +74,22 @@ const getLayersAt = (renderer: object, level: number): object[] | null => {
   const layers = callOf(cacheOf(renderer), 'getLayers', [zSortedOf(renderer), 1, level]);
 
   return layersOf(layers);
+};
+
+/** The levels that hold a region, in the order they were made. */
+const regionLevelsOf = (renderer: object): string[] => {
+  const regions = objectOf(Reflect.get(cacheOf(renderer), 'regions'), 'regions');
+  const levels = Object.keys(regions);
+
+  return levels;
+};
+
+/** The layers `level` keeps, without asking getLayers for them. */
+const keptLayersAt = (renderer: object, level: number): object[] | null => {
+  const layersByLevel = objectOf(Reflect.get(cacheOf(renderer), 'layersByLevel'), 'layers by level');
+  const layers = layersOf(Reflect.get(layersByLevel, level));
+
+  return layers;
 };
 
 /** Draws every queued element into its layer, as the idle frames after a gesture do. */
@@ -168,6 +190,46 @@ describe('FEATURE: the cytoscape layered texture cache region patch', () => {
       const levels = getLayersAt(renderer, -2)?.map((layer): unknown => Reflect.get(layer, 'level'));
 
       expect(levels).toStrictEqual([REGION_LEVEL]);
+    });
+
+    it('WHEN four levels are asked for in turn THEN only the three latest keep a region', () => {
+      getLayersAt(renderer, REGION_LEVEL);
+
+      for (const level of LATER_LEVELS) getLayersAt(renderer, level);
+
+      expect(regionLevelsOf(renderer)).toStrictEqual(LATER_LEVELS.map(String));
+    });
+
+    it('WHEN four levels are asked for in turn THEN the oldest level drops its layers', () => {
+      paintedAt(renderer, REGION_LEVEL);
+
+      for (const level of LATER_LEVELS) getLayersAt(renderer, level);
+
+      // Each region level holds a layer up to 4000 x 4000 px; an uncapped list grows one per zoom level visited.
+      expect(layerIdsOf(keptLayersAt(renderer, REGION_LEVEL))).toStrictEqual([]);
+    });
+
+    it('WHEN near2 moves down inside the frame THEN the region layer is rebuilt to reach it', () => {
+      paintedAt(renderer, REGION_LEVEL);
+      const near2 = cy.$id('near2');
+
+      near2.position({ x: NEAR_X, y: BELOW_Y });
+      callOf(cacheOf(renderer), 'invalidateElements', [near2]);
+      const [layer] = paintedAt(renderer, REGION_LEVEL) ?? [];
+      const bb = objectOf(Reflect.get(objectOf(layer, 'layer'), 'bb'), 'layer box');
+
+      // The old region box clipped the graph's row, so near2 would be drawn outside its layer and cut off.
+      expect(Reflect.get(bb, 'y2')).toBe(near2.boundingBox().y2);
+    });
+
+    it('WHEN far moves close enough for the whole graph to fit THEN one layer over the whole graph replaces the region', () => {
+      paintedAt(renderer, REGION_LEVEL);
+      const far = cy.$id('far');
+
+      far.position({ x: FITTING_X, y: 0 });
+      callOf(cacheOf(renderer), 'invalidateElements', [far]);
+
+      expect(layerIdsOf(paintedAt(renderer, REGION_LEVEL))).toStrictEqual([['near', 'far', 'near2']]);
     });
 
     it('WHEN a frame past the max layer zoom follows a region frame THEN every element is drawn', () => {
